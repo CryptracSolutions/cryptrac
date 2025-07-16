@@ -1,9 +1,9 @@
 // lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'; // Alias import to avoid name clash
 import { cookies } from 'next/headers';
 
-// Type for cookie options (per Supabase ssr docs - avoids 'any' for TS safety)
+// Type for cookie options (avoids 'any' for TS safety)
 type CookieOptions = {
   path?: string;
   domain?: string;
@@ -21,10 +21,10 @@ export const createBrowserClient = () =>
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-// Server Client (server-side)
-export const createServerClient = () => {
+// Server Client (server-side, renamed to avoid conflict)
+export const createSupabaseServer = () => {
   const cookieStore = cookies();
-  return createServerClient(
+  return createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
