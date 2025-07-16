@@ -2,7 +2,7 @@
 
 // app/login/page.tsx
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@/lib/supabase-browser';
+import { createBrowserClient } from '../../lib/supabase-browser'; // Relative path (fixes alias issue)
 import toast from 'react-hot-toast';
 
 const supabase = createBrowserClient(); // Singleton
@@ -12,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Test toast on load (should show popup if fixed)
+  // Test toast on load
   useEffect(() => {
     toast.success('Test toast - if visible, fix worked!');
   }, []);
