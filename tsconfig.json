@@ -18,10 +18,10 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".", // Base for aliases
     "paths": {
-      "@/*": ["./*"] // Add this for @/ = root (fixes '@/lib')
-    },
-    "baseUrl": "." // Add this for paths to work
+      "@/*": ["./*"] // Alias @/ to root (fixes '@/lib')
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
