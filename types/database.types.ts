@@ -288,6 +288,24 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+        }
+        Relationships: []
+      }
       rep_sales: {
         Row: {
           date: string | null
