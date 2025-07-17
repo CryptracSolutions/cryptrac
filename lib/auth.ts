@@ -2,7 +2,8 @@
 import { createSupabaseServer } from './supabase-server'; // Server client
 import { redirect } from 'next/navigation'; // For redirects
 import { useEffect, useState } from 'react'; // For client hook
-import { Session } from '@supabase/supabase-js'; // Import Session type
+import { createBrowserClient } from './supabase-browser'; // Add this for client guard
+import { Session } from '@supabase/supabase-js'; // For type
 
 // Server Guard (for async pages)
 export async function withAuth(allowedRoles: string[]) {
