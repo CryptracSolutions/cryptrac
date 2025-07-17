@@ -2,7 +2,7 @@
 import { createSupabaseServer } from './supabase-server'; // Server client
 import { redirect } from 'next/navigation'; // For redirects
 import { useEffect, useState } from 'react'; // For client hook
-import { createBrowserClient } from './supabase-browser'; // Client client
+import { Session } from '@supabase/supabase-js'; // Import Session type
 
 // Server Guard (for async pages)
 export async function withAuth(allowedRoles: string[]) {
@@ -16,7 +16,7 @@ export async function withAuth(allowedRoles: string[]) {
 
 // Client Guard Hook (for use in pages)
 export function useRoleGuard(allowedRoles: string[]) {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<Session | null>(null); // Fix type to Session | null
   const supabase = createBrowserClient();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function useRoleGuard(allowedRoles: string[]) {
       const role = data.session?.user.user_metadata.role;
       if (role && !allowedRoles.includes(role)) window.location.href = '/';
     });
-  }, [allowedRoles, supabase.auth]); // Add deps to fix warning
+  }, [allowedRoles, supabase.auth]); // Deps to fix warning
 
   return session;
 }
