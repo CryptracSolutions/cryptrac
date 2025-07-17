@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const supabase = createBrowserClient(); // Singleton
 
 export default function AdminSignupForm() {
-  const [email, setEmail] = useState('admin@cryptrac.com'); // Hardcoded
+  const email = 'admin@cryptrac.com'; // Hardcoded, no state/set
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +25,7 @@ export default function AdminSignupForm() {
     if (error) {
       toast.error(error.message);
     } else if (data.user) {
-      await supabase.from('profiles').insert({ id: data.user.id, role: 'admin' });
+      await supabase.auth.updateUser({ data: { role: 'admin' } }); // Set in metadata (Bible Section 5)
       toast.success('Admin signed up! Set up 2FA in settings.');
       window.location.href = '/login';
     }
