@@ -2,7 +2,7 @@
 
 // app/login/page.tsx
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '../../lib/supabase-browser'; // Relative path (fixes alias issue)
+import { createBrowserClient } from '../../lib/supabase-browser'; // Relative path
 import toast from 'react-hot-toast';
 
 const supabase = createBrowserClient(); // Singleton
@@ -57,3 +57,5 @@ export default function Login() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic'; // Add this to make page dynamic (fixes prerender env issue)
