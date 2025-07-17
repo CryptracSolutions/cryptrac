@@ -11,7 +11,7 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('merchant'); // Default role
-  const [loading, setLoading] = useState(false); // Fixed: Added 'const'
+  const [loading, setLoading] = useState(false);
 
   // Test toast on load
   useEffect(() => {
@@ -27,11 +27,13 @@ export default function Signup() {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       toast.error(error.message);
-    } else {
+    } else if (data.user) { // Null check to fix type error
       // Set role metadata (Bible Section 5) - assume profiles table; add migration if needed
       await supabase.from('profiles').insert({ id: data.user.id, role });
       toast.success('Signed up!');
       window.location.href = '/login';
+    } else {
+      toast.error('Signup succeeded but user data missing');
     }
     setLoading(false);
   };
