@@ -27,8 +27,8 @@ export default function Signup() {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       toast.error(error.message);
-    } else if (data.user) { // Null check to fix type error
-      // Set role metadata (Bible Section 5) - assume profiles table; add migration if needed
+    } else if (data.user) {
+      // Set role metadata (Bible Section 5)
       await supabase.from('profiles').insert({ id: data.user.id, role });
       toast.success('Signed up!');
       window.location.href = '/login';
@@ -38,11 +38,11 @@ export default function Signup() {
     setLoading(false);
   };
 
-  // Stub country check (ipapi)
+  // Stub country check (ipapi) - custom toast for warning
   useEffect(() => {
     fetch('https://ipapi.co/json/').then(res => res.json()).then(data => {
       if (data.country_code !== 'US') {
-        toast.warning('US-only - Proceed at own risk');
+        toast('US-only - Proceed at own risk', { icon: '⚠️' }); // Custom warning
       }
     });
   }, []);
