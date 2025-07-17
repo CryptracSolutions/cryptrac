@@ -3,7 +3,7 @@ import { createSupabaseServer } from '../../lib/supabase-server'; // Server clie
 import { redirect } from 'next/navigation'; // For redirects
 import AdminSignupForm from './AdminSignupForm'; // Import the client form
 
-// Server Guard: Only admin (async page for App Router)
+// Server Guard: Only admin (async page for App Router) - RE-ENABLED
 export default async function AdminSignupPage() {
   const supabase = await createSupabaseServer();
   const { data: { session } } = await supabase.auth.getSession();

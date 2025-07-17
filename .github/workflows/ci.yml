@@ -17,5 +17,9 @@ jobs:
       with:
         node-version: '20'
     - run: yarn install
+    - name: Generate Supabase Types
+      run: yarn supabase gen types typescript --project-id ${{ secrets.SUPABASE_PROJECT_ID }} > types/database.types.ts
+    - name: Check for Type Changes
+      run: git diff --exit-code types/database.types.ts || (echo "Types changed - run gen types locally" && exit 1)
     - run: yarn lint  # Assuming we'll add ESLint later
     - run: yarn type-check  # For TypeScript checks
