@@ -14,7 +14,7 @@ export default function Login() {
 
   // Test toast on load
   useEffect(() => {
-    toast.success('Test toast - if visible, fix worked!');
+    toast.success('Test toast - should show!');
   }, []);
 
   const handleLogin = async () => {
@@ -49,7 +49,7 @@ export default function Login() {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ display: 'block', margin: '10px 0' }}
+        style={ { display: 'block', margin: '10px 0' } }
       />
       <button onClick={handleLogin} disabled={loading}>
         {loading ? 'Logging in...' : 'Login'}
@@ -58,4 +58,4 @@ export default function Login() {
   );
 }
 
-export const dynamic = 'force-dynamic'; // Add this to make page dynamic (fixes prerender env issue)
+export const dynamic = 'force-dynamic'; // Force dynamic rendering (fixes prerender env error on Vercel)
