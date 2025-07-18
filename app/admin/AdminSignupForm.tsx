@@ -1,13 +1,13 @@
 "use client"; // Client component for the form
 
 import { useState } from 'react';
-import { createBrowserClient } from '../../lib/supabase-browser'; // Relative path
+import { createBrowserClient } from '@/lib/supabase-browser'; // Alias
 import toast from 'react-hot-toast';
 
 const supabase = createBrowserClient(); // Singleton
 
 export default function AdminSignupForm() {
-  const email = 'admin@cryptrac.com'; // Hardcoded, no state/set
+  const email = 'admin@cryptrac.com'; // Hardcoded
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +25,7 @@ export default function AdminSignupForm() {
     if (error) {
       toast.error(error.message);
     } else if (data.user) {
-      await supabase.auth.updateUser({ data: { role: 'admin' } }); // Set in metadata (Bible Section 5)
+      await supabase.auth.updateUser({ data: { role: 'admin' } });
       toast.success('Admin signed up! Set up 2FA in settings.');
       window.location.href = '/login';
     }
@@ -40,6 +40,7 @@ export default function AdminSignupForm() {
         value={email}
         disabled
         style={{ display: 'block', margin: '10px 0' }}
+        name="email" // Fix warning
       />
       <input
         type="password"
@@ -47,6 +48,7 @@ export default function AdminSignupForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         style={{ display: 'block', margin: '10px 0' }}
+        name="password" // Fix warning
       />
       <button onClick={handleSignup} disabled={loading}>
         {loading ? 'Signing up...' : 'Signup Admin'}

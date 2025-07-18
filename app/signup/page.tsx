@@ -2,7 +2,7 @@
 
 // app/signup/page.tsx
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '../../lib/supabase-browser'; // Relative path
+import { createBrowserClient } from '@/lib/supabase-browser'; // Alias
 import toast from 'react-hot-toast';
 
 const supabase = createBrowserClient(); // Singleton
@@ -56,6 +56,7 @@ export default function Signup() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         style={{ display: 'block', margin: '10px 0' }}
+        name="email" // Fix warning
       />
       <input
         type="password"
@@ -63,6 +64,7 @@ export default function Signup() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         style={{ display: 'block', margin: '10px 0' }}
+        name="password" // Fix warning
       />
       <select value={role} onChange={(e) => setRole(e.target.value)} style={{ display: 'block', margin: '10px 0' }}>
         <option value="merchant">Merchant</option>

@@ -18,9 +18,9 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".", // Base for aliases
+    "baseUrl": ".", // Base for aliases, relative to tsconfig.json location
     "paths": {
-      "@/*": ["./*"] // Alias @/ to root (fixes '@/lib')
+      "@/*": ["./*"] // Maps @/lib/supabase-server to lib/supabase-server.ts
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
