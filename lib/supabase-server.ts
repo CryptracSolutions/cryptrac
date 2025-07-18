@@ -14,9 +14,10 @@ type CookieOptions = {
   sameSite?: 'lax' | 'strict' | 'none' | boolean;
 };
 
-export async function createServerClient() {
+// Server client with cookie handling
+export async function createServerClient( ) {
   const cookieStore = await cookies(); // Await the cookies object
-  console.log('All server cookies:', cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ')); // Debug all cookies
+  console.log('All server cookies:', cookieStore.getAll().map(c => `${c.name}=${c.value}`));
 
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,7 +28,7 @@ export async function createServerClient() {
           getItem: (key: string) => {
             const value = cookieStore.get(key)?.value;
             console.log(`Getting cookie ${key}: ${value || 'undefined'}`); // Debug
-            return value;
+            return value || null; // ✅ Return null instead of undefined
           },
           setItem: (key: string, value: string, options: CookieOptions = {}) => {
             console.log(`Setting cookie ${key}=${value}`); // Debug
