@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { 
   Shield, 
   Users, 
   Building, 
   CreditCard, 
-  TrendingUp,
   Settings,
   Database,
   AlertTriangle,
