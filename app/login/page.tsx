@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createBrowserClient } from '@supabase/ssr';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Logo } from '@/app/components/ui/logo';
+import { createBrowserClient } from '@/lib/supabase-browser';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -17,10 +17,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,7 +138,6 @@ export default function Login() {
                 type="submit" 
                 className="w-full"
                 size="lg"
-                loading={loading}
                 disabled={loading}
               >
                 {loading ? 'Signing in...' : 'Sign in'}
@@ -181,4 +177,3 @@ export default function Login() {
 }
 
 export const dynamic = 'force-dynamic';
-

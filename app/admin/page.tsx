@@ -4,28 +4,30 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  DollarSign, 
-  TrendingUp, 
+  Shield, 
   Users, 
+  Building, 
   CreditCard, 
-  Plus, 
-  QrCode, 
-  Link as LinkIcon,
+  TrendingUp,
+  Settings,
+  Database,
+  AlertTriangle,
+  Activity,
+  DollarSign,
+  UserCheck,
+  Globe,
   BarChart3,
-  Calendar,
-  ArrowUpRight,
-  Bitcoin,
-  Wallet
+  FileText,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
-import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { createBrowserClient } from '@/lib/supabase-browser';
 
-export default function MerchantDashboard() {
-  const [user, setUser] = useState<{ email?: string; user_metadata?: { business_name?: string; trial_end?: string } } | null>(null);
+export default function AdminDashboard() {
+  const [user, setUser] = useState<{ email?: string; user_metadata?: { role?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const supabase = createBrowserClient();
@@ -34,6 +36,11 @@ export default function MerchantDashboard() {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        // Verify admin access
+        if (session.user.email !== 'admin@cryptrac.com' && session.user.user_metadata?.role !== 'admin') {
+          router.push('/merchant/dashboard');
+          return;
+        }
         setUser(session.user);
       } else {
         router.push('/login');
@@ -55,142 +62,169 @@ export default function MerchantDashboard() {
     return null;
   }
 
-  // Mock data for demonstration
-  const stats = [
+  // Platform-wide stats (mock data)
+  const platformStats = [
     {
-      title: "Total Revenue",
-      value: "$12,345.67",
-      change: "+12.5%",
+      title: "Total Platform Revenue",
+      value: "$2,847,392.18",
+      change: "+18.2%",
       changeType: "positive" as const,
       icon: DollarSign,
+      description: "All-time platform revenue"
     },
     {
-      title: "Transactions",
-      value: "156",
-      change: "+8.2%",
+      title: "Active Merchants",
+      value: "1,247",
+      change: "+12.5%",
+      changeType: "positive" as const,
+      icon: Building,
+      description: "Currently active merchants"
+    },
+    {
+      title: "Total Transactions",
+      value: "89,432",
+      change: "+24.1%",
       changeType: "positive" as const,
       icon: CreditCard,
+      description: "Platform-wide transactions"
     },
     {
-      title: "Customers",
-      value: "89",
-      change: "+23.1%",
+      title: "System Health",
+      value: "99.9%",
+      change: "+0.1%",
       changeType: "positive" as const,
-      icon: Users,
-    },
-    {
-      title: "Conversion Rate",
-      value: "3.2%",
-      change: "-0.5%",
-      changeType: "negative" as const,
-      icon: TrendingUp,
+      icon: Activity,
+      description: "Platform uptime"
     },
   ];
 
-  const recentTransactions = [
+  const adminSections = [
     {
-      id: "1",
-      amount: "$125.50",
-      currency: "BTC",
-      customer: "john@example.com",
-      status: "completed",
-      date: "2 hours ago"
+      title: "User Management",
+      description: "Manage merchants, reps, and partners",
+      icon: Users,
+      href: "/admin/users",
+      color: "bg-blue-500",
+      badge: "Phase 8",
+      items: ["View all users", "Approve/suspend accounts", "Role management"]
     },
     {
-      id: "2", 
-      amount: "$89.99",
-      currency: "ETH",
-      customer: "sarah@example.com",
-      status: "pending",
-      date: "4 hours ago"
+      title: "Platform Analytics",
+      description: "Deep insights into platform performance",
+      icon: BarChart3,
+      href: "/admin/analytics",
+      color: "bg-green-500",
+      badge: "Phase 8",
+      items: ["Revenue analytics", "Transaction monitoring", "Growth metrics"]
+    },
+    {
+      title: "System Settings",
+      description: "Configure platform-wide settings",
+      icon: Settings,
+      href: "/admin/settings",
+      color: "bg-purple-500",
+      badge: "Phase 8",
+      items: ["Fee configuration", "API settings", "Security policies"]
+    },
+    {
+      title: "Database Management",
+      description: "Monitor and manage database operations",
+      icon: Database,
+      href: "/admin/database",
+      color: "bg-orange-500",
+      badge: "Phase 8",
+      items: ["Database health", "Backup management", "Query optimization"]
+    },
+    {
+      title: "Security Center",
+      description: "Monitor security and compliance",
+      icon: Shield,
+      href: "/admin/security",
+      color: "bg-red-500",
+      badge: "Phase 8",
+      items: ["Security alerts", "Compliance reports", "Audit logs"]
+    },
+    {
+      title: "Support & Reports",
+      description: "Customer support and reporting tools",
+      icon: FileText,
+      href: "/admin/support",
+      color: "bg-indigo-500",
+      badge: "Phase 8",
+      items: ["Support tickets", "Financial reports", "Compliance exports"]
+    }
+  ];
+
+  const recentAlerts = [
+    {
+      id: "1",
+      type: "info",
+      title: "New merchant signup",
+      description: "TechCorp Inc. has completed registration",
+      time: "5 minutes ago"
+    },
+    {
+      id: "2",
+      type: "warning",
+      title: "High transaction volume",
+      description: "Unusual activity detected on merchant ID #1247",
+      time: "1 hour ago"
     },
     {
       id: "3",
-      amount: "$250.00",
-      currency: "LTC",
-      customer: "mike@example.com", 
-      status: "completed",
-      date: "1 day ago"
-    },
+      type: "success",
+      title: "System update completed",
+      description: "Platform updated to v0.3.0 successfully",
+      time: "2 hours ago"
+    }
   ];
-
-  const quickActions = [
-    {
-      title: "Create Payment Link",
-      description: "Generate a shareable payment link",
-      icon: LinkIcon,
-      href: "/merchant/payments/create",
-      color: "bg-blue-500"
-    },
-    {
-      title: "Generate QR Code",
-      description: "Create QR code for in-person payments",
-      icon: QrCode,
-      href: "/merchant/payments/qr",
-      color: "bg-green-500"
-    },
-    {
-      title: "View Analytics",
-      description: "Detailed payment analytics",
-      icon: BarChart3,
-      href: "/merchant/analytics",
-      color: "bg-purple-500"
-    },
-    {
-      title: "Manage Wallets",
-      description: "Configure cryptocurrency wallets",
-      icon: Wallet,
-      href: "/merchant/wallets",
-      color: "bg-orange-500"
-    },
-  ];
-
-  const trialDaysLeft = user.user_metadata?.trial_end ? 
-    Math.max(0, Math.ceil((new Date(user.user_metadata.trial_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 0;
 
   return (
     <DashboardLayout user={user}>
       <div className="p-8">
-        {/* Welcome Section */}
+        {/* Admin Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Shield className="h-6 w-6 text-red-600" />
+            </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {user.user_metadata?.business_name || 'there'}!
+                Admin Dashboard
               </h1>
-              <p className="text-muted-foreground mt-1">
-                Here&apos;s what&apos;s happening with your crypto payments today.
+              <p className="text-muted-foreground">
+                Platform-wide control center • God mode access
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              {trialDaysLeft > 0 && (
-                <Badge variant="warning" className="text-sm">
-                  {trialDaysLeft} days left in trial
-                </Badge>
-              )}
-              <Button asChild>
-                <Link href="/merchant/payments/create">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Payment
-                </Link>
-              </Button>
+            <Badge variant="destructive" className="ml-auto">
+              ADMIN ACCESS
+            </Badge>
+          </div>
+          
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              <span className="font-medium text-amber-800">Development Notice</span>
             </div>
+            <p className="text-amber-700 mt-1">
+              Full admin controls will be implemented in Phase 8. Current view shows platform overview and planned features.
+            </p>
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Platform Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
+          {platformStats.map((stat, index) => (
+            <Card key={index} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
+                <stat.icon className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="flex items-center text-xs text-muted-foreground">
+                <div className="flex items-center text-xs text-muted-foreground mt-1">
                   <span className={`inline-flex items-center ${
                     stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                   }`}>
@@ -198,137 +232,149 @@ export default function MerchantDashboard() {
                   </span>
                   <span className="ml-1">from last month</span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <div className="lg:col-span-1">
+          {/* Admin Sections */}
+          <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Admin Control Panels
+                </CardTitle>
                 <CardDescription>
-                  Common tasks to manage your payments
+                  Platform management and administrative tools
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {quickActions.map((action, index) => (
-                  <Link
-                    key={index}
-                    href={action.href}
-                    className="flex items-center p-3 rounded-lg border hover:bg-accent transition-colors group"
-                  >
-                    <div className={`p-2 rounded-md ${action.color} text-white mr-3`}>
-                      <action.icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm group-hover:text-primary">
-                        {action.title}
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {adminSections.map((section, index) => (
+                    <div
+                      key={index}
+                      className="relative p-4 rounded-lg border hover:bg-accent transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className={`p-2 rounded-md ${section.color} text-white`}>
+                          <section.icon className="h-4 w-4" />
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {section.badge}
+                        </Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {action.description}
+                      <div className="space-y-2">
+                        <h3 className="font-medium text-sm group-hover:text-primary">
+                          {section.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {section.description}
+                        </p>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          {section.items.map((item, itemIndex) => (
+                            <li key={itemIndex} className="flex items-center gap-1">
+                              <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                  </Link>
-                ))}
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Recent Transactions */}
-          <div className="lg:col-span-2">
+          {/* Recent Alerts */}
+          <div className="lg:col-span-1">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>
-                    Your latest cryptocurrency payments
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/merchant/transactions">
-                    View All
-                    <ArrowUpRight className="h-4 w-4 ml-1" />
-                  </Link>
-                </Button>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  System Alerts
+                </CardTitle>
+                <CardDescription>
+                  Recent platform notifications
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentTransactions.map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <CryptoIcon currency={transaction.currency} size="sm" />
-                        <div>
-                          <div className="font-medium">{transaction.amount}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {transaction.customer}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge 
-                          variant={transaction.status === 'completed' ? 'confirmed' : 'pending'}
-                          className="mb-1"
-                        >
-                          {transaction.status}
-                        </Badge>
-                        <div className="text-sm text-muted-foreground">
-                          {transaction.date}
-                        </div>
-                      </div>
+              <CardContent className="space-y-4">
+                {recentAlerts.map((alert) => (
+                  <div key={alert.id} className="flex items-start gap-3 p-3 rounded-lg border">
+                    <div className={`p-1 rounded-full ${
+                      alert.type === 'success' ? 'bg-green-100' :
+                      alert.type === 'warning' ? 'bg-yellow-100' :
+                      'bg-blue-100'
+                    }`}>
+                      <div className={`w-2 h-2 rounded-full ${
+                        alert.type === 'success' ? 'bg-green-500' :
+                        alert.type === 'warning' ? 'bg-yellow-500' :
+                        'bg-blue-500'
+                      }`}></div>
                     </div>
-                  ))}
-                  
-                  {recentTransactions.length === 0 && (
-                    <div className="text-center py-8">
-                      <Bitcoin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="font-medium text-lg mb-2">No transactions yet</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Create your first payment link to start accepting crypto payments.
-                      </p>
-                      <Button asChild>
-                        <Link href="/merchant/payments/create">
-                          Create Payment Link
-                        </Link>
-                      </Button>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{alert.title}</p>
+                      <p className="text-xs text-muted-foreground">{alert.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ))}
+                
+                <Button variant="outline" size="sm" className="w-full">
+                  View All Alerts
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-sm">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Approve Pending Merchants
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Globe className="h-4 w-4 mr-2" />
+                  System Health Check
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Generate Reports
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Trial Notice */}
-        {trialDaysLeft > 0 && (
-          <Card className="mt-8 border-warning bg-warning/5">
-            <CardContent className="flex items-center justify-between p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-warning/10 rounded-full">
-                  <Calendar className="h-5 w-5 text-warning-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Trial Period Active</h3>
-                  <p className="text-sm text-muted-foreground">
-                    You have {trialDaysLeft} days left in your free trial. Upgrade to continue using Cryptrac after your trial ends.
-                  </p>
-                </div>
+        {/* Development Status */}
+        <Card className="mt-8 border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-blue-100 rounded-full">
+                <Settings className="h-5 w-5 text-blue-600" />
               </div>
-              <Button variant="outline" asChild>
-                <Link href="/merchant/billing">
-                  Upgrade Now
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+              <div className="flex-1">
+                <h3 className="font-medium text-blue-900">Phase 8 Development Preview</h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  This admin dashboard shows the planned structure for Phase 8. Full administrative controls, 
+                  user management, platform analytics, and system configuration tools will be implemented then.
+                </p>
+              </div>
+              <Badge variant="outline" className="border-blue-300 text-blue-700">
+                Coming in Phase 8
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
 }
 
 export const dynamic = 'force-dynamic';
-

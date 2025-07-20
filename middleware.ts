@@ -54,29 +54,70 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Get current session
-  const { data: { session } } = await supabase.auth.getSession();
   const { pathname } = request.nextUrl;
 
-  // Public routes that don't require authentication
-  const publicRoutes = ['/', '/login', '/signup', '/terms', '/privacy'];
-  const isPublicRoute = publicRoutes.includes(pathname);
-
-  // If no session and trying to access protected route
-  if (!session && !isPublicRoute) {
-    const redirectUrl = new URL('/login', request.url);
-    return NextResponse.redirect(redirectUrl);
+  // Routes that are completely public (no auth needed)
+  const publicRoutes = ['/', '/terms', '/privacy'];
+  
+  // Auth routes (login/signup) - handle differently
+  const authRoutes = ['/login', '/signup'];
+  
+  // Skip middleware for public routes
+  if (publicRoutes.includes(pathname)) {
+    return response;
   }
 
-  // If session exists, check role-based access
-  if (session) {
-    const role = session.user.user_metadata.role || 'merchant';
+  try {
+    // Get current session
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    // Handle auth routes (login/signup)
+    if (authRoutes.includes(pathname)) {
+      // If user is already logged in, redirect to appropriate dashboard
+      if (session && !error) {
+        const role = session.user.user_metadata?.role || 'merchant';
+        const email = session.user.email;
+        
+        let redirectPath = '/merchant/dashboard';
+        
+        if (email === 'admin@cryptrac.com' || role === 'admin') {
+          redirectPath = '/admin';
+        } else if (role === 'rep') {
+          redirectPath = '/rep/dashboard';
+        } else if (role === 'partner') {
+          redirectPath = '/partner/dashboard';
+        }
+        
+        const redirectUrl = new URL(redirectPath, request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+      // If no session, allow access to login/signup
+      return response;
+    }
+
+    // For protected routes, check authentication
+    if (!session || error) {
+      // Only redirect to login if we're sure there's no session
+      // This prevents redirect loops during login process
+      const hasAuthCookies = request.cookies.has('sb-jngvlbimfmvhpupbpuuj-auth-token');
+      
+      if (!hasAuthCookies) {
+        const redirectUrl = new URL('/login', request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+      
+      // If auth cookies exist but session failed, let the page handle it
+      return response;
+    }
+
+    // Role-based access control for authenticated users
+    const role = session.user.user_metadata?.role || 'merchant';
     const email = session.user.email;
 
-    // Admin routes - hardcoded email check
+    // Admin routes
     if (pathname.startsWith('/admin')) {
       if (email !== 'admin@cryptrac.com' && role !== 'admin') {
-        const redirectUrl = new URL('/', request.url);
+        const redirectUrl = new URL('/merchant/dashboard', request.url);
         return NextResponse.redirect(redirectUrl);
       }
     }
@@ -84,7 +125,7 @@ export async function middleware(request: NextRequest) {
     // Rep routes
     if (pathname.startsWith('/rep')) {
       if (role !== 'rep' && role !== 'admin') {
-        const redirectUrl = new URL('/', request.url);
+        const redirectUrl = new URL('/merchant/dashboard', request.url);
         return NextResponse.redirect(redirectUrl);
       }
     }
@@ -92,12 +133,12 @@ export async function middleware(request: NextRequest) {
     // Partner routes
     if (pathname.startsWith('/partner')) {
       if (role !== 'partner' && role !== 'admin') {
-        const redirectUrl = new URL('/', request.url);
+        const redirectUrl = new URL('/merchant/dashboard', request.url);
         return NextResponse.redirect(redirectUrl);
       }
     }
 
-    // Merchant routes (default for authenticated users)
+    // Merchant routes
     if (pathname.startsWith('/merchant')) {
       if (role !== 'merchant' && role !== 'admin') {
         const redirectUrl = new URL('/', request.url);
@@ -105,30 +146,10 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Redirect authenticated users away from login/signup
-    if (pathname === '/login' || pathname === '/signup') {
-      let redirectPath = '/';
-      
-      // Role-based default redirects
-      switch (role) {
-        case 'admin':
-          redirectPath = '/admin';
-          break;
-        case 'rep':
-          redirectPath = '/rep/dashboard';
-          break;
-        case 'partner':
-          redirectPath = '/partner/dashboard';
-          break;
-        case 'merchant':
-        default:
-          redirectPath = '/merchant/dashboard';
-          break;
-      }
-      
-      const redirectUrl = new URL(redirectPath, request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
+  } catch (error) {
+    // If middleware fails, let the page handle authentication
+    console.warn('Middleware error:', error);
+    return response;
   }
 
   return response;

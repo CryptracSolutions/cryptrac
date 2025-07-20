@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createBrowserClient } from '@supabase/ssr';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, Building } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
@@ -11,6 +10,7 @@ import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Logo } from '@/app/components/ui/logo';
+import { createBrowserClient } from '@/lib/supabase-browser';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -19,10 +19,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserClient();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +41,7 @@ export default function Signup() {
       // Get country from IP
       let country = 'US';
       try {
-        const ipResponse = await fetch('https://ipapi.co/json/');
+        const ipResponse = await fetch('https://ipapi.co/json/' );
         const ipData = await ipResponse.json();
         country = ipData.country_code || 'US';
       } catch (ipError) {
@@ -175,7 +172,6 @@ export default function Signup() {
                 type="submit" 
                 className="w-full"
                 size="lg"
-                loading={loading}
                 disabled={loading}
               >
                 {loading ? 'Creating account...' : 'Create account'}
@@ -233,4 +229,3 @@ export default function Signup() {
 }
 
 export const dynamic = 'force-dynamic';
-
