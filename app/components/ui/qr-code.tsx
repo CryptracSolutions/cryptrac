@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 
 interface QRCodeProps {
@@ -19,6 +19,53 @@ export function QRCode({
   foregroundColor = '#000000'
 }: QRCodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const generateMockQRPattern = useCallback((data: string, gridSize: number): boolean[][] => {
+    const pattern: boolean[][] = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false))
+    
+    // Simple hash-based pattern generation
+    let hash = 0
+    for (let i = 0; i < data.length; i++) {
+      hash = ((hash << 5) - hash + data.charCodeAt(i)) & 0xffffffff
+    }
+
+    // Fill pattern based on hash
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
+        // Skip finder pattern areas
+        if (isFinderPatternArea(row, col, gridSize)) continue
+        
+        const cellHash = (hash + row * gridSize + col) & 0xffffffff
+        pattern[row][col] = (cellHash % 3) === 0
+      }
+    }
+
+    return pattern
+  }, [])
+
+  const isFinderPatternArea = useCallback((row: number, col: number, gridSize: number): boolean => {
+    // Top-left finder pattern
+    if (row < 9 && col < 9) return true
+    // Top-right finder pattern
+    if (row < 9 && col >= gridSize - 9) return true
+    // Bottom-left finder pattern
+    if (row >= gridSize - 9 && col < 9) return true
+    
+    return false
+  }, [])
+
+  const drawFinderPattern = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, cellSize: number) => {
+    // Outer square (7x7)
+    ctx.fillRect(x, y, cellSize * 7, cellSize * 7)
+    
+    // Inner white square (5x5)
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(x + cellSize, y + cellSize, cellSize * 5, cellSize * 5)
+    
+    // Center black square (3x3)
+    ctx.fillStyle = foregroundColor
+    ctx.fillRect(x + cellSize * 2, y + cellSize * 2, cellSize * 3, cellSize * 3)
+  }, [backgroundColor, foregroundColor])
 
   useEffect(() => {
     if (!canvasRef.current || !value) return
@@ -59,54 +106,7 @@ export function QRCode({
     drawFinderPattern(ctx, (gridSize - 7) * cellSize, 0, cellSize)
     drawFinderPattern(ctx, 0, (gridSize - 7) * cellSize, cellSize)
 
-  }, [value, size, backgroundColor, foregroundColor])
-
-  const generateMockQRPattern = (data: string, gridSize: number): boolean[][] => {
-    const pattern: boolean[][] = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false))
-    
-    // Simple hash-based pattern generation
-    let hash = 0
-    for (let i = 0; i < data.length; i++) {
-      hash = ((hash << 5) - hash + data.charCodeAt(i)) & 0xffffffff
-    }
-
-    // Fill pattern based on hash
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        // Skip finder pattern areas
-        if (isFinderPatternArea(row, col, gridSize)) continue
-        
-        const cellHash = (hash + row * gridSize + col) & 0xffffffff
-        pattern[row][col] = (cellHash % 3) === 0
-      }
-    }
-
-    return pattern
-  }
-
-  const isFinderPatternArea = (row: number, col: number, gridSize: number): boolean => {
-    // Top-left finder pattern
-    if (row < 9 && col < 9) return true
-    // Top-right finder pattern
-    if (row < 9 && col >= gridSize - 9) return true
-    // Bottom-left finder pattern
-    if (row >= gridSize - 9 && col < 9) return true
-    
-    return false
-  }
-
-  const drawFinderPattern = (ctx: CanvasRenderingContext2D, x: number, y: number, cellSize: number) => {
-    // Outer square (7x7)
-    ctx.fillRect(x, y, cellSize * 7, cellSize * 7)
-    
-    // Inner white square (5x5)
-    ctx.fillStyle = backgroundColor
-    ctx.fillRect(x + cellSize, y + cellSize, cellSize * 5, cellSize * 5)
-    
-    // Center black square (3x3)
-    ctx.fillStyle = foregroundColor
-    ctx.fillRect(x + cellSize * 2, y + cellSize * 2, cellSize * 3, cellSize * 3)
-  }
+  }, [value, size, backgroundColor, foregroundColor, generateMockQRPattern, drawFinderPattern])
 
   if (!value) {
     return (

@@ -4,475 +4,430 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
-import { Input } from '@/app/components/ui/input'
-import { Textarea } from '@/app/components/ui/textarea'
 import { Badge } from '@/app/components/ui/badge'
-import { Alert, AlertDescription } from '@/app/components/ui/alert'
+import { QRCode } from '@/app/components/ui/qr-code'
 import { 
   ArrowLeft, 
-  Link2, 
-  DollarSign, 
-  Calendar, 
-  Infinity,
-  QrCode,
+  Copy, 
+  ExternalLink, 
+  Edit, 
+  Trash2,
+  Share2,
+  Download,
   Eye,
-  Copy,
-  CheckCircle,
+  EyeOff,
+  Calendar,
+  DollarSign,
+  Users,
+  TrendingUp,
+  Clock,
   AlertTriangle
 } from 'lucide-react'
 
-interface PaymentLinkData {
-  title: string
-  description: string
-  amount: string
-  currency: string
-  expiresAt: string
-  maxUses: string
-  acceptedCryptos: string[]
-  requireCustomerInfo: boolean
-  redirectUrl: string
+// Mock payment link data (in real app, fetch by ID)
+const mockPaymentLink = {
+  id: 'pl_abc123',
+  title: 'Website Development Service',
+  description: 'Full-stack web development project including frontend, backend, and database setup. Includes responsive design, user authentication, and payment processing.',
+  amount: 2500.00,
+  currency: 'USD',
+  status: 'active',
+  created: '2025-01-15T10:30:00Z',
+  expires: '2025-02-15T23:59:59Z',
+  maxUses: null,
+  currentUses: 0,
+  totalReceived: 0,
+  link: 'https://pay.cryptrac.com/pl_abc123',
+  acceptedCryptos: ['BTC', 'ETH', 'LTC'],
+  requireCustomerInfo: false,
+  redirectUrl: 'https://mywebsite.com/thank-you',
+  payments: []
 }
 
-const SUPPORTED_CRYPTOS = [
-  { code: 'BTC', name: 'Bitcoin', symbol: '₿' },
-  { code: 'ETH', name: 'Ethereum', symbol: 'Ξ' },
-  { code: 'LTC', name: 'Litecoin', symbol: 'Ł' },
-  { code: 'USDT', name: 'Tether', symbol: '₮' },
-  { code: 'USDC', name: 'USD Coin', symbol: '$' }
+// Mock recent payments for this link
+const mockPayments = [
+  {
+    id: '1',
+    amount: 2500.00,
+    crypto: 'BTC',
+    cryptoAmount: '0.03456',
+    status: 'completed',
+    timestamp: '2025-01-20T14:30:00Z',
+    txHash: '1a2b3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890',
+    customerEmail: 'john@example.com'
+  }
 ]
 
-export default function CreatePaymentLinkPage() {
+export default function PaymentLinkDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  
-  const [formData, setFormData] = useState<PaymentLinkData>({
-    title: '',
-    description: '',
-    amount: '',
-    currency: 'USD',
-    expiresAt: '',
-    maxUses: '',
-    acceptedCryptos: ['BTC', 'ETH', 'LTC'],
-    requireCustomerInfo: false,
-    redirectUrl: ''
-  })
+  const [showQRCode, setShowQRCode] = useState(true)
+  const [copied, setCopied] = useState(false)
 
-  const handleInputChange = (field: keyof PaymentLinkData, value: string | boolean | string[]) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      const newErrors = { ...errors }
-      delete newErrors[field]
-      setErrors(newErrors)
+  const paymentLink = mockPaymentLink // In real app: fetch by params.id
+
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const downloadQRCode = () => {
+    // TODO: Implement QR code download
+    console.log('Download QR code')
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800'
+      case 'expired': return 'bg-gray-100 text-gray-800'
+      case 'completed': return 'bg-blue-100 text-blue-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const handleCryptoToggle = (crypto: string) => {
-    const newCryptos = formData.acceptedCryptos.includes(crypto)
-      ? formData.acceptedCryptos.filter(c => c !== crypto)
-      : [...formData.acceptedCryptos, crypto]
-    
-    handleInputChange('acceptedCryptos', newCryptos)
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required'
-    }
-
-    if (!formData.amount.trim()) {
-      newErrors.amount = 'Amount is required'
-    } else if (isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be a valid positive number'
-    }
-
-    if (formData.acceptedCryptos.length === 0) {
-      newErrors.acceptedCryptos = 'Please select at least one cryptocurrency'
-    }
-
-    if (formData.maxUses && (isNaN(Number(formData.maxUses)) || Number(formData.maxUses) <= 0)) {
-      newErrors.maxUses = 'Max uses must be a valid positive number'
-    }
-
-    if (formData.redirectUrl && !isValidUrl(formData.redirectUrl)) {
-      newErrors.redirectUrl = 'Please enter a valid URL'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const isValidUrl = (url: string): boolean => {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      // TODO: Submit to API
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Mock success - redirect to payments page
-      router.push('/merchant/dashboard/payments')
-    } catch (error) {
-      console.error('Failed to create payment link:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const generatePreviewUrl = () => {
-    return `https://pay.cryptrac.com/pl_${Math.random().toString(36).substr(2, 9)}`
-  }
-
-  const previewUrl = generatePreviewUrl()
+  const isExpired = paymentLink.expires && new Date(paymentLink.expires) < new Date()
+  const isMaxUsesReached = paymentLink.maxUses && paymentLink.currentUses >= paymentLink.maxUses
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-          className="flex items-center"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Payment Link</h1>
-          <p className="text-gray-600 mt-1">
-            Create a secure payment link to accept cryptocurrency payments
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="flex items-center"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{paymentLink.title}</h1>
+            <div className="flex items-center space-x-3 mt-1">
+              <Badge className={getStatusColor(paymentLink.status)}>
+                {paymentLink.status}
+              </Badge>
+              <span className="text-gray-500 text-sm">
+                Created {formatDate(paymentLink.created)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm">
+            <Share2 className="w-4 h-4 mr-2" />
+            Share
+          </Button>
+          <Button variant="outline" size="sm">
+            <Edit className="w-4 h-4 mr-2" />
+            Edit
+          </Button>
+          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete
+          </Button>
         </div>
       </div>
 
+      {/* Status Alerts */}
+      {isExpired && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
+            <span className="text-red-800 font-medium">This payment link has expired</span>
+          </div>
+        </div>
+      )}
+
+      {isMaxUsesReached && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mr-2" />
+            <span className="text-amber-800 font-medium">Maximum uses reached</span>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form */}
-        <div className="lg:col-span-2">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Payment Link Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Link2 className="w-5 h-5 mr-2 text-[#7f5efd]" />
-                Payment Link Details
-              </CardTitle>
+              <CardTitle>Payment Link Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Description */}
+              {paymentLink.description && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">Description</h3>
+                  <p className="text-gray-600">{paymentLink.description}</p>
+                </div>
+              )}
+
+              {/* Payment Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">Payment Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Amount:</span>
+                      <span className="font-medium">${paymentLink.amount.toLocaleString()} {paymentLink.currency}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Uses:</span>
+                      <span className="font-medium">
+                        {paymentLink.currentUses} / {paymentLink.maxUses || '∞'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Total Received:</span>
+                      <span className="font-medium">${paymentLink.totalReceived.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">Settings</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Expires:</span>
+                      <span className="font-medium">
+                        {paymentLink.expires ? formatDate(paymentLink.expires) : 'Never'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Customer Info:</span>
+                      <span className="font-medium">
+                        {paymentLink.requireCustomerInfo ? 'Required' : 'Optional'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Redirect URL:</span>
+                      <span className="font-medium">
+                        {paymentLink.redirectUrl ? 'Yes' : 'None'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accepted Cryptocurrencies */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">Accepted Cryptocurrencies</h3>
+                <div className="flex flex-wrap gap-2">
+                  {paymentLink.acceptedCryptos.map(crypto => (
+                    <Badge key={crypto} variant="secondary">
+                      {crypto}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Link URL */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">Payment Link URL</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 p-3 bg-gray-50 rounded-lg font-mono text-sm break-all">
+                    {paymentLink.link}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(paymentLink.link)}
+                  >
+                    <Copy className="w-4 h-4" />
+                    {copied && <span className="ml-1 text-xs">Copied!</span>}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(paymentLink.link, '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Payments */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Payments</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Title *
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="e.g., Website Development Service"
-                      value={formData.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
-                      className={errors.title ? 'border-red-300 focus:border-red-500' : ''}
-                    />
-                    {errors.title && (
-                      <p className="text-sm text-red-600 mt-1">{errors.title}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <Textarea
-                      placeholder="Describe what the customer is paying for..."
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                {/* Payment Details */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Payment Details</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Amount *
-                      </label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={formData.amount}
-                          onChange={(e) => handleInputChange('amount', e.target.value)}
-                          className={`pl-10 ${errors.amount ? 'border-red-300 focus:border-red-500' : ''}`}
-                        />
-                      </div>
-                      {errors.amount && (
-                        <p className="text-sm text-red-600 mt-1">{errors.amount}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Currency
-                      </label>
-                      <select
-                        value={formData.currency}
-                        onChange={(e) => handleInputChange('currency', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7f5efd] focus:border-transparent"
-                      >
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="GBP">GBP (£)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Accepted Cryptocurrencies */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Accepted Cryptocurrencies</h3>
-                  <p className="text-sm text-gray-600">
-                    Select which cryptocurrencies customers can use to pay
+              {mockPayments.length === 0 ? (
+                <div className="text-center py-8">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No payments yet</h3>
+                  <p className="text-gray-600">
+                    Payments will appear here once customers start using this link.
                   </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {SUPPORTED_CRYPTOS.map((crypto) => {
-                      const isSelected = formData.acceptedCryptos.includes(crypto.code)
-                      return (
-                        <div
-                          key={crypto.code}
-                          onClick={() => handleCryptoToggle(crypto.code)}
-                          className={`
-                            p-3 rounded-lg border-2 cursor-pointer transition-all duration-200
-                            ${isSelected 
-                              ? 'border-[#7f5efd] bg-[#7f5efd]/5' 
-                              : 'border-gray-200 hover:border-gray-300'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className={`
-                                w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                                ${isSelected ? 'bg-[#7f5efd] text-white' : 'bg-gray-100 text-gray-600'}
-                              `}>
-                                {crypto.symbol}
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-900">{crypto.name}</span>
-                                <Badge variant="secondary" className="ml-2 text-xs">
-                                  {crypto.code}
-                                </Badge>
-                              </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {mockPayments.map((payment) => (
+                    <div key={payment.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <Badge className={getStatusColor(payment.status)}>
+                              {payment.status}
+                            </Badge>
+                            <span className="text-sm text-gray-500">
+                              {formatDate(payment.timestamp)}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">Amount:</span>
+                              <p className="font-medium">${payment.amount.toLocaleString()}</p>
                             </div>
-                            <div className={`
-                              w-4 h-4 rounded-full border-2 flex items-center justify-center
-                              ${isSelected ? 'border-[#7f5efd] bg-[#7f5efd]' : 'border-gray-300'}
-                            `}>
-                              {isSelected && (
-                                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                              )}
+                            <div>
+                              <span className="text-gray-500">Crypto:</span>
+                              <p className="font-medium">{payment.cryptoAmount} {payment.crypto}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Customer:</span>
+                              <p className="font-medium">{payment.customerEmail}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Transaction:</span>
+                              <p className="font-medium font-mono text-xs">
+                                {payment.txHash.substring(0, 16)}...
+                              </p>
                             </div>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
-                  
-                  {errors.acceptedCryptos && (
-                    <p className="text-sm text-red-600">{errors.acceptedCryptos}</p>
-                  )}
-                </div>
 
-                {/* Advanced Options */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Advanced Options</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Expires At
-                      </label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          type="datetime-local"
-                          value={formData.expiresAt}
-                          onChange={(e) => handleInputChange('expiresAt', e.target.value)}
-                          className="pl-10"
-                        />
+                        <div className="flex items-center space-x-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(payment.txHash)}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Leave empty for no expiration
-                      </p>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Max Uses
-                      </label>
-                      <div className="relative">
-                        <Infinity className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          type="number"
-                          placeholder="Unlimited"
-                          value={formData.maxUses}
-                          onChange={(e) => handleInputChange('maxUses', e.target.value)}
-                          className={`pl-10 ${errors.maxUses ? 'border-red-300 focus:border-red-500' : ''}`}
-                        />
-                      </div>
-                      {errors.maxUses && (
-                        <p className="text-sm text-red-600 mt-1">{errors.maxUses}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Redirect URL (Optional)
-                    </label>
-                    <Input
-                      type="url"
-                      placeholder="https://yourwebsite.com/thank-you"
-                      value={formData.redirectUrl}
-                      onChange={(e) => handleInputChange('redirectUrl', e.target.value)}
-                      className={errors.redirectUrl ? 'border-red-300 focus:border-red-500' : ''}
-                    />
-                    {errors.redirectUrl && (
-                      <p className="text-sm text-red-600 mt-1">{errors.redirectUrl}</p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      Where to redirect customers after successful payment
-                    </p>
-                  </div>
+                  ))}
                 </div>
-
-                {/* Submit Buttons */}
-                <div className="flex justify-between pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowPreview(!showPreview)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    {showPreview ? 'Hide Preview' : 'Preview'}
-                  </Button>
-
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white"
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create Payment Link'}
-                  </Button>
-                </div>
-              </form>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Preview */}
+        {/* Sidebar */}
         <div className="lg:col-span-1">
-          <div className="sticky top-6">
+          <div className="sticky top-6 space-y-6">
+            {/* Stats */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <QrCode className="w-5 h-5 mr-2 text-[#7f5efd]" />
-                  Preview
-                </CardTitle>
+                <CardTitle>Statistics</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {formData.title ? (
-                  <>
-                    {/* Payment Link Preview */}
-                    <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg">
-                      <h3 className="font-semibold text-gray-900 mb-2">{formData.title}</h3>
-                      {formData.description && (
-                        <p className="text-sm text-gray-600 mb-3">{formData.description}</p>
-                      )}
-                      {formData.amount && (
-                        <div className="text-2xl font-bold text-[#7f5efd] mb-3">
-                          ${Number(formData.amount).toLocaleString()} {formData.currency}
-                        </div>
-                      )}
-                      {formData.acceptedCryptos.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {formData.acceptedCryptos.map(crypto => (
-                            <Badge key={crypto} variant="secondary" className="text-xs">
-                              {crypto}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Total Uses</span>
+                  </div>
+                  <span className="font-semibold">{paymentLink.currentUses}</span>
+                </div>
 
-                    {/* Link URL */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Payment Link URL
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          value={previewUrl}
-                          readOnly
-                          className="font-mono text-xs"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigator.clipboard.writeText(previewUrl)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <DollarSign className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Total Received</span>
+                  </div>
+                  <span className="font-semibold">${paymentLink.totalReceived.toLocaleString()}</span>
+                </div>
 
-                    {/* QR Code Placeholder */}
-                    <div className="text-center">
-                      <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                        <QrCode className="w-12 h-12 text-gray-400" />
-                      </div>
-                      <p className="text-xs text-gray-500">QR Code will be generated</p>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Conversion Rate</span>
+                  </div>
+                  <span className="font-semibold">0%</span>
+                </div>
 
-                    {/* Validation Alerts */}
-                    {Object.keys(errors).length > 0 && (
-                      <Alert className="border-red-200 bg-red-50">
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
-                        <AlertDescription className="text-red-800">
-                          Please fix the errors above to create your payment link.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Days Active</span>
+                  </div>
+                  <span className="font-semibold">
+                    {Math.ceil((Date.now() - new Date(paymentLink.created).getTime()) / (1000 * 60 * 60 * 24))}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* QR Code */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>QR Code</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowQRCode(!showQRCode)}
+                  >
+                    {showQRCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {showQRCode ? (
+                  <div className="text-center space-y-4">
+                    <QRCode 
+                      value={paymentLink.link} 
+                      size={200}
+                      className="mx-auto"
+                    />
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={downloadQRCode}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => copyToClipboard(paymentLink.link)}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Link
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Link2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Fill out the form to see a preview</p>
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                      <Eye className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 text-sm">Click to show QR code</p>
                   </div>
                 )}
               </CardContent>
