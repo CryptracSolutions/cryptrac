@@ -20,6 +20,17 @@ export function QRCode({
 }: QRCodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
+  const isFinderPatternArea = useCallback((row: number, col: number, gridSize: number): boolean => {
+    // Top-left finder pattern
+    if (row < 9 && col < 9) return true
+    // Top-right finder pattern
+    if (row < 9 && col >= gridSize - 9) return true
+    // Bottom-left finder pattern
+    if (row >= gridSize - 9 && col < 9) return true
+    
+    return false
+  }, [])
+
   const generateMockQRPattern = useCallback((data: string, gridSize: number): boolean[][] => {
     const pattern: boolean[][] = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false))
     
@@ -41,18 +52,7 @@ export function QRCode({
     }
 
     return pattern
-  }, [])
-
-  const isFinderPatternArea = useCallback((row: number, col: number, gridSize: number): boolean => {
-    // Top-left finder pattern
-    if (row < 9 && col < 9) return true
-    // Top-right finder pattern
-    if (row < 9 && col >= gridSize - 9) return true
-    // Bottom-left finder pattern
-    if (row >= gridSize - 9 && col < 9) return true
-    
-    return false
-  }, [])
+  }, [isFinderPatternArea])
 
   const drawFinderPattern = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, cellSize: number) => {
     // Outer square (7x7)

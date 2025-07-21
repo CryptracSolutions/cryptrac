@@ -58,7 +58,7 @@ const mockPayments = [
   }
 ]
 
-export default function PaymentLinkDetailPage({ params }: { params: { id: string } }) {
+export default function PaymentLinkDetailPage() {
   const router = useRouter()
   const [showQRCode, setShowQRCode] = useState(true)
   const [copied, setCopied] = useState(false)

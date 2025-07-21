@@ -20,9 +20,7 @@ import {
   QrCode, 
   Edit, 
   Trash2,
-  ExternalLink,
-  Calendar,
-  Users
+  ExternalLink
 } from 'lucide-react'
 
 // Mock data for payment links
