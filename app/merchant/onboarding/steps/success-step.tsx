@@ -153,7 +153,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
 
           {/* What's Next */}
           <div className="bg-gradient-to-r from-[#7f5efd]/5 to-blue-50 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-3">What's next?</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">What&apos;s next?</h3>
             <div className="space-y-2 text-sm text-gray-700">
               <div className="flex items-center space-x-2">
                 <div className="w-1.5 h-1.5 bg-[#7f5efd] rounded-full"></div>
@@ -179,7 +179,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <h4 className="font-medium text-amber-800 mb-2">🔐 Important Reminder</h4>
               <p className="text-sm text-amber-700">
-                Don't forget to save your recovery phrase securely! You'll need it to import your 
+                Don&apos;t forget to save your recovery phrase securely! You&apos;ll need it to import your 
                 wallets into apps like Coinbase Wallet, MetaMask, or Exodus.
               </p>
             </div>
@@ -210,7 +210,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
           {/* Support */}
           <div className="text-center pt-4">
             <p className="text-xs text-gray-500">
-              Questions? We're here to help at{' '}
+              Questions? We&apos;re here to help at{' '}
               <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] hover:underline">
                 support@cryptrac.com
               </a>

@@ -44,8 +44,8 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
             Welcome to Cryptrac
           </CardTitle>
           <p className="text-lg text-gray-600 max-w-md mx-auto">
-            Let's get you set up to accept cryptocurrency payments in just 5 easy steps. 
-            You'll be accepting crypto in no time!
+            Let&apos;s get you set up to accept cryptocurrency payments in just 5 easy steps. 
+            You&apos;ll be accepting crypto in no time!
           </p>
         </CardHeader>
 

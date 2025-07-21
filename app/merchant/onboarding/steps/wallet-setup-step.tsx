@@ -103,7 +103,9 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
     
     // Clear error when user starts typing
     if (errors[crypto]) {
-      setErrors(prev => ({ ...prev, [crypto]: undefined }))
+      const newErrors = { ...errors }
+      delete newErrors[crypto]
+      setErrors(newErrors)
     }
   }
 
@@ -184,8 +186,8 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                 <Alert className="border-green-200 bg-green-50">
                   <Shield className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
-                    <strong>Secure & Easy:</strong> We'll generate new wallet addresses for you. 
-                    You'll get a recovery phrase to import into any wallet app.
+                    <strong>Secure & Easy:</strong> We&apos;ll generate new wallet addresses for you. 
+                    You&apos;ll get a recovery phrase to import into any wallet app.
                   </AlertDescription>
                 </Alert>
 
@@ -209,7 +211,6 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                     <div className="space-y-3">
                       <h3 className="font-medium text-gray-900">Your Generated Wallets:</h3>
                       {Object.entries(formData.wallets).map(([crypto, address]) => {
-                        const cryptoInfo = SUPPORTED_CRYPTOS.find(c => c.code === crypto)
                         return (
                           <div key={crypto} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div className="flex items-center space-x-3">
@@ -238,7 +239,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                           <AlertTriangle className="h-4 w-4 text-amber-600" />
                           <AlertDescription className="text-amber-800">
                             <strong>Important:</strong> Save your recovery phrase securely. 
-                            You'll need it to import these wallets into Coinbase Wallet, MetaMask, or Exodus.
+                            You&apos;ll need it to import these wallets into Coinbase Wallet, MetaMask, or Exodus.
                           </AlertDescription>
                         </Alert>
 

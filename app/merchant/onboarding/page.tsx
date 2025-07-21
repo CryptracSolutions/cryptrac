@@ -2,13 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { Button } from '@/app/components/ui/button'
 import { Stepper } from '@/app/components/ui/stepper'
-import { LoadingSpinner } from '@/app/components/ui/loading-spinner'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Logo } from '@/app/components/ui/logo'
-import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react'
 
 // Import step components
 import WelcomeStep from './steps/welcome-step'
@@ -74,7 +70,23 @@ export default function OnboardingPage() {
       try {
         const parsed = JSON.parse(savedProgress)
         setCurrentStep(parsed.step || 1)
-        setOnboardingData(parsed.data || onboardingData)
+        setOnboardingData(parsed.data || {
+          businessInfo: {
+            businessName: '',
+            website: '',
+            industry: '',
+            description: ''
+          },
+          walletConfig: {
+            walletType: 'generate',
+            wallets: {}
+          },
+          paymentConfig: {
+            acceptedCryptos: ['BTC', 'ETH', 'LTC'],
+            feePercentage: 2.9,
+            autoForward: true
+          }
+        })
       } catch (error) {
         console.error('Failed to load onboarding progress:', error)
       }
@@ -105,7 +117,7 @@ export default function OnboardingPage() {
     }
   }
 
-  const handleStepComplete = (stepData: any) => {
+  const handleStepComplete = (stepData: Partial<OnboardingData>) => {
     const updatedData = { ...onboardingData, ...stepData }
     setOnboardingData(updatedData)
     saveProgress(currentStep, updatedData)
