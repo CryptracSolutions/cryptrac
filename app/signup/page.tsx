@@ -78,8 +78,8 @@ export default function Signup() {
         toast.success('Account created successfully! Welcome to Cryptrac!');
         console.log('User created:', data.user);
         
-        // Redirect to merchant dashboard
-        router.push('/merchant/dashboard');
+        // Redirect to onboarding wizard for new users
+        router.push('/merchant/onboarding');
       } else {
         toast.error('Account creation failed');
         setLoading(false);
@@ -229,3 +229,4 @@ export default function Signup() {
 }
 
 export const dynamic = 'force-dynamic';
+

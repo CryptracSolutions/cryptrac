@@ -119,28 +119,28 @@ export default function MerchantDashboard() {
       title: "Create Payment Link",
       description: "Generate a shareable payment link",
       icon: LinkIcon,
-      href: "/merchant/payments/create",
+      href: "/merchant/dashboard/payments/create",
       color: "bg-blue-500"
     },
     {
       title: "Generate QR Code",
       description: "Create QR code for in-person payments",
       icon: QrCode,
-      href: "/merchant/payments/qr",
+      href: "/merchant/dashboard/payments/create",
       color: "bg-green-500"
     },
     {
       title: "View Analytics",
       description: "Detailed payment analytics",
       icon: BarChart3,
-      href: "/merchant/analytics",
+      href: "/merchant/dashboard/analytics",
       color: "bg-purple-500"
     },
     {
       title: "Manage Wallets",
       description: "Configure cryptocurrency wallets",
       icon: Wallet,
-      href: "/merchant/wallets",
+      href: "/merchant/dashboard/wallets",
       color: "bg-orange-500"
     },
   ];
@@ -169,7 +169,7 @@ export default function MerchantDashboard() {
                 </Badge>
               )}
               <Button asChild>
-                <Link href="/merchant/payments/create">
+                <Link href="/merchant/dashboard/payments/create">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Payment
                 </Link>
@@ -249,7 +249,7 @@ export default function MerchantDashboard() {
                   </CardDescription>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                  <Link href="/merchant/transactions">
+                  <Link href="/merchant/dashboard/transactions">
                     View All
                     <ArrowUpRight className="h-4 w-4 ml-1" />
                   </Link>
@@ -290,7 +290,7 @@ export default function MerchantDashboard() {
                         Create your first payment link to start accepting crypto payments.
                       </p>
                       <Button asChild>
-                        <Link href="/merchant/payments/create">
+                        <Link href="/merchant/dashboard/payments/create">
                           Create Payment Link
                         </Link>
                       </Button>
@@ -318,7 +318,7 @@ export default function MerchantDashboard() {
                 </div>
               </div>
               <Button variant="outline" asChild>
-                <Link href="/merchant/billing">
+                <Link href="/merchant/dashboard/billing">
                   Upgrade Now
                 </Link>
               </Button>
@@ -331,3 +331,4 @@ export default function MerchantDashboard() {
 }
 
 export const dynamic = 'force-dynamic';
+

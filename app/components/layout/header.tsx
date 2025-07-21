@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, X, LogOut, User, Settings } from "lucide-react"
+import { Menu, X, LogOut, User, Settings, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Logo } from "@/app/components/ui/logo"
@@ -30,6 +30,19 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     const router = useRouter()
     const supabase = createBrowserClient()
     
+    // Close profile dropdown when clicking outside
+    React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as Element
+        if (isProfileOpen && !target.closest('[data-profile-dropdown]')) {
+          setIsProfileOpen(false)
+        }
+      }
+      
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [isProfileOpen])
+    
     const handleLogout = async () => {
       const { error } = await supabase.auth.signOut()
       if (error) {
@@ -38,6 +51,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         toast.success('Logged out successfully')
         router.push('/login')
       }
+      setIsProfileOpen(false)
     }
     
     const getInitials = (email: string, businessName?: string) => {
@@ -62,8 +76,8 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     
     const navigation = user ? [
       { name: 'Dashboard', href: getDashboardLink(user.user_metadata?.role) },
-      { name: 'Payments', href: '/merchant/payments' },
-      { name: 'Settings', href: '/merchant/settings' },
+      { name: 'Payments', href: '/merchant/dashboard/payments' },
+      { name: 'Settings', href: '/merchant/dashboard/settings' },
     ] : [
       { name: 'Features', href: '/#features' },
       { name: 'Pricing', href: '/#pricing' },
@@ -101,55 +115,95 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           <div className="flex items-center space-x-4">
             {user ? (
               /* User Menu */
-              <div className="relative">
+              <div className="relative" data-profile-dropdown>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="relative h-8 w-8 rounded-full"
+                  className="relative h-10 px-3 rounded-lg hover:bg-accent"
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      {getInitials(user.email || '', user.user_metadata?.business_name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                        {getInitials(user.email || '', user.user_metadata?.business_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="hidden sm:block text-left">
+                      <div className="text-sm font-medium leading-none">
+                        {user.user_metadata?.business_name || 'Account'}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {user.email}
+                      </div>
+                    </div>
+                    <ChevronDown className={cn(
+                      "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                      isProfileOpen && "rotate-180"
+                    )} />
+                  </div>
                 </Button>
                 
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 shadow-md">
-                    <div className="px-2 py-1.5 text-sm">
-                      <div className="font-medium">{user.user_metadata?.business_name || 'Account'}</div>
-                      <div className="text-muted-foreground">{user.email}</div>
+                  <div className="absolute right-0 mt-2 w-64 rounded-lg border bg-popover shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="p-4 border-b">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                            {getInitials(user.email || '', user.user_metadata?.business_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">
+                            {user.user_metadata?.business_name || 'Account'}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {user.email}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {user.user_metadata?.role === 'admin' ? 'Administrator' : 'Merchant'}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="h-px bg-border my-1" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => router.push('/merchant/profile')}
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => router.push('/merchant/settings')}
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Button>
-                    <div className="h-px bg-border my-1" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-destructive hover:text-destructive"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Log out
-                    </Button>
+                    
+                    <div className="py-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start px-4 py-2 text-sm"
+                        onClick={() => {
+                          router.push('/merchant/dashboard/profile')
+                          setIsProfileOpen(false)
+                        }}
+                      >
+                        <User className="mr-3 h-4 w-4" />
+                        Profile
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start px-4 py-2 text-sm"
+                        onClick={() => {
+                          router.push('/merchant/dashboard/settings')
+                          setIsProfileOpen(false)
+                        }}
+                      >
+                        <Settings className="mr-3 h-4 w-4" />
+                        Settings
+                      </Button>
+                    </div>
+                    
+                    <div className="border-t py-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start px-4 py-2 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="mr-3 h-4 w-4" />
+                        Log out
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
