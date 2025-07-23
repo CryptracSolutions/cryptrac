@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Logo } from "@/app/components/ui/logo"
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar"
-import { createBrowserClient } from "@/lib/supabase-browser"
+import { createClient } from "@/lib/supabase-browser"
 import { toast } from "react-hot-toast"
 
 interface HeaderProps {
@@ -28,7 +28,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
     const [isProfileOpen, setIsProfileOpen] = React.useState(false)
     const router = useRouter()
-    const supabase = createBrowserClient()
+    const supabase = createClient()
     
     // Close profile dropdown when clicking outside
     React.useEffect(() => {

@@ -39,16 +39,52 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get payment link details
-    const { data: paymentLink, error: linkError } = await supabase
+    // First, get the merchant ID for this user
+    const { data: merchant, error: merchantError } = await supabase
+      .from('merchants')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (merchantError || !merchant) {
+      return NextResponse.json({ error: 'Merchant not found' }, { status: 404 });
+    }
+
+    // Try to find payment link by UUID first, then by link_id
+    let paymentLink = null;
+    let linkError = null;
+
+    // First try by UUID (id field)
+    const { data: linkById, error: errorById } = await supabase
       .from('payment_links')
       .select(`
         *,
         merchant:merchants(business_name)
       `)
       .eq('id', id)
-      .eq('merchant_id', user.id)
+      .eq('merchant_id', merchant.id)
       .single();
+
+    if (linkById) {
+      paymentLink = linkById;
+    } else {
+      // If not found by UUID, try by link_id
+      const { data: linkByLinkId, error: errorByLinkId } = await supabase
+        .from('payment_links')
+        .select(`
+          *,
+          merchant:merchants(business_name)
+        `)
+        .eq('link_id', id)
+        .eq('merchant_id', merchant.id)
+        .single();
+
+      if (linkByLinkId) {
+        paymentLink = linkByLinkId;
+      } else {
+        linkError = errorByLinkId;
+      }
+    }
 
     if (linkError || !paymentLink) {
       return NextResponse.json(
@@ -61,7 +97,7 @@ export async function GET(
     const { data: payments, error: paymentsError } = await supabase
       .from('merchant_payments')
       .select('*')
-      .eq('payment_link_id', id);
+      .eq('payment_link_id', paymentLink.id);
 
     if (paymentsError) {
       console.error('Error fetching payments:', paymentsError);
@@ -82,7 +118,7 @@ export async function GET(
     // Return payment link with statistics
     return NextResponse.json({
       success: true,
-      payment_link: {
+      data: {
         ...paymentLink,
         payment_url: paymentUrl,
         statistics: {
@@ -142,6 +178,17 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get the merchant ID for this user
+    const { data: merchant, error: merchantError } = await supabase
+      .from('merchants')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (merchantError || !merchant) {
+      return NextResponse.json({ error: 'Merchant not found' }, { status: 404 });
+    }
+
     // Parse request body
     const body = await request.json();
     const {
@@ -172,7 +219,7 @@ export async function PUT(
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('merchant_id', user.id)
+      .eq('merchant_id', merchant.id)
       .select()
       .single();
 
@@ -235,12 +282,23 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get the merchant ID for this user
+    const { data: merchant, error: merchantError } = await supabase
+      .from('merchants')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (merchantError || !merchant) {
+      return NextResponse.json({ error: 'Merchant not found' }, { status: 404 });
+    }
+
     // Delete payment link
     const { error: deleteError } = await supabase
       .from('payment_links')
       .delete()
       .eq('id', id)
-      .eq('merchant_id', user.id);
+      .eq('merchant_id', merchant.id);
 
     if (deleteError) {
       console.error('Delete error:', deleteError);

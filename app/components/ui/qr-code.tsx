@@ -37,6 +37,8 @@ export function QRCode({
         const canvas = canvasRef.current
         if (!canvas) return
 
+        console.log('Generating QR code for value:', value)
+
         // Generate QR code using the qrcode library
         await QRCodeLib.toCanvas(canvas, value, {
           width: size,
@@ -48,6 +50,7 @@ export function QRCode({
           errorCorrectionLevel: 'M'
         })
 
+        console.log('QR code generated successfully')
         setIsLoading(false)
       } catch (err) {
         console.error('QR Code generation error:', err)
@@ -71,7 +74,7 @@ export function QRCode({
               <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4z"/>
             </svg>
           </div>
-          <span className="text-xs">QR Code</span>
+          <span className="text-xs">No URL</span>
         </div>
       </div>
     )
@@ -114,11 +117,13 @@ export function QRCode({
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={cn("rounded-lg", className)}
-      style={{ width: size, height: size }}
-    />
+    <div className={cn("inline-block", className)}>
+      <canvas
+        ref={canvasRef}
+        className="rounded-lg"
+        style={{ width: size, height: size }}
+      />
+    </div>
   )
 }
 

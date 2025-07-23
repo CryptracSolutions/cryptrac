@@ -9,7 +9,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Logo } from '@/app/components/ui/logo';
-import { createBrowserClient } from '@/lib/supabase-browser';
+import { supabase } from '@/lib/supabase-browser';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -17,7 +17,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createBrowserClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

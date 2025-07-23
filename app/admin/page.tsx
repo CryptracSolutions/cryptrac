@@ -22,13 +22,13 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
-import { createBrowserClient } from '@/lib/supabase-browser';
+import { createClient } from '@/lib/supabase-browser';
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<{ email?: string; user_metadata?: { role?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     const getUser = async () => {

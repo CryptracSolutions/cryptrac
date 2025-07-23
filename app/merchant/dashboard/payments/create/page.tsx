@@ -9,7 +9,7 @@ import { Textarea } from '@/app/components/ui/textarea'
 import { Badge } from '@/app/components/ui/badge'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { QRCode } from '@/app/components/ui/qr-code'
-import { createBrowserClient } from '@/lib/supabase-browser'
+import { supabase } from '@/lib/supabase-browser'
 import { 
   ArrowLeft, 
   DollarSign, 
@@ -81,8 +81,6 @@ export default function CreatePaymentPage() {
   const [showPreview, setShowPreview] = useState(false)
   const [createdPaymentLink, setCreatedPaymentLink] = useState<CreatedPaymentLink | null>(null)
   const [copied, setCopied] = useState(false)
-
-  const supabase = createBrowserClient()
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))

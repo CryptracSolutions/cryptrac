@@ -10,7 +10,7 @@ import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Logo } from '@/app/components/ui/logo';
-import { createBrowserClient } from '@/lib/supabase-browser';
+import { createClient } from '@/lib/supabase-browser';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
