@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
@@ -12,8 +11,7 @@ import {
   Plus, 
   ExternalLink, 
   Copy, 
-  Eye, 
-  Trash2,
+  Eye,
   DollarSign,
   CreditCard,
   TrendingUp,
@@ -21,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 
 interface PaymentLink {
   id: string;
@@ -76,43 +75,25 @@ export default function PaymentsPage() {
 
   const router = useRouter();
 
-  const fetchPaymentLinks = async () => {
+  const fetchPaymentLinks = useCallback(async () => {
     try {
       console.log('Fetching payment links...');
       setLoading(true);
       setError(null);
 
-      // Create Supabase client - same pattern as working payment creation
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
-      // Get user directly instead of session - matches working pattern
+      // Check authentication using singleton client
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
-        console.error('No user found:', userError);
+        console.error('Authentication failed:', userError);
         setError('Authentication required. Please log in.');
         router.push('/login');
         return;
       }
 
-      console.log('User found, getting session...');
+      console.log('User authenticated:', user.id);
 
-      // Get session for the token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error('No session found:', sessionError);
-        setError('Session expired. Please log in again.');
-        router.push('/login');
-        return;
-      }
-
-      console.log('Session found, making API call...');
-
-      // Make API call with Authorization header - same as working payment creation
+      // Build query parameters
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '50',
@@ -120,20 +101,16 @@ export default function PaymentsPage() {
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
-      const response = await fetch(`/api/payments?${params}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      console.log('Making authenticated API request...');
+
+      // Make authenticated API call using helper function
+      const response = await makeAuthenticatedRequest(`/api/payments?${params}`);
 
       console.log('Response status:', response.status);
 
       if (!response.ok) {
         if (response.status === 401) {
-          setError('Authentication expired. Please log in again.');
+          setError('Session expired. Please log in again.');
           router.push('/login');
           return;
         }
@@ -141,7 +118,7 @@ export default function PaymentsPage() {
       }
 
       const data: ApiResponse = await response.json();
-      console.log('API response:', data);
+      console.log('API response received:', data.success);
 
       if (data.success) {
         setPaymentLinks(data.data.payment_links || []);
@@ -159,15 +136,15 @@ export default function PaymentsPage() {
 
     } catch (error) {
       console.error('Error fetching payment links:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load payment links');
+      setError('Failed to load payment links');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, statusFilter, router]);
 
   useEffect(() => {
     fetchPaymentLinks();
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [fetchPaymentLinks]);
 
   const copyToClipboard = async (text: string, id: string) => {
     try {

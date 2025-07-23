@@ -48,6 +48,11 @@ interface CreatedPaymentLink {
   currency: string
   payment_url: string
   qr_code_data: string
+  metadata?: {
+    fee_amount?: number
+    fee_percentage?: number
+    total_amount?: number
+  }
 }
 
 const SUPPORTED_CRYPTOS = [
@@ -140,12 +145,27 @@ export default function CreatePaymentPage() {
     setIsSubmitting(true)
 
     try {
+      console.log('Creating payment link...')
+      
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError || !session) {
         throw new Error('No valid session')
       }
+
+      const requestData = {
+        title: formData.title,
+        description: formData.description,
+        amount: parseFloat(formData.amount),
+        currency: formData.currency,
+        accepted_cryptos: formData.acceptedCryptos,
+        expires_at: formData.expiresAt || null,
+        max_uses: formData.maxUses ? parseInt(formData.maxUses) : null,
+        redirect_url: formData.redirectUrl || null
+      }
+
+      console.log('Sending request data:', requestData)
 
       // Submit to API
       const response = await fetch('/api/payments/create', {
@@ -154,17 +174,10 @@ export default function CreatePaymentPage() {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          amount: parseFloat(formData.amount),
-          currency: formData.currency,
-          accepted_cryptos: formData.acceptedCryptos,
-          expires_at: formData.expiresAt || null,
-          max_uses: formData.maxUses ? parseInt(formData.maxUses) : null,
-          redirect_url: formData.redirectUrl || null
-        })
+        body: JSON.stringify(requestData)
       })
+
+      console.log('Response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Failed to create payment link')
@@ -173,7 +186,15 @@ export default function CreatePaymentPage() {
       const result = await response.json()
       
       if (result.success) {
-        setCreatedPaymentLink(result.payment_link)
+        console.log('Payment link created successfully:', result.payment_link.id)
+        
+        // Construct the proper payment URL
+        const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${result.payment_link.link_id}`
+        
+        setCreatedPaymentLink({
+          ...result.payment_link,
+          payment_url: paymentUrl
+        })
       } else {
         throw new Error(result.error || 'Failed to create payment link')
       }
@@ -200,6 +221,10 @@ export default function CreatePaymentPage() {
 
   // If payment link was created successfully, show success page
   if (createdPaymentLink) {
+    const feeAmount = createdPaymentLink.metadata?.fee_amount || 0
+    const feePercentage = createdPaymentLink.metadata?.fee_percentage || 2.5
+    const totalAmount = createdPaymentLink.metadata?.total_amount || createdPaymentLink.amount
+
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Success Header */}
@@ -230,6 +255,25 @@ export default function CreatePaymentPage() {
               {createdPaymentLink.description && (
                 <p className="text-gray-600">{createdPaymentLink.description}</p>
               )}
+              
+              {/* Fee Breakdown */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Fee Breakdown</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Payment Amount:</span>
+                    <span>{formatCurrency(createdPaymentLink.amount, createdPaymentLink.currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Processing Fee ({feePercentage.toFixed(1)}%):</span>
+                    <span>{formatCurrency(feeAmount, createdPaymentLink.currency)}</span>
+                  </div>
+                  <div className="flex justify-between font-medium border-t pt-1">
+                    <span>Total Amount:</span>
+                    <span>{formatCurrency(totalAmount, createdPaymentLink.currency)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Payment URL */}

@@ -1,380 +1,407 @@
-"use client"
+'use client';
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { Button } from '@/app/components/ui/button'
-import { Badge } from '@/app/components/ui/badge'
-import { QRCode } from '@/app/components/ui/qr-code'
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
+  Plus, 
   Copy, 
-  ExternalLink, 
-  Edit,
-  Trash2,
-  Share2,
-  Download,
-  Eye,
-  EyeOff,
-  Calendar,
+  ExternalLink,
   DollarSign,
-  Users,
-  TrendingUp,
+  Calendar,
+  Link as LinkIcon,
+  QrCode,
+  CheckCircle,
+  AlertCircle,
   Clock,
-  AlertTriangle
-} from 'lucide-react'
+  Globe
+} from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Input } from '@/app/components/ui/input';
+import { Textarea } from '@/app/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+import { QRCode } from '@/app/components/ui/qr-code';
+import { supabase } from '@/lib/supabase-browser';
 
-// Mock payment link data (in real app, fetch by ID)
-const mockPaymentLink = {
-  id: 'pl_abc123',
-  title: 'Website Development Service',
-  description: 'Full-stack web development project including frontend, backend, and database setup. Includes responsive design, user authentication, and payment processing.',
-  amount: 2500.00,
-  currency: 'USD',
-  status: 'active',
-  created: '2025-01-15T10:30:00Z',
-  expires: '2025-02-15T23:59:59Z',
-  maxUses: null,
-  currentUses: 0,
-  totalReceived: 0,
-  link: 'https://pay.cryptrac.com/pl_abc123',
-  acceptedCryptos: ['BTC', 'ETH', 'LTC'],
-  requireCustomerInfo: false,
-  redirectUrl: 'https://mywebsite.com/thank-you',
-  payments: []
+interface FormData {
+  title: string;
+  description: string;
+  amount: string;
+  currency: string;
+  acceptedCryptos: string[];
+  expiresAt: string;
+  maxUses: string;
+  redirectUrl: string;
 }
 
-// Mock recent payments for this link
-const mockPayments = [
-  {
-    id: '1',
-    amount: 2500.00,
-    crypto: 'BTC',
-    cryptoAmount: '0.03456',
-    status: 'completed',
-    timestamp: '2025-01-20T14:30:00Z',
-    txHash: '1a2b3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890',
-    customerEmail: 'john@example.com'
-  }
-]
+interface FormErrors {
+  [key: string]: string;
+}
 
-export default function PaymentLinkDetailPage() {
-  const router = useRouter()
-  const [showQRCode, setShowQRCode] = useState(true)
-  const [copied, setCopied] = useState(false)
+interface CreatedLink {
+  id: string;
+  link_id: string;
+  title: string;
+  amount: number;
+  currency: string;
+  payment_url: string;
+  created_at: string;
+  metadata?: {
+    fee_percentage: number;
+    fee_amount: number;
+    net_amount: number;
+  };
+}
 
-  const paymentLink = mockPaymentLink // In real app: fetch by params.id
+export default function CreatePaymentLinkPage() {
+  const [user, setUser] = useState<any>(null);
+  const [formData, setFormData] = useState<FormData>({
+    title: '',
+    description: '',
+    amount: '',
+    currency: 'USD',
+    acceptedCryptos: ['BTC', 'ETH', 'USDT'],
+    expiresAt: '',
+    maxUses: '',
+    redirectUrl: ''
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState(false);
+  const [createdLink, setCreatedLink] = useState<CreatedLink | null>(null);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const router = useRouter();
+
+  const availableCryptos = [
+    { code: 'BTC', name: 'Bitcoin' },
+    { code: 'ETH', name: 'Ethereum' },
+    { code: 'LTC', name: 'Litecoin' },
+    { code: 'USDT', name: 'Tether' },
+    { code: 'USDC', name: 'USD Coin' },
+    { code: 'BCH', name: 'Bitcoin Cash' },
+    { code: 'XRP', name: 'Ripple' },
+    { code: 'ADA', name: 'Cardano' }
+  ];
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+          console.error('Authentication error:', error);
+          router.push('/login');
+          return;
+        }
+
+        setUser(user);
+      } catch (error) {
+        console.error('Failed to get user:', error);
+        router.push('/login');
+      }
+    };
+
+    getUser();
+  }, [router]);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+
+    if (!formData.amount.trim()) {
+      newErrors.amount = 'Amount is required';
+    } else {
+      const amount = parseFloat(formData.amount);
+      if (isNaN(amount) || amount <= 0) {
+        newErrors.amount = 'Amount must be a positive number';
+      } else if (amount > 1000000) {
+        newErrors.amount = 'Amount cannot exceed $1,000,000';
+      }
+    }
+
+    if (formData.acceptedCryptos.length === 0) {
+      newErrors.acceptedCryptos = 'At least one cryptocurrency must be selected';
+    }
+
+    if (formData.maxUses && parseInt(formData.maxUses) <= 0) {
+      newErrors.maxUses = 'Max uses must be a positive number';
+    }
+
+    if (formData.redirectUrl && !isValidUrl(formData.redirectUrl)) {
+      newErrors.redirectUrl = 'Please enter a valid URL';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+
+    try {
+      console.log('Creating payment link...');
+
+      // Get the session for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError);
+        setErrors({ general: 'Session expired. Please log in again.' });
+        router.push('/login');
+        return;
+      }
+
+      // Prepare request data
+      const requestData = {
+        title: formData.title.trim(),
+        description: formData.description.trim() || undefined,
+        amount: parseFloat(formData.amount),
+        currency: formData.currency,
+        accepted_cryptos: formData.acceptedCryptos,
+        expires_at: formData.expiresAt || undefined,
+        max_uses: formData.maxUses ? parseInt(formData.maxUses) : undefined,
+        redirect_url: formData.redirectUrl.trim() || undefined
+      };
+
+      console.log('Sending request data:', requestData);
+
+      // Make authenticated API request
+      const response = await fetch('/api/payments/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrors({ general: 'Session expired. Please log in again.' });
+          router.push('/login');
+          return;
+        }
+        
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Payment link created successfully:', result.payment_link?.id);
+
+      if (result.success && result.payment_link) {
+        // Construct the proper payment URL
+        const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${result.payment_link.link_id}`;
+        
+        setCreatedLink({
+          ...result.payment_link,
+          payment_url: paymentUrl
+        });
+      } else {
+        throw new Error('Invalid response format');
+      }
+
+    } catch (error) {
+      console.error('Failed to create payment link:', error);
+      setErrors({ 
+        general: error instanceof Error ? error.message : 'Failed to create payment link' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const downloadQRCode = () => {
-    // TODO: Implement QR code download
-    console.log('Download QR code')
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'expired': return 'bg-gray-100 text-gray-800'
-      case 'completed': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
     }
+  };
+
+  const handleCryptoToggle = (crypto: string) => {
+    setFormData(prev => ({
+      ...prev,
+      acceptedCryptos: prev.acceptedCryptos.includes(crypto)
+        ? prev.acceptedCryptos.filter(c => c !== crypto)
+        : [...prev.acceptedCryptos, crypto]
+    }));
+  };
+
+  if (!user) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  // Success state - show created payment link
+  if (createdLink) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setCreatedLink(null);
+                setFormData({
+                  title: '',
+                  description: '',
+                  amount: '',
+                  currency: 'USD',
+                  acceptedCryptos: ['BTC', 'ETH', 'USDT'],
+                  expiresAt: '',
+                  maxUses: '',
+                  redirectUrl: ''
+                });
+              }}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Another Link
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/merchant/dashboard/payments')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              View All Links
+            </Button>
+          </div>
 
-  const isExpired = paymentLink.expires && new Date(paymentLink.expires) < new Date()
-  const isMaxUsesReached = paymentLink.maxUses && paymentLink.currentUses >= paymentLink.maxUses
-
-  return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="flex items-center"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{paymentLink.title}</h1>
-            <div className="flex items-center space-x-3 mt-1">
-              <Badge className={getStatusColor(paymentLink.status)}>
-                {paymentLink.status}
-              </Badge>
-              <span className="text-gray-500 text-sm">
-                Created {formatDate(paymentLink.created)}
-              </span>
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Link Created!</h1>
+            <p className="text-gray-600">
+              Your payment link is ready to share with customers.
+            </p>
           </div>
-        </div>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
-          </Button>
-          <Button variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
-          </Button>
-        </div>
-      </div>
-
-      {/* Status Alerts */}
-      {isExpired && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
-            <span className="text-red-800 font-medium">This payment link has expired</span>
-          </div>
-        </div>
-      )}
-
-      {isMaxUsesReached && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertTriangle className="w-5 h-5 text-amber-600 mr-2" />
-            <span className="text-amber-800 font-medium">Maximum uses reached</span>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Payment Link Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Link Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Description */}
-              {paymentLink.description && (
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Description</h3>
-                  <p className="text-gray-600">{paymentLink.description}</p>
-                </div>
-              )}
-
-              {/* Payment Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Payment Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Amount:</span>
-                      <span className="font-medium">${paymentLink.amount.toLocaleString()} {paymentLink.currency}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Uses:</span>
-                      <span className="font-medium">
-                        {paymentLink.currentUses} / {paymentLink.maxUses || '∞'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Total Received:</span>
-                      <span className="font-medium">${paymentLink.totalReceived.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Settings</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Expires:</span>
-                      <span className="font-medium">
-                        {paymentLink.expires ? formatDate(paymentLink.expires) : 'Never'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Customer Info:</span>
-                      <span className="font-medium">
-                        {paymentLink.requireCustomerInfo ? 'Required' : 'Optional'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Redirect URL:</span>
-                      <span className="font-medium">
-                        {paymentLink.redirectUrl ? 'Yes' : 'None'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Accepted Cryptocurrencies */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-3">Accepted Cryptocurrencies</h3>
-                <div className="flex flex-wrap gap-2">
-                  {paymentLink.acceptedCryptos.map(crypto => (
-                    <Badge key={crypto} variant="secondary">
-                      {crypto}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Payment Link URL */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-3">Payment Link URL</h3>
-                <div className="flex items-center space-x-2">
-                  <div className="flex-1 p-3 bg-gray-50 rounded-lg font-mono text-sm break-all">
-                    {paymentLink.link}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(paymentLink.link)}
-                  >
-                    <Copy className="w-4 h-4" />
-                    {copied && <span className="ml-1 text-xs">Copied!</span>}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(paymentLink.link, '_blank')}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Payments */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Payments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {mockPayments.length === 0 ? (
-                <div className="text-center py-8">
-                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No payments yet</h3>
-                  <p className="text-gray-600">
-                    Payments will appear here once customers start using this link.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {mockPayments.map((payment) => (
-                    <div key={payment.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <Badge className={getStatusColor(payment.status)}>
-                              {payment.status}
-                            </Badge>
-                            <span className="text-sm text-gray-500">
-                              {formatDate(payment.timestamp)}
-                            </span>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Amount:</span>
-                              <p className="font-medium">${payment.amount.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Crypto:</span>
-                              <p className="font-medium">{payment.cryptoAmount} {payment.crypto}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Customer:</span>
-                              <p className="font-medium">{payment.customerEmail}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Transaction:</span>
-                              <p className="font-medium font-mono text-xs">
-                                {payment.txHash.substring(0, 16)}...
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2 ml-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToClipboard(payment.txHash)}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6 space-y-6">
-            {/* Stats */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Payment Link Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Statistics</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <LinkIcon className="h-5 w-5" />
+                  Payment Link Details
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Total Uses</span>
-                  </div>
-                  <span className="font-semibold">{paymentLink.currentUses}</span>
+              <CardContent className="space-y-6">
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Title</div>
+                  <p className="text-lg font-semibold text-gray-900">{createdLink.title}</p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Total Received</span>
-                  </div>
-                  <span className="font-semibold">${paymentLink.totalReceived.toLocaleString()}</span>
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Amount</div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${createdLink.amount.toFixed(2)} {createdLink.currency}
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Conversion Rate</span>
-                  </div>
-                  <span className="font-semibold">0%</span>
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Created</div>
+                  <p className="text-gray-900 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {new Date(createdLink.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Days Active</span>
+                {/* Fee Breakdown */}
+                {createdLink.metadata && (
+                  <div className="border-t pt-4">
+                    <div className="text-sm font-medium text-gray-500 mb-3">Fee Breakdown</div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Gross Amount</span>
+                        <span className="font-medium">${createdLink.amount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          Processing Fee ({createdLink.metadata.fee_percentage}%)
+                        </span>
+                        <span className="font-medium">-${createdLink.metadata.fee_amount.toFixed(2)}</span>
+                      </div>
+                      <hr />
+                      <div className="flex justify-between font-semibold">
+                        <span>Net Amount</span>
+                        <span className="text-green-600">${createdLink.metadata.net_amount.toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="font-semibold">
-                    {Math.ceil((Date.now() - new Date(paymentLink.created).getTime()) / (1000 * 60 * 60 * 24))}
-                  </span>
+                )}
+
+                {/* Payment URL */}
+                <div className="border-t pt-4">
+                  <div className="text-sm font-medium text-gray-500 mb-2">Payment URL</div>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                    <code className="flex-1 text-sm font-mono text-gray-800 break-all">
+                      {createdLink.payment_url}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(createdLink.payment_url)}
+                      className="flex-shrink-0"
+                    >
+                      <Copy className="h-4 w-4" />
+                      {copiedUrl ? 'Copied!' : 'Copy'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(createdLink.payment_url, '_blank')}
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Open Link
+                  </Button>
+                  <Button
+                    onClick={() => router.push(`/merchant/dashboard/payments/${createdLink.link_id}`)}
+                    className="flex items-center gap-2"
+                  >
+                    View Details
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -382,60 +409,239 @@ export default function PaymentLinkDetailPage() {
             {/* QR Code */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>QR Code</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowQRCode(!showQRCode)}
-                  >
-                    {showQRCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <QrCode className="h-5 w-5" />
+                  QR Code
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                {showQRCode ? (
-                  <div className="text-center space-y-4">
-                    <QRCode 
-                      value={paymentLink.link} 
-                      size={200}
-                      className="mx-auto"
-                    />
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={downloadQRCode}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => copyToClipboard(paymentLink.link)}
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy Link
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <Eye className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <p className="text-gray-500 text-sm">Click to show QR code</p>
-                  </div>
-                )}
+              <CardContent className="flex flex-col items-center space-y-4">
+                <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
+                  <QRCode 
+                    value={createdLink.payment_url} 
+                    size={200}
+                  />
+                </div>
+                <p className="text-sm text-gray-600 text-center">
+                  Customers can scan this QR code to access the payment page
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => copyToClipboard(createdLink.payment_url)}
+                  className="flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Payment URL
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Form state - show payment link creation form
+  return (
+    <DashboardLayout user={user}>
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => router.push('/merchant/dashboard/payments')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Payment Links
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Payment Link</h1>
+            <p className="text-gray-600">Generate a link to accept cryptocurrency payments</p>
+          </div>
+        </div>
+
+        {/* Error Alert */}
+        {errors.general && (
+          <Card className="border-red-200 bg-red-50 mb-6">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <div>
+                  <p className="font-medium text-red-900">Error</p>
+                  <p className="text-sm text-red-700">{errors.general}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Basic Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Basic Information
+                </CardTitle>
+                <CardDescription>
+                  Set up the basic details for your payment link
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-700 mb-1">Title *</div>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., Product Purchase, Service Payment"
+                    className={errors.title ? 'border-red-500' : ''}
+                  />
+                  {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title}</p>}
+                </div>
+
+                <div>
+                  <div className="text-sm font-medium text-gray-700 mb-1">Description</div>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Optional description for your customers"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 mb-1">Amount *</div>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="1000000"
+                      value={formData.amount}
+                      onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="0.00"
+                      className={errors.amount ? 'border-red-500' : ''}
+                    />
+                    {errors.amount && <p className="text-sm text-red-600 mt-1">{errors.amount}</p>}
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 mb-1">Currency</div>
+                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                        <SelectItem value="CAD">CAD</SelectItem>
+                        <SelectItem value="AUD">AUD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cryptocurrency Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Accepted Cryptocurrencies *</CardTitle>
+                <CardDescription>
+                  Select which cryptocurrencies you want to accept
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3">
+                  {availableCryptos.map((crypto) => (
+                    <div key={crypto.code} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={crypto.code}
+                        checked={formData.acceptedCryptos.includes(crypto.code)}
+                        onChange={() => handleCryptoToggle(crypto.code)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor={crypto.code} className="text-sm font-medium text-gray-700">
+                        {crypto.code} - {crypto.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {errors.acceptedCryptos && <p className="text-sm text-red-600 mt-2">{errors.acceptedCryptos}</p>}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Advanced Options */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Advanced Options
+              </CardTitle>
+              <CardDescription>
+                Optional settings to customize your payment link
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Expires At</div>
+                <Input
+                  type="datetime-local"
+                  value={formData.expiresAt}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expiresAt: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Max Uses</div>
+                <Input
+                  type="number"
+                  min="1"
+                  value={formData.maxUses}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maxUses: e.target.value }))}
+                  placeholder="Unlimited"
+                  className={errors.maxUses ? 'border-red-500' : ''}
+                />
+                {errors.maxUses && <p className="text-sm text-red-600 mt-1">{errors.maxUses}</p>}
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Redirect URL</div>
+                <Input
+                  type="url"
+                  value={formData.redirectUrl}
+                  onChange={(e) => setFormData(prev => ({ ...prev, redirectUrl: e.target.value }))}
+                  placeholder="https://yoursite.com/success"
+                  className={errors.redirectUrl ? 'border-red-500' : ''}
+                />
+                {errors.redirectUrl && <p className="text-sm text-red-600 mt-1">{errors.redirectUrl}</p>}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Submit Button */}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={loading} className="min-w-[200px]">
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating Link...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Payment Link
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
       </div>
-    </div>
-  )
+    </DashboardLayout>
+  );
 }
 
