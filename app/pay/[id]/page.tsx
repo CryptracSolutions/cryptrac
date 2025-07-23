@@ -7,8 +7,6 @@ import { Badge } from '@/app/components/ui/badge'
 import { 
   CreditCard,
   Shield,
-  Clock,
-  CheckCircle,
   AlertCircle,
   RefreshCw
 } from 'lucide-react'

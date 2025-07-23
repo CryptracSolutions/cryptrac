@@ -1,57 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getNOWPaymentsClient, calculateCryptracFees } from '@/lib/nowpayments';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== PAYMENT CREATE API START ===');
+    
     // Get Authorization header
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get('Authorization');
+    console.log('Authorization header present:', !!authHeader);
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Missing or invalid Authorization header');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.log('Missing or invalid Authorization header');
+      return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { status: 401 });
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    console.log('Token extracted from Authorization header');
 
-    // Create Supabase client with the token
+    // Create regular Supabase client for authentication
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     // Get the current user using the token
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      console.error('Authentication failed:', authError);
+      console.log('Authentication failed:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('Authenticated user:', user.id);
-
-    // Get the merchant record for this user (should exist after running the SQL migration)
-    const { data: merchant, error: merchantError } = await supabase
-      .from('merchants')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (merchantError || !merchant) {
-      console.error('Merchant not found for user:', user.id, merchantError);
-      return NextResponse.json({ 
-        error: 'Merchant account not found. Please run the database migration first.' 
-      }, { status: 404 });
-    }
-
-    console.log('Found merchant:', merchant.id);
 
     // Parse request body
     const body = await request.json();
@@ -66,6 +46,8 @@ export async function POST(request: NextRequest) {
       redirect_url
     } = body;
 
+    console.log('Request body parsed:', { title, amount, currency });
+
     // Validate required fields
     if (!title || !amount) {
       return NextResponse.json(
@@ -74,35 +56,122 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate amount
+    if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      return NextResponse.json(
+        { error: 'Amount must be a positive number' },
+        { status: 400 }
+      );
+    }
+
     // Generate unique link ID
-    const linkId = `pl_${Math.random().toString(36).substr(2, 9)}`;
+    const linkId = generateLinkId();
+    console.log('Generated link ID:', linkId);
+
+    // Create service role client for all database operations (bypasses RLS)
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    // Check if merchant exists using service role (bypasses RLS)
+    let { data: merchant, error: merchantError } = await serviceSupabase
+      .from('merchants')
+      .select('id, business_name, user_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (merchantError && merchantError.code === 'PGRST116') {
+      console.log('Merchant not found, creating new merchant record...');
+      
+      // Create merchant record with service role
+      const { data: newMerchant, error: createError } = await serviceSupabase
+        .from('merchants')
+        .insert({
+          user_id: user.id,
+          business_name: user.email || 'My Business',
+          onboarding_completed: true,
+          onboarding_step: 5,
+          setup_paid: true,
+          preferred_currencies: accepted_cryptos
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Failed to create merchant:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create merchant account' },
+          { status: 500 }
+        );
+      }
+
+      merchant = newMerchant;
+      console.log('Created new merchant:', newMerchant?.id);
+    } else if (merchantError) {
+      console.log('Merchant lookup error:', merchantError);
+      return NextResponse.json(
+        { error: 'Failed to lookup merchant' },
+        { status: 500 }
+      );
+    }
+
+    // Ensure merchant exists at this point
+    if (!merchant) {
+      console.error('Merchant is null after lookup/creation');
+      return NextResponse.json(
+        { error: 'Failed to get merchant information' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Found/created merchant:', merchant.id);
 
     // Calculate fees
-    const fees = calculateCryptracFees(parseFloat(amount));
+    const amountNum = parseFloat(amount);
+    const cryptracFeePercentage = 1.9;
+    const gatewayFeePercentage = 1.0;
+    const totalFeePercentage = 2.9;
+    
+    const cryptracFeeAmount = amountNum * (cryptracFeePercentage / 100);
+    const gatewayFeeAmount = amountNum * (gatewayFeePercentage / 100);
+    const merchantAmount = amountNum - cryptracFeeAmount - gatewayFeeAmount;
 
-    // Create the payment URL
-    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${linkId}`;
+    // Generate payment URL
+    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/${linkId}`;
 
-    // Create payment link in database
-    const { data: paymentLink, error: insertError } = await supabase
+    // Create payment link using service role (bypasses RLS)
+    const { data: paymentLink, error: insertError } = await serviceSupabase
       .from('payment_links')
       .insert({
         merchant_id: merchant.id,
-        link_id: linkId,
         title,
         description,
-        amount: parseFloat(amount),
+        amount: amountNum,
         currency,
         accepted_cryptos,
-        expires_at: expires_at || null,
-        max_uses: max_uses ? parseInt(max_uses) : null,
+        link_id: linkId,
+        qr_code_data: paymentUrl,
+        expires_at: expires_at ? new Date(expires_at).toISOString() : null,
+        max_uses: max_uses || null,
         status: 'active',
         metadata: {
           redirect_url: redirect_url || null,
-          payment_url: paymentUrl,
-          fees: fees
-        },
-        created_at: new Date().toISOString()
+          fee_breakdown: {
+            cryptrac_fee_percentage: cryptracFeePercentage,
+            gateway_fee_percentage: gatewayFeePercentage,
+            total_fee_percentage: totalFeePercentage,
+            cryptrac_fee_amount: cryptracFeeAmount,
+            gateway_fee_amount: gatewayFeeAmount,
+            merchant_amount: merchantAmount
+          }
+        }
       })
       .select()
       .single();
@@ -117,24 +186,38 @@ export async function POST(request: NextRequest) {
 
     console.log('Payment link created successfully:', paymentLink.id);
 
-    // Return the payment link with the URL included
-    const responsePaymentLink = {
-      ...paymentLink,
-      payment_url: paymentUrl
-    };
-
+    // Return success response
     return NextResponse.json({
       success: true,
-      payment_link: responsePaymentLink,
-      fees: fees
+      payment_link: {
+        ...paymentLink,
+        payment_url: paymentUrl,
+        qr_code_data: paymentUrl,
+        fee_breakdown: {
+          cryptracFee: cryptracFeeAmount,
+          nowPaymentsFee: gatewayFeeAmount,
+          totalFees: cryptracFeeAmount + gatewayFeeAmount,
+          merchantReceives: merchantAmount
+        }
+      }
     });
 
   } catch (error) {
-    console.error('Payment link creation error:', error);
+    console.error('Payment creation error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+// Generate a unique link ID
+function generateLinkId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = 'pl_';
+  for (let i = 0; i < 9; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 

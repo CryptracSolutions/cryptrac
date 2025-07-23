@@ -1,6 +1,8 @@
 // NOWPayments API Client for Cryptrac
 // Based on NOWPayments v1 API documentation
 
+import crypto from 'crypto';
+
 export interface NOWPaymentsConfig {
   apiKey: string;
   baseUrl?: string;
@@ -123,7 +125,6 @@ export class NOWPaymentsClient {
       throw new Error('IPN secret not configured');
     }
 
-    const crypto = require('crypto');
     const expectedSignature = crypto
       .createHmac('sha512', this.config.ipnSecret)
       .update(payload)
@@ -194,14 +195,26 @@ export const PaymentStatus = {
 export type PaymentStatusType = typeof PaymentStatus[keyof typeof PaymentStatus];
 
 export function isPaymentComplete(status: string): boolean {
-  return status === 'confirmed' || status === 'finished';
+  return [
+    PaymentStatus.CONFIRMED,
+    PaymentStatus.FINISHED,
+  ].includes(status as typeof PaymentStatus.CONFIRMED | typeof PaymentStatus.FINISHED);
 }
 
 export function isPaymentFailed(status: string): boolean {
-  return status === 'failed' || status === 'refunded' || status === 'expired';
+  return [
+    PaymentStatus.FAILED,
+    PaymentStatus.REFUNDED,
+    PaymentStatus.EXPIRED,
+  ].includes(status as typeof PaymentStatus.FAILED | typeof PaymentStatus.REFUNDED | typeof PaymentStatus.EXPIRED);
 }
 
 export function isPaymentPending(status: string): boolean {
-  return status === 'waiting' || status === 'confirming' || status === 'sending' || status === 'partially_paid';
+  return [
+    PaymentStatus.WAITING,
+    PaymentStatus.CONFIRMING,
+    PaymentStatus.SENDING,
+    PaymentStatus.PARTIALLY_PAID,
+  ].includes(status as typeof PaymentStatus.WAITING | typeof PaymentStatus.CONFIRMING | typeof PaymentStatus.SENDING | typeof PaymentStatus.PARTIALLY_PAID);
 }
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getNOWPaymentsClient } from '@/lib/nowpayments';
 
 // Supported cryptocurrencies as per Cryptrac Bible
@@ -37,7 +37,7 @@ const CURRENCY_DETAILS = {
   }
 };
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const nowPayments = getNOWPaymentsClient();
     

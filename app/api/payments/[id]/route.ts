@@ -1,92 +1,99 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Await params for Next.js 15 compatibility
     const { id } = await params;
-
-    // Get Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Missing or invalid Authorization header');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-
-    // Create Supabase client with the token
-    const supabase = createClient(
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
           },
         },
       }
     );
 
-    // Get the current user using the token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Get the current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Authenticated user:', user.id);
-
-    // Find the merchant record for this user
-    const { data: merchant, error: merchantError } = await supabase
-      .from('merchants')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (merchantError || !merchant) {
-      console.error('Merchant not found for user:', user.id, merchantError);
-      return NextResponse.json({ error: 'Merchant not found' }, { status: 404 });
-    }
-
-    console.log('Found merchant:', merchant.id);
-
-    // Get the payment link
+    // Get payment link details
     const { data: paymentLink, error: linkError } = await supabase
       .from('payment_links')
-      .select('*')
+      .select(`
+        *,
+        merchant:merchants(business_name)
+      `)
       .eq('id', id)
-      .eq('merchant_id', merchant.id)
+      .eq('merchant_id', user.id)
       .single();
 
     if (linkError || !paymentLink) {
-      console.error('Payment link not found:', linkError);
-      return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Payment link not found' },
+        { status: 404 }
+      );
     }
 
-    // For now, return simplified data without merchant_payments join
-    // This can be enhanced later with separate queries if needed
-    const linkWithStats = {
-      ...paymentLink,
-      merchant_payments: [], // Empty array for compatibility
-      statistics: {
-        totalPayments: 0,
-        successfulPayments: 0,
-        totalAmount: 0,
-        successRate: 0,
-        averageAmount: 0,
-        lastPayment: null,
-        daysActive: Math.ceil((Date.now() - new Date(paymentLink.created_at).getTime()) / (1000 * 60 * 60 * 24))
-      }
-    };
+    // Get payment statistics
+    const { data: payments, error: paymentsError } = await supabase
+      .from('merchant_payments')
+      .select('*')
+      .eq('payment_link_id', id);
 
+    if (paymentsError) {
+      console.error('Error fetching payments:', paymentsError);
+    }
+
+    // Calculate statistics
+    const totalPayments = payments?.length || 0;
+    const totalReceived = payments?.reduce((sum, payment) => {
+      return sum + (payment.status === 'confirmed' ? parseFloat(payment.amount_received || '0') : 0);
+    }, 0) || 0;
+
+    const successfulPayments = payments?.filter(p => p.status === 'confirmed').length || 0;
+    const pendingPayments = payments?.filter(p => p.status === 'pending').length || 0;
+
+    // Generate payment URL
+    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/${paymentLink.link_id}`;
+
+    // Return payment link with statistics
     return NextResponse.json({
       success: true,
-      data: linkWithStats
+      payment_link: {
+        ...paymentLink,
+        payment_url: paymentUrl,
+        statistics: {
+          total_payments: totalPayments,
+          total_received: totalReceived,
+          successful_payments: successfulPayments,
+          pending_payments: pendingPayments,
+          conversion_rate: totalPayments > 0 ? (successfulPayments / totalPayments) * 100 : 0
+        }
+      },
+      recent_payments: payments?.slice(-10) || []
     });
 
   } catch (error) {
@@ -103,54 +110,51 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Await params for Next.js 15 compatibility
     const { id } = await params;
-
-    // Get Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Missing or invalid Authorization header');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-
-    // Create Supabase client with the token
-    const supabase = createClient(
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
           },
         },
       }
     );
 
-    // Get the current user using the token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Get the current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Find the merchant record for this user
-    const { data: merchant, error: merchantError } = await supabase
-      .from('merchants')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (merchantError || !merchant) {
-      console.error('Merchant not found for user:', user.id, merchantError);
-      return NextResponse.json({ error: 'Merchant not found' }, { status: 404 });
     }
 
     // Parse request body
     const body = await request.json();
-    const { title, description, amount, currency, status } = body;
+    const {
+      title,
+      description,
+      amount,
+      currency,
+      accepted_cryptos,
+      expires_at,
+      max_uses,
+      redirect_url,
+      status
+    } = body;
 
     // Update payment link
     const { data: updatedLink, error: updateError } = await supabase
@@ -158,13 +162,17 @@ export async function PUT(
       .update({
         title,
         description,
-        amount,
+        amount: amount ? parseFloat(amount) : undefined,
         currency,
+        accepted_cryptos,
+        expires_at: expires_at ? new Date(expires_at).toISOString() : null,
+        max_uses: max_uses || null,
+        redirect_url: redirect_url || null,
         status,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('merchant_id', merchant.id)
+      .eq('merchant_id', user.id)
       .select()
       .single();
 
@@ -178,7 +186,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      data: updatedLink
+      payment_link: updatedLink
     });
 
   } catch (error) {
@@ -195,49 +203,36 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Await params for Next.js 15 compatibility
     const { id } = await params;
-
-    // Get Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Missing or invalid Authorization header');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-
-    // Create Supabase client with the token
-    const supabase = createClient(
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
           },
         },
       }
     );
 
-    // Get the current user using the token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Get the current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Find the merchant record for this user
-    const { data: merchant, error: merchantError } = await supabase
-      .from('merchants')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (merchantError || !merchant) {
-      console.error('Merchant not found for user:', user.id, merchantError);
-      return NextResponse.json({ error: 'Merchant not found' }, { status: 404 });
     }
 
     // Delete payment link
@@ -245,7 +240,7 @@ export async function DELETE(
       .from('payment_links')
       .delete()
       .eq('id', id)
-      .eq('merchant_id', merchant.id);
+      .eq('merchant_id', user.id);
 
     if (deleteError) {
       console.error('Delete error:', deleteError);

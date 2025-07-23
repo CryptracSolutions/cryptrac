@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { getNOWPaymentsClient, PaymentStatus, isPaymentComplete, isPaymentFailed } from '@/lib/nowpayments';
+import { getNOWPaymentsClient, isPaymentComplete, isPaymentFailed } from '@/lib/nowpayments';
 
 interface NOWPaymentsIPN {
   payment_id: string;
@@ -96,11 +96,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if payment already exists
-    let { data: existingPayment, error: paymentError } = await supabase
+    const { data: existingPaymentData, error: paymentError } = await supabase
       .from('merchant_payments')
       .select('*')
       .eq('nowpayments_payment_id', ipnData.payment_id)
       .single();
+
+    let existingPayment = existingPaymentData;
 
     if (paymentError && paymentError.code !== 'PGRST116') {
       console.error('Error checking existing payment:', paymentError);

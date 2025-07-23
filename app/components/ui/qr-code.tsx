@@ -1,5 +1,7 @@
 "use client"
+
 import React, { useEffect, useRef, useState } from 'react'
+import QRCodeLib from 'qrcode'
 import { cn } from '@/lib/utils'
 
 interface QRCodeProps {
@@ -17,12 +19,12 @@ export function QRCode({
   backgroundColor = '#ffffff',
   foregroundColor = '#000000'
 }: QRCodeProps) {
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!value) {
+    if (!canvasRef.current || !value) {
       setIsLoading(false)
       return
     }
@@ -32,11 +34,11 @@ export function QRCode({
         setIsLoading(true)
         setError(null)
 
-        // Use a different approach - dynamic import with explicit default access
-        const QRCodeLib = await import('qrcode')
-        
-        // Generate QR code as data URL instead of canvas
-        const dataUrl = await QRCodeLib.default.toDataURL(value, {
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        // Generate QR code using the qrcode library
+        await QRCodeLib.toCanvas(canvas, value, {
           width: size,
           margin: 2,
           color: {
@@ -45,8 +47,7 @@ export function QRCode({
           },
           errorCorrectionLevel: 'M'
         })
-        
-        setQrDataUrl(dataUrl)
+
         setIsLoading(false)
       } catch (err) {
         console.error('QR Code generation error:', err)
@@ -55,9 +56,7 @@ export function QRCode({
       }
     }
 
-    // Add a small delay to ensure component is mounted
-    const timer = setTimeout(generateQRCode, 100)
-    return () => clearTimeout(timer)
+    generateQRCode()
   }, [value, size, backgroundColor, foregroundColor])
 
   if (!value) {
@@ -96,7 +95,7 @@ export function QRCode({
     )
   }
 
-  if (isLoading || !qrDataUrl) {
+  if (isLoading) {
     return (
       <div 
         className={cn("flex items-center justify-center bg-gray-100 rounded-lg animate-pulse", className)}
@@ -108,16 +107,15 @@ export function QRCode({
               <path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/>
             </svg>
           </div>
-          <span className="text-xs">Generating QR...</span>
+          <span className="text-xs">Loading...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <img
-      src={qrDataUrl}
-      alt="QR Code"
+    <canvas
+      ref={canvasRef}
       className={cn("rounded-lg", className)}
       style={{ width: size, height: size }}
     />
@@ -136,8 +134,7 @@ export function useQRCodeDataURL(value: string, size: number = 200): string | nu
 
     const generateDataURL = async () => {
       try {
-        const QRCodeLib = await import('qrcode')
-        const url = await QRCodeLib.default.toDataURL(value, {
+        const url = await QRCodeLib.toDataURL(value, {
           width: size,
           margin: 2,
           color: {
@@ -162,8 +159,7 @@ export function useQRCodeDataURL(value: string, size: number = 200): string | nu
 // Utility function to download QR code as image
 export async function downloadQRCode(value: string, filename: string = 'qr-code.png', size: number = 400) {
   try {
-    const QRCodeLib = await import('qrcode')
-    const dataURL = await QRCodeLib.default.toDataURL(value, {
+    const dataURL = await QRCodeLib.toDataURL(value, {
       width: size,
       margin: 2,
       color: {
