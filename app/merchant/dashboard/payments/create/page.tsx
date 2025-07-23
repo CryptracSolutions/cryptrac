@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -8,28 +8,46 @@ import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Badge } from '@/app/components/ui/badge'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
+import { QRCode } from '@/app/components/ui/qr-code'
+import { createBrowserClient } from '@/lib/supabase-browser'
 import { 
   ArrowLeft, 
-  Link2, 
   DollarSign, 
   Calendar, 
-  Infinity,
-  QrCode,
-  Eye,
-  Copy,
-  AlertTriangle
+  Users, 
+  ExternalLink, 
+  Copy, 
+  Link2, 
+  QrCode, 
+  AlertTriangle,
+  CheckCircle,
+  Loader2
 } from 'lucide-react'
 
-interface PaymentLinkData {
+interface FormData {
   title: string
   description: string
   amount: string
   currency: string
+  acceptedCryptos: string[]
   expiresAt: string
   maxUses: string
-  acceptedCryptos: string[]
-  requireCustomerInfo: boolean
   redirectUrl: string
+}
+
+interface FormErrors {
+  [key: string]: string
+}
+
+interface CreatedPaymentLink {
+  id: string
+  link_id: string
+  title: string
+  description: string
+  amount: number
+  currency: string
+  payment_url: string
+  qr_code_data: string
 }
 
 const SUPPORTED_CRYPTOS = [
@@ -40,45 +58,46 @@ const SUPPORTED_CRYPTOS = [
   { code: 'USDC', name: 'USD Coin', symbol: '$' }
 ]
 
-export default function CreatePaymentLinkPage() {
+export default function CreatePaymentPage() {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  
-  const [formData, setFormData] = useState<PaymentLinkData>({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     amount: '',
     currency: 'USD',
+    acceptedCryptos: ['BTC', 'ETH'],
     expiresAt: '',
     maxUses: '',
-    acceptedCryptos: ['BTC', 'ETH', 'LTC'],
-    requireCustomerInfo: false,
     redirectUrl: ''
   })
+  
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [createdPaymentLink, setCreatedPaymentLink] = useState<CreatedPaymentLink | null>(null)
+  const [copied, setCopied] = useState(false)
 
-  const handleInputChange = (field: keyof PaymentLinkData, value: string | boolean | string[]) => {
+  const supabase = createBrowserClient()
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    
     // Clear error when user starts typing
     if (errors[field]) {
-      const newErrors = { ...errors }
-      delete newErrors[field]
-      setErrors(newErrors)
+      setErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
 
   const handleCryptoToggle = (crypto: string) => {
-    const newCryptos = formData.acceptedCryptos.includes(crypto)
-      ? formData.acceptedCryptos.filter(c => c !== crypto)
-      : [...formData.acceptedCryptos, crypto]
-    
-    handleInputChange('acceptedCryptos', newCryptos)
+    setFormData(prev => ({
+      ...prev,
+      acceptedCryptos: prev.acceptedCryptos.includes(crypto)
+        ? prev.acceptedCryptos.filter(c => c !== crypto)
+        : [...prev.acceptedCryptos, crypto]
+    }))
   }
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: FormErrors = {}
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required'
@@ -86,16 +105,12 @@ export default function CreatePaymentLinkPage() {
 
     if (!formData.amount.trim()) {
       newErrors.amount = 'Amount is required'
-    } else if (isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be a valid positive number'
+    } else if (isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
+      newErrors.amount = 'Amount must be a positive number'
     }
 
     if (formData.acceptedCryptos.length === 0) {
-      newErrors.acceptedCryptos = 'Please select at least one cryptocurrency'
-    }
-
-    if (formData.maxUses && (isNaN(Number(formData.maxUses)) || Number(formData.maxUses) <= 0)) {
-      newErrors.maxUses = 'Max uses must be a valid positive number'
+      newErrors.acceptedCryptos = 'At least one cryptocurrency must be selected'
     }
 
     if (formData.redirectUrl && !isValidUrl(formData.redirectUrl)) {
@@ -106,11 +121,11 @@ export default function CreatePaymentLinkPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const isValidUrl = (url: string): boolean => {
+  const isValidUrl = (string: string): boolean => {
     try {
-      new URL(url)
+      new URL(string)
       return true
-    } catch {
+    } catch (_) {
       return false
     }
   }
@@ -125,20 +140,177 @@ export default function CreatePaymentLinkPage() {
     setIsSubmitting(true)
 
     try {
-      // TODO: Submit to API
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
-      // Mock success - redirect to payments page
-      router.push('/merchant/dashboard/payments')
+      if (sessionError || !session) {
+        throw new Error('No valid session')
+      }
+
+      // Submit to API
+      const response = await fetch('/api/payments/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          amount: parseFloat(formData.amount),
+          currency: formData.currency,
+          accepted_cryptos: formData.acceptedCryptos,
+          expires_at: formData.expiresAt || null,
+          max_uses: formData.maxUses ? parseInt(formData.maxUses) : null,
+          redirect_url: formData.redirectUrl || null
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment link')
+      }
+
+      const result = await response.json()
+      
+      if (result.success) {
+        setCreatedPaymentLink(result.payment_link)
+      } else {
+        throw new Error(result.error || 'Failed to create payment link')
+      }
     } catch (error) {
       console.error('Failed to create payment link:', error)
+      setErrors({ submit: 'Failed to create payment link. Please try again.' })
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+    }).format(amount)
+  }
+
+  // If payment link was created successfully, show success page
+  if (createdPaymentLink) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Success Header */}
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-green-100 p-3 rounded-full">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Link Created!</h1>
+          <p className="text-gray-600">Your payment link is ready to share with customers</p>
+        </div>
+
+        {/* Payment Link Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Link2 className="h-5 w-5" />
+              <span>{createdPaymentLink.title}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Amount and Description */}
+            <div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+                {formatCurrency(createdPaymentLink.amount, createdPaymentLink.currency)}
+              </div>
+              {createdPaymentLink.description && (
+                <p className="text-gray-600">{createdPaymentLink.description}</p>
+              )}
+            </div>
+
+            {/* Payment URL */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Payment URL
+              </label>
+              <div className="flex items-center space-x-2">
+                <code className="flex-1 p-3 bg-gray-100 rounded-lg text-sm font-mono break-all">
+                  {createdPaymentLink.payment_url}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyToClipboard(createdPaymentLink.payment_url)}
+                >
+                  {copied ? 'Copied!' : <Copy className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(createdPaymentLink.payment_url, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* QR Code */}
+            <div className="text-center">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
+                QR Code
+              </label>
+              <div className="flex justify-center">
+                <QRCode 
+                  value={createdPaymentLink.payment_url} 
+                  size={200}
+                  className="border border-gray-200"
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Customers can scan this QR code to access the payment link
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            onClick={() => router.push('/merchant/dashboard/payments')}
+            className="flex-1"
+          >
+            View All Payment Links
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              setCreatedPaymentLink(null)
+              setFormData({
+                title: '',
+                description: '',
+                amount: '',
+                currency: 'USD',
+                acceptedCryptos: ['BTC', 'ETH'],
+                expiresAt: '',
+                maxUses: '',
+                redirectUrl: ''
+              })
+            }}
+            className="flex-1"
+          >
+            Create Another Link
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   const generatePreviewUrl = () => {
-    return `https://pay.cryptrac.com/pl_${Math.random().toString(36).substr(2, 9)}`
+    return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/pl_preview`
   }
 
   const previewUrl = generatePreviewUrl()
@@ -147,12 +319,11 @@ export default function CreatePaymentLinkPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-          className="flex items-center"
+        <Button 
+          variant="outline" 
+          onClick={() => router.push('/merchant/dashboard/payments')}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <div>
@@ -163,15 +334,12 @@ export default function CreatePaymentLinkPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form */}
-        <div className="lg:col-span-2">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Link2 className="w-5 h-5 mr-2 text-[#7f5efd]" />
-                Payment Link Details
-              </CardTitle>
+              <CardTitle>Payment Link Details</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -184,8 +352,7 @@ export default function CreatePaymentLinkPage() {
                       Title *
                     </label>
                     <Input
-                      type="text"
-                      placeholder="e.g., Website Development Service"
+                      placeholder="e.g., Product Purchase, Service Payment"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
                       className={errors.title ? 'border-red-300 focus:border-red-500' : ''}
@@ -300,7 +467,6 @@ export default function CreatePaymentLinkPage() {
                       )
                     })}
                   </div>
-                  
                   {errors.acceptedCryptos && (
                     <p className="text-sm text-red-600">{errors.acceptedCryptos}</p>
                   )}
@@ -334,28 +500,28 @@ export default function CreatePaymentLinkPage() {
                         Max Uses
                       </label>
                       <div className="relative">
-                        <Infinity className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <Input
                           type="number"
                           placeholder="Unlimited"
                           value={formData.maxUses}
                           onChange={(e) => handleInputChange('maxUses', e.target.value)}
-                          className={`pl-10 ${errors.maxUses ? 'border-red-300 focus:border-red-500' : ''}`}
+                          className="pl-10"
                         />
                       </div>
-                      {errors.maxUses && (
-                        <p className="text-sm text-red-600 mt-1">{errors.maxUses}</p>
-                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Maximum number of payments allowed
+                      </p>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Redirect URL (Optional)
+                      Redirect URL
                     </label>
                     <Input
                       type="url"
-                      placeholder="https://yourwebsite.com/thank-you"
+                      placeholder="https://yoursite.com/success"
                       value={formData.redirectUrl}
                       onChange={(e) => handleInputChange('redirectUrl', e.target.value)}
                       className={errors.redirectUrl ? 'border-red-300 focus:border-red-500' : ''}
@@ -376,69 +542,68 @@ export default function CreatePaymentLinkPage() {
                     variant="outline"
                     onClick={() => setShowPreview(!showPreview)}
                   >
-                    <Eye className="w-4 h-4 mr-2" />
-                    {showPreview ? 'Hide Preview' : 'Preview'}
+                    {showPreview ? 'Hide Preview' : 'Show Preview'}
                   </Button>
-
-                  <Button
-                    type="submit"
+                  
+                  <Button 
+                    type="submit" 
                     disabled={isSubmitting}
-                    className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white"
+                    className="bg-[#7f5efd] hover:bg-[#6d4fd8]"
                   >
-                    {isSubmitting ? 'Creating...' : 'Create Payment Link'}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Payment Link'
+                    )}
                   </Button>
                 </div>
+
+                {/* Error Display */}
+                {errors.submit && (
+                  <Alert className="border-red-200 bg-red-50">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      {errors.submit}
+                    </AlertDescription>
+                  </Alert>
+                )}
               </form>
             </CardContent>
           </Card>
         </div>
 
         {/* Preview */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <QrCode className="w-5 h-5 mr-2 text-[#7f5efd]" />
-                  Preview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {formData.title ? (
-                  <>
-                    {/* Payment Link Preview */}
-                    <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg">
-                      <h3 className="font-semibold text-gray-900 mb-2">{formData.title}</h3>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {showPreview && formData.title && formData.amount ? (
+                <>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">{formData.title}</h3>
                       {formData.description && (
-                        <p className="text-sm text-gray-600 mb-3">{formData.description}</p>
-                      )}
-                      {formData.amount && (
-                        <div className="text-2xl font-bold text-[#7f5efd] mb-3">
-                          ${Number(formData.amount).toLocaleString()} {formData.currency}
-                        </div>
-                      )}
-                      {formData.acceptedCryptos.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {formData.acceptedCryptos.map(crypto => (
-                            <Badge key={crypto} variant="secondary" className="text-xs">
-                              {crypto}
-                            </Badge>
-                          ))}
-                        </div>
+                        <p className="text-gray-600 mt-1">{formData.description}</p>
                       )}
                     </div>
 
-                    {/* Link URL */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Payment Link URL
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          value={previewUrl}
-                          readOnly
-                          className="font-mono text-xs"
-                        />
+                      <span className="text-3xl font-bold text-gray-900">
+                        {formatCurrency(parseFloat(formData.amount || '0'), formData.currency)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Payment URL</label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
+                          {previewUrl}
+                        </code>
                         <Button
                           type="button"
                           variant="outline"
@@ -450,7 +615,7 @@ export default function CreatePaymentLinkPage() {
                       </div>
                     </div>
 
-                    {/* QR Code Placeholder */}
+                    {/* QR Code Preview */}
                     <div className="text-center">
                       <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
                         <QrCode className="w-12 h-12 text-gray-400" />
@@ -467,16 +632,16 @@ export default function CreatePaymentLinkPage() {
                         </AlertDescription>
                       </Alert>
                     )}
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <Link2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Fill out the form to see a preview</p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Link2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">Fill out the form to see a preview</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

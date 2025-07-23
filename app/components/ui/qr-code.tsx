@@ -1,6 +1,5 @@
 "use client"
-
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface QRCodeProps {
@@ -18,95 +17,48 @@ export function QRCode({
   backgroundColor = '#ffffff',
   foregroundColor = '#000000'
 }: QRCodeProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  const isFinderPatternArea = useCallback((row: number, col: number, gridSize: number): boolean => {
-    // Top-left finder pattern
-    if (row < 9 && col < 9) return true
-    // Top-right finder pattern
-    if (row < 9 && col >= gridSize - 9) return true
-    // Bottom-left finder pattern
-    if (row >= gridSize - 9 && col < 9) return true
-    
-    return false
-  }, [])
-
-  const generateMockQRPattern = useCallback((data: string, gridSize: number): boolean[][] => {
-    const pattern: boolean[][] = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false))
-    
-    // Simple hash-based pattern generation
-    let hash = 0
-    for (let i = 0; i < data.length; i++) {
-      hash = ((hash << 5) - hash + data.charCodeAt(i)) & 0xffffffff
-    }
-
-    // Fill pattern based on hash
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        // Skip finder pattern areas
-        if (isFinderPatternArea(row, col, gridSize)) continue
-        
-        const cellHash = (hash + row * gridSize + col) & 0xffffffff
-        pattern[row][col] = (cellHash % 3) === 0
-      }
-    }
-
-    return pattern
-  }, [isFinderPatternArea])
-
-  const drawFinderPattern = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, cellSize: number) => {
-    // Outer square (7x7)
-    ctx.fillRect(x, y, cellSize * 7, cellSize * 7)
-    
-    // Inner white square (5x5)
-    ctx.fillStyle = backgroundColor
-    ctx.fillRect(x + cellSize, y + cellSize, cellSize * 5, cellSize * 5)
-    
-    // Center black square (3x3)
-    ctx.fillStyle = foregroundColor
-    ctx.fillRect(x + cellSize * 2, y + cellSize * 2, cellSize * 3, cellSize * 3)
-  }, [backgroundColor, foregroundColor])
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!canvasRef.current || !value) return
+    if (!value) {
+      setIsLoading(false)
+      return
+    }
 
-    // Simple QR code generation (in production, use a proper QR library like qrcode)
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx) return
+    const generateQRCode = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
 
-    // Set canvas size
-    canvas.width = size
-    canvas.height = size
-
-    // Clear canvas
-    ctx.fillStyle = backgroundColor
-    ctx.fillRect(0, 0, size, size)
-
-    // Generate a simple pattern (placeholder for real QR code)
-    const gridSize = 25
-    const cellSize = size / gridSize
-    
-    ctx.fillStyle = foregroundColor
-
-    // Create a mock QR pattern based on the value
-    const pattern = generateMockQRPattern(value, gridSize)
-    
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        if (pattern[row][col]) {
-          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize)
-        }
+        // Use a different approach - dynamic import with explicit default access
+        const QRCodeLib = await import('qrcode')
+        
+        // Generate QR code as data URL instead of canvas
+        const dataUrl = await QRCodeLib.default.toDataURL(value, {
+          width: size,
+          margin: 2,
+          color: {
+            dark: foregroundColor,
+            light: backgroundColor
+          },
+          errorCorrectionLevel: 'M'
+        })
+        
+        setQrDataUrl(dataUrl)
+        setIsLoading(false)
+      } catch (err) {
+        console.error('QR Code generation error:', err)
+        setError('Failed to generate QR code')
+        setIsLoading(false)
       }
     }
 
-    // Add finder patterns (corners)
-    drawFinderPattern(ctx, 0, 0, cellSize)
-    drawFinderPattern(ctx, (gridSize - 7) * cellSize, 0, cellSize)
-    drawFinderPattern(ctx, 0, (gridSize - 7) * cellSize, cellSize)
-
-  }, [value, size, backgroundColor, foregroundColor, generateMockQRPattern, drawFinderPattern])
+    // Add a small delay to ensure component is mounted
+    const timer = setTimeout(generateQRCode, 100)
+    return () => clearTimeout(timer)
+  }, [value, size, backgroundColor, foregroundColor])
 
   if (!value) {
     return (
@@ -126,9 +78,46 @@ export function QRCode({
     )
   }
 
+  if (error) {
+    return (
+      <div 
+        className={cn("flex items-center justify-center bg-red-50 border border-red-200 rounded-lg", className)}
+        style={{ width: size, height: size }}
+      >
+        <div className="text-red-500 text-center">
+          <div className="w-8 h-8 mx-auto mb-2">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <span className="text-xs">Error</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading || !qrDataUrl) {
+    return (
+      <div 
+        className={cn("flex items-center justify-center bg-gray-100 rounded-lg animate-pulse", className)}
+        style={{ width: size, height: size }}
+      >
+        <div className="text-gray-400 text-center">
+          <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="animate-spin">
+              <path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/>
+            </svg>
+          </div>
+          <span className="text-xs">Generating QR...</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <canvas
-      ref={canvasRef}
+    <img
+      src={qrDataUrl}
+      alt="QR Code"
       className={cn("rounded-lg", className)}
       style={{ width: size, height: size }}
     />
@@ -137,7 +126,7 @@ export function QRCode({
 
 // Hook for generating QR code data URL
 export function useQRCodeDataURL(value: string, size: number = 200): string | null {
-  const [dataURL, setDataURL] = React.useState<string | null>(null)
+  const [dataURL, setDataURL] = useState<string | null>(null)
 
   useEffect(() => {
     if (!value) {
@@ -145,58 +134,55 @@ export function useQRCodeDataURL(value: string, size: number = 200): string | nu
       return
     }
 
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx) return
-
-    canvas.width = size
-    canvas.height = size
-
-    // Generate QR code on canvas (same logic as above)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, size, size)
-
-    const gridSize = 25
-    const cellSize = size / gridSize
-    
-    ctx.fillStyle = '#000000'
-
-    // Simple pattern generation
-    let hash = 0
-    for (let i = 0; i < value.length; i++) {
-      hash = ((hash << 5) - hash + value.charCodeAt(i)) & 0xffffffff
-    }
-
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        if (row < 9 && col < 9) continue // Skip finder patterns
-        if (row < 9 && col >= gridSize - 9) continue
-        if (row >= gridSize - 9 && col < 9) continue
-        
-        const cellHash = (hash + row * gridSize + col) & 0xffffffff
-        if ((cellHash % 3) === 0) {
-          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize)
-        }
+    const generateDataURL = async () => {
+      try {
+        const QRCodeLib = await import('qrcode')
+        const url = await QRCodeLib.default.toDataURL(value, {
+          width: size,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          },
+          errorCorrectionLevel: 'M'
+        })
+        setDataURL(url)
+      } catch (error) {
+        console.error('QR Code data URL generation error:', error)
+        setDataURL(null)
       }
     }
 
-    // Add finder patterns
-    const drawFinder = (x: number, y: number) => {
-      ctx.fillRect(x, y, cellSize * 7, cellSize * 7)
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(x + cellSize, y + cellSize, cellSize * 5, cellSize * 5)
-      ctx.fillStyle = '#000000'
-      ctx.fillRect(x + cellSize * 2, y + cellSize * 2, cellSize * 3, cellSize * 3)
-    }
-
-    drawFinder(0, 0)
-    drawFinder((gridSize - 7) * cellSize, 0)
-    drawFinder(0, (gridSize - 7) * cellSize)
-
-    setDataURL(canvas.toDataURL())
+    generateDataURL()
   }, [value, size])
 
   return dataURL
+}
+
+// Utility function to download QR code as image
+export async function downloadQRCode(value: string, filename: string = 'qr-code.png', size: number = 400) {
+  try {
+    const QRCodeLib = await import('qrcode')
+    const dataURL = await QRCodeLib.default.toDataURL(value, {
+      width: size,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      },
+      errorCorrectionLevel: 'M'
+    })
+
+    // Create download link
+    const link = document.createElement('a')
+    link.href = dataURL
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } catch (error) {
+    console.error('QR Code download error:', error)
+    throw new Error('Failed to download QR code')
+  }
 }
 

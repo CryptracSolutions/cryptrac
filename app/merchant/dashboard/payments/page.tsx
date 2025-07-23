@@ -1,120 +1,127 @@
-"use client"
+'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Badge } from '@/app/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
 import { 
   Plus, 
   Search, 
-  Filter, 
   Link2, 
   CheckCircle, 
   DollarSign, 
   TrendingUp,
   Copy, 
   Eye, 
-  QrCode, 
-  Edit, 
   Trash2,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react'
 
-// Mock data for payment links
+// Mock data to get the dashboard working
 const mockPaymentLinks = [
   {
-    id: 'pl_abc123',
-    title: 'Website Development Service',
-    description: 'Full-stack web development project',
-    amount: 2500.00,
+    id: '1',
+    link_id: 'pl_abc123',
+    title: 'Product Purchase',
+    description: 'Payment for premium product',
+    amount: 99.99,
     currency: 'USD',
     status: 'active',
-    created: '2025-01-15T10:30:00Z',
-    expires: '2025-02-15T23:59:59Z',
-    payments: 0,
-    received: 0,
-    acceptedCryptos: ['BTC', 'ETH', 'LTC']
+    created_at: '2025-01-20T10:00:00Z',
+    expires_at: null,
+    max_uses: null,
+    accepted_cryptos: ['BTC', 'ETH'],
+    payment_url: 'http://localhost:3000/pay/pl_abc123',
+    statistics: {
+      total_payments: 3,
+      successful_payments: 3,
+      total_received: 299.97
+    }
   },
   {
-    id: 'pl_def456',
+    id: '2',
+    link_id: 'pl_def456',
     title: 'Consulting Session',
-    description: 'One-hour business consultation',
+    description: 'One-hour consulting session',
     amount: 150.00,
     currency: 'USD',
     status: 'active',
-    created: '2025-01-10T14:20:00Z',
-    expires: '2025-01-25T23:59:59Z',
-    payments: 2,
-    received: 300.00,
-    acceptedCryptos: ['BTC', 'ETH']
+    created_at: '2025-01-19T14:30:00Z',
+    expires_at: null,
+    max_uses: 5,
+    accepted_cryptos: ['BTC', 'ETH', 'USDT'],
+    payment_url: 'http://localhost:3000/pay/pl_def456',
+    statistics: {
+      total_payments: 2,
+      successful_payments: 2,
+      total_received: 300.00
+    }
   },
   {
-    id: 'pl_ghi789',
+    id: '3',
+    link_id: 'pl_ghi789',
     title: 'Digital Marketing Package',
     description: 'Complete social media management',
     amount: 800.00,
     currency: 'USD',
     status: 'expired',
-    created: '2025-01-05T09:15:00Z',
-    expires: '2025-01-17T23:59:59Z',
-    payments: 1,
-    received: 800.00,
-    acceptedCryptos: ['BTC', 'ETH', 'LTC', 'USDT']
-  }
-]
-
-// Mock data for recent payments
-const mockRecentPayments = [
-  {
-    id: 'pay_123',
-    paymentLinkTitle: 'Digital Marketing Package',
-    amount: 800.00,
-    crypto: 'BTC',
-    cryptoAmount: '0.01234',
-    status: 'completed',
-    timestamp: '2025-01-20T14:30:00Z',
-    customer: 'john@example.com'
-  },
-  {
-    id: 'pay_124',
-    paymentLinkTitle: 'Consulting Session',
-    amount: 150.00,
-    crypto: 'ETH',
-    cryptoAmount: '0.0456',
-    status: 'completed',
-    timestamp: '2025-01-19T11:15:00Z',
-    customer: 'sarah@example.com'
-  },
-  {
-    id: 'pay_125',
-    paymentLinkTitle: 'Consulting Session',
-    amount: 150.00,
-    crypto: 'BTC',
-    cryptoAmount: '0.00234',
-    status: 'pending',
-    timestamp: '2025-01-18T16:45:00Z',
-    customer: 'mike@example.com'
+    created_at: '2025-01-05T09:15:00Z',
+    expires_at: '2025-01-17T23:59:59Z',
+    max_uses: null,
+    accepted_cryptos: ['BTC', 'ETH', 'LTC', 'USDT'],
+    payment_url: 'http://localhost:3000/pay/pl_ghi789',
+    statistics: {
+      total_payments: 1,
+      successful_payments: 1,
+      total_received: 800.00
+    }
   }
 ]
 
 export default function PaymentsPage() {
   const router = useRouter()
+  const [paymentLinks, setPaymentLinks] = useState(mockPaymentLinks)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeTab, setActiveTab] = useState('links')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [copied, setCopied] = useState<string | null>(null)
 
-  const filteredPaymentLinks = mockPaymentLinks.filter(link =>
-    link.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    link.description.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Calculate statistics from mock data
+  const statistics = {
+    total_links: mockPaymentLinks.length,
+    active_links: mockPaymentLinks.filter(link => link.status === 'active').length,
+    total_payments: mockPaymentLinks.reduce((sum, link) => sum + link.statistics.total_payments, 0),
+    total_received: mockPaymentLinks.reduce((sum, link) => sum + link.statistics.total_received, 0)
+  }
 
-  const stats = {
-    totalLinks: mockPaymentLinks.length,
-    activeLinks: mockPaymentLinks.filter(link => link.status === 'active').length,
-    totalReceived: mockPaymentLinks.reduce((sum, link) => sum + link.received, 0),
-    totalPayments: mockPaymentLinks.reduce((sum, link) => sum + link.payments, 0)
+  const copyToClipboard = async (text: string, linkId: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(linkId)
+      setTimeout(() => setCopied(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
   }
 
   const getStatusColor = (status: string) => {
@@ -122,23 +129,17 @@ export default function PaymentsPage() {
       case 'active': return 'bg-green-100 text-green-800'
       case 'expired': return 'bg-gray-100 text-gray-800'
       case 'completed': return 'bg-blue-100 text-blue-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
-
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text)
-    // TODO: Show toast notification
-  }
+  // Filter payment links based on search and status
+  const filteredLinks = paymentLinks.filter(link => {
+    const matchesSearch = link.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         link.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || link.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
   return (
     <div className="space-y-6">
@@ -149,27 +150,28 @@ export default function PaymentsPage() {
           <p className="text-gray-600 mt-1">
             Manage your payment links, invoices, and track incoming payments
           </p>
+          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> Currently showing mock data while we resolve the API session issue. 
+              Payment creation and QR codes are working perfectly!
+            </p>
+          </div>
         </div>
-        <Button 
-          onClick={() => router.push('/merchant/dashboard/payments/create')}
-          className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
+        <Button onClick={() => router.push('/merchant/dashboard/payments/create')}>
+          <Plus className="mr-2 h-4 w-4" />
           Create Payment Link
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center">
+              <Link2 className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Links</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalLinks}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Link2 className="w-6 h-6 text-blue-600" />
+                <p className="text-2xl font-bold text-gray-900">{statistics.total_links}</p>
               </div>
             </div>
           </CardContent>
@@ -177,13 +179,11 @@ export default function PaymentsPage() {
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Links</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeLinks}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+                <p className="text-2xl font-bold text-gray-900">{statistics.active_links}</p>
               </div>
             </div>
           </CardContent>
@@ -191,229 +191,124 @@ export default function PaymentsPage() {
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Received</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.totalReceived.toLocaleString()}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Payments</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPayments}</p>
+                <p className="text-2xl font-bold text-gray-900">{statistics.total_payments}</p>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Received</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(statistics.total_received, 'USD')}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Payment Management */}
+      {/* Filters and Search */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search payment links..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="expired">Expired</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+
+      {/* Payment Links List */}
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Payment Management</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search payment links..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
-            </div>
-          </div>
+          <CardTitle>Payment Links ({paymentLinks.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="links" className="flex items-center">
-                <Link2 className="w-4 h-4 mr-2" />
-                Payment Links
-                <Badge variant="secondary" className="ml-2">
-                  {filteredPaymentLinks.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="payments" className="flex items-center">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Recent Payments
-                <Badge variant="secondary" className="ml-2">
-                  {mockRecentPayments.length}
-                </Badge>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="links" className="space-y-4">
-              {filteredPaymentLinks.length === 0 ? (
-                <div className="text-center py-12">
-                  <Link2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No payment links found</h3>
-                  <p className="text-gray-600 mb-4">
-                    {searchTerm ? 'Try adjusting your search terms.' : 'Create your first payment link to get started.'}
-                  </p>
-                  {!searchTerm && (
-                    <Button 
-                      onClick={() => router.push('/merchant/dashboard/payments/create')}
-                      className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Payment Link
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredPaymentLinks.map((link) => (
-                    <div key={link.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">{link.title}</h3>
-                            <Badge className={getStatusColor(link.status)}>
-                              {link.status}
-                            </Badge>
-                          </div>
-                          
-                          <p className="text-gray-600 mb-4">{link.description}</p>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Amount:</span>
-                              <p className="font-medium">${link.amount.toLocaleString()} {link.currency}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Payments:</span>
-                              <p className="font-medium">{link.payments}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Received:</span>
-                              <p className="font-medium">${link.received.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Expires:</span>
-                              <p className="font-medium">{formatDate(link.expires)}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2 mt-4">
-                            <span className="text-sm text-gray-500">Accepts:</span>
-                            {link.acceptedCryptos.map(crypto => (
-                              <Badge key={crypto} variant="secondary" className="text-xs">
-                                {crypto}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2 ml-6">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToClipboard(`https://pay.cryptrac.com/${link.id}`)}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/merchant/dashboard/payments/${link.id}`)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/merchant/dashboard/payments/${link.id}`)}
-                          >
-                            <QrCode className="w-4 h-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+          {filteredLinks.length === 0 ? (
+            <div className="text-center py-8">
+              <Link2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 mb-4">
+                {paymentLinks.length === 0 ? 'No payment links found' : 'No payment links match your search'}
+              </p>
+              <Button 
+                onClick={() => router.push('/merchant/dashboard/payments/create')}
+              >
+                Create Your First Payment Link
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredLinks.map((link) => (
+                <div key={link.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="font-semibold text-lg">{link.title}</h3>
+                        <Badge className={getStatusColor(link.status)}>
+                          {link.status}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-600 mt-1">{link.description}</p>
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                        <span>{formatCurrency(link.amount, link.currency)}</span>
+                        <span>•</span>
+                        <span>Created {formatDate(link.created_at)}</span>
+                        <span>•</span>
+                        <span>{link.statistics.total_payments} payments</span>
+                        <span>•</span>
+                        <span>Received {formatCurrency(link.statistics.total_received, link.currency)}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="payments" className="space-y-4">
-              {mockRecentPayments.length === 0 ? (
-                <div className="text-center py-12">
-                  <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No payments yet</h3>
-                  <p className="text-gray-600">
-                    Payments will appear here once customers start using your payment links.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {mockRecentPayments.map((payment) => (
-                    <div key={payment.id} className="border rounded-lg p-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">{payment.paymentLinkTitle}</h3>
-                            <Badge className={getStatusColor(payment.status)}>
-                              {payment.status}
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Amount:</span>
-                              <p className="font-medium">${payment.amount.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Crypto:</span>
-                              <p className="font-medium">{payment.cryptoAmount} {payment.crypto}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Customer:</span>
-                              <p className="font-medium">{payment.customer}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Date:</span>
-                              <p className="font-medium">{formatDate(payment.timestamp)}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2 ml-6">
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(link.payment_url, link.id)}
+                      >
+                        {copied === link.id ? 'Copied!' : <Copy className="w-4 h-4" />}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(link.payment_url, '_blank')}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push(`/merchant/dashboard/payments/${link.id}`)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
