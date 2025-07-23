@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from 'react'
-import QRCodeLib from 'qrcode'
+import React, { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface QRCodeProps {
@@ -19,12 +18,12 @@ export function QRCode({
   backgroundColor = '#ffffff',
   foregroundColor = '#000000'
 }: QRCodeProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [qrDataURL, setQrDataURL] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!canvasRef.current || !value) {
+    if (!value) {
       setIsLoading(false)
       return
     }
@@ -34,23 +33,13 @@ export function QRCode({
         setIsLoading(true)
         setError(null)
 
-        const canvas = canvasRef.current
-        if (!canvas) return
-
         console.log('Generating QR code for value:', value)
 
-        // Generate QR code using the qrcode library
-        await QRCodeLib.toCanvas(canvas, value, {
-          width: size,
-          margin: 2,
-          color: {
-            dark: foregroundColor,
-            light: backgroundColor
-          },
-          errorCorrectionLevel: 'M'
-        })
-
-        console.log('QR code generated successfully')
+        // Use QR Server API as a fallback since the library isn't working
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}&bgcolor=${backgroundColor.replace('#', '')}&color=${foregroundColor.replace('#', '')}`
+        
+        console.log('QR code URL generated:', qrUrl)
+        setQrDataURL(qrUrl)
         setIsLoading(false)
       } catch (err) {
         console.error('QR Code generation error:', err)
@@ -118,11 +107,19 @@ export function QRCode({
 
   return (
     <div className={cn("inline-block", className)}>
-      <canvas
-        ref={canvasRef}
-        className="rounded-lg"
-        style={{ width: size, height: size }}
-      />
+      {qrDataURL && (
+        <img
+          src={qrDataURL}
+          alt="QR Code"
+          className="rounded-lg"
+          style={{ width: size, height: size }}
+          onLoad={() => console.log('QR code image loaded successfully')}
+          onError={(e) => {
+            console.error('QR code image failed to load:', e)
+            setError('Failed to load QR code')
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -137,25 +134,9 @@ export function useQRCodeDataURL(value: string, size: number = 200): string | nu
       return
     }
 
-    const generateDataURL = async () => {
-      try {
-        const url = await QRCodeLib.toDataURL(value, {
-          width: size,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#ffffff'
-          },
-          errorCorrectionLevel: 'M'
-        })
-        setDataURL(url)
-      } catch (error) {
-        console.error('QR Code data URL generation error:', error)
-        setDataURL(null)
-      }
-    }
-
-    generateDataURL()
+    // Use QR Server API
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}`
+    setDataURL(qrUrl)
   }, [value, size])
 
   return dataURL
@@ -164,19 +145,11 @@ export function useQRCodeDataURL(value: string, size: number = 200): string | nu
 // Utility function to download QR code as image
 export async function downloadQRCode(value: string, filename: string = 'qr-code.png', size: number = 400) {
   try {
-    const dataURL = await QRCodeLib.toDataURL(value, {
-      width: size,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#ffffff'
-      },
-      errorCorrectionLevel: 'M'
-    })
-
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}`
+    
     // Create download link
     const link = document.createElement('a')
-    link.href = dataURL
+    link.href = qrUrl
     link.download = filename
     document.body.appendChild(link)
     link.click()
