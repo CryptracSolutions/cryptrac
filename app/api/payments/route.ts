@@ -1,60 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('=== PAYMENTS LIST API START ===');
     
-    const cookieStore = await cookies();
-    console.log('Cookie store created');
+    // Get Authorization header (same as working APIs)
+    const authHeader = request.headers.get('authorization');
     
-    // Use EXACT same Supabase client creation as working create API
-    const supabase = createServerClient(
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('Missing or invalid Authorization header');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    console.log('Token extracted from Authorization header');
+
+    // Create Supabase client with the token (same as working APIs)
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
         },
       }
     );
 
-    console.log('Supabase client created');
+    console.log('Supabase client created with Authorization header');
 
-    // Get the current user - EXACT same method as working create API
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Get the current user using the token (same as working APIs)
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      console.log('Authentication failed:', authError);
+      console.error('Authentication failed:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('Authenticated user:', user.id);
 
-    // Get merchant record - same as create API
+    // Get the merchant record for this user (same as working APIs)
     const { data: merchant, error: merchantError } = await supabase
       .from('merchants')
-      .select('*')
+      .select('id')
       .eq('user_id', user.id)
       .single();
 
     if (merchantError || !merchant) {
-      console.log('Merchant not found:', merchantError);
-      return NextResponse.json({ error: 'Merchant not found' }, { status: 404 });
+      console.error('Merchant not found for user:', user.id, merchantError);
+      return NextResponse.json({ 
+        error: 'Merchant account not found' 
+      }, { status: 404 });
     }
 
     console.log('Found merchant:', merchant.id);
@@ -69,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     console.log('Query params:', { search, status, page, limit });
 
-    // Build query using merchant_id (same as create API uses)
+    // Build query using merchant_id
     let query = supabase
       .from('payment_links')
       .select('*', { count: 'exact' })
@@ -121,7 +119,7 @@ export async function GET(request: NextRequest) {
       total_received: 0
     };
 
-    console.log('Returning success response');
+    console.log('Returning success response with', transformedLinks.length, 'payment links');
 
     // Return data in the structure expected by frontend
     return NextResponse.json({

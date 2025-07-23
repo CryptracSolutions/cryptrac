@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@/lib/supabase-browser'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
@@ -21,83 +22,111 @@ import {
   AlertCircle
 } from 'lucide-react'
 
-// Mock data to get the dashboard working
-const mockPaymentLinks = [
-  {
-    id: '1',
-    link_id: 'pl_abc123',
-    title: 'Product Purchase',
-    description: 'Payment for premium product',
-    amount: 99.99,
-    currency: 'USD',
-    status: 'active',
-    created_at: '2025-01-20T10:00:00Z',
-    expires_at: null,
-    max_uses: null,
-    accepted_cryptos: ['BTC', 'ETH'],
-    payment_url: 'http://localhost:3000/pay/pl_abc123',
-    statistics: {
-      total_payments: 3,
-      successful_payments: 3,
-      total_received: 299.97
+interface PaymentLink {
+  id: string
+  link_id: string
+  title: string
+  description: string
+  amount: number
+  currency: string
+  status: string
+  created_at: string
+  expires_at?: string
+  max_uses?: number
+  accepted_cryptos: string[]
+  payment_url: string
+  statistics: {
+    total_payments: number
+    successful_payments: number
+    total_received: number
+  }
+}
+
+interface PaymentLinksResponse {
+  success: boolean
+  data: {
+    payment_links: PaymentLink[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      pages: number
     }
-  },
-  {
-    id: '2',
-    link_id: 'pl_def456',
-    title: 'Consulting Session',
-    description: 'One-hour consulting session',
-    amount: 150.00,
-    currency: 'USD',
-    status: 'active',
-    created_at: '2025-01-19T14:30:00Z',
-    expires_at: null,
-    max_uses: 5,
-    accepted_cryptos: ['BTC', 'ETH', 'USDT'],
-    payment_url: 'http://localhost:3000/pay/pl_def456',
     statistics: {
-      total_payments: 2,
-      successful_payments: 2,
-      total_received: 300.00
-    }
-  },
-  {
-    id: '3',
-    link_id: 'pl_ghi789',
-    title: 'Digital Marketing Package',
-    description: 'Complete social media management',
-    amount: 800.00,
-    currency: 'USD',
-    status: 'expired',
-    created_at: '2025-01-05T09:15:00Z',
-    expires_at: '2025-01-17T23:59:59Z',
-    max_uses: null,
-    accepted_cryptos: ['BTC', 'ETH', 'LTC', 'USDT'],
-    payment_url: 'http://localhost:3000/pay/pl_ghi789',
-    statistics: {
-      total_payments: 1,
-      successful_payments: 1,
-      total_received: 800.00
+      total_links: number
+      active_links: number
+      total_payments: number
+      total_received: number
     }
   }
-]
+}
 
 export default function PaymentsPage() {
   const router = useRouter()
-  const [paymentLinks, setPaymentLinks] = useState(mockPaymentLinks)
-  const [loading, setLoading] = useState(false)
+  const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [copied, setCopied] = useState<string | null>(null)
+  const [statistics, setStatistics] = useState({
+    total_links: 0,
+    active_links: 0,
+    total_payments: 0,
+    total_received: 0
+  })
 
-  // Calculate statistics from mock data
-  const statistics = {
-    total_links: mockPaymentLinks.length,
-    active_links: mockPaymentLinks.filter(link => link.status === 'active').length,
-    total_payments: mockPaymentLinks.reduce((sum, link) => sum + link.statistics.total_payments, 0),
-    total_received: mockPaymentLinks.reduce((sum, link) => sum + link.statistics.total_received, 0)
+  const fetchPaymentLinks = async () => {
+    try {
+      console.log('Fetching payment links...')
+      setLoading(true)
+      setError(null)
+
+      // Get session from Supabase
+      const supabase = createBrowserClient()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError || !session) {
+        throw new Error('No valid session')
+      }
+
+      console.log('Session found, making API call...')
+
+      // Make API call with Authorization header (same as working APIs)
+      const response = await fetch('/api/payments?page=1&limit=50', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('Response status:', response.status)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data: PaymentLinksResponse = await response.json()
+      console.log('API response:', data)
+
+      if (data.success) {
+        setPaymentLinks(data.data.payment_links)
+        setStatistics(data.data.statistics)
+      } else {
+        throw new Error('API returned success: false')
+      }
+
+    } catch (error) {
+      console.error('Error fetching payment links:', error)
+      setError(error instanceof Error ? error.message : 'Failed to fetch payment links')
+    } finally {
+      setLoading(false)
+    }
   }
+
+  useEffect(() => {
+    fetchPaymentLinks()
+  }, [])
 
   const copyToClipboard = async (text: string, linkId: string) => {
     try {
@@ -141,6 +170,60 @@ export default function PaymentsPage() {
     return matchesSearch && matchesStatus
   })
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
+            <p className="text-gray-600 mt-1">Loading payment links...</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
+            <p className="text-gray-600 mt-1">Error loading payment links</p>
+          </div>
+          <Button onClick={() => router.push('/merchant/dashboard/payments/create')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Payment Link
+          </Button>
+        </div>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3 text-red-600">
+              <AlertCircle className="h-6 w-6" />
+              <div>
+                <h3 className="font-semibold">Failed to load payment links</h3>
+                <p className="text-sm text-gray-600 mt-1">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={fetchPaymentLinks}
+                  className="mt-3"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -150,12 +233,6 @@ export default function PaymentsPage() {
           <p className="text-gray-600 mt-1">
             Manage your payment links, invoices, and track incoming payments
           </p>
-          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Currently showing mock data while we resolve the API session issue. 
-              Payment creation and QR codes are working perfectly!
-            </p>
-          </div>
         </div>
         <Button onClick={() => router.push('/merchant/dashboard/payments/create')}>
           <Plus className="mr-2 h-4 w-4" />
@@ -235,6 +312,10 @@ export default function PaymentsPage() {
           <option value="expired">Expired</option>
           <option value="completed">Completed</option>
         </select>
+        <Button variant="outline" onClick={fetchPaymentLinks}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
       {/* Payment Links List */}
