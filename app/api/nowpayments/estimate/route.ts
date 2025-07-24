@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNOWPaymentsClient } from '@/lib/nowpayments';
 
+// Helper function to add delay between API calls
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -89,7 +92,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST endpoint for batch estimates
+// POST endpoint for batch estimates with rate limiting
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -118,45 +121,85 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('🔍 Batch estimates request:', { amount: amountNum, currency_from, currencies_to });
+
     // Get NOWPayments client
     const nowPayments = getNOWPaymentsClient();
 
-    // Get estimates for all requested currencies
-    const estimates = await Promise.allSettled(
-      currencies_to.map(async (currencyTo: string) => {
-        try {
-          const estimate = await nowPayments.getEstimate({
-            amount: amountNum,
-            currency_from: currency_from.toLowerCase(),
-            currency_to: currencyTo.toLowerCase()
-          });
+    // Get estimates for all requested currencies with rate limiting
+    const estimates = [];
+    const failed = [];
 
-          return {
-            currency_to: currencyTo.toUpperCase(),
-            estimated_amount: estimate.estimated_amount,
-            estimated_amount_formatted: parseFloat(estimate.estimated_amount.toString()).toFixed(8),
-            success: true
-          };
-        } catch (error) {
-          return {
+    for (let i = 0; i < currencies_to.length; i++) {
+      const currencyTo = currencies_to[i];
+      
+      try {
+        console.log(`🔍 Getting estimate for ${currencyTo} (${i + 1}/${currencies_to.length})`);
+        
+        // Add delay between requests to avoid rate limiting (except for first request)
+        if (i > 0) {
+          console.log('⏱️ Adding 1 second delay to avoid rate limits...');
+          await delay(1000); // 1 second delay between requests
+        }
+
+        const estimate = await nowPayments.getEstimate({
+          amount: amountNum,
+          currency_from: currency_from.toLowerCase(),
+          currency_to: currencyTo.toLowerCase()
+        });
+
+        estimates.push({
+          currency_to: currencyTo.toUpperCase(),
+          estimated_amount: estimate.estimated_amount,
+          estimated_amount_formatted: parseFloat(estimate.estimated_amount.toString()).toFixed(8),
+          success: true
+        });
+
+        console.log(`✅ Success for ${currencyTo}: ${estimate.estimated_amount}`);
+
+      } catch (error) {
+        console.log(`❌ Failed for ${currencyTo}:`, error instanceof Error ? error.message : 'Unknown error');
+        
+        // Check if it's a rate limit error
+        if (error instanceof Error && error.message.includes('429')) {
+          console.log('⏱️ Rate limit detected, adding longer delay...');
+          
+          // For rate limit errors, try again after a longer delay
+          try {
+            await delay(3000); // 3 second delay for rate limit recovery
+            
+            const retryEstimate = await nowPayments.getEstimate({
+              amount: amountNum,
+              currency_from: currency_from.toLowerCase(),
+              currency_to: currencyTo.toLowerCase()
+            });
+
+            estimates.push({
+              currency_to: currencyTo.toUpperCase(),
+              estimated_amount: retryEstimate.estimated_amount,
+              estimated_amount_formatted: parseFloat(retryEstimate.estimated_amount.toString()).toFixed(8),
+              success: true
+            });
+
+            console.log(`✅ Retry success for ${currencyTo}: ${retryEstimate.estimated_amount}`);
+
+          } catch (retryError) {
+            failed.push({
+              currency_to: currencyTo.toUpperCase(),
+              error: retryError instanceof Error ? retryError.message : 'Unknown error',
+              success: false
+            });
+            console.log(`❌ Retry also failed for ${currencyTo}`);
+          }
+        } else {
+          failed.push({
             currency_to: currencyTo.toUpperCase(),
             error: error instanceof Error ? error.message : 'Unknown error',
             success: false
-          };
+          });
         }
-      })
-    );
-
-    // Process results
-    const successful = estimates
-      .filter(result => result.status === 'fulfilled')
-      .map(result => (result as PromiseFulfilledResult<unknown>).value)
-      .filter((value: unknown) => (value as { success: boolean }).success);
-
-    const failed = estimates
-      .filter(result => result.status === 'fulfilled')
-      .map(result => (result as PromiseFulfilledResult<unknown>).value)
-      .filter((value: unknown) => !(value as { success: boolean }).success);
+      }
+    }
 
     // Calculate fees
     const cryptracFeeRate = 0.019; // 1.9%
@@ -167,11 +210,13 @@ export async function POST(request: NextRequest) {
     const totalFees = cryptracFee + nowPaymentsFee;
     const merchantReceives = amountNum - totalFees;
 
+    console.log(`🔍 Final results: ${estimates.length} successful, ${failed.length} failed`);
+
     return NextResponse.json({
       success: true,
       currency_from: currency_from.toUpperCase(),
       amount_from: amountNum,
-      estimates: successful,
+      estimates: estimates,
       failed_estimates: failed,
       fees: {
         cryptrac_fee: cryptracFee,
