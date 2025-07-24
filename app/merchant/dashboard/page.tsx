@@ -36,6 +36,22 @@ export default function MerchantDashboard() {
           return;
         }
 
+        // Ensure merchant record exists
+        try {
+          const response = await fetch('/api/merchants/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            console.error('Failed to create/verify merchant record');
+          }
+        } catch (merchantError) {
+          console.error('Merchant creation error:', merchantError);
+        }
+
         setUser(user);
       } catch (error) {
         console.error('Failed to get user:', error);
