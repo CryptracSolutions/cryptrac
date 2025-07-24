@@ -26,20 +26,83 @@ CREATE OR REPLACE FUNCTION "public"."calculate_proration"("merchant_id" "uuid", 
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 DECLARE
-  usage INT;
+    usage INTEGER;
+    days_used INTEGER;
+    total_days INTEGER := 14; -- 14-day refund window
 BEGIN
-  SELECT usage_count INTO usage FROM merchants WHERE id = merchant_id;
-  -- Proration logic: full refund if usage=0, else reduce by usage % (adjust per Bible Appendix A)
-  IF usage = 0 THEN
-    RETURN full_fee;
-  ELSE
-    RETURN full_fee * (1 - (usage / 100.0));
-  END IF;
+    -- Get usage count and calculate days since setup
+    SELECT 
+        COALESCE(usage_count, 0),
+        GREATEST(0, EXTRACT(days FROM NOW() - created_at)::INTEGER)
+    INTO usage, days_used
+    FROM merchants 
+    WHERE id = merchant_id;
+    
+    -- Full refund if no usage and within 14 days
+    IF usage = 0 AND days_used <= total_days THEN
+        RETURN full_fee;
+    END IF;
+    
+    -- Prorated refund based on usage and time
+    IF days_used <= total_days THEN
+        RETURN full_fee * (1 - (usage::NUMERIC / 100.0)) * (1 - (days_used::NUMERIC / total_days));
+    END IF;
+    
+    -- No refund after 14 days
+    RETURN 0;
 END;
 $$;
 
 
 ALTER FUNCTION "public"."calculate_proration"("merchant_id" "uuid", "full_fee" numeric) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text" DEFAULT 'My Business'::"text") RETURNS TABLE("id" "uuid", "user_id" "uuid", "business_name" "text", "onboarding_completed" boolean, "onboarding_step" integer, "setup_paid" boolean)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  -- Check if merchant already exists
+  IF EXISTS (SELECT 1 FROM merchants WHERE merchants.user_id = p_user_id) THEN
+    -- Return existing merchant
+    RETURN QUERY 
+    SELECT m.id, m.user_id, m.business_name, m.onboarding_completed, m.onboarding_step, m.setup_paid
+    FROM merchants m 
+    WHERE m.user_id = p_user_id;
+  ELSE
+    -- Create new merchant
+    RETURN QUERY
+    INSERT INTO merchants (user_id, business_name, onboarding_completed, onboarding_step, setup_paid)
+    VALUES (p_user_id, p_business_name, true, 5, true)
+    RETURNING merchants.id, merchants.user_id, merchants.business_name, merchants.onboarding_completed, merchants.onboarding_step, merchants.setup_paid;
+  END IF;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") IS 'Securely creates or returns merchant record for a user, bypassing RLS';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."get_current_merchant_id"() RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+    merchant_uuid UUID;
+BEGIN
+    SELECT id INTO merchant_uuid
+    FROM merchants
+    WHERE user_id = auth.uid();
+    
+    RETURN merchant_uuid;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_current_merchant_id"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."handle_monthly_bonus"() RETURNS "trigger"
@@ -76,6 +139,19 @@ $_$;
 
 
 ALTER FUNCTION "public"."handle_monthly_bonus"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_updated_at_column"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
 
 SET default_tablespace = '';
 
@@ -140,7 +216,8 @@ CREATE TABLE IF NOT EXISTS "public"."merchant_payments" (
     "pay_currency" "text",
     "status" "text" DEFAULT 'pending'::"text",
     "tx_hash" "text",
-    "created_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "nowpayments_invoice_id" character varying(100)
 );
 
 
@@ -162,6 +239,17 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "usage_count" integer DEFAULT 0,
     "created_at" timestamp with time zone DEFAULT "now"(),
     "preferred_currency" "text" DEFAULT 'USD'::"text",
+    "onboarding_step" integer DEFAULT 0,
+    "onboarding_completed" boolean DEFAULT false,
+    "onboarding_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "business_website" character varying(500),
+    "business_industry" character varying(100),
+    "business_description" "text",
+    "preferred_currencies" "jsonb" DEFAULT '["BTC", "ETH", "LTC"]'::"jsonb",
+    "payment_config" "jsonb" DEFAULT '{"auto_forward": true, "fee_percentage": 2.9}'::"jsonb",
+    "setup_paid" boolean DEFAULT false,
+    "setup_fee_amount" numeric(10,2) DEFAULT 99.00,
+    "updated_at" timestamp with time zone DEFAULT "now"(),
     CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at"))
 );
 
@@ -199,6 +287,29 @@ CREATE TABLE IF NOT EXISTS "public"."partners" (
 
 
 ALTER TABLE "public"."partners" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."payment_links" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "title" character varying(255) NOT NULL,
+    "description" "text",
+    "amount" numeric(18,8) NOT NULL,
+    "currency" character varying(10) DEFAULT 'USD'::character varying NOT NULL,
+    "accepted_cryptos" "jsonb" DEFAULT '["BTC", "ETH", "LTC"]'::"jsonb",
+    "link_id" character varying(50) NOT NULL,
+    "qr_code_data" "text",
+    "status" character varying(20) DEFAULT 'active'::character varying,
+    "expires_at" timestamp with time zone,
+    "max_uses" integer,
+    "current_uses" integer DEFAULT 0,
+    "metadata" "jsonb" DEFAULT '{}'::"jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."payment_links" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
@@ -259,6 +370,25 @@ CREATE TABLE IF NOT EXISTS "public"."support_messages" (
 ALTER TABLE "public"."support_messages" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."supported_currencies" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "code" character varying(10) NOT NULL,
+    "name" character varying(100) NOT NULL,
+    "symbol" character varying(10),
+    "enabled" boolean DEFAULT true,
+    "min_amount" numeric(18,8) DEFAULT 0.00000001,
+    "max_amount" numeric(18,8),
+    "decimals" integer DEFAULT 8,
+    "icon_url" character varying(500),
+    "nowpayments_code" character varying(10),
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."supported_currencies" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."upgrade_history" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "merchant_id" "uuid",
@@ -269,6 +399,25 @@ CREATE TABLE IF NOT EXISTS "public"."upgrade_history" (
 
 
 ALTER TABLE "public"."upgrade_history" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."webhook_logs" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "source" character varying(50) NOT NULL,
+    "event_type" character varying(100) NOT NULL,
+    "headers" "jsonb",
+    "payload" "jsonb" NOT NULL,
+    "signature" character varying(500),
+    "processed" boolean DEFAULT false,
+    "processing_error" "text",
+    "merchant_id" "uuid",
+    "payment_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "processed_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."webhook_logs" OWNER TO "postgres";
 
 
 ALTER TABLE ONLY "public"."audit_logs"
@@ -301,6 +450,11 @@ ALTER TABLE ONLY "public"."merchants"
 
 
 
+ALTER TABLE ONLY "public"."merchants"
+    ADD CONSTRAINT "merchants_user_id_unique" UNIQUE ("user_id");
+
+
+
 ALTER TABLE ONLY "public"."monthly_bonus_log"
     ADD CONSTRAINT "monthly_bonus_log_pkey" PRIMARY KEY ("id");
 
@@ -313,6 +467,16 @@ ALTER TABLE ONLY "public"."partners"
 
 ALTER TABLE ONLY "public"."partners"
     ADD CONSTRAINT "partners_referral_code_key" UNIQUE ("referral_code");
+
+
+
+ALTER TABLE ONLY "public"."payment_links"
+    ADD CONSTRAINT "payment_links_link_id_key" UNIQUE ("link_id");
+
+
+
+ALTER TABLE ONLY "public"."payment_links"
+    ADD CONSTRAINT "payment_links_pkey" PRIMARY KEY ("id");
 
 
 
@@ -341,8 +505,23 @@ ALTER TABLE ONLY "public"."support_messages"
 
 
 
+ALTER TABLE ONLY "public"."supported_currencies"
+    ADD CONSTRAINT "supported_currencies_code_key" UNIQUE ("code");
+
+
+
+ALTER TABLE ONLY "public"."supported_currencies"
+    ADD CONSTRAINT "supported_currencies_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."upgrade_history"
     ADD CONSTRAINT "upgrade_history_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."webhook_logs"
+    ADD CONSTRAINT "webhook_logs_pkey" PRIMARY KEY ("id");
 
 
 
@@ -354,11 +533,27 @@ CREATE INDEX "idx_fiat_payouts_user_id" ON "public"."fiat_payouts" USING "btree"
 
 
 
+CREATE INDEX "idx_merchant_payments_created_at" ON "public"."merchant_payments" USING "btree" ("created_at" DESC);
+
+
+
 CREATE INDEX "idx_merchant_payments_merchant_id" ON "public"."merchant_payments" USING "btree" ("merchant_id");
 
 
 
+CREATE INDEX "idx_merchant_payments_nowpayments_invoice_id" ON "public"."merchant_payments" USING "btree" ("nowpayments_invoice_id");
+
+
+
+CREATE INDEX "idx_merchant_payments_status" ON "public"."merchant_payments" USING "btree" ("status");
+
+
+
 CREATE INDEX "idx_merchants_user_id" ON "public"."merchants" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_merchants_user_id_unique" ON "public"."merchants" USING "btree" ("user_id");
 
 
 
@@ -367,6 +562,18 @@ CREATE INDEX "idx_monthly_bonus_log_rep_id" ON "public"."monthly_bonus_log" USIN
 
 
 CREATE INDEX "idx_partners_user_id" ON "public"."partners" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_payment_links_link_id" ON "public"."payment_links" USING "btree" ("link_id");
+
+
+
+CREATE INDEX "idx_payment_links_merchant_id" ON "public"."payment_links" USING "btree" ("merchant_id");
+
+
+
+CREATE INDEX "idx_payment_links_status" ON "public"."payment_links" USING "btree" ("status");
 
 
 
@@ -390,7 +597,35 @@ CREATE INDEX "idx_upgrade_history_merchant_id" ON "public"."upgrade_history" USI
 
 
 
+CREATE INDEX "idx_webhook_logs_created_at" ON "public"."webhook_logs" USING "btree" ("created_at" DESC);
+
+
+
+CREATE INDEX "idx_webhook_logs_processed" ON "public"."webhook_logs" USING "btree" ("processed");
+
+
+
+CREATE INDEX "idx_webhook_logs_source" ON "public"."webhook_logs" USING "btree" ("source");
+
+
+
 CREATE OR REPLACE TRIGGER "after_rep_sales_update" AFTER UPDATE ON "public"."rep_sales" FOR EACH ROW WHEN ((("old"."validated" IS DISTINCT FROM "new"."validated") AND ("new"."validated" = true))) EXECUTE FUNCTION "public"."handle_monthly_bonus"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_merchant_payments_updated_at" BEFORE UPDATE ON "public"."merchant_payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_merchants_updated_at" BEFORE UPDATE ON "public"."merchants" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_payment_links_updated_at" BEFORE UPDATE ON "public"."payment_links" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_supported_currencies_updated_at" BEFORE UPDATE ON "public"."supported_currencies" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -424,6 +659,11 @@ ALTER TABLE ONLY "public"."partners"
 
 
 
+ALTER TABLE ONLY "public"."payment_links"
+    ADD CONSTRAINT "payment_links_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -454,6 +694,24 @@ ALTER TABLE ONLY "public"."upgrade_history"
 
 
 
+ALTER TABLE ONLY "public"."webhook_logs"
+    ADD CONSTRAINT "webhook_logs_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id");
+
+
+
+ALTER TABLE ONLY "public"."webhook_logs"
+    ADD CONSTRAINT "webhook_logs_payment_id_fkey" FOREIGN KEY ("payment_id") REFERENCES "public"."merchant_payments"("id");
+
+
+
+CREATE POLICY "Admin can insert any merchant record" ON "public"."merchants" FOR INSERT WITH CHECK (("auth"."email"() = 'admin@cryptrac.com'::"text"));
+
+
+
+CREATE POLICY "Admin can insert any payment link" ON "public"."payment_links" FOR INSERT WITH CHECK (("auth"."email"() = 'admin@cryptrac.com'::"text"));
+
+
+
 CREATE POLICY "Audit logs view admin" ON "public"."audit_logs" FOR SELECT USING (("auth"."email"() = 'admin@cryptrac.com'::"text"));
 
 
@@ -468,6 +726,46 @@ CREATE POLICY "Merchant payments view own" ON "public"."merchant_payments" FOR S
 
 
 
+CREATE POLICY "Merchants can create own records" ON "public"."merchants" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
+
+
+
+COMMENT ON POLICY "Merchants can create own records" ON "public"."merchants" IS 'Allows users to create merchant records for themselves';
+
+
+
+CREATE POLICY "Merchants can create payment links" ON "public"."payment_links" FOR INSERT WITH CHECK ((("merchant_id" IN ( SELECT "merchants"."id"
+   FROM "public"."merchants"
+  WHERE ("merchants"."user_id" = "auth"."uid"()))) OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
+
+
+
+COMMENT ON POLICY "Merchants can create payment links" ON "public"."payment_links" IS 'Allows merchants to create payment links for their own merchant account';
+
+
+
+CREATE POLICY "Merchants can insert own" ON "public"."merchants" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
+
+
+
+CREATE POLICY "Merchants can insert their own payment links" ON "public"."payment_links" FOR INSERT WITH CHECK (("merchant_id" IN ( SELECT "merchants"."id"
+   FROM "public"."merchants"
+  WHERE ("merchants"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants can manage their own payment links" ON "public"."payment_links" USING (("merchant_id" IN ( SELECT "merchants"."id"
+   FROM "public"."merchants"
+  WHERE ("merchants"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants can manage their own payments" ON "public"."merchant_payments" USING (("merchant_id" IN ( SELECT "merchants"."id"
+   FROM "public"."merchants"
+  WHERE ("merchants"."user_id" = "auth"."uid"()))));
+
+
+
 CREATE POLICY "Merchants update own" ON "public"."merchants" FOR UPDATE USING ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
 
 
@@ -479,6 +777,12 @@ CREATE POLICY "Merchants view own" ON "public"."merchants" FOR SELECT USING ((("
 CREATE POLICY "Monthly bonus log view" ON "public"."monthly_bonus_log" FOR SELECT USING ((("rep_id" = ( SELECT "reps"."id"
    FROM "public"."reps"
   WHERE ("reps"."user_id" = "auth"."uid"()))) OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
+
+
+
+CREATE POLICY "Only admins can view webhook logs" ON "public"."webhook_logs" FOR SELECT USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."role" = 'admin'::"text"))));
 
 
 
@@ -516,6 +820,14 @@ CREATE POLICY "Support messages view" ON "public"."support_messages" FOR SELECT 
 
 
 
+CREATE POLICY "Users can insert their own merchant records" ON "public"."merchants" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can manage their own merchant records" ON "public"."merchants" USING ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
+
+
+
 ALTER TABLE "public"."audit_logs" ENABLE ROW LEVEL SECURITY;
 
 
@@ -538,6 +850,9 @@ ALTER TABLE "public"."monthly_bonus_log" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."partners" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."payment_links" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
@@ -568,9 +883,27 @@ GRANT ALL ON FUNCTION "public"."calculate_proration"("merchant_id" "uuid", "full
 
 
 
+GRANT ALL ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
 
 
@@ -622,6 +955,12 @@ GRANT ALL ON TABLE "public"."partners" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."payment_links" TO "anon";
+GRANT ALL ON TABLE "public"."payment_links" TO "authenticated";
+GRANT ALL ON TABLE "public"."payment_links" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."profiles" TO "anon";
 GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
@@ -646,9 +985,21 @@ GRANT ALL ON TABLE "public"."support_messages" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."supported_currencies" TO "anon";
+GRANT ALL ON TABLE "public"."supported_currencies" TO "authenticated";
+GRANT ALL ON TABLE "public"."supported_currencies" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."upgrade_history" TO "anon";
 GRANT ALL ON TABLE "public"."upgrade_history" TO "authenticated";
 GRANT ALL ON TABLE "public"."upgrade_history" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."webhook_logs" TO "anon";
+GRANT ALL ON TABLE "public"."webhook_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."webhook_logs" TO "service_role";
 
 
 
@@ -683,3 +1034,27 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
+-- Create buckets
+select storage.create_bucket('w9-uploads', public := false);
+select storage.create_bucket('promo-kits', public := true);
+
+-- Enable Row Level Security on storage.objects (required for policies)
+alter table storage.objects enable row level security;
+
+-- RLS Policy: Allow public SELECT on 'promo-kits' bucket
+create policy "Public read for promo kits"
+on storage.objects
+for select
+to public
+using (
+  bucket_id = 'promo-kits'
+);
+
+-- RLS Policy: Allow public INSERT to 'w9-uploads' if user is the owner
+create policy "User can upload to own W9"
+on storage.objects
+for insert
+to public
+with check (
+  bucket_id = 'w9-uploads' AND auth.uid() = owner
+);
