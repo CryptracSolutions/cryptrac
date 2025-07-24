@@ -4,7 +4,6 @@ import React, { useState, useEffect, use } from 'react'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
-import { Badge } from '@/app/components/ui/badge'
 import { Input } from '@/app/components/ui/input'
 import { 
   CreditCard,
@@ -16,7 +15,9 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Wallet
+  Wallet,
+  Loader2,
+  Info
 } from 'lucide-react'
 import QRCode from 'qrcode'
 
@@ -65,6 +66,59 @@ interface CurrencyEstimate {
   success: boolean
 }
 
+// Enhanced: Payment status configurations with better UX
+const PAYMENT_STATUS_CONFIG = {
+  waiting: {
+    label: 'Waiting for Payment',
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    icon: Clock,
+    description: 'Send the exact amount to complete your payment',
+    showInstructions: true
+  },
+  confirming: {
+    label: 'Confirming Payment',
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    icon: Loader2,
+    description: 'Payment received! Waiting for blockchain confirmation...',
+    showInstructions: false
+  },
+  confirmed: {
+    label: 'Payment Confirmed',
+    color: 'bg-green-100 text-green-800 border-green-200',
+    icon: CheckCircle,
+    description: 'Payment confirmed and processing',
+    showInstructions: false
+  },
+  finished: {
+    label: 'Payment Complete',
+    color: 'bg-green-100 text-green-800 border-green-200',
+    icon: CheckCircle,
+    description: 'Payment successfully completed!',
+    showInstructions: false
+  },
+  partially_paid: {
+    label: 'Partially Paid',
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
+    icon: AlertCircle,
+    description: 'Partial payment received. Please send the remaining amount.',
+    showInstructions: true
+  },
+  failed: {
+    label: 'Payment Failed',
+    color: 'bg-red-100 text-red-800 border-red-200',
+    icon: XCircle,
+    description: 'Payment failed. Please try again.',
+    showInstructions: false
+  },
+  expired: {
+    label: 'Payment Expired',
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: XCircle,
+    description: 'Payment window has expired',
+    showInstructions: false
+  }
+} as const
+
 export default function CustomerPaymentPage({ params }: { params: Promise<{ id: string }> }) {
   // Unwrap params using React.use() for Next.js 15 compatibility
   const { id } = use(params)
@@ -78,6 +132,8 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string>('')
+  // Enhanced: Add polling state
+  const [isPolling, setIsPolling] = useState(false)
 
   useEffect(() => {
     const fetchPaymentLink = async () => {
@@ -190,7 +246,10 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
     }
   }
 
+  // Enhanced: Better polling with visual feedback
   const startPaymentPolling = (paymentId: string) => {
+    setIsPolling(true)
+    
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetch(`/api/nowpayments/create-payment?payment_id=${paymentId}`)
@@ -202,18 +261,23 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
             // Stop polling if payment is complete or failed
             if (['finished', 'confirmed', 'failed', 'expired', 'refunded'].includes(data.payment.payment_status)) {
               clearInterval(pollInterval)
+              setIsPolling(false)
             }
           }
         }
       } catch (error) {
         console.error('Error polling payment status:', error)
       }
-    }, 10000) // Poll every 10 seconds
+    }, 5000) // Enhanced: Faster polling - every 5 seconds
 
     // Stop polling after 1 hour
-    setTimeout(() => clearInterval(pollInterval), 60 * 60 * 1000)
+    setTimeout(() => {
+      clearInterval(pollInterval)
+      setIsPolling(false)
+    }, 60 * 60 * 1000)
   }
 
+  // Enhanced: Better copy feedback
   const copyToClipboard = async (text: string, type: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -235,30 +299,9 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
     return `${amount.toFixed(8)} ${currency.toUpperCase()}`
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'waiting': return 'bg-yellow-100 text-yellow-800'
-      case 'confirming': return 'bg-blue-100 text-blue-800'
-      case 'confirmed': 
-      case 'finished': return 'bg-green-100 text-green-800'
-      case 'failed':
-      case 'expired':
-      case 'refunded': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'waiting': return <Clock className="h-4 w-4" />
-      case 'confirming': return <RefreshCw className="h-4 w-4 animate-spin" />
-      case 'confirmed':
-      case 'finished': return <CheckCircle className="h-4 w-4" />
-      case 'failed':
-      case 'expired':
-      case 'refunded': return <XCircle className="h-4 w-4" />
-      default: return <Clock className="h-4 w-4" />
-    }
+  // Enhanced: Use status config for consistent styling
+  const getStatusConfig = (status: string) => {
+    return PAYMENT_STATUS_CONFIG[status as keyof typeof PAYMENT_STATUS_CONFIG] || PAYMENT_STATUS_CONFIG.waiting
   }
 
   if (loading) {
@@ -293,330 +336,332 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
 
   // If payment is created, show payment details
   if (paymentDetails) {
+    const statusConfig = getStatusConfig(paymentDetails.status)
+    const StatusIcon = statusConfig.icon
+
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-purple-100 p-3 rounded-full">
-                <Wallet className="h-8 w-8 text-purple-600" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{paymentLink.title}</h1>
+            <p className="text-gray-600">from {paymentLink.merchant.business_name}</p>
+            <div className="mt-4">
+              <div className="text-2xl font-bold text-gray-900">
+                {formatCurrency(paymentLink.amount, paymentLink.currency)}
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Payment</h1>
-            <p className="text-gray-600">Send {paymentDetails.pay_currency} to the address below</p>
           </div>
 
-          {/* Payment Status */}
+          {/* Enhanced: Better status display */}
           <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Payment Status</span>
-                <Badge className={getStatusColor(paymentDetails.status)}>
-                  <div className="flex items-center space-x-1">
-                    {getStatusIcon(paymentDetails.status)}
-                    <span className="capitalize">{paymentDetails.status}</span>
-                  </div>
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Amount to Pay</label>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    ≈ {formatCurrency(paymentDetails.price_amount, paymentDetails.price_currency)}
-                  </p>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full border ${statusConfig.color}`}>
+                  <StatusIcon className={`h-4 w-4 ${paymentDetails.status === 'confirming' ? 'animate-spin' : ''}`} />
+                  <span className="font-medium">{statusConfig.label}</span>
                 </div>
+                <p className="text-gray-600 mt-3">{statusConfig.description}</p>
                 
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Payment Address</label>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono break-all">
-                      {paymentDetails.pay_address}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(paymentDetails.pay_address, 'address')}
-                    >
-                      {copied === 'address' ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
+                {/* Enhanced: Show polling indicator */}
+                {isPolling && (
+                  <div className="flex items-center justify-center space-x-2 mt-2 text-sm text-gray-500">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Checking for updates...</span>
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Exact Amount</label>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
-                      {paymentDetails.pay_amount}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(paymentDetails.pay_amount.toString(), 'amount')}
-                    >
-                      {copied === 'amount' ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Send exactly this amount to ensure proper processing
-                  </p>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* QR Code */}
-          {qrCodeUrl && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <QrCode className="h-5 w-5" />
-                  <span>Scan to Pay</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <Image 
-                  src={qrCodeUrl} 
-                  alt="Payment QR Code" 
-                  width={256}
-                  height={256}
-                  className="mx-auto mb-4 border rounded-lg"
-                />
-                <p className="text-sm text-gray-600">
-                  Scan this QR code with your {paymentDetails.pay_currency} wallet
-                </p>
+          {/* Enhanced: Show payment instructions only when needed */}
+          {statusConfig.showInstructions && (
+            <>
+              {/* QR Code */}
+              {qrCodeUrl && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <QrCode className="h-5 w-5" />
+                      <span>Scan to Pay</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Image 
+                      src={qrCodeUrl} 
+                      alt="Payment QR Code" 
+                      width={256}
+                      height={256}
+                      className="mx-auto mb-4 border rounded-lg"
+                    />
+                    <p className="text-sm text-gray-600">
+                      Scan with your {paymentDetails.pay_currency.toUpperCase()} wallet
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Payment Details */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Payment Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Payment Address */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Send {paymentDetails.pay_currency.toUpperCase()} to this address:
+                    </label>
+                    <div className="flex space-x-2">
+                      <Input
+                        value={paymentDetails.pay_address}
+                        readOnly
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(paymentDetails.pay_address, 'address')}
+                        className="shrink-0"
+                      >
+                        {copied === 'address' ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Payment Amount */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Exact amount to send:
+                    </label>
+                    <div className="flex space-x-2">
+                      <Input
+                        value={formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}
+                        readOnly
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(paymentDetails.pay_amount.toString(), 'amount')}
+                        className="shrink-0"
+                      >
+                        {copied === 'amount' ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Enhanced: Special handling for partial payments */}
+                  {paymentDetails.status === 'partially_paid' && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <div className="flex items-start space-x-2">
+                        <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-orange-900">Partial Payment Received</h4>
+                          <p className="text-sm text-orange-800 mt-1">
+                            We received part of your payment. Please send the remaining amount to the same address above to complete your payment.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Instructions */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-2">
+                      <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-blue-900">Payment Instructions</h4>
+                        <ol className="list-decimal list-inside text-sm text-blue-800 mt-2 space-y-1">
+                          <li>Copy the address above or scan the QR code</li>
+                          <li>Send exactly {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}</li>
+                          <li>Wait for blockchain confirmation</li>
+                          <li>Payment status will update automatically</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Warning */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-2">
+                      <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-yellow-900">Important</h4>
+                        <p className="text-sm text-yellow-800 mt-1">
+                          Only send {paymentDetails.pay_currency.toUpperCase()} to this address. 
+                          Sending other cryptocurrencies may result in permanent loss.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Enhanced: Success message for completed payments */}
+          {['confirmed', 'finished'].includes(paymentDetails.status) && (
+            <Card className="mb-6 border-green-200 bg-green-50">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold text-green-900 mb-2">Payment Successful!</h2>
+                  <p className="text-green-700 mb-4">
+                    Your payment of {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)} has been confirmed.
+                  </p>
+                  <div className="bg-white border border-green-200 rounded-lg p-4 text-left">
+                    <h3 className="font-semibold text-green-900 mb-2">Transaction Details</h3>
+                    <div className="space-y-1 text-sm text-green-800">
+                      <p><strong>Amount:</strong> {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}</p>
+                      <p><strong>Payment ID:</strong> {paymentDetails.nowpayments_payment_id}</p>
+                      <p><strong>Status:</strong> {statusConfig.label}</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Payment Instructions */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Payment Instructions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
-                <li>Copy the payment address above or scan the QR code</li>
-                <li>Send exactly {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)} from your wallet</li>
-                <li>Wait for blockchain confirmation (usually 1-6 confirmations)</li>
-                <li>You&apos;ll see the status update automatically when payment is confirmed</li>
-              </ol>
-              
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium text-yellow-800">Important:</p>
-                    <p className="text-yellow-700">
-                      Send only {paymentDetails.pay_currency} to this address. 
-                      Sending other cryptocurrencies may result in permanent loss.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Fee Breakdown */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Fee Breakdown</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <Shield className="h-5 w-5" />
+                <span>Fee Breakdown</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Payment Amount:</span>
-                  <span className="font-medium">{formatCurrency(paymentDetails.price_amount, paymentDetails.price_currency)}</span>
+                  <span>Subtotal:</span>
+                  <span>{formatCurrency(paymentDetails.price_amount, paymentDetails.price_currency)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Processing Fee (2.9%):</span>
-                  <span className="font-medium">{formatCurrency(paymentDetails.fees.total_fees, paymentDetails.price_currency)}</span>
+                <div className="flex justify-between text-gray-600">
+                  <span>Cryptrac Fee (1.9%):</span>
+                  <span>{formatCurrency(paymentDetails.fees.cryptrac_fee, paymentDetails.price_currency)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Gateway Fee (1.0%):</span>
+                  <span>{formatCurrency(paymentDetails.fees.gateway_fee, paymentDetails.price_currency)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
                   <span>Merchant Receives:</span>
-                  <span>{formatCurrency(paymentDetails.fees.merchant_receives, paymentDetails.price_currency)}</span>
+                  <span className="text-green-600">
+                    {formatCurrency(paymentDetails.fees.merchant_receives, paymentDetails.price_currency)}
+                  </span>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Security Notice */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <Shield className="h-5 w-5 text-green-600 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-gray-900 mb-1">Secure Payment</p>
-                  <p className="text-gray-600">
-                    This payment is processed securely through the blockchain. 
-                    Your transaction will be visible on the public ledger once confirmed.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Footer */}
-          <div className="text-center mt-8 text-sm text-gray-500">
-            <p>Powered by Cryptrac • Secure Cryptocurrency Payments</p>
-          </div>
         </div>
       </div>
     )
   }
 
-  // Initial payment selection screen
+  // Show currency selection
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-purple-100 p-3 rounded-full">
-              <CreditCard className="h-8 w-8 text-purple-600" />
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{paymentLink.title}</h1>
+          <p className="text-gray-600">from {paymentLink.merchant.business_name}</p>
+          {paymentLink.description && (
+            <p className="text-gray-500 mt-2">{paymentLink.description}</p>
+          )}
+          <div className="mt-4">
+            <div className="text-4xl font-bold text-gray-900">
+              {formatCurrency(paymentLink.amount, paymentLink.currency)}
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cryptrac Payment</h1>
-          <p className="text-gray-600">Secure cryptocurrency payment processing</p>
         </div>
 
-        {/* Payment Details */}
+        {/* Customer Email */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>{paymentLink.title}</span>
-              <Badge className="bg-green-100 text-green-800">
-                {paymentLink.status}
-              </Badge>
+            <CardTitle className="flex items-center space-x-2">
+              <CreditCard className="h-5 w-5" />
+              <span>Contact Information (Optional)</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500">Amount</label>
-                <p className="text-3xl font-bold text-gray-900">
-                  {formatCurrency(paymentLink.amount, paymentLink.currency)}
-                </p>
-              </div>
-              
-              {paymentLink.description && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Description</label>
-                  <p className="text-gray-700">{paymentLink.description}</p>
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-medium text-gray-500">Merchant</label>
-                <p className="text-gray-700">{paymentLink.merchant.business_name}</p>
-              </div>
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+              />
+              <p className="text-sm text-gray-500">
+                Optional: Receive payment confirmation and receipt
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Customer Email (Optional) */}
+        {/* Cryptocurrency Selection */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Contact Information (Optional)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Input
-              type="email"
-              placeholder="your@email.com"
-              value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
-              className="w-full"
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              Receive payment confirmation and receipt via email
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Payment Methods */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Choose Payment Method</CardTitle>
-            <p className="text-sm text-gray-600">
-              Select your preferred cryptocurrency to complete the payment
-            </p>
+            <CardTitle>Select Cryptocurrency</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3">
-              {paymentLink.accepted_cryptos.map((crypto) => {
-                const estimate = estimates.find(e => e.currency_to === crypto.toUpperCase())
-                
-                return (
-                  <Button
-                    key={crypto}
-                    variant="outline"
-                    className="w-full justify-start h-auto p-4"
-                    onClick={() => createPayment(crypto)}
-                    disabled={creating}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-bold text-orange-600">
-                            {crypto}
-                          </span>
+              {estimates.map((estimate) => (
+                <div
+                  key={estimate.currency_to}
+                  className="border rounded-lg p-4 hover:border-blue-500 cursor-pointer transition-colors"
+                  onClick={() => createPayment(estimate.currency_to)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                      <Wallet className="h-6 w-6 text-gray-400" />
+                      <div>
+                        <div className="font-semibold text-lg">
+                          {estimate.currency_to.toUpperCase()}
                         </div>
-                        <div className="text-left">
-                          <p className="font-medium">Pay with {crypto}</p>
-                          <p className="text-sm text-gray-500">
-                            {crypto === 'BTC' && 'Bitcoin'}
-                            {crypto === 'ETH' && 'Ethereum'}
-                            {crypto === 'LTC' && 'Litecoin'}
-                            {crypto === 'USDT' && 'Tether'}
-                            {crypto === 'USDC' && 'USD Coin'}
-                          </p>
+                        <div className="text-gray-600">
+                          {formatCrypto(parseFloat(estimate.estimated_amount_formatted), estimate.currency_to)}
                         </div>
                       </div>
-                      {estimate && (
-                        <div className="text-right">
-                          <p className="font-medium">{estimate.estimated_amount_formatted}</p>
-                          <p className="text-sm text-gray-500">{crypto.toUpperCase()}</p>
-                        </div>
-                      )}
                     </div>
-                  </Button>
-                )
-              })}
+                    <div className="text-right">
+                      <div className="text-sm text-gray-500">
+                        Total fees: 2.9%
+                      </div>
+                      <div className="text-sm text-green-600">
+                        Merchant receives: {formatCurrency(paymentLink.amount * 0.971, paymentLink.currency)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            
+
             {creating && (
-              <div className="mt-4 text-center">
-                <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Creating payment...</p>
+              <div className="mt-6 text-center">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                <p className="text-gray-600">Creating payment...</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Security Notice */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-start space-x-3">
-              <Shield className="h-5 w-5 text-green-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-gray-900 mb-1">Secure Payment</p>
-                <p className="text-gray-600">
-                  Your payment is processed securely through our encrypted payment system. 
-                  No sensitive information is stored on our servers.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-500">
-          <p>Powered by Cryptrac • Secure Cryptocurrency Payments</p>
+        <div className="text-center text-sm text-gray-500">
+          <p>Powered by Cryptrac • Secure cryptocurrency payments</p>
         </div>
       </div>
     </div>
