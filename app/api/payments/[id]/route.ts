@@ -55,7 +55,7 @@ export async function GET(
     let linkError = null;
 
     // First try by UUID (id field)
-    const { data: linkById, error: errorById } = await supabase
+    const { data: linkById } = await supabase
       .from('payment_links')
       .select(`
         *,

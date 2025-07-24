@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     console.log('Executing query...');
 
     // Execute query
-    const { data: paymentLinks, error: queryError, count } = await query;
+    const { data: paymentLinks, error: queryError } = await query;
 
     if (queryError) {
       console.error('Query error:', queryError);
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
       .select('status, amount')
       .eq('merchant_id', merchant.id);
 
-    let statistics = {
+    const statistics = {
       total_links: totalCount || 0,
       active_links: 0,
       total_payments: 0,

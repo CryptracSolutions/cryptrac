@@ -81,11 +81,13 @@ export async function POST(request: NextRequest) {
     );
 
     // Check if merchant exists using service role (bypasses RLS)
-    let { data: merchant, error: merchantError } = await serviceSupabase
+    const { data: initialMerchant, error: merchantError } = await serviceSupabase
       .from('merchants')
       .select('id, business_name, user_id')
       .eq('user_id', user.id)
       .single();
+
+    let merchant = initialMerchant;
 
     if (merchantError && merchantError.code === 'PGRST116') {
       console.log('Merchant not found, creating new merchant record...');

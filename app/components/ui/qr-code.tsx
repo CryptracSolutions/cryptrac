@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 interface QRCodeProps {
@@ -108,11 +109,12 @@ export function QRCode({
   return (
     <div className={cn("inline-block", className)}>
       {qrDataURL && (
-        <img
+        <Image
           src={qrDataURL}
           alt="QR Code"
           className="rounded-lg"
-          style={{ width: size, height: size }}
+          width={size}
+          height={size}
           onLoad={() => console.log('QR code image loaded successfully')}
           onError={(e) => {
             console.error('QR code image failed to load:', e)

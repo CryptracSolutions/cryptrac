@@ -89,14 +89,9 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
         const result = await response.json();
         
-        console.log('Payment details API response:', result);
-        console.log('Requested ID:', id);
-        
         if (result.success) {
           // Construct the proper payment URL
           const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${result.data.link_id}`;
-          
-          console.log('Setting payment link data:', result.data);
           
           setPaymentLink({
             ...result.data,
