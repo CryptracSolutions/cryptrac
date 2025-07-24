@@ -32,6 +32,64 @@ export async function GET(
       }
     );
 
+    // Check if this is a public request (no auth header) for customer payment page
+    const authHeader = request.headers.get('authorization');
+    const isPublicRequest = !authHeader;
+
+    if (isPublicRequest) {
+      // Public access for customer payment page - fetch by link_id
+      const { data: paymentLink, error } = await supabase
+        .from('payment_links')
+        .select(`
+          id,
+          link_id,
+          title,
+          description,
+          amount,
+          currency,
+          status,
+          accepted_cryptos,
+          expires_at,
+          max_uses,
+          current_uses,
+          merchant:merchants(
+            business_name
+          )
+        `)
+        .eq('link_id', id)
+        .eq('status', 'active')
+        .single();
+
+      if (error || !paymentLink) {
+        return NextResponse.json(
+          { error: 'Payment link not found' },
+          { status: 404 }
+        );
+      }
+
+      // Check if payment link has expired
+      if (paymentLink.expires_at && new Date(paymentLink.expires_at) < new Date()) {
+        return NextResponse.json(
+          { error: 'Payment link has expired' },
+          { status: 410 }
+        );
+      }
+
+      // Check if payment link has reached max uses
+      if (paymentLink.max_uses && paymentLink.current_uses >= paymentLink.max_uses) {
+        return NextResponse.json(
+          { error: 'Payment link has reached maximum uses' },
+          { status: 410 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        payment_link: paymentLink
+      });
+    }
+
+    // Authenticated request - existing merchant dashboard functionality
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
