@@ -6,21 +6,16 @@ import {
   DollarSign, 
   CreditCard, 
   TrendingUp, 
-  Users, 
-  Link as LinkIcon, 
-  QrCode,
+  LinkIcon, 
   ArrowUpRight,
   ArrowDownRight,
   Plus,
-  ExternalLink,
   Calendar,
   Clock,
-  CheckCircle,
-  AlertTriangle
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Badge } from '@/app/components/ui/badge';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { supabase } from '@/lib/supabase-browser';
@@ -80,7 +75,7 @@ export default function MerchantDashboard() {
               Welcome back, {businessName}!
             </h1>
             <p className="text-gray-600">
-              Here's what's happening with your cryptocurrency payments today.
+              Here&apos;s what&apos;s happening with your cryptocurrency payments today.
             </p>
           </div>
           <div className="flex gap-3">
