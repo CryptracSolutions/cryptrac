@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Badge } from '@/app/components/ui/badge';
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { 
   Search, 
   Plus, 
@@ -15,7 +16,12 @@ import {
   DollarSign,
   CreditCard,
   TrendingUp,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Play,
+  Pause,
+  CheckCircle,
+  MoreHorizontal,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -28,17 +34,28 @@ interface PaymentLink {
   description?: string;
   amount: number;
   currency: string;
-  status: 'active' | 'expired' | 'completed';
+  status: 'active' | 'expired' | 'completed' | 'paused';
   created_at: string;
   expires_at?: string;
   max_uses?: number;
-  current_uses: number;
+  usage_count: number;
   qr_code_data?: string;
+  _status_info?: {
+    stored_status: string;
+    calculated_status: string;
+    is_single_use: boolean;
+    usage_vs_max: string;
+    is_expired: boolean;
+  };
 }
 
 interface Statistics {
   total_links: number;
   active_links: number;
+  completed_links: number;
+  expired_links: number;
+  paused_links: number;
+  single_use_links: number;
   total_payments: number;
   total_revenue: number;
 }
@@ -62,6 +79,10 @@ export default function PaymentsPage() {
   const [statistics, setStatistics] = useState<Statistics>({
     total_links: 0,
     active_links: 0,
+    completed_links: 0,
+    expired_links: 0,
+    paused_links: 0,
+    single_use_links: 0,
     total_payments: 0,
     total_revenue: 0
   });
@@ -72,6 +93,7 @@ export default function PaymentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -125,6 +147,10 @@ export default function PaymentsPage() {
         setStatistics(data.data.statistics || {
           total_links: 0,
           active_links: 0,
+          completed_links: 0,
+          expired_links: 0,
+          paused_links: 0,
+          single_use_links: 0,
           total_payments: 0,
           total_revenue: 0
         });
@@ -145,6 +171,36 @@ export default function PaymentsPage() {
   useEffect(() => {
     fetchPaymentLinks();
   }, [fetchPaymentLinks]);
+
+  const updatePaymentLinkStatus = async (linkId: string, newStatus: string, reason?: string) => {
+    try {
+      setStatusUpdateLoading(linkId);
+      
+      const response = await makeAuthenticatedRequest(`/api/payments/${linkId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus, reason })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update payment link status');
+      }
+
+      const result = await response.json();
+      console.log('Status updated:', result);
+
+      // Refresh the payment links
+      await fetchPaymentLinks();
+      
+    } catch (error) {
+      console.error('Error updating status:', error);
+      setError('Failed to update payment link status');
+    } finally {
+      setStatusUpdateLoading(null);
+    }
+  };
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -177,18 +233,95 @@ export default function PaymentsPage() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, link?: PaymentLink) => {
     const variants = {
-      active: 'default',
-      expired: 'secondary',
-      completed: 'outline'
-    } as const;
+      active: { variant: 'default' as const, color: 'bg-green-100 text-green-800' },
+      expired: { variant: 'secondary' as const, color: 'bg-gray-100 text-gray-800' },
+      completed: { variant: 'outline' as const, color: 'bg-blue-100 text-blue-800' },
+      paused: { variant: 'secondary' as const, color: 'bg-yellow-100 text-yellow-800' }
+    };
 
+    const config = variants[status as keyof typeof variants] || variants.active;
+    
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
+      <div className="flex items-center gap-2">
+        <Badge variant={config.variant} className={config.color}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </Badge>
+        {link?.max_uses === 1 && (
+          <Badge variant="outline" className="text-xs">
+            Single Use
+          </Badge>
+        )}
+      </div>
     );
+  };
+
+  const getStatusActions = (link: PaymentLink) => {
+    const actions = [];
+
+    if (link.status === 'active') {
+      actions.push(
+        <Button
+          key="pause"
+          variant="outline"
+          size="sm"
+          onClick={() => updatePaymentLinkStatus(link.id, 'paused', 'Manually paused by merchant')}
+          disabled={statusUpdateLoading === link.id}
+          className="flex items-center gap-1"
+        >
+          <Pause className="h-3 w-3" />
+          Pause
+        </Button>
+      );
+      actions.push(
+        <Button
+          key="complete"
+          variant="outline"
+          size="sm"
+          onClick={() => updatePaymentLinkStatus(link.id, 'completed', 'Manually completed by merchant')}
+          disabled={statusUpdateLoading === link.id}
+          className="flex items-center gap-1"
+        >
+          <CheckCircle className="h-3 w-3" />
+          Complete
+        </Button>
+      );
+    }
+
+    if (link.status === 'paused') {
+      actions.push(
+        <Button
+          key="resume"
+          variant="outline"
+          size="sm"
+          onClick={() => updatePaymentLinkStatus(link.id, 'active', 'Resumed by merchant')}
+          disabled={statusUpdateLoading === link.id}
+          className="flex items-center gap-1"
+        >
+          <Play className="h-3 w-3" />
+          Resume
+        </Button>
+      );
+    }
+
+    if (link.status === 'expired') {
+      actions.push(
+        <Button
+          key="reactivate"
+          variant="outline"
+          size="sm"
+          onClick={() => updatePaymentLinkStatus(link.id, 'active', 'Reactivated by merchant')}
+          disabled={statusUpdateLoading === link.id}
+          className="flex items-center gap-1"
+        >
+          <Play className="h-3 w-3" />
+          Reactivate
+        </Button>
+      );
+    }
+
+    return actions;
   };
 
   if (loading) {
@@ -209,6 +342,7 @@ export default function PaymentsPage() {
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <p className="text-red-600 mb-4">Error: {error}</p>
             <div className="space-x-2">
               <Button onClick={fetchPaymentLinks} variant="outline">
@@ -240,8 +374,8 @@ export default function PaymentsPage() {
         </Link>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Enhanced Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Links</CardTitle>
@@ -249,22 +383,40 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{statistics.total_links}</div>
-            <p className="text-xs text-muted-foreground">
-              All payment links created
-            </p>
+            <p className="text-xs text-muted-foreground">All payment links</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Links</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Active</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{statistics.active_links}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently accepting payments
-            </p>
+            <div className="text-2xl font-bold text-green-600">{statistics.active_links}</div>
+            <p className="text-xs text-muted-foreground">Accepting payments</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CheckCircle className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{statistics.completed_links}</div>
+            <p className="text-xs text-muted-foreground">Finished or max uses</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Single Use</CardTitle>
+            <CreditCard className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{statistics.single_use_links}</div>
+            <p className="text-xs text-muted-foreground">One-time payments</p>
           </CardContent>
         </Card>
 
@@ -275,9 +427,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{statistics.total_payments}</div>
-            <p className="text-xs text-muted-foreground">
-              Completed transactions
-            </p>
+            <p className="text-xs text-muted-foreground">Completed transactions</p>
           </CardContent>
         </Card>
 
@@ -288,9 +438,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(statistics.total_revenue)}</div>
-            <p className="text-xs text-muted-foreground">
-              Total earnings received
-            </p>
+            <p className="text-xs text-muted-foreground">Total earnings</p>
           </CardContent>
         </Card>
       </div>
@@ -300,7 +448,7 @@ export default function PaymentsPage() {
         <CardHeader>
           <CardTitle>Payment Links</CardTitle>
           <CardDescription>
-            View and manage all your payment links
+            View and manage all your payment links with enhanced status controls
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -323,8 +471,9 @@ export default function PaymentsPage() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -358,7 +507,7 @@ export default function PaymentsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-gray-900">{link.title}</h3>
-                        {getStatusBadge(link.status)}
+                        {getStatusBadge(link.status, link)}
                       </div>
                       
                       {link.description && (
@@ -374,12 +523,16 @@ export default function PaymentsPage() {
                           <span>Expires {formatDate(link.expires_at)}</span>
                         )}
                         {link.max_uses && (
-                          <span>{link.current_uses}/{link.max_uses} uses</span>
+                          <span>{link.usage_count}/{link.max_uses} uses</span>
                         )}
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-2 ml-4">
+                      {/* Status Action Buttons */}
+                      {getStatusActions(link)}
+                      
+                      {/* Standard Action Buttons */}
                       <Button
                         variant="outline"
                         size="sm"

@@ -34,19 +34,45 @@ function isPaymentPartial(status: string): boolean {
   return status === 'partially_paid';
 }
 
+function calculatePaymentLinkStatus(paymentLink: any, newUsageCount: number): string {
+  // If payment link is manually completed, keep it completed
+  if (paymentLink.status === 'completed') {
+    return 'completed';
+  }
+
+  // If payment link is manually paused, keep it paused
+  if (paymentLink.status === 'paused') {
+    return 'paused';
+  }
+
+  // Check if expired
+  if (paymentLink.expires_at && new Date(paymentLink.expires_at) < new Date()) {
+    return 'expired';
+  }
+
+  // Check if max uses reached (including single-use links with max_uses=1)
+  if (paymentLink.max_uses && newUsageCount >= paymentLink.max_uses) {
+    return 'completed';
+  }
+
+  // Otherwise, keep it active
+  return 'active';
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get the raw body for signature verification
     const body = await request.text();
     const signature = request.headers.get('x-nowpayments-sig');
 
-    console.log('NOWPayments webhook received:', {
+    console.log('🔔 NOWPayments webhook received:', {
       hasSignature: !!signature,
-      bodyLength: body.length
+      bodyLength: body.length,
+      timestamp: new Date().toISOString()
     });
 
     if (!signature) {
-      console.error('Missing NOWPayments signature');
+      console.error('❌ Missing NOWPayments signature');
       return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
     }
 
@@ -55,14 +81,14 @@ export async function POST(request: NextRequest) {
     const isValidSignature = nowPayments.verifyIpnSignature(body, signature);
 
     if (!isValidSignature) {
-      console.error('Invalid NOWPayments signature');
+      console.error('❌ Invalid NOWPayments signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     // Parse the IPN data
     const ipnData: NOWPaymentsIPN = JSON.parse(body);
     
-    console.log('NOWPayments IPN processed:', {
+    console.log('📦 NOWPayments IPN processed:', {
       payment_id: ipnData.payment_id,
       status: ipnData.payment_status,
       order_id: ipnData.order_id,
@@ -106,7 +132,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (logError.error) {
-      console.error('Error logging webhook:', logError.error);
+      console.error('⚠️ Error logging webhook:', logError.error);
     }
 
     // Extract link_id from order_id
@@ -120,6 +146,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log('🔍 Looking for payment link:', linkId);
+
     // Find the payment link
     const { data: paymentLink, error: linkError } = await supabase
       .from('payment_links')
@@ -128,9 +156,18 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (linkError || !paymentLink) {
-      console.error('Payment link not found:', linkId);
+      console.error('❌ Payment link not found:', linkId, linkError);
       return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
     }
+
+    console.log('✅ Found payment link:', {
+      id: paymentLink.id,
+      title: paymentLink.title,
+      current_status: paymentLink.status,
+      usage_count: paymentLink.usage_count,
+      max_uses: paymentLink.max_uses,
+      is_single_use: paymentLink.max_uses === 1
+    });
 
     // Check if payment already exists
     const { data: existingPayment, error: paymentError } = await supabase
@@ -140,7 +177,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (paymentError && paymentError.code !== 'PGRST116') {
-      console.error('Error checking existing payment:', paymentError);
+      console.error('❌ Error checking existing payment:', paymentError);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
@@ -178,11 +215,11 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (insertError) {
-        console.error('Error creating payment record:', insertError);
+        console.error('❌ Error creating payment record:', insertError);
         return NextResponse.json({ error: 'Failed to create payment' }, { status: 500 });
       }
 
-      console.log('Payment record created:', newPayment?.id);
+      console.log('✅ Payment record created:', newPayment?.id);
     } else {
       // Update existing payment
       const { error: updateError } = await supabase
@@ -197,25 +234,60 @@ export async function POST(request: NextRequest) {
         .eq('id', existingPayment.id);
 
       if (updateError) {
-        console.error('Error updating payment record:', updateError);
+        console.error('❌ Error updating payment record:', updateError);
         return NextResponse.json({ error: 'Failed to update payment' }, { status: 500 });
       }
 
-      console.log('Payment record updated:', existingPayment.id);
+      console.log('✅ Payment record updated:', existingPayment.id);
     }
 
     // Handle payment completion
     if (isPaymentComplete(ipnData.payment_status)) {
-      console.log('Payment completed:', ipnData.payment_id);
+      console.log('🎉 Payment completed:', ipnData.payment_id);
       
-      // Update payment link usage count
-      await supabase
+      // Calculate new usage count
+      const newUsageCount = paymentLink.usage_count + 1;
+      
+      // Calculate new payment link status
+      const newStatus = calculatePaymentLinkStatus(paymentLink, newUsageCount);
+      
+      console.log('📊 Updating payment link:', {
+        old_usage: paymentLink.usage_count,
+        new_usage: newUsageCount,
+        old_status: paymentLink.status,
+        new_status: newStatus,
+        max_uses: paymentLink.max_uses,
+        expires_at: paymentLink.expires_at,
+        is_single_use: paymentLink.max_uses === 1,
+        will_complete: newStatus === 'completed'
+      });
+
+      // Update payment link with new usage count and status
+      const { error: linkUpdateError } = await supabase
         .from('payment_links')
         .update({
-          usage_count: paymentLink.usage_count + 1,
-          last_payment_at: new Date().toISOString()
+          usage_count: newUsageCount,
+          last_payment_at: new Date().toISOString(),
+          status: newStatus,
+          updated_at: new Date().toISOString()
         })
         .eq('id', paymentLink.id);
+
+      if (linkUpdateError) {
+        console.error('❌ Error updating payment link:', linkUpdateError);
+      } else {
+        console.log('✅ Payment link updated successfully');
+        
+        // Log status change if it occurred
+        if (newStatus !== paymentLink.status) {
+          console.log(`🔄 Payment link status changed: ${paymentLink.status} → ${newStatus}`);
+          
+          // Special logging for single-use links
+          if (paymentLink.max_uses === 1 && newStatus === 'completed') {
+            console.log('🎯 Single-use payment link completed after first payment');
+          }
+        }
+      }
 
       // TODO: Send confirmation email to merchant
       // TODO: Trigger real-time notification to dashboard
@@ -224,9 +296,9 @@ export async function POST(request: NextRequest) {
 
     // Handle partial payments
     if (isPaymentPartial(ipnData.payment_status)) {
-      console.log('Partial payment detected:', ipnData.payment_id);
+      console.log('⚠️ Partial payment detected:', ipnData.payment_id);
       const shortfall = ipnData.pay_amount - (ipnData.actually_paid || 0);
-      console.log('Payment shortfall:', shortfall, ipnData.pay_currency);
+      console.log('💰 Payment shortfall:', shortfall, ipnData.pay_currency);
       
       // TODO: Send partial payment notification to merchant
       // TODO: Update customer payment page with shortfall amount
@@ -234,7 +306,7 @@ export async function POST(request: NextRequest) {
 
     // Handle payment failure
     if (isPaymentFailed(ipnData.payment_status)) {
-      console.log('Payment failed:', ipnData.payment_id, 'Status:', ipnData.payment_status);
+      console.log('❌ Payment failed:', ipnData.payment_id, 'Status:', ipnData.payment_status);
       
       // TODO: Send failure notification to merchant
       // TODO: Log failure reason
@@ -247,6 +319,8 @@ export async function POST(request: NextRequest) {
       .eq('payment_id', ipnData.payment_id)
       .eq('provider', 'nowpayments');
 
+    console.log('✅ Webhook processing completed successfully');
+
     return NextResponse.json({ 
       success: true, 
       message: 'Webhook processed successfully',
@@ -255,7 +329,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    console.error('💥 Webhook processing error:', error);
     
     // Log the error
     try {
@@ -290,7 +364,7 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString()
       });
     } catch (logError) {
-      console.error('Failed to log webhook error:', logError);
+      console.error('💥 Failed to log webhook error:', logError);
     }
 
     return NextResponse.json(
