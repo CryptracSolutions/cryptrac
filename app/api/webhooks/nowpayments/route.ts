@@ -13,7 +13,7 @@ interface NOWPaymentsIPN {
   pay_currency: string;
   order_id: string;
   order_description: string;
-  purchase_id?: string;
+  purchase_id: string;
   created_at: string;
   updated_at: string;
   outcome_amount?: number;
@@ -22,29 +22,16 @@ interface NOWPaymentsIPN {
   actually_paid_at_fiat?: number;
 }
 
-// Payment status mappings
-const PAYMENT_STATUS = {
-  WAITING: 'waiting',
-  CONFIRMING: 'confirming', 
-  CONFIRMED: 'confirmed',
-  SENDING: 'sending',
-  PARTIALLY_PAID: 'partially_paid',
-  FINISHED: 'finished',
-  FAILED: 'failed',
-  REFUNDED: 'refunded',
-  EXPIRED: 'expired'
-} as const;
-
 function isPaymentComplete(status: string): boolean {
-  return [PAYMENT_STATUS.CONFIRMED, PAYMENT_STATUS.FINISHED].includes(status as any);
+  return status === 'confirmed' || status === 'finished';
 }
 
 function isPaymentFailed(status: string): boolean {
-  return [PAYMENT_STATUS.FAILED, PAYMENT_STATUS.EXPIRED, PAYMENT_STATUS.REFUNDED].includes(status as any);
+  return status === 'failed' || status === 'expired' || status === 'refunded';
 }
 
 function isPaymentPartial(status: string): boolean {
-  return status === PAYMENT_STATUS.PARTIALLY_PAID;
+  return status === 'partially_paid';
 }
 
 export async function POST(request: NextRequest) {
@@ -108,7 +95,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Log the webhook event
-    const { error: logError } = await supabase.from('webhook_logs').insert({
+    const logError = await supabase.from('webhook_logs').insert({
       provider: 'nowpayments',
       event_type: 'payment_status_update',
       payment_id: ipnData.payment_id,
@@ -118,39 +105,34 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString()
     });
 
-    if (logError) {
-      console.error('Error logging webhook:', logError);
+    if (logError.error) {
+      console.error('Error logging webhook:', logError.error);
     }
 
-    // Extract link_id from order_id (format: cryptrac_pl_XXXXX_timestamp)
-    const linkIdMatch = ipnData.order_id.match(/cryptrac_(pl_[^_]+)_/);
-    const linkId = linkIdMatch ? linkIdMatch[1] : null;
-
-    if (!linkId) {
-      console.error('Could not extract link_id from order_id:', ipnData.order_id);
-      return NextResponse.json({ error: 'Invalid order_id format' }, { status: 400 });
+    // Extract link_id from order_id
+    let linkId = ipnData.order_id;
+    
+    // If order_id follows format "cryptrac_pl_XXXXX_timestamp", extract the link_id
+    if (ipnData.order_id.startsWith('cryptrac_')) {
+      const parts = ipnData.order_id.split('_');
+      if (parts.length >= 3 && parts[1] === 'pl') {
+        linkId = `${parts[1]}_${parts[2]}`;
+      }
     }
 
     // Find the payment link
     const { data: paymentLink, error: linkError } = await supabase
       .from('payment_links')
-      .select(`
-        *,
-        merchant:merchants(
-          id,
-          business_name,
-          user_id
-        )
-      `)
+      .select('*')
       .eq('link_id', linkId)
       .single();
 
     if (linkError || !paymentLink) {
-      console.error('Payment link not found for link_id:', linkId, linkError);
+      console.error('Payment link not found:', linkId);
       return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
     }
 
-    // Find existing payment record
+    // Check if payment already exists
     const { data: existingPayment, error: paymentError } = await supabase
       .from('merchant_payments')
       .select('*')
@@ -162,38 +144,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
-    // Calculate fees based on actual amounts
-    const baseAmount = ipnData.price_amount;
-    const actuallyPaid = ipnData.actually_paid || ipnData.pay_amount;
+    // Calculate fees
+    const baseAmount = ipnData.actually_paid || ipnData.price_amount;
     const cryptracFeeRate = 0.019; // 1.9%
     const nowPaymentsFeeRate = 0.01; // 1% (estimated)
-    
     const cryptracFee = baseAmount * cryptracFeeRate;
     const nowPaymentsFee = baseAmount * nowPaymentsFeeRate;
     const totalFees = cryptracFee + nowPaymentsFee;
-    const merchantReceives = Math.max(0, baseAmount - totalFees);
-
-    // Determine payment completion status
-    const isComplete = isPaymentComplete(ipnData.payment_status);
-    const isFailed = isPaymentFailed(ipnData.payment_status);
-    const isPartial = isPaymentPartial(ipnData.payment_status);
+    const merchantReceives = baseAmount - totalFees;
 
     if (!existingPayment) {
       // Create new payment record
       const { data: newPayment, error: insertError } = await supabase
         .from('merchant_payments')
         .insert({
-          merchant_id: paymentLink.merchant.id,
+          merchant_id: paymentLink.merchant_id,
           payment_link_id: paymentLink.id,
           nowpayments_invoice_id: ipnData.payment_id,
-          order_id: ipnData.order_id,
-          amount: baseAmount,
-          amount_received: actuallyPaid,
-          currency: ipnData.price_currency.toUpperCase(),
-          currency_received: ipnData.pay_currency.toUpperCase(),
+          amount: ipnData.price_amount,
+          currency: ipnData.price_currency,
+          pay_amount: ipnData.actually_paid || ipnData.pay_amount,
+          pay_currency: ipnData.pay_currency,
           status: ipnData.payment_status,
           pay_address: ipnData.pay_address,
-          pay_amount: ipnData.pay_amount,
           cryptrac_fee: cryptracFee,
           gateway_fee: nowPaymentsFee,
           merchant_receives: merchantReceives,
@@ -209,14 +182,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create payment' }, { status: 500 });
       }
 
-      console.log('Created new payment record:', newPayment?.id);
+      console.log('Payment record created:', newPayment?.id);
     } else {
       // Update existing payment
       const { error: updateError } = await supabase
         .from('merchant_payments')
         .update({
           status: ipnData.payment_status,
-          amount_received: actuallyPaid,
+          pay_amount: ipnData.actually_paid || ipnData.pay_amount,
           merchant_receives: merchantReceives,
           payment_data: ipnData,
           updated_at: ipnData.updated_at
@@ -228,70 +201,51 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to update payment' }, { status: 500 });
       }
 
-      console.log('Updated existing payment record:', existingPayment.id);
+      console.log('Payment record updated:', existingPayment.id);
     }
 
     // Handle payment completion
-    if (isComplete) {
-      console.log('🎉 Payment completed successfully:', {
-        payment_id: ipnData.payment_id,
-        amount_paid: actuallyPaid,
-        merchant_receives: merchantReceives
-      });
+    if (isPaymentComplete(ipnData.payment_status)) {
+      console.log('Payment completed:', ipnData.payment_id);
       
       // Update payment link usage count
-      const { error: usageError } = await supabase
+      await supabase
         .from('payment_links')
         .update({
-          usage_count: (paymentLink.usage_count || 0) + 1,
+          usage_count: paymentLink.usage_count + 1,
           last_payment_at: new Date().toISOString()
         })
         .eq('id', paymentLink.id);
 
-      if (usageError) {
-        console.error('Error updating usage count:', usageError);
-      }
-
       // TODO: Send confirmation email to merchant
       // TODO: Trigger real-time notification to dashboard
-      // TODO: Process fee distribution to merchant wallet
+      // TODO: Process fee distribution
     }
 
     // Handle partial payments
-    if (isPartial) {
-      console.log('⚠️ Partial payment received:', {
-        payment_id: ipnData.payment_id,
-        expected: ipnData.pay_amount,
-        received: actuallyPaid,
-        shortfall: ipnData.pay_amount - actuallyPaid
-      });
-
+    if (isPaymentPartial(ipnData.payment_status)) {
+      console.log('Partial payment detected:', ipnData.payment_id);
+      const shortfall = ipnData.pay_amount - (ipnData.actually_paid || 0);
+      console.log('Payment shortfall:', shortfall, ipnData.pay_currency);
+      
       // TODO: Send partial payment notification to merchant
-      // TODO: Provide customer with option to complete payment
+      // TODO: Update customer payment page with shortfall amount
     }
 
     // Handle payment failure
-    if (isFailed) {
-      console.log('❌ Payment failed:', {
-        payment_id: ipnData.payment_id,
-        status: ipnData.payment_status,
-        reason: ipnData.payment_status
-      });
+    if (isPaymentFailed(ipnData.payment_status)) {
+      console.log('Payment failed:', ipnData.payment_id, 'Status:', ipnData.payment_status);
       
       // TODO: Send failure notification to merchant
-      // TODO: Log failure reason for analytics
+      // TODO: Log failure reason
     }
 
     // Mark webhook as processed
     await supabase
       .from('webhook_logs')
-      .update({ 
-        processed: true,
-        processed_at: new Date().toISOString()
-      })
+      .update({ processed: true })
       .eq('payment_id', ipnData.payment_id)
-      .eq('provider', 'nowpayments')
-      .eq('processed', false);
+      .eq('provider', 'nowpayments');
 
     return NextResponse.json({ 
       success: true, 
@@ -301,7 +255,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Webhook processing error:', error);
+    console.error('Webhook processing error:', error);
     
     // Log the error
     try {
@@ -331,7 +285,7 @@ export async function POST(request: NextRequest) {
         provider: 'nowpayments',
         event_type: 'webhook_error',
         error_message: error instanceof Error ? error.message : 'Unknown error',
-        raw_data: { error: error instanceof Error ? error.stack : error },
+        raw_data: { error: error instanceof Error ? error.stack : String(error) },
         processed: false,
         created_at: new Date().toISOString()
       });
@@ -350,9 +304,8 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({ 
     status: 'ok', 
-    service: 'nowpayments-webhook-enhanced',
-    timestamp: new Date().toISOString(),
-    version: '2.0'
+    service: 'nowpayments-webhook',
+    timestamp: new Date().toISOString()
   });
 }
 
