@@ -141,6 +141,27 @@ $_$;
 ALTER FUNCTION "public"."handle_monthly_bonus"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."update_payment_link_usage"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    -- Update usage count when a payment is confirmed
+    IF NEW.status = 'confirmed' AND (OLD.status IS NULL OR OLD.status != 'confirmed') THEN
+        UPDATE payment_links 
+        SET 
+            usage_count = COALESCE(usage_count, 0) + 1,
+            last_payment_at = NOW()
+        WHERE id = NEW.payment_link_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_payment_link_usage"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."update_updated_at_column"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
@@ -212,16 +233,33 @@ CREATE TABLE IF NOT EXISTS "public"."merchant_payments" (
     "merchant_id" "uuid",
     "invoice_id" "text",
     "amount" numeric(18,2),
-    "currency" "text",
-    "pay_currency" "text",
+    "currency" character varying(20),
+    "pay_currency" character varying(20),
     "status" "text" DEFAULT 'pending'::"text",
     "tx_hash" "text",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "nowpayments_invoice_id" character varying(100)
+    "nowpayments_invoice_id" character varying(100),
+    "payment_link_id" "uuid",
+    "order_id" character varying(255),
+    "amount_received" numeric(18,8) DEFAULT 0,
+    "currency_received" character varying(10),
+    "pay_address" "text",
+    "pay_amount" numeric(18,8),
+    "cryptrac_fee" numeric(18,8) DEFAULT 0,
+    "gateway_fee" numeric(18,8) DEFAULT 0,
+    "merchant_receives" numeric(18,8) DEFAULT 0,
+    "customer_email" character varying(255),
+    "payment_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "expires_at" timestamp with time zone,
+    "updated_at" timestamp with time zone DEFAULT "now"()
 );
 
 
 ALTER TABLE "public"."merchant_payments" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."merchant_payments" IS 'Updated for Phase 5 NOWPayments integration - all required columns added';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."merchants" (
@@ -295,7 +333,7 @@ CREATE TABLE IF NOT EXISTS "public"."payment_links" (
     "title" character varying(255) NOT NULL,
     "description" "text",
     "amount" numeric(18,8) NOT NULL,
-    "currency" character varying(10) DEFAULT 'USD'::character varying NOT NULL,
+    "currency" character varying(20) DEFAULT 'USD'::character varying NOT NULL,
     "accepted_cryptos" "jsonb" DEFAULT '["BTC", "ETH", "LTC"]'::"jsonb",
     "link_id" character varying(50) NOT NULL,
     "qr_code_data" "text",
@@ -305,7 +343,9 @@ CREATE TABLE IF NOT EXISTS "public"."payment_links" (
     "current_uses" integer DEFAULT 0,
     "metadata" "jsonb" DEFAULT '{}'::"jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "usage_count" integer DEFAULT 0,
+    "last_payment_at" timestamp with time zone
 );
 
 
@@ -372,21 +412,25 @@ ALTER TABLE "public"."support_messages" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."supported_currencies" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "code" character varying(10) NOT NULL,
+    "code" character varying(20) NOT NULL,
     "name" character varying(100) NOT NULL,
-    "symbol" character varying(10),
+    "symbol" character varying(20),
     "enabled" boolean DEFAULT true,
     "min_amount" numeric(18,8) DEFAULT 0.00000001,
     "max_amount" numeric(18,8),
     "decimals" integer DEFAULT 8,
     "icon_url" character varying(500),
-    "nowpayments_code" character varying(10),
+    "nowpayments_code" character varying(20),
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"()
 );
 
 
 ALTER TABLE "public"."supported_currencies" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."supported_currencies" IS 'Column sizes updated for Phase 5 NOWPayments integration - supports longer currency codes';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."upgrade_history" (
@@ -405,19 +449,27 @@ CREATE TABLE IF NOT EXISTS "public"."webhook_logs" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "source" character varying(50) NOT NULL,
     "event_type" character varying(100) NOT NULL,
-    "headers" "jsonb",
-    "payload" "jsonb" NOT NULL,
-    "signature" character varying(500),
+    "request_headers" "jsonb",
+    "request_payload" "jsonb" NOT NULL,
+    "request_signature" character varying(500),
     "processed" boolean DEFAULT false,
     "processing_error" "text",
     "merchant_id" "uuid",
     "payment_id" "uuid",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "processed_at" timestamp with time zone
+    "processed_at" timestamp with time zone,
+    "provider" character varying(50) DEFAULT 'nowpayments'::character varying,
+    "status" character varying(50),
+    "raw_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "error_message" "text"
 );
 
 
 ALTER TABLE "public"."webhook_logs" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."webhook_logs" IS 'Updated for Phase 5 NOWPayments webhook handling';
+
 
 
 ALTER TABLE ONLY "public"."audit_logs"
@@ -545,6 +597,14 @@ CREATE INDEX "idx_merchant_payments_nowpayments_invoice_id" ON "public"."merchan
 
 
 
+CREATE INDEX "idx_merchant_payments_order_id" ON "public"."merchant_payments" USING "btree" ("order_id");
+
+
+
+CREATE INDEX "idx_merchant_payments_payment_link_id" ON "public"."merchant_payments" USING "btree" ("payment_link_id");
+
+
+
 CREATE INDEX "idx_merchant_payments_status" ON "public"."merchant_payments" USING "btree" ("status");
 
 
@@ -601,7 +661,15 @@ CREATE INDEX "idx_webhook_logs_created_at" ON "public"."webhook_logs" USING "btr
 
 
 
+CREATE INDEX "idx_webhook_logs_payment_id" ON "public"."webhook_logs" USING "btree" ("payment_id");
+
+
+
 CREATE INDEX "idx_webhook_logs_processed" ON "public"."webhook_logs" USING "btree" ("processed");
+
+
+
+CREATE INDEX "idx_webhook_logs_provider" ON "public"."webhook_logs" USING "btree" ("provider");
 
 
 
@@ -610,6 +678,10 @@ CREATE INDEX "idx_webhook_logs_source" ON "public"."webhook_logs" USING "btree" 
 
 
 CREATE OR REPLACE TRIGGER "after_rep_sales_update" AFTER UPDATE ON "public"."rep_sales" FOR EACH ROW WHEN ((("old"."validated" IS DISTINCT FROM "new"."validated") AND ("new"."validated" = true))) EXECUTE FUNCTION "public"."handle_monthly_bonus"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_update_payment_link_usage" AFTER INSERT OR UPDATE ON "public"."merchant_payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_payment_link_usage"();
 
 
 
@@ -641,6 +713,11 @@ ALTER TABLE ONLY "public"."fiat_payouts"
 
 ALTER TABLE ONLY "public"."merchant_payments"
     ADD CONSTRAINT "merchant_payments_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."merchant_payments"
+    ADD CONSTRAINT "merchant_payments_payment_link_id_fkey" FOREIGN KEY ("payment_link_id") REFERENCES "public"."payment_links"("id");
 
 
 
@@ -712,6 +789,18 @@ CREATE POLICY "Admin can insert any payment link" ON "public"."payment_links" FO
 
 
 
+CREATE POLICY "Allow public read access to active payment links" ON "public"."payment_links" FOR SELECT USING ((("status")::"text" = 'active'::"text"));
+
+
+
+CREATE POLICY "Allow public read access to merchant business names" ON "public"."merchants" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "Allow webhook logging" ON "public"."webhook_logs" FOR INSERT WITH CHECK (true);
+
+
+
 CREATE POLICY "Audit logs view admin" ON "public"."audit_logs" FOR SELECT USING (("auth"."email"() = 'admin@cryptrac.com'::"text"));
 
 
@@ -763,6 +852,12 @@ CREATE POLICY "Merchants can manage their own payment links" ON "public"."paymen
 CREATE POLICY "Merchants can manage their own payments" ON "public"."merchant_payments" USING (("merchant_id" IN ( SELECT "merchants"."id"
    FROM "public"."merchants"
   WHERE ("merchants"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants can view their payment data" ON "public"."merchant_payments" FOR SELECT USING ((("merchant_id" IN ( SELECT "merchants"."id"
+   FROM "public"."merchants"
+  WHERE ("merchants"."user_id" = "auth"."uid"()))) OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
 
 
 
@@ -820,6 +915,14 @@ CREATE POLICY "Support messages view" ON "public"."support_messages" FOR SELECT 
 
 
 
+CREATE POLICY "System can insert payment data" ON "public"."merchant_payments" FOR INSERT WITH CHECK (true);
+
+
+
+CREATE POLICY "System can update payment data" ON "public"."merchant_payments" FOR UPDATE USING (true);
+
+
+
 CREATE POLICY "Users can insert their own merchant records" ON "public"."merchants" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
 
 
@@ -870,6 +973,9 @@ ALTER TABLE "public"."support_messages" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."upgrade_history" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."webhook_logs" ENABLE ROW LEVEL SECURITY;
+
+
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
@@ -898,6 +1004,12 @@ GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_payment_link_usage"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_payment_link_usage"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_payment_link_usage"() TO "service_role";
 
 
 
@@ -1034,6 +1146,9 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
+
+
+
 -- Create buckets
 select storage.create_bucket('w9-uploads', public := false);
 select storage.create_bucket('promo-kits', public := true);
