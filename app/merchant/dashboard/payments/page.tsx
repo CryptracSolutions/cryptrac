@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Badge } from '@/app/components/ui/badge';
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { 
   Search, 
   Plus, 
@@ -20,7 +19,6 @@ import {
   Play,
   Pause,
   CheckCircle,
-  MoreHorizontal,
   AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';

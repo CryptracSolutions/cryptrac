@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-function calculatePaymentLinkStatus(link: any): string {
+interface PaymentLink {
+  id: string;
+  status: string;
+  usage_count: number;
+  max_uses: number | null;
+  expires_at: string | null;
+}
+
+function calculatePaymentLinkStatus(link: PaymentLink): string {
   // If manually completed, keep it completed
   if (link.status === 'completed') {
     return 'completed';
@@ -138,7 +146,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate real-time status for each payment link and apply status filter
     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
-      const calculatedStatus = calculatePaymentLinkStatus(link);
+      const calculatedStatus = calculatePaymentLinkStatus(link as PaymentLink);
       return {
         ...link,
         status: calculatedStatus,
@@ -171,7 +179,7 @@ export async function GET(request: NextRequest) {
     // Calculate statistics with real-time status
     const allLinksWithStatus = (allLinks || []).map(link => ({
       ...link,
-      status: calculatePaymentLinkStatus(link)
+      status: calculatePaymentLinkStatus(link as PaymentLink)
     }));
 
     // Apply search filter to all links for accurate count

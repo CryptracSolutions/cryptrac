@@ -22,6 +22,16 @@ interface NOWPaymentsIPN {
   actually_paid_at_fiat?: number;
 }
 
+interface PaymentLink {
+  id: string;
+  merchant_id: string;
+  title: string;
+  status: string;
+  usage_count: number;
+  max_uses: number | null;
+  expires_at: string | null;
+}
+
 function isPaymentComplete(status: string): boolean {
   return status === 'confirmed' || status === 'finished';
 }
@@ -34,7 +44,7 @@ function isPaymentPartial(status: string): boolean {
   return status === 'partially_paid';
 }
 
-function calculatePaymentLinkStatus(paymentLink: any, newUsageCount: number): string {
+function calculatePaymentLinkStatus(paymentLink: PaymentLink, newUsageCount: number): string {
   // If payment link is manually completed, keep it completed
   if (paymentLink.status === 'completed') {
     return 'completed';
@@ -249,7 +259,7 @@ export async function POST(request: NextRequest) {
       const newUsageCount = paymentLink.usage_count + 1;
       
       // Calculate new payment link status
-      const newStatus = calculatePaymentLinkStatus(paymentLink, newUsageCount);
+      const newStatus = calculatePaymentLinkStatus(paymentLink as PaymentLink, newUsageCount);
       
       console.log('📊 Updating payment link:', {
         old_usage: paymentLink.usage_count,
