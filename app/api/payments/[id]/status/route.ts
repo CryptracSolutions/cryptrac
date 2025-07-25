@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ) {
   try {
     console.log('=== PAYMENT LINK STATUS UPDATE API START ===');
+    
+    // Await the params in Next.js 15
+    const { id } = await context.params;
     
     // Get Authorization header
     const authHeader = request.headers.get('Authorization');
@@ -28,7 +35,7 @@ export async function PATCH(
       }, { status: 400 });
     }
 
-    console.log('Status update request:', { id: params.id, status, reason });
+    console.log('Status update request:', { id, status, reason });
 
     // Create regular Supabase client for authentication
     const supabase = createClient(
@@ -74,7 +81,7 @@ export async function PATCH(
     const { data: paymentLink, error: linkError } = await serviceSupabase
       .from('payment_links')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('merchant_id', merchant.id)
       .single();
 
@@ -105,7 +112,7 @@ export async function PATCH(
         status: status,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('merchant_id', merchant.id)
       .select()
       .single();
@@ -119,7 +126,7 @@ export async function PATCH(
     await serviceSupabase.from('audit_logs').insert({
       action: 'payment_link_status_update',
       user_id: user.id,
-      affected_id: params.id,
+      affected_id: id,
       details: {
         old_status: paymentLink.status,
         new_status: status,
@@ -129,7 +136,7 @@ export async function PATCH(
     });
 
     console.log('✅ Payment link status updated:', {
-      id: params.id,
+      id: id,
       old_status: paymentLink.status,
       new_status: status
     });
