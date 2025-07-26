@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 // GET merchant settings
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Initialize Supabase client
     const cookieStore = await cookies();
@@ -89,8 +89,13 @@ export async function GET(request: NextRequest) {
 // PUT update merchant settings
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { auto_convert_enabled, preferred_payout_currency, wallets } = body;
+    const requestData: {
+      auto_convert_enabled: boolean;
+      preferred_payout_currency: string | null;
+      wallets: Record<string, string>;
+    } = await request.json();
+    
+    const { auto_convert_enabled, preferred_payout_currency, wallets } = requestData;
 
     // Initialize Supabase client
     const cookieStore = await cookies();

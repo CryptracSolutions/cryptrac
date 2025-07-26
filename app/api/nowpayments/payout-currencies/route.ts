@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNOWPaymentsClient } from '@/lib/nowpayments';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get NOWPayments client
     const nowPayments = getNOWPaymentsClient();

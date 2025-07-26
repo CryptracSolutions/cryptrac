@@ -145,7 +145,19 @@ export async function POST(request: NextRequest) {
     const orderId = `cryptrac_${paymentLink.link_id}_${Date.now()}`;
 
     // Prepare NOWPayments payment request with auto-conversion support
-    const paymentRequest: any = {
+    const paymentRequest: {
+      price_amount: number;
+      price_currency: string;
+      pay_currency: string;
+      order_id: string;
+      order_description: string;
+      ipn_callback_url: string;
+      success_url: string;
+      cancel_url: string;
+      is_fee_paid_by_user: boolean;
+      payout_address: string;
+      payout_currency?: string;
+    } = {
       price_amount: paymentLink.amount,
       price_currency: paymentLink.currency.toLowerCase(),
       pay_currency: pay_currency.toLowerCase(),

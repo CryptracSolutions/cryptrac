@@ -21,9 +21,7 @@ import {
   QrCode, 
   AlertTriangle,
   CheckCircle,
-  Loader2,
-  Info,
-  Settings
+  Loader2
 } from 'lucide-react'
 
 interface FormData {
