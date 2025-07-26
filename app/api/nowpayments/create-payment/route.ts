@@ -154,13 +154,13 @@ export async function POST(request: NextRequest) {
       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       success_url: success_url || `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
       cancel_url: cancel_url || `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancelled`,
-      is_fee_paid_by_user: false // Merchant pays the fee
+      is_fee_paid_by_user: false, // Merchant pays the fee
+      payout_address: payoutAddress // ALWAYS include for non-custodial flow
     };
 
-    // Add payout details if auto-conversion is enabled
-    if (autoConvertEnabled && preferredPayoutCurrency && payoutAddress) {
+    // Add payout currency if auto-conversion is enabled
+    if (autoConvertEnabled && preferredPayoutCurrency) {
       paymentRequest.payout_currency = payoutCurrency;
-      paymentRequest.payout_address = payoutAddress;
     }
 
     console.log('Creating NOWPayments payment:', {
