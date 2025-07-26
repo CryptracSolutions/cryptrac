@@ -149,7 +149,12 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update merchant settings
-    const updateData: any = {
+    const updateData: {
+      updated_at: string;
+      auto_convert_enabled?: boolean;
+      preferred_payout_currency?: string | null;
+      wallets?: Record<string, string>;
+    } = {
       updated_at: new Date().toISOString()
     };
 
