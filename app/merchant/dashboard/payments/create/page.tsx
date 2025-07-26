@@ -220,8 +220,6 @@ export default function CreatePaymentPage() {
   // If payment link was created successfully, show success page
   if (createdPaymentLink) {
     const feeAmount = createdPaymentLink.metadata?.fee_amount || 0
-    const feePercentage = createdPaymentLink.metadata?.fee_percentage || 0.5
-    const totalAmount = createdPaymentLink.metadata?.total_amount || createdPaymentLink.amount
 
     return (
       <div className="max-w-2xl mx-auto space-y-6">

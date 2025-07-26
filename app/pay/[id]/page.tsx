@@ -7,7 +7,6 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { 
   CreditCard,
-  Shield,
   AlertCircle,
   RefreshCw,
   Copy,
