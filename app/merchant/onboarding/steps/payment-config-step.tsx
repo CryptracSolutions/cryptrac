@@ -155,13 +155,13 @@ export default function PaymentConfigStep({ data, onComplete, onPrevious }: Paym
                     </h4>
                     <div className="space-y-2 text-sm text-gray-700">
                       <div className="flex justify-between items-center">
-                        <span>Transaction Fee:</span>
-                        <span className="font-semibold text-[#7f5efd]">2.9% per transaction</span>
+                        <span>Gateway Fee:</span>
+                        <span className="font-semibold text-[#7f5efd]">Cryptrac Gateway Fee: 0.5% (no conversion), 1% (auto-convert enabled)</span>
                       </div>
                       <div className="text-xs text-gray-500">
-                        • 1.9% goes to Cryptrac for platform services<br/>
-                        • Up to 1.0% goes to payment processing (varies by crypto)<br/>
-                        • No hidden fees, no monthly charges, no setup costs
+                        • Gateway Fee is automatically deducted per transaction<br/>
+                        • Cryptrac does not charge transaction fees<br/>
+                        • No hidden fees, $19/month or $199/year subscription
                       </div>
                     </div>
                   </div>
@@ -195,7 +195,7 @@ export default function PaymentConfigStep({ data, onComplete, onPrevious }: Paym
                   <div>
                     <h4 className="font-medium text-gray-900">Fee Deduction</h4>
                     <p className="text-sm text-gray-600">
-                      2.9% transaction fee is automatically deducted
+                      Gateway Fee is automatically deducted; Cryptrac does not hold or touch any funds.
                     </p>
                   </div>
                 </div>

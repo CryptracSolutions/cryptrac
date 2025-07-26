@@ -531,37 +531,6 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
             </Card>
           )}
 
-          {/* Fee Breakdown */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="h-5 w-5" />
-                <span>Fee Breakdown</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{formatCurrency(paymentDetails.price_amount, paymentDetails.price_currency)}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Cryptrac Fee (1.9%):</span>
-                  <span>{formatCurrency(paymentDetails.fees.cryptrac_fee, paymentDetails.price_currency)}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Gateway Fee (1.0%):</span>
-                  <span>{formatCurrency(paymentDetails.fees.gateway_fee, paymentDetails.price_currency)}</span>
-                </div>
-                <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Merchant Receives:</span>
-                  <span className="text-green-600">
-                    {formatCurrency(paymentDetails.fees.merchant_receives, paymentDetails.price_currency)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     )
@@ -638,11 +607,8 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-gray-500">
-                        Total fees: 2.9%
-                      </div>
-                      <div className="text-sm text-green-600">
-                        Merchant receives: {formatCurrency(paymentLink.amount * 0.971, paymentLink.currency)}
+                      <div className="text-sm text-blue-600 font-medium">
+                        Select to pay
                       </div>
                     </div>
                   </div>

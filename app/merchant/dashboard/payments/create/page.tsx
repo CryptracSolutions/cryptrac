@@ -220,7 +220,7 @@ export default function CreatePaymentPage() {
   // If payment link was created successfully, show success page
   if (createdPaymentLink) {
     const feeAmount = createdPaymentLink.metadata?.fee_amount || 0
-    const feePercentage = createdPaymentLink.metadata?.fee_percentage || 2.5
+    const feePercentage = createdPaymentLink.metadata?.fee_percentage || 0.5
     const totalAmount = createdPaymentLink.metadata?.total_amount || createdPaymentLink.amount
 
     return (
@@ -263,12 +263,12 @@ export default function CreatePaymentPage() {
                     <span>{formatCurrency(createdPaymentLink.amount, createdPaymentLink.currency)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Processing Fee ({feePercentage.toFixed(1)}%):</span>
+                    <span className="text-gray-600">Gateway Fee (0.5% no conversion, 1% auto-convert):</span>
                     <span>{formatCurrency(feeAmount, createdPaymentLink.currency)}</span>
                   </div>
                   <div className="flex justify-between font-medium border-t pt-1">
-                    <span>Total Amount:</span>
-                    <span>{formatCurrency(totalAmount, createdPaymentLink.currency)}</span>
+                    <span>You Receive:</span>
+                    <span>{formatCurrency(createdPaymentLink.amount - feeAmount, createdPaymentLink.currency)}</span>
                   </div>
                 </div>
               </div>

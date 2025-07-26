@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
@@ -33,45 +33,18 @@ interface SuccessStepProps {
 }
 
 export default function SuccessStep({ onboardingData, onFinish, isLoading }: SuccessStepProps) {
-  const [showConfetti, setShowConfetti] = useState(false)
-
-  useEffect(() => {
-    // Trigger confetti animation
-    setShowConfetti(true)
-    const timer = setTimeout(() => setShowConfetti(false), 3000)
-    return () => clearTimeout(timer)
-  }, [])
-
   const { businessInfo, walletConfig, paymentConfig } = onboardingData
 
   return (
     <div className="max-w-2xl mx-auto">
       <Card className="shadow-lg border-0 bg-white relative overflow-hidden">
-        {/* Confetti Effect */}
-        {showConfetti && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
-              {[...Array(20)].map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute w-2 h-2 bg-[#7f5efd] rounded-full animate-bounce"
-                  style={{
-                    left: `${Math.random() * 400 - 200}px`,
-                    animationDelay: `${Math.random() * 2}s`,
-                    animationDuration: `${1 + Math.random()}s`
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
         <CardHeader className="text-center pb-6">
           <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
-            🎉 Congratulations!
+            Congratulations!
           </CardTitle>
           <p className="text-lg text-gray-600">
             Your Cryptrac account is ready to accept cryptocurrency payments!
@@ -133,7 +106,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
                   <h4 className="font-medium text-gray-900">Payment Settings</h4>
                   <div className="mt-2 space-y-2">
                     <div className="text-sm text-gray-600">
-                      <strong>Transaction Fee:</strong> {paymentConfig.feePercentage}%
+                      <strong>Gateway Fee:</strong> 0.5% (no conversion), 1% (auto-convert enabled)
                     </div>
                     <div>
                       <span className="text-sm text-gray-600"><strong>Accepted Cryptos:</strong></span>

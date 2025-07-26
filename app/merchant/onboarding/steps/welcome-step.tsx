@@ -29,7 +29,7 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
     {
       icon: DollarSign,
       title: 'Transparent Fees',
-      description: 'Only 2.9% transaction fee - no hidden costs'
+      description: 'Cryptrac Gateway Fee: 0.5% (no conversion), 1% (auto-convert enabled)'
     }
   ]
 

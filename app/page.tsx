@@ -52,9 +52,9 @@ export default function Home() {
   ];
 
   const benefits = [
-    "7-day free trial",
-    "No setup fees during trial",
-    "2.9% transaction fee",
+    "30-day free trial",
+    "$19/month or $199/year subscription – 30 days free",
+    "Cryptrac Gateway Fee: 0.5% (no conversion), 1% (auto-convert enabled)",
     "Non-custodial security",
     "Real-time notifications",
     "Mobile-friendly interface"
@@ -100,12 +100,12 @@ export default function Home() {
               <span className="text-gradient">Crypto</span>
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-              The simplest way to accept cryptocurrency payments. Non-custodial, secure, and designed for modern businesses.
+              Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button size="lg" className="text-base" asChild>
                 <Link href="/signup">
-                  Start Free Trial
+                  Get Started Free - 30-Day Trial Available
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -114,7 +114,7 @@ export default function Home() {
               </Button>
             </div>
             <div className="mt-8 text-sm text-muted-foreground">
-              7-day free trial • No credit card required • 2.9% transaction fee
+              30-day free trial • $19/month or $199/year • Cryptrac Gateway Fee applies (see pricing)
             </div>
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function Home() {
               Simple, transparent pricing
             </h2>
             <p className="text-lg text-muted-foreground">
-              No hidden fees. No monthly subscriptions. Pay only when you get paid.
+              Cryptrac does not charge any transaction fee. A Gateway Fee (0.5% or 1%) is automatically deducted by the platform per transaction—see dashboard for breakdown. This fee is not Cryptrac revenue.
             </p>
           </div>
           <div className="max-w-lg mx-auto">
@@ -200,8 +200,11 @@ export default function Home() {
                   Everything you need to get started
                 </CardDescription>
                 <div className="mt-6">
-                  <span className="text-4xl font-bold">2.9%</span>
-                  <span className="text-muted-foreground ml-2">per transaction</span>
+                  <span className="text-4xl font-bold">$19</span>
+                  <span className="text-muted-foreground ml-2">/month</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  or $199/year (save $29)
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -217,7 +220,7 @@ export default function Home() {
                   <Link href="/signup">Start Free Trial</Link>
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  No setup fees during 7-day trial period
+                  Accept all cryptos, 0.5% Gateway fee, 30-day trial for setup
                 </p>
               </CardContent>
             </Card>

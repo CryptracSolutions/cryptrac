@@ -84,7 +84,7 @@ export class NOWPaymentsClient {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`NOWPayments API error: ${response.status} - ${errorText}`);
+      throw new Error(`Payment processor error: ${response.status} - ${errorText}`);
     }
 
     return response.json();
@@ -162,11 +162,11 @@ export function calculateCryptracFees(amount: number): {
   totalFees: number;
   merchantReceives: number;
 } {
-  // 2.9% total fee structure: 1.9% Cryptrac + up to 1% NOWPayments
-  const cryptracFeeRate = 0.019; // 1.9%
-  const nowPaymentsFeeRate = 0.01; // 1% (max)
+  // Gateway Fee structure: 0.5% (no conversion) or 1% (auto-convert enabled)
+  // Cryptrac does not charge transaction fees - only gateway fees apply
+  const cryptracFee = 0; // Cryptrac does not charge transaction fees
+  const nowPaymentsFeeRate = 0.005; // 0.5% default (1% if auto-convert enabled, handled in business logic)
   
-  const cryptracFee = amount * cryptracFeeRate;
   const nowPaymentsFee = amount * nowPaymentsFeeRate;
   const totalFees = cryptracFee + nowPaymentsFee;
   const merchantReceives = amount - totalFees;

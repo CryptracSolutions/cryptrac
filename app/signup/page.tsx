@@ -48,9 +48,9 @@ export default function Signup() {
         console.warn('Could not detect country:', ipError);
       }
 
-      // Calculate trial end date (7 days from now)
+      // Calculate trial end date (30 days from now)
       const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 7);
+      trialEnd.setDate(trialEnd.getDate() + 30);
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -105,7 +105,7 @@ export default function Signup() {
           </p>
           <div className="flex justify-center mt-4">
             <Badge variant="success" className="text-xs">
-              7-day free trial • No setup fees during trial
+              30-day free trial
             </Badge>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function Signup() {
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl text-center">Create account</CardTitle>
             <CardDescription className="text-center">
-              Start accepting cryptocurrency payments today
+              $19/month or $199/year after trial
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -205,7 +205,7 @@ export default function Signup() {
             </div>
             <div className="flex items-center justify-center gap-2">
               <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-              <span>2.9% transaction fee</span>
+              <span>Cryptrac Gateway Fee: 0.5% (no conversion), 1% (auto-convert enabled)</span>
             </div>
           </div>
         </div>
