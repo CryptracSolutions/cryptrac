@@ -37,6 +37,8 @@ interface PaymentLink {
   created_at: string;
   updated_at: string;
   payment_url: string;
+  auto_convert_enabled?: boolean;
+  fee_percentage?: number;
   metadata?: {
     fee_percentage?: number;
     fee_amount?: number;
@@ -229,9 +231,11 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
     );
   }
 
-  const feePercentage = 0;
-  const feeAmount = 0;
+  const feePercentage = paymentLink.fee_percentage ? paymentLink.fee_percentage * 100 : 0;
+  const feeAmount = paymentLink.metadata?.fee_amount || (paymentLink.amount * (paymentLink.fee_percentage || 0));
   const totalAmount = paymentLink.amount;
+  const autoConvertEnabled = paymentLink.auto_convert_enabled || false;
+  const feeLabel = autoConvertEnabled ? `${feePercentage.toFixed(1)}% (Auto-conversion enabled)` : `${feePercentage.toFixed(1)}% (Direct crypto)`;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -290,12 +294,12 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                     <span>{formatCurrency(paymentLink.amount, paymentLink.currency)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Processing Fee ({feePercentage.toFixed(1)}%):</span>
+                    <span className="text-gray-600">Processing Fee ({feeLabel}):</span>
                     <span>{formatCurrency(feeAmount, paymentLink.currency)}</span>
                   </div>
                   <div className="flex justify-between font-medium border-t pt-1">
-                    <span>Total Amount:</span>
-                    <span>{formatCurrency(totalAmount, paymentLink.currency)}</span>
+                    <span>You Receive:</span>
+                    <span>{formatCurrency(totalAmount - feeAmount, paymentLink.currency)}</span>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
@@ -21,7 +21,9 @@ import {
   QrCode, 
   AlertTriangle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Info,
+  Settings
 } from 'lucide-react'
 
 interface FormData {
@@ -55,6 +57,12 @@ interface CreatedPaymentLink {
   }
 }
 
+interface MerchantSettings {
+  auto_convert_enabled: boolean
+  preferred_payout_currency: string | null
+  wallets: Record<string, string>
+}
+
 const SUPPORTED_CRYPTOS = [
   { code: 'BTC', name: 'Bitcoin', symbol: '₿' },
   { code: 'ETH', name: 'Ethereum', symbol: 'Ξ' },
@@ -76,11 +84,47 @@ export default function CreatePaymentPage() {
     redirectUrl: ''
   })
   
+  const [merchantSettings, setMerchantSettings] = useState<MerchantSettings>({
+    auto_convert_enabled: false,
+    preferred_payout_currency: null,
+    wallets: {}
+  })
+  
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [createdPaymentLink, setCreatedPaymentLink] = useState<CreatedPaymentLink | null>(null)
   const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch merchant settings on component mount
+  useEffect(() => {
+    const fetchMerchantSettings = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+
+        const response = await fetch('/api/merchants/settings', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            setMerchantSettings(result.settings)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch merchant settings:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMerchantSettings()
+  }, [])
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -130,6 +174,20 @@ export default function CreatePaymentPage() {
       return true
     } catch {
       return false
+    }
+  }
+
+  const calculateFeeInfo = () => {
+    const amount = parseFloat(formData.amount) || 0
+    const feePercentage = merchantSettings.auto_convert_enabled ? 0.01 : 0.005 // 1% or 0.5%
+    const feeAmount = amount * feePercentage
+    const merchantReceives = amount - feeAmount
+
+    return {
+      feePercentage: feePercentage * 100, // Convert to percentage
+      feeAmount,
+      merchantReceives,
+      feeLabel: merchantSettings.auto_convert_enabled ? '1% (Auto-conversion enabled)' : '0.5% (Direct crypto)'
     }
   }
 
@@ -217,9 +275,17 @@ export default function CreatePaymentPage() {
     }).format(amount)
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
   // If payment link was created successfully, show success page
   if (createdPaymentLink) {
-    const feeAmount = createdPaymentLink.metadata?.fee_amount || 0
+    const feeInfo = calculateFeeInfo()
 
     return (
       <div className="max-w-2xl mx-auto space-y-6">
@@ -261,12 +327,12 @@ export default function CreatePaymentPage() {
                     <span>{formatCurrency(createdPaymentLink.amount, createdPaymentLink.currency)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Gateway Fee (0.5% no conversion, 1% auto-convert):</span>
-                    <span>{formatCurrency(feeAmount, createdPaymentLink.currency)}</span>
+                    <span className="text-gray-600">Gateway Fee ({feeInfo.feeLabel}):</span>
+                    <span>{formatCurrency(feeInfo.feeAmount, createdPaymentLink.currency)}</span>
                   </div>
                   <div className="flex justify-between font-medium border-t pt-1">
                     <span>You Receive:</span>
-                    <span>{formatCurrency(createdPaymentLink.amount - feeAmount, createdPaymentLink.currency)}</span>
+                    <span>{formatCurrency(feeInfo.merchantReceives, createdPaymentLink.currency)}</span>
                   </div>
                 </div>
               </div>

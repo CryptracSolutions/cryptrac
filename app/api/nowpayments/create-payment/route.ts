@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Get payment link details
+    // Get payment link details with merchant information
     const { data: paymentLink, error: linkError } = await supabase
       .from('payment_links')
       .select(`
@@ -98,32 +98,79 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get auto-conversion settings from the payment link (not current merchant settings)
+    const merchant = paymentLink.merchant;
+    const autoConvertEnabled = paymentLink.auto_convert_enabled || false;
+    const preferredPayoutCurrency = paymentLink.preferred_payout_currency;
+    const merchantWallets = merchant.wallets || {};
+
+    console.log('Using payment link auto-conversion settings:', {
+      autoConvertEnabled,
+      preferredPayoutCurrency,
+      paymentLinkId: paymentLink.id
+    });
+
+    // Determine payout currency and address
+    let payoutCurrency = pay_currency.toLowerCase();
+    let payoutAddress = merchantWallets[payoutCurrency];
+
+    if (autoConvertEnabled && preferredPayoutCurrency) {
+      payoutCurrency = preferredPayoutCurrency.toLowerCase();
+      payoutAddress = merchantWallets[payoutCurrency];
+
+      // Validate that merchant has the required payout wallet
+      if (!payoutAddress) {
+        return NextResponse.json(
+          { error: `Merchant wallet address for ${payoutCurrency.toUpperCase()} is required for auto-conversion` },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Validate that merchant has wallet for the payment currency
+      if (!payoutAddress) {
+        return NextResponse.json(
+          { error: `Merchant wallet address for ${pay_currency.toUpperCase()} is required` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Get NOWPayments client
     const nowPayments = getNOWPaymentsClient();
 
-    // Calculate fees
-    const fees = calculateCryptracFees(paymentLink.amount);
+    // Calculate fees based on auto-conversion setting
+    const fees = calculateCryptracFees(paymentLink.amount, autoConvertEnabled);
 
     // Create unique order ID
     const orderId = `cryptrac_${paymentLink.link_id}_${Date.now()}`;
 
-    // Prepare NOWPayments payment request
-    const paymentRequest = {
+    // Prepare NOWPayments payment request with auto-conversion support
+    const paymentRequest: any = {
       price_amount: paymentLink.amount,
       price_currency: paymentLink.currency.toLowerCase(),
       pay_currency: pay_currency.toLowerCase(),
       order_id: orderId,
-      order_description: `${paymentLink.title} - ${paymentLink.merchant.business_name}`,
+      order_description: `${paymentLink.title} - ${merchant.business_name}`,
       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       success_url: success_url || `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
-      cancel_url: cancel_url || `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancelled`
+      cancel_url: cancel_url || `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancelled`,
+      is_fee_paid_by_user: false // Merchant pays the fee
     };
+
+    // Add payout details if auto-conversion is enabled
+    if (autoConvertEnabled && preferredPayoutCurrency && payoutAddress) {
+      paymentRequest.payout_currency = payoutCurrency;
+      paymentRequest.payout_address = payoutAddress;
+    }
 
     console.log('Creating NOWPayments payment:', {
       orderId,
       amount: paymentRequest.price_amount,
       currency: paymentRequest.price_currency,
-      payCurrency: paymentRequest.pay_currency
+      payCurrency: paymentRequest.pay_currency,
+      payoutCurrency: paymentRequest.payout_currency || 'same as pay_currency',
+      autoConvert: autoConvertEnabled,
+      feePercentage: fees.feePercentage
     });
 
     // Create payment with NOWPayments
@@ -135,26 +182,34 @@ export async function POST(request: NextRequest) {
       payAddress: nowPayment.pay_address
     });
 
-    // Store payment in database using ONLY existing columns
+    // Store payment in database with enhanced fields
     const { data: merchantPayment, error: paymentError } = await supabase
       .from('merchant_payments')
       .insert({
-        merchant_id: paymentLink.merchant.id,
+        merchant_id: merchant.id,
         payment_link_id: paymentLink.id,
         nowpayments_invoice_id: nowPayment.payment_id,
         order_id: orderId,
         amount: paymentLink.amount,
         amount_received: 0,
         currency: paymentLink.currency,
+        pay_currency: pay_currency.toUpperCase(),
+        payout_currency: payoutCurrency.toUpperCase(),
         currency_received: pay_currency.toUpperCase(),
         status: nowPayment.payment_status,
         pay_address: nowPayment.pay_address,
         pay_amount: nowPayment.pay_amount,
         cryptrac_fee: fees.cryptracFee,
-        gateway_fee: fees.nowPaymentsFee,
+        gateway_fee: fees.gatewayFee,
         merchant_receives: fees.merchantReceives,
         customer_email: customer_email,
-        payment_data: nowPayment,
+        payment_data: {
+          ...nowPayment,
+          auto_convert_enabled: autoConvertEnabled,
+          preferred_payout_currency: preferredPayoutCurrency,
+          payout_address: payoutAddress,
+          fee_percentage: fees.feePercentage
+        },
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -180,7 +235,7 @@ export async function POST(request: NextRequest) {
       qrCodeData = `${pay_currency.toLowerCase()}:${nowPayment.pay_address}?amount=${nowPayment.pay_amount}`;
     }
 
-    // Return payment details
+    // Return payment details with auto-conversion information
     return NextResponse.json({
       success: true,
       payment: {
@@ -191,22 +246,25 @@ export async function POST(request: NextRequest) {
         pay_address: nowPayment.pay_address,
         pay_amount: nowPayment.pay_amount,
         pay_currency: pay_currency.toUpperCase(),
+        payout_currency: payoutCurrency.toUpperCase(),
         price_amount: paymentLink.amount,
         price_currency: paymentLink.currency,
         qr_code_data: qrCodeData,
         payment_url: nowPayment.payment_url,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        auto_convert_enabled: autoConvertEnabled,
         fees: {
           cryptrac_fee: fees.cryptracFee,
-          gateway_fee: fees.nowPaymentsFee,
+          gateway_fee: fees.gatewayFee,
           total_fees: fees.totalFees,
-          merchant_receives: fees.merchantReceives
+          merchant_receives: fees.merchantReceives,
+          fee_percentage: fees.feePercentage
         }
       },
       payment_link: {
         title: paymentLink.title,
         description: paymentLink.description,
-        merchant_name: paymentLink.merchant.business_name
+        merchant_name: merchant.business_name
       }
     });
 

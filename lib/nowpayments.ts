@@ -13,11 +13,14 @@ export interface CreatePaymentRequest {
   price_amount: number;
   price_currency: string;
   pay_currency?: string;
+  payout_currency?: string;
+  payout_address?: string;
   ipn_callback_url?: string;
   order_id: string;
   order_description: string;
   success_url?: string;
   cancel_url?: string;
+  is_fee_paid_by_user?: boolean;
 }
 
 export interface PaymentResponse {
@@ -95,6 +98,11 @@ export class NOWPaymentsClient {
     return this.makeRequest<Currency[]>('/currencies');
   }
 
+  // Get available payout currencies for auto-conversion
+  async getPayoutCurrencies(): Promise<Currency[]> {
+    return this.makeRequest<Currency[]>('/payout-currencies');
+  }
+
   // Get estimate for currency conversion
   async getEstimate(request: EstimateRequest): Promise<EstimateResponse> {
     const params = new URLSearchParams({
@@ -156,26 +164,28 @@ export function getNOWPaymentsClient(): NOWPaymentsClient {
 }
 
 // Fee calculation utilities
-export function calculateCryptracFees(amount: number): {
+export function calculateCryptracFees(amount: number, autoConvertEnabled: boolean = false): {
   cryptracFee: number;
-  nowPaymentsFee: number;
+  gatewayFee: number;
   totalFees: number;
   merchantReceives: number;
+  feePercentage: number;
 } {
   // Gateway Fee structure: 0.5% (no conversion) or 1% (auto-convert enabled)
   // Cryptrac does not charge transaction fees - only gateway fees apply
   const cryptracFee = 0; // Cryptrac does not charge transaction fees
-  const nowPaymentsFeeRate = 0.005; // 0.5% default (1% if auto-convert enabled, handled in business logic)
+  const feePercentage = autoConvertEnabled ? 0.01 : 0.005; // 1% or 0.5%
   
-  const nowPaymentsFee = amount * nowPaymentsFeeRate;
-  const totalFees = cryptracFee + nowPaymentsFee;
+  const gatewayFee = amount * feePercentage;
+  const totalFees = cryptracFee + gatewayFee;
   const merchantReceives = amount - totalFees;
 
   return {
     cryptracFee,
-    nowPaymentsFee,
+    gatewayFee,
     totalFees,
     merchantReceives,
+    feePercentage,
   };
 }
 

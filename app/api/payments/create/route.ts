@@ -80,10 +80,10 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Check if merchant exists using service role (bypasses RLS)
+    // Check if merchant exists and get auto-conversion settings using service role (bypasses RLS)
     const { data: initialMerchant, error: merchantError } = await serviceSupabase
       .from('merchants')
-      .select('id, business_name, user_id')
+      .select('id, business_name, user_id, auto_convert_enabled, preferred_payout_currency')
       .eq('user_id', user.id)
       .single();
 
@@ -101,9 +101,11 @@ export async function POST(request: NextRequest) {
           onboarding_completed: true,
           onboarding_step: 5,
           setup_paid: true,
-          preferred_currencies: accepted_cryptos
+          preferred_currencies: accepted_cryptos,
+          auto_convert_enabled: false,
+          preferred_payout_currency: null
         })
-        .select()
+        .select('id, business_name, user_id, auto_convert_enabled, preferred_payout_currency')
         .single();
 
       if (createError) {
@@ -135,20 +137,27 @@ export async function POST(request: NextRequest) {
 
     console.log('Found/created merchant:', merchant.id);
 
-    // Calculate fees
+    // Get merchant's current auto-conversion settings
+    const autoConvertEnabled = merchant.auto_convert_enabled || false;
+    const preferredPayoutCurrency = merchant.preferred_payout_currency;
+
+    // Calculate fees based on auto-conversion setting
     const amountNum = parseFloat(amount);
-    const cryptracFeePercentage = 1.9;
-    const gatewayFeePercentage = 1.0;
-    const totalFeePercentage = 2.9;
-    
-    const cryptracFeeAmount = amountNum * (cryptracFeePercentage / 100);
-    const gatewayFeeAmount = amountNum * (gatewayFeePercentage / 100);
-    const merchantAmount = amountNum - cryptracFeeAmount - gatewayFeeAmount;
+    const feePercentage = autoConvertEnabled ? 0.01 : 0.005; // 1% or 0.5%
+    const feeAmount = amountNum * feePercentage;
+    const merchantReceives = amountNum - feeAmount;
+
+    console.log('Fee calculation:', {
+      autoConvertEnabled,
+      feePercentage: feePercentage * 100 + '%',
+      feeAmount,
+      merchantReceives
+    });
 
     // Generate payment URL
     const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/${linkId}`;
 
-    // Create payment link using service role (bypasses RLS)
+    // Create payment link using service role (bypasses RLS) with auto-conversion settings
     const { data: paymentLink, error: insertError } = await serviceSupabase
       .from('payment_links')
       .insert({
@@ -163,15 +172,17 @@ export async function POST(request: NextRequest) {
         expires_at: expires_at ? new Date(expires_at).toISOString() : null,
         max_uses: max_uses || null,
         status: 'active',
+        auto_convert_enabled: autoConvertEnabled,
+        preferred_payout_currency: preferredPayoutCurrency,
+        fee_percentage: feePercentage,
         metadata: {
           redirect_url: redirect_url || null,
           fee_breakdown: {
-            cryptrac_fee_percentage: cryptracFeePercentage,
-            gateway_fee_percentage: gatewayFeePercentage,
-            total_fee_percentage: totalFeePercentage,
-            cryptrac_fee_amount: cryptracFeeAmount,
-            gateway_fee_amount: gatewayFeeAmount,
-            merchant_amount: merchantAmount
+            fee_percentage: feePercentage * 100,
+            fee_amount: feeAmount,
+            merchant_receives: merchantReceives,
+            auto_convert_enabled: autoConvertEnabled,
+            preferred_payout_currency: preferredPayoutCurrency
           }
         }
       })
@@ -195,11 +206,10 @@ export async function POST(request: NextRequest) {
         ...paymentLink,
         payment_url: paymentUrl,
         qr_code_data: paymentUrl,
-        fee_breakdown: {
-          cryptracFee: cryptracFeeAmount,
-          nowPaymentsFee: gatewayFeeAmount,
-          totalFees: cryptracFeeAmount + gatewayFeeAmount,
-          merchantReceives: merchantAmount
+        metadata: {
+          ...paymentLink.metadata,
+          fee_amount: feeAmount,
+          fee_percentage: feePercentage * 100
         }
       }
     });
