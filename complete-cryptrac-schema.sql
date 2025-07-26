@@ -22,39 +22,168 @@ COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
 
-CREATE OR REPLACE FUNCTION "public"."calculate_proration"("merchant_id" "uuid", "full_fee" numeric) RETURNS numeric
+CREATE OR REPLACE FUNCTION "public"."calculate_monthly_leaderboard"("target_month" "date" DEFAULT "date_trunc"('month'::"text", ("now"() - '1 mon'::interval))) RETURNS TABLE("rep_id" "uuid", "sales_count" integer, "rank" integer, "bonus_amount" numeric, "tie_count" integer)
+    LANGUAGE "plpgsql"
+    AS $_$
+BEGIN
+    RETURN QUERY
+    WITH monthly_sales AS (
+        SELECT 
+            rs.rep_id,
+            COUNT(*) as sales
+        FROM rep_sales rs
+        WHERE rs.validated = TRUE
+        AND date_trunc('month', rs.date) = target_month
+        GROUP BY rs.rep_id
+        HAVING COUNT(*) >= 5  -- Minimum 5 sales to qualify (Bible Section 7.6)
+    ),
+    ranked_sales AS (
+        SELECT 
+            rep_id,
+            sales::INT,
+            DENSE_RANK() OVER (ORDER BY sales DESC) as rank,
+            COUNT(*) OVER (PARTITION BY sales) as tie_count
+        FROM monthly_sales
+    ),
+    bonus_calculation AS (
+        SELECT 
+            rs.*,
+            CASE 
+                WHEN rs.rank = 1 THEN 300.0 / rs.tie_count  -- 1st place: $300 split among ties
+                WHEN rs.rank = 2 THEN 200.0 / rs.tie_count  -- 2nd place: $200 split among ties  
+                WHEN rs.rank = 3 THEN 100.0 / rs.tie_count  -- 3rd place: $100 split among ties
+                ELSE 0.0
+            END as bonus
+        FROM ranked_sales rs
+        WHERE rs.rank <= 3
+    )
+    SELECT 
+        bc.rep_id,
+        bc.sales,
+        bc.rank,
+        bc.bonus,
+        bc.tie_count
+    FROM bonus_calculation bc;
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."calculate_monthly_leaderboard"("target_month" "date") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."calculate_monthly_leaderboard_secure"("target_month" "date" DEFAULT "date_trunc"('month'::"text", ("now"() - '1 mon'::interval))) RETURNS TABLE("rep_id" "uuid", "sales_count" integer, "rank" integer, "bonus_amount" numeric, "tie_count" integer)
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
-DECLARE
-    usage INTEGER;
-    days_used INTEGER;
-    total_days INTEGER := 14; -- 14-day refund window
 BEGIN
-    -- Get usage count and calculate days since setup
-    SELECT 
-        COALESCE(usage_count, 0),
-        GREATEST(0, EXTRACT(days FROM NOW() - created_at)::INTEGER)
-    INTO usage, days_used
-    FROM merchants 
-    WHERE id = merchant_id;
-    
-    -- Full refund if no usage and within 14 days
-    IF usage = 0 AND days_used <= total_days THEN
-        RETURN full_fee;
+    -- Check if user is rep or admin
+    IF NOT EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE id = auth.uid() 
+        AND role IN ('rep', 'admin')
+    ) THEN
+        RAISE EXCEPTION 'Access denied: Only reps and admins can view leaderboard';
     END IF;
     
-    -- Prorated refund based on usage and time
-    IF days_used <= total_days THEN
-        RETURN full_fee * (1 - (usage::NUMERIC / 100.0)) * (1 - (days_used::NUMERIC / total_days));
-    END IF;
-    
-    -- No refund after 14 days
-    RETURN 0;
+    -- Return the leaderboard data
+    RETURN QUERY SELECT * FROM calculate_monthly_leaderboard(target_month);
 END;
 $$;
 
 
-ALTER FUNCTION "public"."calculate_proration"("merchant_id" "uuid", "full_fee" numeric) OWNER TO "postgres";
+ALTER FUNCTION "public"."calculate_monthly_leaderboard_secure"("target_month" "date") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) RETURNS "text"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    -- If manually completed, keep it completed
+    IF p_current_status = 'completed' THEN
+        RETURN 'completed';
+    END IF;
+
+    -- If manually paused, keep it paused
+    IF p_current_status = 'paused' THEN
+        RETURN 'paused';
+    END IF;
+
+    -- Check if expired
+    IF p_expires_at IS NOT NULL AND p_expires_at < NOW() THEN
+        RETURN 'expired';
+    END IF;
+
+    -- Check if max uses reached (including single-use links with max_uses=1)
+    IF p_max_uses IS NOT NULL AND p_usage_count >= p_max_uses THEN
+        RETURN 'completed';
+    END IF;
+
+    -- Otherwise, it's active
+    RETURN 'active';
+END;
+$$;
+
+
+ALTER FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) IS 'Calculates the correct status for a payment link based on business rules';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."calculate_rep_tier"("rep_id" "uuid", "target_month" "date" DEFAULT "date_trunc"('month'::"text", ("now"() - '1 mon'::interval))) RETURNS integer
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    prev_month_sales INT;
+    new_tier INT;
+BEGIN
+    -- Count validated sales from previous month
+    SELECT COUNT(*) INTO prev_month_sales
+    FROM rep_sales rs
+    WHERE rs.rep_id = calculate_rep_tier.rep_id
+    AND rs.validated = TRUE
+    AND date_trunc('month', rs.date) = target_month;
+    
+    -- Determine tier based on Bible Section 7.3.1
+    IF prev_month_sales >= 8 THEN
+        new_tier := 3;  -- 100% commission
+    ELSIF prev_month_sales >= 4 THEN
+        new_tier := 2;  -- 80% commission
+    ELSE
+        new_tier := 1;  -- 60% commission
+    END IF;
+    
+    RETURN new_tier;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."calculate_rep_tier"("rep_id" "uuid", "target_month" "date") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."calculate_subscription_proration"("merchant_id" "uuid", "subscription_amount" numeric, "days_used" integer, "total_days" integer) RETURNS numeric
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+    -- This function is for admin use only for subscription refunds
+    -- Bible: "Manual for subscription, and prorated based on usage at our discretion"
+    
+    -- Simple proration based on time used
+    IF days_used >= total_days THEN
+        RETURN 0;  -- No refund if full period used
+    END IF;
+    
+    -- Return prorated amount based on unused days
+    RETURN subscription_amount * ((total_days - days_used)::NUMERIC / total_days);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."calculate_subscription_proration"("merchant_id" "uuid", "subscription_amount" numeric, "days_used" integer, "total_days" integer) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" "uuid", "subscription_amount" numeric, "days_used" integer, "total_days" integer) IS 'Admin-only function for manual subscription proration. Bible: No automatic refunds, admin discretion only.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text" DEFAULT 'My Business'::"text") RETURNS TABLE("id" "uuid", "user_id" "uuid", "business_name" "text", "onboarding_completed" boolean, "onboarding_step" integer, "setup_paid" boolean)
@@ -105,40 +234,219 @@ $$;
 ALTER FUNCTION "public"."get_current_merchant_id"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") RETURNS TABLE("total_links" integer, "active_links" integer, "completed_links" integer, "expired_links" integer, "paused_links" integer, "single_use_links" integer, "total_payments" integer, "total_revenue" numeric)
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    RETURN QUERY
+    WITH link_stats AS (
+        SELECT 
+            COUNT(*) as total,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'active') as active,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'completed') as completed,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'expired') as expired,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'paused') as paused,
+            COUNT(*) FILTER (WHERE max_uses = 1) as single_use
+        FROM payment_links
+        WHERE merchant_id = p_merchant_id
+    ),
+    payment_stats AS (
+        SELECT 
+            COUNT(*) as payments,
+            COALESCE(SUM(amount), 0) as revenue
+        FROM merchant_payments
+        WHERE merchant_id = p_merchant_id
+        AND status IN ('confirmed', 'finished')
+    )
+    SELECT 
+        link_stats.total::INTEGER,
+        link_stats.active::INTEGER,
+        link_stats.completed::INTEGER,
+        link_stats.expired::INTEGER,
+        link_stats.paused::INTEGER,
+        link_stats.single_use::INTEGER,
+        payment_stats.payments::INTEGER,
+        payment_stats.revenue::NUMERIC
+    FROM link_stats, payment_stats;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") IS 'Returns comprehensive statistics for merchant payment links with real-time status calculation';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."handle_monthly_bonus"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $_$
-BEGIN
-  -- Per Bible: On validation, increment sales, check for $100 every 3, add tiered commission on setup fee
-  -- (Full leaderboard ties in monthly cron per Section 11)
-  -- Assume setup_fee = 99, tier from reps table
-  DECLARE
+DECLARE
     current_sales INT;
     tier_percentage INT;
-    commission NUMERIC;
-  BEGIN
-    current_sales := (SELECT total_sales + 1 FROM reps WHERE id = NEW.rep_id FOR UPDATE);
-    UPDATE reps SET total_sales = current_sales WHERE id = NEW.rep_id;
-    
-    -- $100 every 3 validated sales
-    IF current_sales % 3 = 0 THEN
-      UPDATE reps SET total_commission = total_commission + 100 WHERE id = NEW.rep_id;
-      INSERT INTO monthly_bonus_log (rep_id, month, sales_count, bonus_amount, paid) 
-      VALUES (NEW.rep_id, date_trunc('month', NOW()), current_sales, 100, false);
+    setup_commission NUMERIC;
+    bonus_amount NUMERIC := 0;
+BEGIN
+    -- Only process when a sale becomes validated
+    IF NEW.validated = TRUE AND (OLD.validated IS NULL OR OLD.validated = FALSE) THEN
+        
+        -- Get current rep info
+        SELECT total_sales + 1, tier INTO current_sales, tier_percentage
+        FROM reps WHERE id = NEW.rep_id FOR UPDATE;
+        
+        -- Update total sales count
+        UPDATE reps SET total_sales = current_sales WHERE id = NEW.rep_id;
+        
+        -- Calculate tiered commission on $99 setup fee (Bible Section 7.3.1)
+        setup_commission := CASE tier_percentage
+            WHEN 1 THEN 99 * 0.60  -- Tier 1: 60%
+            WHEN 2 THEN 99 * 0.80  -- Tier 2: 80%
+            WHEN 3 THEN 99 * 1.00  -- Tier 3: 100%
+            ELSE 99 * 0.60         -- Default to Tier 1
+        END;
+        
+        -- Add setup fee commission
+        UPDATE reps SET total_commission = total_commission + setup_commission WHERE id = NEW.rep_id;
+        
+        -- $100 bonus every 3 validated sales (Bible Section 7)
+        IF current_sales % 3 = 0 THEN
+            bonus_amount := 100;
+            UPDATE reps SET total_commission = total_commission + bonus_amount WHERE id = NEW.rep_id;
+            
+            -- Log the bonus
+            INSERT INTO monthly_bonus_log (rep_id, month, sales_count, bonus_amount, paid, original_bonus, split_bonus) 
+            VALUES (NEW.rep_id, date_trunc('month', NOW()), current_sales, bonus_amount, FALSE, bonus_amount, bonus_amount);
+        END IF;
+        
     END IF;
     
-    -- Tiered commission on $99 setup (per Bible Section 7.3.1)
-    SELECT CASE tier WHEN 1 THEN 50 WHEN 2 THEN 75 WHEN 3 THEN 100 END INTO tier_percentage FROM reps WHERE id = NEW.rep_id;
-    commission := 99 * (tier_percentage / 100.0);
-    UPDATE reps SET total_commission = total_commission + commission WHERE id = NEW.rep_id;
-    
     RETURN NEW;
-  END;
 END;
 $_$;
 
 
 ALTER FUNCTION "public"."handle_monthly_bonus"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."handle_partner_referral"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $_$
+BEGIN
+    -- When merchant becomes onboarded and setup is paid, validate partner referral
+    IF NEW.onboarded = TRUE AND NEW.setup_paid = TRUE AND 
+       (OLD.onboarded = FALSE OR OLD.setup_paid = FALSE) AND
+       NEW.referred_by_partner IS NOT NULL THEN
+        
+        -- Insert or update partner referral record
+        INSERT INTO partner_referrals (partner_id, merchant_id, validated, validated_at)
+        VALUES (NEW.referred_by_partner, NEW.id, TRUE, NOW())
+        ON CONFLICT (partner_id, merchant_id) 
+        DO UPDATE SET validated = TRUE, validated_at = NOW();
+        
+        -- Update partner totals ($50 per validated referral - Bible Section 8)
+        UPDATE partners 
+        SET total_referrals = total_referrals + 1,
+            total_bonus = total_bonus + 50
+        WHERE id = NEW.referred_by_partner;
+        
+    END IF;
+    
+    RETURN NEW;
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."handle_partner_referral"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_expired_payment_links"() RETURNS integer
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    updated_count INTEGER := 0;
+BEGIN
+    -- Update all payment links that have expired but are still active or paused
+    UPDATE payment_links
+    SET 
+        status = 'expired',
+        updated_at = NOW()
+    WHERE 
+        expires_at IS NOT NULL 
+        AND expires_at < NOW() 
+        AND status IN ('active', 'paused');
+    
+    GET DIAGNOSTICS updated_count = ROW_COUNT;
+    
+    -- Log the batch update
+    IF updated_count > 0 THEN
+        INSERT INTO audit_logs (action, details)
+        VALUES (
+            'batch_expire_payment_links',
+            jsonb_build_object(
+                'updated_count', updated_count,
+                'timestamp', NOW()
+            )
+        );
+    END IF;
+    
+    RETURN updated_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_expired_payment_links"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_expired_payment_links"() IS 'Batch function to update expired payment links (for cron jobs)';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_payment_link_status"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    new_status TEXT;
+BEGIN
+    -- Calculate the new status
+    new_status := calculate_payment_link_status(
+        NEW.status,
+        NEW.usage_count,
+        NEW.max_uses,
+        NEW.expires_at
+    );
+
+    -- Update the status if it has changed
+    IF new_status != NEW.status THEN
+        NEW.status := new_status;
+        NEW.updated_at := NOW();
+        
+        -- Log the automatic status change
+        INSERT INTO audit_logs (action, affected_id, details)
+        VALUES (
+            'payment_link_auto_status_update',
+            NEW.id,
+            jsonb_build_object(
+                'old_status', OLD.status,
+                'new_status', new_status,
+                'reason', 'automatic_calculation',
+                'usage_count', NEW.usage_count,
+                'max_uses', NEW.max_uses,
+                'expires_at', NEW.expires_at
+            )
+        );
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_payment_link_status"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_payment_link_status"() IS 'Trigger function to automatically update payment link status';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."update_payment_link_usage"() RETURNS "trigger"
@@ -284,15 +592,38 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "business_industry" character varying(100),
     "business_description" "text",
     "preferred_currencies" "jsonb" DEFAULT '["BTC", "ETH", "LTC"]'::"jsonb",
-    "payment_config" "jsonb" DEFAULT '{"auto_forward": true, "fee_percentage": 2.9}'::"jsonb",
+    "payment_config" "jsonb" DEFAULT '{"auto_forward": true, "fee_percentage": 0.5, "auto_convert_fee": 1.0}'::"jsonb",
     "setup_paid" boolean DEFAULT false,
     "setup_fee_amount" numeric(10,2) DEFAULT 99.00,
     "updated_at" timestamp with time zone DEFAULT "now"(),
-    CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at"))
+    "auto_convert_enabled" boolean DEFAULT false,
+    "preferred_payout_currency" "text",
+    "subscription_plan" "text",
+    "subscription_status" "text" DEFAULT 'active'::"text",
+    "monthly_subscription_id" "text",
+    "yearly_subscription_id" "text",
+    "last_subscription_payment" timestamp with time zone,
+    "referred_by_rep" "uuid",
+    "referred_by_partner" "uuid",
+    CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at")),
+    CONSTRAINT "merchants_subscription_plan_check" CHECK (("subscription_plan" = ANY (ARRAY['monthly'::"text", 'yearly'::"text"]))),
+    CONSTRAINT "merchants_subscription_status_check" CHECK (("subscription_status" = ANY (ARRAY['active'::"text", 'cancelled'::"text", 'past_due'::"text"])))
 );
 
 
 ALTER TABLE "public"."merchants" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."merchants"."subscription_plan" IS 'Monthly ($19) or yearly ($199) subscription plan';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."referred_by_rep" IS 'Rep who referred this merchant for commission tracking';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."referred_by_partner" IS 'Partner who referred this merchant for $50 bonus';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."monthly_bonus_log" (
@@ -303,11 +634,44 @@ CREATE TABLE IF NOT EXISTS "public"."monthly_bonus_log" (
     "rank" integer,
     "bonus_amount" numeric(18,2),
     "paid" boolean DEFAULT false,
-    "created_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "tie_count" integer DEFAULT 1,
+    "original_bonus" numeric(18,2),
+    "split_bonus" numeric(18,2)
 );
 
 
 ALTER TABLE "public"."monthly_bonus_log" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."monthly_bonus_log"."tie_count" IS 'Number of reps tied at this rank for bonus splitting';
+
+
+
+COMMENT ON COLUMN "public"."monthly_bonus_log"."original_bonus" IS 'Original bonus amount before tie splitting';
+
+
+
+COMMENT ON COLUMN "public"."monthly_bonus_log"."split_bonus" IS 'Actual bonus amount after tie splitting';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."partner_referrals" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "partner_id" "uuid" NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "validated" boolean DEFAULT false,
+    "bonus_paid" boolean DEFAULT false,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "validated_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."partner_referrals" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."partner_referrals" IS 'Tracks partner referrals similar to rep_sales, with $50 bonus per validated referral';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."partners" (
@@ -320,7 +684,8 @@ CREATE TABLE IF NOT EXISTS "public"."partners" (
     "pending" boolean DEFAULT true,
     "created_at" timestamp with time zone DEFAULT "now"(),
     "preferred_currency" "text" DEFAULT 'USD'::"text",
-    "referral_code" "text"
+    "referral_code" "text",
+    "internal_notes" "text"
 );
 
 
@@ -387,11 +752,37 @@ CREATE TABLE IF NOT EXISTS "public"."reps" (
     "created_at" timestamp with time zone DEFAULT "now"(),
     "preferred_currency" "text" DEFAULT 'USD'::"text",
     "referral_code" "text",
+    "internal_notes" "text",
+    "last_tier_update" timestamp with time zone DEFAULT "now"(),
+    "previous_month_sales" integer DEFAULT 0,
     CONSTRAINT "check_tier" CHECK ((("tier" >= 1) AND ("tier" <= 3)))
 );
 
 
 ALTER TABLE "public"."reps" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."subscription_history" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "subscription_type" "text" NOT NULL,
+    "amount" numeric(10,2) NOT NULL,
+    "stripe_subscription_id" "text",
+    "stripe_invoice_id" "text",
+    "period_start" timestamp with time zone NOT NULL,
+    "period_end" timestamp with time zone NOT NULL,
+    "status" "text" DEFAULT 'paid'::"text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "subscription_history_status_check" CHECK (("status" = ANY (ARRAY['paid'::"text", 'failed'::"text", 'refunded'::"text"]))),
+    CONSTRAINT "subscription_history_subscription_type_check" CHECK (("subscription_type" = ANY (ARRAY['monthly'::"text", 'yearly'::"text"])))
+);
+
+
+ALTER TABLE "public"."subscription_history" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."subscription_history" IS 'Tracks monthly ($19) and yearly ($199) subscription payments';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."support_messages" (
@@ -430,6 +821,25 @@ ALTER TABLE "public"."supported_currencies" OWNER TO "postgres";
 
 
 COMMENT ON TABLE "public"."supported_currencies" IS 'Column sizes updated for Phase 5 NOWPayments integration - supports longer currency codes';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."tier_history" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "rep_id" "uuid" NOT NULL,
+    "month" "date" NOT NULL,
+    "previous_month_sales" integer NOT NULL,
+    "old_tier" integer,
+    "new_tier" integer NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "tier_history_new_tier_check" CHECK (("new_tier" = ANY (ARRAY[1, 2, 3])))
+);
+
+
+ALTER TABLE "public"."tier_history" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."tier_history" IS 'Tracks rep tier changes based on previous month sales for commission calculation';
 
 
 
@@ -512,6 +922,16 @@ ALTER TABLE ONLY "public"."monthly_bonus_log"
 
 
 
+ALTER TABLE ONLY "public"."partner_referrals"
+    ADD CONSTRAINT "partner_referrals_partner_id_merchant_id_key" UNIQUE ("partner_id", "merchant_id");
+
+
+
+ALTER TABLE ONLY "public"."partner_referrals"
+    ADD CONSTRAINT "partner_referrals_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."partners"
     ADD CONSTRAINT "partners_pkey" PRIMARY KEY ("id");
 
@@ -552,6 +972,11 @@ ALTER TABLE ONLY "public"."reps"
 
 
 
+ALTER TABLE ONLY "public"."subscription_history"
+    ADD CONSTRAINT "subscription_history_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."support_messages"
     ADD CONSTRAINT "support_messages_pkey" PRIMARY KEY ("id");
 
@@ -564,6 +989,11 @@ ALTER TABLE ONLY "public"."supported_currencies"
 
 ALTER TABLE ONLY "public"."supported_currencies"
     ADD CONSTRAINT "supported_currencies_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."tier_history"
+    ADD CONSTRAINT "tier_history_pkey" PRIMARY KEY ("id");
 
 
 
@@ -609,6 +1039,18 @@ CREATE INDEX "idx_merchant_payments_status" ON "public"."merchant_payments" USIN
 
 
 
+CREATE INDEX "idx_merchants_referred_by_partner" ON "public"."merchants" USING "btree" ("referred_by_partner");
+
+
+
+CREATE INDEX "idx_merchants_referred_by_rep" ON "public"."merchants" USING "btree" ("referred_by_rep");
+
+
+
+CREATE INDEX "idx_merchants_subscription_status" ON "public"."merchants" USING "btree" ("subscription_status");
+
+
+
 CREATE INDEX "idx_merchants_user_id" ON "public"."merchants" USING "btree" ("user_id");
 
 
@@ -618,6 +1060,18 @@ CREATE INDEX "idx_merchants_user_id_unique" ON "public"."merchants" USING "btree
 
 
 CREATE INDEX "idx_monthly_bonus_log_rep_id" ON "public"."monthly_bonus_log" USING "btree" ("rep_id");
+
+
+
+CREATE INDEX "idx_partner_referrals_merchant_id" ON "public"."partner_referrals" USING "btree" ("merchant_id");
+
+
+
+CREATE INDEX "idx_partner_referrals_partner_id" ON "public"."partner_referrals" USING "btree" ("partner_id");
+
+
+
+CREATE INDEX "idx_partner_referrals_validated" ON "public"."partner_referrals" USING "btree" ("validated");
 
 
 
@@ -633,7 +1087,19 @@ CREATE INDEX "idx_payment_links_merchant_id" ON "public"."payment_links" USING "
 
 
 
+CREATE INDEX "idx_payment_links_merchant_status" ON "public"."payment_links" USING "btree" ("merchant_id", "status");
+
+
+
 CREATE INDEX "idx_payment_links_status" ON "public"."payment_links" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_payment_links_status_expires" ON "public"."payment_links" USING "btree" ("status", "expires_at") WHERE ("expires_at" IS NOT NULL);
+
+
+
+CREATE INDEX "idx_payment_links_usage" ON "public"."payment_links" USING "btree" ("usage_count", "max_uses") WHERE ("max_uses" IS NOT NULL);
 
 
 
@@ -649,7 +1115,19 @@ CREATE INDEX "idx_reps_user_id" ON "public"."reps" USING "btree" ("user_id");
 
 
 
+CREATE INDEX "idx_subscription_history_merchant_id" ON "public"."subscription_history" USING "btree" ("merchant_id");
+
+
+
 CREATE INDEX "idx_support_messages_user_id" ON "public"."support_messages" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_tier_history_month" ON "public"."tier_history" USING "btree" ("month");
+
+
+
+CREATE INDEX "idx_tier_history_rep_id" ON "public"."tier_history" USING "btree" ("rep_id");
 
 
 
@@ -678,6 +1156,14 @@ CREATE INDEX "idx_webhook_logs_source" ON "public"."webhook_logs" USING "btree" 
 
 
 CREATE OR REPLACE TRIGGER "after_rep_sales_update" AFTER UPDATE ON "public"."rep_sales" FOR EACH ROW WHEN ((("old"."validated" IS DISTINCT FROM "new"."validated") AND ("new"."validated" = true))) EXECUTE FUNCTION "public"."handle_monthly_bonus"();
+
+
+
+CREATE OR REPLACE TRIGGER "merchant_partner_referral_trigger" AFTER UPDATE ON "public"."merchants" FOR EACH ROW EXECUTE FUNCTION "public"."handle_partner_referral"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_update_payment_link_status" BEFORE UPDATE ON "public"."payment_links" FOR EACH ROW EXECUTE FUNCTION "public"."update_payment_link_status"();
 
 
 
@@ -722,12 +1208,32 @@ ALTER TABLE ONLY "public"."merchant_payments"
 
 
 ALTER TABLE ONLY "public"."merchants"
+    ADD CONSTRAINT "merchants_referred_by_partner_fkey" FOREIGN KEY ("referred_by_partner") REFERENCES "public"."partners"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."merchants"
+    ADD CONSTRAINT "merchants_referred_by_rep_fkey" FOREIGN KEY ("referred_by_rep") REFERENCES "public"."reps"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."merchants"
     ADD CONSTRAINT "merchants_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."monthly_bonus_log"
     ADD CONSTRAINT "monthly_bonus_log_rep_id_fkey" FOREIGN KEY ("rep_id") REFERENCES "public"."reps"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."partner_referrals"
+    ADD CONSTRAINT "partner_referrals_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."partner_referrals"
+    ADD CONSTRAINT "partner_referrals_partner_id_fkey" FOREIGN KEY ("partner_id") REFERENCES "public"."partners"("id") ON DELETE CASCADE;
 
 
 
@@ -761,8 +1267,18 @@ ALTER TABLE ONLY "public"."reps"
 
 
 
+ALTER TABLE ONLY "public"."subscription_history"
+    ADD CONSTRAINT "subscription_history_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."support_messages"
     ADD CONSTRAINT "support_messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tier_history"
+    ADD CONSTRAINT "tier_history_rep_id_fkey" FOREIGN KEY ("rep_id") REFERENCES "public"."reps"("id") ON DELETE CASCADE;
 
 
 
@@ -786,6 +1302,54 @@ CREATE POLICY "Admin can insert any merchant record" ON "public"."merchants" FOR
 
 
 CREATE POLICY "Admin can insert any payment link" ON "public"."payment_links" FOR INSERT WITH CHECK (("auth"."email"() = 'admin@cryptrac.com'::"text"));
+
+
+
+CREATE POLICY "Admins bypass all partner_referrals" ON "public"."partner_referrals" USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
+CREATE POLICY "Admins bypass all subscription_history" ON "public"."subscription_history" USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
+CREATE POLICY "Admins bypass all tier_history" ON "public"."tier_history" USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
+CREATE POLICY "Admins can update partner referrals" ON "public"."partner_referrals" FOR UPDATE USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
+CREATE POLICY "Admins can update subscription history" ON "public"."subscription_history" FOR UPDATE USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
+CREATE POLICY "Admins can view all partner referrals" ON "public"."partner_referrals" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
+CREATE POLICY "Admins can view all subscription history" ON "public"."subscription_history" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
+CREATE POLICY "Admins can view all tier history" ON "public"."tier_history" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
 
 
 
@@ -855,6 +1419,12 @@ CREATE POLICY "Merchants can manage their own payments" ON "public"."merchant_pa
 
 
 
+CREATE POLICY "Merchants can view own subscription history" ON "public"."subscription_history" FOR SELECT USING (("merchant_id" IN ( SELECT "merchants"."id"
+   FROM "public"."merchants"
+  WHERE ("merchants"."user_id" = "auth"."uid"()))));
+
+
+
 CREATE POLICY "Merchants can view their payment data" ON "public"."merchant_payments" FOR SELECT USING ((("merchant_id" IN ( SELECT "merchants"."id"
    FROM "public"."merchants"
   WHERE ("merchants"."user_id" = "auth"."uid"()))) OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
@@ -881,6 +1451,22 @@ CREATE POLICY "Only admins can view webhook logs" ON "public"."webhook_logs" FOR
 
 
 
+CREATE POLICY "Partners can insert own referrals" ON "public"."partner_referrals" FOR INSERT WITH CHECK (("partner_id" IN ( SELECT "partners"."id"
+   FROM "public"."partners"
+  WHERE ("partners"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Partners can update own notes" ON "public"."partners" FOR UPDATE USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Partners can view own referrals" ON "public"."partner_referrals" FOR SELECT USING (("partner_id" IN ( SELECT "partners"."id"
+   FROM "public"."partners"
+  WHERE ("partners"."user_id" = "auth"."uid"()))));
+
+
+
 CREATE POLICY "Partners update own" ON "public"."partners" FOR UPDATE USING ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
 
 
@@ -903,6 +1489,16 @@ CREATE POLICY "Rep sales view own" ON "public"."rep_sales" FOR SELECT USING ((("
 
 
 
+CREATE POLICY "Reps can update own notes" ON "public"."reps" FOR UPDATE USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Reps can view own tier history" ON "public"."tier_history" FOR SELECT USING (("rep_id" IN ( SELECT "reps"."id"
+   FROM "public"."reps"
+  WHERE ("reps"."user_id" = "auth"."uid"()))));
+
+
+
 CREATE POLICY "Reps update own" ON "public"."reps" FOR UPDATE USING ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
 
 
@@ -916,6 +1512,14 @@ CREATE POLICY "Support messages view" ON "public"."support_messages" FOR SELECT 
 
 
 CREATE POLICY "System can insert payment data" ON "public"."merchant_payments" FOR INSERT WITH CHECK (true);
+
+
+
+CREATE POLICY "System can insert subscription history" ON "public"."subscription_history" FOR INSERT WITH CHECK (true);
+
+
+
+CREATE POLICY "System can insert tier history" ON "public"."tier_history" FOR INSERT WITH CHECK (true);
 
 
 
@@ -952,6 +1556,9 @@ ALTER TABLE "public"."merchants" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."monthly_bonus_log" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."partner_referrals" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."partners" ENABLE ROW LEVEL SECURITY;
 
 
@@ -967,7 +1574,13 @@ ALTER TABLE "public"."rep_sales" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."reps" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."subscription_history" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."support_messages" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."tier_history" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."upgrade_history" ENABLE ROW LEVEL SECURITY;
@@ -983,9 +1596,33 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."calculate_proration"("merchant_id" "uuid", "full_fee" numeric) TO "anon";
-GRANT ALL ON FUNCTION "public"."calculate_proration"("merchant_id" "uuid", "full_fee" numeric) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."calculate_proration"("merchant_id" "uuid", "full_fee" numeric) TO "service_role";
+GRANT ALL ON FUNCTION "public"."calculate_monthly_leaderboard"("target_month" "date") TO "anon";
+GRANT ALL ON FUNCTION "public"."calculate_monthly_leaderboard"("target_month" "date") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."calculate_monthly_leaderboard"("target_month" "date") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."calculate_monthly_leaderboard_secure"("target_month" "date") TO "anon";
+GRANT ALL ON FUNCTION "public"."calculate_monthly_leaderboard_secure"("target_month" "date") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."calculate_monthly_leaderboard_secure"("target_month" "date") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "anon";
+GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."calculate_rep_tier"("rep_id" "uuid", "target_month" "date") TO "anon";
+GRANT ALL ON FUNCTION "public"."calculate_rep_tier"("rep_id" "uuid", "target_month" "date") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."calculate_rep_tier"("rep_id" "uuid", "target_month" "date") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" "uuid", "subscription_amount" numeric, "days_used" integer, "total_days" integer) TO "anon";
+GRANT ALL ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" "uuid", "subscription_amount" numeric, "days_used" integer, "total_days" integer) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" "uuid", "subscription_amount" numeric, "days_used" integer, "total_days" integer) TO "service_role";
 
 
 
@@ -1001,9 +1638,33 @@ GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "anon";
+GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_payment_link_status"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_payment_link_status"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_payment_link_status"() TO "service_role";
 
 
 
@@ -1061,6 +1722,12 @@ GRANT ALL ON TABLE "public"."monthly_bonus_log" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."partner_referrals" TO "anon";
+GRANT ALL ON TABLE "public"."partner_referrals" TO "authenticated";
+GRANT ALL ON TABLE "public"."partner_referrals" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."partners" TO "anon";
 GRANT ALL ON TABLE "public"."partners" TO "authenticated";
 GRANT ALL ON TABLE "public"."partners" TO "service_role";
@@ -1091,6 +1758,12 @@ GRANT ALL ON TABLE "public"."reps" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."subscription_history" TO "anon";
+GRANT ALL ON TABLE "public"."subscription_history" TO "authenticated";
+GRANT ALL ON TABLE "public"."subscription_history" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."support_messages" TO "anon";
 GRANT ALL ON TABLE "public"."support_messages" TO "authenticated";
 GRANT ALL ON TABLE "public"."support_messages" TO "service_role";
@@ -1100,6 +1773,12 @@ GRANT ALL ON TABLE "public"."support_messages" TO "service_role";
 GRANT ALL ON TABLE "public"."supported_currencies" TO "anon";
 GRANT ALL ON TABLE "public"."supported_currencies" TO "authenticated";
 GRANT ALL ON TABLE "public"."supported_currencies" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tier_history" TO "anon";
+GRANT ALL ON TABLE "public"."tier_history" TO "authenticated";
+GRANT ALL ON TABLE "public"."tier_history" TO "service_role";
 
 
 
