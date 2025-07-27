@@ -559,7 +559,8 @@ CREATE TABLE IF NOT EXISTS "public"."merchant_payments" (
     "customer_email" character varying(255),
     "payment_data" "jsonb" DEFAULT '{}'::"jsonb",
     "expires_at" timestamp with time zone,
-    "updated_at" timestamp with time zone DEFAULT "now"()
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "payout_currency" character varying(20)
 );
 
 
@@ -710,7 +711,10 @@ CREATE TABLE IF NOT EXISTS "public"."payment_links" (
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"(),
     "usage_count" integer DEFAULT 0,
-    "last_payment_at" timestamp with time zone
+    "last_payment_at" timestamp with time zone,
+    "auto_convert_enabled" boolean DEFAULT false,
+    "preferred_payout_currency" character varying(20),
+    "fee_percentage" numeric(5,3) DEFAULT 0.005
 );
 
 
@@ -1825,7 +1829,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
-
 
 
 -- Create buckets
