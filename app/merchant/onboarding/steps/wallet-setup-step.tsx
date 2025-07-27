@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
-import { ArrowRight, ArrowLeft, Wallet, Plus, Trash2, Copy, Eye, EyeOff, Shield, AlertTriangle, Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Wallet, Plus, Trash2, Copy, Eye, EyeOff, Shield, AlertTriangle, Loader2, CheckCircle, XCircle, RefreshCw, Info } from 'lucide-react'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Badge } from '@/app/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import toast from 'react-hot-toast'
+import { getTrustWalletCurrencies, generateWallets, validateAddress, getDisplayName } from '@/lib/wallet-generation-real'
 
 interface WalletConfigData {
   walletType: 'generate' | 'existing'
@@ -38,6 +39,7 @@ interface CurrencyInfo {
   max_amount?: number
   decimals: number
   icon_url?: string
+  display_name?: string
 }
 
 interface GeneratedWallet {
@@ -46,6 +48,8 @@ interface GeneratedWallet {
   network: string
   derivation_path?: string
   public_key?: string
+  display_name?: string
+  address_type: string
 }
 
 export default function WalletSetupStep({ data, onComplete, onPrevious }: WalletSetupStepProps) {
@@ -55,38 +59,31 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
   const [showMnemonic, setShowMnemonic] = useState(false)
   const [mnemonicCopied, setMnemonicCopied] = useState(false)
   
-  // Dynamic currency support
+  // Trust Wallet currencies (fixed list)
+  const trustWalletCurrencies = getTrustWalletCurrencies()
+  
+  // Dynamic currency support for "Use Existing" option
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
-  const [popularCurrencies, setPopularCurrencies] = useState<string[]>([])
-  const [loadingCurrencies, setLoadingCurrencies] = useState(true)
+  const [loadingCurrencies, setLoadingCurrencies] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [validationStates, setValidationStates] = useState<Record<string, 'validating' | 'valid' | 'invalid' | null>>({})
 
-  // Load available currencies on component mount
+  // Load available currencies for "Use Existing" option
   useEffect(() => {
-    loadAvailableCurrencies()
-  }, [])
+    if (formData.walletType === 'existing') {
+      loadAvailableCurrencies()
+    }
+  }, [formData.walletType])
 
   const loadAvailableCurrencies = async () => {
     try {
       setLoadingCurrencies(true)
       
-      // Load popular currencies first for better UX
-      const popularResponse = await fetch('/api/currencies?popular=true')
-      if (popularResponse.ok) {
-        const popularData = await popularResponse.json()
-        if (popularData.success) {
-          setAvailableCurrencies(popularData.currencies)
-          setPopularCurrencies(popularData.currencies.map((c: CurrencyInfo) => c.code))
-        }
-      }
-      
-      // Then load all currencies
-      const allResponse = await fetch('/api/currencies')
-      if (allResponse.ok) {
-        const allData = await allResponse.json()
-        if (allData.success) {
-          setAvailableCurrencies(allData.currencies)
+      const response = await fetch('/api/currencies')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setAvailableCurrencies(data.currencies)
         }
       }
       
@@ -94,15 +91,18 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       console.error('Failed to load currencies:', error)
       toast.error('Failed to load available currencies')
       
-      // Fallback to basic currencies
-      setAvailableCurrencies([
-        { code: 'BTC', name: 'Bitcoin', symbol: '₿', enabled: true, min_amount: 0.00000001, decimals: 8, trust_wallet_compatible: true },
-        { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', enabled: true, min_amount: 0.000000001, decimals: 18, trust_wallet_compatible: true },
-        { code: 'USDT', name: 'Tether', symbol: '₮', enabled: true, min_amount: 0.000001, decimals: 6, trust_wallet_compatible: true },
-        { code: 'USDC', name: 'USD Coin', symbol: '$', enabled: true, min_amount: 0.000001, decimals: 6, trust_wallet_compatible: true },
-        { code: 'LTC', name: 'Litecoin', symbol: 'Ł', enabled: true, min_amount: 0.00000001, decimals: 8, trust_wallet_compatible: true }
-      ])
-      setPopularCurrencies(['BTC', 'ETH', 'USDT', 'USDC', 'LTC'])
+      // Fallback to Trust Wallet currencies
+      setAvailableCurrencies(trustWalletCurrencies.map(currency => ({
+        code: currency.code,
+        name: currency.name,
+        symbol: currency.symbol,
+        network: currency.network,
+        enabled: true,
+        min_amount: currency.min_amount,
+        decimals: currency.decimals,
+        trust_wallet_compatible: currency.trust_wallet_compatible,
+        display_name: currency.display_name
+      })))
     } finally {
       setLoadingCurrencies(false)
     }
@@ -140,33 +140,17 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
     try {
       setIsGenerating(true)
       
-      // Use selected currencies or default to popular ones
-      const currenciesToGenerate = formData.selectedCurrencies && formData.selectedCurrencies.length > 0 
-        ? formData.selectedCurrencies 
-        : popularCurrencies.slice(0, 8) // Top 8 popular currencies
+      // Generate all Trust Wallet compatible currencies
+      const currenciesToGenerate = trustWalletCurrencies.map(c => c.code)
       
-      const response = await fetch('/api/wallets/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currencies: currenciesToGenerate,
-          generation_method: 'trust_wallet'
-        })
+      const result = await generateWallets({
+        currencies: currenciesToGenerate,
+        generation_method: 'trust_wallet'
       })
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate wallets')
-      }
-      
-      const result = await response.json()
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Wallet generation failed')
-      }
       
       // Convert generated wallets to our format
       const generatedWallets: Record<string, string> = {}
-      result.data.wallets.forEach((wallet: GeneratedWallet) => {
+      result.wallets.forEach((wallet: GeneratedWallet) => {
         generatedWallets[wallet.currency] = wallet.address
       })
       
@@ -177,7 +161,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
         mnemonic: result.mnemonic
       }))
       
-      toast.success(`Generated ${result.data.wallets.length} wallet addresses!`)
+      toast.success(`Generated ${result.wallets.length} wallet addresses!`)
       
     } catch (error) {
       console.error('Wallet generation failed:', error)
@@ -189,7 +173,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
 
   const handleAddWallet = () => {
     const availableCryptos = availableCurrencies.filter(
-      crypto => !formData.wallets[crypto.code] && crypto.trust_wallet_compatible
+      crypto => !formData.wallets[crypto.code]
     )
     
     if (availableCryptos.length > 0) {
@@ -270,7 +254,13 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       newErrors.general = 'Please add at least one wallet address'
     }
 
-    // Validate all wallet addresses
+    // For generated wallets, we don't need to validate each address
+    if (formData.walletType === 'generate') {
+      setErrors(newErrors)
+      return Object.keys(newErrors).length === 0
+    }
+
+    // Validate all wallet addresses for existing wallets
     const validationPromises = Object.entries(formData.wallets).map(async ([crypto, address]) => {
       if (!address.trim()) {
         newErrors[crypto] = 'Address is required'
@@ -295,15 +285,29 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!(await validateForm())) {
+    console.log('Form submitted, validating...')
+    
+    const isValid = await validateForm()
+    if (!isValid) {
+      console.log('Form validation failed:', errors)
       return
     }
 
+    console.log('Form validation passed, proceeding...')
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 500))
     
-    onComplete(formData)
-    setIsSubmitting(false)
+    try {
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      console.log('Calling onComplete with data:', formData)
+      onComplete(formData)
+    } catch (error) {
+      console.error('Error in handleSubmit:', error)
+      toast.error('Failed to save wallet configuration')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const copyMnemonic = async () => {
@@ -316,6 +320,23 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
   }
 
   const getCurrencyInfo = (code: string) => {
+    // First check Trust Wallet currencies
+    const trustWalletCurrency = trustWalletCurrencies.find(c => c.code === code)
+    if (trustWalletCurrency) {
+      return {
+        code: trustWalletCurrency.code,
+        name: trustWalletCurrency.name,
+        symbol: trustWalletCurrency.symbol,
+        network: trustWalletCurrency.network,
+        enabled: true,
+        min_amount: trustWalletCurrency.min_amount,
+        decimals: trustWalletCurrency.decimals,
+        trust_wallet_compatible: true,
+        display_name: trustWalletCurrency.display_name
+      }
+    }
+    
+    // Then check available currencies for existing wallets
     return availableCurrencies.find(c => c.code === code) || {
       code,
       name: code,
@@ -323,7 +344,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       enabled: true,
       min_amount: 0.00000001,
       decimals: 8,
-      trust_wallet_compatible: true
+      trust_wallet_compatible: false
     }
   }
 
@@ -341,6 +362,21 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
     }
   }
 
+  const getNetworkBadgeColor = (network: string) => {
+    const colorMap: Record<string, string> = {
+      'Bitcoin': 'bg-orange-100 text-orange-800',
+      'Ethereum': 'bg-blue-100 text-blue-800',
+      'Polygon': 'bg-purple-100 text-purple-800',
+      'BSC': 'bg-yellow-100 text-yellow-800',
+      'Tron': 'bg-red-100 text-red-800',
+      'Litecoin': 'bg-gray-100 text-gray-800',
+      'Solana': 'bg-green-100 text-green-800',
+      'XRP Ledger': 'bg-indigo-100 text-indigo-800',
+      'Dogecoin': 'bg-amber-100 text-amber-800'
+    }
+    return colorMap[network] || 'bg-gray-100 text-gray-800'
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card className="shadow-lg border-0 bg-white">
@@ -354,12 +390,6 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
           <p className="text-gray-600">
             Configure where you want to receive cryptocurrency payments. All funds go directly to your wallets.
           </p>
-          {loadingCurrencies && (
-            <div className="flex items-center justify-center mt-4">
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              <span className="text-sm text-gray-500">Loading available currencies...</span>
-            </div>
-          )}
         </CardHeader>
 
         <CardContent>
@@ -374,7 +404,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
               }))}
             >
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="generate">Generate New</TabsTrigger>
+                <TabsTrigger value="generate">Generate New (Recommended)</TabsTrigger>
                 <TabsTrigger value="existing">Use Existing</TabsTrigger>
               </TabsList>
 
@@ -383,165 +413,158 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                 <Alert className="border-green-200 bg-green-50">
                   <Shield className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
-                    <strong>Secure & Trust Wallet Compatible:</strong> We&apos;ll generate new wallet addresses for you. 
+                    <strong>Trust Wallet Compatible:</strong> We&apos;ll generate wallet addresses for all major cryptocurrencies. 
                     You&apos;ll get a recovery phrase to import into Trust Wallet or any compatible wallet app.
                   </AlertDescription>
                 </Alert>
 
                 {!Object.keys(formData.wallets).length ? (
                   <div className="text-center py-8">
-                    <div className="space-y-4">
-                      <h3 className="font-medium text-gray-900">Select Cryptocurrencies</h3>
-                      <p className="text-sm text-gray-600">
-                        Choose which cryptocurrencies you want to accept. We recommend starting with popular ones.
-                      </p>
-                      
-                      {!loadingCurrencies && (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded-lg p-4">
-                          {availableCurrencies
-                            .filter(currency => currency.trust_wallet_compatible)
-                            .slice(0, 20) // Show top 20 currencies
-                            .map((currency) => (
-                            <div key={currency.code} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={currency.code}
-                                checked={formData.selectedCurrencies?.includes(currency.code) || popularCurrencies.includes(currency.code)}
-                                onChange={(e) => {
-                                  const checked = e.target.checked
-                                  if (checked) {
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      selectedCurrencies: [...(prev.selectedCurrencies || []), currency.code]
-                                    }))
-                                  } else {
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      selectedCurrencies: (prev.selectedCurrencies || []).filter(c => c !== currency.code)
-                                    }))
-                                  }
-                                }}
-                                className="h-4 w-4 text-[#7f5efd] border-gray-300 rounded focus:ring-[#7f5efd]"
-                              />
-                              <label htmlFor={currency.code} className="text-sm font-medium cursor-pointer">
-                                {currency.symbol} {currency.code}
-                              </label>
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2">Trust Wallet Compatible Currencies</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          We&apos;ll generate addresses for these {trustWalletCurrencies.length} cryptocurrencies that work perfectly with Trust Wallet:
+                        </p>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50">
+                          {trustWalletCurrencies.map((currency) => (
+                            <div key={currency.code} className="flex items-center space-x-2 p-2 bg-white rounded border">
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">{currency.symbol} {currency.code}</div>
+                                <div className="text-xs text-gray-500">{currency.display_name || currency.name}</div>
+                                <Badge variant="outline" className={`text-xs mt-1 ${getNetworkBadgeColor(currency.network)}`}>
+                                  {currency.network}
+                                </Badge>
+                              </div>
                             </div>
                           ))}
                         </div>
-                      )}
+                      </div>
+                      
+                      <Button
+                        type="button"
+                        onClick={handleGenerateWallets}
+                        disabled={isGenerating}
+                        className="bg-[#7f5efd] hover:bg-[#6d4fd2] text-white px-8 py-3 text-lg"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                            Generating Wallets...
+                          </>
+                        ) : (
+                          <>
+                            <Wallet className="w-5 h-5 mr-2" />
+                            Generate All {trustWalletCurrencies.length} Wallets
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    
-                    <Button
-                      type="button"
-                      onClick={handleGenerateWallets}
-                      disabled={isGenerating || loadingCurrencies}
-                      className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white mt-6"
-                      size="lg"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating Wallets...
-                        </>
-                      ) : (
-                        'Generate Wallet Addresses'
-                      )}
-                    </Button>
-                    <p className="text-sm text-gray-500 mt-2">
-                      This will create secure addresses compatible with Trust Wallet
-                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* Generated Wallets */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium text-gray-900">Your Generated Wallets:</h3>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleGenerateWallets}
-                          disabled={isGenerating}
-                        >
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Regenerate
-                        </Button>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900">Generated Wallet Addresses</h3>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        {Object.keys(formData.wallets).length} addresses generated
+                      </Badge>
+                    </div>
+
+                    {/* Mnemonic Display */}
+                    {formData.mnemonic && (
+                      <Alert className="border-amber-200 bg-amber-50">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800">
+                          <div className="space-y-3">
+                            <div>
+                              <strong>IMPORTANT: Save your recovery phrase!</strong>
+                              <p className="text-sm mt-1">
+                                This 12-word phrase is the only way to recover your wallets. Import it into Trust Wallet to access your funds.
+                              </p>
+                            </div>
+                            
+                            <div className="bg-white p-3 rounded border border-amber-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-amber-800">Recovery Phrase:</span>
+                                <div className="flex space-x-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowMnemonic(!showMnemonic)}
+                                    className="text-amber-700 border-amber-300"
+                                  >
+                                    {showMnemonic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={copyMnemonic}
+                                    className="text-amber-700 border-amber-300"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                    {mnemonicCopied ? 'Copied!' : 'Copy'}
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="font-mono text-sm bg-gray-100 p-2 rounded">
+                                {showMnemonic ? formData.mnemonic : '••• ••• ••• ••• ••• ••• ••• ••• ••• ••• ••• •••'}
+                              </div>
+                            </div>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Trust Wallet Compatibility Notice */}
+                    <Alert className="border-blue-200 bg-blue-50">
+                      <Info className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-800">
+                        <strong>Address Compatibility:</strong> EVM-compatible addresses (ETH, BNB, MATIC, tokens) will match Trust Wallet exactly. 
+                        For Bitcoin, Litecoin, Dogecoin, and XRP, you&apos;ll need to manually find the correct addresses in Trust Wallet after importing your seed phrase.
+                      </AlertDescription>
+                    </Alert>
+
+                    {/* Generated Addresses */}
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
                       {Object.entries(formData.wallets).map(([crypto, address]) => {
                         const currencyInfo = getCurrencyInfo(crypto)
+                        const isPlaceholder = address.includes('PLACEHOLDER')
                         return (
-                          <div key={crypto} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center space-x-3 flex-1">
-                              <Badge variant="secondary">{currencyInfo.symbol} {crypto}</Badge>
-                              <span className="text-sm font-mono text-gray-600 truncate max-w-xs">
-                                {address}
-                              </span>
-                              {currencyInfo.network && (
-                                <Badge variant="outline" className="text-xs">
+                          <div key={crypto} className={`p-3 border rounded-lg ${isPlaceholder ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium">{currencyInfo.symbol} {crypto}</span>
+                                <Badge variant="outline" className={`text-xs ${getNetworkBadgeColor(currencyInfo.network || '')}`}>
                                   {currencyInfo.network}
                                 </Badge>
-                              )}
+                                {isPlaceholder && (
+                                  <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
+                                    Manual Setup Required
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigator.clipboard.writeText(address)}
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
+                            <div className="font-mono text-sm bg-white p-2 rounded border break-all">
+                              {isPlaceholder ? `Import seed phrase into Trust Wallet to get ${crypto} address` : address}
+                            </div>
                           </div>
                         )
                       })}
                     </div>
 
-                    {/* Recovery Phrase */}
-                    {formData.mnemonic && (
-                      <div className="space-y-3">
-                        <Alert className="border-amber-200 bg-amber-50">
-                          <AlertTriangle className="h-4 w-4 text-amber-600" />
-                          <AlertDescription className="text-amber-800">
-                            <strong>Important:</strong> Save your recovery phrase securely. 
-                            You&apos;ll need it to import these wallets into Trust Wallet, MetaMask, or any compatible wallet.
-                          </AlertDescription>
-                        </Alert>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium text-gray-700">
-                              Recovery Phrase (12 words)
-                            </label>
-                            <div className="flex space-x-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowMnemonic(!showMnemonic)}
-                              >
-                                {showMnemonic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={copyMnemonic}
-                              >
-                                <Copy className="w-4 h-4" />
-                                {mnemonicCopied && <span className="ml-1 text-xs">Copied!</span>}
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="p-3 bg-gray-100 rounded-lg font-mono text-sm">
-                            {showMnemonic ? formData.mnemonic : '••• ••• ••• ••• ••• ••• ••• ••• ••• ••• ••• •••'}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            💡 Import this phrase into Trust Wallet to access your funds
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleGenerateWallets}
+                      disabled={isGenerating}
+                      className="w-full"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Regenerate All Addresses
+                    </Button>
                   </div>
                 )}
               </TabsContent>
@@ -549,54 +572,60 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
               {/* Use Existing Wallets Tab */}
               <TabsContent value="existing" className="space-y-4">
                 <Alert className="border-blue-200 bg-blue-50">
+                  <Info className="h-4 w-4 text-blue-600" />
                   <AlertDescription className="text-blue-800">
-                    Enter your existing wallet addresses. Payments will be sent directly to these addresses.
-                    We support {availableCurrencies.length}+ cryptocurrencies.
+                    <strong>Use Your Existing Wallets:</strong> Add wallet addresses for cryptocurrencies you want to accept. 
+                    You can add more currencies later in your dashboard settings.
                   </AlertDescription>
                 </Alert>
 
-                {/* Wallet Inputs */}
+                {loadingCurrencies && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span className="text-sm text-gray-500">Loading available currencies...</span>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   {Object.entries(formData.wallets).map(([crypto, address]) => {
                     const currencyInfo = getCurrencyInfo(crypto)
-                    const availableForChange = availableCurrencies.filter(
-                      c => c.code !== crypto && !formData.wallets[c.code] && c.trust_wallet_compatible
-                    )
-                    
                     return (
-                      <div key={crypto} className="space-y-2">
+                      <div key={crypto} className="p-4 border rounded-lg space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Select
                               value={crypto}
                               onValueChange={(newCrypto) => handleCurrencyChange(crypto, newCrypto)}
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className="w-48">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value={crypto}>
-                                  {currencyInfo.symbol} {crypto}
-                                </SelectItem>
-                                {availableForChange.map((currency) => (
+                                {availableCurrencies
+                                  .filter(currency => !formData.wallets[currency.code] || currency.code === crypto)
+                                  .map((currency) => (
                                   <SelectItem key={currency.code} value={currency.code}>
-                                    {currency.symbol} {currency.code}
+                                    <div className="flex items-center space-x-2">
+                                      <span>{currency.symbol} {currency.code}</span>
+                                      <Badge variant="outline" className="text-xs">
+                                        {currency.network || 'Unknown'}
+                                      </Badge>
+                                    </div>
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
-                            <span className="text-sm text-gray-600">
-                              {currencyInfo.name}
-                            </span>
-                            {currencyInfo.network && (
-                              <Badge variant="outline" className="text-xs">
-                                {currencyInfo.network}
+                            
+                            {currencyInfo.trust_wallet_compatible && (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                Trust Wallet
                               </Badge>
                             )}
                           </div>
+                          
                           <Button
                             type="button"
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleRemoveWallet(crypto)}
                             className="text-red-600 hover:text-red-700"
@@ -604,60 +633,63 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                        <div className="relative">
-                          <Input
-                            type="text"
-                            placeholder={`Enter your ${crypto} wallet address`}
-                            value={address}
-                            onChange={(e) => handleWalletChange(crypto, e.target.value)}
-                            className={`font-mono text-sm pr-10 ${
-                              errors[crypto] ? 'border-red-300 focus:border-red-500' : 
-                              validationStates[crypto] === 'valid' ? 'border-green-300 focus:border-green-500' :
-                              validationStates[crypto] === 'invalid' ? 'border-red-300 focus:border-red-500' : ''
-                            }`}
-                          />
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              placeholder={`Enter your ${crypto} wallet address`}
+                              value={address}
+                              onChange={(e) => handleWalletChange(crypto, e.target.value)}
+                              className={errors[crypto] ? 'border-red-300' : ''}
+                            />
                             {getValidationIcon(crypto)}
                           </div>
+                          
+                          {currencyInfo.display_name && (
+                            <p className="text-xs text-gray-500">
+                              Network: {currencyInfo.display_name}
+                            </p>
+                          )}
+                          
+                          {errors[crypto] && (
+                            <p className="text-sm text-red-600">{errors[crypto]}</p>
+                          )}
                         </div>
-                        {errors[crypto] && (
-                          <p className="text-sm text-red-600">{errors[crypto]}</p>
-                        )}
-                        {validationStates[crypto] === 'valid' && (
-                          <p className="text-sm text-green-600">✓ Valid {crypto} address</p>
-                        )}
                       </div>
                     )
                   })}
 
-                  {/* Add Wallet Button */}
-                  {Object.keys(formData.wallets).length < availableCurrencies.filter(c => c.trust_wallet_compatible).length && (
+                  {!loadingCurrencies && (
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handleAddWallet}
-                      className="w-full border-dashed"
-                      disabled={loadingCurrencies}
+                      disabled={availableCurrencies.filter(c => !formData.wallets[c.code]).length === 0}
+                      className="w-full"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Another Wallet
+                      Add Another Cryptocurrency
                     </Button>
-                  )}
-
-                  {errors.general && (
-                    <p className="text-sm text-red-600">{errors.general}</p>
                   )}
                 </div>
               </TabsContent>
             </Tabs>
 
-            {/* Navigation Buttons */}
+            {errors.general && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  {errors.general}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="flex justify-between pt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onPrevious}
-                className="flex items-center"
+                disabled={isSubmitting}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Previous
@@ -665,13 +697,13 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
 
               <Button
                 type="submit"
-                disabled={isSubmitting || Object.keys(formData.wallets).length === 0 || isGenerating}
-                className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center"
+                disabled={isSubmitting || Object.keys(formData.wallets).length === 0}
+                className="bg-[#7f5efd] hover:bg-[#6d4fd2] text-white"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Setting up...
                   </>
                 ) : (
                   <>

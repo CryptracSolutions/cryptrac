@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { 
   generateWallets, 
-  getSupportedCurrencies,
+  getTrustWalletCurrencies,
   validateMnemonic
 } from '@/lib/wallet-generation';
 
@@ -59,8 +59,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate currencies if provided
-    const supportedCurrencies = getSupportedCurrencies();
+    // Get Trust Wallet compatible currencies
+    const trustWalletCurrencies = getTrustWalletCurrencies();
+    const supportedCurrencies = trustWalletCurrencies.map(c => c.code);
+
+    // Validate currencies if provided, otherwise use all Trust Wallet currencies
+    const currenciesToGenerate = currencies || supportedCurrencies;
+    
     if (currencies) {
       const invalidCurrencies = currencies.filter(c => 
         !supportedCurrencies.includes(c.toUpperCase())
@@ -71,7 +76,8 @@ export async function POST(request: NextRequest) {
           { 
             error: 'Unsupported currencies provided',
             invalid_currencies: invalidCurrencies,
-            supported_currencies: supportedCurrencies
+            supported_currencies: supportedCurrencies,
+            trust_wallet_currencies: trustWalletCurrencies
           },
           { status: 400 }
         );
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
     // Generate wallets
     console.log('Generating wallets for user:', user.id);
     const walletResult = await generateWallets({
-      currencies: currencies?.map(c => c.toUpperCase()) || ['BTC', 'ETH', 'LTC'],
+      currencies: currenciesToGenerate.map(c => c.toUpperCase()),
       mnemonic,
       generation_method: generation_method as 'trust_wallet' | 'custom'
     });
@@ -151,59 +157,47 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to retrieve supported currencies for wallet generation
+// GET endpoint to retrieve Trust Wallet compatible currencies
 export async function GET() {
   try {
-    const supportedCurrencies = getSupportedCurrencies();
+    const trustWalletCurrencies = getTrustWalletCurrencies();
     
     // Group currencies by network for better UX
-    const currenciesByNetwork = {
-      bitcoin: supportedCurrencies.filter(c => ['BTC'].includes(c)),
-      ethereum: supportedCurrencies.filter(c => 
-        ['ETH', 'USDT', 'USDC'].includes(c)
-      ),
-      bsc: supportedCurrencies.filter(c => 
-        ['BNB', 'USDT_BEP20', 'USDC_BEP20'].includes(c)
-      ),
-      polygon: supportedCurrencies.filter(c => 
-        ['MATIC', 'USDT_POLYGON', 'USDC_POLYGON'].includes(c)
-      ),
-      tron: supportedCurrencies.filter(c => 
-        ['TRX', 'USDT_TRC20'].includes(c)
-      ),
-      solana: supportedCurrencies.filter(c => ['SOL'].includes(c)),
-      other: supportedCurrencies.filter(c => 
-        !['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'USDT_BEP20', 'USDC_BEP20', 
-          'MATIC', 'USDT_POLYGON', 'USDC_POLYGON', 'TRX', 'USDT_TRC20', 'SOL'].includes(c)
-      )
-    };
+    const currenciesByNetwork = trustWalletCurrencies.reduce((acc, currency) => {
+      const network = currency.network;
+      if (!acc[network]) {
+        acc[network] = [];
+      }
+      acc[network].push(currency);
+      return acc;
+    }, {} as Record<string, typeof trustWalletCurrencies>);
 
-    // Popular currencies for Trust Wallet (recommended defaults)
-    const popularCurrencies = [
-      'BTC', 'ETH', 'LTC', 'SOL', 'BNB', 'MATIC', 'TRX', 'USDT', 'USDC'
-    ];
+    // Popular currencies for Trust Wallet (all of them are popular since it's a curated list)
+    const popularCurrencies = trustWalletCurrencies.map(c => c.code);
 
     return NextResponse.json({
       success: true,
-      supported_currencies: supportedCurrencies,
+      trust_wallet_currencies: trustWalletCurrencies,
+      supported_currencies: popularCurrencies,
       currencies_by_network: currenciesByNetwork,
       popular_currencies: popularCurrencies,
-      total_supported: supportedCurrencies.length,
+      total_supported: trustWalletCurrencies.length,
       trust_wallet_compatible: true,
       generation_info: {
         method: 'client_side',
         security: 'Private keys never touch server',
         mnemonic_words: 12,
-        derivation_standard: 'BIP44'
+        derivation_standard: 'BIP44',
+        networks_supported: Object.keys(currenciesByNetwork)
       }
     });
 
   } catch (error) {
-    console.error('Error fetching supported currencies:', error);
+    console.error('Error fetching Trust Wallet currencies:', error);
     
     return NextResponse.json(
       { 
-        error: 'Failed to fetch supported currencies',
+        error: 'Failed to fetch Trust Wallet currencies',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

@@ -20,7 +20,7 @@ interface ValidationResult {
   valid: boolean;
   currency: string;
   network?: string;
-  address_format?: string;
+  address_type?: string;
   error?: string;
 }
 
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
       const result: ValidationResult = {
         valid: isValid,
         currency: currency.toUpperCase(),
-        network: currencyInfo.network,
-        address_format: currencyInfo.addressFormat
+        network: currencyInfo?.network,
+        address_type: currencyInfo?.address_type
       };
 
       if (!isValid) {
@@ -59,52 +59,61 @@ export async function POST(request: NextRequest) {
         validation: result
       });
     }
-    
+
     // Batch validation
     if ('addresses' in body) {
       const { addresses }: BatchValidateRequest = body;
       
       if (!Array.isArray(addresses) || addresses.length === 0) {
         return NextResponse.json(
-          { error: 'Addresses array is required and cannot be empty' },
+          { error: 'Addresses array is required and must not be empty' },
           { status: 400 }
         );
       }
 
-      if (addresses.length > 50) {
+      if (addresses.length > 100) {
         return NextResponse.json(
-          { error: 'Maximum 50 addresses can be validated at once' },
+          { error: 'Maximum 100 addresses allowed per batch' },
           { status: 400 }
         );
       }
 
-      const results = addresses.map(({ address, currency }) => {
-        if (!address || !currency) {
-          return {
-            address,
-            currency,
+      const results: ValidationResult[] = [];
+
+      for (const item of addresses) {
+        if (!item.address || !item.currency) {
+          results.push({
             valid: false,
+            currency: item.currency || 'UNKNOWN',
             error: 'Address and currency are required'
+          });
+          continue;
+        }
+
+        try {
+          const isValid = validateAddress(item.address.trim(), item.currency.toUpperCase());
+          const currencyInfo = getCurrencyInfo(item.currency.toUpperCase());
+          
+          const result: ValidationResult = {
+            valid: isValid,
+            currency: item.currency.toUpperCase(),
+            network: currencyInfo?.network,
+            address_type: currencyInfo?.address_type
           };
+
+          if (!isValid) {
+            result.error = `Invalid ${item.currency.toUpperCase()} address format`;
+          }
+
+          results.push(result);
+        } catch (error) {
+          results.push({
+            valid: false,
+            currency: item.currency.toUpperCase(),
+            error: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          });
         }
-
-        const isValid = validateAddress(address.trim(), currency.toUpperCase());
-        const currencyInfo = getCurrencyInfo(currency.toUpperCase());
-        
-        const result: ValidationResult & { address: string } = {
-          address: address.trim(),
-          valid: isValid,
-          currency: currency.toUpperCase(),
-          network: currencyInfo.network,
-          address_format: currencyInfo.addressFormat
-        };
-
-        if (!isValid) {
-          result.error = `Invalid ${currency.toUpperCase()} address format`;
-        }
-
-        return result;
-      });
+      }
 
       const validCount = results.filter(r => r.valid).length;
       const invalidCount = results.length - validCount;
@@ -121,60 +130,62 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Invalid request format. Expected either {address, currency} or {addresses: [...]}' },
+      { error: 'Invalid request format. Expected either single address validation or batch validation.' },
       { status: 400 }
     );
 
   } catch (error) {
     console.error('Address validation error:', error);
+    
     return NextResponse.json(
-      { error: 'Internal server error during validation' },
+      { 
+        error: 'Address validation failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
 }
 
-// GET endpoint for validation information
+// GET endpoint to retrieve supported currencies for validation
 export async function GET() {
   try {
-    const supportedCurrencies = [
-      'BTC', 'ETH', 'LTC', 'SOL', 'BNB', 'MATIC', 'TRX', 'AVAX',
-      'USDT', 'USDC', 'DAI', 'LINK', 'UNI'
-    ];
+    const { getTrustWalletCurrencies } = await import('@/lib/wallet-generation');
+    const currencies = getTrustWalletCurrencies();
+    
+    const supportedCurrencies = currencies.map(currency => ({
+      code: currency.code,
+      name: currency.name,
+      network: currency.network,
+      address_type: currency.address_type,
+      derivation_path: currency.derivation_path
+    }));
 
-    const validationInfo = supportedCurrencies.map(currency => {
-      const info = getCurrencyInfo(currency);
-      return {
-        currency,
-        name: info.name,
-        symbol: info.symbol,
-        network: info.network,
-        address_format: info.addressFormat,
-        derivation_path: info.derivationPath
-      };
-    });
+    // Convert Set to Array using Array.from() to avoid iteration issues
+    const networksSet = new Set(currencies.map(c => c.network));
+    const addressTypesSet = new Set(currencies.map(c => c.address_type));
+    
+    const supportedNetworks = Array.from(networksSet);
+    const addressTypes = Array.from(addressTypesSet);
 
     return NextResponse.json({
       success: true,
       supported_currencies: supportedCurrencies,
-      validation_info: validationInfo,
-      features: {
-        single_validation: true,
-        batch_validation: true,
-        max_batch_size: 50,
-        supported_formats: [
-          'Bitcoin Bech32',
-          'Ethereum Hex',
-          'Solana Base58',
-          'Tron Base58'
-        ]
+      validation_info: {
+        supported_networks: supportedNetworks,
+        address_types: addressTypes,
+        total_currencies: currencies.length
       }
     });
 
   } catch (error) {
-    console.error('Validation info error:', error);
+    console.error('Error fetching validation currencies:', error);
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Failed to fetch validation currencies',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
