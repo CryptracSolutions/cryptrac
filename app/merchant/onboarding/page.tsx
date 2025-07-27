@@ -37,6 +37,8 @@ interface OnboardingData {
     acceptedCryptos: string[]
     feePercentage: number
     autoForward: boolean
+    autoConvert: boolean
+    preferredPayoutCurrency: string | null
   }
 }
 
@@ -59,7 +61,9 @@ export default function OnboardingPage() {
     paymentConfig: {
       acceptedCryptos: ['BTC', 'ETH', 'LTC'],
       feePercentage: 2.9,
-      autoForward: true
+      autoForward: true,
+      autoConvert: false,
+      preferredPayoutCurrency: null
     }
   })
 

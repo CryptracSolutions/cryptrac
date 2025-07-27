@@ -7,22 +7,38 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Badge } from '@/app/components/ui/badge'
-import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { QRCode } from '@/app/components/ui/qr-code'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import { DashboardLayout } from '@/app/components/layout/dashboard-layout'
 import { supabase } from '@/lib/supabase-browser'
+import toast from 'react-hot-toast'
 import { 
   ArrowLeft, 
   DollarSign, 
-  Calendar, 
-  Users, 
   ExternalLink, 
   Copy, 
   Link2, 
-  QrCode, 
-  AlertTriangle,
   CheckCircle,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react'
+
+interface CurrencyInfo {
+  code: string;
+  name: string;
+  symbol: string;
+  network?: string;
+  is_token?: boolean;
+  parent_currency?: string;
+  trust_wallet_compatible?: boolean;
+  address_format?: string;
+  enabled: boolean;
+  min_amount: number;
+  max_amount?: number;
+  decimals: number;
+  icon_url?: string;
+  rate_usd?: number;
+}
 
 interface FormData {
   title: string
@@ -48,97 +64,87 @@ interface CreatedPaymentLink {
   currency: string
   payment_url: string
   qr_code_data: string
-  metadata?: {
-    fee_amount?: number
-    fee_percentage?: number
-    total_amount?: number
-  }
+  accepted_cryptos: string[]
+  expires_at: string | null
+  max_uses: number | null
+  redirect_url: string | null
 }
-
-interface MerchantSettings {
-  auto_convert_enabled: boolean
-  preferred_payout_currency: string | null
-  wallets: Record<string, string>
-}
-
-const SUPPORTED_CRYPTOS = [
-  { code: 'BTC', name: 'Bitcoin', symbol: '₿' },
-  { code: 'ETH', name: 'Ethereum', symbol: 'Ξ' },
-  { code: 'LTC', name: 'Litecoin', symbol: 'Ł' },
-  { code: 'USDT', name: 'Tether', symbol: '₮' },
-  { code: 'USDC', name: 'USD Coin', symbol: '$' }
-]
 
 export default function CreatePaymentPage() {
   const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [createdLink, setCreatedLink] = useState<CreatedPaymentLink | null>(null)
+  const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
+  const [loadingCurrencies, setLoadingCurrencies] = useState(true)
+  const [popularCurrencies, setPopularCurrencies] = useState<string[]>([])
+  
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     amount: '',
     currency: 'USD',
-    acceptedCryptos: ['BTC', 'ETH'],
+    acceptedCryptos: [],
     expiresAt: '',
     maxUses: '',
     redirectUrl: ''
   })
   
-  const [merchantSettings, setMerchantSettings] = useState<MerchantSettings>({
-    auto_convert_enabled: false,
-    preferred_payout_currency: null,
-    wallets: {}
-  })
-  
   const [errors, setErrors] = useState<FormErrors>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [createdPaymentLink, setCreatedPaymentLink] = useState<CreatedPaymentLink | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [loading, setLoading] = useState(true)
 
-  // Fetch merchant settings on component mount
   useEffect(() => {
-    const fetchMerchantSettings = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) return
-
-        const response = await fetch('/api/merchants/settings', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        })
-
-        if (response.ok) {
-          const result = await response.json()
-          if (result.success) {
-            setMerchantSettings(result.settings)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch merchant settings:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchMerchantSettings()
+    loadAvailableCurrencies()
   }, [])
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+  const loadAvailableCurrencies = async () => {
+    try {
+      setLoadingCurrencies(true)
+      
+      // Load popular currencies first for better UX
+      const popularResponse = await fetch('/api/currencies?popular=true')
+      if (popularResponse.ok) {
+        const popularData = await popularResponse.json()
+        if (popularData.success) {
+          setAvailableCurrencies(popularData.currencies)
+          setPopularCurrencies(popularData.currencies.map((c: CurrencyInfo) => c.code))
+          
+          // Pre-select popular cryptocurrencies
+          setFormData(prev => ({
+            ...prev,
+            acceptedCryptos: popularData.currencies.slice(0, 5).map((c: CurrencyInfo) => c.code)
+          }))
+        }
+      }
+      
+      // Then load all currencies
+      const allResponse = await fetch('/api/currencies')
+      if (allResponse.ok) {
+        const allData = await allResponse.json()
+        if (allData.success) {
+          setAvailableCurrencies(allData.currencies)
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to load currencies:', error)
+      toast.error('Failed to load available currencies')
+      
+      // Fallback to basic currencies
+      const fallbackCurrencies = [
+        { code: 'BTC', name: 'Bitcoin', symbol: '₿', enabled: true, min_amount: 0.00000001, decimals: 8, trust_wallet_compatible: true, rate_usd: 45000 },
+        { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', enabled: true, min_amount: 0.000000001, decimals: 18, trust_wallet_compatible: true, rate_usd: 2800 },
+        { code: 'USDT', name: 'Tether', symbol: '₮', enabled: true, min_amount: 0.000001, decimals: 6, trust_wallet_compatible: true, rate_usd: 1 },
+        { code: 'USDC', name: 'USD Coin', symbol: '$', enabled: true, min_amount: 0.000001, decimals: 6, trust_wallet_compatible: true, rate_usd: 1 },
+        { code: 'LTC', name: 'Litecoin', symbol: 'Ł', enabled: true, min_amount: 0.00000001, decimals: 8, trust_wallet_compatible: true, rate_usd: 85 }
+      ]
+      setAvailableCurrencies(fallbackCurrencies)
+      setPopularCurrencies(['BTC', 'ETH', 'USDT', 'USDC', 'LTC'])
+      setFormData(prev => ({
+        ...prev,
+        acceptedCryptos: ['BTC', 'ETH', 'USDT', 'USDC', 'LTC']
+      }))
+    } finally {
+      setLoadingCurrencies(false)
     }
-  }
-
-  const handleCryptoToggle = (crypto: string) => {
-    setFormData(prev => ({
-      ...prev,
-      acceptedCryptos: prev.acceptedCryptos.includes(crypto)
-        ? prev.acceptedCryptos.filter(c => c !== crypto)
-        : [...prev.acceptedCryptos, crypto]
-    }))
   }
 
   const validateForm = (): boolean => {
@@ -150,12 +156,23 @@ export default function CreatePaymentPage() {
 
     if (!formData.amount.trim()) {
       newErrors.amount = 'Amount is required'
-    } else if (isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be a positive number'
+    } else {
+      const amount = parseFloat(formData.amount)
+      if (isNaN(amount) || amount <= 0) {
+        newErrors.amount = 'Amount must be a positive number'
+      }
     }
 
     if (formData.acceptedCryptos.length === 0) {
-      newErrors.acceptedCryptos = 'At least one cryptocurrency must be selected'
+      newErrors.acceptedCryptos = 'Please select at least one cryptocurrency'
+    }
+
+    if (formData.expiresAt && new Date(formData.expiresAt) <= new Date()) {
+      newErrors.expiresAt = 'Expiration date must be in the future'
+    }
+
+    if (formData.maxUses && (parseInt(formData.maxUses) <= 0 || !Number.isInteger(parseFloat(formData.maxUses)))) {
+      newErrors.maxUses = 'Max uses must be a positive integer'
     }
 
     if (formData.redirectUrl && !isValidUrl(formData.redirectUrl)) {
@@ -175,20 +192,6 @@ export default function CreatePaymentPage() {
     }
   }
 
-  const calculateFeeInfo = () => {
-    const amount = parseFloat(formData.amount) || 0
-    const feePercentage = merchantSettings.auto_convert_enabled ? 0.01 : 0.005 // 1% or 0.5%
-    const feeAmount = amount * feePercentage
-    const merchantReceives = amount - feeAmount
-
-    return {
-      feePercentage: feePercentage * 100, // Convert to percentage
-      feeAmount,
-      merchantReceives,
-      feeLabel: merchantSettings.auto_convert_enabled ? '1% (Auto-conversion enabled)' : '0.5% (Direct crypto)'
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -196,559 +199,546 @@ export default function CreatePaymentPage() {
       return
     }
 
-    setIsSubmitting(true)
+    setLoading(true)
 
     try {
-      console.log('Creating payment link...')
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
       
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError || !session) {
-        throw new Error('No valid session')
+      if (authError || !user) {
+        toast.error('Please log in to create payment links')
+        router.push('/auth/login')
+        return
       }
 
-      const requestData = {
-        title: formData.title,
-        description: formData.description,
+      // Get merchant info
+      const { data: merchant, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (merchantError || !merchant) {
+        toast.error('Merchant account not found')
+        return
+      }
+
+      // Create payment link
+      const paymentData = {
+        merchant_id: merchant.id,
+        title: formData.title.trim(),
+        description: formData.description.trim() || null,
         amount: parseFloat(formData.amount),
         currency: formData.currency,
         accepted_cryptos: formData.acceptedCryptos,
         expires_at: formData.expiresAt || null,
         max_uses: formData.maxUses ? parseInt(formData.maxUses) : null,
-        redirect_url: formData.redirectUrl || null
+        redirect_url: formData.redirectUrl.trim() || null,
+        is_active: true
       }
 
-      console.log('Sending request data:', requestData)
+      const { data: createdPayment, error: createError } = await supabase
+        .from('payment_links')
+        .insert(paymentData)
+        .select(`
+          id,
+          link_id,
+          title,
+          description,
+          amount,
+          currency,
+          accepted_cryptos,
+          expires_at,
+          max_uses,
+          redirect_url
+        `)
+        .single()
 
-      // Submit to API
-      const response = await fetch('/api/payments/create', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData)
-      })
-
-      console.log('Response status:', response.status)
-
-      if (!response.ok) {
-        throw new Error('Failed to create payment link')
+      if (createError) {
+        console.error('Error creating payment link:', createError)
+        toast.error('Failed to create payment link')
+        return
       }
 
-      const result = await response.json()
+      // Generate payment URL and QR code data
+      const baseUrl = window.location.origin
+      const paymentUrl = `${baseUrl}/pay/${createdPayment.link_id}`
       
-      if (result.success) {
-        console.log('Payment link created successfully:', result.payment_link.id)
-        
-        // Construct the proper payment URL
-        const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${result.payment_link.link_id}`
-        
-        setCreatedPaymentLink({
-          ...result.payment_link,
-          payment_url: paymentUrl
-        })
-      } else {
-        throw new Error(result.error || 'Failed to create payment link')
+      const paymentLinkData: CreatedPaymentLink = {
+        ...createdPayment,
+        payment_url: paymentUrl,
+        qr_code_data: paymentUrl
       }
+
+      setCreatedLink(paymentLinkData)
+      toast.success('Payment link created successfully!')
+
     } catch (error) {
-      console.error('Failed to create payment link:', error)
-      setErrors({ submit: 'Failed to create payment link. Please try again.' })
+      console.error('Error creating payment link:', error)
+      toast.error('Failed to create payment link')
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const handleCryptoToggle = (crypto: string) => {
+    setFormData(prev => ({
+      ...prev,
+      acceptedCryptos: prev.acceptedCryptos.includes(crypto)
+        ? prev.acceptedCryptos.filter(c => c !== crypto)
+        : [...prev.acceptedCryptos, crypto]
+    }))
+    
+    // Clear error when user makes selection
+    if (errors.acceptedCryptos) {
+      setErrors(prev => ({ ...prev, acceptedCryptos: '' }))
+    }
   }
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
-    }).format(amount)
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(`${label} copied to clipboard!`)
+    } catch {
+      toast.error('Failed to copy to clipboard')
+    }
   }
 
-  if (loading) {
+  const getCurrencyInfo = (code: string) => {
+    return availableCurrencies.find(c => c.code === code) || {
+      code,
+      name: code,
+      symbol: code,
+      enabled: true,
+      min_amount: 0.00000001,
+      decimals: 8,
+      trust_wallet_compatible: true
+    }
+  }
+
+  const getEstimatedCryptoAmount = (currency: CurrencyInfo) => {
+    if (!formData.amount || !currency.rate_usd) return null
+    
+    const usdAmount = parseFloat(formData.amount)
+    if (isNaN(usdAmount)) return null
+    
+    const cryptoAmount = usdAmount / currency.rate_usd
+    return cryptoAmount.toFixed(currency.decimals)
+  }
+
+  if (createdLink) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
-  // If payment link was created successfully, show success page
-  if (createdPaymentLink) {
-    const feeInfo = calculateFeeInfo()
-
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Success Header */}
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-green-100 p-3 rounded-full">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Link Created!</h1>
-          <p className="text-gray-600">Your payment link is ready to share with customers</p>
-        </div>
-
-        {/* Payment Link Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Link2 className="h-5 w-5" />
-              <span>{createdPaymentLink.title}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Amount and Description */}
-            <div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">
-                {formatCurrency(createdPaymentLink.amount, createdPaymentLink.currency)}
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto p-6">
+          <Card className="shadow-lg">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              {createdPaymentLink.description && (
-                <p className="text-gray-600">{createdPaymentLink.description}</p>
-              )}
-              
-              {/* Fee Breakdown */}
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Fee Breakdown</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Payment Amount:</span>
-                    <span>{formatCurrency(createdPaymentLink.amount, createdPaymentLink.currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Gateway Fee ({feeInfo.feeLabel}):</span>
-                    <span>{formatCurrency(feeInfo.feeAmount, createdPaymentLink.currency)}</span>
-                  </div>
-                  <div className="flex justify-between font-medium border-t pt-1">
-                    <span>You Receive:</span>
-                    <span>{formatCurrency(feeInfo.merchantReceives, createdPaymentLink.currency)}</span>
-                  </div>
+              <CardTitle className="text-2xl text-green-600">Payment Link Created!</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-2">{createdLink.title}</h3>
+                <p className="text-2xl font-bold text-[#7f5efd]">
+                  ${createdLink.amount} {createdLink.currency}
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 mt-2">
+                  {createdLink.accepted_cryptos.map(crypto => {
+                    const currencyInfo = getCurrencyInfo(crypto)
+                    const estimatedAmount = getEstimatedCryptoAmount(currencyInfo)
+                    return (
+                      <Badge key={crypto} variant="secondary" className="text-xs">
+                        {currencyInfo.symbol} {crypto}
+                        {estimatedAmount && (
+                          <span className="ml-1 text-gray-500">
+                            (~{estimatedAmount})
+                          </span>
+                        )}
+                      </Badge>
+                    )
+                  })}
                 </div>
               </div>
-            </div>
 
-            {/* Payment URL */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment URL
-              </label>
-              <div className="flex items-center space-x-2">
-                <code className="flex-1 p-3 bg-gray-100 rounded-lg text-sm font-mono break-all">
-                  {createdPaymentLink.payment_url}
-                </code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(createdPaymentLink.payment_url)}
-                >
-                  {copied ? 'Copied!' : <Copy className="h-4 w-4" />}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(createdPaymentLink.payment_url, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* QR Code */}
-            <div className="text-center">
-              <label className="block text-sm font-medium text-gray-700 mb-4">
-                QR Code
-              </label>
               <div className="flex justify-center">
-                <QRCode 
-                  value={createdPaymentLink.payment_url} 
-                  size={200}
-                  className="border border-gray-200"
-                />
+                <QRCode value={createdLink.qr_code_data} size={200} />
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Customers can scan this QR code to access the payment link
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button 
-            onClick={() => router.push('/merchant/dashboard/payments')}
-            className="flex-1"
-          >
-            View All Payment Links
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => {
-              setCreatedPaymentLink(null)
-              setFormData({
-                title: '',
-                description: '',
-                amount: '',
-                currency: 'USD',
-                acceptedCryptos: ['BTC', 'ETH'],
-                expiresAt: '',
-                maxUses: '',
-                redirectUrl: ''
-              })
-            }}
-            className="flex-1"
-          >
-            Create Another Link
-          </Button>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Payment URL
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={createdLink.payment_url}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(createdLink.payment_url, 'Payment URL')}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => window.open(createdLink.payment_url, '_blank')}
+                    className="flex-1"
+                    variant="outline"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/merchant/dashboard/payments')}
+                    className="flex-1 bg-[#7f5efd] hover:bg-[#7f5efd]/90"
+                  >
+                    View All Payments
+                  </Button>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    setCreatedLink(null)
+                    setFormData({
+                      title: '',
+                      description: '',
+                      amount: '',
+                      currency: 'USD',
+                      acceptedCryptos: popularCurrencies.slice(0, 5),
+                      expiresAt: '',
+                      maxUses: '',
+                      redirectUrl: ''
+                    })
+                  }}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Create Another Payment Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </DashboardLayout>
     )
   }
-
-  const generatePreviewUrl = () => {
-    return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/pl_preview`
-  }
-
-  const previewUrl = generatePreviewUrl()
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button 
-          variant="outline" 
-          onClick={() => router.push('/merchant/dashboard/payments')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Payment Link</h1>
-          <p className="text-gray-600 mt-1">
-            Create a secure payment link to accept cryptocurrency payments
-          </p>
+    <DashboardLayout>
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="flex items-center space-x-4 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Payment Link</h1>
+            <p className="text-gray-600">Generate a payment link to accept cryptocurrency</p>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Form */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Link Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Title *
-                    </label>
-                    <Input
-                      placeholder="e.g., Product Purchase, Service Payment"
-                      value={formData.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
-                      className={errors.title ? 'border-red-300 focus:border-red-500' : ''}
-                    />
-                    {errors.title && (
-                      <p className="text-sm text-red-600 mt-1">{errors.title}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <Textarea
-                      placeholder="Describe what the customer is paying for..."
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                {/* Payment Details */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Payment Details</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Amount *
-                      </label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={formData.amount}
-                          onChange={(e) => handleInputChange('amount', e.target.value)}
-                          className={`pl-10 ${errors.amount ? 'border-red-300 focus:border-red-500' : ''}`}
-                        />
-                      </div>
-                      {errors.amount && (
-                        <p className="text-sm text-red-600 mt-1">{errors.amount}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Currency
-                      </label>
-                      <select
-                        value={formData.currency}
-                        onChange={(e) => handleInputChange('currency', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7f5efd] focus:border-transparent"
-                      >
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="GBP">GBP (£)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Accepted Cryptocurrencies */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Accepted Cryptocurrencies</h3>
-                  <p className="text-sm text-gray-600">
-                    Select which cryptocurrencies customers can use to pay
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {SUPPORTED_CRYPTOS.map((crypto) => {
-                      const isSelected = formData.acceptedCryptos.includes(crypto.code)
-                      return (
-                        <div
-                          key={crypto.code}
-                          onClick={() => handleCryptoToggle(crypto.code)}
-                          className={`
-                            p-3 rounded-lg border-2 cursor-pointer transition-all duration-200
-                            ${isSelected 
-                              ? 'border-[#7f5efd] bg-[#7f5efd]/5' 
-                              : 'border-gray-200 hover:border-gray-300'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className={`
-                                w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                                ${isSelected ? 'bg-[#7f5efd] text-white' : 'bg-gray-100 text-gray-600'}
-                              `}>
-                                {crypto.symbol}
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-900">{crypto.name}</span>
-                                <Badge variant="secondary" className="ml-2 text-xs">
-                                  {crypto.code}
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className={`
-                              w-4 h-4 rounded-full border-2 flex items-center justify-center
-                              ${isSelected ? 'border-[#7f5efd] bg-[#7f5efd]' : 'border-gray-300'}
-                            `}>
-                              {isSelected && (
-                                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  {errors.acceptedCryptos && (
-                    <p className="text-sm text-red-600">{errors.acceptedCryptos}</p>
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <DollarSign className="w-5 h-5 text-[#7f5efd]" />
+              <span>Payment Details</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Payment Title *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="e.g., Product Purchase, Service Payment"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    className={errors.title ? 'border-red-300' : ''}
+                  />
+                  {errors.title && (
+                    <p className="text-sm text-red-600 mt-1">{errors.title}</p>
                   )}
                 </div>
 
-                {/* Advanced Options */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Advanced Options</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Expires At
-                      </label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          type="datetime-local"
-                          value={formData.expiresAt}
-                          onChange={(e) => handleInputChange('expiresAt', e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Leave empty for no expiration
-                      </p>
-                    </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Description (Optional)
+                  </label>
+                  <Textarea
+                    placeholder="Additional details about this payment"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Max Uses
-                      </label>
-                      <div className="relative">
-                        <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          type="number"
-                          placeholder="Unlimited"
-                          value={formData.maxUses}
-                          onChange={(e) => handleInputChange('maxUses', e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Maximum number of payments allowed
-                      </p>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Amount *
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={formData.amount}
+                      onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                      className={errors.amount ? 'border-red-300' : ''}
+                    />
+                    {errors.amount && (
+                      <p className="text-sm text-red-600 mt-1">{errors.amount}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Redirect URL
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Currency
+                    </label>
+                    <Select
+                      value={formData.currency}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="EUR">EUR (€)</SelectItem>
+                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                        <SelectItem value="JPY">JPY (¥)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accepted Cryptocurrencies */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-3 block">
+                  Accepted Cryptocurrencies *
+                </label>
+                {loadingCurrencies ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                    <span>Loading available currencies...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Popular Currencies */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-600 mb-2">Popular Currencies</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {availableCurrencies
+                          .filter(currency => popularCurrencies.includes(currency.code))
+                          .map(currency => {
+                            const isSelected = formData.acceptedCryptos.includes(currency.code)
+                            const estimatedAmount = getEstimatedCryptoAmount(currency)
+                            
+                            return (
+                              <div
+                                key={currency.code}
+                                onClick={() => handleCryptoToggle(currency.code)}
+                                className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                                  isSelected
+                                    ? 'border-[#7f5efd] bg-[#7f5efd]/5'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-medium">{currency.symbol}</span>
+                                    <span className="text-sm text-gray-600">{currency.code}</span>
+                                  </div>
+                                  {isSelected && (
+                                    <CheckCircle className="w-4 h-4 text-[#7f5efd]" />
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {currency.name}
+                                  {currency.network && (
+                                    <Badge variant="outline" className="ml-1 text-xs">
+                                      {currency.network}
+                                    </Badge>
+                                  )}
+                                </div>
+                                {estimatedAmount && (
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    ~{estimatedAmount} {currency.code}
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                      </div>
+                    </div>
+
+                    {/* All Other Currencies */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-600 mb-2">All Currencies</h4>
+                      <div className="max-h-48 overflow-y-auto border rounded-lg p-2">
+                        <div className="grid grid-cols-3 gap-1">
+                          {availableCurrencies
+                            .filter(currency => !popularCurrencies.includes(currency.code))
+                            .map(currency => {
+                              const isSelected = formData.acceptedCryptos.includes(currency.code)
+                              
+                              return (
+                                <div
+                                  key={currency.code}
+                                  onClick={() => handleCryptoToggle(currency.code)}
+                                  className={`p-2 text-xs border rounded cursor-pointer transition-colors ${
+                                    isSelected
+                                      ? 'border-[#7f5efd] bg-[#7f5efd]/5 text-[#7f5efd]'
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span>{currency.symbol} {currency.code}</span>
+                                    {isSelected && <CheckCircle className="w-3 h-3" />}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Selected Summary */}
+                    {formData.acceptedCryptos.length > 0 && (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <div className="text-sm font-medium text-gray-700 mb-2">
+                          Selected Cryptocurrencies ({formData.acceptedCryptos.length})
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {formData.acceptedCryptos.map(crypto => {
+                            const currencyInfo = getCurrencyInfo(crypto)
+                            return (
+                              <Badge
+                                key={crypto}
+                                variant="secondary"
+                                className="text-xs cursor-pointer hover:bg-red-100"
+                                onClick={() => handleCryptoToggle(crypto)}
+                              >
+                                {currencyInfo.symbol} {crypto}
+                                <X className="w-3 h-3 ml-1" />
+                              </Badge>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {errors.acceptedCryptos && (
+                  <p className="text-sm text-red-600 mt-1">{errors.acceptedCryptos}</p>
+                )}
+              </div>
+
+              {/* Advanced Options */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Advanced Options</h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Expiration Date (Optional)
                     </label>
                     <Input
-                      type="url"
-                      placeholder="https://yoursite.com/success"
-                      value={formData.redirectUrl}
-                      onChange={(e) => handleInputChange('redirectUrl', e.target.value)}
-                      className={errors.redirectUrl ? 'border-red-300 focus:border-red-500' : ''}
+                      type="datetime-local"
+                      value={formData.expiresAt}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiresAt: e.target.value }))}
+                      className={errors.expiresAt ? 'border-red-300' : ''}
                     />
-                    {errors.redirectUrl && (
-                      <p className="text-sm text-red-600 mt-1">{errors.redirectUrl}</p>
+                    {errors.expiresAt && (
+                      <p className="text-sm text-red-600 mt-1">{errors.expiresAt}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      Where to redirect customers after successful payment
-                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Max Uses (Optional)
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="Unlimited"
+                      value={formData.maxUses}
+                      onChange={(e) => setFormData(prev => ({ ...prev, maxUses: e.target.value }))}
+                      className={errors.maxUses ? 'border-red-300' : ''}
+                    />
+                    {errors.maxUses && (
+                      <p className="text-sm text-red-600 mt-1">{errors.maxUses}</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Submit Buttons */}
-                <div className="flex justify-between pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowPreview(!showPreview)}
-                  >
-                    {showPreview ? 'Hide Preview' : 'Show Preview'}
-                  </Button>
-                  
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="bg-[#7f5efd] hover:bg-[#6d4fd8]"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create Payment Link'
-                    )}
-                  </Button>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Redirect URL (Optional)
+                  </label>
+                  <Input
+                    type="url"
+                    placeholder="https://yourwebsite.com/success"
+                    value={formData.redirectUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, redirectUrl: e.target.value }))}
+                    className={errors.redirectUrl ? 'border-red-300' : ''}
+                  />
+                  {errors.redirectUrl && (
+                    <p className="text-sm text-red-600 mt-1">{errors.redirectUrl}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Users will be redirected here after successful payment
+                  </p>
                 </div>
+              </div>
 
-                {/* Error Display */}
-                {errors.submit && (
-                  <Alert className="border-red-200 bg-red-50">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-red-800">
-                      {errors.submit}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Preview */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {showPreview && formData.title && formData.amount ? (
-                <>
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">{formData.title}</h3>
-                      {formData.description && (
-                        <p className="text-gray-600 mt-1">{formData.description}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <span className="text-3xl font-bold text-gray-900">
-                        {formatCurrency(parseFloat(formData.amount || '0'), formData.currency)}
-                      </span>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Payment URL</label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
-                          {previewUrl}
-                        </code>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigator.clipboard.writeText(previewUrl)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* QR Code Preview */}
-                    <div className="text-center">
-                      <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                        <QrCode className="w-12 h-12 text-gray-400" />
-                      </div>
-                      <p className="text-xs text-gray-500">QR Code will be generated</p>
-                    </div>
-
-                    {/* Validation Alerts */}
-                    {Object.keys(errors).length > 0 && (
-                      <Alert className="border-red-200 bg-red-50">
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
-                        <AlertDescription className="text-red-800">
-                          Please fix the errors above to create your payment link.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <Link2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Fill out the form to see a preview</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              {/* Submit Button */}
+              <div className="flex justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading || loadingCurrencies}
+                  className="bg-[#7f5efd] hover:bg-[#7f5efd]/90"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Create Payment Link
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
 
