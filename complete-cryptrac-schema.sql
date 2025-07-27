@@ -186,6 +186,23 @@ COMMENT ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" "u
 
 
 
+CREATE OR REPLACE FUNCTION "public"."clean_expired_cache"() RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    DELETE FROM "public"."nowpayments_cache" 
+    WHERE "expires_at" < NOW();
+END;
+$$;
+
+
+ALTER FUNCTION "public"."clean_expired_cache"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."clean_expired_cache"() IS 'Removes expired cache entries from nowpayments_cache table';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text" DEFAULT 'My Business'::"text") RETURNS TABLE("id" "uuid", "user_id" "uuid", "business_name" "text", "onboarding_completed" boolean, "onboarding_step" integer, "setup_paid" boolean)
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -232,6 +249,50 @@ $$;
 
 
 ALTER FUNCTION "public"."get_current_merchant_id"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") RETURNS TABLE("code" character varying, "name" character varying, "symbol" character varying, "network" character varying, "is_token" boolean, "parent_currency" character varying, "trust_wallet_compatible" boolean, "address_format" character varying, "has_wallet" boolean)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        sc.code,
+        sc.name,
+        sc.symbol,
+        sc.network,
+        sc.is_token,
+        sc.parent_currency,
+        sc.trust_wallet_compatible,
+        sc.address_format,
+        (m.wallets ? sc.code) as has_wallet
+    FROM "public"."supported_currencies" sc
+    CROSS JOIN "public"."merchants" m
+    WHERE m.id = merchant_id
+    AND sc.enabled = true
+    AND (
+        array_length(m.supported_currencies, 1) IS NULL 
+        OR sc.code = ANY(m.supported_currencies)
+    )
+    ORDER BY 
+        CASE sc.code 
+            WHEN 'BTC' THEN 1
+            WHEN 'ETH' THEN 2
+            WHEN 'USDT' THEN 3
+            WHEN 'USDC' THEN 4
+            WHEN 'LTC' THEN 5
+            ELSE 99
+        END,
+        sc.name;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") IS 'Returns supported currencies for a merchant with wallet status';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") RETURNS TABLE("total_links" integer, "active_links" integer, "completed_links" integer, "expired_links" integer, "paused_links" integer, "single_use_links" integer, "total_payments" integer, "total_revenue" numeric)
@@ -606,6 +667,8 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "last_subscription_payment" timestamp with time zone,
     "referred_by_rep" "uuid",
     "referred_by_partner" "uuid",
+    "wallet_generation_method" character varying(20) DEFAULT 'manual'::character varying,
+    "supported_currencies" "text"[] DEFAULT '{}'::"text"[],
     CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at")),
     CONSTRAINT "merchants_subscription_plan_check" CHECK (("subscription_plan" = ANY (ARRAY['monthly'::"text", 'yearly'::"text"]))),
     CONSTRAINT "merchants_subscription_status_check" CHECK (("subscription_status" = ANY (ARRAY['active'::"text", 'cancelled'::"text", 'past_due'::"text"])))
@@ -613,6 +676,18 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
 
 
 ALTER TABLE "public"."merchants" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."merchants"."payment_config" IS 'Payment processing configuration including fees and forwarding settings';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."auto_convert_enabled" IS 'Whether merchant has auto-conversion to fiat enabled (1% fee vs 0.5%)';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."preferred_payout_currency" IS 'Preferred currency for auto-conversion payouts';
+
 
 
 COMMENT ON COLUMN "public"."merchants"."subscription_plan" IS 'Monthly ($19) or yearly ($199) subscription plan';
@@ -624,6 +699,14 @@ COMMENT ON COLUMN "public"."merchants"."referred_by_rep" IS 'Rep who referred th
 
 
 COMMENT ON COLUMN "public"."merchants"."referred_by_partner" IS 'Partner who referred this merchant for $50 bonus';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."wallet_generation_method" IS 'How wallets were created: manual, generated, or trust_wallet';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."supported_currencies" IS 'Array of currency codes this merchant accepts';
 
 
 
@@ -655,6 +738,19 @@ COMMENT ON COLUMN "public"."monthly_bonus_log"."original_bonus" IS 'Original bon
 
 COMMENT ON COLUMN "public"."monthly_bonus_log"."split_bonus" IS 'Actual bonus amount after tie splitting';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."nowpayments_cache" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "cache_key" character varying(255) NOT NULL,
+    "cache_data" "jsonb" NOT NULL,
+    "expires_at" timestamp with time zone NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."nowpayments_cache" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."partner_referrals" (
@@ -817,7 +913,14 @@ CREATE TABLE IF NOT EXISTS "public"."supported_currencies" (
     "icon_url" character varying(500),
     "nowpayments_code" character varying(20),
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "network" character varying(50),
+    "contract_address" character varying(100),
+    "is_token" boolean DEFAULT false,
+    "parent_currency" character varying(20),
+    "trust_wallet_compatible" boolean DEFAULT true,
+    "address_format" character varying(50),
+    "derivation_path" character varying(100)
 );
 
 
@@ -825,6 +928,34 @@ ALTER TABLE "public"."supported_currencies" OWNER TO "postgres";
 
 
 COMMENT ON TABLE "public"."supported_currencies" IS 'Column sizes updated for Phase 5 NOWPayments integration - supports longer currency codes';
+
+
+
+COMMENT ON COLUMN "public"."supported_currencies"."network" IS 'Blockchain network (ethereum, bitcoin, tron, polygon, bsc, solana)';
+
+
+
+COMMENT ON COLUMN "public"."supported_currencies"."contract_address" IS 'Token contract address for ERC-20, TRC-20, BEP-20 tokens';
+
+
+
+COMMENT ON COLUMN "public"."supported_currencies"."is_token" IS 'True if this is a token (USDT, USDC), false for native currencies (BTC, ETH)';
+
+
+
+COMMENT ON COLUMN "public"."supported_currencies"."parent_currency" IS 'Parent currency for tokens (ETH for ERC-20, TRX for TRC-20)';
+
+
+
+COMMENT ON COLUMN "public"."supported_currencies"."trust_wallet_compatible" IS 'Whether this currency is supported by Trust Wallet';
+
+
+
+COMMENT ON COLUMN "public"."supported_currencies"."address_format" IS 'Address format validation pattern';
+
+
+
+COMMENT ON COLUMN "public"."supported_currencies"."derivation_path" IS 'HD wallet derivation path for address generation';
 
 
 
@@ -857,6 +988,20 @@ CREATE TABLE IF NOT EXISTS "public"."upgrade_history" (
 
 
 ALTER TABLE "public"."upgrade_history" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."wallet_generation_log" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "generation_method" character varying(20) NOT NULL,
+    "currencies_generated" "text"[] NOT NULL,
+    "client_ip" "inet",
+    "user_agent" "text",
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."wallet_generation_log" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."webhook_logs" (
@@ -923,6 +1068,16 @@ ALTER TABLE ONLY "public"."merchants"
 
 ALTER TABLE ONLY "public"."monthly_bonus_log"
     ADD CONSTRAINT "monthly_bonus_log_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."nowpayments_cache"
+    ADD CONSTRAINT "nowpayments_cache_cache_key_key" UNIQUE ("cache_key");
+
+
+
+ALTER TABLE ONLY "public"."nowpayments_cache"
+    ADD CONSTRAINT "nowpayments_cache_pkey" PRIMARY KEY ("id");
 
 
 
@@ -1006,6 +1161,11 @@ ALTER TABLE ONLY "public"."upgrade_history"
 
 
 
+ALTER TABLE ONLY "public"."wallet_generation_log"
+    ADD CONSTRAINT "wallet_generation_log_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."webhook_logs"
     ADD CONSTRAINT "webhook_logs_pkey" PRIMARY KEY ("id");
 
@@ -1064,6 +1224,10 @@ CREATE INDEX "idx_merchants_user_id_unique" ON "public"."merchants" USING "btree
 
 
 CREATE INDEX "idx_monthly_bonus_log_rep_id" ON "public"."monthly_bonus_log" USING "btree" ("rep_id");
+
+
+
+CREATE INDEX "idx_nowpayments_cache_key_expires" ON "public"."nowpayments_cache" USING "btree" ("cache_key", "expires_at");
 
 
 
@@ -1139,6 +1303,10 @@ CREATE INDEX "idx_upgrade_history_merchant_id" ON "public"."upgrade_history" USI
 
 
 
+CREATE INDEX "idx_wallet_generation_log_merchant_id" ON "public"."wallet_generation_log" USING "btree" ("merchant_id");
+
+
+
 CREATE INDEX "idx_webhook_logs_created_at" ON "public"."webhook_logs" USING "btree" ("created_at" DESC);
 
 
@@ -1180,6 +1348,10 @@ CREATE OR REPLACE TRIGGER "update_merchant_payments_updated_at" BEFORE UPDATE ON
 
 
 CREATE OR REPLACE TRIGGER "update_merchants_updated_at" BEFORE UPDATE ON "public"."merchants" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_nowpayments_cache_updated_at" BEFORE UPDATE ON "public"."nowpayments_cache" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -1288,6 +1460,11 @@ ALTER TABLE ONLY "public"."tier_history"
 
 ALTER TABLE ONLY "public"."upgrade_history"
     ADD CONSTRAINT "upgrade_history_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wallet_generation_log"
+    ADD CONSTRAINT "wallet_generation_log_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
 
 
 
@@ -1630,6 +1807,12 @@ GRANT ALL ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" 
 
 
 
+GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "anon";
+GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p_business_name" "text") TO "service_role";
@@ -1639,6 +1822,12 @@ GRANT ALL ON FUNCTION "public"."create_merchant_for_user"("p_user_id" "uuid", "p
 GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") TO "service_role";
 
 
 
@@ -1726,6 +1915,12 @@ GRANT ALL ON TABLE "public"."monthly_bonus_log" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."nowpayments_cache" TO "anon";
+GRANT ALL ON TABLE "public"."nowpayments_cache" TO "authenticated";
+GRANT ALL ON TABLE "public"."nowpayments_cache" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."partner_referrals" TO "anon";
 GRANT ALL ON TABLE "public"."partner_referrals" TO "authenticated";
 GRANT ALL ON TABLE "public"."partner_referrals" TO "service_role";
@@ -1792,6 +1987,12 @@ GRANT ALL ON TABLE "public"."upgrade_history" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."wallet_generation_log" TO "anon";
+GRANT ALL ON TABLE "public"."wallet_generation_log" TO "authenticated";
+GRANT ALL ON TABLE "public"."wallet_generation_log" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."webhook_logs" TO "anon";
 GRANT ALL ON TABLE "public"."webhook_logs" TO "authenticated";
 GRANT ALL ON TABLE "public"."webhook_logs" TO "service_role";
@@ -1829,6 +2030,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
+
 
 
 -- Create buckets
