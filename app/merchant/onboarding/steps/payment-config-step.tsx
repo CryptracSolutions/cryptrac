@@ -113,9 +113,11 @@ export default function PaymentConfigStep({ data, onComplete, onPrevious }: Paym
   }
 
   const handleSelectAllPopular = () => {
+    // Fix for Set iteration issue - use Array.from() instead of spread operator
+    const uniqueCryptos = Array.from(new Set([...formData.acceptedCryptos, ...popularCurrencies]))
     setFormData(prev => ({
       ...prev,
-      acceptedCryptos: [...new Set([...prev.acceptedCryptos, ...popularCurrencies])]
+      acceptedCryptos: uniqueCryptos
     }))
   }
 

@@ -28,6 +28,9 @@ interface OnboardingData {
   }
   walletConfig: {
     wallets: Record<string, string>
+    wallet_generation_method: string
+    walletType: 'generate' | 'existing'
+    mnemonic?: string
     selectedCurrencies?: string[]
   }
   paymentConfig: {
@@ -36,6 +39,7 @@ interface OnboardingData {
     autoForward: boolean
     autoConvert: boolean
     preferredPayoutCurrency: string | null
+    chargeCustomerFee: boolean
   }
 }
 
@@ -53,6 +57,8 @@ export default function OnboardingPage() {
     },
     walletConfig: {
       wallets: {},
+      wallet_generation_method: 'trust_wallet',
+      walletType: 'existing',
       selectedCurrencies: []
     },
     paymentConfig: {
@@ -60,7 +66,8 @@ export default function OnboardingPage() {
       feePercentage: 2.5,
       autoForward: false,
       autoConvert: false,
-      preferredPayoutCurrency: null
+      preferredPayoutCurrency: null,
+      chargeCustomerFee: false
     }
   })
 
