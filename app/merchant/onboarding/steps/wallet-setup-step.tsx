@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
@@ -111,19 +113,23 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          currency: currency.toLowerCase(),
+          currency: currency.toUpperCase(), // Changed from toLowerCase to toUpperCase
           address: address.trim()
         })
       })
 
       const result = await response.json()
+      
+      // Fixed: Check result.validation.valid instead of result.valid
+      const isValid = result.validation?.valid || false
+      
       setValidationStatus(prev => ({ 
         ...prev, 
-        [currency]: result.valid ? 'valid' : 'invalid' 
+        [currency]: isValid ? 'valid' : 'invalid' 
       }))
 
-      if (!result.valid && result.message) {
-        toast.error(`Invalid ${currency} address: ${result.message}`)
+      if (!isValid && result.validation?.error) {
+        toast.error(`Invalid ${currency} address: ${result.validation.error}`)
       }
     } catch (error) {
       console.error('Address validation error:', error)

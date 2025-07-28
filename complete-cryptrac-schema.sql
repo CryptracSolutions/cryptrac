@@ -2152,3 +2152,29 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
+
+
+-- Create buckets
+select storage.create_bucket('w9-uploads', public := false);
+select storage.create_bucket('promo-kits', public := true);
+
+-- Enable Row Level Security on storage.objects (required for policies)
+alter table storage.objects enable row level security;
+
+-- RLS Policy: Allow public SELECT on 'promo-kits' bucket
+create policy "Public read for promo kits"
+on storage.objects
+for select
+to public
+using (
+  bucket_id = 'promo-kits'
+);
+
+-- RLS Policy: Allow public INSERT to 'w9-uploads' if user is the owner
+create policy "User can upload to own W9"
+on storage.objects
+for insert
+to public
+with check (
+  bucket_id = 'w9-uploads' AND auth.uid() = owner
+);
