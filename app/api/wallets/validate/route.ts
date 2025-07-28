@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   validateAddress,
-  getCurrencyInfo
-} from '@/lib/wallet-generation';
+  getCurrencyInfo,
+  getTrustWalletCurrencies
+} from '@/lib/wallet-generation-unified';
 
 interface ValidateAddressRequest {
   address: string;
@@ -21,7 +22,23 @@ interface ValidationResult {
   currency: string;
   network?: string;
   address_type?: string;
+  exact_match?: boolean;
   error?: string;
+}
+
+interface TrustWalletCurrency {
+  code: string;
+  name: string;
+  symbol: string;
+  network: string;
+  address_type: string;
+  derivation_path: string;
+  trust_wallet_compatible: boolean;
+  decimals: number;
+  min_amount: number;
+  display_name?: string;
+  is_token?: boolean;
+  parent_currency?: string;
 }
 
 // POST endpoint for address validation (single and batch)
@@ -47,7 +64,8 @@ export async function POST(request: NextRequest) {
         valid: isValid,
         currency: currency.toUpperCase(),
         network: currencyInfo?.network,
-        address_type: currencyInfo?.address_type
+        address_type: currencyInfo?.address_type,
+        exact_match: currencyInfo ? ['ETH', 'BNB', 'MATIC', 'USDT_ERC20', 'USDC_ERC20', 'USDC_POLYGON', 'SOL', 'TRX', 'USDT_TRC20'].includes(currencyInfo.code) : false
       };
 
       if (!isValid) {
@@ -98,7 +116,8 @@ export async function POST(request: NextRequest) {
             valid: isValid,
             currency: item.currency.toUpperCase(),
             network: currencyInfo?.network,
-            address_type: currencyInfo?.address_type
+            address_type: currencyInfo?.address_type,
+            exact_match: currencyInfo ? ['ETH', 'BNB', 'MATIC', 'USDT_ERC20', 'USDC_ERC20', 'USDC_POLYGON', 'SOL', 'TRX', 'USDT_TRC20'].includes(currencyInfo.code) : false
           };
 
           if (!isValid) {
@@ -115,8 +134,9 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const validCount = results.filter(r => r.valid).length;
+      const validCount = results.filter((r: ValidationResult) => r.valid).length;
       const invalidCount = results.length - validCount;
+      const exactMatchCount = results.filter((r: ValidationResult) => r.exact_match).length;
 
       return NextResponse.json({
         success: true,
@@ -124,6 +144,7 @@ export async function POST(request: NextRequest) {
           total: results.length,
           valid: validCount,
           invalid: invalidCount,
+          exact_matches: exactMatchCount,
           results
         }
       });
@@ -150,20 +171,20 @@ export async function POST(request: NextRequest) {
 // GET endpoint to retrieve supported currencies for validation
 export async function GET() {
   try {
-    const { getTrustWalletCurrencies } = await import('@/lib/wallet-generation');
     const currencies = getTrustWalletCurrencies();
     
-    const supportedCurrencies = currencies.map(currency => ({
+    const supportedCurrencies = currencies.map((currency: TrustWalletCurrency) => ({
       code: currency.code,
       name: currency.name,
       network: currency.network,
       address_type: currency.address_type,
-      derivation_path: currency.derivation_path
+      derivation_path: currency.derivation_path,
+      exact_match: ['ETH', 'BNB', 'MATIC', 'USDT_ERC20', 'USDC_ERC20', 'USDC_POLYGON', 'SOL', 'TRX', 'USDT_TRC20'].includes(currency.code)
     }));
 
     // Convert Set to Array using Array.from() to avoid iteration issues
-    const networksSet = new Set(currencies.map(c => c.network));
-    const addressTypesSet = new Set(currencies.map(c => c.address_type));
+    const networksSet = new Set(currencies.map((c: TrustWalletCurrency) => c.network));
+    const addressTypesSet = new Set(currencies.map((c: TrustWalletCurrency) => c.address_type));
     
     const supportedNetworks = Array.from(networksSet);
     const addressTypes = Array.from(addressTypesSet);
@@ -174,7 +195,9 @@ export async function GET() {
       validation_info: {
         supported_networks: supportedNetworks,
         address_types: addressTypes,
-        total_currencies: currencies.length
+        total_currencies: currencies.length,
+        exact_match_count: supportedCurrencies.filter((c: any) => c.exact_match).length,
+        manual_setup_count: supportedCurrencies.filter((c: any) => !c.exact_match).length
       }
     });
 

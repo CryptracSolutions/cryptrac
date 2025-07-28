@@ -251,7 +251,7 @@ $$;
 ALTER FUNCTION "public"."get_current_merchant_id"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") RETURNS TABLE("code" character varying, "name" character varying, "symbol" character varying, "network" character varying, "is_token" boolean, "parent_currency" character varying, "trust_wallet_compatible" boolean, "address_format" character varying, "has_wallet" boolean)
+CREATE OR REPLACE FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") RETURNS TABLE("code" character varying, "name" character varying, "symbol" character varying, "network" character varying, "is_token" boolean, "parent_currency" character varying, "trust_wallet_compatible" boolean, "address_format" character varying, "has_wallet" boolean, "display_name" "text")
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 BEGIN
@@ -265,21 +265,23 @@ BEGIN
         sc.parent_currency,
         sc.trust_wallet_compatible,
         sc.address_format,
-        (m.wallets ? sc.code) as has_wallet
-    FROM "public"."supported_currencies" sc
-    CROSS JOIN "public"."merchants" m
+        (m.wallets ? sc.code) as has_wallet,
+        sc.display_name
+    FROM supported_currencies sc
+    CROSS JOIN merchants m
     WHERE m.id = merchant_id
-    AND sc.enabled = true
+    AND sc.enabled = TRUE
     AND (
         array_length(m.supported_currencies, 1) IS NULL 
         OR sc.code = ANY(m.supported_currencies)
     )
     ORDER BY 
+        sc.trust_wallet_compatible DESC,
         CASE sc.code 
             WHEN 'BTC' THEN 1
             WHEN 'ETH' THEN 2
-            WHEN 'USDT' THEN 3
-            WHEN 'USDC' THEN 4
+            WHEN 'USDT_ERC20' THEN 3
+            WHEN 'USDC_ERC20' THEN 4
             WHEN 'LTC' THEN 5
             ELSE 99
         END,
@@ -289,10 +291,6 @@ $$;
 
 
 ALTER FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") OWNER TO "postgres";
-
-
-COMMENT ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") IS 'Returns supported currencies for a merchant with wallet status';
-
 
 
 CREATE OR REPLACE FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") RETURNS TABLE("total_links" integer, "active_links" integer, "completed_links" integer, "expired_links" integer, "paused_links" integer, "single_use_links" integer, "total_payments" integer, "total_revenue" numeric)
@@ -338,6 +336,52 @@ ALTER FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") OW
 
 COMMENT ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") IS 'Returns comprehensive statistics for merchant payment links with real-time status calculation';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."get_trust_wallet_currencies"() RETURNS TABLE("code" character varying, "name" character varying, "symbol" character varying, "network" character varying, "is_token" boolean, "parent_currency" character varying, "trust_wallet_compatible" boolean, "address_type" "text", "derivation_path" "text", "enabled" boolean, "min_amount" numeric, "decimals" integer, "display_name" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        sc.code,
+        sc.name,
+        sc.symbol,
+        sc.network,
+        sc.is_token,
+        sc.parent_currency,
+        sc.trust_wallet_compatible,
+        sc.address_type,
+        sc.derivation_path,
+        sc.enabled,
+        sc.min_amount,
+        sc.decimals,
+        sc.display_name
+    FROM supported_currencies sc
+    WHERE sc.trust_wallet_compatible = TRUE
+    AND sc.enabled = TRUE
+    ORDER BY 
+        CASE sc.code 
+            WHEN 'BTC' THEN 1
+            WHEN 'ETH' THEN 2
+            WHEN 'USDT_ERC20' THEN 3
+            WHEN 'USDC_ERC20' THEN 4
+            WHEN 'MATIC' THEN 5
+            WHEN 'USDC_POLYGON' THEN 6
+            WHEN 'BNB' THEN 7
+            WHEN 'TRX' THEN 8
+            WHEN 'USDT_TRC20' THEN 9
+            WHEN 'LTC' THEN 10
+            WHEN 'SOL' THEN 11
+            WHEN 'XRP' THEN 12
+            WHEN 'DOGE' THEN 13
+            ELSE 99
+        END;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_trust_wallet_currencies"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."handle_monthly_bonus"() RETURNS "trigger"
@@ -920,7 +964,9 @@ CREATE TABLE IF NOT EXISTS "public"."supported_currencies" (
     "parent_currency" character varying(20),
     "trust_wallet_compatible" boolean DEFAULT true,
     "address_format" character varying(50),
-    "derivation_path" character varying(100)
+    "derivation_path" character varying(100),
+    "display_name" "text",
+    "address_type" "text"
 );
 
 
@@ -976,6 +1022,47 @@ ALTER TABLE "public"."tier_history" OWNER TO "postgres";
 
 COMMENT ON TABLE "public"."tier_history" IS 'Tracks rep tier changes based on previous month sales for commission calculation';
 
+
+
+CREATE OR REPLACE VIEW "public"."trust_wallet_currencies" AS
+ SELECT "code",
+    "name",
+    "symbol",
+    "network",
+    "is_token",
+    "parent_currency",
+    "address_type",
+    "derivation_path",
+    "min_amount",
+    "decimals",
+    "display_name",
+        CASE
+            WHEN ("display_name" IS NOT NULL) THEN ("display_name")::character varying
+            WHEN ("is_token" AND ("parent_currency" IS NOT NULL)) THEN ((((("name")::"text" || ' ('::"text") || ("network")::"text") || ')'::"text"))::character varying
+            ELSE "name"
+        END AS "full_display_name"
+   FROM "public"."supported_currencies"
+  WHERE (("trust_wallet_compatible" = true) AND ("enabled" = true))
+  ORDER BY
+        CASE "code"
+            WHEN 'BTC'::"text" THEN 1
+            WHEN 'ETH'::"text" THEN 2
+            WHEN 'USDT_ERC20'::"text" THEN 3
+            WHEN 'USDC_ERC20'::"text" THEN 4
+            WHEN 'MATIC'::"text" THEN 5
+            WHEN 'USDC_POLYGON'::"text" THEN 6
+            WHEN 'BNB'::"text" THEN 7
+            WHEN 'TRX'::"text" THEN 8
+            WHEN 'USDT_TRC20'::"text" THEN 9
+            WHEN 'LTC'::"text" THEN 10
+            WHEN 'SOL'::"text" THEN 11
+            WHEN 'XRP'::"text" THEN 12
+            WHEN 'DOGE'::"text" THEN 13
+            ELSE 99
+        END;
+
+
+ALTER VIEW "public"."trust_wallet_currencies" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."upgrade_history" (
@@ -1291,6 +1378,10 @@ CREATE INDEX "idx_support_messages_user_id" ON "public"."support_messages" USING
 
 
 
+CREATE INDEX "idx_supported_currencies_trust_wallet" ON "public"."supported_currencies" USING "btree" ("trust_wallet_compatible") WHERE ("trust_wallet_compatible" = true);
+
+
+
 CREATE INDEX "idx_tier_history_month" ON "public"."tier_history" USING "btree" ("month");
 
 
@@ -1300,6 +1391,10 @@ CREATE INDEX "idx_tier_history_rep_id" ON "public"."tier_history" USING "btree" 
 
 
 CREATE INDEX "idx_upgrade_history_merchant_id" ON "public"."upgrade_history" USING "btree" ("merchant_id");
+
+
+
+CREATE INDEX "idx_wallet_generation_log_created_at" ON "public"."wallet_generation_log" USING "btree" ("created_at");
 
 
 
@@ -1534,6 +1629,12 @@ CREATE POLICY "Admins can view all tier history" ON "public"."tier_history" FOR 
 
 
 
+CREATE POLICY "Admins can view all wallet generation logs" ON "public"."wallet_generation_log" USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"text")))));
+
+
+
 CREATE POLICY "Allow public read access to active payment links" ON "public"."payment_links" FOR SELECT USING ((("status")::"text" = 'active'::"text"));
 
 
@@ -1601,6 +1702,12 @@ CREATE POLICY "Merchants can manage their own payments" ON "public"."merchant_pa
 
 
 CREATE POLICY "Merchants can view own subscription history" ON "public"."subscription_history" FOR SELECT USING (("merchant_id" IN ( SELECT "merchants"."id"
+   FROM "public"."merchants"
+  WHERE ("merchants"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants can view own wallet generation logs" ON "public"."wallet_generation_log" FOR SELECT USING (("merchant_id" IN ( SELECT "merchants"."id"
    FROM "public"."merchants"
   WHERE ("merchants"."user_id" = "auth"."uid"()))));
 
@@ -1767,6 +1874,9 @@ ALTER TABLE "public"."tier_history" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."upgrade_history" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."wallet_generation_log" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."webhook_logs" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1834,6 +1944,12 @@ GRANT ALL ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id"
 GRANT ALL ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_trust_wallet_currencies"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_trust_wallet_currencies"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_trust_wallet_currencies"() TO "service_role";
 
 
 
@@ -1981,6 +2097,12 @@ GRANT ALL ON TABLE "public"."tier_history" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."trust_wallet_currencies" TO "anon";
+GRANT ALL ON TABLE "public"."trust_wallet_currencies" TO "authenticated";
+GRANT ALL ON TABLE "public"."trust_wallet_currencies" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."upgrade_history" TO "anon";
 GRANT ALL ON TABLE "public"."upgrade_history" TO "authenticated";
 GRANT ALL ON TABLE "public"."upgrade_history" TO "service_role";
@@ -2030,30 +2152,3 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
-
-
-
--- Create buckets
-select storage.create_bucket('w9-uploads', public := false);
-select storage.create_bucket('promo-kits', public := true);
-
--- Enable Row Level Security on storage.objects (required for policies)
-alter table storage.objects enable row level security;
-
--- RLS Policy: Allow public SELECT on 'promo-kits' bucket
-create policy "Public read for promo kits"
-on storage.objects
-for select
-to public
-using (
-  bucket_id = 'promo-kits'
-);
-
--- RLS Policy: Allow public INSERT to 'w9-uploads' if user is the owner
-create policy "User can upload to own W9"
-on storage.objects
-for insert
-to public
-with check (
-  bucket_id = 'w9-uploads' AND auth.uid() = owner
-);

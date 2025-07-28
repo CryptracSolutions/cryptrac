@@ -1,147 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { 
-  generateWallets, 
-  getTrustWalletCurrencies,
-  validateMnemonic
-} from '@/lib/wallet-generation';
+import { generateWallets, getTrustWalletCurrencies } from '@/lib/wallet-generation-unified';
 
 interface GenerateWalletsRequest {
   currencies?: string[];
   mnemonic?: string;
-  generation_method?: 'trust_wallet' | 'manual';
+  generation_method?: 'trust_wallet' | 'custom';
 }
 
+interface TrustWalletCurrency {
+  code: string;
+  name: string;
+  symbol: string;
+  network: string;
+  address_type: string;
+  derivation_path: string;
+  trust_wallet_compatible: boolean;
+  decimals: number;
+  min_amount: number;
+  display_name?: string;
+  is_token?: boolean;
+  parent_currency?: string;
+}
+
+// POST endpoint for wallet generation
 export async function POST(request: NextRequest) {
   try {
-    const requestData: GenerateWalletsRequest = await request.json();
-    const { currencies, mnemonic, generation_method = 'trust_wallet' } = requestData;
-
-    // Initialize Supabase client
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Server component context
-            }
-          },
-        },
-      }
-    );
-
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const body = await request.json();
+    const { currencies, mnemonic, generation_method = 'trust_wallet' }: GenerateWalletsRequest = body;
     
-    if (authError || !user) {
+    // If no currencies specified, use all Trust Wallet compatible currencies
+    const currenciesToGenerate = currencies || getTrustWalletCurrencies().map((c: TrustWalletCurrency) => c.code);
+    
+    if (!Array.isArray(currenciesToGenerate) || currenciesToGenerate.length === 0) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Validate mnemonic if provided
-    if (mnemonic && !validateMnemonic(mnemonic)) {
-      return NextResponse.json(
-        { error: 'Invalid mnemonic phrase provided' },
+        { error: 'At least one currency must be specified' },
         { status: 400 }
       );
     }
 
-    // Get Trust Wallet compatible currencies
-    const trustWalletCurrencies = getTrustWalletCurrencies();
-    const supportedCurrencies = trustWalletCurrencies.map(c => c.code);
-
-    // Validate currencies if provided, otherwise use all Trust Wallet currencies
-    const currenciesToGenerate = currencies || supportedCurrencies;
-    
-    if (currencies) {
-      const invalidCurrencies = currencies.filter(c => 
-        !supportedCurrencies.includes(c.toUpperCase())
+    if (currenciesToGenerate.length > 20) {
+      return NextResponse.json(
+        { error: 'Maximum 20 currencies allowed per generation' },
+        { status: 400 }
       );
-      
-      if (invalidCurrencies.length > 0) {
+    }
+
+    // Validate mnemonic if provided
+    if (mnemonic) {
+      const { validateMnemonic } = await import('@/lib/wallet-generation-unified');
+      if (!validateMnemonic(mnemonic)) {
         return NextResponse.json(
-          { 
-            error: 'Unsupported currencies provided',
-            invalid_currencies: invalidCurrencies,
-            supported_currencies: supportedCurrencies,
-            trust_wallet_currencies: trustWalletCurrencies
-          },
+          { error: 'Invalid mnemonic phrase' },
           { status: 400 }
         );
       }
     }
 
     // Generate wallets
-    console.log('Generating wallets for user:', user.id);
-    const walletResult = await generateWallets({
-      currencies: currenciesToGenerate.map(c => c.toUpperCase()),
+    const result = await generateWallets({
+      currencies: currenciesToGenerate,
       mnemonic,
-      generation_method: generation_method as 'trust_wallet' | 'custom'
+      generation_method
     });
 
-    // Get merchant record
-    const { data: merchant, error: merchantError } = await supabase
-      .from('merchants')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (merchantError || !merchant) {
-      return NextResponse.json(
-        { error: 'Merchant record not found' },
-        { status: 404 }
-      );
-    }
-
-    // Log wallet generation for audit
-    const clientIp = request.headers.get('x-forwarded-for') || 
-                    request.headers.get('x-real-ip') || 
-                    'unknown';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
-
-    const { error: logError } = await supabase
-      .from('wallet_generation_log')
-      .insert({
-        merchant_id: merchant.id,
-        generation_method,
-        currencies_generated: walletResult.wallets.map(w => w.currency),
-        client_ip: clientIp,
-        user_agent: userAgent
-      });
-
-    if (logError) {
-      console.error('Failed to log wallet generation:', logError);
-      // Don't fail the request for logging errors
-    }
-
-    // Return wallet generation result (without storing mnemonic on server)
     return NextResponse.json({
       success: true,
-      message: 'Wallets generated successfully',
-      data: {
-        wallets: walletResult.wallets,
-        trust_wallet_compatible: walletResult.trust_wallet_compatible,
-        generation_method: walletResult.generation_method,
-        timestamp: walletResult.timestamp,
-        total_wallets: walletResult.wallets.length
-      },
-      // Include mnemonic in response for client-side handling
-      // Client should save this securely and never send back to server
-      mnemonic: walletResult.mnemonic,
-      security_notice: 'IMPORTANT: Save your mnemonic phrase securely. We do not store it on our servers.'
+      ...result,
+      generation_info: {
+        total_currencies: result.wallets.length,
+        exact_matches: result.exact_matches,
+        manual_setup_required: result.manual_setup_required,
+        trust_wallet_compatible: result.trust_wallet_compatible
+      }
     });
 
   } catch (error) {
@@ -149,7 +79,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(
       { 
-        error: 'Failed to generate wallets',
+        error: 'Wallet generation failed',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
@@ -157,47 +87,65 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to retrieve Trust Wallet compatible currencies
+// GET endpoint to retrieve supported currencies
 export async function GET() {
   try {
-    const trustWalletCurrencies = getTrustWalletCurrencies();
+    const currencies = getTrustWalletCurrencies();
     
-    // Group currencies by network for better UX
-    const currenciesByNetwork = trustWalletCurrencies.reduce((acc, currency) => {
-      const network = currency.network;
-      if (!acc[network]) {
-        acc[network] = [];
-      }
-      acc[network].push(currency);
-      return acc;
-    }, {} as Record<string, typeof trustWalletCurrencies>);
+    const supportedCurrencies = currencies.map((currency: TrustWalletCurrency) => ({
+      code: currency.code,
+      name: currency.name,
+      symbol: currency.symbol,
+      network: currency.network,
+      address_type: currency.address_type,
+      derivation_path: currency.derivation_path,
+      trust_wallet_compatible: currency.trust_wallet_compatible,
+      decimals: currency.decimals,
+      min_amount: currency.min_amount,
+      display_name: currency.display_name,
+      is_token: currency.is_token,
+      parent_currency: currency.parent_currency
+    }));
 
-    // Popular currencies for Trust Wallet (all of them are popular since it's a curated list)
-    const popularCurrencies = trustWalletCurrencies.map(c => c.code);
+    // Group by compatibility level
+    const exactMatches = supportedCurrencies.filter((c: TrustWalletCurrency) => 
+      ['ETH', 'BNB', 'MATIC', 'USDT_ERC20', 'USDC_ERC20', 'USDC_POLYGON', 'SOL', 'TRX', 'USDT_TRC20'].includes(c.code)
+    );
+    
+    const manualSetup = supportedCurrencies.filter((c: TrustWalletCurrency) => 
+      ['BTC', 'LTC', 'DOGE', 'XRP'].includes(c.code)
+    );
+
+    // Convert Set to Array using Array.from() to avoid iteration issues
+    const networksSet = new Set(supportedCurrencies.map((c: TrustWalletCurrency) => c.network));
+    const addressTypesSet = new Set(supportedCurrencies.map((c: TrustWalletCurrency) => c.address_type));
+    
+    const supportedNetworks = Array.from(networksSet);
+    const addressTypes = Array.from(addressTypesSet);
 
     return NextResponse.json({
       success: true,
-      trust_wallet_currencies: trustWalletCurrencies,
-      supported_currencies: popularCurrencies,
-      currencies_by_network: currenciesByNetwork,
-      popular_currencies: popularCurrencies,
-      total_supported: trustWalletCurrencies.length,
-      trust_wallet_compatible: true,
+      currencies: supportedCurrencies,
+      compatibility_info: {
+        total_currencies: supportedCurrencies.length,
+        exact_matches: exactMatches.length,
+        manual_setup_required: manualSetup.length,
+        exact_match_currencies: exactMatches.map((c: TrustWalletCurrency) => c.code),
+        manual_setup_currencies: manualSetup.map((c: TrustWalletCurrency) => c.code)
+      },
       generation_info: {
-        method: 'client_side',
-        security: 'Private keys never touch server',
-        mnemonic_words: 12,
-        derivation_standard: 'BIP44',
-        networks_supported: Object.keys(currenciesByNetwork)
+        supported_networks: supportedNetworks,
+        supported_address_types: addressTypes,
+        trust_wallet_compatible: true
       }
     });
 
   } catch (error) {
-    console.error('Error fetching Trust Wallet currencies:', error);
+    console.error('Error fetching supported currencies:', error);
     
     return NextResponse.json(
       { 
-        error: 'Failed to fetch Trust Wallet currencies',
+        error: 'Failed to fetch supported currencies',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

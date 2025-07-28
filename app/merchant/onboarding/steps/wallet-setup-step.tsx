@@ -5,12 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
-import { ArrowRight, ArrowLeft, Wallet, Plus, Trash2, Copy, Eye, EyeOff, Shield, AlertTriangle, Loader2, CheckCircle, XCircle, RefreshCw, Info } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Wallet, Plus, Trash2, Copy, Eye, EyeOff, Shield, AlertTriangle, Loader2, CheckCircle, XCircle, RefreshCw, Info, Star } from 'lucide-react'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Badge } from '@/app/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import toast from 'react-hot-toast'
-import { getTrustWalletCurrencies, generateWallets, validateAddress, getDisplayName } from '@/lib/wallet-generation-real'
+import { 
+  getTrustWalletCurrencies, 
+  generateWallets, 
+  validateAddress, 
+  getDisplayName,
+  hasExactTrustWalletMatch,
+  getCompatibilityLevel,
+  type WalletGenerationResult,
+  type GenerateWalletsResponse
+} from '@/lib/wallet-generation-unified'
 
 interface WalletConfigData {
   walletType: 'generate' | 'existing'
@@ -42,16 +51,6 @@ interface CurrencyInfo {
   display_name?: string
 }
 
-interface GeneratedWallet {
-  address: string
-  currency: string
-  network: string
-  derivation_path?: string
-  public_key?: string
-  display_name?: string
-  address_type: string
-}
-
 export default function WalletSetupStep({ data, onComplete, onPrevious }: WalletSetupStepProps) {
   const [formData, setFormData] = useState<WalletConfigData>(data)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -67,6 +66,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
   const [loadingCurrencies, setLoadingCurrencies] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [validationStates, setValidationStates] = useState<Record<string, 'validating' | 'valid' | 'invalid' | null>>({})
+  const [generationResult, setGenerationResult] = useState<GenerateWalletsResponse | null>(null)
 
   // Load available currencies for "Use Existing" option
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       toast.error('Failed to load available currencies')
       
       // Fallback to Trust Wallet currencies
-      setAvailableCurrencies(trustWalletCurrencies.map(currency => ({
+      setAvailableCurrencies(trustWalletCurrencies.map((currency: any) => ({
         code: currency.code,
         name: currency.name,
         symbol: currency.symbol,
@@ -141,16 +141,18 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       setIsGenerating(true)
       
       // Generate all Trust Wallet compatible currencies
-      const currenciesToGenerate = trustWalletCurrencies.map(c => c.code)
+      const currenciesToGenerate = trustWalletCurrencies.map((c: any) => c.code)
       
       const result = await generateWallets({
         currencies: currenciesToGenerate,
         generation_method: 'trust_wallet'
       })
       
+      setGenerationResult(result)
+      
       // Convert generated wallets to our format
       const generatedWallets: Record<string, string> = {}
-      result.wallets.forEach((wallet: GeneratedWallet) => {
+      result.wallets.forEach((wallet: WalletGenerationResult) => {
         generatedWallets[wallet.currency] = wallet.address
       })
       
@@ -173,7 +175,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
 
   const handleAddWallet = () => {
     const availableCryptos = availableCurrencies.filter(
-      crypto => !formData.wallets[crypto.code]
+      (crypto: CurrencyInfo) => !formData.wallets[crypto.code]
     )
     
     if (availableCryptos.length > 0) {
@@ -321,7 +323,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
 
   const getCurrencyInfo = (code: string) => {
     // First check Trust Wallet currencies
-    const trustWalletCurrency = trustWalletCurrencies.find(c => c.code === code)
+    const trustWalletCurrency = trustWalletCurrencies.find((c: any) => c.code === code)
     if (trustWalletCurrency) {
       return {
         code: trustWalletCurrency.code,
@@ -337,7 +339,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
     }
     
     // Then check available currencies for existing wallets
-    return availableCurrencies.find(c => c.code === code) || {
+    return availableCurrencies.find((c: CurrencyInfo) => c.code === code) || {
       code,
       name: code,
       symbol: code,
@@ -375,6 +377,27 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       'Dogecoin': 'bg-amber-100 text-amber-800'
     }
     return colorMap[network] || 'bg-gray-100 text-gray-800'
+  }
+
+  const getCompatibilityBadge = (currency: string) => {
+    const level = getCompatibilityLevel(currency)
+    switch (level) {
+      case 'exact':
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+            <Star className="w-3 h-3 mr-1" />
+            Exact Match
+          </Badge>
+        )
+      case 'manual':
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
+            Manual Setup
+          </Badge>
+        )
+      default:
+        return null
+    }
   }
 
   return (
@@ -424,14 +447,17 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                       <div>
                         <h3 className="font-medium text-gray-900 mb-2">Trust Wallet Compatible Currencies</h3>
                         <p className="text-sm text-gray-600 mb-4">
-                          We&apos;ll generate addresses for these {trustWalletCurrencies.length} cryptocurrencies that work perfectly with Trust Wallet:
+                          We&apos;ll generate addresses for these {trustWalletCurrencies.length} cryptocurrencies that work with Trust Wallet:
                         </p>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50">
-                          {trustWalletCurrencies.map((currency) => (
-                            <div key={currency.code} className="flex items-center space-x-2 p-2 bg-white rounded border">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50">
+                          {trustWalletCurrencies.map((currency: any) => (
+                            <div key={currency.code} className="flex items-center justify-between p-2 bg-white rounded border">
                               <div className="flex-1">
-                                <div className="font-medium text-sm">{currency.symbol} {currency.code}</div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium text-sm">{currency.symbol} {currency.code}</span>
+                                  {getCompatibilityBadge(currency.code)}
+                                </div>
                                 <div className="text-xs text-gray-500">{currency.display_name || currency.name}</div>
                                 <Badge variant="outline" className={`text-xs mt-1 ${getNetworkBadgeColor(currency.network)}`}>
                                   {currency.network}
@@ -466,9 +492,16 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-gray-900">Generated Wallet Addresses</h3>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        {Object.keys(formData.wallets).length} addresses generated
-                      </Badge>
+                      <div className="flex space-x-2">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          {generationResult?.exact_matches || 0} Exact Matches
+                        </Badge>
+                        {generationResult?.manual_setup_required ? (
+                          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                            {generationResult.manual_setup_required} Manual Setup
+                          </Badge>
+                        ) : null}
+                      </div>
                     </div>
 
                     {/* Mnemonic Display */}
@@ -518,12 +551,12 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                       </Alert>
                     )}
 
-                    {/* Trust Wallet Compatibility Notice */}
+                    {/* Compatibility Notice */}
                     <Alert className="border-blue-200 bg-blue-50">
                       <Info className="h-4 w-4 text-blue-600" />
                       <AlertDescription className="text-blue-800">
-                        <strong>Address Compatibility:</strong> EVM-compatible addresses (ETH, BNB, MATIC, tokens) will match Trust Wallet exactly. 
-                        For Bitcoin, Litecoin, Dogecoin, and XRP, you&apos;ll need to manually find the correct addresses in Trust Wallet after importing your seed phrase.
+                        <strong>Address Compatibility:</strong> Addresses marked "Exact Match" will work immediately in Trust Wallet. 
+                        For "Manual Setup" currencies, import your seed phrase into Trust Wallet and manually find the correct addresses.
                       </AlertDescription>
                     </Alert>
 
@@ -531,25 +564,28 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                     <div className="space-y-3 max-h-64 overflow-y-auto">
                       {Object.entries(formData.wallets).map(([crypto, address]) => {
                         const currencyInfo = getCurrencyInfo(crypto)
-                        const isPlaceholder = address.includes('PLACEHOLDER')
+                        const isGuidance = address.includes('Import seed phrase')
+                        const hasExactMatch = hasExactTrustWalletMatch(crypto)
+                        
                         return (
-                          <div key={crypto} className={`p-3 border rounded-lg ${isPlaceholder ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'}`}>
+                          <div key={crypto} className={`p-3 border rounded-lg ${isGuidance ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'}`}>
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
                                 <span className="font-medium">{currencyInfo.symbol} {crypto}</span>
                                 <Badge variant="outline" className={`text-xs ${getNetworkBadgeColor(currencyInfo.network || '')}`}>
                                   {currencyInfo.network}
                                 </Badge>
-                                {isPlaceholder && (
-                                  <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
-                                    Manual Setup Required
-                                  </Badge>
-                                )}
+                                {getCompatibilityBadge(crypto)}
                               </div>
                             </div>
                             <div className="font-mono text-sm bg-white p-2 rounded border break-all">
-                              {isPlaceholder ? `Import seed phrase into Trust Wallet to get ${crypto} address` : address}
+                              {address}
                             </div>
+                            {isGuidance && (
+                              <p className="text-xs text-yellow-700 mt-1">
+                                After importing your seed phrase, look for {crypto} in Trust Wallet to find the correct address.
+                              </p>
+                            )}
                           </div>
                         )
                       })}
@@ -602,8 +638,8 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                               </SelectTrigger>
                               <SelectContent>
                                 {availableCurrencies
-                                  .filter(currency => !formData.wallets[currency.code] || currency.code === crypto)
-                                  .map((currency) => (
+                                  .filter((currency: CurrencyInfo) => !formData.wallets[currency.code] || currency.code === crypto)
+                                  .map((currency: CurrencyInfo) => (
                                   <SelectItem key={currency.code} value={currency.code}>
                                     <div className="flex items-center space-x-2">
                                       <span>{currency.symbol} {currency.code}</span>
@@ -664,7 +700,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
                       type="button"
                       variant="outline"
                       onClick={handleAddWallet}
-                      disabled={availableCurrencies.filter(c => !formData.wallets[c.code]).length === 0}
+                      disabled={availableCurrencies.filter((c: CurrencyInfo) => !formData.wallets[c.code]).length === 0}
                       className="w-full"
                     >
                       <Plus className="w-4 h-4 mr-2" />
