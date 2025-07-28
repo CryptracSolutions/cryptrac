@@ -21,8 +21,9 @@ interface ValidationResult {
   error?: string;
 }
 
-// Basic address validation patterns
+// Complete address validation patterns for all supported currencies
 const ADDRESS_PATTERNS: Record<string, RegExp> = {
+  // Primary cryptocurrencies
   BTC: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/,
   ETH: /^0x[a-fA-F0-9]{40}$/,
   LTC: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
@@ -34,14 +35,33 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   TON: /^[0-9a-zA-Z\-_]{48}$/,
   SUI: /^0x[a-fA-F0-9]{64}$/,
   AVAX: /^0x[a-fA-F0-9]{40}$/,
-  // Stablecoins (use parent network patterns)
+  
+  // Ethereum ecosystem stablecoins (ERC-20)
   USDT_ERC20: /^0x[a-fA-F0-9]{40}$/,
   USDC_ERC20: /^0x[a-fA-F0-9]{40}$/,
-  USDT_TRC20: /^T[A-Za-z1-9]{33}$/,
+  
+  // BNB Smart Chain stablecoins (BEP-20)
+  USDT_BEP20: /^0x[a-fA-F0-9]{40}$/,
+  USDC_BEP20: /^0x[a-fA-F0-9]{40}$/,
+  
+  // Solana ecosystem stablecoins (SPL)
+  USDT_SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
   USDC_SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+  
+  // TRON ecosystem stablecoins (TRC-20)
+  USDT_TRC20: /^T[A-Za-z1-9]{33}$/,
+  USDC_TRC20: /^T[A-Za-z1-9]{33}$/,
+  
+  // TON ecosystem stablecoins
+  USDT_TON: /^[0-9a-zA-Z\-_]{48}$/,
+  
+  // Avalanche ecosystem stablecoins (C-Chain)
+  USDT_AVAX: /^0x[a-fA-F0-9]{40}$/,
+  USDC_AVAX: /^0x[a-fA-F0-9]{40}$/,
 };
 
 const CURRENCY_INFO: Record<string, { network: string; address_type: string; decimals: number }> = {
+  // Primary cryptocurrencies
   BTC: { network: 'Bitcoin', address_type: 'P2PKH/P2SH/Bech32', decimals: 8 },
   ETH: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
   LTC: { network: 'Litecoin', address_type: 'P2PKH/P2SH', decimals: 8 },
@@ -53,18 +73,40 @@ const CURRENCY_INFO: Record<string, { network: string; address_type: string; dec
   TON: { network: 'TON', address_type: 'Base64', decimals: 9 },
   SUI: { network: 'Sui', address_type: 'Hex', decimals: 9 },
   AVAX: { network: 'Avalanche', address_type: 'ERC20', decimals: 18 },
+  
+  // Ethereum ecosystem stablecoins
   USDT_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
   USDC_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
-  USDT_TRC20: { network: 'Tron', address_type: 'TRC20', decimals: 6 },
+  
+  // BNB Smart Chain stablecoins
+  USDT_BEP20: { network: 'BSC', address_type: 'BEP20', decimals: 6 },
+  USDC_BEP20: { network: 'BSC', address_type: 'BEP20', decimals: 6 },
+  
+  // Solana ecosystem stablecoins
+  USDT_SOL: { network: 'Solana', address_type: 'SPL', decimals: 6 },
   USDC_SOL: { network: 'Solana', address_type: 'SPL', decimals: 6 },
+  
+  // TRON ecosystem stablecoins
+  USDT_TRC20: { network: 'Tron', address_type: 'TRC20', decimals: 6 },
+  USDC_TRC20: { network: 'Tron', address_type: 'TRC20', decimals: 6 },
+  
+  // TON ecosystem stablecoins
+  USDT_TON: { network: 'TON', address_type: 'TON', decimals: 6 },
+  
+  // Avalanche ecosystem stablecoins
+  USDT_AVAX: { network: 'Avalanche', address_type: 'C-Chain', decimals: 6 },
+  USDC_AVAX: { network: 'Avalanche', address_type: 'C-Chain', decimals: 6 },
 };
 
 function validateAddress(address: string, currency: string): boolean {
   const pattern = ADDRESS_PATTERNS[currency.toUpperCase()];
   if (!pattern) {
+    console.log(`No validation pattern found for currency: ${currency.toUpperCase()}`);
     return false;
   }
-  return pattern.test(address);
+  const isValid = pattern.test(address);
+  console.log(`Validating ${currency.toUpperCase()} address ${address}: ${isValid}`);
+  return isValid;
 }
 
 function getCurrencyInfo(currency: string) {
@@ -95,7 +137,7 @@ export async function POST(request: NextRequest) {
         currency: currency.toUpperCase(),
         network: currencyInfo?.network,
         address_type: currencyInfo?.address_type,
-        exact_match: currencyInfo ? ['ETH', 'BNB', 'USDT_ERC20', 'USDC_ERC20', 'SOL', 'TRX', 'USDT_TRC20', 'USDC_SOL'].includes(currency.toUpperCase()) : false
+        exact_match: currencyInfo ? true : false
       };
 
       if (!isValid) {
@@ -147,7 +189,7 @@ export async function POST(request: NextRequest) {
             currency: item.currency.toUpperCase(),
             network: currencyInfo?.network,
             address_type: currencyInfo?.address_type,
-            exact_match: currencyInfo ? ['ETH', 'BNB', 'USDT_ERC20', 'USDC_ERC20', 'SOL', 'TRX', 'USDT_TRC20', 'USDC_SOL'].includes(item.currency.toUpperCase()) : false
+            exact_match: currencyInfo ? true : false
           };
 
           if (!isValid) {
@@ -207,7 +249,7 @@ export async function GET() {
       network: CURRENCY_INFO[code].network,
       address_type: CURRENCY_INFO[code].address_type,
       decimals: CURRENCY_INFO[code].decimals,
-      exact_match: ['ETH', 'BNB', 'USDT_ERC20', 'USDC_ERC20', 'SOL', 'TRX', 'USDT_TRC20', 'USDC_SOL'].includes(code)
+      exact_match: true
     }));
 
     const supportedNetworks = Array.from(new Set(Object.values(CURRENCY_INFO).map(info => info.network)));
