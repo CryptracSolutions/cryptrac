@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Stepper } from '@/app/components/ui/stepper'
@@ -29,9 +27,8 @@ interface OnboardingData {
     description: string
   }
   walletConfig: {
-    walletType: 'generate' | 'existing'
     wallets: Record<string, string>
-    mnemonic?: string
+    selectedCurrencies?: string[]
   }
   paymentConfig: {
     acceptedCryptos: string[]
@@ -55,95 +52,59 @@ export default function OnboardingPage() {
       description: ''
     },
     walletConfig: {
-      walletType: 'generate',
-      wallets: {}
+      wallets: {},
+      selectedCurrencies: []
     },
     paymentConfig: {
-      acceptedCryptos: ['BTC', 'ETH', 'LTC'],
-      feePercentage: 2.9,
-      autoForward: true,
+      acceptedCryptos: [],
+      feePercentage: 2.5,
+      autoForward: false,
       autoConvert: false,
       preferredPayoutCurrency: null
     }
   })
 
-  // Load saved progress from localStorage
-  useEffect(() => {
-    const savedProgress = localStorage.getItem('cryptrac_onboarding_progress')
-    if (savedProgress) {
-      try {
-        const parsed = JSON.parse(savedProgress)
-        setCurrentStep(parsed.step || 1)
-        setOnboardingData(parsed.data || {
-          businessInfo: {
-            businessName: '',
-            website: '',
-            industry: '',
-            description: ''
-          },
-          walletConfig: {
-            walletType: 'generate',
-            wallets: {}
-          },
-          paymentConfig: {
-            acceptedCryptos: ['BTC', 'ETH', 'LTC'],
-            feePercentage: 2.9,
-            autoForward: true
-          }
-        })
-      } catch (error) {
-        console.error('Failed to load onboarding progress:', error)
-      }
-    }
-  }, [])
-
-  // Save progress to localStorage
-  const saveProgress = (step: number, data: OnboardingData) => {
-    localStorage.setItem('cryptrac_onboarding_progress', JSON.stringify({
-      step,
-      data
-    }))
-  }
-
   const handleNext = () => {
     if (currentStep < ONBOARDING_STEPS.length) {
-      const nextStep = currentStep + 1
-      setCurrentStep(nextStep)
-      saveProgress(nextStep, onboardingData)
+      setCurrentStep(currentStep + 1)
     }
   }
 
   const handlePrevious = () => {
     if (currentStep > 1) {
-      const prevStep = currentStep - 1
-      setCurrentStep(prevStep)
-      saveProgress(prevStep, onboardingData)
+      setCurrentStep(currentStep - 1)
     }
   }
 
-  const handleStepComplete = (stepData: Partial<OnboardingData>) => {
-    const updatedData = { ...onboardingData, ...stepData }
-    setOnboardingData(updatedData)
-    saveProgress(currentStep, updatedData)
+  const handleStepComplete = (data: Partial<OnboardingData>) => {
+    setOnboardingData(prev => ({ ...prev, ...data }))
   }
 
   const handleFinishOnboarding = async () => {
-    setIsLoading(true)
-    setError(null)
-
     try {
-      // TODO: Save onboarding data to Supabase
-      // For now, we'll simulate the API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Clear saved progress
-      localStorage.removeItem('cryptrac_onboarding_progress')
-      
+      setIsLoading(true)
+      setError(null)
+
+      // Submit onboarding data to API
+      const response = await fetch('/api/merchants/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(onboardingData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to complete onboarding')
+      }
+
       // Redirect to dashboard
       router.push('/merchant/dashboard')
+
     } catch (error) {
-      console.error('Failed to complete onboarding:', error)
-      setError('Failed to complete onboarding. Please try again.')
+      console.error('Onboarding error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to complete onboarding')
     } finally {
       setIsLoading(false)
     }
@@ -153,7 +114,7 @@ export default function OnboardingPage() {
     switch (currentStep) {
       case 1:
         return (
-          <WelcomeStep 
+          <WelcomeStep
             onNext={handleNext}
           />
         )
@@ -204,59 +165,40 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <Logo className="h-8" />
-            <div className="text-sm text-gray-500">
-              Step {currentStep} of {ONBOARDING_STEPS.length}
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <Logo className="mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome to Cryptrac
+          </h1>
+          <p className="text-gray-600">
+            Let's get your crypto payment system set up in just a few steps
+          </p>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Progress Stepper */}
-        <div className="mb-8">
-          <Stepper 
+        <div className="max-w-4xl mx-auto mb-8">
+          <Stepper
             steps={ONBOARDING_STEPS}
             currentStep={currentStep}
-            orientation="horizontal"
-            className="hidden md:flex"
           />
-          
-          {/* Mobile Progress Bar */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {ONBOARDING_STEPS[currentStep - 1]?.title}
-              </h2>
-              <span className="text-sm text-gray-500">
-                {currentStep}/{ONBOARDING_STEPS.length}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-[#7f5efd] h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / ONBOARDING_STEPS.length) * 100}%` }}
-              />
-            </div>
-          </div>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Display */}
         {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertDescription className="text-red-800">
-              {error}
-            </AlertDescription>
-          </Alert>
+          <div className="max-w-2xl mx-auto mb-6">
+            <Alert className="border-red-200 bg-red-50">
+              <AlertDescription className="text-red-800">
+                {error}
+              </AlertDescription>
+            </Alert>
+          </div>
         )}
 
-        {/* Step Content */}
-        <div className="relative">
+        {/* Current Step Content */}
+        <div className="max-w-2xl mx-auto">
           {renderCurrentStep()}
         </div>
       </div>

@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
+import { Badge } from '@/app/components/ui/badge'
+import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { 
   CreditCard,
   AlertCircle,
@@ -16,7 +18,9 @@ import {
   XCircle,
   Wallet,
   Loader2,
-  Info
+  Info,
+  DollarSign,
+  AlertTriangle
 } from 'lucide-react'
 import QRCode from 'qrcode'
 
@@ -32,8 +36,10 @@ interface PaymentLink {
   expires_at?: string
   max_uses?: number
   current_uses: number
+  charge_customer_fee: boolean | null
   merchant: {
     business_name: string
+    charge_customer_fee: boolean
   }
 }
 
@@ -55,6 +61,7 @@ interface PaymentDetails {
     gateway_fee: number
     total_fees: number
     merchant_receives: number
+    customer_pays_fee: boolean
   }
 }
 
@@ -63,6 +70,21 @@ interface CurrencyEstimate {
   estimated_amount: string
   estimated_amount_formatted: string
   success: boolean
+  has_wallet: boolean
+  wallet_address?: string
+}
+
+interface AvailableCurrency {
+  code: string
+  name: string
+  symbol: string
+  network?: string
+  has_wallet: boolean
+  wallet_address?: string
+  rate_usd?: number
+  min_amount: number
+  decimals: number
+  display_name?: string
 }
 
 // Enhanced: Payment status configurations with better UX
@@ -124,6 +146,7 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
   
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null)
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null)
+  const [availableCurrencies, setAvailableCurrencies] = useState<AvailableCurrency[]>([])
   const [estimates, setEstimates] = useState<CurrencyEstimate[]>([])
   const [customerEmail, setCustomerEmail] = useState<string>('')
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
@@ -131,8 +154,8 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string>('')
-  // Enhanced: Add polling state
   const [isPolling, setIsPolling] = useState(false)
+  const [loadingCurrencies, setLoadingCurrencies] = useState(false)
 
   useEffect(() => {
     const fetchPaymentLink = async () => {
@@ -153,10 +176,8 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
         const data = await response.json()
         setPaymentLink(data.payment_link)
 
-        // Fetch currency estimates for accepted cryptos
-        if (data.payment_link.accepted_cryptos?.length > 0) {
-          await fetchEstimates(data.payment_link.amount, data.payment_link.currency, data.payment_link.accepted_cryptos)
-        }
+        // Load available currencies for this merchant (only those with wallet addresses)
+        await loadAvailableCurrencies(data.payment_link.merchant.id, data.payment_link.accepted_cryptos)
 
       } catch (error) {
         console.error('Error fetching payment link:', error)
@@ -168,6 +189,39 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
 
     fetchPaymentLink()
   }, [id])
+
+  const loadAvailableCurrencies = async (merchantId: string, acceptedCryptos: string[]) => {
+    try {
+      setLoadingCurrencies(true)
+      
+      // Get merchant's supported currencies (only those with wallet addresses)
+      const response = await fetch(`/api/merchants/${merchantId}/supported-currencies`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Filter to only show currencies that are both accepted by the payment link AND have wallet addresses
+          const filteredCurrencies = data.currencies.filter((currency: AvailableCurrency) => 
+            acceptedCryptos.includes(currency.code) && currency.has_wallet
+          )
+          
+          setAvailableCurrencies(filteredCurrencies)
+          
+          // Fetch estimates for available currencies
+          if (filteredCurrencies.length > 0 && paymentLink) {
+            await fetchEstimates(
+              paymentLink.amount, 
+              paymentLink.currency, 
+              filteredCurrencies.map(c => c.code)
+            )
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load available currencies:', error)
+    } finally {
+      setLoadingCurrencies(false)
+    }
+  }
 
   const fetchEstimates = async (amount: number, fromCurrency: string, toCurrencies: string[]) => {
     try {
@@ -185,7 +239,17 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
 
       if (response.ok) {
         const data = await response.json()
-        setEstimates(data.estimates || [])
+        // Enhance estimates with wallet information
+        const enhancedEstimates = data.estimates?.map((estimate: CurrencyEstimate) => {
+          const currency = availableCurrencies.find(c => c.code === estimate.currency_to)
+          return {
+            ...estimate,
+            has_wallet: currency?.has_wallet || false,
+            wallet_address: currency?.wallet_address
+          }
+        }) || []
+        
+        setEstimates(enhancedEstimates)
       }
     } catch (error) {
       console.error('Error fetching estimates:', error)
@@ -195,9 +259,21 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
   const createPayment = async (crypto: string) => {
     if (!paymentLink) return
 
+    // Verify the selected crypto has a wallet address
+    const selectedCurrency = availableCurrencies.find(c => c.code === crypto)
+    if (!selectedCurrency || !selectedCurrency.has_wallet) {
+      setError(`No wallet address configured for ${crypto}. Please contact the merchant.`)
+      return
+    }
+
     try {
       setCreating(true)
       setError(null)
+
+      // Determine fee setting (per-link override or merchant global)
+      const chargeCustomerFee = paymentLink.charge_customer_fee !== null 
+        ? paymentLink.charge_customer_fee 
+        : paymentLink.merchant.charge_customer_fee
 
       const response = await fetch('/api/nowpayments/create-payment', {
         method: 'POST',
@@ -209,7 +285,9 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
           pay_currency: crypto,
           customer_email: customerEmail || undefined,
           success_url: `${window.location.origin}/payment/success`,
-          cancel_url: `${window.location.origin}/payment/cancelled`
+          cancel_url: `${window.location.origin}/payment/cancelled`,
+          is_fee_paid_by_user: chargeCustomerFee, // Pass fee setting to NOWPayments
+          payout_address: selectedCurrency.wallet_address // Use merchant's wallet address
         })
       })
 
@@ -298,9 +376,42 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
     return `${amount.toFixed(8)} ${currency.toUpperCase()}`
   }
 
+  const getNetworkBadgeColor = (network: string) => {
+    const colorMap: Record<string, string> = {
+      'Bitcoin': 'bg-orange-100 text-orange-800',
+      'Ethereum': 'bg-blue-100 text-blue-800',
+      'BSC': 'bg-yellow-100 text-yellow-800',
+      'Solana': 'bg-green-100 text-green-800',
+      'Tron': 'bg-red-100 text-red-800',
+      'TON': 'bg-indigo-100 text-indigo-800',
+      'Dogecoin': 'bg-amber-100 text-amber-800',
+      'XRP Ledger': 'bg-purple-100 text-purple-800',
+      'Sui': 'bg-cyan-100 text-cyan-800',
+      'Avalanche': 'bg-rose-100 text-rose-800'
+    }
+    return colorMap[network] || 'bg-gray-100 text-gray-800'
+  }
+
   // Enhanced: Use status config for consistent styling
   const getStatusConfig = (status: string) => {
     return PAYMENT_STATUS_CONFIG[status as keyof typeof PAYMENT_STATUS_CONFIG] || PAYMENT_STATUS_CONFIG.waiting
+  }
+
+  // Get effective fee setting (per-link override or merchant global)
+  const getEffectiveFeeSettings = () => {
+    if (!paymentLink) return { chargeCustomerFee: false, source: 'default' }
+    
+    if (paymentLink.charge_customer_fee !== null) {
+      return {
+        chargeCustomerFee: paymentLink.charge_customer_fee,
+        source: 'link'
+      }
+    }
+    
+    return {
+      chargeCustomerFee: paymentLink.merchant.charge_customer_fee,
+      source: 'merchant'
+    }
   }
 
   if (loading) {
@@ -372,6 +483,49 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
               </div>
             </CardContent>
           </Card>
+
+          {/* Fee Information */}
+          {paymentDetails.fees && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <DollarSign className="h-5 w-5" />
+                  <span>Payment Breakdown</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span>Payment Amount:</span>
+                  <span className="font-medium">{formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}</span>
+                </div>
+                
+                {paymentDetails.fees.customer_pays_fee && (
+                  <>
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Base Amount:</span>
+                      <span>{formatCurrency(paymentLink.amount, paymentLink.currency)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Gateway Fee:</span>
+                      <span>+{paymentDetails.fees.gateway_fee.toFixed(2)} {paymentLink.currency}</span>
+                    </div>
+                    <div className="border-t pt-2">
+                      <div className="flex justify-between font-medium">
+                        <span>Total (including fees):</span>
+                        <span>{formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                {!paymentDetails.fees.customer_pays_fee && (
+                  <div className="text-sm text-green-600">
+                    ✓ Gateway fee absorbed by merchant
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Enhanced: Show payment instructions only when needed */}
           {statusConfig.showInstructions && (
@@ -478,27 +632,13 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
                     <div className="flex items-start space-x-2">
                       <Info className="h-5 w-5 text-blue-600 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-blue-900">Payment Instructions</h4>
-                        <ol className="list-decimal list-inside text-sm text-blue-800 mt-2 space-y-1">
-                          <li>Copy the address above or scan the QR code</li>
-                          <li>Send exactly {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}</li>
-                          <li>Wait for blockchain confirmation</li>
-                          <li>Payment status will update automatically</li>
-                        </ol>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Warning */}
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div className="flex items-start space-x-2">
-                      <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-yellow-900">Important</h4>
-                        <p className="text-sm text-yellow-800 mt-1">
-                          Only send {paymentDetails.pay_currency.toUpperCase()} to this address. 
-                          Sending other cryptocurrencies may result in permanent loss.
-                        </p>
+                        <h4 className="font-medium text-blue-900">Important Instructions</h4>
+                        <ul className="text-sm text-blue-800 mt-1 space-y-1">
+                          <li>• Send only {paymentDetails.pay_currency.toUpperCase()} to this address</li>
+                          <li>• Send the exact amount shown above</li>
+                          <li>• Payment will be confirmed after network confirmations</li>
+                          <li>• Do not send from an exchange (use a personal wallet)</li>
+                        </ul>
                       </div>
                     </div>
                   </div>
@@ -507,35 +647,29 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
             </>
           )}
 
-          {/* Enhanced: Success message for completed payments */}
-          {['confirmed', 'finished'].includes(paymentDetails.status) && (
-            <Card className="mb-6 border-green-200 bg-green-50">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-green-900 mb-2">Payment Successful!</h2>
-                  <p className="text-green-700 mb-4">
-                    Your payment of {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)} has been confirmed.
-                  </p>
-                  <div className="bg-white border border-green-200 rounded-lg p-4 text-left">
-                    <h3 className="font-semibold text-green-900 mb-2">Transaction Details</h3>
-                    <div className="space-y-1 text-sm text-green-800">
-                      <p><strong>Amount:</strong> {formatCrypto(paymentDetails.pay_amount, paymentDetails.pay_currency)}</p>
-                      <p><strong>Payment ID:</strong> {paymentDetails.nowpayments_payment_id}</p>
-                      <p><strong>Status:</strong> {statusConfig.label}</p>
-                    </div>
-                  </div>
-                </div>
+          {/* Success/Complete states */}
+          {['finished', 'confirmed'].includes(paymentDetails.status) && (
+            <Card className="mb-6">
+              <CardContent className="text-center py-8">
+                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-green-600 mb-2">Payment Successful!</h2>
+                <p className="text-gray-600 mb-4">
+                  Your payment has been confirmed and processed successfully.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Transaction ID: {paymentDetails.nowpayments_payment_id}
+                </p>
               </CardContent>
             </Card>
           )}
-
         </div>
       </div>
     )
   }
 
   // Show currency selection
+  const feeSettings = getEffectiveFeeSettings()
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-2xl">
@@ -547,87 +681,149 @@ export default function CustomerPaymentPage({ params }: { params: Promise<{ id: 
             <p className="text-gray-500 mt-2">{paymentLink.description}</p>
           )}
           <div className="mt-4">
-            <div className="text-4xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900">
               {formatCurrency(paymentLink.amount, paymentLink.currency)}
+            </div>
+            
+            {/* Fee Information */}
+            <div className="mt-2">
+              {feeSettings.chargeCustomerFee ? (
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                  + Gateway fee (charged to customer)
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  Gateway fee absorbed by merchant
+                </Badge>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Customer Email */}
+        {/* Customer Email (Optional) */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <CreditCard className="h-5 w-5" />
-              <span>Contact Information (Optional)</span>
-            </CardTitle>
+            <CardTitle>Contact Information (Optional)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-              />
-              <p className="text-sm text-gray-500">
-                Optional: Receive payment confirmation and receipt
-              </p>
-            </div>
+            <Input
+              type="email"
+              placeholder="your@email.com"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              className="w-full"
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              Receive payment confirmation and updates
+            </p>
           </CardContent>
         </Card>
 
-        {/* Cryptocurrency Selection */}
+        {/* Currency Selection */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Select Cryptocurrency</CardTitle>
+            <CardTitle className="flex items-center space-x-2">
+              <Wallet className="h-5 w-5" />
+              <span>Choose Payment Method</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3">
-              {estimates.map((estimate) => (
-                <div
-                  key={estimate.currency_to}
-                  className="border rounded-lg p-4 hover:border-blue-500 cursor-pointer transition-colors"
-                  onClick={() => createPayment(estimate.currency_to)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                      <Wallet className="h-6 w-6 text-gray-400" />
-                      <div>
-                        <div className="font-semibold text-lg">
-                          {estimate.currency_to.toUpperCase()}
+            {loadingCurrencies ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Loading payment options...</p>
+              </div>
+            ) : availableCurrencies.length === 0 ? (
+              <Alert className="border-yellow-200 bg-yellow-50">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-800">
+                  <strong>No payment methods available.</strong> The merchant has not configured wallet addresses 
+                  for the accepted cryptocurrencies. Please contact the merchant for assistance.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="grid gap-4">
+                {availableCurrencies.map((currency) => {
+                  const estimate = estimates.find(e => e.currency_to === currency.code)
+                  const estimatedAmount = estimate ? parseFloat(estimate.estimated_amount) : null
+                  
+                  return (
+                    <div
+                      key={currency.code}
+                      className="border rounded-lg p-4 hover:border-[#7f5efd] transition-colors cursor-pointer"
+                      onClick={() => createPayment(currency.code)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-sm">{currency.symbol}</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium">{currency.code}</span>
+                              {currency.network && (
+                                <Badge variant="outline" className={`text-xs ${getNetworkBadgeColor(currency.network)}`}>
+                                  {currency.network}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {currency.display_name || currency.name}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-gray-600">
-                          {formatCrypto(parseFloat(estimate.estimated_amount_formatted), estimate.currency_to)}
+                        <div className="text-right">
+                          {estimatedAmount ? (
+                            <>
+                              <div className="font-medium">
+                                {estimatedAmount.toFixed(currency.decimals)} {currency.code}
+                              </div>
+                              {feeSettings.chargeCustomerFee && (
+                                <div className="text-xs text-yellow-600">
+                                  + gateway fee
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-sm text-gray-400">
+                              Calculating...
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-blue-600 font-medium">
-                        Select to pay
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
+                  )
+                })}
+              </div>
+            )}
+            
             {creating && (
-              <div className="mt-6 text-center">
-                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+              <div className="text-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
                 <p className="text-gray-600">Creating payment...</p>
               </div>
+            )}
+            
+            {error && (
+              <Alert className="mt-4 border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <div className="text-center text-sm text-gray-500">
-          <p>Powered by Cryptrac • Secure cryptocurrency payments</p>
-        </div>
+        {/* Payment Link Info */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-sm text-gray-500">
+              <p>Powered by Cryptrac</p>
+              <p className="mt-1">Secure cryptocurrency payments</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

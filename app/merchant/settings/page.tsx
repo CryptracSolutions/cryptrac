@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { 
   Settings, 
   Wallet, 
-  ToggleLeft, 
-  ToggleRight, 
   Save, 
   AlertCircle,
   CheckCircle,
@@ -14,10 +12,10 @@ import {
   Info,
   Plus,
   Trash2,
-  Copy,
-  RefreshCw,
-  Eye,
-  EyeOff
+  DollarSign,
+  HelpCircle,
+  Star,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -27,8 +25,10 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Badge } from '@/app/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { Checkbox } from '@/app/components/ui/checkbox';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
+import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
 
 interface CurrencyInfo {
   code: string;
@@ -45,9 +45,11 @@ interface CurrencyInfo {
   decimals: number;
   icon_url?: string;
   rate_usd?: number;
+  display_name?: string;
 }
 
 interface MerchantSettings {
+  charge_customer_fee: boolean;
   auto_convert_enabled: boolean;
   preferred_payout_currency: string | null;
   wallets: Record<string, string>;
@@ -58,14 +60,6 @@ interface MerchantSettings {
   };
 }
 
-interface GeneratedWallet {
-  address: string;
-  currency: string;
-  network: string;
-  derivation_path?: string;
-  public_key?: string;
-}
-
 interface UserType {
   id: string;
   email?: string;
@@ -74,11 +68,193 @@ interface UserType {
   };
 }
 
+// Top 10 + Major Stablecoins (Required for onboarding)
+const TOP_10_CURRENCIES = [
+  {
+    code: 'BTC',
+    name: 'Bitcoin',
+    symbol: '₿',
+    network: 'Bitcoin',
+    trust_wallet_compatible: true,
+    decimals: 8,
+    min_amount: 0.00000001,
+    display_name: 'Bitcoin',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'ETH',
+    name: 'Ethereum',
+    symbol: 'Ξ',
+    network: 'Ethereum',
+    trust_wallet_compatible: true,
+    decimals: 18,
+    min_amount: 0.000000001,
+    display_name: 'Ethereum',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'BNB',
+    name: 'BNB',
+    symbol: 'BNB',
+    network: 'BSC',
+    trust_wallet_compatible: true,
+    decimals: 18,
+    min_amount: 0.000000001,
+    display_name: 'BNB (Binance Smart Chain)',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'SOL',
+    name: 'Solana',
+    symbol: 'SOL',
+    network: 'Solana',
+    trust_wallet_compatible: true,
+    decimals: 9,
+    min_amount: 0.000000001,
+    display_name: 'Solana',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'TRX',
+    name: 'TRON',
+    symbol: 'TRX',
+    network: 'Tron',
+    trust_wallet_compatible: true,
+    decimals: 6,
+    min_amount: 0.000001,
+    display_name: 'TRON',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'TON',
+    name: 'Toncoin',
+    symbol: 'TON',
+    network: 'TON',
+    trust_wallet_compatible: true,
+    decimals: 9,
+    min_amount: 0.000000001,
+    display_name: 'Toncoin',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'DOGE',
+    name: 'Dogecoin',
+    symbol: 'DOGE',
+    network: 'Dogecoin',
+    trust_wallet_compatible: true,
+    decimals: 8,
+    min_amount: 0.00000001,
+    display_name: 'Dogecoin',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'XRP',
+    name: 'XRP',
+    symbol: 'XRP',
+    network: 'XRP Ledger',
+    trust_wallet_compatible: true,
+    decimals: 6,
+    min_amount: 0.000001,
+    display_name: 'XRP',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'SUI',
+    name: 'Sui',
+    symbol: 'SUI',
+    network: 'Sui',
+    trust_wallet_compatible: true,
+    decimals: 9,
+    min_amount: 0.000000001,
+    display_name: 'Sui',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'AVAX',
+    name: 'Avalanche',
+    symbol: 'AVAX',
+    network: 'Avalanche',
+    trust_wallet_compatible: true,
+    decimals: 18,
+    min_amount: 0.000000001,
+    display_name: 'Avalanche',
+    enabled: true,
+    is_required: true
+  },
+  // Major Stablecoins
+  {
+    code: 'USDT_ERC20',
+    name: 'Tether (Ethereum)',
+    symbol: '₮',
+    network: 'Ethereum',
+    trust_wallet_compatible: true,
+    decimals: 6,
+    min_amount: 0.000001,
+    is_token: true,
+    parent_currency: 'ETH',
+    display_name: 'USDT via Ethereum',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'USDC_ERC20',
+    name: 'USD Coin (Ethereum)',
+    symbol: 'USDC',
+    network: 'Ethereum',
+    trust_wallet_compatible: true,
+    decimals: 6,
+    min_amount: 0.000001,
+    is_token: true,
+    parent_currency: 'ETH',
+    display_name: 'USDC via Ethereum',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'USDT_TRC20',
+    name: 'Tether (TRON)',
+    symbol: '₮',
+    network: 'Tron',
+    trust_wallet_compatible: true,
+    decimals: 6,
+    min_amount: 0.000001,
+    is_token: true,
+    parent_currency: 'TRX',
+    display_name: 'USDT via TRON',
+    enabled: true,
+    is_required: true
+  },
+  {
+    code: 'USDC_SOL',
+    name: 'USD Coin (Solana)',
+    symbol: 'USDC',
+    network: 'Solana',
+    trust_wallet_compatible: true,
+    decimals: 6,
+    min_amount: 0.000001,
+    is_token: true,
+    parent_currency: 'SOL',
+    display_name: 'USDC via Solana',
+    enabled: true,
+    is_required: true
+  }
+]
+
 export default function MerchantSettingsPage() {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<MerchantSettings>({
+    charge_customer_fee: false,
     auto_convert_enabled: false,
     preferred_payout_currency: null,
     wallets: {},
@@ -92,10 +268,9 @@ export default function MerchantSettingsPage() {
   // Dynamic currency support
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([]);
   const [loadingCurrencies, setLoadingCurrencies] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [validationStates, setValidationStates] = useState<Record<string, 'validating' | 'valid' | 'invalid' | null>>({});
-  const [generatedMnemonic, setGeneratedMnemonic] = useState<string>('');
-  const [showMnemonic, setShowMnemonic] = useState(false);
+  const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const router = useRouter();
 
@@ -113,14 +288,7 @@ export default function MerchantSettingsPage() {
       // Load merchant settings
       const { data: merchant, error: merchantError } = await supabase
         .from('merchants')
-        .select(`
-          *,
-          merchant_wallets (
-            currency,
-            wallet_address,
-            is_active
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
@@ -132,16 +300,10 @@ export default function MerchantSettingsPage() {
 
       if (merchant) {
         // Convert wallet data to our format
-        const wallets: Record<string, string> = {};
-        if (merchant.merchant_wallets) {
-          merchant.merchant_wallets.forEach((wallet: { currency: string; wallet_address: string; is_active: boolean }) => {
-            if (wallet.is_active) {
-              wallets[wallet.currency] = wallet.wallet_address;
-            }
-          });
-        }
+        const wallets = merchant.wallets || {};
 
         setSettings({
+          charge_customer_fee: merchant.charge_customer_fee || false,
           auto_convert_enabled: merchant.auto_convert_enabled || false,
           preferred_payout_currency: merchant.preferred_payout_currency,
           wallets,
@@ -169,22 +331,18 @@ export default function MerchantSettingsPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setAvailableCurrencies(data.currencies);
+          // Filter out currencies that are already in TOP_10_CURRENCIES
+          const additionalCurrencies = data.currencies.filter((currency: CurrencyInfo) => 
+            !TOP_10_CURRENCIES.find(top10 => top10.code === currency.code)
+          );
+          setAvailableCurrencies(additionalCurrencies);
         }
       }
       
     } catch (error) {
       console.error('Failed to load currencies:', error);
       toast.error('Failed to load available currencies');
-      
-      // Fallback to basic currencies
-      setAvailableCurrencies([
-        { code: 'BTC', name: 'Bitcoin', symbol: '₿', enabled: true, min_amount: 0.00000001, decimals: 8, trust_wallet_compatible: true },
-        { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', enabled: true, min_amount: 0.000000001, decimals: 18, trust_wallet_compatible: true },
-        { code: 'USDT', name: 'Tether', symbol: '₮', enabled: true, min_amount: 0.000001, decimals: 6, trust_wallet_compatible: true },
-        { code: 'USDC', name: 'USD Coin', symbol: '$', enabled: true, min_amount: 0.000001, decimals: 6, trust_wallet_compatible: true },
-        { code: 'LTC', name: 'Litecoin', symbol: 'Ł', enabled: true, min_amount: 0.00000001, decimals: 8, trust_wallet_compatible: true }
-      ]);
+      setAvailableCurrencies([]);
     } finally {
       setLoadingCurrencies(false);
     }
@@ -223,65 +381,11 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const handleGenerateWallets = async () => {
-    try {
-      setIsGenerating(true);
-      
-      // Get popular currencies for generation
-      const popularCurrencies = ['BTC', 'ETH', 'LTC', 'SOL', 'BNB', 'MATIC', 'TRX', 'USDT', 'USDC'];
-      
-      const response = await fetch('/api/wallets/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currencies: popularCurrencies,
-          generation_method: 'trust_wallet'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate wallets');
-      }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Wallet generation failed');
-      }
-      
-      // Convert generated wallets to our format
-      const generatedWallets: Record<string, string> = {};
-      result.data.wallets.forEach((wallet: GeneratedWallet) => {
-        generatedWallets[wallet.currency] = wallet.address;
-      });
-      
+  const handleAddWallet = (currencyCode: string) => {
+    if (!settings.wallets[currencyCode]) {
       setSettings(prev => ({
         ...prev,
-        wallets: { ...prev.wallets, ...generatedWallets }
-      }));
-      
-      setGeneratedMnemonic(result.mnemonic);
-      
-      toast.success(`Generated ${result.data.wallets.length} wallet addresses!`);
-      
-    } catch (error) {
-      console.error('Wallet generation failed:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to generate wallets');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleAddWallet = () => {
-    const availableCryptos = availableCurrencies.filter(
-      crypto => !settings.wallets[crypto.code] && crypto.trust_wallet_compatible
-    );
-    
-    if (availableCryptos.length > 0) {
-      const firstAvailable = availableCryptos[0].code;
-      setSettings(prev => ({
-        ...prev,
-        wallets: { ...prev.wallets, [firstAvailable]: '' }
+        wallets: { ...prev.wallets, [currencyCode]: '' }
       }));
     }
   };
@@ -312,25 +416,6 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const handleCurrencyChange = (oldCrypto: string, newCrypto: string) => {
-    const newWallets = { ...settings.wallets };
-    const address = newWallets[oldCrypto];
-    delete newWallets[oldCrypto];
-    newWallets[newCrypto] = address;
-    
-    setSettings(prev => ({ ...prev, wallets: newWallets }));
-    
-    // Update validation states
-    const newValidationStates = { ...validationStates };
-    delete newValidationStates[oldCrypto];
-    setValidationStates(newValidationStates);
-    
-    // Validate new currency if address exists
-    if (address.trim()) {
-      validateWalletAddress(newCrypto, address);
-    }
-  };
-
   const handleSaveSettings = async () => {
     try {
       setSaving(true);
@@ -356,8 +441,10 @@ export default function MerchantSettingsPage() {
       const { error: merchantError } = await supabase
         .from('merchants')
         .update({
+          charge_customer_fee: settings.charge_customer_fee,
           auto_convert_enabled: settings.auto_convert_enabled,
           preferred_payout_currency: settings.preferred_payout_currency,
+          wallets: settings.wallets,
           auto_forward_enabled: settings.payment_config.auto_forward,
           fee_percentage: settings.payment_config.fee_percentage,
           auto_convert_fee: settings.payment_config.auto_convert_fee,
@@ -367,41 +454,6 @@ export default function MerchantSettingsPage() {
 
       if (merchantError) {
         throw merchantError;
-      }
-
-      // Get merchant ID
-      const { data: merchant } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (merchant) {
-        // Delete existing wallets
-        await supabase
-          .from('merchant_wallets')
-          .delete()
-          .eq('merchant_id', merchant.id);
-
-        // Insert new wallets
-        const walletInserts = Object.entries(settings.wallets)
-          .filter(([, address]) => address.trim())
-          .map(([currency, address]) => ({
-            merchant_id: merchant.id,
-            currency,
-            wallet_address: address.trim(),
-            is_active: true
-          }));
-
-        if (walletInserts.length > 0) {
-          const { error: walletError } = await supabase
-            .from('merchant_wallets')
-            .insert(walletInserts);
-
-          if (walletError) {
-            throw walletError;
-          }
-        }
       }
 
       toast.success('Settings saved successfully!');
@@ -415,6 +467,13 @@ export default function MerchantSettingsPage() {
   };
 
   const getCurrencyInfo = (code: string) => {
+    // First check TOP_10_CURRENCIES
+    const top10Currency = TOP_10_CURRENCIES.find(c => c.code === code);
+    if (top10Currency) {
+      return top10Currency;
+    }
+    
+    // Then check available currencies
     return availableCurrencies.find(c => c.code === code) || {
       code,
       name: code,
@@ -422,7 +481,7 @@ export default function MerchantSettingsPage() {
       enabled: true,
       min_amount: 0.00000001,
       decimals: 8,
-      trust_wallet_compatible: true
+      trust_wallet_compatible: false
     };
   };
 
@@ -440,12 +499,27 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const copyMnemonic = async () => {
-    if (generatedMnemonic) {
-      await navigator.clipboard.writeText(generatedMnemonic);
-      toast.success('Mnemonic copied to clipboard!');
+  const getNetworkBadgeColor = (network: string) => {
+    const colorMap: Record<string, string> = {
+      'Bitcoin': 'bg-orange-100 text-orange-800',
+      'Ethereum': 'bg-blue-100 text-blue-800',
+      'BSC': 'bg-yellow-100 text-yellow-800',
+      'Solana': 'bg-green-100 text-green-800',
+      'Tron': 'bg-red-100 text-red-800',
+      'TON': 'bg-indigo-100 text-indigo-800',
+      'Dogecoin': 'bg-amber-100 text-amber-800',
+      'XRP Ledger': 'bg-purple-100 text-purple-800',
+      'Sui': 'bg-cyan-100 text-cyan-800',
+      'Avalanche': 'bg-rose-100 text-rose-800'
     }
+    return colorMap[network] || 'bg-gray-100 text-gray-800'
   };
+
+  const filteredAdditionalCurrencies = availableCurrencies.filter(currency =>
+    currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    currency.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -453,6 +527,17 @@ export default function MerchantSettingsPage() {
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (showTrustWalletGuide) {
+    return (
+      <DashboardLayout>
+        <TrustWalletGuide
+          onComplete={() => setShowTrustWalletGuide(false)}
+          onSkip={() => setShowTrustWalletGuide(false)}
+        />
       </DashboardLayout>
     );
   }
@@ -471,7 +556,7 @@ export default function MerchantSettingsPage() {
         <Tabs defaultValue="wallets" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="wallets">Wallet Management</TabsTrigger>
-            <TabsTrigger value="payment">Payment Settings</TabsTrigger>
+            <TabsTrigger value="fees">Fee Settings</TabsTrigger>
             <TabsTrigger value="conversion">Auto-Conversion</TabsTrigger>
           </TabsList>
 
@@ -485,221 +570,283 @@ export default function MerchantSettingsPage() {
                 </CardTitle>
                 <CardDescription>
                   Configure where you want to receive cryptocurrency payments. 
-                  We support {availableCurrencies.length}+ cryptocurrencies.
+                  Add wallet addresses for cryptocurrencies you want to accept.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Generate Wallets Section */}
+                {/* Trust Wallet Setup Button */}
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    onClick={() => setShowTrustWalletGuide(true)}
+                    variant="outline"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Need help setting up Trust Wallet?
+                  </Button>
+                </div>
+
+                {/* Required Cryptocurrencies */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium">Quick Setup</h3>
-                    <Button
-                      onClick={handleGenerateWallets}
-                      disabled={isGenerating || loadingCurrencies}
-                      className="bg-[#7f5efd] hover:bg-[#7f5efd]/90"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Generate New Wallets
-                        </>
-                      )}
-                    </Button>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">Top 10 + Major Stablecoins</h3>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      Recommended
+                    </Badge>
                   </div>
                   
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>
-                      Generate Trust Wallet compatible addresses for popular cryptocurrencies. 
-                      You&apos;ll receive a recovery phrase to import into any compatible wallet.
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <Star className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      <strong>Most Popular Cryptocurrencies:</strong> Add wallet addresses for the most 
+                      commonly used cryptocurrencies to maximize payment options for your customers.
                     </AlertDescription>
                   </Alert>
 
-                  {generatedMnemonic && (
-                    <Alert className="border-amber-200 bg-amber-50">
-                      <AlertCircle className="h-4 w-4 text-amber-600" />
-                      <AlertDescription className="text-amber-800">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {TOP_10_CURRENCIES.map((currency) => (
+                      <div key={currency.code} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium">{currency.symbol} {currency.code}</span>
+                              <Badge variant="outline" className={`text-xs ${getNetworkBadgeColor(currency.network)}`}>
+                                {currency.network}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-gray-500">{currency.display_name}</div>
+                          </div>
+                          {settings.wallets[currency.code] && (
+                            <Button
+                              type="button"
+                              onClick={() => handleRemoveWallet(currency.code)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <strong>Your Recovery Phrase (Save Securely):</strong>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowMnemonic(!showMnemonic)}
-                              >
-                                {showMnemonic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={copyMnemonic}
-                              >
-                                <Copy className="w-4 h-4" />
-                              </Button>
+                          {settings.wallets[currency.code] !== undefined ? (
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                type="text"
+                                placeholder={`Enter your ${currency.code} wallet address`}
+                                value={settings.wallets[currency.code] || ''}
+                                onChange={(e) => handleWalletChange(currency.code, e.target.value)}
+                                className="font-mono text-sm"
+                              />
+                              {getValidationIcon(currency.code)}
+                            </div>
+                          ) : (
+                            <Button
+                              type="button"
+                              onClick={() => handleAddWallet(currency.code)}
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add {currency.code} Address
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Additional Cryptocurrencies */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">Additional Cryptocurrencies</h3>
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      Optional
+                    </Badge>
+                  </div>
+
+                  {loadingCurrencies ? (
+                    <div className="text-center py-4">
+                      <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                      <p className="text-gray-600">Loading additional currencies...</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Search */}
+                      <div className="max-w-md">
+                        <Input
+                          type="text"
+                          placeholder="Search cryptocurrencies..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Additional currencies grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                        {filteredAdditionalCurrencies.map((currency) => (
+                          <div key={currency.code} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium">{currency.symbol} {currency.code}</span>
+                                  {currency.network && (
+                                    <Badge variant="outline" className={`text-xs ${getNetworkBadgeColor(currency.network)}`}>
+                                      {currency.network}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-500">{currency.display_name || currency.name}</div>
+                              </div>
+                              {settings.wallets[currency.code] && (
+                                <Button
+                                  type="button"
+                                  onClick={() => handleRemoveWallet(currency.code)}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              {settings.wallets[currency.code] !== undefined ? (
+                                <div className="flex items-center space-x-2">
+                                  <Input
+                                    type="text"
+                                    placeholder={`Enter your ${currency.code} wallet address`}
+                                    value={settings.wallets[currency.code] || ''}
+                                    onChange={(e) => handleWalletChange(currency.code, e.target.value)}
+                                    className="font-mono text-sm"
+                                  />
+                                  {getValidationIcon(currency.code)}
+                                </div>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  onClick={() => handleAddWallet(currency.code)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                >
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Add {currency.code} Address
+                                </Button>
+                              )}
                             </div>
                           </div>
-                          <div className="p-2 bg-white rounded font-mono text-sm">
-                            {showMnemonic ? generatedMnemonic : '••• ••• ••• ••• ••• ••• ••• ••• ••• ••• ••• •••'}
-                          </div>
+                        ))}
+                      </div>
+
+                      {filteredAdditionalCurrencies.length === 0 && searchTerm && (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>No cryptocurrencies found matching "{searchTerm}"</p>
                         </div>
-                      </AlertDescription>
-                    </Alert>
+                      )}
+                    </>
                   )}
                 </div>
 
-                {/* Wallet Inputs */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Your Wallet Addresses</h3>
-                  
-                  {Object.entries(settings.wallets).map(([crypto, address]) => {
-                    const currencyInfo = getCurrencyInfo(crypto);
-                    const availableForChange = availableCurrencies.filter(
-                      c => c.code !== crypto && !settings.wallets[c.code] && c.trust_wallet_compatible
-                    );
-                    
-                    return (
-                      <div key={crypto} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Select
-                              value={crypto}
-                              onValueChange={(newCrypto) => handleCurrencyChange(crypto, newCrypto)}
-                            >
-                              <SelectTrigger className="w-40">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value={crypto}>
-                                  {currencyInfo.symbol} {crypto}
-                                </SelectItem>
-                                {availableForChange.map((currency) => (
-                                  <SelectItem key={currency.code} value={currency.code}>
-                                    {currency.symbol} {currency.code}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <span className="text-sm text-gray-600">
-                              {currencyInfo.name}
-                            </span>
-                            {currencyInfo.network && (
-                              <Badge variant="outline" className="text-xs">
-                                {currencyInfo.network}
-                              </Badge>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveWallet(crypto)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="relative">
-                          <Input
-                            type="text"
-                            placeholder={`Enter your ${crypto} wallet address`}
-                            value={address}
-                            onChange={(e) => handleWalletChange(crypto, e.target.value)}
-                            className={`font-mono text-sm pr-10 ${
-                              validationStates[crypto] === 'valid' ? 'border-green-300 focus:border-green-500' :
-                              validationStates[crypto] === 'invalid' ? 'border-red-300 focus:border-red-500' : ''
-                            }`}
-                          />
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                            {getValidationIcon(crypto)}
-                          </div>
-                        </div>
-                        {validationStates[crypto] === 'valid' && (
-                          <p className="text-sm text-green-600">✓ Valid {crypto} address</p>
-                        )}
-                        {validationStates[crypto] === 'invalid' && (
-                          <p className="text-sm text-red-600">✗ Invalid {crypto} address format</p>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Add Wallet Button */}
-                  {Object.keys(settings.wallets).length < availableCurrencies.filter(c => c.trust_wallet_compatible).length && (
-                    <Button
-                      variant="outline"
-                      onClick={handleAddWallet}
-                      className="w-full border-dashed"
-                      disabled={loadingCurrencies}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Another Wallet
-                    </Button>
-                  )}
+                {/* Wallet Summary */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">Wallet Summary</h4>
+                  <p className="text-sm text-gray-600">
+                    You have configured {Object.keys(settings.wallets).filter(k => settings.wallets[k].trim()).length} wallet addresses.
+                    Only cryptocurrencies with wallet addresses can be used for payment links.
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Payment Settings Tab */}
-          <TabsContent value="payment" className="space-y-6">
+          {/* Fee Settings Tab */}
+          <TabsContent value="fees" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Payment Configuration</CardTitle>
+                <CardTitle className="flex items-center space-x-2">
+                  <DollarSign className="w-5 h-5" />
+                  <span>Fee Settings</span>
+                </CardTitle>
                 <CardDescription>
-                  Configure how payments are processed and forwarded
+                  Configure who pays the gateway fees for your payments.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">Auto-Forward Payments</h3>
-                    <p className="text-sm text-gray-600">
-                      Automatically forward payments to your wallets
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSettings(prev => ({
-                      ...prev,
-                      payment_config: {
-                        ...prev.payment_config,
-                        auto_forward: !prev.payment_config.auto_forward
-                      }
-                    }))}
-                  >
-                    {settings.payment_config.auto_forward ? (
-                      <ToggleRight className="w-6 h-6 text-green-500" />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6 text-gray-400" />
-                    )}
-                  </Button>
-                </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Gateway Fee Responsibility</h3>
+                  
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      <strong>Global Setting:</strong> This setting applies to all new payment links by default. 
+                      You can override this setting for individual payment links when creating them.
+                    </AlertDescription>
+                  </Alert>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Transaction Fee (%)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="10"
-                    step="0.1"
-                    value={settings.payment_config.fee_percentage}
-                    onChange={(e) => setSettings(prev => ({
-                      ...prev,
-                      payment_config: {
-                        ...prev.payment_config,
-                        fee_percentage: parseFloat(e.target.value) || 0
-                      }
-                    }))}
-                  />
-                  <p className="text-xs text-gray-500">
-                    Fee charged on each transaction (0-10%)
-                  </p>
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        checked={!settings.charge_customer_fee}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({ 
+                            ...prev, 
+                            charge_customer_fee: !checked 
+                          }))
+                        }
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">Merchant pays gateway fee</div>
+                        <div className="text-sm text-gray-600">
+                          You absorb the gateway fee. Customers pay the exact amount shown.
+                        </div>
+                        <div className="text-xs text-green-600 mt-1">
+                          ✓ Better customer experience - no surprise fees
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        checked={settings.charge_customer_fee}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({ 
+                            ...prev, 
+                            charge_customer_fee: !!checked 
+                          }))
+                        }
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">Customer pays gateway fee</div>
+                        <div className="text-sm text-gray-600">
+                          Gateway fee is added to the payment amount. You receive the full amount.
+                        </div>
+                        <div className="text-xs text-blue-600 mt-1">
+                          ✓ You receive the full payment amount
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-2">
+                      <HelpCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-yellow-900">How it works</h4>
+                        <ul className="text-sm text-yellow-800 mt-1 space-y-1">
+                          <li>• <strong>Merchant pays:</strong> $100 payment = customer pays $100, you receive ~$98.50</li>
+                          <li>• <strong>Customer pays:</strong> $100 payment = customer pays ~$101.50, you receive $100</li>
+                          <li>• You can override this setting for individual payment links</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -711,79 +858,46 @@ export default function MerchantSettingsPage() {
               <CardHeader>
                 <CardTitle>Auto-Conversion Settings</CardTitle>
                 <CardDescription>
-                  Automatically convert received payments to your preferred currency
+                  Automatically convert received payments to your preferred cryptocurrency.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">Enable Auto-Conversion</h3>
-                    <p className="text-sm text-gray-600">
-                      Convert all payments to a single currency
-                    </p>
+                <Alert className="border-yellow-200 bg-yellow-50">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800">
+                    <strong>Coming Soon:</strong> Auto-conversion features are currently in development. 
+                    This will allow you to automatically convert received payments to your preferred cryptocurrency.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-4 opacity-50">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox disabled />
+                    <div>
+                      <div className="font-medium">Enable Auto-Conversion</div>
+                      <div className="text-sm text-gray-600">
+                        Automatically convert all received payments to your preferred currency
+                      </div>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSettings(prev => ({
-                      ...prev,
-                      auto_convert_enabled: !prev.auto_convert_enabled
-                    }))}
-                  >
-                    {settings.auto_convert_enabled ? (
-                      <ToggleRight className="w-6 h-6 text-green-500" />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6 text-gray-400" />
-                    )}
-                  </Button>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Preferred Payout Currency
+                    </label>
+                    <Select disabled>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select preferred currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
+                        <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
+                        <SelectItem value="USDT">Tether (USDT)</SelectItem>
+                        <SelectItem value="USDC">USD Coin (USDC)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-
-                {settings.auto_convert_enabled && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Preferred Payout Currency</label>
-                      <Select
-                        value={settings.preferred_payout_currency || ''}
-                        onValueChange={(value) => setSettings(prev => ({
-                          ...prev,
-                          preferred_payout_currency: value
-                        }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableCurrencies.map((currency) => (
-                            <SelectItem key={currency.code} value={currency.code}>
-                              {currency.symbol} {currency.code} - {currency.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Conversion Fee (%)</label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="5"
-                        step="0.1"
-                        value={settings.payment_config.auto_convert_fee}
-                        onChange={(e) => setSettings(prev => ({
-                          ...prev,
-                          payment_config: {
-                            ...prev.payment_config,
-                            auto_convert_fee: parseFloat(e.target.value) || 0
-                          }
-                        }))}
-                      />
-                      <p className="text-xs text-gray-500">
-                        Additional fee for currency conversion (0-5%)
-                      </p>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -794,7 +908,7 @@ export default function MerchantSettingsPage() {
           <Button
             onClick={handleSaveSettings}
             disabled={saving}
-            className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white"
+            className="bg-[#7f5efd] hover:bg-[#7f5efd]/90"
           >
             {saving ? (
               <>

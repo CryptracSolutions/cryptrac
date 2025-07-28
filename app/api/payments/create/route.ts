@@ -40,13 +40,16 @@ export async function POST(request: NextRequest) {
       description,
       amount,
       currency = 'USD',
-      accepted_cryptos = ['BTC', 'ETH', 'LTC'],
+      accepted_cryptos = [],
       expires_at,
       max_uses,
-      redirect_url
+      redirect_url,
+      charge_customer_fee = null, // null = inherit from merchant global setting
+      auto_convert_enabled = null, // null = inherit from merchant global setting
+      preferred_payout_currency = null // null = inherit from merchant global setting
     } = body;
 
-    console.log('Request body parsed:', { title, amount, currency });
+    console.log('Request body parsed:', { title, amount, currency, accepted_cryptos });
 
     // Validate required fields
     if (!title || !amount) {
@@ -64,9 +67,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique link ID
-    const linkId = generateLinkId();
-    console.log('Generated link ID:', linkId);
+    // Validate accepted_cryptos
+    if (!Array.isArray(accepted_cryptos) || accepted_cryptos.length === 0) {
+      return NextResponse.json(
+        { error: 'At least one accepted cryptocurrency is required' },
+        { status: 400 }
+      );
+    }
 
     // Create service role client for all database operations (bypasses RLS)
     const serviceSupabase = createClient(
@@ -80,84 +87,78 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Check if merchant exists and get auto-conversion settings using service role (bypasses RLS)
-    const { data: initialMerchant, error: merchantError } = await serviceSupabase
+    // Get merchant with wallet addresses and fee settings
+    const { data: merchant, error: merchantError } = await serviceSupabase
       .from('merchants')
-      .select('id, business_name, user_id, auto_convert_enabled, preferred_payout_currency')
+      .select('id, business_name, user_id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency')
       .eq('user_id', user.id)
       .single();
 
-    let merchant = initialMerchant;
-
-    if (merchantError && merchantError.code === 'PGRST116') {
-      console.log('Merchant not found, creating new merchant record...');
-      
-      // Create merchant record with service role
-      const { data: newMerchant, error: createError } = await serviceSupabase
-        .from('merchants')
-        .insert({
-          user_id: user.id,
-          business_name: user.email || 'My Business',
-          onboarding_completed: true,
-          onboarding_step: 5,
-          setup_paid: true,
-          preferred_currencies: accepted_cryptos,
-          auto_convert_enabled: false,
-          preferred_payout_currency: null
-        })
-        .select('id, business_name, user_id, auto_convert_enabled, preferred_payout_currency')
-        .single();
-
-      if (createError) {
-        console.error('Failed to create merchant:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create merchant account' },
-          { status: 500 }
-        );
-      }
-
-      merchant = newMerchant;
-      console.log('Created new merchant:', newMerchant?.id);
-    } else if (merchantError) {
+    if (merchantError) {
       console.log('Merchant lookup error:', merchantError);
       return NextResponse.json(
-        { error: 'Failed to lookup merchant' },
-        { status: 500 }
+        { error: 'Merchant account not found. Please complete onboarding first.' },
+        { status: 404 }
       );
     }
 
-    // Ensure merchant exists at this point
-    if (!merchant) {
-      console.error('Merchant is null after lookup/creation');
+    console.log('Found merchant:', merchant.id);
+
+    // Validate that merchant has wallet addresses for all accepted cryptocurrencies
+    const merchantWallets = merchant.wallets || {};
+    const missingWallets = accepted_cryptos.filter(crypto => 
+      !merchantWallets[crypto] || !merchantWallets[crypto].trim()
+    );
+
+    if (missingWallets.length > 0) {
       return NextResponse.json(
-        { error: 'Failed to get merchant information' },
-        { status: 500 }
+        { 
+          error: `Missing wallet addresses for: ${missingWallets.join(', ')}. Please configure wallet addresses in your settings.`,
+          missing_wallets: missingWallets
+        },
+        { status: 400 }
       );
     }
 
-    console.log('Found/created merchant:', merchant.id);
+    console.log('Wallet validation passed for currencies:', accepted_cryptos);
 
-    // Get merchant's current auto-conversion settings
-    const autoConvertEnabled = merchant.auto_convert_enabled || false;
-    const preferredPayoutCurrency = merchant.preferred_payout_currency;
+    // Determine effective settings (per-link override or merchant global)
+    const effectiveChargeCustomerFee = charge_customer_fee !== null 
+      ? charge_customer_fee 
+      : (merchant.charge_customer_fee || false);
 
-    // Calculate fees based on auto-conversion setting
+    const effectiveAutoConvertEnabled = auto_convert_enabled !== null 
+      ? auto_convert_enabled 
+      : (merchant.auto_convert_enabled || false);
+
+    const effectivePreferredPayoutCurrency = preferred_payout_currency !== null 
+      ? preferred_payout_currency 
+      : merchant.preferred_payout_currency;
+
+    // Calculate fees based on settings
     const amountNum = parseFloat(amount);
-    const feePercentage = autoConvertEnabled ? 0.01 : 0.005; // 1% or 0.5%
-    const feeAmount = amountNum * feePercentage;
+    const baseFeePercentage = 0.005; // 0.5% base fee
+    const autoConvertFeePercentage = effectiveAutoConvertEnabled ? 0.005 : 0; // Additional 0.5% for auto-convert
+    const totalFeePercentage = baseFeePercentage + autoConvertFeePercentage;
+    const feeAmount = amountNum * totalFeePercentage;
     const merchantReceives = amountNum - feeAmount;
 
     console.log('Fee calculation:', {
-      autoConvertEnabled,
-      feePercentage: feePercentage * 100 + '%',
+      effectiveChargeCustomerFee,
+      effectiveAutoConvertEnabled,
+      totalFeePercentage: totalFeePercentage * 100 + '%',
       feeAmount,
       merchantReceives
     });
 
+    // Generate unique link ID
+    const linkId = generateLinkId();
+    console.log('Generated link ID:', linkId);
+
     // Generate payment URL
     const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/${linkId}`;
 
-    // Create payment link using service role (bypasses RLS) with auto-conversion settings
+    // Create payment link with new fields
     const { data: paymentLink, error: insertError } = await serviceSupabase
       .from('payment_links')
       .insert({
@@ -172,18 +173,25 @@ export async function POST(request: NextRequest) {
         expires_at: expires_at ? new Date(expires_at).toISOString() : null,
         max_uses: max_uses || null,
         status: 'active',
-        auto_convert_enabled: autoConvertEnabled,
-        preferred_payout_currency: preferredPayoutCurrency,
-        fee_percentage: feePercentage,
+        charge_customer_fee: charge_customer_fee, // Store the override (null = inherit)
+        auto_convert_enabled: auto_convert_enabled, // Store the override (null = inherit)
+        preferred_payout_currency: preferred_payout_currency, // Store the override (null = inherit)
+        fee_percentage: totalFeePercentage,
         metadata: {
           redirect_url: redirect_url || null,
           fee_breakdown: {
-            fee_percentage: feePercentage * 100,
+            base_fee_percentage: baseFeePercentage * 100,
+            auto_convert_fee_percentage: autoConvertFeePercentage * 100,
+            total_fee_percentage: totalFeePercentage * 100,
             fee_amount: feeAmount,
             merchant_receives: merchantReceives,
-            auto_convert_enabled: autoConvertEnabled,
-            preferred_payout_currency: preferredPayoutCurrency
-          }
+            effective_charge_customer_fee: effectiveChargeCustomerFee,
+            effective_auto_convert_enabled: effectiveAutoConvertEnabled,
+            effective_preferred_payout_currency: effectivePreferredPayoutCurrency
+          },
+          wallet_addresses: Object.fromEntries(
+            accepted_cryptos.map(crypto => [crypto, merchantWallets[crypto]])
+          )
         }
       })
       .select()
@@ -199,7 +207,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Payment link created successfully:', paymentLink.id);
 
-    // Return success response
+    // Return success response with enhanced metadata
     return NextResponse.json({
       success: true,
       payment_link: {
@@ -209,7 +217,13 @@ export async function POST(request: NextRequest) {
         metadata: {
           ...paymentLink.metadata,
           fee_amount: feeAmount,
-          fee_percentage: feePercentage * 100
+          fee_percentage: totalFeePercentage * 100,
+          merchant_receives: merchantReceives,
+          effective_settings: {
+            charge_customer_fee: effectiveChargeCustomerFee,
+            auto_convert_enabled: effectiveAutoConvertEnabled,
+            preferred_payout_currency: effectivePreferredPayoutCurrency
+          }
         }
       }
     });

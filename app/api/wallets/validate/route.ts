@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  validateAddress,
-  getCurrencyInfo,
-  getTrustWalletCurrencies
-} from '@/lib/wallet-generation-unified';
 
 interface ValidateAddressRequest {
   address: string;
@@ -26,19 +21,54 @@ interface ValidationResult {
   error?: string;
 }
 
-interface TrustWalletCurrency {
-  code: string;
-  name: string;
-  symbol: string;
-  network: string;
-  address_type: string;
-  derivation_path: string;
-  trust_wallet_compatible: boolean;
-  decimals: number;
-  min_amount: number;
-  display_name?: string;
-  is_token?: boolean;
-  parent_currency?: string;
+// Basic address validation patterns
+const ADDRESS_PATTERNS: Record<string, RegExp> = {
+  BTC: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/,
+  ETH: /^0x[a-fA-F0-9]{40}$/,
+  LTC: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
+  DOGE: /^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$/,
+  XRP: /^r[0-9a-zA-Z]{24,34}$/,
+  TRX: /^T[A-Za-z1-9]{33}$/,
+  SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+  BNB: /^0x[a-fA-F0-9]{40}$|^bnb[0-9a-z]{39}$/,
+  TON: /^[0-9a-zA-Z\-_]{48}$/,
+  SUI: /^0x[a-fA-F0-9]{64}$/,
+  AVAX: /^0x[a-fA-F0-9]{40}$/,
+  // Stablecoins (use parent network patterns)
+  USDT_ERC20: /^0x[a-fA-F0-9]{40}$/,
+  USDC_ERC20: /^0x[a-fA-F0-9]{40}$/,
+  USDT_TRC20: /^T[A-Za-z1-9]{33}$/,
+  USDC_SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+};
+
+const CURRENCY_INFO: Record<string, { network: string; address_type: string; decimals: number }> = {
+  BTC: { network: 'Bitcoin', address_type: 'P2PKH/P2SH/Bech32', decimals: 8 },
+  ETH: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  LTC: { network: 'Litecoin', address_type: 'P2PKH/P2SH', decimals: 8 },
+  DOGE: { network: 'Dogecoin', address_type: 'P2PKH', decimals: 8 },
+  XRP: { network: 'XRP Ledger', address_type: 'Classic', decimals: 6 },
+  TRX: { network: 'Tron', address_type: 'Base58', decimals: 6 },
+  SOL: { network: 'Solana', address_type: 'Base58', decimals: 9 },
+  BNB: { network: 'BSC', address_type: 'ERC20', decimals: 18 },
+  TON: { network: 'TON', address_type: 'Base64', decimals: 9 },
+  SUI: { network: 'Sui', address_type: 'Hex', decimals: 9 },
+  AVAX: { network: 'Avalanche', address_type: 'ERC20', decimals: 18 },
+  USDT_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
+  USDC_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
+  USDT_TRC20: { network: 'Tron', address_type: 'TRC20', decimals: 6 },
+  USDC_SOL: { network: 'Solana', address_type: 'SPL', decimals: 6 },
+};
+
+function validateAddress(address: string, currency: string): boolean {
+  const pattern = ADDRESS_PATTERNS[currency.toUpperCase()];
+  if (!pattern) {
+    return false;
+  }
+  return pattern.test(address);
+}
+
+function getCurrencyInfo(currency: string) {
+  return CURRENCY_INFO[currency.toUpperCase()];
 }
 
 // POST endpoint for address validation (single and batch)
@@ -65,7 +95,7 @@ export async function POST(request: NextRequest) {
         currency: currency.toUpperCase(),
         network: currencyInfo?.network,
         address_type: currencyInfo?.address_type,
-        exact_match: currencyInfo ? ['ETH', 'BNB', 'MATIC', 'USDT_ERC20', 'USDC_ERC20', 'USDC_POLYGON', 'SOL', 'TRX', 'USDT_TRC20'].includes(currencyInfo.code) : false
+        exact_match: currencyInfo ? ['ETH', 'BNB', 'USDT_ERC20', 'USDC_ERC20', 'SOL', 'TRX', 'USDT_TRC20', 'USDC_SOL'].includes(currency.toUpperCase()) : false
       };
 
       if (!isValid) {
@@ -117,7 +147,7 @@ export async function POST(request: NextRequest) {
             currency: item.currency.toUpperCase(),
             network: currencyInfo?.network,
             address_type: currencyInfo?.address_type,
-            exact_match: currencyInfo ? ['ETH', 'BNB', 'MATIC', 'USDT_ERC20', 'USDC_ERC20', 'USDC_POLYGON', 'SOL', 'TRX', 'USDT_TRC20'].includes(currencyInfo.code) : false
+            exact_match: currencyInfo ? ['ETH', 'BNB', 'USDT_ERC20', 'USDC_ERC20', 'SOL', 'TRX', 'USDT_TRC20', 'USDC_SOL'].includes(item.currency.toUpperCase()) : false
           };
 
           if (!isValid) {
@@ -171,23 +201,17 @@ export async function POST(request: NextRequest) {
 // GET endpoint to retrieve supported currencies for validation
 export async function GET() {
   try {
-    const currencies = getTrustWalletCurrencies();
-    
-    const supportedCurrencies = currencies.map((currency: TrustWalletCurrency) => ({
-      code: currency.code,
-      name: currency.name,
-      network: currency.network,
-      address_type: currency.address_type,
-      derivation_path: currency.derivation_path,
-      exact_match: ['ETH', 'BNB', 'MATIC', 'USDT_ERC20', 'USDC_ERC20', 'USDC_POLYGON', 'SOL', 'TRX', 'USDT_TRC20'].includes(currency.code)
+    const supportedCurrencies = Object.keys(CURRENCY_INFO).map(code => ({
+      code,
+      name: code,
+      network: CURRENCY_INFO[code].network,
+      address_type: CURRENCY_INFO[code].address_type,
+      decimals: CURRENCY_INFO[code].decimals,
+      exact_match: ['ETH', 'BNB', 'USDT_ERC20', 'USDC_ERC20', 'SOL', 'TRX', 'USDT_TRC20', 'USDC_SOL'].includes(code)
     }));
 
-    // Convert Set to Array using Array.from() to avoid iteration issues
-    const networksSet = new Set(currencies.map((c: TrustWalletCurrency) => c.network));
-    const addressTypesSet = new Set(currencies.map((c: TrustWalletCurrency) => c.address_type));
-    
-    const supportedNetworks = Array.from(networksSet);
-    const addressTypes = Array.from(addressTypesSet);
+    const supportedNetworks = Array.from(new Set(Object.values(CURRENCY_INFO).map(info => info.network)));
+    const addressTypes = Array.from(new Set(Object.values(CURRENCY_INFO).map(info => info.address_type)));
 
     return NextResponse.json({
       success: true,
@@ -195,9 +219,9 @@ export async function GET() {
       validation_info: {
         supported_networks: supportedNetworks,
         address_types: addressTypes,
-        total_currencies: currencies.length,
-        exact_match_count: supportedCurrencies.filter((c: any) => c.exact_match).length,
-        manual_setup_count: supportedCurrencies.filter((c: any) => !c.exact_match).length
+        total_currencies: supportedCurrencies.length,
+        exact_match_count: supportedCurrencies.filter(c => c.exact_match).length,
+        manual_setup_count: supportedCurrencies.filter(c => !c.exact_match).length
       }
     });
 

@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
@@ -7,7 +5,6 @@ import { Badge } from '@/app/components/ui/badge'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Copy, QrCode, CheckCircle, AlertTriangle, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { getPaymentInstructions, getNetworkDisplayInfo } from '@/lib/trust-wallet-service'
 
 interface PaymentDisplayProps {
   currency: string
@@ -18,6 +15,100 @@ interface PaymentDisplayProps {
   description?: string
   orderId?: string
   onPaymentDetected?: () => void
+}
+
+// Payment instructions and network info (inline implementation)
+const PAYMENT_INFO: Record<string, {
+  currency: { code: string; symbol: string; name: string; network: string };
+  instructions: string[];
+  warning?: string;
+}> = {
+  BTC: {
+    currency: { code: 'BTC', symbol: '₿', name: 'Bitcoin', network: 'Bitcoin' },
+    instructions: [
+      'Open your Bitcoin wallet',
+      'Send the exact amount to the address below',
+      'Wait for network confirmation'
+    ],
+    warning: 'Bitcoin transactions may take 10-60 minutes to confirm'
+  },
+  ETH: {
+    currency: { code: 'ETH', symbol: 'Ξ', name: 'Ethereum', network: 'Ethereum' },
+    instructions: [
+      'Open your Ethereum wallet',
+      'Send the exact amount to the address below',
+      'Ensure sufficient gas fees'
+    ],
+    warning: 'Gas fees may vary based on network congestion'
+  },
+  USDT_ERC20: {
+    currency: { code: 'USDT', symbol: '₮', name: 'Tether', network: 'Ethereum' },
+    instructions: [
+      'Open your Ethereum wallet',
+      'Send USDT (ERC-20) to the address below',
+      'Ensure sufficient ETH for gas fees'
+    ],
+    warning: 'This is an ERC-20 token on Ethereum network'
+  },
+  USDC_ERC20: {
+    currency: { code: 'USDC', symbol: '$', name: 'USD Coin', network: 'Ethereum' },
+    instructions: [
+      'Open your Ethereum wallet',
+      'Send USDC (ERC-20) to the address below',
+      'Ensure sufficient ETH for gas fees'
+    ],
+    warning: 'This is an ERC-20 token on Ethereum network'
+  },
+  TRX: {
+    currency: { code: 'TRX', symbol: 'TRX', name: 'TRON', network: 'Tron' },
+    instructions: [
+      'Open your TRON wallet',
+      'Send the exact amount to the address below',
+      'Low transaction fees on TRON network'
+    ]
+  },
+  USDT_TRC20: {
+    currency: { code: 'USDT', symbol: '₮', name: 'Tether', network: 'Tron' },
+    instructions: [
+      'Open your TRON wallet',
+      'Send USDT (TRC-20) to the address below',
+      'Very low transaction fees'
+    ],
+    warning: 'This is a TRC-20 token on TRON network'
+  },
+  SOL: {
+    currency: { code: 'SOL', symbol: 'SOL', name: 'Solana', network: 'Solana' },
+    instructions: [
+      'Open your Solana wallet',
+      'Send the exact amount to the address below',
+      'Fast and low-cost transactions'
+    ]
+  },
+  USDC_SOL: {
+    currency: { code: 'USDC', symbol: '$', name: 'USD Coin', network: 'Solana' },
+    instructions: [
+      'Open your Solana wallet',
+      'Send USDC (SPL) to the address below',
+      'Fast and low-cost transactions'
+    ],
+    warning: 'This is an SPL token on Solana network'
+  }
+};
+
+const NETWORK_INFO: Record<string, { name: string; color: string }> = {
+  Bitcoin: { name: 'Bitcoin', color: 'bg-orange-100 text-orange-800' },
+  Ethereum: { name: 'Ethereum', color: 'bg-blue-100 text-blue-800' },
+  Tron: { name: 'TRON', color: 'bg-red-100 text-red-800' },
+  Solana: { name: 'Solana', color: 'bg-green-100 text-green-800' },
+  BSC: { name: 'BSC', color: 'bg-yellow-100 text-yellow-800' }
+};
+
+function getPaymentInstructions(currency: string) {
+  return PAYMENT_INFO[currency.toUpperCase()];
+}
+
+function getNetworkDisplayInfo(network: string) {
+  return NETWORK_INFO[network];
 }
 
 export default function PaymentDisplay({
@@ -99,7 +190,7 @@ export default function PaymentDisplay({
         {amount && (
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl font-bold text-gray-900">
-              {formatAmount(amount, currencyInfo.decimals)} {currencyInfo.code}
+              {formatAmount(amount)} {currencyInfo.code}
             </div>
             {usdAmount && (
               <div className="text-sm text-gray-600">
@@ -109,115 +200,80 @@ export default function PaymentDisplay({
           </div>
         )}
 
-        {/* Payment Instructions */}
-        <Alert className="border-blue-200 bg-blue-50">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            <strong>{instructions}</strong>
-            {currencyInfo.display_name && (
-              <div className="text-sm mt-1">
-                Network: {currencyInfo.display_name}
+        {/* Payment Address */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Send to this address:
+          </label>
+          <div className="flex items-center space-x-2">
+            <div className="flex-1 p-3 bg-gray-50 rounded-lg border">
+              <div className="font-mono text-sm break-all text-gray-900">
+                {address}
               </div>
-            )}
-          </AlertDescription>
-        </Alert>
+            </div>
+            <Button
+              onClick={copyAddress}
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+            >
+              {addressCopied ? (
+                <CheckCircle className="w-4 h-4 text-green-600" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        </div>
 
-        {/* Network Warning */}
+        {/* QR Code Button */}
+        <Button
+          onClick={() => setShowQR(!showQR)}
+          variant="outline"
+          className="w-full"
+        >
+          <QrCode className="w-4 h-4 mr-2" />
+          {showQR ? 'Hide' : 'Show'} QR Code
+        </Button>
+
+        {/* Payment Instructions */}
+        <div className="space-y-2">
+          <h4 className="font-medium text-gray-900">Payment Instructions:</h4>
+          <ol className="text-sm text-gray-600 space-y-1">
+            {instructions.map((instruction, index) => (
+              <li key={index} className="flex items-start space-x-2">
+                <span className="font-medium text-[#7f5efd] mt-0.5">{index + 1}.</span>
+                <span>{instruction}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Warning */}
         {warning && (
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              <strong>Important:</strong> {warning}
+          <Alert className="border-yellow-200 bg-yellow-50">
+            <Info className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              {warning}
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Payment Address */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">
-              Payment Address
-            </label>
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowQR(!showQR)}
-              >
-                <QrCode className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyAddress}
-                className={addressCopied ? 'bg-green-50 border-green-200' : ''}
-              >
-                {addressCopied ? (
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-                {addressCopied ? 'Copied!' : 'Copy'}
-              </Button>
-            </div>
-          </div>
-
-          <div className="p-3 bg-gray-100 rounded-lg border">
-            <div className="font-mono text-sm break-all text-gray-800">
-              {address}
-            </div>
-          </div>
-        </div>
-
-        {/* QR Code Placeholder */}
-        {showQR && (
-          <div className="flex justify-center p-4 bg-white border rounded-lg">
-            <div className="w-48 h-48 bg-gray-100 rounded flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <QrCode className="w-12 h-12 mx-auto mb-2" />
-                <p className="text-sm">QR Code</p>
-                <p className="text-xs">(Install qrcode-react for QR generation)</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Order Information */}
+        {/* Order Info */}
         {(description || orderId) && (
           <div className="pt-4 border-t border-gray-200">
             {description && (
-              <div className="mb-2">
-                <span className="text-sm font-medium text-gray-700">Description: </span>
-                <span className="text-sm text-gray-600">{description}</span>
+              <div className="text-sm text-gray-600 mb-2">
+                <strong>Description:</strong> {description}
               </div>
             )}
             {orderId && (
-              <div>
-                <span className="text-sm font-medium text-gray-700">Order ID: </span>
-                <span className="text-sm text-gray-600 font-mono">{orderId}</span>
+              <div className="text-sm text-gray-600">
+                <strong>Order ID:</strong> {orderId}
               </div>
             )}
           </div>
         )}
-
-        {/* Payment Status */}
-        <div className="pt-4 border-t border-gray-200">
-          <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
-            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-            <span>Waiting for payment...</span>
-          </div>
-          <p className="text-xs text-gray-500 text-center mt-2">
-            Payment will be confirmed automatically once received
-          </p>
-        </div>
-
-        {/* Trust Wallet Badge */}
-        <div className="flex justify-center pt-2">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-            Trust Wallet Compatible
-          </Badge>
-        </div>
       </CardContent>
     </Card>
   )

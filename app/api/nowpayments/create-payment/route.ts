@@ -9,12 +9,22 @@ interface CreatePaymentRequest {
   customer_email?: string;
   success_url?: string;
   cancel_url?: string;
+  is_fee_paid_by_user?: boolean; // New: explicit fee setting
+  payout_address?: string; // New: explicit payout address
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePaymentRequest = await request.json();
-    const { payment_link_id, pay_currency, customer_email, success_url, cancel_url } = body;
+    const { 
+      payment_link_id, 
+      pay_currency, 
+      customer_email, 
+      success_url, 
+      cancel_url,
+      is_fee_paid_by_user,
+      payout_address 
+    } = body;
 
     // Validate required parameters
     if (!payment_link_id || !pay_currency) {
@@ -59,7 +69,8 @@ export async function POST(request: NextRequest) {
           id,
           business_name,
           user_id,
-          wallets
+          wallets,
+          charge_customer_fee
         )
       `)
       .eq('id', payment_link_id)
@@ -98,53 +109,73 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get auto-conversion settings from the payment link (not current merchant settings)
     const merchant = paymentLink.merchant;
-    const autoConvertEnabled = paymentLink.auto_convert_enabled || false;
-    const preferredPayoutCurrency = paymentLink.preferred_payout_currency;
     const merchantWallets = merchant.wallets || {};
 
-    console.log('Using payment link auto-conversion settings:', {
+    // Validate that merchant has wallet address for the requested currency
+    const currencyWalletAddress = merchantWallets[pay_currency.toUpperCase()] || merchantWallets[pay_currency.toLowerCase()];
+    if (!currencyWalletAddress || !currencyWalletAddress.trim()) {
+      return NextResponse.json(
+        { error: `Merchant wallet address for ${pay_currency.toUpperCase()} is not configured` },
+        { status: 400 }
+      );
+    }
+
+    // Determine effective fee setting (per-link override or merchant global)
+    let effectiveFeeSettings: boolean;
+    if (is_fee_paid_by_user !== undefined) {
+      // Use explicit setting from request (from checkout page)
+      effectiveFeeSettings = is_fee_paid_by_user;
+    } else if (paymentLink.charge_customer_fee !== null) {
+      // Use per-link override
+      effectiveFeeSettings = paymentLink.charge_customer_fee;
+    } else {
+      // Use merchant global setting
+      effectiveFeeSettings = merchant.charge_customer_fee || false;
+    }
+
+    // Get auto-conversion settings from the payment link
+    const autoConvertEnabled = paymentLink.auto_convert_enabled || false;
+    const preferredPayoutCurrency = paymentLink.preferred_payout_currency;
+
+    console.log('Payment settings:', {
+      paymentLinkId: paymentLink.id,
+      payCurrency: pay_currency.toUpperCase(),
+      chargeCustomerFee: effectiveFeeSettings,
       autoConvertEnabled,
       preferredPayoutCurrency,
-      paymentLinkId: paymentLink.id
+      walletAddress: currencyWalletAddress
     });
 
     // Determine payout currency and address
     let payoutCurrency = pay_currency.toLowerCase();
-    let payoutAddress = merchantWallets[payoutCurrency];
+    let finalPayoutAddress = payout_address || currencyWalletAddress;
 
     if (autoConvertEnabled && preferredPayoutCurrency) {
       payoutCurrency = preferredPayoutCurrency.toLowerCase();
-      payoutAddress = merchantWallets[payoutCurrency];
-
+      const preferredWalletAddress = merchantWallets[payoutCurrency.toUpperCase()] || merchantWallets[payoutCurrency];
+      
       // Validate that merchant has the required payout wallet
-      if (!payoutAddress) {
+      if (!preferredWalletAddress || !preferredWalletAddress.trim()) {
         return NextResponse.json(
           { error: `Merchant wallet address for ${payoutCurrency.toUpperCase()} is required for auto-conversion` },
           { status: 400 }
         );
       }
-    } else {
-      // Validate that merchant has wallet for the payment currency
-      if (!payoutAddress) {
-        return NextResponse.json(
-          { error: `Merchant wallet address for ${pay_currency.toUpperCase()} is required` },
-          { status: 400 }
-        );
-      }
+      
+      finalPayoutAddress = preferredWalletAddress;
     }
 
     // Get NOWPayments client
     const nowPayments = getNOWPaymentsClient();
 
-    // Calculate fees based on auto-conversion setting
+    // Calculate fees based on auto-conversion setting and fee responsibility
     const fees = calculateCryptracFees(paymentLink.amount, autoConvertEnabled);
 
     // Create unique order ID
     const orderId = `cryptrac_${paymentLink.link_id}_${Date.now()}`;
 
-    // Prepare NOWPayments payment request with auto-conversion support
+    // Prepare NOWPayments payment request with proper fee handling
     const paymentRequest: {
       price_amount: number;
       price_currency: string;
@@ -166,8 +197,8 @@ export async function POST(request: NextRequest) {
       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       success_url: success_url || `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
       cancel_url: cancel_url || `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancelled`,
-      is_fee_paid_by_user: false, // Merchant pays the fee
-      payout_address: payoutAddress // ALWAYS include for non-custodial flow
+      is_fee_paid_by_user: effectiveFeeSettings, // Use determined fee setting
+      payout_address: finalPayoutAddress // Use merchant's wallet address
     };
 
     // Add payout currency if auto-conversion is enabled
@@ -181,8 +212,10 @@ export async function POST(request: NextRequest) {
       currency: paymentRequest.price_currency,
       payCurrency: paymentRequest.pay_currency,
       payoutCurrency: paymentRequest.payout_currency || 'same as pay_currency',
+      payoutAddress: finalPayoutAddress,
       autoConvert: autoConvertEnabled,
-      feePercentage: fees.feePercentage
+      feePercentage: fees.feePercentage,
+      customerPaysFee: effectiveFeeSettings
     });
 
     // Create payment with NOWPayments
@@ -191,10 +224,11 @@ export async function POST(request: NextRequest) {
     console.log('NOWPayments payment created:', {
       paymentId: nowPayment.payment_id,
       status: nowPayment.payment_status,
-      payAddress: nowPayment.pay_address
+      payAddress: nowPayment.pay_address,
+      payAmount: nowPayment.pay_amount
     });
 
-    // Store payment in database with enhanced fields
+    // Store payment in database with enhanced fields including payout address tracking
     const { data: merchantPayment, error: paymentError } = await supabase
       .from('merchant_payments')
       .insert({
@@ -209,7 +243,7 @@ export async function POST(request: NextRequest) {
         payout_currency: payoutCurrency.toUpperCase(),
         currency_received: pay_currency.toUpperCase(),
         status: nowPayment.payment_status,
-        pay_address: nowPayment.pay_address,
+        pay_address: finalPayoutAddress, // Store the actual payout address used
         pay_amount: nowPayment.pay_amount,
         cryptrac_fee: fees.cryptracFee,
         gateway_fee: fees.gatewayFee,
@@ -219,8 +253,11 @@ export async function POST(request: NextRequest) {
           ...nowPayment,
           auto_convert_enabled: autoConvertEnabled,
           preferred_payout_currency: preferredPayoutCurrency,
-          payout_address: payoutAddress,
-          fee_percentage: fees.feePercentage
+          payout_address: finalPayoutAddress,
+          fee_percentage: fees.feePercentage,
+          customer_pays_fee: effectiveFeeSettings,
+          fee_source: is_fee_paid_by_user !== undefined ? 'explicit' : 
+                     (paymentLink.charge_customer_fee !== null ? 'link_override' : 'merchant_global')
         },
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         updated_at: new Date().toISOString()
@@ -237,17 +274,23 @@ export async function POST(request: NextRequest) {
 
     // Generate QR code data for the payment
     let qrCodeData: string;
-    if (pay_currency.toLowerCase() === 'usdc') {
+    const payCurrencyLower = pay_currency.toLowerCase();
+    
+    if (['usdc', 'usdt'].includes(payCurrencyLower)) {
       qrCodeData = `ethereum:${nowPayment.pay_address}?value=${nowPayment.pay_amount}`;
-    } else if (pay_currency.toLowerCase() === 'btc') {
+    } else if (payCurrencyLower === 'btc') {
       qrCodeData = `bitcoin:${nowPayment.pay_address}?amount=${nowPayment.pay_amount}`;
-    } else if (pay_currency.toLowerCase() === 'eth') {
+    } else if (payCurrencyLower === 'eth') {
       qrCodeData = `ethereum:${nowPayment.pay_address}?value=${nowPayment.pay_amount}`;
+    } else if (payCurrencyLower === 'ltc') {
+      qrCodeData = `litecoin:${nowPayment.pay_address}?amount=${nowPayment.pay_amount}`;
+    } else if (payCurrencyLower === 'trx') {
+      qrCodeData = `tron:${nowPayment.pay_address}?amount=${nowPayment.pay_amount}`;
     } else {
-      qrCodeData = `${pay_currency.toLowerCase()}:${nowPayment.pay_address}?amount=${nowPayment.pay_amount}`;
+      qrCodeData = `${payCurrencyLower}:${nowPayment.pay_address}?amount=${nowPayment.pay_amount}`;
     }
 
-    // Return payment details with auto-conversion information
+    // Return payment details with enhanced fee information
     return NextResponse.json({
       success: true,
       payment: {
@@ -259,6 +302,7 @@ export async function POST(request: NextRequest) {
         pay_amount: nowPayment.pay_amount,
         pay_currency: pay_currency.toUpperCase(),
         payout_currency: payoutCurrency.toUpperCase(),
+        payout_address: finalPayoutAddress,
         price_amount: paymentLink.amount,
         price_currency: paymentLink.currency,
         qr_code_data: qrCodeData,
@@ -270,13 +314,19 @@ export async function POST(request: NextRequest) {
           gateway_fee: fees.gatewayFee,
           total_fees: fees.totalFees,
           merchant_receives: fees.merchantReceives,
-          fee_percentage: fees.feePercentage
+          fee_percentage: fees.feePercentage,
+          customer_pays_fee: effectiveFeeSettings
         }
       },
       payment_link: {
         title: paymentLink.title,
         description: paymentLink.description,
         merchant_name: merchant.business_name
+      },
+      fee_settings: {
+        customer_pays_fee: effectiveFeeSettings,
+        source: is_fee_paid_by_user !== undefined ? 'explicit' : 
+               (paymentLink.charge_customer_fee !== null ? 'link_override' : 'merchant_global')
       }
     });
 
