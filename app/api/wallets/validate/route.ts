@@ -21,7 +21,7 @@ interface ValidationResult {
   error?: string;
 }
 
-// Complete address validation patterns for all supported currencies
+// Comprehensive address validation patterns for ALL supported currencies
 const ADDRESS_PATTERNS: Record<string, RegExp> = {
   // Primary cryptocurrencies
   BTC: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/,
@@ -58,6 +58,69 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   // Avalanche ecosystem stablecoins (C-Chain)
   USDT_AVAX: /^0x[a-fA-F0-9]{40}$/,
   USDC_AVAX: /^0x[a-fA-F0-9]{40}$/,
+
+  // Additional ERC-20 tokens (use Ethereum address pattern)
+  AAVE: /^0x[a-fA-F0-9]{40}$/,
+  MATIC: /^0x[a-fA-F0-9]{40}$/,
+  LINK: /^0x[a-fA-F0-9]{40}$/,
+  UNI: /^0x[a-fA-F0-9]{40}$/,
+  CRV: /^0x[a-fA-F0-9]{40}$/,
+  COMP: /^0x[a-fA-F0-9]{40}$/,
+  MKR: /^0x[a-fA-F0-9]{40}$/,
+  SNX: /^0x[a-fA-F0-9]{40}$/,
+  SUSHI: /^0x[a-fA-F0-9]{40}$/,
+  YFI: /^0x[a-fA-F0-9]{40}$/,
+  BAL: /^0x[a-fA-F0-9]{40}$/,
+  USDT: /^0x[a-fA-F0-9]{40}$/, // Default to ERC-20
+  USDC: /^0x[a-fA-F0-9]{40}$/, // Default to ERC-20
+
+  // Cardano ecosystem
+  ADA: /^addr1[a-z0-9]{98}$|^[A-Za-z0-9]{59}$/,
+
+  // Polkadot ecosystem
+  DOT: /^1[0-9A-Za-z]{46}$/,
+
+  // Additional native currencies
+  BCH: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bitcoincash:[a-z0-9]{42}$/,
+  ETC: /^0x[a-fA-F0-9]{40}$/,
+  ZEC: /^t1[a-zA-Z0-9]{33}$|^t3[a-zA-Z0-9]{33}$/,
+  DASH: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,
+  XMR: /^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
+
+  // Polygon ecosystem (MATIC network)
+  MATIC_POLYGON: /^0x[a-fA-F0-9]{40}$/,
+  USDT_POLYGON: /^0x[a-fA-F0-9]{40}$/,
+  USDC_POLYGON: /^0x[a-fA-F0-9]{40}$/,
+
+  // Arbitrum ecosystem
+  ARB: /^0x[a-fA-F0-9]{40}$/,
+  USDT_ARBITRUM: /^0x[a-fA-F0-9]{40}$/,
+  USDC_ARBITRUM: /^0x[a-fA-F0-9]{40}$/,
+
+  // Optimism ecosystem
+  OP: /^0x[a-fA-F0-9]{40}$/,
+  USDT_OPTIMISM: /^0x[a-fA-F0-9]{40}$/,
+  USDC_OPTIMISM: /^0x[a-fA-F0-9]{40}$/,
+};
+
+// Network-based fallback patterns
+const NETWORK_PATTERNS: Record<string, RegExp> = {
+  'ethereum': /^0x[a-fA-F0-9]{40}$/,
+  'bsc': /^0x[a-fA-F0-9]{40}$/,
+  'polygon': /^0x[a-fA-F0-9]{40}$/,
+  'arbitrum': /^0x[a-fA-F0-9]{40}$/,
+  'optimism': /^0x[a-fA-F0-9]{40}$/,
+  'avalanche': /^0x[a-fA-F0-9]{40}$/,
+  'solana': /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+  'tron': /^T[A-Za-z1-9]{33}$/,
+  'ton': /^[0-9a-zA-Z\-_]{48}$/,
+  'cardano': /^addr1[a-z0-9]{98}$|^[A-Za-z0-9]{59}$/,
+  'polkadot': /^1[0-9A-Za-z]{46}$/,
+  'bitcoin': /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/,
+  'litecoin': /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
+  'dogecoin': /^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$/,
+  'ripple': /^r[0-9a-zA-Z]{24,34}$/,
+  'sui': /^0x[a-fA-F0-9]{64}$/,
 };
 
 const CURRENCY_INFO: Record<string, { network: string; address_type: string; decimals: number }> = {
@@ -77,6 +140,8 @@ const CURRENCY_INFO: Record<string, { network: string; address_type: string; dec
   // Ethereum ecosystem stablecoins
   USDT_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
   USDC_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
+  USDT: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
+  USDC: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
   
   // BNB Smart Chain stablecoins
   USDT_BEP20: { network: 'BSC', address_type: 'BEP20', decimals: 6 },
@@ -96,17 +161,63 @@ const CURRENCY_INFO: Record<string, { network: string; address_type: string; dec
   // Avalanche ecosystem stablecoins
   USDT_AVAX: { network: 'Avalanche', address_type: 'C-Chain', decimals: 6 },
   USDC_AVAX: { network: 'Avalanche', address_type: 'C-Chain', decimals: 6 },
+
+  // Additional ERC-20 tokens
+  AAVE: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  MATIC: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  LINK: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  UNI: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  CRV: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  COMP: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  MKR: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  SNX: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  SUSHI: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  YFI: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+  BAL: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
+
+  // Other native currencies
+  ADA: { network: 'Cardano', address_type: 'Bech32', decimals: 6 },
+  DOT: { network: 'Polkadot', address_type: 'SS58', decimals: 10 },
+  BCH: { network: 'Bitcoin Cash', address_type: 'P2PKH/P2SH', decimals: 8 },
+  ETC: { network: 'Ethereum Classic', address_type: 'ERC20', decimals: 18 },
+  ZEC: { network: 'Zcash', address_type: 'Transparent', decimals: 8 },
+  DASH: { network: 'Dash', address_type: 'P2PKH', decimals: 8 },
+  XMR: { network: 'Monero', address_type: 'CryptoNote', decimals: 12 },
 };
 
 function validateAddress(address: string, currency: string): boolean {
-  const pattern = ADDRESS_PATTERNS[currency.toUpperCase()];
-  if (!pattern) {
-    console.log(`No validation pattern found for currency: ${currency.toUpperCase()}`);
-    return false;
+  const upperCurrency = currency.toUpperCase();
+  console.log(`🔍 Validating ${upperCurrency} address: ${address}`);
+  
+  // Try exact pattern match first
+  const pattern = ADDRESS_PATTERNS[upperCurrency];
+  if (pattern) {
+    const isValid = pattern.test(address);
+    console.log(`✅ Pattern match for ${upperCurrency}: ${isValid}`);
+    return isValid;
   }
-  const isValid = pattern.test(address);
-  console.log(`Validating ${currency.toUpperCase()} address ${address}: ${isValid}`);
-  return isValid;
+
+  // Try network-based fallback
+  const currencyInfo = CURRENCY_INFO[upperCurrency];
+  if (currencyInfo) {
+    const networkPattern = NETWORK_PATTERNS[currencyInfo.network.toLowerCase()];
+    if (networkPattern) {
+      const isValid = networkPattern.test(address);
+      console.log(`🔄 Network fallback for ${upperCurrency} (${currencyInfo.network}): ${isValid}`);
+      return isValid;
+    }
+  }
+
+  // Default ERC-20 fallback for unknown tokens
+  if (!pattern && !currencyInfo) {
+    const ethPattern = /^0x[a-fA-F0-9]{40}$/;
+    const isValid = ethPattern.test(address);
+    console.log(`🔄 ERC-20 fallback for ${upperCurrency}: ${isValid}`);
+    return isValid;
+  }
+
+  console.log(`❌ No validation pattern found for currency: ${upperCurrency}`);
+  return false;
 }
 
 function getCurrencyInfo(currency: string) {
@@ -117,12 +228,14 @@ function getCurrencyInfo(currency: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log(`📨 Validation request received:`, body);
     
     // Single address validation
     if ('address' in body && 'currency' in body) {
       const { address, currency }: ValidateAddressRequest = body;
       
       if (!address || !currency) {
+        console.log(`❌ Missing required fields: address=${!!address}, currency=${!!currency}`);
         return NextResponse.json(
           { error: 'Address and currency are required' },
           { status: 400 }
@@ -143,6 +256,8 @@ export async function POST(request: NextRequest) {
       if (!isValid) {
         result.error = `Invalid ${currency.toUpperCase()} address format`;
       }
+
+      console.log(`📤 Validation result for ${currency.toUpperCase()}:`, result);
 
       return NextResponse.json({
         success: true,

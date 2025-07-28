@@ -43,6 +43,13 @@ interface CurrencyInfo {
   display_name?: string
 }
 
+interface CompatibleCurrency {
+  code: string
+  name: string
+  symbol: string
+  network: string
+}
+
 // Final verified currency grouping with NOWPayments supported currencies
 const CURRENCY_GROUPS = [
   {
@@ -116,17 +123,6 @@ const CURRENCY_GROUPS = [
   }
 ]
 
-// Currency code mapping for validation API
-const CURRENCY_CODE_MAPPING: Record<string, string> = {
-  'USDT': 'USDT_ERC20',
-  'USDC': 'USDC_ERC20',
-  'LTC': 'LTC',
-  'MATIC': 'MATIC',
-  'ADA': 'ADA',
-  'DOT': 'DOT',
-  // Add more mappings as needed
-}
-
 export default function WalletSetupStep({ data, onComplete, onPrevious }: WalletSetupStepProps) {
   const [wallets, setWallets] = useState<Record<string, string>>(data.wallets || {})
   const [validationStatus, setValidationStatus] = useState<Record<string, 'valid' | 'invalid' | 'checking'>>({})
@@ -152,12 +148,13 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
           // Filter out currencies that are already in our groups
           const groupedCodes = CURRENCY_GROUPS.flatMap(group => [
             group.primary?.code,
-            ...group.compatible.map(c => c.code)
+            ...group.compatible.map((c: CompatibleCurrency) => c.code)
           ]).filter(Boolean)
           
           const additional = result.currencies.filter((c: CurrencyInfo) => 
             !groupedCodes.includes(c.code) && c.enabled
           )
+          console.log(`📊 Loaded ${additional.length} additional currencies:`, additional.map((c: CurrencyInfo) => c.code))
           setAdditionalCurrencies(additional)
         }
       }
@@ -169,29 +166,31 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
   }
 
   const validateAddress = async (currency: string, address: string) => {
+    console.log(`🔍 Starting validation for ${currency} with address: ${address}`)
+    
     if (!address.trim()) {
+      console.log(`❌ Empty address for ${currency}`)
       setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }))
       return false
     }
 
     setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }))
+    console.log(`⏳ Set ${currency} status to checking`)
 
     try {
-      // Map currency code for validation API
-      const validationCurrency = CURRENCY_CODE_MAPPING[currency] || currency
-
       const response = await fetch('/api/wallets/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          currency: validationCurrency.toUpperCase(),
+          currency: currency.toUpperCase(),
           address: address.trim()
         })
       })
 
       const result = await response.json()
+      console.log(`📨 Validation response for ${currency}:`, result)
       
       // The API returns { success: true, validation: { valid: boolean, ... } }
       const isValid = result.success && result.validation?.valid
@@ -201,28 +200,39 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
         [currency]: isValid ? 'valid' : 'invalid' 
       }))
 
+      console.log(`✅ Set ${currency} validation status to: ${isValid ? 'valid' : 'invalid'}`)
+
       if (!isValid) {
         const errorMsg = result.validation?.error || result.error || 'Invalid address format'
         toast.error(`Invalid ${currency} address: ${errorMsg}`)
+        console.log(`❌ Validation failed for ${currency}: ${errorMsg}`)
+      } else {
+        console.log(`✅ Validation passed for ${currency}`)
       }
 
       return isValid
     } catch (error) {
-      console.error('Address validation error:', error)
+      console.error(`💥 Address validation error for ${currency}:`, error)
       setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }))
       toast.error(`Failed to validate ${currency} address`)
       return false
     }
   }
 
-  const autoFillCompatibleCurrencies = (primaryCurrency: string, address: string) => {
+  const autoFillCompatibleCurrencies = async (primaryCurrency: string, address: string) => {
+    console.log(`⚡ Starting auto-fill for ${primaryCurrency} with address: ${address}`)
+    
     const group = CURRENCY_GROUPS.find(g => g.primary?.code === primaryCurrency)
-    if (!group || !group.compatible.length) return
+    if (!group || !group.compatible.length) {
+      console.log(`❌ No compatible currencies found for ${primaryCurrency}`)
+      return
+    }
 
     const newAutoFilled: string[] = []
 
-    // Create a new wallets object without modifying the primary currency
+    // Update wallets state with auto-filled addresses
     setWallets(prevWallets => {
+      console.log(`📝 Current wallets state:`, prevWallets)
       const updatedWallets = { ...prevWallets }
       
       group.compatible.forEach(compatible => {
@@ -230,84 +240,133 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
         if (!updatedWallets[compatible.code]?.trim()) {
           updatedWallets[compatible.code] = address
           newAutoFilled.push(compatible.code)
+          console.log(`⚡ Auto-filled ${compatible.code} with address: ${address}`)
+        } else {
+          console.log(`⏭️ Skipping ${compatible.code} - already has address: ${updatedWallets[compatible.code]}`)
         }
       })
 
+      console.log(`📝 Updated wallets state:`, updatedWallets)
       return updatedWallets
     })
 
     if (newAutoFilled.length > 0) {
-      setAutoFilledCurrencies(prev => [...prev, ...newAutoFilled])
-      
-      // Validate auto-filled currencies
-      newAutoFilled.forEach(code => {
-        setTimeout(() => validateAddress(code, address), 300)
+      setAutoFilledCurrencies(prev => {
+        const updated = [...prev, ...newAutoFilled]
+        console.log(`📋 Auto-filled currencies list updated:`, updated)
+        return updated
       })
       
+      // Validate auto-filled currencies with increased delay
+      console.log(`🔄 Starting validation for ${newAutoFilled.length} auto-filled currencies`)
+      
+      for (const code of newAutoFilled) {
+        console.log(`⏰ Scheduling validation for ${code} in 1000ms`)
+        setTimeout(async () => {
+          console.log(`🔍 Validating auto-filled currency: ${code}`)
+          await validateAddress(code, address)
+        }, 1000)
+      }
+      
       const compatibleNames = newAutoFilled.map(code => 
-        group.compatible.find(c => c.code === code)?.name
+        group.compatible.find((c: CompatibleCurrency) => c.code === code)?.name
       ).join(', ')
       
       toast.success(`Auto-filled compatible currencies: ${compatibleNames}`, {
         duration: 4000,
         icon: '⚡'
       })
+      
+      console.log(`✅ Auto-fill completed for: ${compatibleNames}`)
+    } else {
+      console.log(`ℹ️ No new currencies to auto-fill`)
     }
   }
 
   const handleAddressChange = (currency: string, address: string) => {
-    // Update the wallet address - use functional update to avoid race conditions
-    setWallets(prev => ({ ...prev, [currency]: address }))
+    console.log(`📝 Address change for ${currency}: "${address}"`)
+    
+    // Update the wallet address
+    setWallets(prev => {
+      const updated = { ...prev, [currency]: address }
+      console.log(`💾 Updated wallets state for ${currency}:`, updated)
+      return updated
+    })
     
     // Remove from auto-filled list if manually changed
     if (autoFilledCurrencies.includes(currency)) {
-      setAutoFilledCurrencies(prev => prev.filter(c => c !== currency))
+      setAutoFilledCurrencies(prev => {
+        const updated = prev.filter(c => c !== currency)
+        console.log(`📋 Removed ${currency} from auto-filled list:`, updated)
+        return updated
+      })
     }
     
     // Clear existing timeout for this currency
     if (validationTimeouts[currency]) {
+      console.log(`⏰ Clearing existing timeout for ${currency}`)
       clearTimeout(validationTimeouts[currency])
     }
     
     // Set new validation timeout
     const timeout = setTimeout(async () => {
+      console.log(`⏰ Validation timeout triggered for ${currency}`)
+      
       if (address.trim()) {
         const isValid = await validateAddress(currency, address)
         
         // Auto-fill compatible currencies if this is a primary currency and validation passed
         if (isValid) {
           const isPrimary = CURRENCY_GROUPS.some(group => group.primary?.code === currency)
+          console.log(`🔍 Is ${currency} a primary currency? ${isPrimary}`)
+          
           if (isPrimary) {
+            console.log(`⚡ Triggering auto-fill for primary currency ${currency}`)
             // Wait a bit more to ensure validation is complete
             setTimeout(() => {
               autoFillCompatibleCurrencies(currency, address)
-            }, 1000)
+            }, 500)
           }
         }
       } else {
+        console.log(`🧹 Clearing validation status for empty ${currency}`)
         setValidationStatus(prev => {
           const updated = { ...prev }
           delete updated[currency]
           return updated
         })
       }
-    }, 1000) // Increased debounce time
+    }, 1200) // Increased debounce time
     
-    setValidationTimeouts(prev => ({ ...prev, [currency]: timeout }))
+    setValidationTimeouts(prev => {
+      const updated = { ...prev, [currency]: timeout }
+      console.log(`⏰ Set validation timeout for ${currency}`)
+      return updated
+    })
   }
 
   const handleRemoveWallet = (currency: string) => {
+    console.log(`🗑️ Removing wallet for ${currency}`)
+    
     setWallets(prev => {
       const updated = { ...prev }
       delete updated[currency]
+      console.log(`💾 Updated wallets after removal:`, updated)
       return updated
     })
+    
     setValidationStatus(prev => {
       const updated = { ...prev }
       delete updated[currency]
+      console.log(`📊 Updated validation status after removal:`, updated)
       return updated
     })
-    setAutoFilledCurrencies(prev => prev.filter(c => c !== currency))
+    
+    setAutoFilledCurrencies(prev => {
+      const updated = prev.filter(c => c !== currency)
+      console.log(`📋 Updated auto-filled list after removal:`, updated)
+      return updated
+    })
     
     // Clear timeout if exists
     if (validationTimeouts[currency]) {
@@ -315,6 +374,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       setValidationTimeouts(prev => {
         const updated = { ...prev }
         delete updated[currency]
+        console.log(`⏰ Cleared timeout for ${currency}`)
         return updated
       })
     }
@@ -339,7 +399,9 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
   }
 
   const getConfiguredCurrenciesCount = () => {
-    return Object.values(wallets).filter(address => address?.trim()).length
+    const count = Object.values(wallets).filter(address => address?.trim()).length
+    console.log(`📊 Configured currencies count: ${count}`)
+    return count
   }
 
   const canProceed = () => {
@@ -348,10 +410,14 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
     // Check that all provided addresses are valid
     const allValid = Object.entries(wallets).every(([currency, address]) => {
       if (!address?.trim()) return true // Empty addresses are okay
-      return validationStatus[currency] === 'valid'
+      const isValid = validationStatus[currency] === 'valid'
+      console.log(`✅ ${currency}: ${address ? 'has address' : 'empty'}, valid: ${isValid}`)
+      return isValid
     })
 
-    return hasMinimumRequired && allValid
+    const canProceedResult = hasMinimumRequired && allValid
+    console.log(`🚦 Can proceed? ${canProceedResult} (min required: ${hasMinimumRequired}, all valid: ${allValid})`)
+    return canProceedResult
   }
 
   const handleSubmit = async () => {
@@ -370,6 +436,8 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
         }
         return acc
       }, {} as Record<string, string>)
+
+      console.log(`💾 Submitting wallet config:`, validWallets)
 
       const walletConfigData: WalletConfigData = {
         wallets: validWallets,
@@ -403,6 +471,13 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
     currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     currency.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Debug info
+  useEffect(() => {
+    console.log(`🔄 State update - Wallets:`, wallets)
+    console.log(`🔄 State update - Validation Status:`, validationStatus)
+    console.log(`🔄 State update - Auto-filled:`, autoFilledCurrencies)
+  }, [wallets, validationStatus, autoFilledCurrencies])
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
