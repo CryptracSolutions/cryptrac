@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
-import { ArrowRight, ArrowLeft, Settings, DollarSign, HelpCircle, Info, Loader2 } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Settings, DollarSign, HelpCircle, Info, Loader2, Shield } from 'lucide-react'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Badge } from '@/app/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
@@ -33,6 +33,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   const [formData, setFormData] = useState<PaymentConfigData>({
     ...data,
     chargeCustomerFee: data.chargeCustomerFee ?? false,
+    autoForward: true, // Always enabled for non-custodial compliance
     // Auto-set accepted cryptos from wallet config
     acceptedCryptos: data.acceptedCryptos.length > 0 ? data.acceptedCryptos : Object.keys(walletConfig.wallets || {})
   })
@@ -75,9 +76,11 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
       setIsSubmitting(true)
       
       // Ensure accepted cryptos includes all configured wallet currencies
+      // and autoForward is always true for non-custodial compliance
       const finalData = {
         ...formData,
-        acceptedCryptos: configuredCurrencies // Always use wallet configured currencies
+        acceptedCryptos: configuredCurrencies, // Always use wallet configured currencies
+        autoForward: true // Always enabled for non-custodial compliance
       }
       
       onComplete(finalData)
@@ -104,6 +107,15 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* Non-Custodial Compliance Notice */}
+        <Alert className="border-green-200 bg-green-50">
+          <Shield className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <strong>Non-Custodial Security:</strong> Cryptrac automatically forwards all payments directly to your wallet addresses 
+            immediately upon confirmation. We never hold your funds, ensuring maximum security and regulatory compliance.
+          </AlertDescription>
+        </Alert>
+
         {/* Configured Cryptocurrencies Display */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
@@ -292,32 +304,6 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 </p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Auto-Forward Setting */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Payment Forwarding</h3>
-          
-          <div className="flex items-center space-x-3">
-            <Checkbox
-              checked={formData.autoForward}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ 
-                  ...prev, 
-                  autoForward: !!checked 
-                }))
-              }
-            />
-            <div>
-              <div className="font-medium text-gray-900">Enable Auto-Forward</div>
-              <div className="text-sm text-gray-600">
-                Automatically forward payments to your wallet addresses immediately upon confirmation
-              </div>
-              <div className="text-xs text-blue-600 mt-1">
-                ✓ Recommended for faster access to your funds
-              </div>
-            </div>
           </div>
         </div>
 

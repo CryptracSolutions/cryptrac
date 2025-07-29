@@ -47,7 +47,8 @@ export async function GET() {
         auto_convert_enabled,
         preferred_payout_currency,
         wallets,
-        payment_config
+        payment_config,
+        charge_customer_fee
       `)
       .eq('user_id', user.id)
       .single();
@@ -65,10 +66,13 @@ export async function GET() {
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency || null,
         wallets: merchant.wallets || {},
-        payment_config: merchant.payment_config || {
+        charge_customer_fee: merchant.charge_customer_fee || false,
+        payment_config: {
+          // Always enable auto_forward for non-custodial compliance
           auto_forward: true,
           fee_percentage: 0.5,
-          auto_convert_fee: 1.0
+          auto_convert_fee: 1.0,
+          ...(merchant.payment_config || {})
         }
       }
     });
@@ -93,9 +97,10 @@ export async function PUT(request: NextRequest) {
       auto_convert_enabled: boolean;
       preferred_payout_currency: string | null;
       wallets: Record<string, string>;
+      charge_customer_fee: boolean;
     } = await request.json();
     
-    const { auto_convert_enabled, preferred_payout_currency, wallets } = requestData;
+    const { auto_convert_enabled, preferred_payout_currency, wallets, charge_customer_fee } = requestData;
 
     // Initialize Supabase client
     const cookieStore = await cookies();
@@ -154,6 +159,8 @@ export async function PUT(request: NextRequest) {
       auto_convert_enabled?: boolean;
       preferred_payout_currency?: string | null;
       wallets?: Record<string, string>;
+      charge_customer_fee?: boolean;
+      payment_config?: any;
     } = {
       updated_at: new Date().toISOString()
     };
@@ -170,6 +177,17 @@ export async function PUT(request: NextRequest) {
       updateData.wallets = wallets;
     }
 
+    if (typeof charge_customer_fee === 'boolean') {
+      updateData.charge_customer_fee = charge_customer_fee;
+    }
+
+    // Always ensure payment_config has auto_forward: true for non-custodial compliance
+    updateData.payment_config = {
+      auto_forward: true, // Always enabled for non-custodial compliance
+      fee_percentage: 0.5,
+      auto_convert_fee: 1.0
+    };
+
     const { data: merchant, error: updateError } = await supabase
       .from('merchants')
       .update(updateData)
@@ -180,7 +198,8 @@ export async function PUT(request: NextRequest) {
         auto_convert_enabled,
         preferred_payout_currency,
         wallets,
-        payment_config
+        payment_config,
+        charge_customer_fee
       `)
       .single();
 
@@ -199,10 +218,13 @@ export async function PUT(request: NextRequest) {
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency || null,
         wallets: merchant.wallets || {},
-        payment_config: merchant.payment_config || {
+        charge_customer_fee: merchant.charge_customer_fee || false,
+        payment_config: {
+          // Always enable auto_forward for non-custodial compliance
           auto_forward: true,
           fee_percentage: 0.5,
-          auto_convert_fee: 1.0
+          auto_convert_fee: 1.0,
+          ...(merchant.payment_config || {})
         }
       }
     });
