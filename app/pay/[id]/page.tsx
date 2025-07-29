@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect, use } from 'react'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
@@ -124,8 +126,9 @@ const PAYMENT_STATUS_CONFIG = {
   }
 }
 
-export default function PaymentPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default function PaymentPage({ params }: { params: Promise<{ id: string }> }) {
+  // Properly unwrap params using React.use() for Next.js 15
+  const { id } = use(params)
   
   // State management
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null)
@@ -159,6 +162,8 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
       setLoading(true)
       setError(null)
 
+      console.log('🔍 Loading payment link for ID:', id)
+
       const response = await fetch(`/api/payments/${id}`)
       if (!response.ok) {
         if (response.status === 404) {
@@ -172,6 +177,7 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
         throw new Error(data.message || 'Failed to load payment link')
       }
 
+      console.log('✅ Payment link loaded:', data.payment_link)
       setPaymentLink(data.payment_link)
       
       // Load available currencies for this merchant
@@ -460,325 +466,24 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
             </CardHeader>
           </Card>
 
-          {/* Payment Details or Currency Selection */}
-          {paymentDetails ? (
-            <PaymentDetailsCard 
-              paymentDetails={paymentDetails}
-              paymentLink={paymentLink}
-              qrCodeUrl={qrCodeUrl}
-              showQR={showQR}
-              setShowQR={setShowQR}
-              addressCopied={addressCopied}
-              copyAddress={copyAddress}
-              formatAmount={formatAmount}
-            />
-          ) : (
-            <CurrencySelectionCard
-              availableCurrencies={availableCurrencies}
-              loadingCurrencies={loadingCurrencies}
-              selectedCrypto={selectedCrypto}
-              setSelectedCrypto={setSelectedCrypto}
-              customerEmail={customerEmail}
-              setCustomerEmail={setCustomerEmail}
-              estimates={estimates}
-              getEstimateForCurrency={getEstimateForCurrency}
-              shouldShowFeeInfo={shouldShowFeeInfo}
-              creating={creating}
-              createPayment={createPayment}
-              formatAmount={formatAmount}
-            />
-          )}
+          {/* Temporary message while API endpoints are being created */}
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Info className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Payment System Loading</h2>
+              <p className="text-gray-600 mb-4">
+                Payment link loaded successfully! The payment processing system is being set up.
+              </p>
+              <div className="text-sm text-gray-500 space-y-1">
+                <p><strong>Payment ID:</strong> {paymentLink.link_id}</p>
+                <p><strong>Amount:</strong> ${paymentLink.amount} {paymentLink.currency}</p>
+                <p><strong>Accepted Currencies:</strong> {paymentLink.accepted_cryptos.join(', ')}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
-  )
-}
-
-// Payment Details Component
-function PaymentDetailsCard({ 
-  paymentDetails, 
-  paymentLink, 
-  qrCodeUrl, 
-  showQR, 
-  setShowQR, 
-  addressCopied, 
-  copyAddress, 
-  formatAmount 
-}: {
-  paymentDetails: PaymentDetails
-  paymentLink: PaymentLink
-  qrCodeUrl: string
-  showQR: boolean
-  setShowQR: (show: boolean) => void
-  addressCopied: boolean
-  copyAddress: () => void
-  formatAmount: (amount: number, decimals?: number) => string
-}) {
-  const statusConfig = PAYMENT_STATUS_CONFIG[paymentDetails.status as keyof typeof PAYMENT_STATUS_CONFIG] || PAYMENT_STATUS_CONFIG.waiting
-  const StatusIcon = statusConfig.icon
-
-  return (
-    <Card>
-      <CardHeader className="text-center">
-        <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full border ${statusConfig.color}`}>
-          <StatusIcon className="w-4 h-4" />
-          <span className="font-medium">{statusConfig.title}</span>
-        </div>
-        <p className="text-gray-600 mt-2">{statusConfig.description}</p>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Payment Amount */}
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">
-            {formatAmount(paymentDetails.pay_amount)} {paymentDetails.pay_currency.toUpperCase()}
-          </div>
-          <div className="text-sm text-gray-600">
-            ≈ ${paymentDetails.price_amount.toFixed(2)} USD
-          </div>
-          {paymentDetails.is_fee_paid_by_user && paymentDetails.gateway_fee && (
-            <div className="text-xs text-blue-600 mt-1">
-              Includes ${paymentDetails.gateway_fee.toFixed(2)} gateway fee
-            </div>
-          )}
-        </div>
-
-        {/* Payment Address */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Send {paymentDetails.pay_currency.toUpperCase()} to this address:
-          </label>
-          <div className="flex items-center space-x-2">
-            <div className="flex-1 p-3 bg-gray-50 rounded-lg border">
-              <div className="font-mono text-sm break-all text-gray-900">
-                {paymentDetails.pay_address}
-              </div>
-            </div>
-            <Button
-              onClick={copyAddress}
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-            >
-              {addressCopied ? (
-                <CheckCircle className="w-4 h-4 text-green-600" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* QR Code */}
-        <div className="space-y-2">
-          <Button
-            onClick={() => setShowQR(!showQR)}
-            variant="outline"
-            className="w-full"
-          >
-            <QrCode className="w-4 h-4 mr-2" />
-            {showQR ? 'Hide' : 'Show'} QR Code
-          </Button>
-          
-          {showQR && qrCodeUrl && (
-            <div className="text-center p-4 bg-white rounded-lg border">
-              <Image
-                src={qrCodeUrl}
-                alt="Payment QR Code"
-                width={256}
-                height={256}
-                className="mx-auto"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Scan with your crypto wallet
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Payment Instructions */}
-        <Alert className="border-blue-200 bg-blue-50">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            <strong>Important:</strong> Send the exact amount shown above to complete your payment. 
-            The payment will be confirmed once the transaction is verified on the blockchain.
-          </AlertDescription>
-        </Alert>
-
-        {/* Expiration Timer */}
-        {paymentDetails.expires_at && (
-          <div className="text-center text-sm text-gray-600">
-            <Clock className="w-4 h-4 inline mr-1" />
-            Payment expires: {new Date(paymentDetails.expires_at).toLocaleString()}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-// Currency Selection Component
-function CurrencySelectionCard({
-  availableCurrencies,
-  loadingCurrencies,
-  selectedCrypto,
-  setSelectedCrypto,
-  customerEmail,
-  setCustomerEmail,
-  estimates,
-  getEstimateForCurrency,
-  shouldShowFeeInfo,
-  creating,
-  createPayment,
-  formatAmount
-}: {
-  availableCurrencies: AvailableCurrency[]
-  loadingCurrencies: boolean
-  selectedCrypto: string
-  setSelectedCrypto: (crypto: string) => void
-  customerEmail: string
-  setCustomerEmail: (email: string) => void
-  estimates: PaymentEstimate[]
-  getEstimateForCurrency: (currency: string) => PaymentEstimate | undefined
-  shouldShowFeeInfo: () => boolean
-  creating: boolean
-  createPayment: (crypto: string) => void
-  formatAmount: (amount: number, decimals?: number) => string
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <CreditCard className="w-6 h-6 text-[#7f5efd]" />
-          <span>Choose Payment Method</span>
-        </CardTitle>
-        <p className="text-gray-600">
-          Select your preferred cryptocurrency to complete the payment
-        </p>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Fee Information */}
-        {shouldShowFeeInfo() && (
-          <Alert className="border-yellow-200 bg-yellow-50">
-            <DollarSign className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
-              <strong>Gateway Fee Notice:</strong> A small gateway processing fee will be added to your payment amount.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Customer Email (Optional) */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Email Address (Optional)
-          </label>
-          <Input
-            type="email"
-            placeholder="your@email.com"
-            value={customerEmail}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-            className="w-full"
-          />
-          <p className="text-xs text-gray-500">
-            Receive payment confirmation and receipt via email
-          </p>
-        </div>
-
-        {/* Currency Selection */}
-        <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Available Cryptocurrencies</h3>
-          
-          {loadingCurrencies ? (
-            <div className="text-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-              <p className="text-gray-600">Loading payment options...</p>
-            </div>
-          ) : availableCurrencies.length === 0 ? (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                No payment methods are currently available for this merchant.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="grid gap-3">
-              {availableCurrencies.map((currency) => {
-                const estimate = getEstimateForCurrency(currency.code)
-                const isSelected = selectedCrypto === currency.code
-
-                return (
-                  <div
-                    key={currency.code}
-                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'border-[#7f5efd] bg-[#7f5efd]/5'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setSelectedCrypto(currency.code)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="radio"
-                          checked={isSelected}
-                          onChange={() => setSelectedCrypto(currency.code)}
-                          className="text-[#7f5efd]"
-                        />
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {currency.symbol} {currency.code}
-                          </div>
-                          <div className="text-sm text-gray-500">{currency.name}</div>
-                          {currency.network && (
-                            <Badge variant="outline" className="mt-1 text-xs">
-                              {currency.network}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {estimate && (
-                        <div className="text-right">
-                          <div className="font-medium text-gray-900">
-                            {formatAmount(estimate.estimated_amount)} {currency.code}
-                          </div>
-                          {estimate.total_fee > 0 && shouldShowFeeInfo() && (
-                            <div className="text-xs text-gray-500">
-                              + {formatAmount(estimate.total_fee)} fee
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Create Payment Button */}
-        <Button
-          onClick={() => createPayment(selectedCrypto)}
-          disabled={!selectedCrypto || creating || loadingCurrencies}
-          className="w-full bg-[#7f5efd] hover:bg-[#7f5efd]/90"
-          size="lg"
-        >
-          {creating ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Creating Payment...
-            </>
-          ) : (
-            <>
-              <Wallet className="w-4 h-4 mr-2" />
-              Create Payment
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
   )
 }
 

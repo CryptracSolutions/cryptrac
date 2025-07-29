@@ -57,7 +57,6 @@ interface FormData {
   acceptedCryptos: string[]
   expiresAt: string
   maxUses: string
-  redirectUrl: string
   chargeCustomerFee: boolean | null // null = inherit from merchant global setting
   autoConvertEnabled: boolean | null // null = inherit from merchant global setting
   preferredPayoutCurrency: string | null // null = inherit from merchant global setting
@@ -79,7 +78,6 @@ interface CreatedPaymentLink {
   accepted_cryptos: string[]
   expires_at: string | null
   max_uses: number | null
-  redirect_url: string | null
   charge_customer_fee: boolean | null
 }
 
@@ -87,6 +85,16 @@ interface MerchantSettings {
   charge_customer_fee: boolean
   auto_convert_enabled: boolean
   preferred_payout_currency: string | null
+}
+
+// Generate a unique, URL-safe link ID
+const generateLinkId = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  for (let i = 0; i < 12; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
 }
 
 export default function CreatePaymentPage() {
@@ -105,54 +113,124 @@ export default function CreatePaymentPage() {
     acceptedCryptos: [],
     expiresAt: '',
     maxUses: '',
-    redirectUrl: '',
-    chargeCustomerFee: null, // inherit from merchant
-    autoConvertEnabled: null, // inherit from merchant
-    preferredPayoutCurrency: null // inherit from merchant
+    chargeCustomerFee: null, // null = inherit from merchant global setting
+    autoConvertEnabled: null, // null = inherit from merchant global setting
+    preferredPayoutCurrency: null // null = inherit from merchant global setting
   })
-  
+
   const [errors, setErrors] = useState<FormErrors>({})
 
+  // Load merchant settings and available currencies
   useEffect(() => {
-    loadMerchantSupportedCurrencies()
+    loadMerchantData()
   }, [])
 
-  const loadMerchantSupportedCurrencies = async () => {
+  const loadMerchantData = async () => {
     try {
-      setLoadingCurrencies(true)
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
       
-      // Load merchant's supported currencies (only those with wallet addresses)
-      const response = await fetch('/api/merchants/supported-currencies')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setAvailableCurrencies(data.currencies)
-          setMerchantSettings({
-            charge_customer_fee: data.charge_customer_fee,
-            auto_convert_enabled: false, // Will be loaded from merchant settings
-            preferred_payout_currency: null // Will be loaded from merchant settings
-          })
-          
-          // Pre-select all available currencies if merchant has wallets
-          if (data.currencies.length > 0) {
-            setFormData(prev => ({
-              ...prev,
-              acceptedCryptos: data.currencies.map((c: CurrencyInfo) => c.code)
-            }))
-          }
-        } else {
-          // No wallet addresses configured
-          setAvailableCurrencies([])
-          toast.error(data.message || 'No wallet addresses configured')
-        }
-      } else {
-        throw new Error('Failed to load supported currencies')
+      if (authError || !user) {
+        router.push('/auth/login')
+        return
       }
-      
+
+      // Load merchant settings
+      const { data: merchant, error: merchantError } = await supabase
+        .from('merchants')
+        .select('charge_customer_fee, auto_convert_enabled, preferred_payout_currency, wallets')
+        .eq('user_id', user.id)
+        .single()
+
+      if (merchantError) {
+        console.error('Error loading merchant:', merchantError)
+        toast.error('Failed to load merchant settings')
+        return
+      }
+
+      console.log('✅ Merchant loaded:', merchant)
+
+      setMerchantSettings({
+        charge_customer_fee: merchant.charge_customer_fee || false,
+        auto_convert_enabled: merchant.auto_convert_enabled || false,
+        preferred_payout_currency: merchant.preferred_payout_currency
+      })
+
+      // Load available currencies with proper error handling
+      try {
+        console.log('📡 Fetching currencies from API...')
+        const response = await fetch('/api/currencies?popular=true')
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const currenciesData = await response.json()
+        console.log('📨 Currencies API response:', currenciesData)
+
+        if (!currenciesData || !currenciesData.success) {
+          throw new Error('Invalid API response format')
+        }
+
+        // Filter currencies to only show those with configured wallet addresses
+        const merchantWallets = merchant.wallets || {}
+        console.log('💰 Merchant wallets:', merchantWallets)
+        
+        const availableCurrencies = currenciesData.currencies.filter((currency: CurrencyInfo) => {
+          const hasWallet = merchantWallets[currency.code]
+          console.log(`🔍 ${currency.code}: has wallet = ${!!hasWallet}`)
+          return hasWallet && currency.enabled
+        }).map((currency: CurrencyInfo) => ({
+          ...currency,
+          has_wallet: true,
+          wallet_address: merchantWallets[currency.code]
+        }))
+
+        console.log('✅ Available currencies after filtering:', availableCurrencies)
+        setAvailableCurrencies(availableCurrencies)
+        
+        // Auto-select all available currencies as default
+        setFormData(prev => ({
+          ...prev,
+          acceptedCryptos: availableCurrencies.map((c: CurrencyInfo) => c.code)
+        }))
+
+      } catch (currencyError) {
+        console.error('Error loading currencies:', currencyError)
+        
+        // Fallback: Use merchant wallets directly if API fails
+        const merchantWallets = merchant.wallets || {}
+        const fallbackCurrencies = Object.keys(merchantWallets).map(code => ({
+          code,
+          name: code,
+          symbol: code,
+          network: 'Unknown',
+          enabled: true,
+          min_amount: 0.00000001,
+          max_amount: 1000000,
+          decimals: 8,
+          has_wallet: true,
+          wallet_address: merchantWallets[code],
+          display_name: code
+        }))
+
+        console.log('🔄 Using fallback currencies from merchant wallets:', fallbackCurrencies)
+        setAvailableCurrencies(fallbackCurrencies)
+        
+        setFormData(prev => ({
+          ...prev,
+          acceptedCryptos: fallbackCurrencies.map(c => c.code)
+        }))
+
+        if (fallbackCurrencies.length === 0) {
+          toast.error('No configured wallet addresses found. Please configure wallets in settings.')
+        } else {
+          toast.success(`Loaded ${fallbackCurrencies.length} currencies from your wallet configuration`)
+        }
+      }
+
     } catch (error) {
-      console.error('Failed to load merchant currencies:', error)
-      toast.error('Failed to load available currencies. Please configure wallet addresses in your settings.')
-      setAvailableCurrencies([])
+      console.error('Error loading merchant data:', error)
+      toast.error('Failed to load merchant data')
     } finally {
       setLoadingCurrencies(false)
     }
@@ -162,54 +240,27 @@ export default function CreatePaymentPage() {
     const newErrors: FormErrors = {}
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required'
+      newErrors.title = 'Payment title is required'
     }
 
-    if (!formData.amount.trim()) {
-      newErrors.amount = 'Amount is required'
-    } else {
-      const amount = parseFloat(formData.amount)
-      if (isNaN(amount) || amount <= 0) {
-        newErrors.amount = 'Amount must be a positive number'
-      }
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      newErrors.amount = 'Valid amount is required'
     }
 
     if (formData.acceptedCryptos.length === 0) {
-      newErrors.acceptedCryptos = 'Please select at least one cryptocurrency'
+      newErrors.acceptedCryptos = 'At least one cryptocurrency must be selected'
     }
 
     if (formData.expiresAt && new Date(formData.expiresAt) <= new Date()) {
       newErrors.expiresAt = 'Expiration date must be in the future'
     }
 
-    if (formData.maxUses && (parseInt(formData.maxUses) <= 0 || !Number.isInteger(parseFloat(formData.maxUses)))) {
-      newErrors.maxUses = 'Max uses must be a positive integer'
-    }
-
-    if (formData.redirectUrl && !isValidUrl(formData.redirectUrl)) {
-      newErrors.redirectUrl = 'Please enter a valid URL'
-    }
-
-    // Validate that all selected cryptocurrencies have wallet addresses
-    const invalidCryptos = formData.acceptedCryptos.filter(crypto => 
-      !availableCurrencies.find(c => c.code === crypto && c.has_wallet)
-    )
-    
-    if (invalidCryptos.length > 0) {
-      newErrors.acceptedCryptos = `Missing wallet addresses for: ${invalidCryptos.join(', ')}`
+    if (formData.maxUses && parseInt(formData.maxUses) <= 0) {
+      newErrors.maxUses = 'Max uses must be greater than 0'
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
-
-  const isValidUrl = (string: string): boolean => {
-    try {
-      new URL(string)
-      return true
-    } catch {
-      return false
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -238,13 +289,43 @@ export default function CreatePaymentPage() {
         .single()
 
       if (merchantError || !merchant) {
+        console.error('Error fetching merchant:', merchantError)
         toast.error('Merchant account not found')
         return
       }
 
-      // Create payment link with new fields
+      // Generate unique link ID
+      let linkId = generateLinkId()
+      
+      // Ensure link ID is unique (check database)
+      let isUnique = false
+      let attempts = 0
+      while (!isUnique && attempts < 5) {
+        const { data: existingLink } = await supabase
+          .from('payment_links')
+          .select('id')
+          .eq('link_id', linkId)
+          .single()
+        
+        if (!existingLink) {
+          isUnique = true
+        } else {
+          linkId = generateLinkId()
+          attempts++
+        }
+      }
+
+      if (!isUnique) {
+        toast.error('Failed to generate unique link ID. Please try again.')
+        return
+      }
+
+      console.log('🔗 Generated unique link ID:', linkId)
+
+      // Create payment link with correct database schema
       const paymentData = {
         merchant_id: merchant.id,
+        link_id: linkId, // Add the generated link ID
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         amount: parseFloat(formData.amount),
@@ -252,12 +333,13 @@ export default function CreatePaymentPage() {
         accepted_cryptos: formData.acceptedCryptos,
         expires_at: formData.expiresAt || null,
         max_uses: formData.maxUses ? parseInt(formData.maxUses) : null,
-        redirect_url: formData.redirectUrl.trim() || null,
         charge_customer_fee: formData.chargeCustomerFee, // null = inherit from merchant
         auto_convert_enabled: formData.autoConvertEnabled, // null = inherit from merchant
         preferred_payout_currency: formData.preferredPayoutCurrency, // null = inherit from merchant
-        is_active: true
+        status: 'active' // Use 'status' column instead of 'is_active'
       }
+
+      console.log('🔗 Creating payment link with data:', paymentData)
 
       const { data: createdPayment, error: createError } = await supabase
         .from('payment_links')
@@ -272,7 +354,6 @@ export default function CreatePaymentPage() {
           accepted_cryptos,
           expires_at,
           max_uses,
-          redirect_url,
           charge_customer_fee
         `)
         .single()
@@ -282,6 +363,8 @@ export default function CreatePaymentPage() {
         toast.error('Failed to create payment link')
         return
       }
+
+      console.log('✅ Payment link created successfully:', createdPayment)
 
       // Generate payment URL and QR code data
       const baseUrl = window.location.origin
@@ -304,185 +387,189 @@ export default function CreatePaymentPage() {
     }
   }
 
-  const handleCryptoToggle = (crypto: string) => {
-    setFormData(prev => ({
-      ...prev,
-      acceptedCryptos: prev.acceptedCryptos.includes(crypto)
-        ? prev.acceptedCryptos.filter(c => c !== crypto)
-        : [...prev.acceptedCryptos, crypto]
-    }))
-    
-    // Clear error when user makes selection
-    if (errors.acceptedCryptos) {
-      setErrors(prev => ({ ...prev, acceptedCryptos: '' }))
+  const handleCopyLink = () => {
+    if (createdLink) {
+      navigator.clipboard.writeText(createdLink.payment_url)
+      toast.success('Payment link copied to clipboard!')
     }
   }
 
-  const copyToClipboard = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success(`${label} copied to clipboard!`)
-    } catch {
-      toast.error('Failed to copy to clipboard')
+  const handleCopyLinkId = () => {
+    if (createdLink) {
+      navigator.clipboard.writeText(createdLink.link_id)
+      toast.success('Link ID copied to clipboard!')
     }
   }
 
-  const getCurrencyInfo = (code: string) => {
-    return availableCurrencies.find(c => c.code === code) || {
-      code,
-      name: code,
-      symbol: code,
-      enabled: true,
-      min_amount: 0.00000001,
-      decimals: 8,
-      trust_wallet_compatible: true,
-      has_wallet: false
-    }
+  const resetForm = () => {
+    setCreatedLink(null)
+    setFormData({
+      title: '',
+      description: '',
+      amount: '',
+      currency: 'USD',
+      acceptedCryptos: availableCurrencies.map(c => c.code),
+      expiresAt: '',
+      maxUses: '',
+      chargeCustomerFee: null,
+      autoConvertEnabled: null,
+      preferredPayoutCurrency: null
+    })
+    setErrors({})
   }
 
-  const getEstimatedCryptoAmount = (currency: CurrencyInfo) => {
-    if (!formData.amount || !currency.rate_usd) return null
-    
-    const usdAmount = parseFloat(formData.amount)
-    if (isNaN(usdAmount)) return null
-    
-    const cryptoAmount = usdAmount / currency.rate_usd
-    return cryptoAmount.toFixed(currency.decimals)
+  const getCurrencyDisplayName = (code: string) => {
+    const currency = availableCurrencies.find(c => c.code === code)
+    return currency?.display_name || currency?.name || code
   }
 
-  const getNetworkBadgeColor = (network: string) => {
-    const colorMap: Record<string, string> = {
-      'Bitcoin': 'bg-orange-100 text-orange-800',
-      'Ethereum': 'bg-blue-100 text-blue-800',
-      'BSC': 'bg-yellow-100 text-yellow-800',
-      'Solana': 'bg-green-100 text-green-800',
-      'Tron': 'bg-red-100 text-red-800',
-      'TON': 'bg-indigo-100 text-indigo-800',
-      'Dogecoin': 'bg-amber-100 text-amber-800',
-      'XRP Ledger': 'bg-purple-100 text-purple-800',
-      'Sui': 'bg-cyan-100 text-cyan-800',
-      'Avalanche': 'bg-rose-100 text-rose-800'
-    }
-    return colorMap[network] || 'bg-gray-100 text-gray-800'
+  const getInheritedValue = (value: boolean | null, merchantDefault: boolean) => {
+    return value !== null ? value : merchantDefault
+  }
+
+  if (loadingCurrencies) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#7f5efd]" />
+            <p className="text-gray-600">Loading payment creation form...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   if (createdLink) {
     return (
       <DashboardLayout>
-        <div className="max-w-2xl mx-auto p-6">
-          <Card className="shadow-lg">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <CardTitle className="text-2xl text-green-600">Payment Link Created!</CardTitle>
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/merchant/dashboard/payments')}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Payments
+            </Button>
+            <h1 className="text-3xl font-bold text-gray-900">Payment Link Created!</h1>
+            <p className="text-gray-600 mt-2">Your payment link is ready to use</p>
+          </div>
+
+          {/* Success Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-green-600">
+                <CheckCircle className="w-5 h-5" />
+                <span>Payment Link Successfully Created</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">{createdLink.title}</h3>
-                <p className="text-2xl font-bold text-[#7f5efd]">
-                  ${createdLink.amount} {createdLink.currency}
-                </p>
-                <div className="flex flex-wrap justify-center gap-2 mt-2">
-                  {createdLink.accepted_cryptos.map(crypto => {
-                    const currencyInfo = getCurrencyInfo(crypto)
-                    const estimatedAmount = getEstimatedCryptoAmount(currencyInfo)
-                    return (
-                      <Badge key={crypto} variant="secondary" className="text-xs">
-                        {currencyInfo.symbol} {crypto}
-                        {estimatedAmount && (
-                          <span className="ml-1 text-gray-500">
-                            (~{estimatedAmount})
-                          </span>
-                        )}
-                      </Badge>
-                    )
-                  })}
-                </div>
-                
-                {/* Fee information */}
-                <div className="mt-3 text-sm text-gray-600">
-                  {createdLink.charge_customer_fee === true && (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                      Gateway fee charged to customer
-                    </Badge>
-                  )}
-                  {createdLink.charge_customer_fee === false && (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      Gateway fee absorbed by merchant
-                    </Badge>
-                  )}
-                  {createdLink.charge_customer_fee === null && merchantSettings && (
-                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                      Using global setting: {merchantSettings.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-center">
-                <QRCode value={createdLink.qr_code_data} size={200} />
-              </div>
-
-              <div className="space-y-4">
+              {/* Payment Link Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Payment URL
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      value={createdLink.payment_url}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(createdLink.payment_url, 'Payment URL')}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
+                  <h3 className="font-semibold text-gray-900 mb-3">Payment Details</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Title:</span>
+                      <span className="font-medium">{createdLink.title}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Amount:</span>
+                      <span className="font-medium">{createdLink.amount} {createdLink.currency}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Link ID:</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-mono text-xs">{createdLink.link_id}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCopyLinkId}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    {createdLink.expires_at && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Expires:</span>
+                        <span className="font-medium">
+                          {new Date(createdLink.expires_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    {createdLink.max_uses && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Max Uses:</span>
+                        <span className="font-medium">{createdLink.max_uses}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex space-x-2">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">QR Code</h3>
+                  <div className="flex justify-center">
+                    <QRCode value={createdLink.qr_code_data} size={150} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Accepted Cryptocurrencies */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Accepted Cryptocurrencies</h3>
+                <div className="flex flex-wrap gap-2">
+                  {createdLink.accepted_cryptos.map((crypto) => (
+                    <Badge key={crypto} variant="secondary" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                      {getCurrencyDisplayName(crypto)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment URL */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Payment URL</h3>
+                <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
+                  <Input
+                    value={createdLink.payment_url}
+                    readOnly
+                    className="bg-white border-gray-200"
+                  />
+                  <Button onClick={handleCopyLink} variant="outline" size="sm">
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy
+                  </Button>
                   <Button
                     onClick={() => window.open(createdLink.payment_url, '_blank')}
-                    className="flex-1"
                     variant="outline"
+                    size="sm"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Preview
-                  </Button>
-                  <Button
-                    onClick={() => router.push('/merchant/dashboard/payments')}
-                    className="flex-1 bg-[#7f5efd] hover:bg-[#7f5efd]/90"
-                  >
-                    View All Payments
+                    Open
                   </Button>
                 </div>
+              </div>
 
-                <Button
-                  onClick={() => {
-                    setCreatedLink(null)
-                    setFormData({
-                      title: '',
-                      description: '',
-                      amount: '',
-                      currency: 'USD',
-                      acceptedCryptos: availableCurrencies.map(c => c.code),
-                      expiresAt: '',
-                      maxUses: '',
-                      redirectUrl: '',
-                      chargeCustomerFee: null,
-                      autoConvertEnabled: null,
-                      preferredPayoutCurrency: null
-                    })
-                  }}
-                  variant="ghost"
-                  className="w-full"
-                >
-                  Create Another Payment Link
+              {/* Success Flow Info */}
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <strong>Automatic Success Handling:</strong> After payment completion, customers will be automatically redirected to a Cryptrac-branded thank you page with receipt options (text/email).
+                </AlertDescription>
+              </Alert>
+
+              {/* Actions */}
+              <div className="flex space-x-4 pt-4">
+                <Button onClick={resetForm} variant="outline">
+                  Create Another Link
+                </Button>
+                <Button onClick={() => router.push('/merchant/dashboard/payments')}>
+                  View All Payment Links
                 </Button>
               </div>
             </CardContent>
@@ -494,45 +581,62 @@ export default function CreatePaymentPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="flex items-center space-x-4 mb-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
           <Button
             variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
+            onClick={() => router.push('/merchant/dashboard/payments')}
+            className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            Back to Payments
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Create Payment Link</h1>
-            <p className="text-gray-600">Generate a payment link to accept cryptocurrency</p>
-          </div>
+          <h1 className="text-3xl font-bold text-gray-900">Create Payment Link</h1>
+          <p className="text-gray-600 mt-2">Generate a secure payment link for your customers</p>
         </div>
 
-        {/* No wallet addresses warning */}
-        {!loadingCurrencies && availableCurrencies.length === 0 && (
-          <Alert className="mb-6 border-yellow-200 bg-yellow-50">
-            <AlertTriangle className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
-              <strong>No wallet addresses configured.</strong> You need to add wallet addresses for cryptocurrencies 
-              before creating payment links. 
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-yellow-800 underline ml-1"
+        {/* Available Currencies Info */}
+        {availableCurrencies.length === 0 && (
+          <Alert className="mb-6 border-amber-200 bg-amber-50">
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              <strong>No wallet addresses configured.</strong> You need to configure wallet addresses in your{' '}
+              <button
                 onClick={() => router.push('/merchant/settings')}
+                className="underline hover:no-underline"
               >
-                Go to Settings
-              </Button>
+                merchant settings
+              </button>{' '}
+              before creating payment links.
             </AlertDescription>
           </Alert>
         )}
 
-        <Card className="shadow-lg">
+        {availableCurrencies.length > 0 && (
+          <Alert className="mb-6 border-blue-200 bg-blue-50">
+            <Info className="w-4 h-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>Available currencies:</strong> Only cryptocurrencies with configured wallet addresses can be selected for payment links.
+              You have {availableCurrencies.length} currencies available.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Success Flow Info */}
+        <Alert className="mb-6 border-green-200 bg-green-50">
+          <CheckCircle className="w-4 h-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <strong>Automatic Success Handling:</strong> Customers will be automatically redirected to a Cryptrac-branded thank you page after payment completion, with options to receive receipts via text or email.
+          </AlertDescription>
+        </Alert>
+
+        {/* Create Payment Form */}
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <DollarSign className="w-5 h-5 text-[#7f5efd]" />
-              <span>Payment Details</span>
+              <Link2 className="w-5 h-5" />
+              <span>Payment Link Details</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -557,17 +661,17 @@ export default function CreatePaymentPage() {
 
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Description (Optional)
+                    Description
                   </label>
                   <Textarea
-                    placeholder="Additional details about this payment"
+                    placeholder="Optional description for the payment"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">
                       Amount *
@@ -588,14 +692,11 @@ export default function CreatePaymentPage() {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Currency
+                      Currency *
                     </label>
-                    <Select
-                      value={formData.currency}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
-                    >
+                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="USD">USD ($)</SelectItem>
@@ -610,160 +711,129 @@ export default function CreatePaymentPage() {
               </div>
 
               {/* Accepted Cryptocurrencies */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">
-                    Accepted Cryptocurrencies *
-                  </label>
-                  {loadingCurrencies && (
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                  )}
-                </div>
-                
-                {loadingCurrencies ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Loading your configured cryptocurrencies...
-                  </div>
-                ) : availableCurrencies.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Wallet className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="font-medium">No wallet addresses configured</p>
-                    <p className="text-sm">Add wallet addresses in your settings to create payment links</p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-3"
-                      onClick={() => router.push('/merchant/settings')}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Go to Settings
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {availableCurrencies.map((currency) => {
-                      const isSelected = formData.acceptedCryptos.includes(currency.code)
-                      const estimatedAmount = getEstimatedCryptoAmount(currency)
-                      
-                      return (
-                        <div
-                          key={currency.code}
-                          className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                            isSelected 
-                              ? 'border-[#7f5efd] bg-[#7f5efd]/5' 
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          onClick={() => handleCryptoToggle(currency.code)}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <Checkbox
-                              checked={isSelected}
-                              onChange={() => handleCryptoToggle(currency.code)}
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <span className="font-medium">{currency.symbol} {currency.code}</span>
-                                {currency.network && (
-                                  <Badge variant="outline" className={`text-xs ${getNetworkBadgeColor(currency.network)}`}>
-                                    {currency.network}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {currency.display_name || currency.name}
-                                {estimatedAmount && (
-                                  <span className="ml-2 text-[#7f5efd]">
-                                    ~{estimatedAmount} {currency.code}
-                                  </span>
-                                )}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-3 block">
+                  Accepted Cryptocurrencies *
+                </label>
+                {availableCurrencies.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {availableCurrencies.map((currency) => (
+                        <div key={currency.code} className="flex items-center space-x-3 p-3 border rounded-lg">
+                          <Checkbox
+                            id={currency.code}
+                            checked={formData.acceptedCryptos.includes(currency.code)}
+                            onCheckedChange={(checked) => {
+                              // Convert CheckedState to boolean
+                              const isChecked = checked === true
+                              if (isChecked) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  acceptedCryptos: [...prev.acceptedCryptos, currency.code]
+                                }))
+                              } else {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  acceptedCryptos: prev.acceptedCryptos.filter(c => c !== currency.code)
+                                }))
+                              }
+                            }}
+                          />
+                          <div className="flex-1">
+                            <label htmlFor={currency.code} className="text-sm font-medium text-gray-900 cursor-pointer">
+                              {getCurrencyDisplayName(currency.code)}
+                            </label>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {currency.network}
+                              </Badge>
+                              <div className="flex items-center space-x-1">
+                                <Wallet className="w-3 h-3 text-green-600" />
+                                <span className="text-xs text-green-600">Configured</span>
                               </div>
                             </div>
                           </div>
                         </div>
-                      )
-                    })}
+                      ))}
+                    </div>
+                    {errors.acceptedCryptos && (
+                      <p className="text-sm text-red-600">{errors.acceptedCryptos}</p>
+                    )}
                   </div>
-                )}
-                
-                {errors.acceptedCryptos && (
-                  <p className="text-sm text-red-600">{errors.acceptedCryptos}</p>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Wallet className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No cryptocurrencies available</p>
+                    <p className="text-sm">Configure wallet addresses in settings first</p>
+                  </div>
                 )}
               </div>
 
-              {/* Fee Settings */}
-              {merchantSettings && (
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-gray-700">
-                    Fee Settings
-                  </label>
-                  
+              {/* Advanced Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                  <Settings className="w-5 h-5" />
+                  <span>Advanced Settings</span>
+                </h3>
+
+                {/* Fee Override */}
+                {merchantSettings && (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <Checkbox
-                        checked={formData.chargeCustomerFee === true}
-                        onCheckedChange={(checked) => 
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            chargeCustomerFee: checked ? true : null 
+                        id="chargeCustomerFeeOverride"
+                        checked={formData.chargeCustomerFee !== null}
+                        onCheckedChange={(checked) => {
+                          // Convert CheckedState to boolean and handle the logic
+                          const isChecked = checked === true
+                          setFormData(prev => ({
+                            ...prev,
+                            chargeCustomerFee: isChecked ? !merchantSettings.charge_customer_fee : null
                           }))
-                        }
+                        }}
                       />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">Charge customer gateway fee</div>
-                        <div className="text-xs text-gray-500">
-                          Customer pays the gateway fee instead of merchant
-                        </div>
-                      </div>
+                      <label htmlFor="chargeCustomerFeeOverride" className="text-sm font-medium text-gray-700">
+                        Override fee setting for this payment link
+                      </label>
                     </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <Checkbox
-                        checked={formData.chargeCustomerFee === false}
-                        onCheckedChange={(checked) => 
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            chargeCustomerFee: checked ? false : null 
-                          }))
-                        }
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">Merchant absorbs gateway fee</div>
-                        <div className="text-xs text-gray-500">
-                          Merchant pays the gateway fee (customer pays exact amount)
+
+                    {formData.chargeCustomerFee !== null && (
+                      <div className="ml-6 space-y-2">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id="chargeCustomerFee"
+                            checked={formData.chargeCustomerFee === true}
+                            onCheckedChange={(checked) => {
+                              // Convert CheckedState to boolean
+                              const isChecked = checked === true
+                              setFormData(prev => ({ ...prev, chargeCustomerFee: isChecked }))
+                            }}
+                          />
+                          <label htmlFor="chargeCustomerFee" className="text-sm text-gray-700">
+                            Charge customer fee for this payment link
+                          </label>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <Checkbox
-                        checked={formData.chargeCustomerFee === null}
-                        onCheckedChange={(checked) => 
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            chargeCustomerFee: checked ? null : false 
-                          }))
-                        }
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">Use global setting</div>
-                        <div className="text-xs text-gray-500">
-                          Current: {merchantSettings.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'}
-                        </div>
-                      </div>
+                    )}
+
+                    <div className="text-xs text-gray-500 ml-6">
+                      {formData.chargeCustomerFee !== null ? (
+                        <span>
+                          This payment link will {getInheritedValue(formData.chargeCustomerFee, merchantSettings.charge_customer_fee) ? 'charge' : 'not charge'} customers the processing fee
+                        </span>
+                      ) : (
+                        <span>
+                          Using merchant default: {merchantSettings.charge_customer_fee ? 'charge' : 'not charge'} customer fee
+                        </span>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Optional Settings */}
-              <div className="space-y-4">
-                <label className="text-sm font-medium text-gray-700">
-                  Optional Settings
-                </label>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-gray-600 mb-2 block">
-                      Expires At
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Expiration Date
                     </label>
                     <Input
                       type="datetime-local"
@@ -777,7 +847,7 @@ export default function CreatePaymentPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-gray-600 mb-2 block">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
                       Max Uses
                     </label>
                     <Input
@@ -793,35 +863,26 @@ export default function CreatePaymentPage() {
                     )}
                   </div>
                 </div>
-
-                <div>
-                  <label className="text-sm text-gray-600 mb-2 block">
-                    Redirect URL (After Payment)
-                  </label>
-                  <Input
-                    type="url"
-                    placeholder="https://yoursite.com/success"
-                    value={formData.redirectUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, redirectUrl: e.target.value }))}
-                    className={errors.redirectUrl ? 'border-red-300' : ''}
-                  />
-                  {errors.redirectUrl && (
-                    <p className="text-sm text-red-600 mt-1">{errors.redirectUrl}</p>
-                  )}
-                </div>
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4">
+              <div className="flex justify-end space-x-4 pt-6 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push('/merchant/dashboard/payments')}
+                >
+                  Cancel
+                </Button>
                 <Button
                   type="submit"
                   disabled={loading || availableCurrencies.length === 0}
-                  className="w-full bg-[#7f5efd] hover:bg-[#7f5efd]/90"
+                  className="bg-[#7f5efd] hover:bg-[#6d4fd8]"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating Payment Link...
+                      Creating...
                     </>
                   ) : (
                     <>
