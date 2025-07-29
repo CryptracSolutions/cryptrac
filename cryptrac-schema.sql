@@ -713,6 +713,7 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "referred_by_partner" "uuid",
     "wallet_generation_method" character varying(20) DEFAULT 'manual'::character varying,
     "supported_currencies" "text"[] DEFAULT '{}'::"text"[],
+    "charge_customer_fee" boolean DEFAULT false,
     CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at")),
     CONSTRAINT "merchants_subscription_plan_check" CHECK (("subscription_plan" = ANY (ARRAY['monthly'::"text", 'yearly'::"text"]))),
     CONSTRAINT "merchants_subscription_status_check" CHECK (("subscription_status" = ANY (ARRAY['active'::"text", 'cancelled'::"text", 'past_due'::"text"])))
@@ -751,6 +752,10 @@ COMMENT ON COLUMN "public"."merchants"."wallet_generation_method" IS 'How wallet
 
 
 COMMENT ON COLUMN "public"."merchants"."supported_currencies" IS 'Array of currency codes this merchant accepts';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."charge_customer_fee" IS 'Global setting: true = customer pays gateway fee, false = merchant absorbs gateway fee';
 
 
 
@@ -854,11 +859,16 @@ CREATE TABLE IF NOT EXISTS "public"."payment_links" (
     "last_payment_at" timestamp with time zone,
     "auto_convert_enabled" boolean DEFAULT false,
     "preferred_payout_currency" character varying(20),
-    "fee_percentage" numeric(5,3) DEFAULT 0.005
+    "fee_percentage" numeric(5,3) DEFAULT 0.005,
+    "charge_customer_fee" boolean
 );
 
 
 ALTER TABLE "public"."payment_links" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."payment_links"."charge_customer_fee" IS 'Per-link override for charge_customer_fee (null = inherit from merchant global setting)';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
@@ -2152,6 +2162,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
+
 
 
 -- Create buckets
