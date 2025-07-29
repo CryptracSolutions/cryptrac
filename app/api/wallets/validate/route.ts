@@ -1,397 +1,307 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 
-interface ValidateAddressRequest {
-  address: string;
-  currency: string;
-}
-
-interface BatchValidateRequest {
-  addresses: Array<{
-    address: string;
-    currency: string;
-  }>;
-}
-
-interface ValidationResult {
-  valid: boolean;
-  currency: string;
-  network?: string;
-  address_type?: string;
-  exact_match?: boolean;
-  error?: string;
-}
-
-// Comprehensive address validation patterns for ALL supported currencies
+// Comprehensive address validation patterns for all supported cryptocurrencies
 const ADDRESS_PATTERNS: Record<string, RegExp> = {
-  // Primary cryptocurrencies
-  BTC: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/,
-  ETH: /^0x[a-fA-F0-9]{40}$/,
-  LTC: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
-  DOGE: /^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$/,
-  XRP: /^r[0-9a-zA-Z]{24,34}$/,
-  TRX: /^T[A-Za-z1-9]{33}$/,
-  SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
-  BNB: /^0x[a-fA-F0-9]{40}$|^bnb[0-9a-z]{39}$/,
-  TON: /^[0-9a-zA-Z\-_]{48}$/,
-  SUI: /^0x[a-fA-F0-9]{64}$/,
-  AVAX: /^0x[a-fA-F0-9]{40}$/,
+  // Bitcoin and variants
+  BTC: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,87}$/,
   
-  // Ethereum ecosystem stablecoins (ERC-20)
+  // Ethereum and ERC-20 tokens
+  ETH: /^0x[a-fA-F0-9]{40}$/,
   USDT_ERC20: /^0x[a-fA-F0-9]{40}$/,
   USDC_ERC20: /^0x[a-fA-F0-9]{40}$/,
+  USDT: /^0x[a-fA-F0-9]{40}$/, // Default USDT to ERC-20
+  USDC: /^0x[a-fA-F0-9]{40}$/, // Default USDC to ERC-20
   
-  // BNB Smart Chain stablecoins (BEP-20)
+  // BSC (BEP-20) tokens
+  BNB: /^0x[a-fA-F0-9]{40}$/,
   USDT_BEP20: /^0x[a-fA-F0-9]{40}$/,
   USDC_BEP20: /^0x[a-fA-F0-9]{40}$/,
   
-  // Solana ecosystem stablecoins (SPL)
+  // Solana and SPL tokens
+  SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
   USDT_SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
   USDC_SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
   
-  // TRON ecosystem stablecoins (TRC-20)
+  // TRON and TRC-20 tokens
+  TRX: /^T[A-Za-z1-9]{33}$/,
   USDT_TRC20: /^T[A-Za-z1-9]{33}$/,
   USDC_TRC20: /^T[A-Za-z1-9]{33}$/,
   
-  // TON ecosystem stablecoins
+  // TON ecosystem
+  TON: /^[0-9a-zA-Z\-_]{48}$/,
   USDT_TON: /^[0-9a-zA-Z\-_]{48}$/,
   
-  // Avalanche ecosystem stablecoins (C-Chain)
+  // Avalanche ecosystem
+  AVAX: /^0x[a-fA-F0-9]{40}$/,
   USDT_AVAX: /^0x[a-fA-F0-9]{40}$/,
   USDC_AVAX: /^0x[a-fA-F0-9]{40}$/,
-
-  // Additional ERC-20 tokens (use Ethereum address pattern)
-  AAVE: /^0x[a-fA-F0-9]{40}$/,
+  
+  // Other major cryptocurrencies
+  DOGE: /^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{32}$/,
+  XRP: /^r[0-9a-zA-Z]{24,34}$/,
+  SUI: /^0x[a-fA-F0-9]{64}$/,
+  
+  // Additional popular cryptocurrencies
+  LTC: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
+  ADA: /^addr1[a-z0-9]+$/,
+  DOT: /^1[0-9A-Za-z]{46}$/,
   MATIC: /^0x[a-fA-F0-9]{40}$/,
   LINK: /^0x[a-fA-F0-9]{40}$/,
   UNI: /^0x[a-fA-F0-9]{40}$/,
-  CRV: /^0x[a-fA-F0-9]{40}$/,
-  COMP: /^0x[a-fA-F0-9]{40}$/,
-  MKR: /^0x[a-fA-F0-9]{40}$/,
-  SNX: /^0x[a-fA-F0-9]{40}$/,
-  SUSHI: /^0x[a-fA-F0-9]{40}$/,
-  YFI: /^0x[a-fA-F0-9]{40}$/,
-  BAL: /^0x[a-fA-F0-9]{40}$/,
-  USDT: /^0x[a-fA-F0-9]{40}$/, // Default to ERC-20
-  USDC: /^0x[a-fA-F0-9]{40}$/, // Default to ERC-20
-
-  // Cardano ecosystem
-  ADA: /^addr1[a-z0-9]{98}$|^[A-Za-z0-9]{59}$/,
-
-  // Polkadot ecosystem
-  DOT: /^1[0-9A-Za-z]{46}$/,
-
-  // Additional native currencies
-  BCH: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bitcoincash:[a-z0-9]{42}$/,
-  ETC: /^0x[a-fA-F0-9]{40}$/,
-  ZEC: /^t1[a-zA-Z0-9]{33}$|^t3[a-zA-Z0-9]{33}$/,
-  DASH: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,
+  AAVE: /^0x[a-fA-F0-9]{40}$/,
+  ALGO: /^[A-Z2-7]{58}$/,
+  ATOM: /^cosmos[0-9a-z]{39}$/,
+  FIL: /^f[0-9][a-z0-9]{38,86}$/,
+  ICP: /^[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}$/,
+  NEAR: /^[a-z0-9_\-\.]{2,64}\.near$/,
+  VET: /^0x[a-fA-F0-9]{40}$/,
+  XLM: /^G[A-Z2-7]{55}$/,
+  EOS: /^[a-z1-5\.]{1,12}$/,
+  XTZ: /^tz[1-3][1-9A-HJ-NP-Za-km-z]{33}$/,
+  THETA: /^0x[a-fA-F0-9]{40}$/,
+  FLOW: /^0x[a-fA-F0-9]{16}$/,
+  EGLD: /^erd[0-9a-z]{59}$/,
+  HBAR: /^0\.0\.[0-9]+$/,
   XMR: /^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
-
-  // Polygon ecosystem (MATIC network)
-  MATIC_POLYGON: /^0x[a-fA-F0-9]{40}$/,
-  USDT_POLYGON: /^0x[a-fA-F0-9]{40}$/,
-  USDC_POLYGON: /^0x[a-fA-F0-9]{40}$/,
-
-  // Arbitrum ecosystem
-  ARB: /^0x[a-fA-F0-9]{40}$/,
-  USDT_ARBITRUM: /^0x[a-fA-F0-9]{40}$/,
-  USDC_ARBITRUM: /^0x[a-fA-F0-9]{40}$/,
-
-  // Optimism ecosystem
-  OP: /^0x[a-fA-F0-9]{40}$/,
-  USDT_OPTIMISM: /^0x[a-fA-F0-9]{40}$/,
-  USDC_OPTIMISM: /^0x[a-fA-F0-9]{40}$/,
-};
-
-// Network-based fallback patterns
-const NETWORK_PATTERNS: Record<string, RegExp> = {
-  'ethereum': /^0x[a-fA-F0-9]{40}$/,
-  'bsc': /^0x[a-fA-F0-9]{40}$/,
-  'polygon': /^0x[a-fA-F0-9]{40}$/,
-  'arbitrum': /^0x[a-fA-F0-9]{40}$/,
-  'optimism': /^0x[a-fA-F0-9]{40}$/,
-  'avalanche': /^0x[a-fA-F0-9]{40}$/,
-  'solana': /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
-  'tron': /^T[A-Za-z1-9]{33}$/,
-  'ton': /^[0-9a-zA-Z\-_]{48}$/,
-  'cardano': /^addr1[a-z0-9]{98}$|^[A-Za-z0-9]{59}$/,
-  'polkadot': /^1[0-9A-Za-z]{46}$/,
-  'bitcoin': /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/,
-  'litecoin': /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
-  'dogecoin': /^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$/,
-  'ripple': /^r[0-9a-zA-Z]{24,34}$/,
-  'sui': /^0x[a-fA-F0-9]{64}$/,
-};
-
-const CURRENCY_INFO: Record<string, { network: string; address_type: string; decimals: number }> = {
-  // Primary cryptocurrencies
-  BTC: { network: 'Bitcoin', address_type: 'P2PKH/P2SH/Bech32', decimals: 8 },
-  ETH: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  LTC: { network: 'Litecoin', address_type: 'P2PKH/P2SH', decimals: 8 },
-  DOGE: { network: 'Dogecoin', address_type: 'P2PKH', decimals: 8 },
-  XRP: { network: 'XRP Ledger', address_type: 'Classic', decimals: 6 },
-  TRX: { network: 'Tron', address_type: 'Base58', decimals: 6 },
-  SOL: { network: 'Solana', address_type: 'Base58', decimals: 9 },
-  BNB: { network: 'BSC', address_type: 'ERC20', decimals: 18 },
-  TON: { network: 'TON', address_type: 'Base64', decimals: 9 },
-  SUI: { network: 'Sui', address_type: 'Hex', decimals: 9 },
-  AVAX: { network: 'Avalanche', address_type: 'ERC20', decimals: 18 },
+  ZEC: /^t[13][a-km-zA-HJ-NP-Z1-9]{33}$/,
+  DASH: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,
+  BCH: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+  BSV: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+  ETC: /^0x[a-fA-F0-9]{40}$/,
+  ZIL: /^zil[0-9a-z]{39}$/,
+  ONT: /^A[0-9a-zA-Z]{33}$/,
+  QTUM: /^[MQ][a-km-zA-HJ-NP-Z1-9]{33}$/,
+  ICX: /^hx[0-9a-f]{40}$/,
+  WAVES: /^3P[0-9A-Za-z]{33}$/,
+  LSK: /^[0-9]{1,21}L$/,
+  NANO: /^nano_[13][13456789abcdefghijkmnopqrstuwxyz]{59}$/,
+  IOTA: /^[A-Z9]{90}$/,
+  NEO: /^A[0-9a-zA-Z]{33}$/,
+  GAS: /^A[0-9a-zA-Z]{33}$/,
+  KMD: /^R[0-9a-zA-Z]{33}$/,
+  DCR: /^D[ksecS][0-9a-zA-Z]{33}$/,
+  STRAT: /^S[0-9a-zA-Z]{33}$/,
+  ARK: /^A[0-9a-zA-Z]{33}$/,
+  KCS: /^0x[a-fA-F0-9]{40}$/,
+  BNT: /^0x[a-fA-F0-9]{40}$/,
+  REP: /^0x[a-fA-F0-9]{40}$/,
+  ZRX: /^0x[a-fA-F0-9]{40}$/,
+  BAT: /^0x[a-fA-F0-9]{40}$/,
+  ENJ: /^0x[a-fA-F0-9]{40}$/,
+  MANA: /^0x[a-fA-F0-9]{40}$/,
+  SNT: /^0x[a-fA-F0-9]{40}$/,
+  KNC: /^0x[a-fA-F0-9]{40}$/,
+  LOOM: /^0x[a-fA-F0-9]{40}$/,
+  GNT: /^0x[a-fA-F0-9]{40}$/,
+  STORJ: /^0x[a-fA-F0-9]{40}$/,
+  CVC: /^0x[a-fA-F0-9]{40}$/,
+  MCO: /^0x[a-fA-F0-9]{40}$/,
+  MTL: /^0x[a-fA-F0-9]{40}$/,
+  POLY: /^0x[a-fA-F0-9]{40}$/,
+  LRC: /^0x[a-fA-F0-9]{40}$/,
+  RLC: /^0x[a-fA-F0-9]{40}$/,
+  BNB_LEGACY: /^bnb[0-9a-z]{39}$/,
   
-  // Ethereum ecosystem stablecoins
-  USDT_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
-  USDC_ERC20: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
-  USDT: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
-  USDC: { network: 'Ethereum', address_type: 'ERC20', decimals: 6 },
-  
-  // BNB Smart Chain stablecoins
-  USDT_BEP20: { network: 'BSC', address_type: 'BEP20', decimals: 6 },
-  USDC_BEP20: { network: 'BSC', address_type: 'BEP20', decimals: 6 },
-  
-  // Solana ecosystem stablecoins
-  USDT_SOL: { network: 'Solana', address_type: 'SPL', decimals: 6 },
-  USDC_SOL: { network: 'Solana', address_type: 'SPL', decimals: 6 },
-  
-  // TRON ecosystem stablecoins
-  USDT_TRC20: { network: 'Tron', address_type: 'TRC20', decimals: 6 },
-  USDC_TRC20: { network: 'Tron', address_type: 'TRC20', decimals: 6 },
-  
-  // TON ecosystem stablecoins
-  USDT_TON: { network: 'TON', address_type: 'TON', decimals: 6 },
-  
-  // Avalanche ecosystem stablecoins
-  USDT_AVAX: { network: 'Avalanche', address_type: 'C-Chain', decimals: 6 },
-  USDC_AVAX: { network: 'Avalanche', address_type: 'C-Chain', decimals: 6 },
-
-  // Additional ERC-20 tokens
-  AAVE: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  MATIC: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  LINK: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  UNI: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  CRV: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  COMP: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  MKR: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  SNX: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  SUSHI: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  YFI: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-  BAL: { network: 'Ethereum', address_type: 'ERC20', decimals: 18 },
-
-  // Other native currencies
-  ADA: { network: 'Cardano', address_type: 'Bech32', decimals: 6 },
-  DOT: { network: 'Polkadot', address_type: 'SS58', decimals: 10 },
-  BCH: { network: 'Bitcoin Cash', address_type: 'P2PKH/P2SH', decimals: 8 },
-  ETC: { network: 'Ethereum Classic', address_type: 'ERC20', decimals: 18 },
-  ZEC: { network: 'Zcash', address_type: 'Transparent', decimals: 8 },
-  DASH: { network: 'Dash', address_type: 'P2PKH', decimals: 8 },
-  XMR: { network: 'Monero', address_type: 'CryptoNote', decimals: 12 },
-};
-
-function validateAddress(address: string, currency: string): boolean {
-  const upperCurrency = currency.toUpperCase();
-  console.log(`🔍 Validating ${upperCurrency} address: ${address}`);
-  
-  // Try exact pattern match first
-  const pattern = ADDRESS_PATTERNS[upperCurrency];
-  if (pattern) {
-    const isValid = pattern.test(address);
-    console.log(`✅ Pattern match for ${upperCurrency}: ${isValid}`);
-    return isValid;
-  }
-
-  // Try network-based fallback
-  const currencyInfo = CURRENCY_INFO[upperCurrency];
-  if (currencyInfo) {
-    const networkPattern = NETWORK_PATTERNS[currencyInfo.network.toLowerCase()];
-    if (networkPattern) {
-      const isValid = networkPattern.test(address);
-      console.log(`🔄 Network fallback for ${upperCurrency} (${currencyInfo.network}): ${isValid}`);
-      return isValid;
-    }
-  }
-
-  // Default ERC-20 fallback for unknown tokens
-  if (!pattern && !currencyInfo) {
-    const ethPattern = /^0x[a-fA-F0-9]{40}$/;
-    const isValid = ethPattern.test(address);
-    console.log(`🔄 ERC-20 fallback for ${upperCurrency}: ${isValid}`);
-    return isValid;
-  }
-
-  console.log(`❌ No validation pattern found for currency: ${upperCurrency}`);
-  return false;
+  // Network-based fallback patterns
+  ethereum: /^0x[a-fA-F0-9]{40}$/,
+  bsc: /^0x[a-fA-F0-9]{40}$/,
+  polygon: /^0x[a-fA-F0-9]{40}$/,
+  avalanche: /^0x[a-fA-F0-9]{40}$/,
+  solana: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+  tron: /^T[A-Za-z1-9]{33}$/,
+  bitcoin: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,87}$/,
+  litecoin: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
+  dogecoin: /^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{32}$/,
+  ripple: /^r[0-9a-zA-Z]{24,34}$/,
+  cardano: /^addr1[a-z0-9]+$/,
+  polkadot: /^1[0-9A-Za-z]{46}$/,
+  chainlink: /^0x[a-fA-F0-9]{40}$/,
+  uniswap: /^0x[a-fA-F0-9]{40}$/,
+  aave: /^0x[a-fA-F0-9]{40}$/,
+  algorand: /^[A-Z2-7]{58}$/,
+  cosmos: /^cosmos[0-9a-z]{39}$/,
+  filecoin: /^f[0-9][a-z0-9]{38,86}$/,
+  'internet-computer': /^[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}$/,
+  near: /^[a-z0-9_\-\.]{2,64}\.near$/,
+  vechain: /^0x[a-fA-F0-9]{40}$/,
+  stellar: /^G[A-Z2-7]{55}$/,
+  eos: /^[a-z1-5\.]{1,12}$/,
+  tezos: /^tz[1-3][1-9A-HJ-NP-Za-km-z]{33}$/,
+  theta: /^0x[a-fA-F0-9]{40}$/,
+  flow: /^0x[a-fA-F0-9]{16}$/,
+  elrond: /^erd[0-9a-z]{59}$/,
+  hedera: /^0\.0\.[0-9]+$/,
+  monero: /^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
+  zcash: /^t[13][a-km-zA-HJ-NP-Z1-9]{33}$/,
+  dash: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,
+  'bitcoin-cash': /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+  'bitcoin-sv': /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+  'ethereum-classic': /^0x[a-fA-F0-9]{40}$/,
+  zilliqa: /^zil[0-9a-z]{39}$/,
+  ontology: /^A[0-9a-zA-Z]{33}$/,
+  qtum: /^[MQ][a-km-zA-HJ-NP-Z1-9]{33}$/,
+  icon: /^hx[0-9a-f]{40}$/,
+  waves: /^3P[0-9A-Za-z]{33}$/,
+  lisk: /^[0-9]{1,21}L$/,
+  nano: /^nano_[13][13456789abcdefghijkmnopqrstuwxyz]{59}$/,
+  iota: /^[A-Z9]{90}$/,
+  neo: /^A[0-9a-zA-Z]{33}$/,
+  'neo-gas': /^A[0-9a-zA-Z]{33}$/,
+  komodo: /^R[0-9a-zA-Z]{33}$/,
+  decred: /^D[ksecS][0-9a-zA-Z]{33}$/,
+  stratis: /^S[0-9a-zA-Z]{33}$/,
+  ark: /^A[0-9a-zA-Z]{33}$/
 }
 
-function getCurrencyInfo(currency: string) {
-  return CURRENCY_INFO[currency.toUpperCase()];
+// Currency information for better error messages
+const CURRENCY_INFO: Record<string, { name: string; network: string; addressType: string }> = {
+  BTC: { name: 'Bitcoin', network: 'Bitcoin', addressType: 'Legacy, SegWit, or Bech32' },
+  ETH: { name: 'Ethereum', network: 'Ethereum', addressType: 'Ethereum address' },
+  USDT_ERC20: { name: 'Tether (ERC-20)', network: 'Ethereum', addressType: 'Ethereum address' },
+  USDC_ERC20: { name: 'USD Coin (ERC-20)', network: 'Ethereum', addressType: 'Ethereum address' },
+  BNB: { name: 'BNB', network: 'BSC', addressType: 'BSC address' },
+  USDT_BEP20: { name: 'Tether (BEP-20)', network: 'BSC', addressType: 'BSC address' },
+  USDC_BEP20: { name: 'USD Coin (BEP-20)', network: 'BSC', addressType: 'BSC address' },
+  SOL: { name: 'Solana', network: 'Solana', addressType: 'Solana address' },
+  USDT_SOL: { name: 'Tether (Solana)', network: 'Solana', addressType: 'Solana address' },
+  USDC_SOL: { name: 'USD Coin (Solana)', network: 'Solana', addressType: 'Solana address' },
+  TRX: { name: 'TRON', network: 'TRON', addressType: 'TRON address' },
+  USDT_TRC20: { name: 'Tether (TRC-20)', network: 'TRON', addressType: 'TRON address' },
+  USDC_TRC20: { name: 'USD Coin (TRC-20)', network: 'TRON', addressType: 'TRON address' },
+  TON: { name: 'Toncoin', network: 'TON', addressType: 'TON address' },
+  USDT_TON: { name: 'Tether (TON)', network: 'TON', addressType: 'TON address' },
+  AVAX: { name: 'Avalanche', network: 'Avalanche', addressType: 'Avalanche address' },
+  USDT_AVAX: { name: 'Tether (Avalanche)', network: 'Avalanche', addressType: 'Avalanche address' },
+  USDC_AVAX: { name: 'USD Coin (Avalanche)', network: 'Avalanche', addressType: 'Avalanche address' },
+  DOGE: { name: 'Dogecoin', network: 'Dogecoin', addressType: 'Dogecoin address' },
+  XRP: { name: 'XRP', network: 'XRP Ledger', addressType: 'XRP address' },
+  SUI: { name: 'Sui', network: 'Sui', addressType: 'Sui address' },
+  LTC: { name: 'Litecoin', network: 'Litecoin', addressType: 'Litecoin address' },
+  ADA: { name: 'Cardano', network: 'Cardano', addressType: 'Cardano address' },
+  DOT: { name: 'Polkadot', network: 'Polkadot', addressType: 'Polkadot address' },
+  MATIC: { name: 'Polygon', network: 'Polygon', addressType: 'Polygon address' },
+  LINK: { name: 'Chainlink', network: 'Ethereum', addressType: 'Ethereum address' },
+  UNI: { name: 'Uniswap', network: 'Ethereum', addressType: 'Ethereum address' },
+  AAVE: { name: 'Aave', network: 'Ethereum', addressType: 'Ethereum address' },
+  ALGO: { name: 'Algorand', network: 'Algorand', addressType: 'Algorand address' },
+  ATOM: { name: 'Cosmos', network: 'Cosmos', addressType: 'Cosmos address' },
+  FIL: { name: 'Filecoin', network: 'Filecoin', addressType: 'Filecoin address' },
+  ICP: { name: 'Internet Computer', network: 'Internet Computer', addressType: 'ICP address' },
+  NEAR: { name: 'NEAR Protocol', network: 'NEAR', addressType: 'NEAR address' },
+  VET: { name: 'VeChain', network: 'VeChain', addressType: 'VeChain address' },
+  XLM: { name: 'Stellar', network: 'Stellar', addressType: 'Stellar address' },
+  EOS: { name: 'EOS', network: 'EOS', addressType: 'EOS account name' },
+  XTZ: { name: 'Tezos', network: 'Tezos', addressType: 'Tezos address' },
+  THETA: { name: 'Theta', network: 'Theta', addressType: 'Theta address' },
+  FLOW: { name: 'Flow', network: 'Flow', addressType: 'Flow address' },
+  EGLD: { name: 'Elrond', network: 'Elrond', addressType: 'Elrond address' },
+  HBAR: { name: 'Hedera', network: 'Hedera', addressType: 'Hedera address' },
+  XMR: { name: 'Monero', network: 'Monero', addressType: 'Monero address' },
+  ZEC: { name: 'Zcash', network: 'Zcash', addressType: 'Zcash address' },
+  DASH: { name: 'Dash', network: 'Dash', addressType: 'Dash address' },
+  BCH: { name: 'Bitcoin Cash', network: 'Bitcoin Cash', addressType: 'Bitcoin Cash address' },
+  BSV: { name: 'Bitcoin SV', network: 'Bitcoin SV', addressType: 'Bitcoin SV address' },
+  ETC: { name: 'Ethereum Classic', network: 'Ethereum Classic', addressType: 'Ethereum Classic address' },
+  ZIL: { name: 'Zilliqa', network: 'Zilliqa', addressType: 'Zilliqa address' },
+  ONT: { name: 'Ontology', network: 'Ontology', addressType: 'Ontology address' },
+  QTUM: { name: 'Qtum', network: 'Qtum', addressType: 'Qtum address' },
+  ICX: { name: 'ICON', network: 'ICON', addressType: 'ICON address' },
+  WAVES: { name: 'Waves', network: 'Waves', addressType: 'Waves address' },
+  LSK: { name: 'Lisk', network: 'Lisk', addressType: 'Lisk address' },
+  NANO: { name: 'Nano', network: 'Nano', addressType: 'Nano address' },
+  IOTA: { name: 'IOTA', network: 'IOTA', addressType: 'IOTA address' },
+  NEO: { name: 'NEO', network: 'NEO', addressType: 'NEO address' },
+  GAS: { name: 'NEO Gas', network: 'NEO', addressType: 'NEO address' },
+  KMD: { name: 'Komodo', network: 'Komodo', addressType: 'Komodo address' },
+  DCR: { name: 'Decred', network: 'Decred', addressType: 'Decred address' },
+  STRAT: { name: 'Stratis', network: 'Stratis', addressType: 'Stratis address' },
+  ARK: { name: 'Ark', network: 'Ark', addressType: 'Ark address' }
 }
 
-// POST endpoint for address validation (single and batch)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    console.log(`📨 Validation request received:`, body);
-    
-    // Single address validation
-    if ('address' in body && 'currency' in body) {
-      const { address, currency }: ValidateAddressRequest = body;
-      
-      if (!address || !currency) {
-        console.log(`❌ Missing required fields: address=${!!address}, currency=${!!currency}`);
-        return NextResponse.json(
-          { error: 'Address and currency are required' },
-          { status: 400 }
-        );
-      }
+    const { currency, address } = await request.json()
 
-      const isValid = validateAddress(address.trim(), currency.toUpperCase());
-      const currencyInfo = getCurrencyInfo(currency.toUpperCase());
-      
-      const result: ValidationResult = {
-        valid: isValid,
-        currency: currency.toUpperCase(),
-        network: currencyInfo?.network,
-        address_type: currencyInfo?.address_type,
-        exact_match: currencyInfo ? true : false
-      };
+    console.log(`🔍 Validating ${currency} address: ${address}`)
 
-      if (!isValid) {
-        result.error = `Invalid ${currency.toUpperCase()} address format`;
-      }
-
-      console.log(`📤 Validation result for ${currency.toUpperCase()}:`, result);
-
+    if (!currency || !address) {
+      console.log(`❌ Missing currency or address`)
       return NextResponse.json({
-        success: true,
-        validation: result
-      });
+        success: false,
+        validation: {
+          valid: false,
+          error: 'Currency and address are required'
+        }
+      })
     }
 
-    // Batch validation
-    if ('addresses' in body) {
-      const { addresses }: BatchValidateRequest = body;
+    const upperCurrency = currency.toUpperCase()
+    const trimmedAddress = address.trim()
+
+    // Check if we have a validation pattern for this currency
+    const pattern = ADDRESS_PATTERNS[upperCurrency]
+    
+    if (!pattern) {
+      console.log(`❌ No validation pattern found for currency: ${upperCurrency}`)
       
-      if (!Array.isArray(addresses) || addresses.length === 0) {
-        return NextResponse.json(
-          { error: 'Addresses array is required and must not be empty' },
-          { status: 400 }
-        );
-      }
-
-      if (addresses.length > 100) {
-        return NextResponse.json(
-          { error: 'Maximum 100 addresses allowed per batch' },
-          { status: 400 }
-        );
-      }
-
-      const results: ValidationResult[] = [];
-
-      for (const item of addresses) {
-        if (!item.address || !item.currency) {
-          results.push({
-            valid: false,
-            currency: item.currency || 'UNKNOWN',
-            error: 'Address and currency are required'
-          });
-          continue;
-        }
-
-        try {
-          const isValid = validateAddress(item.address.trim(), item.currency.toUpperCase());
-          const currencyInfo = getCurrencyInfo(item.currency.toUpperCase());
+      // Try network-based fallback
+      const currencyInfo = CURRENCY_INFO[upperCurrency]
+      if (currencyInfo) {
+        const networkPattern = ADDRESS_PATTERNS[currencyInfo.network.toLowerCase()]
+        if (networkPattern) {
+          console.log(`🔄 Using network fallback pattern for ${upperCurrency} (${currencyInfo.network})`)
+          const isValid = networkPattern.test(trimmedAddress)
           
-          const result: ValidationResult = {
-            valid: isValid,
-            currency: item.currency.toUpperCase(),
-            network: currencyInfo?.network,
-            address_type: currencyInfo?.address_type,
-            exact_match: currencyInfo ? true : false
-          };
-
-          if (!isValid) {
-            result.error = `Invalid ${item.currency.toUpperCase()} address format`;
-          }
-
-          results.push(result);
-        } catch (error) {
-          results.push({
-            valid: false,
-            currency: item.currency.toUpperCase(),
-            error: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-          });
+          return NextResponse.json({
+            success: true,
+            validation: {
+              valid: isValid,
+              currency: upperCurrency,
+              address: trimmedAddress,
+              network: currencyInfo.network,
+              addressType: currencyInfo.addressType,
+              error: isValid ? null : `Invalid ${currencyInfo.addressType} format`
+            }
+          })
         }
       }
-
-      const validCount = results.filter((r: ValidationResult) => r.valid).length;
-      const invalidCount = results.length - validCount;
-      const exactMatchCount = results.filter((r: ValidationResult) => r.exact_match).length;
-
+      
       return NextResponse.json({
-        success: true,
-        batch_validation: {
-          total: results.length,
-          valid: validCount,
-          invalid: invalidCount,
-          exact_matches: exactMatchCount,
-          results
+        success: false,
+        validation: {
+          valid: false,
+          error: `Validation not supported for ${upperCurrency}`
         }
-      });
+      })
     }
 
-    return NextResponse.json(
-      { error: 'Invalid request format. Expected either single address validation or batch validation.' },
-      { status: 400 }
-    );
+    // Validate the address against the pattern
+    const isValid = pattern.test(trimmedAddress)
+    const currencyInfo = CURRENCY_INFO[upperCurrency]
 
-  } catch (error) {
-    console.error('Address validation error:', error);
-    
-    return NextResponse.json(
-      { 
-        error: 'Address validation failed',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// GET endpoint to retrieve supported currencies for validation
-export async function GET() {
-  try {
-    const supportedCurrencies = Object.keys(CURRENCY_INFO).map(code => ({
-      code,
-      name: code,
-      network: CURRENCY_INFO[code].network,
-      address_type: CURRENCY_INFO[code].address_type,
-      decimals: CURRENCY_INFO[code].decimals,
-      exact_match: true
-    }));
-
-    const supportedNetworks = Array.from(new Set(Object.values(CURRENCY_INFO).map(info => info.network)));
-    const addressTypes = Array.from(new Set(Object.values(CURRENCY_INFO).map(info => info.address_type)));
+    console.log(`✅ Validation result for ${upperCurrency}: ${isValid ? 'VALID' : 'INVALID'}`)
 
     return NextResponse.json({
       success: true,
-      supported_currencies: supportedCurrencies,
-      validation_info: {
-        supported_networks: supportedNetworks,
-        address_types: addressTypes,
-        total_currencies: supportedCurrencies.length,
-        exact_match_count: supportedCurrencies.filter(c => c.exact_match).length,
-        manual_setup_count: supportedCurrencies.filter(c => !c.exact_match).length
+      validation: {
+        valid: isValid,
+        currency: upperCurrency,
+        address: trimmedAddress,
+        network: currencyInfo?.network || 'Unknown',
+        addressType: currencyInfo?.addressType || 'Address',
+        error: isValid ? null : `Invalid ${currencyInfo?.addressType || upperCurrency + ' address'} format`
       }
-    });
+    })
 
   } catch (error) {
-    console.error('Error fetching validation currencies:', error);
-    
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch validation currencies',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    console.error('💥 Address validation error:', error)
+    return NextResponse.json({
+      success: false,
+      validation: {
+        valid: false,
+        error: 'Internal validation error'
+      }
+    }, { status: 500 })
   }
 }
 

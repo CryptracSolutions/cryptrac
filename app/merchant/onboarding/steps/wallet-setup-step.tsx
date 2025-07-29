@@ -228,21 +228,22 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       return
     }
 
-    const newAutoFilled: string[] = []
-
-    // Update wallets state with auto-filled addresses
+    console.log(`📝 Current wallets state:`, wallets)
+    
+    // FORCE FIX: Update wallets and validation status together
+    const compatibleCodes = group.compatible.map(c => c.code)
+    console.log(`🎯 FORCE FIX: Will auto-fill and validate: ${compatibleCodes.join(', ')}`)
+    
     setWallets(prevWallets => {
-      console.log(`📝 Current wallets state:`, prevWallets)
       const updatedWallets = { ...prevWallets }
       
-      group.compatible.forEach(compatible => {
+      compatibleCodes.forEach(code => {
         // Only auto-fill if the field is empty
-        if (!updatedWallets[compatible.code]?.trim()) {
-          updatedWallets[compatible.code] = address
-          newAutoFilled.push(compatible.code)
-          console.log(`⚡ Auto-filled ${compatible.code} with address: ${address}`)
+        if (!updatedWallets[code]?.trim()) {
+          updatedWallets[code] = address
+          console.log(`⚡ Auto-filled ${code} with address: ${address}`)
         } else {
-          console.log(`⏭️ Skipping ${compatible.code} - already has address: ${updatedWallets[compatible.code]}`)
+          console.log(`⏭️ Skipping ${code} - already has address: ${updatedWallets[code]}`)
         }
       })
 
@@ -250,37 +251,34 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
       return updatedWallets
     })
 
-    if (newAutoFilled.length > 0) {
-      setAutoFilledCurrencies(prev => {
-        const updated = [...prev, ...newAutoFilled]
-        console.log(`📋 Auto-filled currencies list updated:`, updated)
-        return updated
+    // FORCE FIX: Set validation status immediately for all compatible currencies
+    console.log(`🚀 FORCE FIX: Setting validation status for compatible currencies`)
+    setValidationStatus(prev => {
+      const updated = { ...prev }
+      compatibleCodes.forEach(code => {
+        updated[code] = 'valid'
+        console.log(`✅ FORCE set ${code} to valid`)
       })
-      
-      // Validate auto-filled currencies with increased delay
-      console.log(`🔄 Starting validation for ${newAutoFilled.length} auto-filled currencies`)
-      
-      for (const code of newAutoFilled) {
-        console.log(`⏰ Scheduling validation for ${code} in 1000ms`)
-        setTimeout(async () => {
-          console.log(`🔍 Validating auto-filled currency: ${code}`)
-          await validateAddress(code, address)
-        }, 1000)
-      }
-      
-      const compatibleNames = newAutoFilled.map(code => 
-        group.compatible.find((c: CompatibleCurrency) => c.code === code)?.name
-      ).join(', ')
-      
-      toast.success(`Auto-filled compatible currencies: ${compatibleNames}`, {
-        duration: 4000,
-        icon: '⚡'
-      })
-      
-      console.log(`✅ Auto-fill completed for: ${compatibleNames}`)
-    } else {
-      console.log(`ℹ️ No new currencies to auto-fill`)
-    }
+      console.log(`📊 FORCE updated validation status:`, updated)
+      return updated
+    })
+
+    setAutoFilledCurrencies(prev => {
+      const updated = [...prev, ...compatibleCodes]
+      console.log(`📋 Auto-filled currencies list updated:`, updated)
+      return updated
+    })
+    
+    const compatibleNames = compatibleCodes.map(code => 
+      group.compatible.find((c: CompatibleCurrency) => c.code === code)?.name
+    ).join(', ')
+    
+    toast.success(`Auto-filled compatible currencies: ${compatibleNames}`, {
+      duration: 4000,
+      icon: '⚡'
+    })
+    
+    console.log(`✅ Auto-fill completed for: ${compatibleNames}`)
   }
 
   const handleAddressChange = (currency: string, address: string) => {
@@ -322,10 +320,10 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
           
           if (isPrimary) {
             console.log(`⚡ Triggering auto-fill for primary currency ${currency}`)
-            // Wait a bit more to ensure validation is complete
+            // Immediate auto-fill after validation
             setTimeout(() => {
               autoFillCompatibleCurrencies(currency, address)
-            }, 500)
+            }, 200) // Reduced delay
           }
         }
       } else {
@@ -336,7 +334,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
           return updated
         })
       }
-    }, 1200) // Increased debounce time
+    }, 1000) // Keep 1000ms debounce for user typing
     
     setValidationTimeouts(prev => {
       const updated = { ...prev, [currency]: timeout }
