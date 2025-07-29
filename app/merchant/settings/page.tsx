@@ -357,49 +357,69 @@ export default function SettingsPage() {
   const loadUserAndSettings = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading user and settings...');
 
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
+        console.log('❌ No user found, redirecting to login');
         router.push('/auth/login');
         return;
       }
 
+      console.log('✅ User found:', user.id);
       setUser(user);
 
       // Get merchant settings
+      console.log('📡 Fetching merchant settings...');
       const response = await fetch('/api/merchants/settings');
       const data = await response.json();
 
+      console.log('📨 Settings API response:', data);
+
       if (data.success) {
-        setSettings({
+        const loadedWallets = data.settings.wallets || {};
+        console.log('💰 Loaded wallets from API:', loadedWallets);
+        console.log('💰 Number of wallet addresses loaded:', Object.keys(loadedWallets).length);
+
+        const newSettings = {
           charge_customer_fee: data.settings.charge_customer_fee || false,
           auto_convert_enabled: data.settings.auto_convert_enabled || false,
           preferred_payout_currency: data.settings.preferred_payout_currency || null,
-          wallets: data.settings.wallets || {},
+          wallets: loadedWallets,
           payment_config: {
             // auto_forward always enabled for non-custodial compliance
             fee_percentage: data.settings.payment_config?.fee_percentage || 0.5,
             auto_convert_fee: data.settings.payment_config?.auto_convert_fee || 1.0
           }
-        });
+        };
+
+        console.log('⚙️ Setting new settings state:', newSettings);
+        setSettings(newSettings);
 
         // Initialize validation status for existing wallets
         const initialValidation: Record<string, 'valid' | 'invalid' | 'validating'> = {};
-        Object.keys(data.settings.wallets || {}).forEach(currency => {
-          if (data.settings.wallets[currency]) {
+        Object.keys(loadedWallets).forEach(currency => {
+          if (loadedWallets[currency] && loadedWallets[currency].trim()) {
             initialValidation[currency] = 'valid';
+            console.log(`✅ Set ${currency} as valid (address: ${loadedWallets[currency]})`);
           }
         });
+        
+        console.log('📊 Initial validation status:', initialValidation);
         setValidationStatus(initialValidation);
+      } else {
+        console.error('❌ Settings API returned error:', data.error);
+        toast.error('Failed to load settings');
       }
 
     } catch (error) {
-      console.error('Error loading settings:', error);
+      console.error('💥 Error loading settings:', error);
       toast.error('Failed to load settings');
     } finally {
       setLoading(false);
+      console.log('✅ Loading complete');
     }
   };
 
@@ -455,13 +475,19 @@ export default function SettingsPage() {
   };
 
   const handleWalletChange = (currency: string, address: string) => {
-    setSettings(prev => ({
-      ...prev,
-      wallets: {
-        ...prev.wallets,
-        [currency]: address
-      }
-    }));
+    console.log(`📝 Wallet change for ${currency}: "${address}"`);
+    
+    setSettings(prev => {
+      const updated = {
+        ...prev,
+        wallets: {
+          ...prev.wallets,
+          [currency]: address
+        }
+      };
+      console.log(`💾 Updated settings.wallets:`, updated.wallets);
+      return updated;
+    });
 
     // Debounce validation
     const timeoutId = setTimeout(() => {
@@ -529,6 +555,10 @@ export default function SettingsPage() {
 
   const configuredWalletCount = Object.values(settings.wallets).filter(address => address?.trim()).length;
 
+  // Debug logging for render
+  console.log('🎨 Rendering settings page with wallets:', settings.wallets);
+  console.log('🎨 Configured wallet count:', configuredWalletCount);
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -568,6 +598,21 @@ export default function SettingsPage() {
             )}
           </Button>
         </div>
+
+        {/* Debug Info - Remove in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>Debug Info:</strong> Loaded {configuredWalletCount} wallet addresses from database.
+              {configuredWalletCount > 0 && (
+                <div className="mt-1 text-xs">
+                  Currencies: {Object.keys(settings.wallets).filter(k => settings.wallets[k]?.trim()).join(', ')}
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Non-Custodial Security Notice */}
         <Alert className="border-green-200 bg-green-50">
@@ -632,46 +677,51 @@ export default function SettingsPage() {
                   </h3>
                   
                   <div className="grid gap-4">
-                    {TOP_10_CURRENCIES.map((currency) => (
-                      <div key={currency.code} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {currency.symbol}
+                    {TOP_10_CURRENCIES.map((currency) => {
+                      const currentAddress = settings.wallets[currency.code] || '';
+                      console.log(`🎨 Rendering ${currency.code} with address: "${currentAddress}"`);
+                      
+                      return (
+                        <div key={currency.code} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-gradient-to-r from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                {currency.symbol}
+                              </div>
+                              <div>
+                                <div className="font-medium text-gray-900">
+                                  {currency.code}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {currency.display_name}
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                {currency.code}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {currency.display_name}
-                              </div>
+                            <Badge variant="outline" className="text-xs">
+                              {currency.network}
+                            </Badge>
+                          </div>
+                          
+                          <div className="relative">
+                            <Input
+                              placeholder={`Enter your ${currency.code} wallet address`}
+                              value={currentAddress}
+                              onChange={(e) => handleWalletChange(currency.code, e.target.value)}
+                              className="pr-10"
+                            />
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              {getValidationIcon(currency.code)}
                             </div>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {currency.network}
-                          </Badge>
+                          
+                          {validationStatus[currency.code] === 'invalid' && currentAddress.trim() && (
+                            <p className="text-sm text-red-600 mt-1">
+                              Please enter a valid {currency.code} address
+                            </p>
+                          )}
                         </div>
-                        
-                        <div className="relative">
-                          <Input
-                            placeholder={`Enter your ${currency.code} wallet address`}
-                            value={settings.wallets[currency.code] || ''}
-                            onChange={(e) => handleWalletChange(currency.code, e.target.value)}
-                            className="pr-10"
-                          />
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                            {getValidationIcon(currency.code)}
-                          </div>
-                        </div>
-                        
-                        {validationStatus[currency.code] === 'invalid' && settings.wallets[currency.code]?.trim() && (
-                          <p className="text-sm text-red-600 mt-1">
-                            Please enter a valid {currency.code} address
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -693,48 +743,52 @@ export default function SettingsPage() {
 
                   {searchTerm && (
                     <div className="grid gap-3 max-h-96 overflow-y-auto">
-                      {filteredAdditionalCurrencies.map((currency) => (
-                        <div key={currency.code} className="border border-gray-200 rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-xs font-bold">
-                                {currency.symbol || currency.code.charAt(0)}
+                      {filteredAdditionalCurrencies.map((currency) => {
+                        const currentAddress = settings.wallets[currency.code] || '';
+                        
+                        return (
+                          <div key={currency.code} className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-xs font-bold">
+                                  {currency.symbol || currency.code.charAt(0)}
+                                </div>
+                                <div>
+                                  <div className="font-medium text-sm text-gray-900">
+                                    {currency.code}
+                                  </div>
+                                  <div className="text-xs text-gray-600">
+                                    {currency.name}
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <div className="font-medium text-sm text-gray-900">
-                                  {currency.code}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                  {currency.name}
-                                </div>
+                              {currency.network && (
+                                <Badge variant="outline" className="text-xs">
+                                  {currency.network}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="relative">
+                              <Input
+                                placeholder={`Enter your ${currency.code} wallet address`}
+                                value={currentAddress}
+                                onChange={(e) => handleWalletChange(currency.code, e.target.value)}
+                                className="pr-10 text-sm"
+                              />
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                {getValidationIcon(currency.code)}
                               </div>
                             </div>
-                            {currency.network && (
-                              <Badge variant="outline" className="text-xs">
-                                {currency.network}
-                              </Badge>
+                            
+                            {validationStatus[currency.code] === 'invalid' && currentAddress.trim() && (
+                              <p className="text-xs text-red-600 mt-1">
+                                Please enter a valid {currency.code} address
+                              </p>
                             )}
                           </div>
-                          
-                          <div className="relative">
-                            <Input
-                              placeholder={`Enter your ${currency.code} wallet address`}
-                              value={settings.wallets[currency.code] || ''}
-                              onChange={(e) => handleWalletChange(currency.code, e.target.value)}
-                              className="pr-10 text-sm"
-                            />
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                              {getValidationIcon(currency.code)}
-                            </div>
-                          </div>
-                          
-                          {validationStatus[currency.code] === 'invalid' && settings.wallets[currency.code]?.trim() && (
-                            <p className="text-xs text-red-600 mt-1">
-                              Please enter a valid {currency.code} address
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                       
                       {filteredAdditionalCurrencies.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
@@ -799,29 +853,22 @@ export default function SettingsPage() {
                     <div className="flex-1">
                       <div className="font-medium text-gray-900">Customer pays gateway fee</div>
                       <div className="text-sm text-gray-600">
-                        Gateway fee is added to the payment amount. You receive the full amount.
+                        Gateway fee is added to the customer's total. You receive the full amount.
                       </div>
                       <div className="text-xs text-blue-600 mt-1">
-                        ✓ You receive the full payment amount
+                        ✓ You receive 100% of the listed price
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-2">
-                    <HelpCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-yellow-900">How Gateway Fees Work</h4>
-                      <ul className="text-sm text-yellow-800 mt-1 space-y-1">
-                        <li>• <strong>Merchant pays (Auto-convert OFF):</strong> $100 payment = customer pays $100, you receive $99.50 (0.5% fee)</li>
-                        <li>• <strong>Customer pays (Auto-convert OFF):</strong> $100 payment = customer pays $100.50, you receive $100</li>
-                        <li>• <strong>Merchant pays (Auto-convert ON):</strong> $100 payment = customer pays $100, you receive $99.00 (1% fee)</li>
-                        <li>• <strong>Customer pays (Auto-convert ON):</strong> $100 payment = customer pays $101.00, you receive $100</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                <Alert className="border-amber-200 bg-amber-50">
+                  <Info className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
+                    <strong>Gateway Fees:</strong> 0.5% for direct crypto payments, 1% for auto-conversion to your preferred currency.
+                    These fees are processed by our payment gateway and enable instant, non-custodial forwarding to your wallets.
+                  </AlertDescription>
+                </Alert>
               </CardContent>
             </Card>
           </TabsContent>
@@ -835,39 +882,34 @@ export default function SettingsPage() {
                   <span>Auto-Conversion Settings</span>
                 </CardTitle>
                 <CardDescription>
-                  Automatically convert all received payments to your preferred cryptocurrency. 
-                  Higher gateway fee (1%) applies when enabled.
+                  Configure automatic conversion of incoming payments to your preferred cryptocurrency.
+                  This feature uses our payment gateway's conversion service.
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      checked={settings.auto_convert_enabled}
-                      onCheckedChange={(checked) => 
-                        setSettings(prev => ({ 
-                          ...prev, 
-                          auto_convert_enabled: !!checked,
-                          // Clear preferred currency if auto-convert is disabled
-                          preferred_payout_currency: checked ? prev.preferred_payout_currency : null
-                        }))
-                      }
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">Enable Auto-Conversion</div>
-                      <div className="text-sm text-gray-600">
-                        Automatically convert all received payments to your preferred currency
-                      </div>
-                      <div className="text-xs text-orange-600 mt-1">
-                        ⚠️ Higher gateway fee (1% instead of 0.5%) applies when enabled
-                      </div>
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    checked={settings.auto_convert_enabled}
+                    onCheckedChange={(checked) => 
+                      setSettings(prev => ({ 
+                        ...prev, 
+                        auto_convert_enabled: !!checked 
+                      }))
+                    }
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Enable Auto-Conversion</div>
+                    <div className="text-sm text-gray-600">
+                      Automatically convert all incoming payments to your preferred cryptocurrency.
                     </div>
                   </div>
+                </div>
 
-                  {settings.auto_convert_enabled && (
-                    <div className="space-y-3 ml-6">
-                      <label className="text-sm font-medium text-gray-700">
+                {settings.auto_convert_enabled && (
+                  <div className="space-y-4 pl-6 border-l-2 border-[#7f5efd]">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Preferred Payout Currency
                       </label>
                       <Select
@@ -880,45 +922,27 @@ export default function SettingsPage() {
                         }
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select preferred payout currency" />
+                          <SelectValue placeholder="Select your preferred payout currency" />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.keys(settings.wallets)
-                            .filter(currency => settings.wallets[currency]?.trim())
-                            .map((currency) => {
-                              const currencyInfo = TOP_10_CURRENCIES.find(c => c.code === currency);
-                              return (
-                                <SelectItem key={currency} value={currency}>
-                                  {currency} - {currencyInfo?.display_name || currency}
-                                </SelectItem>
-                              );
-                            })}
+                          {TOP_10_CURRENCIES.map((currency) => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.display_name} ({currency.code})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-gray-500">
-                        All payments will be automatically converted to this currency before payout
-                      </p>
-                      
-                      {settings.preferred_payout_currency && !settings.wallets[settings.preferred_payout_currency]?.trim() && (
-                        <Alert className="border-red-200 bg-red-50">
-                          <AlertTriangle className="h-4 w-4 text-red-600" />
-                          <AlertDescription className="text-red-800">
-                            Please configure a wallet address for {settings.preferred_payout_currency} in the Wallet Addresses tab.
-                          </AlertDescription>
-                        </Alert>
-                      )}
                     </div>
-                  )}
-                </div>
 
-                <Alert className="border-blue-200 bg-blue-50">
-                  <Info className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-800">
-                    <strong>Auto-Conversion:</strong> When enabled, all payments are automatically converted to your preferred 
-                    currency before being forwarded to your wallet. This feature uses NOWPayments' conversion service and 
-                    incurs a higher gateway fee of 1% instead of the standard 0.5%.
-                  </AlertDescription>
-                </Alert>
+                    <Alert className="border-blue-200 bg-blue-50">
+                      <Info className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-800">
+                        <strong>Auto-Conversion Fee:</strong> 1% gateway fee applies to converted payments (instead of 0.5% for direct payments).
+                        You must have a wallet address configured for your preferred payout currency.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -926,19 +950,10 @@ export default function SettingsPage() {
 
         {/* Trust Wallet Guide Modal */}
         {showTrustWalletGuide && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <TrustWalletGuide
-                onComplete={() => {
-                  setShowTrustWalletGuide(false);
-                  toast.success('Great! Now you can enter your wallet addresses above.');
-                }}
-                onSkip={() => {
-                  setShowTrustWalletGuide(false);
-                }}
-              />
-            </div>
-          </div>
+          <TrustWalletGuide
+            onComplete={() => setShowTrustWalletGuide(false)}
+            onSkip={() => setShowTrustWalletGuide(false)}
+          />
         )}
       </div>
     </DashboardLayout>
