@@ -1,30 +1,14 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
-import { Input } from '@/app/components/ui/input'
-import { ArrowRight, ArrowLeft, Settings, Shield, Loader2, CheckCircle, Info, DollarSign, HelpCircle } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Settings, DollarSign, HelpCircle, Info, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Badge } from '@/app/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import toast from 'react-hot-toast'
-
-interface CurrencyInfo {
-  code: string;
-  name: string;
-  symbol: string;
-  network?: string;
-  is_token?: boolean;
-  parent_currency?: string;
-  trust_wallet_compatible?: boolean;
-  address_format?: string;
-  enabled: boolean;
-  min_amount: number;
-  max_amount?: number;
-  decimals: number;
-  icon_url?: string;
-  rate_usd?: number;
-}
 
 interface PaymentConfigData {
   acceptedCryptos: string[]
@@ -32,129 +16,71 @@ interface PaymentConfigData {
   autoForward: boolean
   autoConvert: boolean
   preferredPayoutCurrency: string | null
-  chargeCustomerFee: boolean // New field for fee responsibility
+  chargeCustomerFee: boolean
 }
 
 interface PaymentConfigStepProps {
   data: PaymentConfigData
+  walletConfig: {
+    wallets: Record<string, string>
+    selectedCurrencies?: string[]
+  }
   onComplete: (data: PaymentConfigData) => void
   onPrevious: () => void
 }
 
-export default function PaymentConfigStep({ data, onComplete, onPrevious }: PaymentConfigStepProps) {
+export default function PaymentConfigStep({ data, walletConfig, onComplete, onPrevious }: PaymentConfigStepProps) {
   const [formData, setFormData] = useState<PaymentConfigData>({
     ...data,
-    chargeCustomerFee: data.chargeCustomerFee ?? false // Default to false if not set
+    chargeCustomerFee: data.chargeCustomerFee ?? false,
+    // Auto-set accepted cryptos from wallet config
+    acceptedCryptos: data.acceptedCryptos.length > 0 ? data.acceptedCryptos : Object.keys(walletConfig.wallets || {})
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
-  const [popularCurrencies, setPopularCurrencies] = useState<string[]>([])
-  const [loadingCurrencies, setLoadingCurrencies] = useState(true)
-  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Popular cryptocurrencies for quick selection
-  const POPULAR_CRYPTOS = [
-    'BTC', 'ETH', 'USDT_ERC20', 'USDC_ERC20', 'BNB', 'SOL', 'TRX', 'USDT_TRC20', 'DOGE', 'XRP'
-  ]
-
-  useEffect(() => {
-    loadAvailableCurrencies()
-  }, [])
-
-  const loadAvailableCurrencies = async () => {
-    try {
-      setLoadingCurrencies(true)
-      
-      const response = await fetch('/api/currencies')
-      if (response.ok) {
-        const result = await response.json()
-        if (result.success) {
-          setAvailableCurrencies(result.currencies)
-          
-          // Set popular currencies based on what's available
-          const availableCodes = result.currencies.map((c: CurrencyInfo) => c.code)
-          const filteredPopular = POPULAR_CRYPTOS.filter(code => availableCodes.includes(code))
-          setPopularCurrencies(filteredPopular)
-          
-          // Auto-select popular currencies if none selected
-          if (formData.acceptedCryptos.length === 0) {
-            setFormData(prev => ({
-              ...prev,
-              acceptedCryptos: filteredPopular.slice(0, 5) // Select first 5 popular
-            }))
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load currencies:', error)
-      toast.error('Failed to load available currencies')
-      
-      // Fallback to basic currencies
-      const fallbackCurrencies = [
-        { code: 'BTC', name: 'Bitcoin', symbol: '₿', enabled: true, min_amount: 0.00000001, decimals: 8 },
-        { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', enabled: true, min_amount: 0.000000001, decimals: 18 },
-        { code: 'USDT_ERC20', name: 'Tether (ERC-20)', symbol: '₮', enabled: true, min_amount: 0.000001, decimals: 6 },
-        { code: 'USDC_ERC20', name: 'USD Coin (ERC-20)', symbol: '$', enabled: true, min_amount: 0.000001, decimals: 6 }
-      ]
-      setAvailableCurrencies(fallbackCurrencies)
-      setPopularCurrencies(['BTC', 'ETH', 'USDT_ERC20', 'USDC_ERC20'])
-    } finally {
-      setLoadingCurrencies(false)
-    }
+  // Get configured wallet currencies
+  const configuredCurrencies = Object.keys(walletConfig.wallets || {})
+  
+  // Currency display names mapping
+  const CURRENCY_NAMES: Record<string, string> = {
+    'BTC': 'Bitcoin',
+    'ETH': 'Ethereum',
+    'BNB': 'BNB',
+    'SOL': 'Solana',
+    'TRX': 'TRON',
+    'TON': 'Toncoin',
+    'AVAX': 'Avalanche',
+    'DOGE': 'Dogecoin',
+    'XRP': 'XRP',
+    'SUI': 'Sui',
+    'USDT_ERC20': 'Tether (ERC-20)',
+    'USDC_ERC20': 'USD Coin (ERC-20)',
+    'USDT_BEP20': 'Tether (BEP-20)',
+    'USDC_BEP20': 'USD Coin (BEP-20)',
+    'USDT_SOL': 'Tether (Solana)',
+    'USDC_SOL': 'USD Coin (Solana)',
+    'USDT_TRC20': 'Tether (TRC-20)',
+    'USDC_TRC20': 'USD Coin (TRC-20)',
+    'USDT_TON': 'Tether (TON)',
+    'USDT_AVAX': 'Tether (Avalanche)',
+    'USDC_AVAX': 'USD Coin (Avalanche)'
   }
 
-  const handleCryptoToggle = (crypto: string) => {
-    setFormData(prev => ({
-      ...prev,
-      acceptedCryptos: prev.acceptedCryptos.includes(crypto)
-        ? prev.acceptedCryptos.filter(c => c !== crypto)
-        : [...prev.acceptedCryptos, crypto]
-    }))
-  }
-
-  const handleSelectAllPopular = () => {
-    // Fix for Set iteration issue - use Array.from() instead of spread operator
-    const uniqueCryptos = Array.from(new Set([...formData.acceptedCryptos, ...popularCurrencies]))
-    setFormData(prev => ({
-      ...prev,
-      acceptedCryptos: uniqueCryptos
-    }))
-  }
-
-  const handleClearAll = () => {
-    setFormData(prev => ({
-      ...prev,
-      acceptedCryptos: []
-    }))
-  }
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
-
-    if (formData.acceptedCryptos.length === 0) {
-      newErrors.acceptedCryptos = 'Please select at least one cryptocurrency'
-    }
-
-    if (formData.feePercentage < 0 || formData.feePercentage > 10) {
-      newErrors.feePercentage = 'Fee percentage must be between 0% and 10%'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const getCurrencyDisplayName = (code: string) => {
+    return CURRENCY_NAMES[code] || code
   }
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return
-    }
-
     try {
       setIsSubmitting(true)
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Ensure accepted cryptos includes all configured wallet currencies
+      const finalData = {
+        ...formData,
+        acceptedCryptos: configuredCurrencies // Always use wallet configured currencies
+      }
       
-      onComplete(formData)
+      onComplete(finalData)
       toast.success('Payment configuration saved!')
       
     } catch (error) {
@@ -162,17 +88,6 @@ export default function PaymentConfigStep({ data, onComplete, onPrevious }: Paym
       toast.error('Failed to save payment configuration')
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  const getCurrencyInfo = (code: string) => {
-    return availableCurrencies.find(c => c.code === code) || {
-      code,
-      name: code,
-      symbol: code,
-      enabled: true,
-      min_amount: 0.00000001,
-      decimals: 8
     }
   }
 
@@ -184,23 +99,70 @@ export default function PaymentConfigStep({ data, onComplete, onPrevious }: Paym
           <span>Payment Configuration</span>
         </CardTitle>
         <p className="text-gray-600">
-          Configure which cryptocurrencies you want to accept and set your payment preferences.
+          Configure your payment preferences and fee settings. All cryptocurrencies from your wallet setup will be accepted.
         </p>
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* Configured Cryptocurrencies Display */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+            <span>Accepted Cryptocurrencies</span>
+            <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+              {configuredCurrencies.length} Configured
+            </Badge>
+          </h3>
+          
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>Auto-configured:</strong> All cryptocurrencies from your wallet setup are automatically accepted. 
+              You can add more currencies later in your dashboard settings.
+            </AlertDescription>
+          </Alert>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {configuredCurrencies.map((currency) => (
+              <div
+                key={currency}
+                className="border border-green-200 bg-green-50 rounded-lg p-3"
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm text-green-900">
+                      {currency}
+                    </div>
+                    <div className="text-xs text-green-700">
+                      {getCurrencyDisplayName(currency)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {configuredCurrencies.length === 0 && (
+            <Alert className="border-yellow-200 bg-yellow-50">
+              <AlertDescription className="text-yellow-800">
+                No wallet addresses configured. Please go back to the wallet setup step.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
         {/* Fee Responsibility Setting */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
             <DollarSign className="w-5 h-5" />
-            <span>Fee Settings</span>
+            <span>Gateway Fee Settings</span>
           </h3>
           
           <Alert className="border-blue-200 bg-blue-50">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800">
               <strong>Gateway Fee Responsibility:</strong> Choose who pays the gateway processing fees.
-              This can be overridden for individual payment links.
+              This setting can be overridden for individual payment links.
             </AlertDescription>
           </Alert>
 
@@ -252,167 +214,109 @@ export default function PaymentConfigStep({ data, onComplete, onPrevious }: Paym
             <div className="flex items-start space-x-2">
               <HelpCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <h4 className="font-medium text-yellow-900">How it works</h4>
+                <h4 className="font-medium text-yellow-900">How Gateway Fees Work</h4>
                 <ul className="text-sm text-yellow-800 mt-1 space-y-1">
-                  <li>• <strong>Merchant pays:</strong> $100 payment = customer pays $100, you receive ~$98.50</li>
-                  <li>• <strong>Customer pays:</strong> $100 payment = customer pays ~$101.50, you receive $100</li>
-                  <li>• You can override this setting for individual payment links</li>
+                  <li>• <strong>Merchant pays (Auto-convert OFF):</strong> $100 payment = customer pays $100, you receive $99.50 (0.5% fee)</li>
+                  <li>• <strong>Customer pays (Auto-convert OFF):</strong> $100 payment = customer pays $100.50, you receive $100</li>
+                  <li>• <strong>Merchant pays (Auto-convert ON):</strong> $100 payment = customer pays $100, you receive $99.00 (1% fee)</li>
+                  <li>• <strong>Customer pays (Auto-convert ON):</strong> $100 payment = customer pays $101.00, you receive $100</li>
                 </ul>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Accepted Cryptocurrencies */}
+        {/* Auto-Conversion Feature */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Accepted Cryptocurrencies</h3>
-            <div className="flex space-x-2">
-              <Button
-                type="button"
-                onClick={handleSelectAllPopular}
-                variant="outline"
-                size="sm"
-                disabled={loadingCurrencies}
-              >
-                Select Popular
-              </Button>
-              <Button
-                type="button"
-                onClick={handleClearAll}
-                variant="outline"
-                size="sm"
-                disabled={loadingCurrencies}
-              >
-                Clear All
-              </Button>
-            </div>
-          </div>
-
-          {errors.acceptedCryptos && (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">
-                {errors.acceptedCryptos}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {loadingCurrencies ? (
-            <div className="text-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-              <p className="text-gray-600">Loading available cryptocurrencies...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {availableCurrencies.map((currency) => (
-                <div
-                  key={currency.code}
-                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                    formData.acceptedCryptos.includes(currency.code)
-                      ? 'border-[#7f5efd] bg-[#7f5efd]/5'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => handleCryptoToggle(currency.code)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.acceptedCryptos.includes(currency.code)}
-                      onChange={() => handleCryptoToggle(currency.code)}
-                      className="rounded border-gray-300"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">
-                        {currency.symbol} {currency.code}
-                      </div>
-                      <div className="text-xs text-gray-500">{currency.name}</div>
-                    </div>
-                  </div>
-                  {popularCurrencies.includes(currency.code) && (
-                    <Badge variant="outline" className="mt-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
-                      Popular
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="text-sm text-gray-600">
-            Selected: {formData.acceptedCryptos.length} cryptocurrencies
-          </div>
-        </div>
-
-        {/* Fee Configuration */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Fee Configuration</h3>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Processing Fee Percentage
-            </label>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                min="0"
-                max="10"
-                step="0.1"
-                value={formData.feePercentage}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  feePercentage: parseFloat(e.target.value) || 0
-                }))}
-                className="w-32"
-              />
-              <span className="text-sm text-gray-600">%</span>
-            </div>
-            {errors.feePercentage && (
-              <p className="text-sm text-red-600">{errors.feePercentage}</p>
-            )}
-            <p className="text-xs text-gray-500">
-              Additional fee charged on top of gateway fees (0-10%)
-            </p>
-          </div>
-        </div>
-
-        {/* Auto-Conversion (Coming Soon) */}
-        <div className="space-y-4 opacity-50">
           <h3 className="text-lg font-semibold text-gray-900">Auto-Conversion</h3>
           
-          <Alert className="border-yellow-200 bg-yellow-50">
-            <Info className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
-              <strong>Coming Soon:</strong> Auto-conversion features will allow you to automatically 
-              convert received payments to your preferred cryptocurrency.
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>Auto-Conversion:</strong> Automatically convert all received payments to your preferred cryptocurrency.
+              Higher gateway fee (1%) applies when enabled.
             </AlertDescription>
           </Alert>
 
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
-              <Checkbox disabled />
+              <Checkbox
+                checked={formData.autoConvert}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    autoConvert: !!checked,
+                    // Clear preferred currency if auto-convert is disabled
+                    preferredPayoutCurrency: checked ? prev.preferredPayoutCurrency : null
+                  }))
+                }
+              />
               <div>
-                <div className="font-medium text-gray-700">Enable Auto-Conversion</div>
-                <div className="text-sm text-gray-500">
+                <div className="font-medium text-gray-900">Enable Auto-Conversion</div>
+                <div className="text-sm text-gray-600">
                   Automatically convert all received payments to your preferred currency
+                </div>
+                <div className="text-xs text-orange-600 mt-1">
+                  ⚠️ Higher gateway fee (1% instead of 0.5%) applies when enabled
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Preferred Payout Currency
-              </label>
-              <Select disabled>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select preferred currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
-                  <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
-                  <SelectItem value="USDT">Tether (USDT)</SelectItem>
-                  <SelectItem value="USDC">USD Coin (USDC)</SelectItem>
-                </SelectContent>
-              </Select>
+            {formData.autoConvert && (
+              <div className="space-y-2 ml-6">
+                <label className="text-sm font-medium text-gray-700">
+                  Preferred Payout Currency
+                </label>
+                <Select
+                  value={formData.preferredPayoutCurrency || ''}
+                  onValueChange={(value) => 
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      preferredPayoutCurrency: value 
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select preferred payout currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {configuredCurrencies.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        {currency} - {getCurrencyDisplayName(currency)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  All payments will be automatically converted to this currency before payout
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Auto-Forward Setting */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Payment Forwarding</h3>
+          
+          <div className="flex items-center space-x-3">
+            <Checkbox
+              checked={formData.autoForward}
+              onCheckedChange={(checked) => 
+                setFormData(prev => ({ 
+                  ...prev, 
+                  autoForward: !!checked 
+                }))
+              }
+            />
+            <div>
+              <div className="font-medium text-gray-900">Enable Auto-Forward</div>
+              <div className="text-sm text-gray-600">
+                Automatically forward payments to your wallet addresses immediately upon confirmation
+              </div>
+              <div className="text-xs text-blue-600 mt-1">
+                ✓ Recommended for faster access to your funds
+              </div>
             </div>
           </div>
         </div>
@@ -431,7 +335,7 @@ export default function PaymentConfigStep({ data, onComplete, onPrevious }: Paym
 
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || loadingCurrencies}
+            disabled={isSubmitting || configuredCurrencies.length === 0}
             className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 flex items-center space-x-2"
           >
             {isSubmitting ? (

@@ -153,6 +153,7 @@ export default function OnboardingPage() {
         return (
           <PaymentConfigStep
             data={onboardingData.paymentConfig}
+            walletConfig={onboardingData.walletConfig}
             onComplete={(data) => {
               handleStepComplete({ paymentConfig: data })
               handleNext()
