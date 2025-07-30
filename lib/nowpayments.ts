@@ -1,230 +1,256 @@
-// NOWPayments API Client for Cryptrac
-// Based on NOWPayments v1 API documentation
+// NOWPayments API integration
+const NOWPAYMENTS_API_BASE = 'https://api.nowpayments.io/v1'
 
-import crypto from 'crypto';
+export interface NOWPaymentsEstimate {
+  currency_from: string
+  amount_from: number
+  currency_to: string
+  estimated_amount: string
+}
 
-export interface NOWPaymentsConfig {
-  apiKey: string;
-  baseUrl?: string;
-  ipnSecret?: string;
+export interface NOWPaymentsPayment {
+  payment_id: string
+  payment_status: string
+  pay_address: string
+  pay_amount: number
+  pay_currency: string
+  price_amount: number
+  price_currency: string
+  payout_address?: string
+  payout_currency?: string
+  payout_extra_id?: string
+  order_id: string
+  order_description?: string
+  created_at: string
+  updated_at: string
+  outcome_amount?: number
+  outcome_currency?: string
 }
 
 export interface CreatePaymentRequest {
-  price_amount: number;
-  price_currency: string;
-  pay_currency?: string;
-  payout_currency?: string;
-  payout_address?: string;
-  ipn_callback_url?: string;
-  order_id: string;
-  order_description: string;
-  success_url?: string;
-  cancel_url?: string;
-  is_fee_paid_by_user?: boolean;
+  price_amount: number
+  price_currency: string
+  pay_currency: string
+  payout_address?: string
+  payout_currency?: string
+  payout_extra_id?: string
+  order_id: string
+  order_description?: string
+  success_url?: string
+  cancel_url?: string
+  is_fee_paid_by_user?: boolean
 }
 
-export interface PaymentResponse {
-  payment_id: string;
-  payment_status: string;
-  pay_address: string;
-  price_amount: number;
-  price_currency: string;
-  pay_amount: number;
-  pay_currency: string;
-  order_id: string;
-  order_description: string;
-  ipn_callback_url?: string;
-  created_at: string;
-  updated_at: string;
-  payment_url?: string;
-}
-
-export interface Currency {
-  currency: string;
-  name: string;
-  logo_url: string;
-  min_amount: number;
-  max_amount: number;
-}
-
-export interface EstimateRequest {
-  amount: number;
-  currency_from: string;
-  currency_to: string;
-}
-
-export interface EstimateResponse {
-  currency_from: string;
-  amount_from: number;
-  currency_to: string;
-  estimated_amount: number;
-}
-
-export class NOWPaymentsClient {
-  private config: NOWPaymentsConfig;
-
-  constructor(config: NOWPaymentsConfig) {
-    this.config = {
-      baseUrl: 'https://api.nowpayments.io/v1',
-      ...config
-    };
+// Get payment estimate from NOWPayments
+export async function getPaymentEstimate(
+  amount: number,
+  currencyFrom: string,
+  currencyTo: string
+): Promise<NOWPaymentsEstimate> {
+  const apiKey = process.env.NOWPAYMENTS_API_KEY
+  if (!apiKey) {
+    throw new Error('NOWPayments API key not configured')
   }
 
-  private async makeRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.config.baseUrl}${endpoint}`;
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'x-api-key': this.config.apiKey,
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+  console.log('💰 Getting estimate:', amount, currencyFrom, '->', currencyTo)
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Payment processor error: ${response.status} - ${errorText}`);
-    }
-
-    return response.json();
-  }
-
-  // Get available currencies
-  async getCurrencies(): Promise<Currency[]> {
-    return this.makeRequest<Currency[]>('/currencies');
-  }
-
-  // Get available payout currencies for auto-conversion
-  async getPayoutCurrencies(): Promise<Currency[]> {
-    return this.makeRequest<Currency[]>('/payout-currencies');
-  }
-
-  // Get estimate for currency conversion
-  async getEstimate(request: EstimateRequest): Promise<EstimateResponse> {
-    const params = new URLSearchParams({
-      amount: request.amount.toString(),
-      currency_from: request.currency_from,
-      currency_to: request.currency_to,
-    });
-
-    return this.makeRequest<EstimateResponse>(`/estimate?${params}`);
-  }
-
-  // Create a payment
-  async createPayment(request: CreatePaymentRequest): Promise<PaymentResponse> {
-    return this.makeRequest<PaymentResponse>('/payment', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
-  }
-
-  // Get payment status
-  async getPaymentStatus(paymentId: string): Promise<PaymentResponse> {
-    return this.makeRequest<PaymentResponse>(`/payment/${paymentId}`);
-  }
-
-  // Verify IPN signature
-  verifyIpnSignature(payload: string, signature: string): boolean {
-    if (!this.config.ipnSecret) {
-      throw new Error('IPN secret not configured');
-    }
-
-    const expectedSignature = crypto
-      .createHmac('sha512', this.config.ipnSecret)
-      .update(payload)
-      .digest('hex');
-
-    return expectedSignature === signature;
-  }
-}
-
-// Create a singleton instance
-let nowPaymentsClient: NOWPaymentsClient | null = null;
-
-export function getNOWPaymentsClient(): NOWPaymentsClient {
-  if (!nowPaymentsClient) {
-    const apiKey = process.env.NOWPAYMENTS_API_KEY;
-    const ipnSecret = process.env.NOWPAYMENTS_IPN_SECRET;
-
-    if (!apiKey) {
-      throw new Error('NOWPAYMENTS_API_KEY environment variable is required');
-    }
-
-    nowPaymentsClient = new NOWPaymentsClient({
-      apiKey,
-      ipnSecret,
-    });
-  }
-
-  return nowPaymentsClient;
-}
-
-// Fee calculation utilities
-export function calculateCryptracFees(amount: number, autoConvertEnabled: boolean = false): {
-  cryptracFee: number;
-  gatewayFee: number;
-  totalFees: number;
-  merchantReceives: number;
-  feePercentage: number;
-} {
-  // Gateway Fee structure: 0.5% (no conversion) or 1% (auto-convert enabled)
-  // Cryptrac does not charge transaction fees - only gateway fees apply
-  const cryptracFee = 0; // Cryptrac does not charge transaction fees
-  const feePercentage = autoConvertEnabled ? 0.01 : 0.005; // 1% or 0.5%
+  const url = `${NOWPAYMENTS_API_BASE}/estimate?amount=${amount}&currency_from=${currencyFrom}&currency_to=${currencyTo}`
   
-  const gatewayFee = amount * feePercentage;
-  const totalFees = cryptracFee + gatewayFee;
-  const merchantReceives = amount - totalFees;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  console.log('📊 NOWPayments estimate response status:', response.status)
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('❌ NOWPayments estimate error:', response.status, errorText)
+    throw new Error(`NOWPayments estimate error: ${response.status} - ${errorText}`)
+  }
+
+  const estimate = await response.json()
+  console.log('✅ Estimate received for', currencyTo + ':', estimate)
 
   return {
-    cryptracFee,
-    gatewayFee,
-    totalFees,
-    merchantReceives,
-    feePercentage,
-  };
+    currency_from: currencyFrom,
+    amount_from: amount,
+    currency_to: currencyTo,
+    estimated_amount: estimate.estimated_amount,
+  }
 }
 
-// Payment status helpers
-export const PaymentStatus = {
-  WAITING: 'waiting',
-  CONFIRMING: 'confirming',
-  CONFIRMED: 'confirmed',
-  SENDING: 'sending',
-  PARTIALLY_PAID: 'partially_paid',
-  FINISHED: 'finished',
-  FAILED: 'failed',
-  REFUNDED: 'refunded',
-  EXPIRED: 'expired',
-} as const;
+// Create payment with NOWPayments
+export async function createPayment(paymentData: CreatePaymentRequest): Promise<NOWPaymentsPayment> {
+  const apiKey = process.env.NOWPAYMENTS_API_KEY
+  if (!apiKey) {
+    throw new Error('NOWPayments API key not configured')
+  }
 
-export type PaymentStatusType = typeof PaymentStatus[keyof typeof PaymentStatus];
+  console.log('🔄 Creating NOWPayments payment:', paymentData)
 
-export function isPaymentComplete(status: string): boolean {
-  return [
-    PaymentStatus.CONFIRMED,
-    PaymentStatus.FINISHED,
-  ].includes(status as typeof PaymentStatus.CONFIRMED | typeof PaymentStatus.FINISHED);
+  // Use the correct NOWPayments payment creation endpoint
+  const url = `${NOWPAYMENTS_API_BASE}/payment`
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(paymentData),
+  })
+
+  console.log('📊 NOWPayments payment response status:', response.status)
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+    console.error('❌ NOWPayments payment creation error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorData
+    })
+    throw new Error(`NOWPayments payment error: ${response.status} - ${errorData.message || response.statusText}`)
+  }
+
+  const payment = await response.json()
+  console.log('✅ NOWPayments payment created:', {
+    payment_id: payment.payment_id,
+    pay_address: payment.pay_address,
+    pay_amount: payment.pay_amount,
+    pay_currency: payment.pay_currency
+  })
+
+  return payment
 }
 
-export function isPaymentFailed(status: string): boolean {
-  return [
-    PaymentStatus.FAILED,
-    PaymentStatus.REFUNDED,
-    PaymentStatus.EXPIRED,
-  ].includes(status as typeof PaymentStatus.FAILED | typeof PaymentStatus.REFUNDED | typeof PaymentStatus.EXPIRED);
+// Get payment status from NOWPayments
+export async function getPaymentStatus(paymentId: string): Promise<NOWPaymentsPayment> {
+  const apiKey = process.env.NOWPAYMENTS_API_KEY
+  if (!apiKey) {
+    throw new Error('NOWPayments API key not configured')
+  }
+
+  const url = `${NOWPAYMENTS_API_BASE}/payment/${paymentId}`
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`NOWPayments status error: ${response.status} - ${errorText}`)
+  }
+
+  return await response.json()
 }
 
-export function isPaymentPending(status: string): boolean {
-  return [
-    PaymentStatus.WAITING,
-    PaymentStatus.CONFIRMING,
-    PaymentStatus.SENDING,
-    PaymentStatus.PARTIALLY_PAID,
-  ].includes(status as typeof PaymentStatus.WAITING | typeof PaymentStatus.CONFIRMING | typeof PaymentStatus.SENDING | typeof PaymentStatus.PARTIALLY_PAID);
+// Generate unique order ID
+export function generateOrderId(merchantId: string, paymentLinkId: string): string {
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).substring(2, 8)
+  return `cryptrac_${merchantId.substring(0, 8)}_${timestamp}_${random}`
+}
+
+// Calculate fees based on settings
+export function calculateFees(
+  baseAmount: number,
+  hasConversion: boolean = false,
+  chargeCustomerFee: boolean = false
+): {
+  gatewayFee: number
+  networkFee: number
+  totalFee: number
+  customerPays: number
+  merchantReceives: number
+} {
+  // NOWPayments fees:
+  // - 0.5% for direct payments
+  // - 1% for payments with conversion
+  const gatewayFeeRate = hasConversion ? 0.01 : 0.005
+  const gatewayFee = baseAmount * gatewayFeeRate
+  
+  // Network fees are typically small and handled by NOWPayments
+  const networkFee = 0
+  
+  const totalFee = gatewayFee + networkFee
+  
+  if (chargeCustomerFee) {
+    // Customer pays the fee
+    return {
+      gatewayFee,
+      networkFee,
+      totalFee,
+      customerPays: baseAmount + totalFee,
+      merchantReceives: baseAmount
+    }
+  } else {
+    // Merchant absorbs the fee
+    return {
+      gatewayFee,
+      networkFee,
+      totalFee,
+      customerPays: baseAmount,
+      merchantReceives: baseAmount - totalFee
+    }
+  }
+}
+
+// Get available currencies from NOWPayments
+export async function getAvailableCurrencies(): Promise<string[]> {
+  const apiKey = process.env.NOWPAYMENTS_API_KEY
+  if (!apiKey) {
+    throw new Error('NOWPayments API key not configured')
+  }
+
+  const url = `${NOWPAYMENTS_API_BASE}/currencies`
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`NOWPayments currencies error: ${response.status} - ${errorText}`)
+  }
+
+  const data = await response.json()
+  return data.currencies || []
+}
+
+// Validate NOWPayments API key
+export async function validateApiKey(): Promise<boolean> {
+  try {
+    const apiKey = process.env.NOWPAYMENTS_API_KEY
+    if (!apiKey) {
+      return false
+    }
+
+    const url = `${NOWPAYMENTS_API_BASE}/status`
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    return response.ok
+  } catch (error) {
+    console.error('Error validating NOWPayments API key:', error)
+    return false
+  }
 }
 

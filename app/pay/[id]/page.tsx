@@ -20,7 +20,10 @@ import {
   Loader2,
   Info,
   DollarSign,
-  AlertTriangle
+  AlertTriangle,
+  Mail,
+  Phone,
+  ExternalLink
 } from 'lucide-react'
 import QRCode from 'qrcode'
 
@@ -38,6 +41,7 @@ interface PaymentLink {
   current_uses: number
   charge_customer_fee: boolean | null
   merchant: {
+    id: string
     business_name: string
     charge_customer_fee: boolean
   }
@@ -55,7 +59,6 @@ interface PaymentDetails {
   price_currency: string
   payout_currency: string
   payout_amount: number
-  payout_address: string
   created_at: string
   updated_at: string
   expires_at: string
@@ -66,6 +69,7 @@ interface PaymentDetails {
   network_fee?: number
   total_fee?: number
   actual_amount_to_pay?: number
+  merchant_receives?: number
 }
 
 interface PaymentEstimate {
@@ -73,10 +77,10 @@ interface PaymentEstimate {
   currency_to: string
   amount_from: number
   estimated_amount: number
-  rate: number
-  fee: number
-  total_fee: number
-  actual_amount_to_pay: number
+  rate?: number
+  fee?: number
+  total_fee?: number
+  actual_amount_to_pay?: number
 }
 
 interface AvailableCurrency {
@@ -124,6 +128,25 @@ const PAYMENT_STATUS_CONFIG = {
     title: 'Payment Expired',
     description: 'Payment window has expired'
   }
+}
+
+// Minimum payment amounts for popular cryptocurrencies (in crypto units)
+const MINIMUM_AMOUNTS: { [key: string]: number } = {
+  BTC: 0.0001,
+  ETH: 0.001,
+  SOL: 0.1,
+  BNB: 0.01,
+  XRP: 1,
+  ADA: 10,
+  DOT: 0.1,
+  USDT_ERC20: 1,
+  USDC_ERC20: 1,
+  USDT_BEP20: 1,
+  USDC_BEP20: 1,
+  USDT_SOL: 1,
+  USDC_SOL: 1,
+  USDT_TRC20: 1,
+  USDC_TRC20: 1,
 }
 
 export default function PaymentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -208,14 +231,24 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
           )
           
           setAvailableCurrencies(filteredCurrencies)
+          console.log('💰 Available currencies:', filteredCurrencies)
           
-          // Fetch estimates for available currencies
+          // DEBUG: Always fetch estimates if we have currencies and payment link
           if (filteredCurrencies.length > 0 && paymentLink) {
+            console.log('🔄 About to fetch estimates...')
+            console.log('Payment link amount:', paymentLink.amount)
+            console.log('Payment link currency:', paymentLink.currency)
+            console.log('Currencies to estimate:', filteredCurrencies.map((c: AvailableCurrency) => c.code))
+            
             await fetchEstimates(
               paymentLink.amount, 
               paymentLink.currency, 
               filteredCurrencies.map((c: AvailableCurrency) => c.code)
             )
+          } else {
+            console.log('❌ Not fetching estimates because:')
+            console.log('- Filtered currencies length:', filteredCurrencies.length)
+            console.log('- Payment link exists:', !!paymentLink)
           }
         }
       }
@@ -228,6 +261,9 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
 
   const fetchEstimates = async (amount: number, fromCurrency: string, toCurrencies: string[]) => {
     try {
+      console.log('📊 Fetching estimates for currencies:', toCurrencies)
+      console.log('📊 Amount:', amount, 'From currency:', fromCurrency)
+      
       const response = await fetch('/api/nowpayments/estimate', {
         method: 'POST',
         headers: {
@@ -240,16 +276,37 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
         })
       })
 
+      console.log('📊 Estimate API response status:', response.status)
+
       if (response.ok) {
         const data = await response.json()
+        console.log('📊 Estimate API response data:', data)
         if (data.success) {
+          console.log('✅ Estimates received:', data.estimates)
           setEstimates(data.estimates)
+        } else {
+          console.error('❌ Estimate API returned error:', data.message)
         }
+      } else {
+        const errorText = await response.text()
+        console.error('❌ Estimate API failed:', response.status, errorText)
       }
     } catch (error) {
-      console.error('Error fetching estimates:', error)
+      console.error('❌ Error fetching estimates:', error)
     }
   }
+
+  // Fix: Fetch estimates when both paymentLink and availableCurrencies are ready
+  useEffect(() => {
+    if (paymentLink && availableCurrencies.length > 0 && estimates.length === 0) {
+      console.log('🔄 useEffect: Fetching estimates because both paymentLink and currencies are ready')
+      fetchEstimates(
+        paymentLink.amount,
+        paymentLink.currency,
+        availableCurrencies.map((c: AvailableCurrency) => c.code)
+      )
+    }
+  }, [paymentLink, availableCurrencies])
 
   const createPayment = async (crypto: string) => {
     if (!paymentLink) return
@@ -257,6 +314,19 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
     try {
       setCreating(true)
       setError(null)
+
+      // Check minimum amount before creating payment
+      const estimate = getEstimateForCurrency(crypto)
+      if (estimate) {
+        const minAmount = MINIMUM_AMOUNTS[crypto] || 0
+        const estimatedAmount = parseFloat(estimate.estimated_amount.toString())
+        
+        if (estimatedAmount < minAmount) {
+          throw new Error(`Payment amount too small. Minimum ${minAmount} ${crypto} required (you would receive ${formatAmount(estimatedAmount)} ${crypto})`)
+        }
+      }
+
+      console.log('🔄 Creating payment for currency:', crypto)
 
       const response = await fetch('/api/nowpayments/create-payment', {
         method: 'POST',
@@ -267,8 +337,6 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
           payment_link_id: paymentLink.id,
           pay_currency: crypto,
           customer_email: customerEmail || undefined,
-          success_url: `${window.location.origin}/payment/success`,
-          cancel_url: `${window.location.origin}/payment/cancelled`
         })
       })
 
@@ -278,6 +346,7 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
       }
 
       const data = await response.json()
+      console.log('✅ Payment created:', data.payment)
       setPaymentDetails(data.payment)
 
       // Generate QR code
@@ -323,6 +392,11 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
             if (['confirmed', 'failed', 'expired'].includes(data.payment.status)) {
               clearInterval(interval)
               setPollingInterval(null)
+              
+              // Redirect to success page if confirmed
+              if (data.payment.status === 'confirmed') {
+                window.location.href = `/payment/success/${data.payment.id}`
+              }
             }
           }
         }
@@ -346,12 +420,47 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
     }
   }
 
-  const formatAmount = (amount: number, decimals: number = 8) => {
-    return amount.toFixed(decimals).replace(/\.?0+$/, '')
+  // Safe number formatting function
+  const formatAmount = (amount: any, decimals: number = 8): string => {
+    // Convert to number if it's not already
+    const numAmount = typeof amount === 'number' ? amount : parseFloat(amount)
+    
+    // Check if it's a valid number
+    if (isNaN(numAmount) || numAmount === null || numAmount === undefined) {
+      console.warn('⚠️ Invalid amount for formatting:', amount)
+      return '0'
+    }
+    
+    return numAmount.toFixed(decimals).replace(/\.?0+$/, '')
   }
 
   const getEstimateForCurrency = (currency: string) => {
     return estimates.find((est: PaymentEstimate) => est.currency_to.toUpperCase() === currency.toUpperCase())
+  }
+
+  // Fixed: Calculate rate properly from estimate data
+  const getRateForCurrency = (currency: string): number => {
+    const estimate = getEstimateForCurrency(currency)
+    if (!estimate) return 0
+    
+    const estimatedAmount = parseFloat(estimate.estimated_amount.toString())
+    const amountFrom = estimate.amount_from
+    
+    if (amountFrom === 0) return 0
+    
+    // Rate = USD per 1 unit of crypto
+    return amountFrom / estimatedAmount
+  }
+
+  // Check if amount is too small for a currency
+  const isAmountTooSmall = (currency: string): boolean => {
+    const estimate = getEstimateForCurrency(currency)
+    if (!estimate) return false
+    
+    const minAmount = MINIMUM_AMOUNTS[currency] || 0
+    const estimatedAmount = parseFloat(estimate.estimated_amount.toString())
+    
+    return estimatedAmount < minAmount
   }
 
   const shouldShowFeeInfo = () => {
@@ -450,7 +559,9 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
                   {paymentLink.title}
                 </CardTitle>
               </div>
-              <p className="text-gray-600">{paymentLink.description}</p>
+              {paymentLink.description && (
+                <p className="text-gray-600">{paymentLink.description}</p>
+              )}
               <div className="flex items-center justify-center space-x-4 mt-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-[#7f5efd]">
@@ -466,23 +577,355 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
             </CardHeader>
           </Card>
 
-          {/* Temporary message while API endpoints are being created */}
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Info className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Payment System Loading</h2>
-              <p className="text-gray-600 mb-4">
-                Payment link loaded successfully! The payment processing system is being set up.
-              </p>
-              <div className="text-sm text-gray-500 space-y-1">
-                <p><strong>Payment ID:</strong> {paymentLink.link_id}</p>
-                <p><strong>Amount:</strong> ${paymentLink.amount} {paymentLink.currency}</p>
-                <p><strong>Accepted Currencies:</strong> {paymentLink.accepted_cryptos.join(', ')}</p>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Payment Details or Currency Selection */}
+          {paymentDetails ? (
+            <PaymentDetailsCard 
+              paymentDetails={paymentDetails}
+              paymentLink={paymentLink}
+              qrCodeUrl={qrCodeUrl}
+              showQR={showQR}
+              setShowQR={setShowQR}
+              addressCopied={addressCopied}
+              copyAddress={copyAddress}
+              formatAmount={formatAmount}
+            />
+          ) : (
+            <CurrencySelectionCard
+              availableCurrencies={availableCurrencies}
+              loadingCurrencies={loadingCurrencies}
+              selectedCrypto={selectedCrypto}
+              setSelectedCrypto={setSelectedCrypto}
+              customerEmail={customerEmail}
+              setCustomerEmail={setCustomerEmail}
+              estimates={estimates}
+              getEstimateForCurrency={getEstimateForCurrency}
+              getRateForCurrency={getRateForCurrency}
+              isAmountTooSmall={isAmountTooSmall}
+              shouldShowFeeInfo={shouldShowFeeInfo}
+              creating={creating}
+              createPayment={createPayment}
+              formatAmount={formatAmount}
+            />
+          )}
         </div>
       </div>
+    </div>
+  )
+}
+
+// Payment Details Component
+function PaymentDetailsCard({ 
+  paymentDetails, 
+  paymentLink, 
+  qrCodeUrl, 
+  showQR, 
+  setShowQR, 
+  addressCopied, 
+  copyAddress, 
+  formatAmount 
+}: {
+  paymentDetails: PaymentDetails
+  paymentLink: PaymentLink
+  qrCodeUrl: string
+  showQR: boolean
+  setShowQR: (show: boolean) => void
+  addressCopied: boolean
+  copyAddress: () => void
+  formatAmount: (amount: any, decimals?: number) => string
+}) {
+  const statusConfig = PAYMENT_STATUS_CONFIG[paymentDetails.status as keyof typeof PAYMENT_STATUS_CONFIG] || PAYMENT_STATUS_CONFIG.waiting
+  const StatusIcon = statusConfig.icon
+
+  return (
+    <div className="space-y-6">
+      {/* Payment Status */}
+      <Card>
+        <CardContent className="p-6">
+          <div className={`flex items-center space-x-3 p-4 rounded-lg border ${statusConfig.color}`}>
+            <StatusIcon className="w-6 h-6" />
+            <div>
+              <h3 className="font-semibold">{statusConfig.title}</h3>
+              <p className="text-sm">{statusConfig.description}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Instructions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <CreditCard className="w-5 h-5" />
+            <span>Payment Instructions</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Amount to Pay */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Amount to Pay:</span>
+              <span className="text-xl font-bold text-gray-900">
+                {formatAmount(paymentDetails.pay_amount)} {paymentDetails.pay_currency}
+              </span>
+            </div>
+          </div>
+
+          {/* Payment Address */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Send to Address:
+            </label>
+            <div className="flex items-center space-x-2">
+              <Input
+                value={paymentDetails.pay_address}
+                readOnly
+                className="font-mono text-sm"
+              />
+              <Button
+                onClick={copyAddress}
+                variant="outline"
+                size="sm"
+                className="flex-shrink-0"
+              >
+                {addressCopied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* QR Code */}
+          <div className="text-center">
+            <Button
+              onClick={() => setShowQR(!showQR)}
+              variant="outline"
+              className="mb-4"
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              {showQR ? 'Hide QR Code' : 'Show QR Code'}
+            </Button>
+            
+            {showQR && qrCodeUrl && (
+              <div className="inline-block p-4 bg-white rounded-lg border">
+                <Image
+                  src={qrCodeUrl}
+                  alt="Payment QR Code"
+                  width={256}
+                  height={256}
+                  className="mx-auto"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Scan with your crypto wallet
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Fee Information */}
+          {paymentDetails.is_fee_paid_by_user && paymentDetails.gateway_fee && (
+            <Alert>
+              <Info className="w-4 h-4" />
+              <AlertDescription>
+                Gateway fee of ${paymentDetails.gateway_fee.toFixed(2)} is included in the amount above.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Payment Expires */}
+          {paymentDetails.expires_at && (
+            <div className="text-center text-sm text-gray-500">
+              Payment expires: {new Date(paymentDetails.expires_at).toLocaleString()}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Currency Selection Component
+function CurrencySelectionCard({
+  availableCurrencies,
+  loadingCurrencies,
+  selectedCrypto,
+  setSelectedCrypto,
+  customerEmail,
+  setCustomerEmail,
+  estimates,
+  getEstimateForCurrency,
+  getRateForCurrency,
+  isAmountTooSmall,
+  shouldShowFeeInfo,
+  creating,
+  createPayment,
+  formatAmount
+}: {
+  availableCurrencies: AvailableCurrency[]
+  loadingCurrencies: boolean
+  selectedCrypto: string
+  setSelectedCrypto: (crypto: string) => void
+  customerEmail: string
+  setCustomerEmail: (email: string) => void
+  estimates: PaymentEstimate[]
+  getEstimateForCurrency: (currency: string) => PaymentEstimate | undefined
+  getRateForCurrency: (currency: string) => number
+  isAmountTooSmall: (currency: string) => boolean
+  shouldShowFeeInfo: () => boolean
+  creating: boolean
+  createPayment: (crypto: string) => void
+  formatAmount: (amount: any, decimals?: number) => string
+}) {
+  if (loadingCurrencies) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#7f5efd]" />
+          <p className="text-gray-600">Loading available cryptocurrencies...</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (availableCurrencies.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Payment Methods Available</h2>
+          <p className="text-gray-600">
+            The merchant hasn't configured any cryptocurrency wallet addresses yet.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Currency Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Wallet className="w-5 h-5" />
+            <span>Select Cryptocurrency</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {availableCurrencies.map((currency) => {
+              const estimate = getEstimateForCurrency(currency.code)
+              const rate = getRateForCurrency(currency.code)
+              const tooSmall = isAmountTooSmall(currency.code)
+              
+              return (
+                <div
+                  key={currency.code}
+                  onClick={() => !tooSmall && setSelectedCrypto(currency.code)}
+                  className={`p-4 border rounded-lg transition-all ${
+                    tooSmall 
+                      ? 'border-red-200 bg-red-50 cursor-not-allowed opacity-60'
+                      : selectedCrypto === currency.code
+                        ? 'border-[#7f5efd] bg-[#7f5efd]/5 cursor-pointer'
+                        : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{currency.code}</h3>
+                      <p className="text-sm text-gray-600">{currency.name}</p>
+                      {currency.network && (
+                        <Badge variant="secondary" className="mt-1 text-xs">
+                          {currency.network}
+                        </Badge>
+                      )}
+                      {tooSmall && (
+                        <Badge variant="destructive" className="mt-1 text-xs">
+                          Amount too small
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      {estimate ? (
+                        <>
+                          <div className={`font-semibold ${tooSmall ? 'text-red-600' : ''}`}>
+                            {formatAmount(estimate.estimated_amount)} {currency.code}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Rate: ${formatAmount(rate, 2)}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-gray-400">Loading...</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Minimum Amount Warning */}
+      {selectedCrypto && isAmountTooSmall(selectedCrypto) && (
+        <Alert>
+          <AlertTriangle className="w-4 h-4" />
+          <AlertDescription>
+            The payment amount is too small for {selectedCrypto}. Minimum amount required: {MINIMUM_AMOUNTS[selectedCrypto]} {selectedCrypto}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Customer Email (Optional) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Mail className="w-5 h-5" />
+            <span>Email Receipt (Optional)</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            type="email"
+            placeholder="Enter your email for payment receipt"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            className="w-full"
+          />
+        </CardContent>
+      </Card>
+
+      {/* Fee Information */}
+      {shouldShowFeeInfo() && (
+        <Alert>
+          <Info className="w-4 h-4" />
+          <AlertDescription>
+            Gateway fees will be added to your payment amount.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Create Payment Button */}
+      <Card>
+        <CardContent className="p-6">
+          <Button
+            onClick={() => createPayment(selectedCrypto)}
+            disabled={!selectedCrypto || creating || isAmountTooSmall(selectedCrypto)}
+            className="w-full bg-[#7f5efd] hover:bg-[#6d4fd2] text-white"
+            size="lg"
+          >
+            {creating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating Payment...
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-4 h-4 mr-2" />
+                Create Payment
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
