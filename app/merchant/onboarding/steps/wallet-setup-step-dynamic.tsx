@@ -4,7 +4,7 @@ import { Input } from '@/app/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink } from 'lucide-react'
-import { TrustWalletGuide } from '@/app/components/onboarding/trust-wallet-guide'
+import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
 
 interface CurrencyInfo {
   code: string
@@ -106,7 +106,7 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
   }
 ]
 
-export function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
+export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
   const [wallets, setWallets] = useState<Record<string, string>>({})
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({})
   const [autoFilledCurrencies, setAutoFilledCurrencies] = useState<string[]>([])
@@ -303,7 +303,10 @@ export function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
 
       {/* Trust Wallet Guide Modal */}
       {showTrustWalletGuide && (
-        <TrustWalletGuide onClose={() => setShowTrustWalletGuide(false)} />
+        <TrustWalletGuide 
+          onComplete={() => setShowTrustWalletGuide(false)} 
+          onSkip={() => setShowTrustWalletGuide(false)} 
+        />
       )}
 
       {/* Top Cryptocurrency Groups */}
@@ -323,9 +326,9 @@ export function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
               <CardTitle className="text-lg">{group.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Primary Currency */}
+              {/* Primary Currency - with proper null checking */}
               {group.primary && (
-                <div key={`compatible-${group.primary.code}`} className={`border rounded-lg p-4 space-y-3 ${
+                <div key={`primary-${group.primary.code}`} className={`border rounded-lg p-4 space-y-3 ${
                   validationStatus[group.primary.code] === 'valid' ? 'border-green-200 bg-green-50' :
                   validationStatus[group.primary.code] === 'invalid' ? 'border-red-200 bg-red-50' :
                   'border-gray-200'
@@ -347,22 +350,22 @@ export function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
                   
                   <div className="space-y-2">
                     <Input
-                      placeholder={`Enter your ${group.primary.code} wallet address`}
-                      value={wallets[group.primary.code] || ''}
-                      onChange={(e) => handleAddressChange(group.primary.code, e.target.value)}
+                      placeholder={`Enter your ${group.primary?.code || ''} wallet address`}
+                      value={wallets[group.primary?.code || ''] || ''}
+                      onChange={(e) => handleAddressChange(group.primary?.code || '', e.target.value)}
                       className={
-                        validationStatus[group.primary.code] === 'valid' ? 'border-green-300' :
-                        validationStatus[group.primary.code] === 'invalid' ? 'border-red-300' :
+                        validationStatus[group.primary?.code || ''] === 'valid' ? 'border-green-300' :
+                        validationStatus[group.primary?.code || ''] === 'invalid' ? 'border-red-300' :
                         ''
                       }
                     />
-                    {validationStatus[group.primary.code] && validationStatus[group.primary.code] !== 'idle' && (
+                    {validationStatus[group.primary?.code || ''] && validationStatus[group.primary?.code || ''] !== 'idle' && (
                       <p className={`text-xs ${
-                        validationStatus[group.primary.code] === 'valid' ? 'text-green-600' :
-                        validationStatus[group.primary.code] === 'invalid' ? 'text-red-600' :
+                        validationStatus[group.primary?.code || ''] === 'valid' ? 'text-green-600' :
+                        validationStatus[group.primary?.code || ''] === 'invalid' ? 'text-red-600' :
                         'text-blue-600'
                       }`}>
-                        {getValidationMessage(group.primary.code)}
+                        {getValidationMessage(group.primary?.code || '')}
                       </p>
                     )}
                   </div>
@@ -388,14 +391,14 @@ export function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
                       <p className="text-xs text-gray-500">Network: {currency.network}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {group.primary && wallets[group.primary.code] && !wallets[currency.code] && (
+                      {group.primary && wallets[group.primary?.code || ''] && !wallets[currency.code] && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleAutoFill(group.primary.code!, currency.code)}
+                          onClick={() => handleAutoFill(group.primary?.code || '', currency.code)}
                           className="text-xs"
                         >
-                          Use {group.primary.code} address
+                          Use {group.primary?.code || ''} address
                         </Button>
                       )}
                       {getValidationIcon(currency.code)}

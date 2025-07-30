@@ -465,6 +465,22 @@ $_$;
 ALTER FUNCTION "public"."handle_partner_referral"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+  UPDATE payment_links 
+  SET 
+    current_uses = COALESCE(current_uses, 0) + 1,
+    last_payment_at = NOW()
+  WHERE id = link_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."update_expired_payment_links"() RETURNS integer
     LANGUAGE "plpgsql"
     AS $$
@@ -1972,6 +1988,12 @@ GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") TO "service_role";
 
 
 

@@ -9,7 +9,7 @@ import { Logo } from '@/app/components/ui/logo'
 // Import step components
 import WelcomeStep from './steps/welcome-step'
 import BusinessInfoStep from './steps/business-info-step'
-import WalletSetupStep from './steps/wallet-setup-step'
+import WalletSetupStep from './steps/wallet-setup-step-dynamic'
 import PaymentConfigStep from './steps/payment-config-step'
 import SuccessStep from './steps/success-step'
 
@@ -131,7 +131,7 @@ export default function OnboardingPage() {
         return (
           <BusinessInfoStep
             data={onboardingData.businessInfo}
-            onComplete={(data) => {
+            onComplete={(data: any) => {
               handleStepComplete({ businessInfo: data })
               handleNext()
             }}
@@ -141,12 +141,16 @@ export default function OnboardingPage() {
       case 3:
         return (
           <WalletSetupStep
-            data={onboardingData.walletConfig}
-            onComplete={(data) => {
-              handleStepComplete({ walletConfig: data })
+            onNext={(wallets: Record<string, string>) => {
+              handleStepComplete({ 
+                walletConfig: { 
+                  ...onboardingData.walletConfig, 
+                  wallets 
+                } 
+              })
               handleNext()
             }}
-            onPrevious={handlePrevious}
+            onBack={handlePrevious}
           />
         )
       case 4:
@@ -154,7 +158,7 @@ export default function OnboardingPage() {
           <PaymentConfigStep
             data={onboardingData.paymentConfig}
             walletConfig={onboardingData.walletConfig}
-            onComplete={(data) => {
+            onComplete={(data: any) => {
               handleStepComplete({ paymentConfig: data })
               handleNext()
             }}

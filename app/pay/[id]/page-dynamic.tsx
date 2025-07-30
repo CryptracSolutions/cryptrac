@@ -131,7 +131,7 @@ export default function PaymentPage() {
           expires_at,
           max_uses,
           charge_customer_fee,
-          merchant:merchants(business_name, charge_customer_fee)
+          merchants!inner(business_name, charge_customer_fee)
         `)
         .eq('link_id', linkId)
         .eq('status', 'active')
@@ -143,11 +143,33 @@ export default function PaymentPage() {
         return
       }
 
-      console.log('✅ Payment link loaded:', paymentLinkData)
-      setPaymentLink(paymentLinkData)
+      // Transform the data to match our interface - handle the merchants array
+      const merchantData = Array.isArray(paymentLinkData.merchants) 
+        ? paymentLinkData.merchants[0] 
+        : paymentLinkData.merchants
+
+      const transformedData: PaymentLink = {
+        id: paymentLinkData.id,
+        link_id: paymentLinkData.link_id,
+        title: paymentLinkData.title,
+        description: paymentLinkData.description,
+        amount: paymentLinkData.amount,
+        currency: paymentLinkData.currency,
+        accepted_cryptos: paymentLinkData.accepted_cryptos,
+        expires_at: paymentLinkData.expires_at,
+        max_uses: paymentLinkData.max_uses,
+        charge_customer_fee: paymentLinkData.charge_customer_fee,
+        merchant: {
+          business_name: merchantData.business_name,
+          charge_customer_fee: merchantData.charge_customer_fee
+        }
+      }
+
+      console.log('✅ Payment link loaded:', transformedData)
+      setPaymentLink(transformedData)
 
       // Load available currencies from dynamic API
-      await loadAvailableCurrencies(paymentLinkData.accepted_cryptos)
+      await loadAvailableCurrencies(transformedData.accepted_cryptos)
 
     } catch (error) {
       console.error('Error loading payment link:', error)

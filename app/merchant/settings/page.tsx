@@ -641,7 +641,10 @@ export default function MerchantSettingsPage() {
 
         {/* Trust Wallet Guide Modal */}
         {showTrustWalletGuide && (
-          <TrustWalletGuide onClose={() => setShowTrustWalletGuide(false)} />
+          <TrustWalletGuide 
+            onComplete={() => setShowTrustWalletGuide(false)} 
+            onSkip={() => setShowTrustWalletGuide(false)} 
+          />
         )}
 
         <Tabs defaultValue="wallets" className="space-y-6">
