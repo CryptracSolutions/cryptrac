@@ -2,7 +2,7 @@
 // Replaces hardcoded SUPPORTED_CRYPTOS with NOWPayments API integration
 // Implements caching and rate limiting for optimal performance
 
-import { getNOWPaymentsClient } from './nowpayments';
+import { getNOWPaymentsClient } from './nowpayments-dynamic';
 import { getCachedData, setCachedData, CacheKeys, CacheTTL } from './cache';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';

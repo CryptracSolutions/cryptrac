@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getNOWPaymentsClient } from '@/lib/nowpayments';
+import { getNOWPaymentsClient } from '@/lib/nowpayments-dynamic';
 
 export async function GET() {
   try {
