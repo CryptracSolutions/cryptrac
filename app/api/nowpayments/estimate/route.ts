@@ -31,44 +31,64 @@ export async function POST(request: NextRequest) {
     }
 
     const estimates = []
+    const errors = []
 
-    // Get estimates for each currency
+    // Get estimates for each currency with individual error handling
     for (const currency_to of currencies_to) {
       try {
         console.log(`📊 Getting estimate: ${amount} ${currency_from} -> ${currency_to}`)
         
-        // Fix: Pass 3 separate arguments instead of 1 object
         const estimate = await getPaymentEstimate(amount, currency_from, currency_to)
 
         console.log(`✅ Estimate result for ${currency_to}:`, estimate)
         
-        if (estimate) {
+        if (estimate && estimate.estimated_amount) {
           estimates.push(estimate)
         } else {
           console.warn(`⚠️ No estimate returned for ${currency_to}`)
+          errors.push({
+            currency: currency_to,
+            error: 'No estimate returned'
+          })
         }
       } catch (error) {
-        console.error(`❌ Error getting estimate for ${currency_to}:`, error)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        console.error(`❌ Error getting estimate for ${currency_to}:`, errorMessage)
+        
+        errors.push({
+          currency: currency_to,
+          error: errorMessage
+        })
+        
         // Continue with other currencies even if one fails
       }
     }
 
     console.log('📊 Final estimates array:', estimates)
+    console.log('📊 Errors encountered:', errors)
 
+    // Return success even if some estimates failed, as long as we got some results
     return NextResponse.json({
       success: true,
       estimates,
       debug: {
         requested_currencies: currencies_to,
         successful_estimates: estimates.length,
-        api_key_configured: !!process.env.NOWPAYMENTS_API_KEY
+        failed_estimates: errors.length,
+        api_key_configured: !!process.env.NOWPAYMENTS_API_KEY,
+        errors: errors
       }
     })
 
   } catch (error) {
     console.error('❌ Error in estimate API:', error)
     return NextResponse.json(
-      { success: false, message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        success: false, 
+        message: 'Internal server error', 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        estimates: [] // Return empty array for graceful fallback
+      },
       { status: 500 }
     )
   }

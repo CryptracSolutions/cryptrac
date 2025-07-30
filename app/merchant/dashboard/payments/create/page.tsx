@@ -157,7 +157,7 @@ export default function CreatePaymentPage() {
 
       // Load available currencies with proper error handling
       try {
-        console.log('📡 Fetching currencies from API...')
+        const response = await fetch('/api/currencies?popular=false')
         const response = await fetch('/api/currencies?popular=true')
         
         if (!response.ok) {

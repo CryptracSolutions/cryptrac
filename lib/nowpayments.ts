@@ -25,6 +25,14 @@ export interface NOWPaymentsPayment {
   updated_at: string
   outcome_amount?: number
   outcome_currency?: string
+  // Additional fields that might be present in responses
+  actually_paid?: number
+  outcome?: string
+  network?: string
+  network_fee?: number
+  txn_id?: string
+  burning_percent?: number
+  expiration_estimate_date?: string
 }
 
 export interface CreatePaymentRequest {
@@ -41,6 +49,12 @@ export interface CreatePaymentRequest {
   is_fee_paid_by_user?: boolean
 }
 
+// Currency code formatting for NOWPayments compatibility
+function formatCurrencyForNOWPayments(currency: string): string {
+  // NOWPayments expects lowercase alphanumeric only (no underscores)
+  return currency.toLowerCase().replace(/_/g, '')
+}
+
 // Get payment estimate from NOWPayments
 export async function getPaymentEstimate(
   amount: number,
@@ -52,34 +66,51 @@ export async function getPaymentEstimate(
     throw new Error('NOWPayments API key not configured')
   }
 
-  console.log('💰 Getting estimate:', amount, currencyFrom, '->', currencyTo)
+  // Format currencies for NOWPayments
+  const formattedFrom = formatCurrencyForNOWPayments(currencyFrom)
+  const formattedTo = formatCurrencyForNOWPayments(currencyTo)
 
-  const url = `${NOWPAYMENTS_API_BASE}/estimate?amount=${amount}&currency_from=${currencyFrom}&currency_to=${currencyTo}`
+  console.log('💰 Getting estimate:', amount, formattedFrom, '->', formattedTo)
+
+  const url = `${NOWPAYMENTS_API_BASE}/estimate?amount=${amount}&currency_from=${formattedFrom}&currency_to=${formattedTo}`
   
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-  })
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    })
 
-  console.log('📊 NOWPayments estimate response status:', response.status)
+    console.log('📊 NOWPayments estimate response status:', response.status)
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error('❌ NOWPayments estimate error:', response.status, errorText)
-    throw new Error(`NOWPayments estimate error: ${response.status} - ${errorText}`)
-  }
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ NOWPayments estimate error:', response.status, errorText)
+      
+      // Handle specific error cases
+      if (response.status === 400) {
+        throw new Error(`Invalid currency pair: ${formattedFrom} -> ${formattedTo}`)
+      } else if (response.status === 404) {
+        throw new Error(`Currency not supported: ${formattedTo}`)
+      } else {
+        throw new Error(`NOWPayments estimate error: ${response.status} - ${errorText}`)
+      }
+    }
 
-  const estimate = await response.json()
-  console.log('✅ Estimate received for', currencyTo + ':', estimate)
+    const estimate = await response.json()
+    console.log('✅ Estimate received for', formattedTo + ':', estimate)
 
-  return {
-    currency_from: currencyFrom,
-    amount_from: amount,
-    currency_to: currencyTo,
-    estimated_amount: estimate.estimated_amount,
+    return {
+      currency_from: currencyFrom, // Return original format for display
+      amount_from: amount,
+      currency_to: currencyTo, // Return original format for display
+      estimated_amount: estimate.estimated_amount,
+    }
+  } catch (error) {
+    console.error('❌ Error in getPaymentEstimate:', error)
+    throw error
   }
 }
 
@@ -90,41 +121,64 @@ export async function createPayment(paymentData: CreatePaymentRequest): Promise<
     throw new Error('NOWPayments API key not configured')
   }
 
-  console.log('🔄 Creating NOWPayments payment:', paymentData)
+  // Format currencies for NOWPayments
+  const formattedPaymentData = {
+    ...paymentData,
+    pay_currency: formatCurrencyForNOWPayments(paymentData.pay_currency),
+    price_currency: formatCurrencyForNOWPayments(paymentData.price_currency),
+    payout_currency: paymentData.payout_currency ? formatCurrencyForNOWPayments(paymentData.payout_currency) : undefined
+  }
+
+  console.log('🔄 Creating NOWPayments payment:', formattedPaymentData)
 
   // Use the correct NOWPayments payment creation endpoint
   const url = `${NOWPAYMENTS_API_BASE}/payment`
   
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(paymentData),
-  })
-
-  console.log('📊 NOWPayments payment response status:', response.status)
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
-    console.error('❌ NOWPayments payment creation error:', {
-      status: response.status,
-      statusText: response.statusText,
-      error: errorData
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formattedPaymentData),
     })
-    throw new Error(`NOWPayments payment error: ${response.status} - ${errorData.message || response.statusText}`)
+
+    console.log('📊 NOWPayments payment response status:', response.status)
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+      console.error('❌ NOWPayments payment creation error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+        request_data: formattedPaymentData
+      })
+      
+      // Handle specific error cases
+      if (response.status === 400) {
+        const errorMessage = errorData.message || 'Invalid payment parameters'
+        throw new Error(`Payment validation error: ${errorMessage}`)
+      } else if (response.status === 422) {
+        throw new Error(`Payment amount too small or invalid currency`)
+      } else {
+        throw new Error(`NOWPayments payment error: ${response.status} - ${errorData.message || response.statusText}`)
+      }
+    }
+
+    const payment = await response.json()
+    console.log('✅ NOWPayments payment created:', {
+      payment_id: payment.payment_id,
+      pay_address: payment.pay_address,
+      pay_amount: payment.pay_amount,
+      pay_currency: payment.pay_currency
+    })
+
+    return payment
+  } catch (error) {
+    console.error('❌ Error in createPayment:', error)
+    throw error
   }
-
-  const payment = await response.json()
-  console.log('✅ NOWPayments payment created:', {
-    payment_id: payment.payment_id,
-    pay_address: payment.pay_address,
-    pay_amount: payment.pay_amount,
-    pay_currency: payment.pay_currency
-  })
-
-  return payment
 }
 
 // Get payment status from NOWPayments
@@ -136,20 +190,25 @@ export async function getPaymentStatus(paymentId: string): Promise<NOWPaymentsPa
 
   const url = `${NOWPAYMENTS_API_BASE}/payment/${paymentId}`
   
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-  })
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`NOWPayments status error: ${response.status} - ${errorText}`)
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`NOWPayments status error: ${response.status} - ${errorText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('❌ Error in getPaymentStatus:', error)
+    throw error
   }
-
-  return await response.json()
 }
 
 // Generate unique order ID
@@ -212,21 +271,26 @@ export async function getAvailableCurrencies(): Promise<string[]> {
 
   const url = `${NOWPAYMENTS_API_BASE}/currencies`
   
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-  })
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`NOWPayments currencies error: ${response.status} - ${errorText}`)
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`NOWPayments currencies error: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    return data.currencies || []
+  } catch (error) {
+    console.error('❌ Error in getAvailableCurrencies:', error)
+    throw error
   }
-
-  const data = await response.json()
-  return data.currencies || []
 }
 
 // Validate NOWPayments API key
@@ -251,6 +315,60 @@ export async function validateApiKey(): Promise<boolean> {
   } catch (error) {
     console.error('Error validating NOWPayments API key:', error)
     return false
+  }
+}
+
+// Get minimum payment amounts for currencies
+export async function getMinimumAmounts(): Promise<{ [currency: string]: number }> {
+  const apiKey = process.env.NOWPAYMENTS_API_KEY
+  if (!apiKey) {
+    throw new Error('NOWPayments API key not configured')
+  }
+
+  try {
+    const url = `${NOWPAYMENTS_API_BASE}/min-amount`
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      console.warn('Could not fetch minimum amounts from NOWPayments')
+      return {}
+    }
+
+    const data = await response.json()
+    return data || {}
+  } catch (error) {
+    console.warn('Error fetching minimum amounts:', error)
+    return {}
+  }
+}
+
+// Check if currency pair is supported
+export async function isCurrencyPairSupported(from: string, to: string): Promise<boolean> {
+  try {
+    // Try to get a small estimate to check if the pair is supported
+    await getPaymentEstimate(1, from, to)
+    return true
+  } catch (error) {
+    console.warn(`Currency pair ${from} -> ${to} not supported:`, error)
+    return false
+  }
+}
+
+// Get exchange rate between two currencies
+export async function getExchangeRate(from: string, to: string): Promise<number | null> {
+  try {
+    const estimate = await getPaymentEstimate(1, from, to)
+    return parseFloat(estimate.estimated_amount)
+  } catch (error) {
+    console.warn(`Could not get exchange rate for ${from} -> ${to}:`, error)
+    return null
   }
 }
 

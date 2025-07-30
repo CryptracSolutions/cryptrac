@@ -625,7 +625,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
 
                 {/* Compatible Currencies */}
                 {group.compatible.map((currency) => (
-                  <div key={currency.code} className={`border rounded-lg p-4 space-y-3 ${
+                  <div key={`compatible-${currency.code}`} className={`border rounded-lg p-4 space-y-3 ${
                     autoFilledCurrencies.includes(currency.code) ? 'bg-green-50/30 border-green-200' : ''
                   }`}>
                     <div className="flex items-center justify-between">
@@ -715,7 +715,7 @@ export default function WalletSetupStep({ data, onComplete, onPrevious }: Wallet
               ) : (
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {filteredAdditionalCurrencies.map((currency) => (
-                    <div key={currency.code} className="border rounded-lg p-3">
+                    <div key={`additional-${currency.code}`} className="border rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
                           <div>
