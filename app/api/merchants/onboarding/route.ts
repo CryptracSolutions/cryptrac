@@ -9,6 +9,15 @@ interface OnboardingData {
     website?: string;
     description?: string;
     industry?: string;
+    phoneNumber?: string;
+    businessAddress?: {
+      street: string;
+      city: string;
+      state: string;
+      zip_code: string;
+      country: string;
+    };
+    timezone?: string;
   };
   walletConfig: {
     wallets: Record<string, string>;
@@ -106,6 +115,10 @@ export async function POST(request: NextRequest) {
       industry: industry,
       website: onboardingData.businessInfo.website || null,
       business_description: onboardingData.businessInfo.description || null,
+      business_type: onboardingData.businessInfo.businessType || null,
+      phone_number: onboardingData.businessInfo.phoneNumber || null,
+      business_address: onboardingData.businessInfo.businessAddress || null,
+      timezone: onboardingData.businessInfo.timezone || 'America/New_York',
       wallets: walletData,
       charge_customer_fee: onboardingData.paymentConfig.chargeCustomerFee || false,
       payment_config: {

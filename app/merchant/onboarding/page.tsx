@@ -27,6 +27,16 @@ interface OnboardingData {
     website: string
     industry: string
     description: string
+    businessType: string
+    phoneNumber: string
+    businessAddress: {
+      street: string
+      city: string
+      state: string
+      zip_code: string
+      country: string
+    }
+    timezone: string
   }
   walletConfig: {
     wallets: Record<string, string>
@@ -55,7 +65,17 @@ export default function OnboardingPage() {
       businessName: '',
       website: '',
       industry: '',
-      description: ''
+      description: '',
+      businessType: '',
+      phoneNumber: '',
+      businessAddress: {
+        street: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        country: 'US'
+      },
+      timezone: 'America/New_York'
     },
     walletConfig: {
       wallets: {},

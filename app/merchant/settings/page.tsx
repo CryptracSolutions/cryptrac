@@ -19,7 +19,11 @@ import {
   Shield,
   Calculator,
   MapPin,
-  Building
+  Building,
+  User,
+  Phone,
+  Globe,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -59,6 +63,15 @@ interface TaxRate {
 }
 
 interface MerchantSettings {
+  // Profile information
+  business_name: string;
+  business_type: string;
+  industry: string;
+  business_description: string;
+  website: string;
+  phone_number: string;
+  timezone: string;
+  // Payment settings
   charge_customer_fee: boolean;
   auto_convert_enabled: boolean;
   preferred_payout_currency: string | null;
@@ -360,8 +373,16 @@ type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
 export default function MerchantSettingsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserType | null>(null);
-  const [settings, setSettings] = useState<MerchantSettings>({
+  const [user, setUser] = useState<UserType | null>(null);  const [settings, setSettings] = useState<MerchantSettings>({
+    // Profile information defaults
+    business_name: '',
+    business_type: '',
+    industry: '',
+    business_description: '',
+    website: '',
+    phone_number: '',
+    timezone: 'America/New_York',
+    // Payment settings defaults
     charge_customer_fee: false,
     auto_convert_enabled: false,
     preferred_payout_currency: null,
@@ -383,7 +404,7 @@ export default function MerchantSettingsPage() {
       country: 'US'
     },
     tax_strategy: 'origin',
-    sales_type: 'both'
+    sales_type: 'local'
   });
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
@@ -430,6 +451,15 @@ export default function MerchantSettingsPage() {
       console.log('✅ Merchant loaded:', merchant);
 
       setSettings({
+        // Profile information from database
+        business_name: merchant.business_name || '',
+        business_type: merchant.business_type || '',
+        industry: merchant.industry || '',
+        business_description: merchant.business_description || '',
+        website: merchant.website || '',
+        phone_number: merchant.phone_number || '',
+        timezone: merchant.timezone || 'America/New_York',
+        // Payment settings from database
         charge_customer_fee: merchant.charge_customer_fee || false,
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency,
@@ -452,7 +482,7 @@ export default function MerchantSettingsPage() {
           country: 'US'
         },
         tax_strategy: merchant.tax_strategy || 'origin',
-        sales_type: merchant.sales_type || 'both'
+        sales_type: merchant.sales_type || 'local'
       });
 
       // Initialize validation status for existing wallets
@@ -663,6 +693,15 @@ export default function MerchantSettingsPage() {
       const { error: updateError } = await supabase
         .from('merchants')
         .update({
+          // Profile information
+          business_name: settings.business_name,
+          business_type: settings.business_type,
+          industry: settings.industry,
+          business_description: settings.business_description,
+          website: settings.website,
+          phone_number: settings.phone_number,
+          timezone: settings.timezone,
+          // Payment settings
           charge_customer_fee: settings.charge_customer_fee,
           auto_convert_enabled: settings.auto_convert_enabled,
           preferred_payout_currency: settings.preferred_payout_currency,
@@ -745,8 +784,12 @@ export default function MerchantSettingsPage() {
           />
         )}
 
-        <Tabs defaultValue="wallets" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="profile">
+              <User className="h-4 w-4 mr-2" />
+              Profile
+            </TabsTrigger>
             <TabsTrigger value="wallets">
               <Wallet className="h-4 w-4 mr-2" />
               Wallet Addresses
@@ -764,6 +807,268 @@ export default function MerchantSettingsPage() {
               Security
             </TabsTrigger>
           </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Business Profile
+                </CardTitle>
+                <CardDescription>
+                  Manage your business information and contact details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Business Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    Business Information
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Business Name *</label>
+                      <Input
+                        value={settings.business_name}
+                        onChange={(e) => setSettings(prev => ({ ...prev, business_name: e.target.value }))}
+                        placeholder="Enter your business name"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Business Type</label>
+                      <Select
+                        value={settings.business_type}
+                        onValueChange={(value) => setSettings(prev => ({ ...prev, business_type: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select business type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="llc">LLC</SelectItem>
+                          <SelectItem value="corporation">Corporation</SelectItem>
+                          <SelectItem value="partnership">Partnership</SelectItem>
+                          <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
+                          <SelectItem value="nonprofit">Nonprofit</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Industry *</label>
+                      <Select
+                        value={settings.industry}
+                        onValueChange={(value) => setSettings(prev => ({ ...prev, industry: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your industry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="retail">Retail</SelectItem>
+                          <SelectItem value="ecommerce">E-commerce</SelectItem>
+                          <SelectItem value="saas">Software/SaaS</SelectItem>
+                          <SelectItem value="consulting">Consulting</SelectItem>
+                          <SelectItem value="healthcare">Healthcare</SelectItem>
+                          <SelectItem value="education">Education</SelectItem>
+                          <SelectItem value="finance">Finance</SelectItem>
+                          <SelectItem value="real_estate">Real Estate</SelectItem>
+                          <SelectItem value="hospitality">Hospitality</SelectItem>
+                          <SelectItem value="nonprofit">Nonprofit</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Website</label>
+                      <Input
+                        value={settings.website}
+                        onChange={(e) => setSettings(prev => ({ ...prev, website: e.target.value }))}
+                        placeholder="https://yourwebsite.com"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Business Description</label>
+                    <Input
+                      value={settings.business_description}
+                      onChange={(e) => setSettings(prev => ({ ...prev, business_description: e.target.value }))}
+                      placeholder="Brief description of your business"
+                    />
+                  </div>
+                </div>
+
+                {/* Contact Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Contact Information
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Phone Number *</label>
+                      <Input
+                        value={settings.phone_number}
+                        onChange={(e) => {
+                          // Format phone number as user types
+                          const value = e.target.value.replace(/\D/g, '');
+                          const formatted = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+                          setSettings(prev => ({ ...prev, phone_number: formatted }));
+                        }}
+                        placeholder="(555) 123-4567"
+                        maxLength={14}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Timezone</label>
+                      <Select
+                        value={settings.timezone}
+                        onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
+                          <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
+                          <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
+                          <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
+                          <SelectItem value="America/Anchorage">Alaska Time (AKT)</SelectItem>
+                          <SelectItem value="Pacific/Honolulu">Hawaii Time (HT)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Business Address Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Business Address
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Street Address *</label>
+                      <Input
+                        value={settings.business_address.street || ''}
+                        onChange={(e) => setSettings(prev => ({
+                          ...prev,
+                          business_address: { ...prev.business_address, street: e.target.value }
+                        }))}
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">City *</label>
+                        <Input
+                          value={settings.business_address.city || ''}
+                          onChange={(e) => setSettings(prev => ({
+                            ...prev,
+                            business_address: { ...prev.business_address, city: e.target.value }
+                          }))}
+                          placeholder="San Francisco"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">State *</label>
+                        <Select
+                          value={settings.business_address.state || ''}
+                          onValueChange={(value) => setSettings(prev => ({
+                            ...prev,
+                            business_address: { ...prev.business_address, state: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="AL">Alabama</SelectItem>
+                            <SelectItem value="AK">Alaska</SelectItem>
+                            <SelectItem value="AZ">Arizona</SelectItem>
+                            <SelectItem value="AR">Arkansas</SelectItem>
+                            <SelectItem value="CA">California</SelectItem>
+                            <SelectItem value="CO">Colorado</SelectItem>
+                            <SelectItem value="CT">Connecticut</SelectItem>
+                            <SelectItem value="DE">Delaware</SelectItem>
+                            <SelectItem value="FL">Florida</SelectItem>
+                            <SelectItem value="GA">Georgia</SelectItem>
+                            <SelectItem value="HI">Hawaii</SelectItem>
+                            <SelectItem value="ID">Idaho</SelectItem>
+                            <SelectItem value="IL">Illinois</SelectItem>
+                            <SelectItem value="IN">Indiana</SelectItem>
+                            <SelectItem value="IA">Iowa</SelectItem>
+                            <SelectItem value="KS">Kansas</SelectItem>
+                            <SelectItem value="KY">Kentucky</SelectItem>
+                            <SelectItem value="LA">Louisiana</SelectItem>
+                            <SelectItem value="ME">Maine</SelectItem>
+                            <SelectItem value="MD">Maryland</SelectItem>
+                            <SelectItem value="MA">Massachusetts</SelectItem>
+                            <SelectItem value="MI">Michigan</SelectItem>
+                            <SelectItem value="MN">Minnesota</SelectItem>
+                            <SelectItem value="MS">Mississippi</SelectItem>
+                            <SelectItem value="MO">Missouri</SelectItem>
+                            <SelectItem value="MT">Montana</SelectItem>
+                            <SelectItem value="NE">Nebraska</SelectItem>
+                            <SelectItem value="NV">Nevada</SelectItem>
+                            <SelectItem value="NH">New Hampshire</SelectItem>
+                            <SelectItem value="NJ">New Jersey</SelectItem>
+                            <SelectItem value="NM">New Mexico</SelectItem>
+                            <SelectItem value="NY">New York</SelectItem>
+                            <SelectItem value="NC">North Carolina</SelectItem>
+                            <SelectItem value="ND">North Dakota</SelectItem>
+                            <SelectItem value="OH">Ohio</SelectItem>
+                            <SelectItem value="OK">Oklahoma</SelectItem>
+                            <SelectItem value="OR">Oregon</SelectItem>
+                            <SelectItem value="PA">Pennsylvania</SelectItem>
+                            <SelectItem value="RI">Rhode Island</SelectItem>
+                            <SelectItem value="SC">South Carolina</SelectItem>
+                            <SelectItem value="SD">South Dakota</SelectItem>
+                            <SelectItem value="TN">Tennessee</SelectItem>
+                            <SelectItem value="TX">Texas</SelectItem>
+                            <SelectItem value="UT">Utah</SelectItem>
+                            <SelectItem value="VT">Vermont</SelectItem>
+                            <SelectItem value="VA">Virginia</SelectItem>
+                            <SelectItem value="WA">Washington</SelectItem>
+                            <SelectItem value="WV">West Virginia</SelectItem>
+                            <SelectItem value="WI">Wisconsin</SelectItem>
+                            <SelectItem value="WY">Wyoming</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">ZIP Code *</label>
+                        <Input
+                          value={settings.business_address.zip_code || ''}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            setSettings(prev => ({
+                              ...prev,
+                              business_address: { ...prev.business_address, zip_code: value }
+                            }));
+                          }}
+                          placeholder="12345"
+                          maxLength={5}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Wallet Addresses Tab */}
           <TabsContent value="wallets" className="space-y-6">
