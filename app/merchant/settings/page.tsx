@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
@@ -53,9 +55,10 @@ interface MerchantSettings {
   preferred_payout_currency: string | null;
   wallets: Record<string, string>;
   payment_config: {
-    // auto_forward removed - always enabled for non-custodial compliance
+    auto_forward?: boolean;
     fee_percentage: number;
-    auto_convert_fee: number;
+    auto_convert_fee?: number;
+    no_convert_fee?: number;
   };
 }
 
@@ -397,8 +400,12 @@ export default function MerchantSettingsPage() {
         preferred_payout_currency: merchant.preferred_payout_currency,
         wallets: merchant.wallets || {},
         payment_config: {
-          fee_percentage: merchant.fee_percentage || 2.5,
-          auto_convert_fee: merchant.auto_convert_fee || 1.0
+          auto_forward: merchant.payment_config?.auto_forward ?? true,
+          fee_percentage: merchant.auto_convert_enabled ? 1.0 : 0.5,
+          ...(merchant.auto_convert_enabled 
+            ? { auto_convert_fee: 1.0 }
+            : { no_convert_fee: 0.5 }
+          )
         }
       });
 
@@ -574,8 +581,7 @@ export default function MerchantSettingsPage() {
           auto_convert_enabled: settings.auto_convert_enabled,
           preferred_payout_currency: settings.preferred_payout_currency,
           wallets: settings.wallets,
-          fee_percentage: settings.payment_config.fee_percentage,
-          auto_convert_fee: settings.payment_config.auto_convert_fee,
+          payment_config: settings.payment_config,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -874,12 +880,12 @@ export default function MerchantSettingsPage() {
                       }
                     />
                     <label htmlFor="charge_customer_fee" className="text-sm font-medium">
-                      Charge processing fee to customers
+                      Charge gateway fee to customers
                     </label>
                   </div>
                   <p className="text-sm text-gray-600 ml-6">
-                    When enabled, customers pay an additional {settings.payment_config.fee_percentage}% processing fee. 
-                    When disabled, you absorb the processing costs.
+                    When enabled, customers pay the gateway fee ({settings.auto_convert_enabled ? '1%' : '0.5%'}). 
+                    When disabled, you absorb the gateway costs.
                   </p>
                 </div>
 
@@ -889,9 +895,21 @@ export default function MerchantSettingsPage() {
                     <Checkbox
                       id="auto_convert_enabled"
                       checked={settings.auto_convert_enabled}
-                      onCheckedChange={(checked) => 
-                        setSettings(prev => ({ ...prev, auto_convert_enabled: checked === true }))
-                      }
+                      onCheckedChange={(checked) => {
+                        const isAutoConvert = checked === true;
+                        setSettings(prev => ({ 
+                          ...prev, 
+                          auto_convert_enabled: isAutoConvert,
+                          payment_config: {
+                            auto_forward: prev.payment_config.auto_forward,
+                            fee_percentage: isAutoConvert ? 1.0 : 0.5,
+                            ...(isAutoConvert 
+                              ? { auto_convert_fee: 1.0 }
+                              : { no_convert_fee: 0.5 }
+                            )
+                          }
+                        }))
+                      }}
                     />
                     <label htmlFor="auto_convert_enabled" className="text-sm font-medium">
                       Enable automatic conversion to preferred currency
@@ -899,7 +917,7 @@ export default function MerchantSettingsPage() {
                   </div>
                   <p className="text-sm text-gray-600 ml-6">
                     Automatically convert received payments to your preferred payout currency. 
-                    Additional {settings.payment_config.auto_convert_fee}% conversion fee applies.
+                    Gateway fee increases to 1% when auto-convert is enabled (vs 0.5% when disabled).
                   </p>
                 </div>
 
@@ -932,48 +950,6 @@ export default function MerchantSettingsPage() {
                   </div>
                 )}
 
-                {/* Fee Configuration */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Processing Fee (%)</label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="10"
-                      value={settings.payment_config.fee_percentage}
-                      onChange={(e) => 
-                        setSettings(prev => ({
-                          ...prev,
-                          payment_config: {
-                            ...prev.payment_config,
-                            fee_percentage: parseFloat(e.target.value) || 0
-                          }
-                        }))
-                      }
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Auto-Convert Fee (%)</label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="5"
-                      value={settings.payment_config.auto_convert_fee}
-                      onChange={(e) => 
-                        setSettings(prev => ({
-                          ...prev,
-                          payment_config: {
-                            ...prev.payment_config,
-                            auto_convert_fee: parseFloat(e.target.value) || 0
-                          }
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

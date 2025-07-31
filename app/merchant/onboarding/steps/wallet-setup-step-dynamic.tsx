@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info } from 'lucide-react'
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
 
 interface CurrencyInfo {
@@ -30,8 +30,10 @@ interface CompatibleCurrency {
 interface CurrencyGroup {
   id: string
   name: string
-  primary?: CompatibleCurrency
-  compatible: CompatibleCurrency[]
+  description: string
+  primary: CompatibleCurrency
+  autoIncludedStablecoins: CompatibleCurrency[]
+  others: CompatibleCurrency[]
 }
 
 interface WalletSetupStepProps {
@@ -41,75 +43,85 @@ interface WalletSetupStepProps {
 
 type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid'
 
-// Top currency groups (same as before for consistency)
+// Improved currency groups with automatic stablecoin inclusion
 const CURRENCY_GROUPS: CurrencyGroup[] = [
   {
     id: 'bitcoin',
     name: 'Bitcoin',
+    description: 'The original cryptocurrency',
     primary: { code: 'BTC', name: 'Bitcoin', network: 'Bitcoin', trust_wallet_compatible: true },
-    compatible: []
+    autoIncludedStablecoins: [],
+    others: []
   },
   {
     id: 'ethereum',
     name: 'Ethereum Ecosystem',
+    description: 'Ethereum and major ERC-20 stablecoins',
     primary: { code: 'ETH', name: 'Ethereum', network: 'Ethereum', trust_wallet_compatible: true },
-    compatible: [
+    autoIncludedStablecoins: [
       { code: 'USDT_ERC20', name: 'USDT (ERC-20)', network: 'Ethereum', trust_wallet_compatible: true },
       { code: 'USDC_ERC20', name: 'USDC (ERC-20)', network: 'Ethereum', trust_wallet_compatible: true }
-    ]
+    ],
+    others: []
   },
   {
     id: 'binance',
     name: 'Binance Smart Chain',
+    description: 'BNB and major BEP-20 stablecoins',
     primary: { code: 'BNB', name: 'BNB', network: 'BSC', trust_wallet_compatible: true },
-    compatible: [
+    autoIncludedStablecoins: [
       { code: 'USDT_BEP20', name: 'USDT (BEP-20)', network: 'BSC', trust_wallet_compatible: true },
       { code: 'USDC_BEP20', name: 'USDC (BEP-20)', network: 'BSC', trust_wallet_compatible: true }
-    ]
+    ],
+    others: []
   },
   {
     id: 'solana',
     name: 'Solana Ecosystem',
+    description: 'Solana and major SPL stablecoins',
     primary: { code: 'SOL', name: 'Solana', network: 'Solana', trust_wallet_compatible: true },
-    compatible: [
+    autoIncludedStablecoins: [
       { code: 'USDT_SOL', name: 'USDT (Solana)', network: 'Solana', trust_wallet_compatible: true },
       { code: 'USDC_SOL', name: 'USDC (Solana)', network: 'Solana', trust_wallet_compatible: true }
-    ]
+    ],
+    others: []
   },
   {
     id: 'tron',
     name: 'TRON Ecosystem',
+    description: 'TRON and major TRC-20 stablecoins',
     primary: { code: 'TRX', name: 'TRON', network: 'TRON', trust_wallet_compatible: true },
-    compatible: [
+    autoIncludedStablecoins: [
       { code: 'USDT_TRC20', name: 'USDT (TRC-20)', network: 'TRON', trust_wallet_compatible: true },
       { code: 'USDC_TRC20', name: 'USDC (TRC-20)', network: 'TRON', trust_wallet_compatible: true }
-    ]
+    ],
+    others: []
   },
   {
     id: 'avalanche',
     name: 'Avalanche Ecosystem',
+    description: 'Avalanche and major AVAX stablecoins',
     primary: { code: 'AVAX', name: 'Avalanche', network: 'Avalanche', trust_wallet_compatible: true },
-    compatible: [
+    autoIncludedStablecoins: [
       { code: 'USDT_AVAX', name: 'USDT (Avalanche)', network: 'Avalanche', trust_wallet_compatible: true },
       { code: 'USDC_AVAX', name: 'USDC (Avalanche)', network: 'Avalanche', trust_wallet_compatible: true }
-    ]
-  },
-  {
-    id: 'other',
-    name: 'Other Popular Cryptocurrencies',
-    compatible: [
-      { code: 'XRP', name: 'XRP', network: 'XRP Ledger', trust_wallet_compatible: true },
-      { code: 'DOGE', name: 'Dogecoin', network: 'Dogecoin', trust_wallet_compatible: true },
-      { code: 'TON', name: 'TON', network: 'TON', trust_wallet_compatible: true },
-      { code: 'SUI', name: 'Sui', network: 'Sui', trust_wallet_compatible: true }
-    ]
+    ],
+    others: []
   }
+]
+
+const OTHER_POPULAR_CURRENCIES: CompatibleCurrency[] = [
+  { code: 'XRP', name: 'XRP', network: 'XRP Ledger', trust_wallet_compatible: true },
+  { code: 'DOGE', name: 'Dogecoin', network: 'Dogecoin', trust_wallet_compatible: true },
+  { code: 'LTC', name: 'Litecoin', network: 'Litecoin', trust_wallet_compatible: true },
+  { code: 'ADA', name: 'Cardano', network: 'Cardano', trust_wallet_compatible: true },
+  { code: 'TON', name: 'TON', network: 'TON', trust_wallet_compatible: true },
+  { code: 'SUI', name: 'Sui', network: 'Sui', trust_wallet_compatible: true }
 ]
 
 export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
   const [wallets, setWallets] = useState<Record<string, string>>({})
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({})
-  const [autoFilledCurrencies, setAutoFilledCurrencies] = useState<string[]>([])
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([])
   const [loadingCurrencies, setLoadingCurrencies] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -129,10 +141,14 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         const result = await response.json()
         if (result.success) {
           // Filter out currencies that are already in our groups
-          const groupedCodes = CURRENCY_GROUPS.flatMap(group => [
-            group.primary?.code,
-            ...group.compatible.map((c: CompatibleCurrency) => c.code)
-          ]).filter(Boolean)
+          const groupedCodes = [
+            ...CURRENCY_GROUPS.flatMap(group => [
+              group.primary.code,
+              ...group.autoIncludedStablecoins.map(c => c.code),
+              ...group.others.map(c => c.code)
+            ]),
+            ...OTHER_POPULAR_CURRENCIES.map(c => c.code)
+          ]
           
           const additional = result.currencies.filter((c: CurrencyInfo) => 
             !groupedCodes.includes(c.code) && c.enabled
@@ -179,7 +195,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       const result = await response.json()
       console.log(`📨 Validation response for ${currency}:`, result)
       
-      // The API returns { success: true, validation: { valid: boolean, ... } }
       const isValid = result.success && result.validation?.valid
       
       setValidationStatus(prev => ({ 
@@ -201,18 +216,68 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     setWallets(prev => ({ ...prev, [currency]: address }))
     
     if (address.trim()) {
-      await validateAddress(currency, address)
+      const isValid = await validateAddress(currency, address)
+      
+      // Auto-include stablecoins when primary currency is validated
+      if (isValid) {
+        const group = CURRENCY_GROUPS.find(g => g.primary.code === currency)
+        if (group && group.autoIncludedStablecoins.length > 0) {
+          console.log(`🔄 Auto-including stablecoins for ${currency}:`, group.autoIncludedStablecoins.map(c => c.code))
+          const newWallets = { ...wallets, [currency]: address }
+          
+          group.autoIncludedStablecoins.forEach(stablecoin => {
+            newWallets[stablecoin.code] = address
+            setValidationStatus(prev => ({ ...prev, [stablecoin.code]: 'valid' }))
+          })
+          
+          setWallets(newWallets)
+        }
+      }
     } else {
       setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }))
+      
+      // Remove auto-included stablecoins when primary currency is cleared
+      const group = CURRENCY_GROUPS.find(g => g.primary.code === currency)
+      if (group && group.autoIncludedStablecoins.length > 0) {
+        const newWallets = { ...wallets }
+        const newValidationStatus = { ...validationStatus }
+        
+        group.autoIncludedStablecoins.forEach(stablecoin => {
+          delete newWallets[stablecoin.code]
+          delete newValidationStatus[stablecoin.code]
+        })
+        
+        setWallets(newWallets)
+        setValidationStatus(newValidationStatus)
+      }
     }
   }
 
-  const handleAutoFill = (fromCurrency: string, toCurrency: string) => {
-    const sourceAddress = wallets[fromCurrency]
-    if (sourceAddress && !wallets[toCurrency]) {
-      setWallets(prev => ({ ...prev, [toCurrency]: sourceAddress }))
-      setAutoFilledCurrencies(prev => [...prev, toCurrency])
-      validateAddress(toCurrency, sourceAddress)
+  const handleRemoveWallet = (currency: string) => {
+    setWallets(prev => {
+      const newWallets = { ...prev }
+      delete newWallets[currency]
+      return newWallets
+    })
+    setValidationStatus(prev => {
+      const newStatus = { ...prev }
+      delete newStatus[currency]
+      return newStatus
+    })
+    
+    // Also remove auto-included stablecoins if removing primary currency
+    const group = CURRENCY_GROUPS.find(g => g.primary.code === currency)
+    if (group && group.autoIncludedStablecoins.length > 0) {
+      const newWallets = { ...wallets }
+      const newValidationStatus = { ...validationStatus }
+      
+      group.autoIncludedStablecoins.forEach(stablecoin => {
+        delete newWallets[stablecoin.code]
+        delete newValidationStatus[stablecoin.code]
+      })
+      
+      setWallets(newWallets)
+      setValidationStatus(newValidationStatus)
     }
   }
 
@@ -275,18 +340,91 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   useEffect(() => {
     console.log('🔄 State update - Wallets:', wallets)
     console.log('🔄 State update - Validation Status:', validationStatus)
-    console.log('🔄 State update - Auto-filled:', autoFilledCurrencies)
-  }, [wallets, validationStatus, autoFilledCurrencies])
+  }, [wallets, validationStatus])
+
+  const renderCurrencyInput = (currency: CompatibleCurrency, isAutoIncluded: boolean = false) => (
+    <div key={currency.code} className={`relative border rounded-xl p-4 transition-all ${
+      validationStatus[currency.code] === 'valid' ? 'border-green-300 bg-green-50/50' :
+      validationStatus[currency.code] === 'invalid' ? 'border-red-300 bg-red-50/50' :
+      isAutoIncluded ? 'border-blue-200 bg-blue-50/30' :
+      'border-gray-200 hover:border-gray-300'
+    }`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-semibold text-gray-900">{currency.code}</span>
+            {isAutoIncluded && (
+              <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                Auto-included
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 mb-1">{currency.name}</p>
+          <p className="text-xs text-gray-500">Network: {currency.network}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {wallets[currency.code] && !isAutoIncluded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleRemoveWallet(currency.code)}
+              className="text-red-500 hover:text-red-700 h-7 w-7 p-0"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
+          {getValidationIcon(currency.code)}
+        </div>
+      </div>
+      
+      {!isAutoIncluded ? (
+        <div className="space-y-2">
+          <Input
+            placeholder={`Enter your ${currency.code} wallet address`}
+            value={wallets[currency.code] || ''}
+            onChange={(e) => handleAddressChange(currency.code, e.target.value)}
+            className={`transition-colors ${
+              validationStatus[currency.code] === 'valid' ? 'border-green-300 focus:border-green-400' :
+              validationStatus[currency.code] === 'invalid' ? 'border-red-300 focus:border-red-400' :
+              'focus:border-blue-400'
+            }`}
+          />
+          {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
+            <p className={`text-xs ${
+              validationStatus[currency.code] === 'valid' ? 'text-green-600' :
+              validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
+              'text-blue-600'
+            }`}>
+              {getValidationMessage(currency.code)}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Info className="h-4 w-4" />
+              <span className="text-sm font-medium">Uses same address as primary currency</span>
+            </div>
+            <p className="text-xs text-blue-600 mt-1">
+              This stablecoin will automatically use your {currency.network} address
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
+      {/* Header */}
+      <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">Set Up Your Crypto Wallets</h2>
-        <p className="mt-2 text-gray-600">
-          Configure wallet addresses for the cryptocurrencies you want to accept
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Configure wallet addresses for the cryptocurrencies you want to accept. Major stablecoins will be automatically included for each ecosystem.
         </p>
-        <div className="mt-4 flex items-center justify-center gap-4">
-          <Badge variant="outline" className="text-sm">
+        <div className="flex items-center justify-center gap-4">
+          <Badge variant={configuredCurrencies.length > 0 ? "default" : "outline"} className="text-sm">
             {configuredCurrencies.length} configured
           </Badge>
           <Button
@@ -309,137 +447,79 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         />
       )}
 
-      {/* Top Cryptocurrency Groups */}
+      {/* Recommended Cryptocurrency Groups */}
       <div className="space-y-6">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">
+        <div className="text-center">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
             Recommended Cryptocurrencies
           </h3>
-          <p className="text-sm text-gray-600 mb-6">
-            These are the most popular cryptocurrencies. Configure at least one to continue.
+          <p className="text-sm text-gray-600">
+            Configure at least one cryptocurrency. Major stablecoins are automatically included.
           </p>
         </div>
 
         {CURRENCY_GROUPS.map((group) => (
-          <Card key={group.id} className="border-2">
+          <Card key={group.id} className="border-2 shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">{group.name}</CardTitle>
+              <div>
+                <CardTitle className="text-lg text-gray-900">{group.name}</CardTitle>
+                <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+                {group.autoIncludedStablecoins.length > 0 && (
+                  <p className="text-xs text-blue-600 mt-2">
+                    ✨ Includes {group.autoIncludedStablecoins.map(c => c.name).join(' and ')} automatically
+                  </p>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Primary Currency - with proper null checking */}
-              {group.primary && (
-                <div key={`primary-${group.primary.code}`} className={`border rounded-lg p-4 space-y-3 ${
-                  validationStatus[group.primary.code] === 'valid' ? 'border-green-200 bg-green-50' :
-                  validationStatus[group.primary.code] === 'invalid' ? 'border-red-200 bg-red-50' :
-                  'border-gray-200'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{group.primary.code}</span>
-                        <Badge variant="secondary" className="text-xs">Primary</Badge>
-                        {autoFilledCurrencies.includes(group.primary.code) && (
-                          <Badge variant="outline" className="text-xs text-blue-600">Auto-filled</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600">{group.primary.name}</p>
-                      <p className="text-xs text-gray-500">Network: {group.primary.network}</p>
-                    </div>
-                    {getValidationIcon(group.primary.code)}
+              {/* Primary Currency */}
+              {renderCurrencyInput(group.primary)}
+
+              {/* Auto-included Stablecoins */}
+              {group.autoIncludedStablecoins.length > 0 && wallets[group.primary.code] && validationStatus[group.primary.code] === 'valid' && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-px bg-blue-200 flex-1"></div>
+                    <span className="text-xs text-blue-600 bg-white px-2">Auto-included Stablecoins</span>
+                    <div className="h-px bg-blue-200 flex-1"></div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Input
-                      placeholder={`Enter your ${group.primary?.code || ''} wallet address`}
-                      value={wallets[group.primary?.code || ''] || ''}
-                      onChange={(e) => handleAddressChange(group.primary?.code || '', e.target.value)}
-                      className={
-                        validationStatus[group.primary?.code || ''] === 'valid' ? 'border-green-300' :
-                        validationStatus[group.primary?.code || ''] === 'invalid' ? 'border-red-300' :
-                        ''
-                      }
-                    />
-                    {validationStatus[group.primary?.code || ''] && validationStatus[group.primary?.code || ''] !== 'idle' && (
-                      <p className={`text-xs ${
-                        validationStatus[group.primary?.code || ''] === 'valid' ? 'text-green-600' :
-                        validationStatus[group.primary?.code || ''] === 'invalid' ? 'text-red-600' :
-                        'text-blue-600'
-                      }`}>
-                        {getValidationMessage(group.primary?.code || '')}
-                      </p>
-                    )}
-                  </div>
+                  {group.autoIncludedStablecoins.map(currency => 
+                    renderCurrencyInput(currency, true)
+                  )}
                 </div>
               )}
 
-              {/* Compatible Currencies */}
-              {group.compatible.map((currency) => (
-                <div key={`compatible-${currency.code}`} className={`border rounded-lg p-4 space-y-3 ${
-                  validationStatus[currency.code] === 'valid' ? 'border-green-200 bg-green-50' :
-                  validationStatus[currency.code] === 'invalid' ? 'border-red-200 bg-red-50' :
-                  'border-gray-200'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{currency.code}</span>
-                        {autoFilledCurrencies.includes(currency.code) && (
-                          <Badge variant="outline" className="text-xs text-blue-600">Auto-filled</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600">{currency.name}</p>
-                      <p className="text-xs text-gray-500">Network: {currency.network}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {group.primary && wallets[group.primary?.code || ''] && !wallets[currency.code] && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAutoFill(group.primary?.code || '', currency.code)}
-                          className="text-xs"
-                        >
-                          Use {group.primary?.code || ''} address
-                        </Button>
-                      )}
-                      {getValidationIcon(currency.code)}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Input
-                      placeholder={`Enter your ${currency.code} wallet address`}
-                      value={wallets[currency.code] || ''}
-                      onChange={(e) => handleAddressChange(currency.code, e.target.value)}
-                      className={
-                        validationStatus[currency.code] === 'valid' ? 'border-green-300' :
-                        validationStatus[currency.code] === 'invalid' ? 'border-red-300' :
-                        ''
-                      }
-                    />
-                    {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-                      <p className={`text-xs ${
-                        validationStatus[currency.code] === 'valid' ? 'text-green-600' :
-                        validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-                        'text-blue-600'
-                      }`}>
-                        {getValidationMessage(currency.code)}
-                      </p>
-                    )}
-                  </div>
+              {/* Other currencies */}
+              {group.others.length > 0 && (
+                <div className="space-y-3">
+                  {group.others.map(currency => renderCurrencyInput(currency))}
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
         ))}
+
+        {/* Other Popular Cryptocurrencies */}
+        <Card className="border-2 shadow-sm">
+          <CardHeader className="pb-4">
+            <div>
+              <CardTitle className="text-lg text-gray-900">Other Popular Cryptocurrencies</CardTitle>
+              <p className="text-sm text-gray-600 mt-1">Additional widely used cryptocurrencies</p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {OTHER_POPULAR_CURRENCIES.map(currency => renderCurrencyInput(currency))}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Additional Currencies Section */}
       {additionalCurrencies.length > 0 && (
-        <Card className="border-2">
+        <Card className="border-2 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Additional Cryptocurrencies</CardTitle>
+            <CardTitle className="text-lg text-gray-900">Additional Cryptocurrencies</CardTitle>
             <p className="text-sm text-gray-600">
-              Optional: Add support for more cryptocurrencies (loaded from NOWPayments)
+              Optional: Add support for more cryptocurrencies ({additionalCurrencies.length} available from NOWPayments)
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -460,45 +540,14 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               </div>
             ) : (
               <div className="grid gap-3 max-h-96 overflow-y-auto">
-                {filteredAdditionalCurrencies.map((currency) => (
-                  <div key={`additional-${currency.code}`} className="border rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{currency.code}</span>
-                          {autoFilledCurrencies.includes(currency.code) && (
-                            <Badge variant="outline" className="text-xs text-blue-600">Auto-filled</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600">{currency.display_name}</p>
-                        <p className="text-xs text-gray-500">Network: {currency.network}</p>
-                      </div>
-                      {getValidationIcon(currency.code)}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Input
-                        placeholder={`Enter your ${currency.code} wallet address`}
-                        value={wallets[currency.code] || ''}
-                        onChange={(e) => handleAddressChange(currency.code, e.target.value)}
-                        className={
-                          validationStatus[currency.code] === 'valid' ? 'border-green-300' :
-                          validationStatus[currency.code] === 'invalid' ? 'border-red-300' :
-                          ''
-                        }
-                      />
-                      {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-                        <p className={`text-xs ${
-                          validationStatus[currency.code] === 'valid' ? 'text-green-600' :
-                          validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-                          'text-blue-600'
-                        }`}>
-                          {getValidationMessage(currency.code)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                {filteredAdditionalCurrencies.map((currency) => 
+                  renderCurrencyInput({
+                    code: currency.code,
+                    name: currency.display_name,
+                    network: currency.network,
+                    trust_wallet_compatible: currency.trust_wallet_compatible
+                  })
+                )}
                 
                 {searchTerm && filteredAdditionalCurrencies.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
@@ -512,7 +561,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )}
 
       {/* Progress Summary */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className={`border-2 ${canProceed ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
             {canProceed ? (
@@ -523,8 +572,8 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
             <div>
               <p className="font-medium">
                 {canProceed 
-                  ? `Ready to continue with ${configuredCurrencies.length} configured cryptocurrencies`
-                  : 'Configure at least 1 cryptocurrency to continue'
+                  ? `✅ Ready to continue with ${configuredCurrencies.length} configured ${configuredCurrencies.length === 1 ? 'cryptocurrency' : 'cryptocurrencies'}`
+                  : '⚠️ Configure at least 1 cryptocurrency to continue'
                 }
               </p>
               <p className="text-sm text-gray-600">
@@ -536,16 +585,16 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       </Card>
 
       {/* Navigation */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
+      <div className="flex justify-between pt-4">
+        <Button variant="outline" onClick={onBack} className="px-8">
           Back
         </Button>
         <Button 
           onClick={handleNext} 
           disabled={!canProceed}
-          className="min-w-[120px]"
+          className="min-w-[120px] px-8"
         >
-          Continue
+          {canProceed ? 'Continue' : 'Configure Wallets'}
         </Button>
       </div>
     </div>
