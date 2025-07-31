@@ -294,6 +294,22 @@ export async function getMinimumAmount(currencyFrom: string, currencyTo: string)
   }
 }
 
+// Get NOWPayments client configuration
+export function getNOWPaymentsClient() {
+  if (!NOWPAYMENTS_API_KEY) {
+    throw new Error('NOWPayments API key not configured')
+  }
+
+  return {
+    apiKey: NOWPAYMENTS_API_KEY,
+    baseUrl: NOWPAYMENTS_API_BASE,
+    headers: {
+      'x-api-key': NOWPAYMENTS_API_KEY,
+      'Content-Type': 'application/json'
+    }
+  }
+}
+
 // Utility function to format currency code for NOWPayments
 export function formatCurrencyForNOWPayments(currencyCode: string): string {
   // NOWPayments expects lowercase currency codes
