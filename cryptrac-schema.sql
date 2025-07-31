@@ -603,6 +603,28 @@ $$;
 
 ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
 
+
+CREATE OR REPLACE FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) RETURNS boolean
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+  calculated_tax NUMERIC := 0;
+  tax_rate JSONB;
+BEGIN
+  -- Calculate total tax from tax_rates array
+  FOR tax_rate IN SELECT * FROM jsonb_array_elements(p_tax_rates)
+  LOOP
+    calculated_tax := calculated_tax + (p_base_amount * (tax_rate->>'percentage')::NUMERIC / 100);
+  END LOOP;
+  
+  -- Return true if calculated tax matches expected (within 0.01 tolerance)
+  RETURN ABS(calculated_tax - p_expected_tax_amount) < 0.01;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) OWNER TO "postgres";
+
 SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
@@ -657,41 +679,6 @@ CREATE TABLE IF NOT EXISTS "public"."fiat_payouts" (
 ALTER TABLE "public"."fiat_payouts" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."merchant_payments" (
-    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "merchant_id" "uuid",
-    "invoice_id" "text",
-    "amount" numeric(18,2),
-    "currency" character varying(20),
-    "pay_currency" character varying(20),
-    "status" "text" DEFAULT 'pending'::"text",
-    "tx_hash" "text",
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "nowpayments_invoice_id" character varying(100),
-    "payment_link_id" "uuid",
-    "order_id" character varying(255),
-    "amount_received" numeric(18,8) DEFAULT 0,
-    "currency_received" character varying(10),
-    "pay_address" "text",
-    "pay_amount" numeric(18,8),
-    "cryptrac_fee" numeric(18,8) DEFAULT 0,
-    "gateway_fee" numeric(18,8) DEFAULT 0,
-    "merchant_receives" numeric(18,8) DEFAULT 0,
-    "customer_email" character varying(255),
-    "payment_data" "jsonb" DEFAULT '{}'::"jsonb",
-    "expires_at" timestamp with time zone,
-    "updated_at" timestamp with time zone DEFAULT "now"(),
-    "payout_currency" character varying(20)
-);
-
-
-ALTER TABLE "public"."merchant_payments" OWNER TO "postgres";
-
-
-COMMENT ON TABLE "public"."merchant_payments" IS 'Updated for Phase 5 NOWPayments integration - all required columns added';
-
-
-
 CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "user_id" "uuid",
@@ -730,6 +717,15 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "wallet_generation_method" character varying(20) DEFAULT 'manual'::character varying,
     "supported_currencies" "text"[] DEFAULT '{}'::"text"[],
     "charge_customer_fee" boolean DEFAULT false,
+    "business_address" "jsonb",
+    "phone_number" "text",
+    "business_type" "text",
+    "website_url" "text",
+    "timezone" "text" DEFAULT 'America/New_York'::"text",
+    "tax_enabled" boolean DEFAULT false,
+    "tax_rates" "jsonb" DEFAULT '[]'::"jsonb",
+    "tax_strategy" "text" DEFAULT 'origin'::"text",
+    "sales_type" "text" DEFAULT 'local'::"text",
     CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at")),
     CONSTRAINT "merchants_subscription_plan_check" CHECK (("subscription_plan" = ANY (ARRAY['monthly'::"text", 'yearly'::"text"]))),
     CONSTRAINT "merchants_subscription_status_check" CHECK (("subscription_status" = ANY (ARRAY['active'::"text", 'cancelled'::"text", 'past_due'::"text"])))
@@ -876,7 +872,14 @@ CREATE TABLE IF NOT EXISTS "public"."payment_links" (
     "auto_convert_enabled" boolean DEFAULT false,
     "preferred_payout_currency" character varying(20),
     "fee_percentage" numeric(5,3) DEFAULT 0.005,
-    "charge_customer_fee" boolean
+    "charge_customer_fee" boolean,
+    "base_amount" numeric(18,2),
+    "tax_enabled" boolean DEFAULT false,
+    "tax_label" "text" DEFAULT 'Sales Tax'::"text",
+    "tax_percentage" numeric(5,2) DEFAULT 0,
+    "tax_amount" numeric(18,2) DEFAULT 0,
+    "subtotal_with_tax" numeric(18,2),
+    "tax_rates" "jsonb" DEFAULT '[]'::"jsonb"
 );
 
 
@@ -884,6 +887,10 @@ ALTER TABLE "public"."payment_links" OWNER TO "postgres";
 
 
 COMMENT ON COLUMN "public"."payment_links"."charge_customer_fee" IS 'Per-link override for charge_customer_fee (null = inherit from merchant global setting)';
+
+
+
+COMMENT ON COLUMN "public"."payment_links"."tax_rates" IS 'Array of tax rate objects: [{"label": "State Tax", "percentage": 8.5}, {"label": "Local Tax", "percentage": 1.0}]';
 
 
 
@@ -1031,6 +1038,99 @@ COMMENT ON COLUMN "public"."supported_currencies"."derivation_path" IS 'HD walle
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."transactions" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid",
+    "invoice_id" "text",
+    "amount" numeric(18,2),
+    "currency" character varying(20),
+    "pay_currency" character varying(20),
+    "status" "text" DEFAULT 'pending'::"text",
+    "tx_hash" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "nowpayments_invoice_id" character varying(100),
+    "payment_link_id" "uuid",
+    "order_id" character varying(255),
+    "amount_received" numeric(18,8) DEFAULT 0,
+    "currency_received" character varying(10),
+    "pay_address" "text",
+    "pay_amount" numeric(18,8),
+    "cryptrac_fee" numeric(18,8) DEFAULT 0,
+    "gateway_fee" numeric(18,8) DEFAULT 0,
+    "merchant_receives" numeric(18,8) DEFAULT 0,
+    "customer_email" character varying(255),
+    "payment_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "expires_at" timestamp with time zone,
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "payout_currency" character varying(20),
+    "base_amount" numeric(18,2),
+    "tax_enabled" boolean DEFAULT false,
+    "tax_label" "text",
+    "tax_percentage" numeric(5,2) DEFAULT 0,
+    "tax_amount" numeric(18,2) DEFAULT 0,
+    "subtotal_with_tax" numeric(18,2),
+    "total_amount_paid" numeric(18,2),
+    "tax_rates" "jsonb" DEFAULT '[]'::"jsonb",
+    "tax_breakdown" "jsonb" DEFAULT '{}'::"jsonb",
+    "receipt_metadata" "jsonb" DEFAULT '{}'::"jsonb"
+);
+
+
+ALTER TABLE "public"."transactions" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."transactions" IS 'Updated for Phase 5 NOWPayments integration - all required columns added';
+
+
+
+COMMENT ON COLUMN "public"."transactions"."base_amount" IS 'Original amount before taxes and fees';
+
+
+
+COMMENT ON COLUMN "public"."transactions"."total_amount_paid" IS 'Final amount paid by customer (base + taxes + fees if applicable)';
+
+
+
+COMMENT ON COLUMN "public"."transactions"."tax_rates" IS 'Tax rates applied to this transaction (immutable record)';
+
+
+
+COMMENT ON COLUMN "public"."transactions"."tax_breakdown" IS 'Detailed breakdown of each tax applied: {"state_tax": 8.50, "local_tax": 1.00}';
+
+
+
+COMMENT ON COLUMN "public"."transactions"."receipt_metadata" IS 'Complete receipt information for customer records';
+
+
+
+CREATE OR REPLACE VIEW "public"."tax_report_view" AS
+ SELECT "t"."id" AS "transaction_id",
+    "t"."merchant_id",
+    "t"."created_at",
+    "t"."base_amount",
+    "t"."tax_enabled",
+    "t"."tax_label",
+    "t"."tax_percentage",
+    "t"."tax_amount",
+    "t"."tax_rates",
+    "t"."tax_breakdown",
+    "t"."subtotal_with_tax",
+    "t"."gateway_fee",
+    "t"."total_amount_paid",
+    "t"."merchant_receives",
+    "t"."customer_email",
+    "t"."currency",
+    "t"."status",
+    "pl"."title" AS "payment_link_title",
+    "pl"."description" AS "payment_link_description"
+   FROM ("public"."transactions" "t"
+     LEFT JOIN "public"."payment_links" "pl" ON (("t"."payment_link_id" = "pl"."id")))
+  WHERE ("t"."tax_enabled" = true);
+
+
+ALTER VIEW "public"."tax_report_view" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."tier_history" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "rep_id" "uuid" NOT NULL,
@@ -1164,7 +1264,7 @@ ALTER TABLE ONLY "public"."fiat_payouts"
 
 
 
-ALTER TABLE ONLY "public"."merchant_payments"
+ALTER TABLE ONLY "public"."transactions"
     ADD CONSTRAINT "merchant_payments_pkey" PRIMARY KEY ("id");
 
 
@@ -1292,27 +1392,27 @@ CREATE INDEX "idx_fiat_payouts_user_id" ON "public"."fiat_payouts" USING "btree"
 
 
 
-CREATE INDEX "idx_merchant_payments_created_at" ON "public"."merchant_payments" USING "btree" ("created_at" DESC);
+CREATE INDEX "idx_merchant_payments_created_at" ON "public"."transactions" USING "btree" ("created_at" DESC);
 
 
 
-CREATE INDEX "idx_merchant_payments_merchant_id" ON "public"."merchant_payments" USING "btree" ("merchant_id");
+CREATE INDEX "idx_merchant_payments_merchant_id" ON "public"."transactions" USING "btree" ("merchant_id");
 
 
 
-CREATE INDEX "idx_merchant_payments_nowpayments_invoice_id" ON "public"."merchant_payments" USING "btree" ("nowpayments_invoice_id");
+CREATE INDEX "idx_merchant_payments_nowpayments_invoice_id" ON "public"."transactions" USING "btree" ("nowpayments_invoice_id");
 
 
 
-CREATE INDEX "idx_merchant_payments_order_id" ON "public"."merchant_payments" USING "btree" ("order_id");
+CREATE INDEX "idx_merchant_payments_order_id" ON "public"."transactions" USING "btree" ("order_id");
 
 
 
-CREATE INDEX "idx_merchant_payments_payment_link_id" ON "public"."merchant_payments" USING "btree" ("payment_link_id");
+CREATE INDEX "idx_merchant_payments_payment_link_id" ON "public"."transactions" USING "btree" ("payment_link_id");
 
 
 
-CREATE INDEX "idx_merchant_payments_status" ON "public"."merchant_payments" USING "btree" ("status");
+CREATE INDEX "idx_merchant_payments_status" ON "public"."transactions" USING "btree" ("status");
 
 
 
@@ -1380,6 +1480,10 @@ CREATE INDEX "idx_payment_links_status_expires" ON "public"."payment_links" USIN
 
 
 
+CREATE INDEX "idx_payment_links_tax_enabled" ON "public"."payment_links" USING "btree" ("merchant_id", "tax_enabled");
+
+
+
 CREATE INDEX "idx_payment_links_usage" ON "public"."payment_links" USING "btree" ("usage_count", "max_uses") WHERE ("max_uses" IS NOT NULL);
 
 
@@ -1413,6 +1517,14 @@ CREATE INDEX "idx_tier_history_month" ON "public"."tier_history" USING "btree" (
 
 
 CREATE INDEX "idx_tier_history_rep_id" ON "public"."tier_history" USING "btree" ("rep_id");
+
+
+
+CREATE INDEX "idx_transactions_date_tax" ON "public"."transactions" USING "btree" ("created_at", "tax_enabled", "merchant_id");
+
+
+
+CREATE INDEX "idx_transactions_tax_reporting" ON "public"."transactions" USING "btree" ("merchant_id", "created_at", "tax_enabled");
 
 
 
@@ -1460,11 +1572,11 @@ CREATE OR REPLACE TRIGGER "trigger_update_payment_link_status" BEFORE UPDATE ON 
 
 
 
-CREATE OR REPLACE TRIGGER "trigger_update_payment_link_usage" AFTER INSERT OR UPDATE ON "public"."merchant_payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_payment_link_usage"();
+CREATE OR REPLACE TRIGGER "trigger_update_payment_link_usage" AFTER INSERT OR UPDATE ON "public"."transactions" FOR EACH ROW EXECUTE FUNCTION "public"."update_payment_link_usage"();
 
 
 
-CREATE OR REPLACE TRIGGER "update_merchant_payments_updated_at" BEFORE UPDATE ON "public"."merchant_payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+CREATE OR REPLACE TRIGGER "update_merchant_payments_updated_at" BEFORE UPDATE ON "public"."transactions" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -1494,12 +1606,12 @@ ALTER TABLE ONLY "public"."fiat_payouts"
 
 
 
-ALTER TABLE ONLY "public"."merchant_payments"
+ALTER TABLE ONLY "public"."transactions"
     ADD CONSTRAINT "merchant_payments_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
 
 
 
-ALTER TABLE ONLY "public"."merchant_payments"
+ALTER TABLE ONLY "public"."transactions"
     ADD CONSTRAINT "merchant_payments_payment_link_id_fkey" FOREIGN KEY ("payment_link_id") REFERENCES "public"."payment_links"("id");
 
 
@@ -1595,7 +1707,7 @@ ALTER TABLE ONLY "public"."webhook_logs"
 
 
 ALTER TABLE ONLY "public"."webhook_logs"
-    ADD CONSTRAINT "webhook_logs_payment_id_fkey" FOREIGN KEY ("payment_id") REFERENCES "public"."merchant_payments"("id");
+    ADD CONSTRAINT "webhook_logs_payment_id_fkey" FOREIGN KEY ("payment_id") REFERENCES "public"."transactions"("id");
 
 
 
@@ -1681,7 +1793,7 @@ CREATE POLICY "Fiat payouts view" ON "public"."fiat_payouts" FOR SELECT USING ((
 
 
 
-CREATE POLICY "Merchant payments view own" ON "public"."merchant_payments" FOR SELECT USING ((("merchant_id" = ( SELECT "merchants"."id"
+CREATE POLICY "Merchant payments view own" ON "public"."transactions" FOR SELECT USING ((("merchant_id" = ( SELECT "merchants"."id"
    FROM "public"."merchants"
   WHERE ("merchants"."user_id" = "auth"."uid"()))) OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
 
@@ -1721,7 +1833,7 @@ CREATE POLICY "Merchants can manage their own payment links" ON "public"."paymen
 
 
 
-CREATE POLICY "Merchants can manage their own payments" ON "public"."merchant_payments" USING (("merchant_id" IN ( SELECT "merchants"."id"
+CREATE POLICY "Merchants can manage their own payments" ON "public"."transactions" USING (("merchant_id" IN ( SELECT "merchants"."id"
    FROM "public"."merchants"
   WHERE ("merchants"."user_id" = "auth"."uid"()))));
 
@@ -1739,7 +1851,7 @@ CREATE POLICY "Merchants can view own wallet generation logs" ON "public"."walle
 
 
 
-CREATE POLICY "Merchants can view their payment data" ON "public"."merchant_payments" FOR SELECT USING ((("merchant_id" IN ( SELECT "merchants"."id"
+CREATE POLICY "Merchants can view their payment data" ON "public"."transactions" FOR SELECT USING ((("merchant_id" IN ( SELECT "merchants"."id"
    FROM "public"."merchants"
   WHERE ("merchants"."user_id" = "auth"."uid"()))) OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
 
@@ -1825,7 +1937,7 @@ CREATE POLICY "Support messages view" ON "public"."support_messages" FOR SELECT 
 
 
 
-CREATE POLICY "System can insert payment data" ON "public"."merchant_payments" FOR INSERT WITH CHECK (true);
+CREATE POLICY "System can insert payment data" ON "public"."transactions" FOR INSERT WITH CHECK (true);
 
 
 
@@ -1837,7 +1949,7 @@ CREATE POLICY "System can insert tier history" ON "public"."tier_history" FOR IN
 
 
 
-CREATE POLICY "System can update payment data" ON "public"."merchant_payments" FOR UPDATE USING (true);
+CREATE POLICY "System can update payment data" ON "public"."transactions" FOR UPDATE USING (true);
 
 
 
@@ -1859,9 +1971,6 @@ ALTER TABLE "public"."email_logs" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."fiat_payouts" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."merchant_payments" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."merchants" ENABLE ROW LEVEL SECURITY;
@@ -1895,6 +2004,9 @@ ALTER TABLE "public"."support_messages" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."tier_history" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."transactions" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."upgrade_history" ENABLE ROW LEVEL SECURITY;
@@ -2021,6 +2133,12 @@ GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) TO "anon";
+GRANT ALL ON FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."audit_logs" TO "anon";
 GRANT ALL ON TABLE "public"."audit_logs" TO "authenticated";
 GRANT ALL ON TABLE "public"."audit_logs" TO "service_role";
@@ -2042,12 +2160,6 @@ GRANT ALL ON TABLE "public"."email_logs" TO "service_role";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "anon";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "authenticated";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."merchant_payments" TO "anon";
-GRANT ALL ON TABLE "public"."merchant_payments" TO "authenticated";
-GRANT ALL ON TABLE "public"."merchant_payments" TO "service_role";
 
 
 
@@ -2120,6 +2232,18 @@ GRANT ALL ON TABLE "public"."support_messages" TO "service_role";
 GRANT ALL ON TABLE "public"."supported_currencies" TO "anon";
 GRANT ALL ON TABLE "public"."supported_currencies" TO "authenticated";
 GRANT ALL ON TABLE "public"."supported_currencies" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."transactions" TO "anon";
+GRANT ALL ON TABLE "public"."transactions" TO "authenticated";
+GRANT ALL ON TABLE "public"."transactions" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tax_report_view" TO "anon";
+GRANT ALL ON TABLE "public"."tax_report_view" TO "authenticated";
+GRANT ALL ON TABLE "public"."tax_report_view" TO "service_role";
 
 
 
