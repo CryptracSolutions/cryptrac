@@ -32,7 +32,7 @@ export async function GET(
 
     // Get the most recent payment for this payment link
     const { data: payment, error } = await supabase
-      .from('merchant_payments')
+      .from('transactions')
       .select(`
         *,
         payment_link:payment_links(
@@ -121,7 +121,7 @@ export async function GET(
           }
 
           const { error: updateError } = await supabase
-            .from('merchant_payments')
+            .from('transactions')
             .update(updateData)
             .eq('id', payment.id)
 

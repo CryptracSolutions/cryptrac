@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate payment statistics
     const { data: payments, error: paymentsError } = await serviceSupabase
-      .from('merchant_payments')
+      .from('transactions')
       .select('status, amount, currency')
       .eq('merchant_id', merchant.id)
       .in('status', ['confirmed', 'finished']);

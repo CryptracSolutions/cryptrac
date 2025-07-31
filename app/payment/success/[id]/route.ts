@@ -31,7 +31,7 @@ export async function GET(
 
     // Fetch payment with related data
     const { data: payment, error } = await supabase
-      .from('merchant_payments')
+      .from('transactions')
       .select(`
         *,
         payment_link:payment_links(

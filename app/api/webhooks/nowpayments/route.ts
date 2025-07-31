@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // Find the payment record
     const { data: payment, error: findError } = await supabase
-      .from('merchant_payments')
+      .from('transactions')
       .select('*')
       .eq('nowpayments_invoice_id', payment_id)
       .single()
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     // Update the payment record
     const { error: updateError } = await supabase
-      .from('merchant_payments')
+      .from('transactions')
       .update(updateData)
       .eq('id', payment.id)
 

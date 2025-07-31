@@ -22,11 +22,20 @@ interface PaymentLink {
   title: string
   description: string | null
   amount: number
+  base_amount: number
   currency: string
   accepted_cryptos: string[]
   expires_at: string | null
   max_uses: number | null
   charge_customer_fee: boolean | null
+  // Tax fields
+  tax_enabled: boolean
+  tax_rates: Array<{
+    label: string
+    percentage: number
+  }>
+  tax_amount: number
+  subtotal_with_tax: number
   merchant: {
     business_name: string
     charge_customer_fee: boolean
@@ -126,11 +135,16 @@ export default function PaymentPage() {
           title,
           description,
           amount,
+          base_amount,
           currency,
           accepted_cryptos,
           expires_at,
           max_uses,
           charge_customer_fee,
+          tax_enabled,
+          tax_rates,
+          tax_amount,
+          subtotal_with_tax,
           merchants!inner(business_name, charge_customer_fee)
         `)
         .eq('link_id', linkId)
@@ -154,11 +168,16 @@ export default function PaymentPage() {
         title: paymentLinkData.title,
         description: paymentLinkData.description,
         amount: paymentLinkData.amount,
+        base_amount: paymentLinkData.base_amount || paymentLinkData.amount,
         currency: paymentLinkData.currency,
         accepted_cryptos: paymentLinkData.accepted_cryptos,
         expires_at: paymentLinkData.expires_at,
         max_uses: paymentLinkData.max_uses,
         charge_customer_fee: paymentLinkData.charge_customer_fee,
+        tax_enabled: paymentLinkData.tax_enabled || false,
+        tax_rates: paymentLinkData.tax_rates || [],
+        tax_amount: paymentLinkData.tax_amount || 0,
+        subtotal_with_tax: paymentLinkData.subtotal_with_tax || paymentLinkData.amount,
         merchant: {
           business_name: merchantData.business_name,
           charge_customer_fee: merchantData.charge_customer_fee
@@ -276,8 +295,15 @@ export default function PaymentPage() {
           pay_currency: selectedCurrency.toLowerCase(),
           order_id: `cryptrac_${paymentLink.link_id}_${Date.now()}`,
           order_description: paymentLink.title,
-          ipn_callback_url: `${window.location.origin}/api/webhooks/nowpayments`
-        })
+          payment_link_id: paymentLink.id,
+          customer_email: customerEmail,
+          // Tax information
+          tax_enabled: paymentLink.tax_enabled,
+          base_amount: paymentLink.base_amount,
+          tax_rates: paymentLink.tax_rates,
+          tax_amount: paymentLink.tax_amount,
+          subtotal_with_tax: paymentLink.subtotal_with_tax
+        }),
       })
 
       if (!response.ok) {
@@ -498,11 +524,57 @@ export default function PaymentPage() {
           {paymentLink.description && (
             <p className="mt-2 text-gray-600">{paymentLink.description}</p>
           )}
+          
+          {/* Payment Amount with Tax Breakdown */}
           <div className="mt-4">
-            <p className="text-2xl font-bold text-blue-600">
-              {formatCurrency(paymentLink.amount, paymentLink.currency)}
-            </p>
-            <p className="text-sm text-gray-500">
+            {paymentLink.tax_enabled && paymentLink.tax_rates.length > 0 ? (
+              <div className="space-y-3">
+                {/* Base Amount */}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Base Amount:</span>
+                  <span className="font-medium">
+                    {formatCurrency(paymentLink.base_amount, paymentLink.currency)}
+                  </span>
+                </div>
+                
+                {/* Individual Tax Rates */}
+                {paymentLink.tax_rates.map((taxRate, index) => {
+                  const taxAmount = (paymentLink.base_amount * taxRate.percentage) / 100;
+                  return (
+                    <div key={index} className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">
+                        {taxRate.label} ({taxRate.percentage}%):
+                      </span>
+                      <span className="text-gray-600">
+                        {formatCurrency(taxAmount, paymentLink.currency)}
+                      </span>
+                    </div>
+                  );
+                })}
+                
+                {/* Total Tax */}
+                <div className="flex justify-between items-center text-sm border-t pt-2">
+                  <span className="text-gray-600">Total Tax:</span>
+                  <span className="font-medium text-gray-700">
+                    {formatCurrency(paymentLink.tax_amount, paymentLink.currency)}
+                  </span>
+                </div>
+                
+                {/* Final Amount */}
+                <div className="flex justify-between items-center border-t pt-2">
+                  <span className="text-lg font-medium">Total Amount:</span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    {formatCurrency(paymentLink.amount, paymentLink.currency)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-2xl font-bold text-blue-600">
+                {formatCurrency(paymentLink.amount, paymentLink.currency)}
+              </p>
+            )}
+            
+            <p className="text-sm text-gray-500 mt-2">
               Payment to {paymentLink.merchant.business_name}
             </p>
           </div>

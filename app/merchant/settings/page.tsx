@@ -16,7 +16,10 @@ import {
   HelpCircle,
   Star,
   AlertTriangle,
-  Shield
+  Shield,
+  Calculator,
+  MapPin,
+  Building
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -49,6 +52,12 @@ interface CurrencyInfo {
   display_name?: string;
 }
 
+interface TaxRate {
+  id: string;
+  label: string;
+  percentage: number;
+}
+
 interface MerchantSettings {
   charge_customer_fee: boolean;
   auto_convert_enabled: boolean;
@@ -60,6 +69,18 @@ interface MerchantSettings {
     auto_convert_fee?: number;
     no_convert_fee?: number;
   };
+  // Tax configuration
+  tax_enabled: boolean;
+  tax_rates: TaxRate[];
+  business_address: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    country?: string;
+  };
+  tax_strategy: 'origin' | 'destination' | 'custom';
+  sales_type: 'local' | 'online' | 'both';
 }
 
 interface UserType {
@@ -348,7 +369,21 @@ export default function MerchantSettingsPage() {
     payment_config: {
       fee_percentage: 2.5,
       auto_convert_fee: 1.0
-    }
+    },
+    // Tax configuration defaults
+    tax_enabled: false,
+    tax_rates: [
+      { id: '1', label: 'Sales Tax', percentage: 8.5 }
+    ],
+    business_address: {
+      street: '',
+      city: '',
+      state: '',
+      zip_code: '',
+      country: 'US'
+    },
+    tax_strategy: 'origin',
+    sales_type: 'both'
   });
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
@@ -402,11 +437,22 @@ export default function MerchantSettingsPage() {
         payment_config: {
           auto_forward: merchant.payment_config?.auto_forward ?? true,
           fee_percentage: merchant.auto_convert_enabled ? 1.0 : 0.5,
-          ...(merchant.auto_convert_enabled 
-            ? { auto_convert_fee: 1.0 }
-            : { no_convert_fee: 0.5 }
-          )
-        }
+          ...(merchant.auto_convert_enabled ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
+        },
+        // Tax configuration from database or defaults
+        tax_enabled: merchant.tax_enabled || false,
+        tax_rates: merchant.tax_rates || [
+          { id: '1', label: 'Sales Tax', percentage: 8.5 }
+        ],
+        business_address: merchant.business_address || {
+          street: '',
+          city: '',
+          state: '',
+          zip_code: '',
+          country: 'US'
+        },
+        tax_strategy: merchant.tax_strategy || 'origin',
+        sales_type: merchant.sales_type || 'both'
       });
 
       // Initialize validation status for existing wallets
@@ -492,7 +538,7 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const handleWalletChange = async (currency: string, address: string) => {
+    const handleWalletChange = (currency: string, address: string) => {
     setSettings(prev => ({
       ...prev,
       wallets: {
@@ -500,7 +546,47 @@ export default function MerchantSettingsPage() {
         [currency]: address
       }
     }));
+  };
 
+  // Tax rate management functions
+  const addTaxRate = () => {
+    const newId = (settings.tax_rates.length + 1).toString();
+    setSettings(prev => ({
+      ...prev,
+      tax_rates: [...prev.tax_rates, { id: newId, label: '', percentage: 0 }]
+    }));
+  };
+
+  const removeTaxRate = (id: string) => {
+    setSettings(prev => ({
+      ...prev,
+      tax_rates: prev.tax_rates.filter(rate => rate.id !== id)
+    }));
+  };
+
+  const updateTaxRate = (id: string, field: 'label' | 'percentage', value: string | number) => {
+    setSettings(prev => ({
+      ...prev,
+      tax_rates: prev.tax_rates.map(rate => 
+        rate.id === id ? { 
+          ...rate, 
+          [field]: field === 'percentage' ? parseFloat(value.toString()) || 0 : value 
+        } : rate
+      )
+    }));
+  };
+
+  // Auto-detect tax rates by ZIP code (placeholder for future implementation)
+  const autoDetectTaxRates = async (zipCode: string) => {
+    // TODO: Integrate with tax rate API (TaxJar, Avalara, etc.)
+    console.log('Auto-detecting tax rates for ZIP:', zipCode);
+    // For now, just show a placeholder message
+    toast.success('Auto-detection feature coming soon! Please enter tax rates manually.');
+  };
+
+  const handleWalletInputChange = async (currency: string, address: string) => {
+    handleWalletChange(currency, address);
+    
     if (address.trim()) {
       await validateAddress(currency, address);
     } else {
@@ -582,6 +668,12 @@ export default function MerchantSettingsPage() {
           preferred_payout_currency: settings.preferred_payout_currency,
           wallets: settings.wallets,
           payment_config: settings.payment_config,
+          // Tax configuration
+          tax_enabled: settings.tax_enabled,
+          tax_rates: settings.tax_rates,
+          business_address: settings.business_address,
+          tax_strategy: settings.tax_strategy,
+          sales_type: settings.sales_type,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -654,7 +746,7 @@ export default function MerchantSettingsPage() {
         )}
 
         <Tabs defaultValue="wallets" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="wallets">
               <Wallet className="h-4 w-4 mr-2" />
               Wallet Addresses
@@ -662,6 +754,10 @@ export default function MerchantSettingsPage() {
             <TabsTrigger value="payment">
               <DollarSign className="h-4 w-4 mr-2" />
               Payment Settings
+            </TabsTrigger>
+            <TabsTrigger value="tax">
+              <Calculator className="h-4 w-4 mr-2" />
+              Tax Management
             </TabsTrigger>
             <TabsTrigger value="security">
               <Shield className="h-4 w-4 mr-2" />
@@ -950,6 +1046,227 @@ export default function MerchantSettingsPage() {
                   </div>
                 )}
 
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tax Management Tab */}
+          <TabsContent value="tax" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5" />
+                  Tax Configuration
+                </CardTitle>
+                <CardDescription>
+                  Configure tax settings for your payment links. Cryptrac helps you charge and report taxes accurately but does not file or remit taxes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Tax Enable/Disable */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="tax_enabled"
+                    checked={settings.tax_enabled}
+                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked === true }))}
+                  />
+                  <label htmlFor="tax_enabled" className="text-sm font-medium">
+                    Enable tax collection on payment links
+                  </label>
+                </div>
+
+                {settings.tax_enabled && (
+                  <>
+                    {/* Business Address */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4" />
+                        <h3 className="text-lg font-medium">Business Address</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Street Address</label>
+                          <Input
+                            placeholder="123 Main St"
+                            value={settings.business_address.street || ''}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              business_address: { ...prev.business_address, street: e.target.value }
+                            }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">City</label>
+                          <Input
+                            placeholder="San Francisco"
+                            value={settings.business_address.city || ''}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              business_address: { ...prev.business_address, city: e.target.value }
+                            }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">State</label>
+                          <Input
+                            placeholder="CA"
+                            value={settings.business_address.state || ''}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              business_address: { ...prev.business_address, state: e.target.value }
+                            }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">ZIP Code</label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="94102"
+                              value={settings.business_address.zip_code || ''}
+                              onChange={(e) => setSettings(prev => ({
+                                ...prev,
+                                business_address: { ...prev.business_address, zip_code: e.target.value }
+                              }))}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => autoDetectTaxRates(settings.business_address.zip_code || '')}
+                              disabled={!settings.business_address.zip_code}
+                            >
+                              <MapPin className="h-4 w-4 mr-1" />
+                              Auto-Detect
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sales Type */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Sales Type</h3>
+                      <Select
+                        value={settings.sales_type}
+                        onValueChange={(value: 'local' | 'online' | 'both') => 
+                          setSettings(prev => ({ ...prev, sales_type: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="local">Local/In-Person Sales Only</SelectItem>
+                          <SelectItem value="online">Online/Remote Sales Only</SelectItem>
+                          <SelectItem value="both">Both Local and Online Sales</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm text-gray-600">
+                        {settings.sales_type === 'local' && 'Tax based on your business location (origin-based).'}
+                        {settings.sales_type === 'online' && 'Tax may vary by customer location (destination-based).'}
+                        {settings.sales_type === 'both' && 'Flexible tax calculation based on sale type.'}
+                      </p>
+                    </div>
+
+                    {/* Tax Strategy */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Tax Strategy</h3>
+                      <Select
+                        value={settings.tax_strategy}
+                        onValueChange={(value: 'origin' | 'destination' | 'custom') => 
+                          setSettings(prev => ({ ...prev, tax_strategy: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="origin">Origin-Based (Business Location)</SelectItem>
+                          <SelectItem value="destination">Destination-Based (Customer Location)</SelectItem>
+                          <SelectItem value="custom">Custom Configuration</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          {settings.tax_strategy === 'origin' && 'All sales taxed at your business location rates. Simplest approach.'}
+                          {settings.tax_strategy === 'destination' && 'Sales taxed based on customer location. More complex but may be required for online sales.'}
+                          {settings.tax_strategy === 'custom' && 'Manual tax configuration for each payment link.'}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+
+                    {/* Default Tax Rates */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium">Default Tax Rates</h3>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addTaxRate}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Tax Rate
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {settings.tax_rates.map((taxRate, index) => (
+                          <div key={taxRate.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <div className="flex-1">
+                              <Input
+                                placeholder="Tax Label (e.g., State Tax, Local Tax)"
+                                value={taxRate.label}
+                                onChange={(e) => updateTaxRate(taxRate.id, 'label', e.target.value)}
+                              />
+                            </div>
+                            
+                            <div className="w-24">
+                              <Input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                max="50"
+                                placeholder="8.5"
+                                value={taxRate.percentage}
+                                onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
+                              />
+                            </div>
+                            
+                            <span className="text-sm text-gray-500">%</span>
+                            
+                            {settings.tax_rates.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeTaxRate(taxRate.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                        <strong>Total Default Tax Rate:</strong> {settings.tax_rates.reduce((sum, rate) => sum + rate.percentage, 0).toFixed(1)}%
+                      </div>
+                    </div>
+
+                    {/* Tax Information */}
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>Important:</strong> Cryptrac helps you charge and report taxes accurately but does not file or remit taxes. 
+                        Consult with a tax professional for compliance requirements in your jurisdiction.
+                      </AlertDescription>
+                    </Alert>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

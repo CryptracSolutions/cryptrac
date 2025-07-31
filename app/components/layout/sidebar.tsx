@@ -15,7 +15,8 @@ import {
   Bell,
   HelpCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Calculator
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -53,6 +54,11 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
         name: "Analytics",
         href: "/merchant/analytics",
         icon: BarChart3,
+      },
+      {
+        name: "Tax Reports",
+        href: "/merchant/dashboard/tax-reports",
+        icon: Calculator,
       },
       {
         name: "Wallets",

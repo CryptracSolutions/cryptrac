@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPayment, formatCurrencyForNOWPayments } from '@/lib/nowpayments-dynamic'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +18,15 @@ export async function POST(request: NextRequest) {
       order_description,
       payout_address,
       payout_currency,
-      ipn_callback_url 
+      ipn_callback_url,
+      payment_link_id,
+      customer_email,
+      // Tax information
+      tax_enabled,
+      base_amount,
+      tax_rates,
+      tax_amount,
+      subtotal_with_tax
     } = body
 
     console.log('💳 Payment creation request:', {

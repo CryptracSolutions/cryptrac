@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
       redirect_url,
       charge_customer_fee = null, // null = inherit from merchant global setting
       auto_convert_enabled = null, // null = inherit from merchant global setting
-      preferred_payout_currency = null // null = inherit from merchant global setting
+      preferred_payout_currency = null, // null = inherit from merchant global setting
+      tax_enabled = false,
+      tax_rates = []
     } = body;
 
     console.log('Request body parsed:', { title, amount, currency, accepted_cryptos });
@@ -135,13 +137,36 @@ export async function POST(request: NextRequest) {
       ? preferred_payout_currency 
       : merchant.preferred_payout_currency;
 
-    // Calculate fees based on settings
+    // Parse amount for calculations
     const amountNum = parseFloat(amount);
+
+    // Calculate taxes from tax rates
+    let totalTaxAmount = 0;
+    let totalTaxPercentage = 0;
+    const taxBreakdown: Record<string, number> = {};
+    
+    if (tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0) {
+      tax_rates.forEach((taxRate: any) => {
+        const percentage = parseFloat(taxRate.percentage) || 0;
+        const taxAmount = (amountNum * percentage) / 100;
+        totalTaxAmount += taxAmount;
+        totalTaxPercentage += percentage;
+        
+        // Create breakdown key from label
+        const breakdownKey = taxRate.label.toLowerCase().replace(/\s+/g, '_');
+        taxBreakdown[breakdownKey] = taxAmount;
+      });
+    }
+    
+    const subtotalWithTax = amountNum + totalTaxAmount;
+
+    // Calculate fees based on settings (fees calculated on post-tax amount)
+    const amountForFeeCalculation = subtotalWithTax;
     const baseFeePercentage = 0.005; // 0.5% base fee
     const autoConvertFeePercentage = effectiveAutoConvertEnabled ? 0.005 : 0; // Additional 0.5% for auto-convert
     const totalFeePercentage = baseFeePercentage + autoConvertFeePercentage;
-    const feeAmount = amountNum * totalFeePercentage;
-    const merchantReceives = amountNum - feeAmount;
+    const feeAmount = amountForFeeCalculation * totalFeePercentage;
+    const merchantReceives = amountForFeeCalculation - feeAmount;
 
     console.log('Fee calculation:', {
       effectiveChargeCustomerFee,
@@ -166,6 +191,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         amount: amountNum,
+        base_amount: amountNum,
         currency,
         accepted_cryptos,
         link_id: linkId,
@@ -177,6 +203,10 @@ export async function POST(request: NextRequest) {
         auto_convert_enabled: auto_convert_enabled, // Store the override (null = inherit)
         preferred_payout_currency: preferred_payout_currency, // Store the override (null = inherit)
         fee_percentage: totalFeePercentage,
+        tax_enabled: tax_enabled,
+        tax_rates: tax_enabled ? tax_rates : [],
+        tax_amount: totalTaxAmount,
+        subtotal_with_tax: subtotalWithTax,
         metadata: {
           redirect_url: redirect_url || null,
           fee_breakdown: {
@@ -189,6 +219,7 @@ export async function POST(request: NextRequest) {
             effective_auto_convert_enabled: effectiveAutoConvertEnabled,
             effective_preferred_payout_currency: effectivePreferredPayoutCurrency
           },
+          tax_breakdown: taxBreakdown,
           wallet_addresses: Object.fromEntries(
             accepted_cryptos.map(crypto => [crypto, merchantWallets[crypto]])
           )

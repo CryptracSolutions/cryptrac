@@ -6,14 +6,17 @@ import {
   ArrowLeft, 
   DollarSign,
   Calendar,
-  Link as LinkIcon,
-  Settings,
-  CreditCard,
+  Link,
+  LinkIcon,
+  Settings, 
+  Wallet, 
+  CreditCard, 
+  Users, 
+  AlertCircle, 
+  CheckCircle, 
   Clock,
-  Users,
-  ExternalLink,
-  AlertCircle,
-  CheckCircle,
+  Plus,
+  Trash2,
   Loader2
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
@@ -29,6 +32,12 @@ import { supabase } from '@/lib/supabase-browser';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 
+interface TaxRate {
+  id: string;
+  label: string;
+  percentage: string;
+}
+
 interface CreatePaymentLinkForm {
   title: string;
   description: string;
@@ -41,8 +50,7 @@ interface CreatePaymentLinkForm {
   auto_convert_enabled: boolean;
   charge_customer_fee: boolean;
   tax_enabled: boolean;
-  tax_percentage: string;
-  tax_label: string;
+  tax_rates: TaxRate[];
 }
 
 interface MerchantSettings {
@@ -82,8 +90,9 @@ export default function CreatePaymentLinkPage() {
     auto_convert_enabled: false,
     charge_customer_fee: false,
     tax_enabled: false,
-    tax_percentage: '8.5',
-    tax_label: 'Sales Tax'
+    tax_rates: [
+      { id: '1', label: 'Sales Tax', percentage: '8.5' }
+    ]
   });
 
   useEffect(() => {
@@ -138,11 +147,53 @@ export default function CreatePaymentLinkPage() {
     }));
   };
 
+  // Tax rate management functions
+  const addTaxRate = () => {
+    const newId = (form.tax_rates.length + 1).toString();
+    setForm(prev => ({
+      ...prev,
+      tax_rates: [...prev.tax_rates, { id: newId, label: '', percentage: '0' }]
+    }));
+  };
+
+  const removeTaxRate = (id: string) => {
+    setForm(prev => ({
+      ...prev,
+      tax_rates: prev.tax_rates.filter(rate => rate.id !== id)
+    }));
+  };
+
+  const updateTaxRate = (id: string, field: 'label' | 'percentage', value: string) => {
+    setForm(prev => ({
+      ...prev,
+      tax_rates: prev.tax_rates.map(rate => 
+        rate.id === id ? { ...rate, [field]: value } : rate
+      )
+    }));
+  };
+
   const calculateFees = () => {
     const baseAmount = parseFloat(form.amount) || 0;
-    const taxPercentage = form.tax_enabled ? (parseFloat(form.tax_percentage) || 0) : 0;
-    const taxAmount = (baseAmount * taxPercentage) / 100;
-    const subtotalWithTax = baseAmount + taxAmount;
+    
+    // Calculate total tax from all tax rates
+    let totalTaxAmount = 0;
+    let totalTaxPercentage = 0;
+    const taxBreakdown: Record<string, number> = {};
+    
+    if (form.tax_enabled && form.tax_rates.length > 0) {
+      form.tax_rates.forEach(taxRate => {
+        const percentage = parseFloat(taxRate.percentage) || 0;
+        const taxAmount = (baseAmount * percentage) / 100;
+        totalTaxAmount += taxAmount;
+        totalTaxPercentage += percentage;
+        
+        // Create breakdown key from label (lowercase, replace spaces with underscores)
+        const breakdownKey = taxRate.label.toLowerCase().replace(/\s+/g, '_');
+        taxBreakdown[breakdownKey] = taxAmount;
+      });
+    }
+    
+    const subtotalWithTax = baseAmount + totalTaxAmount;
     
     const feePercentage = form.auto_convert_enabled ? 1.0 : 0.5;
     const feeAmount = (subtotalWithTax * feePercentage) / 100;
@@ -151,8 +202,9 @@ export default function CreatePaymentLinkPage() {
     
     return {
       baseAmount,
-      taxPercentage,
-      taxAmount,
+      totalTaxPercentage,
+      totalTaxAmount,
+      taxBreakdown,
       subtotalWithTax,
       feePercentage,
       feeAmount,
@@ -203,12 +255,15 @@ export default function CreatePaymentLinkPage() {
         auto_convert_enabled: form.auto_convert_enabled,
         charge_customer_fee: form.charge_customer_fee,
         tax_enabled: form.tax_enabled,
-        tax_percentage: form.tax_enabled ? parseFloat(form.tax_percentage) : 0,
-        tax_label: form.tax_enabled ? form.tax_label.trim() : null,
+        tax_rates: form.tax_enabled ? form.tax_rates.map(rate => ({
+          label: rate.label.trim(),
+          percentage: parseFloat(rate.percentage) || 0
+        })) : [],
         metadata: {
           base_amount: fees.baseAmount,
-          tax_percentage: fees.taxPercentage,
-          tax_amount: fees.taxAmount,
+          total_tax_percentage: fees.totalTaxPercentage,
+          total_tax_amount: fees.totalTaxAmount,
+          tax_breakdown: fees.taxBreakdown,
           subtotal_with_tax: fees.subtotalWithTax,
           fee_percentage: fees.feePercentage,
           fee_amount: fees.feeAmount,
@@ -378,7 +433,7 @@ export default function CreatePaymentLinkPage() {
                   </div>
 
                   {/* Tax Configuration */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="tax_enabled"
@@ -391,29 +446,68 @@ export default function CreatePaymentLinkPage() {
                     </div>
                     
                     {form.tax_enabled && (
-                      <div className="grid grid-cols-2 gap-4 ml-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="tax_percentage">Tax Rate (%)</Label>
-                          <Input
-                            id="tax_percentage"
-                            type="number"
-                            step="0.1"
-                            min="0"
-                            max="50"
-                            placeholder="8.5"
-                            value={form.tax_percentage}
-                            onChange={(e) => setForm(prev => ({ ...prev, tax_percentage: e.target.value }))}
-                          />
+                      <div className="ml-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Tax Rates</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addTaxRate}
+                            className="flex items-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add Tax Rate
+                          </Button>
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="tax_label">Tax Label</Label>
-                          <Input
-                            id="tax_label"
-                            placeholder="Sales Tax"
-                            value={form.tax_label}
-                            onChange={(e) => setForm(prev => ({ ...prev, tax_label: e.target.value }))}
-                          />
+                        <div className="space-y-3">
+                          {form.tax_rates.map((taxRate, index) => (
+                            <div key={taxRate.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                              <div className="flex-1">
+                                <Input
+                                  placeholder="Tax Label (e.g., State Tax, Local Tax)"
+                                  value={taxRate.label}
+                                  onChange={(e) => updateTaxRate(taxRate.id, 'label', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="w-24">
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  max="50"
+                                  placeholder="8.5"
+                                  value={taxRate.percentage}
+                                  onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
+                                />
+                              </div>
+                              
+                              <span className="text-sm text-gray-500">%</span>
+                              
+                              {form.tax_rates.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeTaxRate(taxRate.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                          <strong>Total Tax Rate:</strong> {fees.totalTaxPercentage.toFixed(1)}%
+                          {fees.totalTaxAmount > 0 && (
+                            <span className="ml-2">
+                              ({form.currency} {fees.totalTaxAmount.toFixed(2)})
+                            </span>
+                          )}
                         </div>
                       </div>
                     )}
@@ -509,11 +603,24 @@ export default function CreatePaymentLinkPage() {
                     <span>{form.currency} {fees.baseAmount.toFixed(2)}</span>
                   </div>
                   
-                  {form.tax_enabled && fees.taxAmount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span>{form.tax_label} ({fees.taxPercentage}%):</span>
-                      <span>{form.currency} {fees.taxAmount.toFixed(2)}</span>
-                    </div>
+                  {form.tax_enabled && fees.totalTaxAmount > 0 && (
+                    <>
+                      {form.tax_rates.map((taxRate, index) => {
+                        const percentage = parseFloat(taxRate.percentage) || 0;
+                        const amount = (fees.baseAmount * percentage) / 100;
+                        return amount > 0 ? (
+                          <div key={taxRate.id} className="flex justify-between text-sm">
+                            <span>{taxRate.label} ({percentage}%):</span>
+                            <span>{form.currency} {amount.toFixed(2)}</span>
+                          </div>
+                        ) : null;
+                      })}
+                      
+                      <div className="flex justify-between text-sm font-medium border-t pt-2">
+                        <span>Total Tax ({fees.totalTaxPercentage.toFixed(1)}%):</span>
+                        <span>{form.currency} {fees.totalTaxAmount.toFixed(2)}</span>
+                      </div>
+                    </>
                   )}
                   
                   {form.tax_enabled && (
