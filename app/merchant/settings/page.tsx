@@ -369,11 +369,99 @@ const FIAT_CURRENCIES = [
   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
 ];
 
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' }
+];
+
+const US_TIMEZONES = [
+  { code: 'America/New_York', name: 'Eastern Time (ET)' },
+  { code: 'America/Chicago', name: 'Central Time (CT)' },
+  { code: 'America/Denver', name: 'Mountain Time (MT)' },
+  { code: 'America/Los_Angeles', name: 'Pacific Time (PT)' },
+  { code: 'America/Anchorage', name: 'Alaska Time (AKT)' },
+  { code: 'Pacific/Honolulu', name: 'Hawaii Time (HT)' }
+];
+
+const BUSINESS_TYPES = [
+  'Sole Proprietorship',
+  'LLC',
+  'Corporation',
+  'Partnership',
+  'Non-Profit',
+  'Other'
+];
+
+const INDUSTRIES = [
+  'Retail',
+  'E-commerce',
+  'SaaS',
+  'Consulting',
+  'Professional Services',
+  'Healthcare',
+  'Education',
+  'Technology',
+  'Manufacturing',
+  'Real Estate',
+  'Food & Beverage',
+  'Entertainment',
+  'Other'
+];
+
 type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
 export default function MerchantSettingsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserType | null>(null);  const [settings, setSettings] = useState<MerchantSettings>({
+  const [user, setUser] = useState<UserType | null>(null);
+  const [settings, setSettings] = useState<MerchantSettings>({
     // Profile information defaults
     business_name: '',
     business_type: '',
@@ -568,7 +656,7 @@ export default function MerchantSettingsPage() {
     }
   };
 
-    const handleWalletChange = (currency: string, address: string) => {
+  const handleWalletChange = (currency: string, address: string) => {
     setSettings(prev => ({
       ...prev,
       wallets: {
@@ -604,14 +692,6 @@ export default function MerchantSettingsPage() {
         } : rate
       )
     }));
-  };
-
-  // Auto-detect tax rates by ZIP code (placeholder for future implementation)
-  const autoDetectTaxRates = async (zipCode: string) => {
-    // TODO: Integrate with tax rate API (TaxJar, Avalara, etc.)
-    console.log('Auto-detecting tax rates for ZIP:', zipCode);
-    // For now, just show a placeholder message
-    toast.success('Auto-detection feature coming soon! Please enter tax rates manually.');
   };
 
   const handleWalletInputChange = async (currency: string, address: string) => {
@@ -669,6 +749,50 @@ export default function MerchantSettingsPage() {
     }
   };
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as (XXX) XXX-XXXX
+    if (digits.length >= 6) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    } else if (digits.length >= 3) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    } else {
+      return digits;
+    }
+  };
+
+  const formatZipCode = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as XXXXX or XXXXX-XXXX
+    if (digits.length > 5) {
+      return `${digits.slice(0, 5)}-${digits.slice(5, 9)}`;
+    }
+    return digits;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setSettings(prev => ({
+      ...prev,
+      phone_number: formatted
+    }));
+  };
+
+  const handleZipChange = (value: string) => {
+    const formatted = formatZipCode(value);
+    setSettings(prev => ({
+      ...prev,
+      business_address: {
+        ...prev.business_address,
+        zip_code: formatted
+      }
+    }));
+  };
+
   const saveSettings = async () => {
     try {
       setSaving(true);
@@ -701,6 +825,7 @@ export default function MerchantSettingsPage() {
           website: settings.website,
           phone_number: settings.phone_number,
           timezone: settings.timezone,
+          business_address: settings.business_address,
           // Payment settings
           charge_customer_fee: settings.charge_customer_fee,
           auto_convert_enabled: settings.auto_convert_enabled,
@@ -710,10 +835,8 @@ export default function MerchantSettingsPage() {
           // Tax configuration
           tax_enabled: settings.tax_enabled,
           tax_rates: settings.tax_rates,
-          business_address: settings.business_address,
           tax_strategy: settings.tax_strategy,
-          sales_type: settings.sales_type,
-          updated_at: new Date().toISOString()
+          sales_type: settings.sales_type
         })
         .eq('user_id', user.id);
 
@@ -724,7 +847,7 @@ export default function MerchantSettingsPage() {
       }
 
       console.log('✅ Settings saved successfully');
-      toast.success('Settings saved successfully!');
+      toast.success('Settings saved successfully');
 
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -743,7 +866,7 @@ export default function MerchantSettingsPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-gray-600">Loading settings...</p>
@@ -758,52 +881,50 @@ export default function MerchantSettingsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Merchant Settings</h1>
-            <p className="text-gray-600">Configure your payment processing and wallet settings</p>
+            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+            <p className="text-muted-foreground">
+              Manage your merchant account settings and preferences
+            </p>
           </div>
-          <Button onClick={saveSettings} disabled={saving} className="min-w-[120px]">
+          <Button 
+            onClick={saveSettings} 
+            disabled={saving}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="mr-2 h-4 w-4" />
                 Save Settings
               </>
             )}
           </Button>
         </div>
 
-        {/* Trust Wallet Guide Modal */}
-        {showTrustWalletGuide && (
-          <TrustWalletGuide 
-            onComplete={() => setShowTrustWalletGuide(false)} 
-            onSkip={() => setShowTrustWalletGuide(false)} 
-          />
-        )}
-
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="profile">
-              <User className="h-4 w-4 mr-2" />
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="wallets">
-              <Wallet className="h-4 w-4 mr-2" />
+            <TabsTrigger value="wallets" className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
               Wallet Addresses
             </TabsTrigger>
-            <TabsTrigger value="payment">
-              <DollarSign className="h-4 w-4 mr-2" />
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
               Payment Settings
             </TabsTrigger>
-            <TabsTrigger value="tax">
-              <Calculator className="h-4 w-4 mr-2" />
+            <TabsTrigger value="tax" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
               Tax Management
             </TabsTrigger>
-            <TabsTrigger value="security">
-              <Shield className="h-4 w-4 mr-2" />
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
               Security
             </TabsTrigger>
           </TabsList>
@@ -813,256 +934,195 @@ export default function MerchantSettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Business Profile
+                  <Building className="h-5 w-5" />
+                  Business Information
                 </CardTitle>
                 <CardDescription>
-                  Manage your business information and contact details
+                  Basic information about your business
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Business Information Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Business Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Business Name *</label>
-                      <Input
-                        value={settings.business_name}
-                        onChange={(e) => setSettings(prev => ({ ...prev, business_name: e.target.value }))}
-                        placeholder="Enter your business name"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Business Type</label>
-                      <Select
-                        value={settings.business_type}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, business_type: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select business type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="llc">LLC</SelectItem>
-                          <SelectItem value="corporation">Corporation</SelectItem>
-                          <SelectItem value="partnership">Partnership</SelectItem>
-                          <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
-                          <SelectItem value="nonprofit">Nonprofit</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Industry *</label>
-                      <Select
-                        value={settings.industry}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, industry: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your industry" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="retail">Retail</SelectItem>
-                          <SelectItem value="ecommerce">E-commerce</SelectItem>
-                          <SelectItem value="saas">Software/SaaS</SelectItem>
-                          <SelectItem value="consulting">Consulting</SelectItem>
-                          <SelectItem value="healthcare">Healthcare</SelectItem>
-                          <SelectItem value="education">Education</SelectItem>
-                          <SelectItem value="finance">Finance</SelectItem>
-                          <SelectItem value="real_estate">Real Estate</SelectItem>
-                          <SelectItem value="hospitality">Hospitality</SelectItem>
-                          <SelectItem value="nonprofit">Nonprofit</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Website</label>
-                      <Input
-                        value={settings.website}
-                        onChange={(e) => setSettings(prev => ({ ...prev, website: e.target.value }))}
-                        placeholder="https://yourwebsite.com"
-                      />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Business Name *</label>
+                    <Input
+                      value={settings.business_name}
+                      onChange={(e) => setSettings(prev => ({ ...prev, business_name: e.target.value }))}
+                      placeholder="Enter your business name"
+                      required
+                    />
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Business Description</label>
+                    <label className="text-sm font-medium">Business Type</label>
+                    <Select 
+                      value={settings.business_type} 
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, business_type: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select business type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BUSINESS_TYPES.map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Industry *</label>
+                    <Select 
+                      value={settings.industry} 
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, industry: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your industry" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {INDUSTRIES.map(industry => (
+                          <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Website</label>
                     <Input
-                      value={settings.business_description}
-                      onChange={(e) => setSettings(prev => ({ ...prev, business_description: e.target.value }))}
-                      placeholder="Brief description of your business"
+                      value={settings.website}
+                      onChange={(e) => setSettings(prev => ({ ...prev, website: e.target.value }))}
+                      placeholder="https://your-website.com"
+                      type="url"
                     />
                   </div>
                 </div>
 
-                {/* Contact Information Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Business Description</label>
+                  <Input
+                    value={settings.business_description}
+                    onChange={(e) => setSettings(prev => ({ ...prev, business_description: e.target.value }))}
+                    placeholder="Brief description of your business"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="h-5 w-5" />
+                  Contact Information
+                </CardTitle>
+                <CardDescription>
+                  Contact details for your business
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Phone Number *</label>
+                    <Input
+                      value={settings.phone_number}
+                      onChange={(e) => handlePhoneChange(e.target.value)}
+                      placeholder="(555) 123-4567"
+                      maxLength={14}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Timezone</label>
+                    <Select 
+                      value={settings.timezone} 
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select timezone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_TIMEZONES.map(timezone => (
+                          <SelectItem key={timezone.code} value={timezone.code}>
+                            {timezone.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Business Address
+                </CardTitle>
+                <CardDescription>
+                  Your business address for tax and compliance purposes
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Contact Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Street Address *</label>
+                    <Input
+                      value={settings.business_address.street || ''}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        business_address: { ...prev.business_address, street: e.target.value }
+                      }))}
+                      placeholder="123 Main Street"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Phone Number *</label>
+                      <label className="text-sm font-medium">City *</label>
                       <Input
-                        value={settings.phone_number}
-                        onChange={(e) => {
-                          // Format phone number as user types
-                          const value = e.target.value.replace(/\D/g, '');
-                          const formatted = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
-                          setSettings(prev => ({ ...prev, phone_number: formatted }));
-                        }}
-                        placeholder="(555) 123-4567"
-                        maxLength={14}
+                        value={settings.business_address.city || ''}
+                        onChange={(e) => setSettings(prev => ({
+                          ...prev,
+                          business_address: { ...prev.business_address, city: e.target.value }
+                        }))}
+                        placeholder="San Francisco"
+                        required
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Timezone</label>
-                      <Select
-                        value={settings.timezone}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
+                      <label className="text-sm font-medium">State *</label>
+                      <Select 
+                        value={settings.business_address.state || ''} 
+                        onValueChange={(value) => setSettings(prev => ({
+                          ...prev,
+                          business_address: { ...prev.business_address, state: value }
+                        }))}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                          <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                          <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                          <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                          <SelectItem value="America/Anchorage">Alaska Time (AKT)</SelectItem>
-                          <SelectItem value="Pacific/Honolulu">Hawaii Time (HT)</SelectItem>
+                          {US_STATES.map(state => (
+                            <SelectItem key={state.code} value={state.code}>
+                              {state.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                </div>
 
-                {/* Business Address Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Business Address
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Street Address *</label>
+                      <label className="text-sm font-medium">ZIP Code *</label>
                       <Input
-                        value={settings.business_address.street || ''}
-                        onChange={(e) => setSettings(prev => ({
-                          ...prev,
-                          business_address: { ...prev.business_address, street: e.target.value }
-                        }))}
-                        placeholder="123 Main Street"
+                        value={settings.business_address.zip_code || ''}
+                        onChange={(e) => handleZipChange(e.target.value)}
+                        placeholder="94105"
+                        maxLength={10}
+                        required
                       />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">City *</label>
-                        <Input
-                          value={settings.business_address.city || ''}
-                          onChange={(e) => setSettings(prev => ({
-                            ...prev,
-                            business_address: { ...prev.business_address, city: e.target.value }
-                          }))}
-                          placeholder="San Francisco"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">State *</label>
-                        <Select
-                          value={settings.business_address.state || ''}
-                          onValueChange={(value) => setSettings(prev => ({
-                            ...prev,
-                            business_address: { ...prev.business_address, state: value }
-                          }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select state" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="AL">Alabama</SelectItem>
-                            <SelectItem value="AK">Alaska</SelectItem>
-                            <SelectItem value="AZ">Arizona</SelectItem>
-                            <SelectItem value="AR">Arkansas</SelectItem>
-                            <SelectItem value="CA">California</SelectItem>
-                            <SelectItem value="CO">Colorado</SelectItem>
-                            <SelectItem value="CT">Connecticut</SelectItem>
-                            <SelectItem value="DE">Delaware</SelectItem>
-                            <SelectItem value="FL">Florida</SelectItem>
-                            <SelectItem value="GA">Georgia</SelectItem>
-                            <SelectItem value="HI">Hawaii</SelectItem>
-                            <SelectItem value="ID">Idaho</SelectItem>
-                            <SelectItem value="IL">Illinois</SelectItem>
-                            <SelectItem value="IN">Indiana</SelectItem>
-                            <SelectItem value="IA">Iowa</SelectItem>
-                            <SelectItem value="KS">Kansas</SelectItem>
-                            <SelectItem value="KY">Kentucky</SelectItem>
-                            <SelectItem value="LA">Louisiana</SelectItem>
-                            <SelectItem value="ME">Maine</SelectItem>
-                            <SelectItem value="MD">Maryland</SelectItem>
-                            <SelectItem value="MA">Massachusetts</SelectItem>
-                            <SelectItem value="MI">Michigan</SelectItem>
-                            <SelectItem value="MN">Minnesota</SelectItem>
-                            <SelectItem value="MS">Mississippi</SelectItem>
-                            <SelectItem value="MO">Missouri</SelectItem>
-                            <SelectItem value="MT">Montana</SelectItem>
-                            <SelectItem value="NE">Nebraska</SelectItem>
-                            <SelectItem value="NV">Nevada</SelectItem>
-                            <SelectItem value="NH">New Hampshire</SelectItem>
-                            <SelectItem value="NJ">New Jersey</SelectItem>
-                            <SelectItem value="NM">New Mexico</SelectItem>
-                            <SelectItem value="NY">New York</SelectItem>
-                            <SelectItem value="NC">North Carolina</SelectItem>
-                            <SelectItem value="ND">North Dakota</SelectItem>
-                            <SelectItem value="OH">Ohio</SelectItem>
-                            <SelectItem value="OK">Oklahoma</SelectItem>
-                            <SelectItem value="OR">Oregon</SelectItem>
-                            <SelectItem value="PA">Pennsylvania</SelectItem>
-                            <SelectItem value="RI">Rhode Island</SelectItem>
-                            <SelectItem value="SC">South Carolina</SelectItem>
-                            <SelectItem value="SD">South Dakota</SelectItem>
-                            <SelectItem value="TN">Tennessee</SelectItem>
-                            <SelectItem value="TX">Texas</SelectItem>
-                            <SelectItem value="UT">Utah</SelectItem>
-                            <SelectItem value="VT">Vermont</SelectItem>
-                            <SelectItem value="VA">Virginia</SelectItem>
-                            <SelectItem value="WA">Washington</SelectItem>
-                            <SelectItem value="WV">West Virginia</SelectItem>
-                            <SelectItem value="WI">Wisconsin</SelectItem>
-                            <SelectItem value="WY">Wyoming</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">ZIP Code *</label>
-                        <Input
-                          value={settings.business_address.zip_code || ''}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
-                            setSettings(prev => ({
-                              ...prev,
-                              business_address: { ...prev.business_address, zip_code: value }
-                            }));
-                          }}
-                          placeholder="12345"
-                          maxLength={5}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1074,88 +1134,57 @@ export default function MerchantSettingsPage() {
           <TabsContent value="wallets" className="space-y-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Wallet className="h-5 w-5" />
-                      Cryptocurrency Wallet Addresses
-                    </CardTitle>
-                    <CardDescription>
-                      Configure wallet addresses for cryptocurrencies you want to accept. 
-                      All payments are automatically forwarded to these addresses.
-                    </CardDescription>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowTrustWalletGuide(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Trust Wallet Guide
-                  </Button>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  Configured Wallet Addresses
+                </CardTitle>
+                <CardDescription>
+                  Manage your cryptocurrency wallet addresses for receiving payments
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Non-Custodial Notice */}
-                <Alert>
-                  <Shield className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Non-Custodial:</strong> Cryptrac never holds your funds. All payments are automatically 
-                    forwarded directly to your wallet addresses. You maintain full control of your cryptocurrency.
-                  </AlertDescription>
-                </Alert>
-
-                {/* Top Cryptocurrencies */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Star className="h-5 w-5 text-yellow-500" />
-                    <span>Top Cryptocurrencies + Major Stablecoins</span>
-                    <Badge variant="secondary">Recommended</Badge>
-                  </div>
-                  
+                {/* Top 10 + Major Stablecoins */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Required Currencies</h3>
                   <div className="grid gap-4">
                     {TOP_10_CURRENCIES.map((currency) => (
-                      <div key={currency.code} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{currency.code}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {currency.network}
-                              </Badge>
-                              {currency.is_required && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Popular
-                                </Badge>
-                              )}
+                      <div key={currency.code} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-bold text-blue-600">
+                                {currency.symbol}
+                              </span>
                             </div>
-                            <p className="text-sm text-gray-600">{currency.display_name}</p>
+                            <div>
+                              <div className="font-medium">{currency.display_name}</div>
+                              <div className="text-sm text-gray-500">{currency.network}</div>
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
+                            {getValidationIcon(currency.code)}
                             {settings.wallets[currency.code] && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeWallet(currency.code)}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             )}
-                            {getValidationIcon(currency.code)}
                           </div>
                         </div>
-                        
                         <div className="space-y-2">
                           <Input
-                            placeholder={`Enter your ${currency.code} wallet address`}
+                            placeholder={`Enter your ${currency.display_name} wallet address`}
                             value={settings.wallets[currency.code] || ''}
-                            onChange={(e) => handleWalletChange(currency.code, e.target.value)}
-                            className={
-                              validationStatus[currency.code] === 'valid' ? 'border-green-300' :
-                              validationStatus[currency.code] === 'invalid' ? 'border-red-300' :
-                              ''
-                            }
+                            onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
+                            className={`${
+                              validationStatus[currency.code] === 'valid' ? 'border-green-500' :
+                              validationStatus[currency.code] === 'invalid' ? 'border-red-500' :
+                              validationStatus[currency.code] === 'checking' ? 'border-blue-500' : ''
+                            }`}
                           />
                           {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
                             <p className={`text-xs ${
@@ -1172,64 +1201,76 @@ export default function MerchantSettingsPage() {
                   </div>
                 </div>
 
-                {/* Additional Cryptocurrencies */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Additional Cryptocurrencies</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Add support for more cryptocurrencies (loaded from NOWPayments - {additionalCurrencies.length} available)
-                  </p>
+                {/* Additional Currencies */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Additional Currencies</h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowTrustWalletGuide(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                        Trust Wallet Guide
+                      </Button>
+                    </div>
+                  </div>
                   
                   <div className="space-y-4">
                     <Input
-                      placeholder="Search for additional cryptocurrencies..."
+                      placeholder="Search currencies..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-md"
                     />
-
+                    
                     {loadingCurrencies ? (
                       <div className="text-center py-8">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">Loading additional currencies from NOWPayments...</p>
+                        <p className="text-sm text-gray-600">Loading currencies...</p>
                       </div>
                     ) : (
-                      <div className="max-h-96 overflow-y-auto space-y-3">
+                      <div className="grid gap-3 max-h-96 overflow-y-auto">
                         {filteredAdditionalCurrencies.map((currency) => (
-                          <div key={currency.code} className="border rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{currency.code}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {currency.network}
-                                  </Badge>
+                          <div key={currency.code} className="p-3 border rounded-lg space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
+                                  <span className="text-xs font-bold text-gray-600">
+                                    {currency.symbol || currency.code.charAt(0)}
+                                  </span>
                                 </div>
-                                <p className="text-sm text-gray-600">{currency.display_name || currency.name}</p>
+                                <div>
+                                  <div className="font-medium text-sm">{currency.display_name || currency.name}</div>
+                                  <div className="text-xs text-gray-500">{currency.network}</div>
+                                </div>
                               </div>
                               <div className="flex items-center gap-2">
+                                {getValidationIcon(currency.code)}
                                 {settings.wallets[currency.code] && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => removeWallet(currency.code)}
-                                    className="text-red-600 hover:text-red-700"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 )}
-                                {getValidationIcon(currency.code)}
                               </div>
                             </div>
-                            
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                               <Input
-                                placeholder={`Enter your ${currency.code} wallet address`}
+                                placeholder={`Enter your ${currency.display_name || currency.name} wallet address`}
                                 value={settings.wallets[currency.code] || ''}
-                                onChange={(e) => handleWalletChange(currency.code, e.target.value)}
-                                className={
-                                  validationStatus[currency.code] === 'valid' ? 'border-green-300' :
-                                  validationStatus[currency.code] === 'invalid' ? 'border-red-300' :
-                                  ''
-                                }
+                                onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
+                                className={`text-sm ${
+                                  validationStatus[currency.code] === 'valid' ? 'border-green-500' :
+                                  validationStatus[currency.code] === 'invalid' ? 'border-red-500' :
+                                  validationStatus[currency.code] === 'checking' ? 'border-blue-500' : ''
+                                }`}
                               />
                               {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
                                 <p className={`text-xs ${
@@ -1243,12 +1284,6 @@ export default function MerchantSettingsPage() {
                             </div>
                           </div>
                         ))}
-                        
-                        {searchTerm && filteredAdditionalCurrencies.length === 0 && (
-                          <div className="text-center py-8">
-                            <p>No cryptocurrencies found matching "{searchTerm}"</p>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -1258,99 +1293,107 @@ export default function MerchantSettingsPage() {
           </TabsContent>
 
           {/* Payment Settings Tab */}
-          <TabsContent value="payment" className="space-y-6">
+          <TabsContent value="payments" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
-                  Payment Configuration
+                  Gateway Fee Settings
                 </CardTitle>
                 <CardDescription>
-                  Configure how payments are processed and fees are handled
+                  Configure how gateway fees are handled
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Customer Fee Setting */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="charge_customer_fee"
-                      checked={settings.charge_customer_fee}
-                      onCheckedChange={(checked) => 
-                        setSettings(prev => ({ ...prev, charge_customer_fee: checked === true }))
-                      }
+                      id="auto-convert"
+                      checked={settings.auto_convert_enabled}
+                      onCheckedChange={(checked) => {
+                        setSettings(prev => ({
+                          ...prev,
+                          auto_convert_enabled: checked as boolean,
+                          payment_config: {
+                            ...prev.payment_config,
+                            fee_percentage: checked ? 1.0 : 0.5,
+                            ...(checked ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
+                          }
+                        }));
+                      }}
                     />
-                    <label htmlFor="charge_customer_fee" className="text-sm font-medium">
+                    <label htmlFor="auto-convert" className="text-sm font-medium">
+                      Enable auto-convert
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-600 ml-6">
+                    Automatically convert cryptocurrency payments to your preferred currency
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="charge-customer-fee"
+                      checked={settings.charge_customer_fee}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
+                    />
+                    <label htmlFor="charge-customer-fee" className="text-sm font-medium">
                       Charge gateway fee to customers
                     </label>
                   </div>
                   <p className="text-sm text-gray-600 ml-6">
-                    When enabled, customers pay the gateway fee ({settings.auto_convert_enabled ? '1%' : '0.5%'}). 
-                    When disabled, you absorb the gateway costs.
+                    Pass the {settings.auto_convert_enabled ? '1%' : '0.5%'} gateway fee to your customers instead of absorbing it
                   </p>
                 </div>
 
-                {/* Auto Convert Setting */}
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="auto_convert_enabled"
-                      checked={settings.auto_convert_enabled}
-                      onCheckedChange={(checked) => {
-                        const isAutoConvert = checked === true;
-                        setSettings(prev => ({ 
-                          ...prev, 
-                          auto_convert_enabled: isAutoConvert,
-                          payment_config: {
-                            auto_forward: prev.payment_config.auto_forward,
-                            fee_percentage: isAutoConvert ? 1.0 : 0.5,
-                            ...(isAutoConvert 
-                              ? { auto_convert_fee: 1.0 }
-                              : { no_convert_fee: 0.5 }
-                            )
-                          }
-                        }))
-                      }}
-                    />
-                    <label htmlFor="auto_convert_enabled" className="text-sm font-medium">
-                      Enable automatic conversion to preferred currency
-                    </label>
-                  </div>
-                  <p className="text-sm text-gray-600 ml-6">
-                    Automatically convert received payments to your preferred payout currency. 
-                    Gateway fee increases to 1% when auto-convert is enabled (vs 0.5% when disabled).
-                  </p>
-                </div>
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Gateway Fees:</strong> NOWPayments charges {settings.auto_convert_enabled ? '1%' : '0.5%'} for payment processing. 
+                    {settings.auto_convert_enabled ? ' Higher fee applies when auto-convert is enabled.' : ' Lower fee applies when auto-convert is disabled.'}
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
 
-                {/* Preferred Payout Currency */}
-                {settings.auto_convert_enabled && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Preferred Payout Currency</label>
-                    <Select
-                      value={settings.preferred_payout_currency || ''}
-                      onValueChange={(value) => 
-                        setSettings(prev => ({ ...prev, preferred_payout_currency: value || null }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select preferred currency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {FIAT_CURRENCIES.map(currency => (
-                          <SelectItem key={currency.code} value={currency.code}>
-                            {currency.name} ({currency.symbol})
-                          </SelectItem>
-                        ))}
-                        {Object.keys(settings.wallets).map(crypto => (
-                          <SelectItem key={crypto} value={crypto}>
-                            {crypto}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Preferred Payout Currency</CardTitle>
+                <CardDescription>
+                  Choose your preferred cryptocurrency for payouts (when auto-convert is enabled)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select 
+                  value={settings.preferred_payout_currency || ''} 
+                  onValueChange={(value) => setSettings(prev => ({ ...prev, preferred_payout_currency: value }))}
+                  disabled={!settings.auto_convert_enabled}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select preferred payout currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Show all configured cryptocurrencies */}
+                    {Object.keys(settings.wallets).filter(code => settings.wallets[code]).map(currencyCode => {
+                      const currency = [...TOP_10_CURRENCIES, ...additionalCurrencies].find(c => c.code === currencyCode);
+                      return currency ? (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.display_name || currency.name} ({currency.symbol || currency.code})
+                        </SelectItem>
+                      ) : (
+                        <SelectItem key={currencyCode} value={currencyCode}>
+                          {currencyCode}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                {!settings.auto_convert_enabled && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Enable auto-convert to select a preferred payout currency
+                  </p>
                 )}
-
               </CardContent>
             </Card>
           </TabsContent>
@@ -1361,194 +1404,148 @@ export default function MerchantSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  Tax Configuration
+                  Tax Collection Settings
                 </CardTitle>
                 <CardDescription>
-                  Configure tax settings for your payment links. Cryptrac helps you charge and report taxes accurately but does not file or remit taxes.
+                  Configure tax collection for your payments
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Tax Enable/Disable */}
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="tax_enabled"
+                    id="tax-enabled"
                     checked={settings.tax_enabled}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked === true }))}
+                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked as boolean }))}
                   />
-                  <label htmlFor="tax_enabled" className="text-sm font-medium">
-                    Enable tax collection on payment links
+                  <label htmlFor="tax-enabled" className="text-sm font-medium">
+                    Enable tax collection
                   </label>
                 </div>
 
                 {settings.tax_enabled && (
                   <>
-                    {/* Business Address */}
+                    {/* Business Address Display */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        <h3 className="text-lg font-medium">Business Address</h3>
+                        <MapPin className="h-4 w-4" />
+                        <h3 className="font-medium">Business Address</h3>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Street Address</label>
-                          <Input
-                            placeholder="123 Main St"
-                            value={settings.business_address.street || ''}
-                            onChange={(e) => setSettings(prev => ({
-                              ...prev,
-                              business_address: { ...prev.business_address, street: e.target.value }
-                            }))}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">City</label>
-                          <Input
-                            placeholder="San Francisco"
-                            value={settings.business_address.city || ''}
-                            onChange={(e) => setSettings(prev => ({
-                              ...prev,
-                              business_address: { ...prev.business_address, city: e.target.value }
-                            }))}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">State</label>
-                          <Input
-                            placeholder="CA"
-                            value={settings.business_address.state || ''}
-                            onChange={(e) => setSettings(prev => ({
-                              ...prev,
-                              business_address: { ...prev.business_address, state: e.target.value }
-                            }))}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">ZIP Code</label>
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="94102"
-                              value={settings.business_address.zip_code || ''}
-                              onChange={(e) => setSettings(prev => ({
-                                ...prev,
-                                business_address: { ...prev.business_address, zip_code: e.target.value }
-                              }))}
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => autoDetectTaxRates(settings.business_address.zip_code || '')}
-                              disabled={!settings.business_address.zip_code}
-                            >
-                              <MapPin className="h-4 w-4 mr-1" />
-                              Auto-Detect
-                            </Button>
+                      
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          Your business address is automatically used from your <strong>Profile</strong> information. 
+                          To update your address, please go to the Profile tab.
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className="p-4 bg-gray-50 rounded-lg border">
+                        {settings.business_address.street && (
+                          <div>{settings.business_address.street}</div>
+                        )}
+                        {(settings.business_address.city || settings.business_address.state || settings.business_address.zip_code) && (
+                          <div>
+                            {settings.business_address.city && `${settings.business_address.city}, `}
+                            {settings.business_address.state && `${settings.business_address.state} `}
+                            {settings.business_address.zip_code}
                           </div>
-                        </div>
+                        )}
+                        {(!settings.business_address.street && !settings.business_address.city) && (
+                          <div className="text-gray-500 italic">
+                            No address configured. Please update your profile information.
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Sales Type */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Sales Type</h3>
-                      <Select
-                        value={settings.sales_type}
-                        onValueChange={(value: 'local' | 'online' | 'both') => 
-                          setSettings(prev => ({ ...prev, sales_type: value }))
-                        }
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        <h3 className="font-medium">Sales Type</h3>
+                      </div>
+                      <Select 
+                        value={settings.sales_type} 
+                        onValueChange={(value: 'local' | 'online' | 'both') => setSettings(prev => ({ ...prev, sales_type: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="local">Local/In-Person Sales Only</SelectItem>
-                          <SelectItem value="online">Online/Remote Sales Only</SelectItem>
-                          <SelectItem value="both">Both Local and Online Sales</SelectItem>
+                          <SelectItem value="local">Local Sales Only</SelectItem>
+                          <SelectItem value="online">Online Sales Only</SelectItem>
+                          <SelectItem value="both">Both Local and Online</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-sm text-gray-600">
-                        {settings.sales_type === 'local' && 'Tax based on your business location (origin-based).'}
-                        {settings.sales_type === 'online' && 'Tax may vary by customer location (destination-based).'}
-                        {settings.sales_type === 'both' && 'Flexible tax calculation based on sale type.'}
-                      </p>
                     </div>
 
                     {/* Tax Strategy */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Tax Strategy</h3>
-                      <Select
-                        value={settings.tax_strategy}
-                        onValueChange={(value: 'origin' | 'destination' | 'custom') => 
-                          setSettings(prev => ({ ...prev, tax_strategy: value }))
-                        }
+                      <div className="flex items-center gap-2">
+                        <Calculator className="h-4 w-4" />
+                        <h3 className="font-medium">Tax Strategy</h3>
+                      </div>
+                      <Select 
+                        value={settings.tax_strategy} 
+                        onValueChange={(value: 'origin' | 'destination' | 'custom') => setSettings(prev => ({ ...prev, tax_strategy: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="origin">Origin-Based (Business Location)</SelectItem>
-                          <SelectItem value="destination">Destination-Based (Customer Location)</SelectItem>
-                          <SelectItem value="custom">Custom Configuration</SelectItem>
+                          <SelectItem value="origin">Origin-based (charge tax based on business location)</SelectItem>
+                          <SelectItem value="destination">Destination-based (charge tax based on customer location)</SelectItem>
+                          <SelectItem value="custom">Custom rates per transaction</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertDescription>
-                          {settings.tax_strategy === 'origin' && 'All sales taxed at your business location rates. Simplest approach.'}
-                          {settings.tax_strategy === 'destination' && 'Sales taxed based on customer location. More complex but may be required for online sales.'}
-                          {settings.tax_strategy === 'custom' && 'Manual tax configuration for each payment link.'}
-                        </AlertDescription>
-                      </Alert>
                     </div>
 
                     {/* Default Tax Rates */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium">Default Tax Rates</h3>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4" />
+                          <h3 className="font-medium">Default Tax Rates</h3>
+                        </div>
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           onClick={addTaxRate}
                           className="flex items-center gap-2"
                         >
                           <Plus className="h-4 w-4" />
-                          Add Tax Rate
+                          Add Rate
                         </Button>
                       </div>
                       
                       <div className="space-y-3">
-                        {settings.tax_rates.map((taxRate, index) => (
-                          <div key={taxRate.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                            <div className="flex-1">
-                              <Input
-                                placeholder="Tax Label (e.g., State Tax, Local Tax)"
-                                value={taxRate.label}
-                                onChange={(e) => updateTaxRate(taxRate.id, 'label', e.target.value)}
-                              />
-                            </div>
-                            
-                            <div className="w-24">
+                        {settings.tax_rates.map((rate) => (
+                          <div key={rate.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <Input
+                              placeholder="Tax label (e.g., Sales Tax)"
+                              value={rate.label}
+                              onChange={(e) => updateTaxRate(rate.id, 'label', e.target.value)}
+                              className="flex-1"
+                            />
+                            <div className="flex items-center gap-2">
                               <Input
                                 type="number"
+                                placeholder="0.0"
+                                value={rate.percentage}
+                                onChange={(e) => updateTaxRate(rate.id, 'percentage', e.target.value)}
+                                className="w-20"
                                 step="0.1"
                                 min="0"
-                                max="50"
-                                placeholder="8.5"
-                                value={taxRate.percentage}
-                                onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
+                                max="100"
                               />
+                              <span className="text-sm text-gray-500">%</span>
                             </div>
-                            
-                            <span className="text-sm text-gray-500">%</span>
-                            
                             {settings.tax_rates.length > 1 && (
                               <Button
-                                type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => removeTaxRate(taxRate.id)}
-                                className="text-red-600 hover:text-red-700"
+                                onClick={() => removeTaxRate(rate.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -1620,6 +1617,14 @@ export default function MerchantSettingsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Trust Wallet Guide Modal */}
+        {showTrustWalletGuide && (
+          <TrustWalletGuide 
+            onComplete={() => setShowTrustWalletGuide(false)} 
+            onSkip={() => setShowTrustWalletGuide(false)} 
+          />
+        )}
       </div>
     </DashboardLayout>
   );
