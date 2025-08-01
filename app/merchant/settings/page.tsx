@@ -225,139 +225,6 @@ const TOP_10_CURRENCIES = [
     display_name: 'Sui',
     enabled: true,
     is_required: true
-  },
-  // Major Stablecoins
-  {
-    code: 'USDT_ERC20',
-    name: 'Tether USD',
-    symbol: 'USDT',
-    network: 'Ethereum',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDT (ERC-20)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDC_ERC20',
-    name: 'USD Coin',
-    symbol: 'USDC',
-    network: 'Ethereum',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDC (ERC-20)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDT_BEP20',
-    name: 'Tether USD',
-    symbol: 'USDT',
-    network: 'BSC',
-    trust_wallet_compatible: true,
-    decimals: 18,
-    min_amount: 0.000000001,
-    display_name: 'USDT (BEP-20)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDC_BEP20',
-    name: 'USD Coin',
-    symbol: 'USDC',
-    network: 'BSC',
-    trust_wallet_compatible: true,
-    decimals: 18,
-    min_amount: 0.000000001,
-    display_name: 'USDC (BEP-20)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDT_SOL',
-    name: 'Tether USD',
-    symbol: 'USDT',
-    network: 'Solana',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDT (Solana)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDC_SOL',
-    name: 'USD Coin',
-    symbol: 'USDC',
-    network: 'Solana',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDC (Solana)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDT_TRC20',
-    name: 'Tether USD',
-    symbol: 'USDT',
-    network: 'TRON',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDT (TRC-20)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDC_TRC20',
-    name: 'USD Coin',
-    symbol: 'USDC',
-    network: 'TRON',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDC (TRC-20)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDT_TON',
-    name: 'Tether USD',
-    symbol: 'USDT',
-    network: 'TON',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDT (TON)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDT_AVAX',
-    name: 'Tether USD',
-    symbol: 'USDT',
-    network: 'Avalanche',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDT (Avalanche)',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'USDC_AVAX',
-    name: 'USD Coin',
-    symbol: 'USDC',
-    network: 'Avalanche',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'USDC (Avalanche)',
-    enabled: true,
-    is_required: true
   }
 ];
 
@@ -857,11 +724,29 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const filteredAdditionalCurrencies = additionalCurrencies.filter(currency =>
-    currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    currency.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAdditionalCurrencies = additionalCurrencies.filter(currency => {
+    // Filter out stable coins
+    const isStableCoin = currency.code.includes('USDT') || 
+                        currency.code.includes('USDC') || 
+                        currency.code.includes('DAI') || 
+                        currency.code.includes('BUSD') || 
+                        currency.code.includes('TUSD') || 
+                        currency.code.includes('FRAX') || 
+                        currency.code.includes('LUSD') || 
+                        currency.code.includes('USDP') || 
+                        currency.code.includes('GUSD') || 
+                        currency.code.includes('PYUSD') || 
+                        currency.code.includes('USDE') || 
+                        currency.code.includes('FDUSD') || 
+                        currency.code.includes('USDD');
+    
+    // Include if not a stable coin and matches search term
+    return !isStableCoin && (
+      currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      currency.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   if (loading) {
     return (
@@ -1143,9 +1028,33 @@ export default function MerchantSettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Stable Coin Information */}
+                <Alert className="bg-green-50 border-green-200">
+                  <Info className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    <strong>Smart Wallet Setup:</strong> Configure base cryptocurrency wallets below and automatically support their stable coins.
+                    <div className="mt-2 text-sm font-medium">
+                      No need to add separate wallet addresses for stable coins - they use the same address as their base currency!
+                    </div>
+                  </AlertDescription>
+                </Alert>
+
+                {/* Trust Wallet Guide Button */}
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTrustWalletGuide(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Trust Wallet Guide
+                  </Button>
+                </div>
+
                 {/* Top 10 + Major Stablecoins */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Required Currencies</h3>
+                  <h3 className="text-lg font-semibold">Accepted Currencies</h3>
                   <div className="grid gap-4">
                     {TOP_10_CURRENCIES.map((currency) => (
                       <div key={currency.code} className="p-4 border rounded-lg space-y-3">
@@ -1195,6 +1104,49 @@ export default function MerchantSettingsPage() {
                               {getValidationMessage(currency.code)}
                             </p>
                           )}
+                          
+                          {/* Show included stable coins for validated base currencies */}
+                          {validationStatus[currency.code] === 'valid' && settings.wallets[currency.code] && (
+                            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="text-xs font-medium text-green-800 mb-2">
+                                ✅ Automatically includes these stable coins:
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {(() => {
+                                  const stableCoins = {
+                                    'SOL': ['USDC (Solana)', 'USDT (Solana)'],
+                                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
+                                    'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
+                                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
+                                    'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
+                                    'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                                  }[currency.code] || [];
+                                  
+                                  return stableCoins.map((coin, index) => (
+                                    <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                                      {coin}
+                                    </span>
+                                  ));
+                                })()}
+                              </div>
+                              {(() => {
+                                const stableCoins = {
+                                  'SOL': ['USDC (Solana)', 'USDT (Solana)'],
+                                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
+                                  'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
+                                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
+                                  'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
+                                  'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                                }[currency.code] || [];
+                                
+                                return stableCoins.length === 0 ? null : (
+                                  <div className="mt-2 text-xs text-green-700">
+                                    Customers can pay with {currency.code} or any of these {stableCoins.length} stable coins using the same address.
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1203,20 +1155,7 @@ export default function MerchantSettingsPage() {
 
                 {/* Additional Currencies */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Additional Currencies</h3>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowTrustWalletGuide(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <HelpCircle className="h-4 w-4" />
-                        Trust Wallet Guide
-                      </Button>
-                    </div>
-                  </div>
+                  <h3 className="text-lg font-semibold">Additional Currencies</h3>
                   
                   <div className="space-y-4">
                     <Input
@@ -1620,10 +1559,14 @@ export default function MerchantSettingsPage() {
 
         {/* Trust Wallet Guide Modal */}
         {showTrustWalletGuide && (
-          <TrustWalletGuide 
-            onComplete={() => setShowTrustWalletGuide(false)} 
-            onSkip={() => setShowTrustWalletGuide(false)} 
-          />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <TrustWalletGuide 
+                onComplete={() => setShowTrustWalletGuide(false)} 
+                onSkip={() => setShowTrustWalletGuide(false)} 
+              />
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>

@@ -35,6 +35,30 @@ interface SuccessStepProps {
 export default function SuccessStep({ onboardingData, onFinish, isLoading }: SuccessStepProps) {
   const { businessInfo, walletConfig, paymentConfig } = onboardingData
 
+  // Stable coin associations for automatic inclusion
+  const stableCoinAssociations: Record<string, string[]> = {
+    'SOL': ['USDCSOL', 'USDTSOL'],
+    'ETH': ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
+    'BNB': ['USDTBSC', 'USDCBSC', 'BUSDBSC', 'DAIBSC', 'TUSDBSC', 'FDUSDBSC'],
+    'MATIC': ['USDTMATIC', 'USDCMATIC', 'DAIMATIC'],
+    'AVAX': ['USDTAVAX', 'USDCAVAX'],
+    'TRX': ['USDTTRC20', 'USDDTRC20'],
+    'ARB': ['USDTARB', 'USDCARB'],
+    'OP': ['USDTOP', 'USDCOP']
+  }
+
+  // Expand accepted cryptos to include available stable coins
+  const expandedCurrencies = React.useMemo(() => {
+    const expanded = [...paymentConfig.acceptedCryptos]
+    
+    paymentConfig.acceptedCryptos.forEach(currency => {
+      const associatedStableCoins = stableCoinAssociations[currency] || []
+      expanded.push(...associatedStableCoins)
+    })
+    
+    return expanded
+  }, [paymentConfig.acceptedCryptos])
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card className="shadow-lg border-0 bg-white relative overflow-hidden">
@@ -109,13 +133,39 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
                       <strong>Gateway Fee:</strong> 0.5% (no conversion), 1% (auto-convert enabled)
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600"><strong>Accepted Cryptos:</strong></span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {paymentConfig.acceptedCryptos.map(crypto => (
-                          <Badge key={crypto} className="bg-[#7f5efd] text-white">
-                            {crypto}
-                          </Badge>
-                        ))}
+                      <span className="text-sm text-gray-600"><strong>Total Payment Options:</strong></span>
+                      <div className="mt-1 text-sm text-gray-600">
+                        {expandedCurrencies.length} cryptocurrencies ({paymentConfig.acceptedCryptos.length} base + {expandedCurrencies.length - paymentConfig.acceptedCryptos.length} stable coins)
+                      </div>
+                      
+                      {/* Base Currencies */}
+                      <div className="mt-2">
+                        <span className="text-xs text-gray-500 font-medium">Base Cryptocurrencies:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {paymentConfig.acceptedCryptos.map(crypto => (
+                            <Badge key={crypto} className="bg-[#7f5efd] text-white">
+                              {crypto}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stable Coins */}
+                      {expandedCurrencies.length > paymentConfig.acceptedCryptos.length && (
+                        <div className="mt-2">
+                          <span className="text-xs text-gray-500 font-medium">Included Stable Coins:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {expandedCurrencies.filter(currency => !paymentConfig.acceptedCryptos.includes(currency)).map(crypto => (
+                              <Badge key={crypto} variant="outline" className="border-blue-300 text-blue-700">
+                                {crypto}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-3 text-xs text-green-700 bg-green-50 rounded p-2">
+                        <strong>🎉 Smart Configuration:</strong> Your {paymentConfig.acceptedCryptos.length} base cryptocurrencies automatically include {expandedCurrencies.length - paymentConfig.acceptedCryptos.length} stable coins for maximum payment flexibility!
                       </div>
                     </div>
                   </div>

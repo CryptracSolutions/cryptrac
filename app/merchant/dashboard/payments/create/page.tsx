@@ -17,7 +17,8 @@ import {
   Clock,
   Plus,
   Trash2,
-  Loader2
+  Loader2,
+  Info
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -46,9 +47,8 @@ interface CreatePaymentLinkForm {
   accepted_cryptos: string[];
   expires_at: string;
   max_uses: string;
-  redirect_url: string;
-  auto_convert_enabled: boolean;
-  charge_customer_fee: boolean;
+  auto_convert_enabled: boolean | null; // null = inherit from merchant settings
+  charge_customer_fee: boolean | null; // null = inherit from merchant settings
   tax_enabled: boolean;
   tax_rates: TaxRate[];
 }
@@ -57,6 +57,9 @@ interface MerchantSettings {
   wallets: Record<string, string>;
   auto_convert_enabled: boolean;
   charge_customer_fee: boolean;
+  tax_enabled: boolean;
+  tax_rates: TaxRate[];
+  tax_strategy: string;
   payment_config: {
     fee_percentage?: number;
     auto_convert_fee?: number;
@@ -83,16 +86,13 @@ export default function CreatePaymentLinkPage() {
     description: '',
     amount: '',
     currency: 'USD',
-    accepted_cryptos: [],
+    accepted_cryptos: [], // Will be populated with all available cryptos
     expires_at: '',
     max_uses: '',
-    redirect_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/success/{{PAYMENT_ID}}`,
-    auto_convert_enabled: false,
-    charge_customer_fee: false,
+    auto_convert_enabled: null, // null = inherit from merchant settings
+    charge_customer_fee: null, // null = inherit from merchant settings
     tax_enabled: false,
-    tax_rates: [
-      { id: '1', label: 'Sales Tax', percentage: '8.5' }
-    ]
+    tax_rates: []
   });
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function CreatePaymentLinkPage() {
       // Load merchant settings
       const { data: merchant, error: merchantError } = await supabase
         .from('merchants')
-        .select('wallets, auto_convert_enabled, charge_customer_fee, payment_config')
+        .select('wallets, auto_convert_enabled, charge_customer_fee, payment_config, tax_enabled, tax_rates, tax_strategy')
         .eq('user_id', session.user.id)
         .single();
 
@@ -122,14 +122,15 @@ export default function CreatePaymentLinkPage() {
       }
 
       setMerchantSettings(merchant);
-      setAvailableCryptos(Object.keys(merchant.wallets || {}));
+      const cryptos = Object.keys(merchant.wallets || {});
+      setAvailableCryptos(cryptos);
       
-      // Set default form values from merchant settings
+      // Set default form values - all cryptocurrencies selected by default
       setForm(prev => ({
         ...prev,
-        auto_convert_enabled: merchant.auto_convert_enabled || false,
-        charge_customer_fee: merchant.charge_customer_fee || false,
-        accepted_cryptos: Object.keys(merchant.wallets || {}).slice(0, 3) // Default to first 3 cryptos
+        accepted_cryptos: cryptos, // Select all available cryptos by default
+        auto_convert_enabled: null, // null = inherit from merchant settings
+        charge_customer_fee: null // null = inherit from merchant settings
       }));
 
     } catch (error) {
@@ -172,8 +173,36 @@ export default function CreatePaymentLinkPage() {
     }));
   };
 
+  // Handle tax enabled toggle - auto-populate with merchant's global tax settings
+  const handleTaxEnabledToggle = (enabled: boolean) => {
+    setForm(prev => ({
+      ...prev,
+      tax_enabled: enabled,
+      tax_rates: enabled && prev.tax_rates.length === 0 ? (
+        // Use merchant's global tax settings if available, otherwise provide default
+        merchantSettings?.tax_rates && merchantSettings.tax_rates.length > 0 
+          ? merchantSettings.tax_rates 
+          : [{ id: '1', label: 'Sales Tax', percentage: '8.5' }]
+      ) : prev.tax_rates
+    }));
+  };
+
+  const getEffectiveSettings = () => {
+    if (!merchantSettings) return { auto_convert_enabled: false, charge_customer_fee: false };
+    
+    return {
+      auto_convert_enabled: form.auto_convert_enabled !== null 
+        ? form.auto_convert_enabled 
+        : merchantSettings.auto_convert_enabled,
+      charge_customer_fee: form.charge_customer_fee !== null 
+        ? form.charge_customer_fee 
+        : merchantSettings.charge_customer_fee
+    };
+  };
+
   const calculateFees = () => {
     const baseAmount = parseFloat(form.amount) || 0;
+    const effectiveSettings = getEffectiveSettings();
     
     // Calculate total tax from all tax rates
     let totalTaxAmount = 0;
@@ -195,10 +224,10 @@ export default function CreatePaymentLinkPage() {
     
     const subtotalWithTax = baseAmount + totalTaxAmount;
     
-    const feePercentage = form.auto_convert_enabled ? 1.0 : 0.5;
+    const feePercentage = effectiveSettings.auto_convert_enabled ? 1.0 : 0.5;
     const feeAmount = (subtotalWithTax * feePercentage) / 100;
-    const totalAmount = form.charge_customer_fee ? subtotalWithTax + feeAmount : subtotalWithTax;
-    const merchantReceives = form.charge_customer_fee ? subtotalWithTax : subtotalWithTax - feeAmount;
+    const totalAmount = effectiveSettings.charge_customer_fee ? subtotalWithTax + feeAmount : subtotalWithTax;
+    const merchantReceives = effectiveSettings.charge_customer_fee ? subtotalWithTax : subtotalWithTax - feeAmount;
     
     return {
       baseAmount,
@@ -209,7 +238,8 @@ export default function CreatePaymentLinkPage() {
       feePercentage,
       feeAmount,
       totalAmount,
-      merchantReceives
+      merchantReceives,
+      effectiveSettings
     };
   };
 
@@ -229,6 +259,24 @@ export default function CreatePaymentLinkPage() {
     if (form.accepted_cryptos.length === 0) {
       toast.error('Please select at least one cryptocurrency');
       return;
+    }
+
+    // Validate tax rates if tax is enabled
+    if (form.tax_enabled) {
+      if (form.tax_rates.length === 0) {
+        toast.error('Please add at least one tax rate or disable tax');
+        return;
+      }
+      
+      // Check if all tax rates have valid labels and percentages
+      const invalidTaxRates = form.tax_rates.filter(rate => 
+        !rate.label.trim() || isNaN(parseFloat(rate.percentage)) || parseFloat(rate.percentage) < 0
+      );
+      
+      if (invalidTaxRates.length > 0) {
+        toast.error('Please provide valid labels and percentages for all tax rates');
+        return;
+      }
     }
 
     try {
@@ -251,7 +299,6 @@ export default function CreatePaymentLinkPage() {
         accepted_cryptos: form.accepted_cryptos,
         expires_at: form.expires_at || null,
         max_uses: form.max_uses ? parseInt(form.max_uses) : null,
-        redirect_url: form.redirect_url.trim() || null,
         auto_convert_enabled: form.auto_convert_enabled,
         charge_customer_fee: form.charge_customer_fee,
         tax_enabled: form.tax_enabled,
@@ -291,7 +338,8 @@ export default function CreatePaymentLinkPage() {
 
       if (result.success) {
         toast.success('Payment link created successfully!');
-        router.push(`/merchant/dashboard/payments/${result.data.id}`);
+        // Use the database ID for the merchant dashboard, not the link_id
+        router.push(`/merchant/dashboard/payments/${result.payment_link.id}`);
       } else {
         throw new Error(result.error || 'Failed to create payment link');
       }
@@ -407,6 +455,24 @@ export default function CreatePaymentLinkPage() {
                   {/* Accepted Cryptocurrencies */}
                   <div className="space-y-3">
                     <Label>Accepted Cryptocurrencies *</Label>
+                    <p className="text-sm text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don't want to accept.</p>
+                    
+                    {/* Stable Coin Information */}
+                    <Alert className="bg-blue-50 border-blue-200">
+                      <Info className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-800">
+                        <strong>Bonus:</strong> Selecting base cryptocurrencies automatically includes their stable coins for customers:
+                        <div className="mt-2 text-sm">
+                          • <strong>SOL</strong> → includes USDC & USDT on Solana
+                          • <strong>ETH</strong> → includes USDT, USDC, DAI & 9 more stable coins
+                          • <strong>BNB</strong> → includes USDT, USDC, BUSD & 3 more on BSC
+                          • <strong>MATIC</strong> → includes USDT, USDC & DAI on Polygon
+                          • <strong>AVAX</strong> → includes USDT & USDC on Avalanche
+                          • <strong>TRX</strong> → includes USDT & USDD on Tron
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+
                     {availableCryptos.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {availableCryptos.map(crypto => (
@@ -438,12 +504,26 @@ export default function CreatePaymentLinkPage() {
                       <Checkbox
                         id="tax_enabled"
                         checked={form.tax_enabled}
-                        onCheckedChange={(checked) => setForm(prev => ({ ...prev, tax_enabled: checked === true }))}
+                        onCheckedChange={(checked) => handleTaxEnabledToggle(checked === true)}
                       />
                       <Label htmlFor="tax_enabled" className="text-sm font-medium">
                         Add tax to payment
                       </Label>
                     </div>
+                    
+                    {/* Show global tax settings info */}
+                    {merchantSettings && (
+                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                        <Info className="h-3 w-3 inline mr-1" />
+                        Global tax setting: {merchantSettings.tax_enabled ? 'Enabled' : 'Disabled'}
+                        {merchantSettings.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 && 
+                          ` (${merchantSettings.tax_rates.length} tax rate${merchantSettings.tax_rates.length !== 1 ? 's' : ''} configured)`
+                        }
+                        {form.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 && 
+                          ' - Global rates auto-filled below'
+                        }
+                      </div>
+                    )}
                     
                     {form.tax_enabled && (
                       <div className="ml-6 space-y-4">
@@ -475,10 +555,10 @@ export default function CreatePaymentLinkPage() {
                               <div className="w-24">
                                 <Input
                                   type="number"
-                                  step="0.1"
+                                  step="0.001"
                                   min="0"
                                   max="50"
-                                  placeholder="8.5"
+                                  placeholder="6.625"
                                   value={taxRate.percentage}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
                                 />
@@ -502,7 +582,7 @@ export default function CreatePaymentLinkPage() {
                         </div>
                         
                         <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                          <strong>Total Tax Rate:</strong> {fees.totalTaxPercentage.toFixed(1)}%
+                          <strong>Total Tax Rate:</strong> {fees.totalTaxPercentage.toFixed(3)}%
                           {fees.totalTaxAmount > 0 && (
                             <span className="ml-2">
                               ({form.currency} {fees.totalTaxAmount.toFixed(2)})
@@ -548,154 +628,257 @@ export default function CreatePaymentLinkPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="redirect_url">Redirect URL</Label>
-                    <Input
-                      id="redirect_url"
-                      type="url"
-                      placeholder="https://yoursite.com/thank-you"
-                      value={form.redirect_url}
-                      onChange={(e) => setForm(prev => ({ ...prev, redirect_url: e.target.value }))}
-                    />
-                  </div>
-
-                  {/* Payment Options */}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="auto_convert_enabled"
-                        checked={form.auto_convert_enabled}
-                        onCheckedChange={(checked) => setForm(prev => ({ ...prev, auto_convert_enabled: checked === true }))}
-                      />
-                      <Label htmlFor="auto_convert_enabled" className="text-sm font-medium">
-                        Enable auto-convert to fiat
-                      </Label>
+                  {/* Payment Options with Global Settings Display */}
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium text-gray-700">Payment Options</div>
+                    
+                    {/* Auto-convert setting */}
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium text-gray-900">Auto-Convert Setting</div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="auto_convert_global"
+                            name="auto_convert_setting"
+                            checked={form.auto_convert_enabled === null}
+                            onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: null }))}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                          <Label htmlFor="auto_convert_global" className="text-sm">
+                            Use global setting ({merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="auto_convert_enable"
+                            name="auto_convert_setting"
+                            checked={form.auto_convert_enabled === true}
+                            onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: true }))}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                          <Label htmlFor="auto_convert_enable" className="text-sm">
+                            Enable auto-convert for this payment link
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="auto_convert_disable"
+                            name="auto_convert_setting"
+                            checked={form.auto_convert_enabled === false}
+                            onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: false }))}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                          <Label htmlFor="auto_convert_disable" className="text-sm">
+                            Disable auto-convert for this payment link
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                        <Info className="h-3 w-3 inline mr-1" />
+                        Current selection: {
+                          form.auto_convert_enabled === null 
+                            ? `Global setting (${merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})`
+                            : form.auto_convert_enabled ? 'Enabled' : 'Disabled'
+                        }
+                      </div>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="charge_customer_fee"
-                        checked={form.charge_customer_fee}
-                        onCheckedChange={(checked) => setForm(prev => ({ ...prev, charge_customer_fee: checked === true }))}
-                      />
-                      <Label htmlFor="charge_customer_fee" className="text-sm font-medium">
-                        Charge gateway fee to customer
-                      </Label>
+                    {/* Gateway fee setting */}
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium text-gray-900">Gateway Fee Setting</div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="fee_global"
+                            name="fee_setting"
+                            checked={form.charge_customer_fee === null}
+                            onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: null }))}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                          <Label htmlFor="fee_global" className="text-sm">
+                            Use global setting ({merchantSettings?.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'})
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="customer_pays_fee"
+                            name="fee_setting"
+                            checked={form.charge_customer_fee === true}
+                            onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: true }))}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                          <Label htmlFor="customer_pays_fee" className="text-sm">
+                            Customer pays gateway fee for this payment link
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="merchant_pays_fee"
+                            name="fee_setting"
+                            checked={form.charge_customer_fee === false}
+                            onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: false }))}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                          <Label htmlFor="merchant_pays_fee" className="text-sm">
+                            Merchant pays gateway fee for this payment link
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                        <Info className="h-3 w-3 inline mr-1" />
+                        Current selection: {
+                          form.charge_customer_fee === null 
+                            ? `Global setting (${merchantSettings?.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'})`
+                            : form.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'
+                        }
+                      </div>
                     </div>
                   </div>
+
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      After successful payment, customers will be automatically redirected to Cryptrac's branded thank you page with options to receive their receipt.
+                    </AlertDescription>
+                  </Alert>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Preview & Summary */}
+            {/* Combined Preview & Fee Summary */}
             <div className="space-y-6">
-              {/* Fee Summary */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    Fee Summary
+                    Payment Link Preview
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span>Base Amount:</span>
-                    <span>{form.currency} {fees.baseAmount.toFixed(2)}</span>
-                  </div>
-                  
-                  {form.tax_enabled && fees.totalTaxAmount > 0 && (
-                    <>
-                      {form.tax_rates.map((taxRate, index) => {
-                        const percentage = parseFloat(taxRate.percentage) || 0;
-                        const amount = (fees.baseAmount * percentage) / 100;
-                        return amount > 0 ? (
-                          <div key={taxRate.id} className="flex justify-between text-sm">
-                            <span>{taxRate.label} ({percentage}%):</span>
-                            <span>{form.currency} {amount.toFixed(2)}</span>
-                          </div>
-                        ) : null;
-                      })}
-                      
-                      <div className="flex justify-between text-sm font-medium border-t pt-2">
-                        <span>Total Tax ({fees.totalTaxPercentage.toFixed(1)}%):</span>
-                        <span>{form.currency} {fees.totalTaxAmount.toFixed(2)}</span>
+                <CardContent className="space-y-4">
+                  {/* Preview Section */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border-2 border-dashed border-blue-200">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="font-semibold text-lg text-gray-900">{form.title || 'Payment Link Title'}</p>
+                        <p className="text-sm text-gray-600">{form.description || 'Payment description will appear here'}</p>
                       </div>
-                    </>
-                  )}
-                  
-                  {form.tax_enabled && (
-                    <div className="flex justify-between text-sm font-medium border-t pt-2">
-                      <span>Subtotal with Tax:</span>
-                      <span>{form.currency} {fees.subtotalWithTax.toFixed(2)}</span>
+                      
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="default" className="text-lg px-3 py-1">
+                          {form.currency} {fees.totalAmount.toFixed(2)}
+                        </Badge>
+                        {form.accepted_cryptos.length > 0 && (
+                          <Badge variant="secondary">
+                            {form.accepted_cryptos.length} crypto{form.accepted_cryptos.length !== 1 ? 's' : ''} accepted
+                          </Badge>
+                        )}
+                        {form.tax_enabled && fees.totalTaxAmount > 0 && (
+                          <Badge variant="outline" className="text-green-700 border-green-300">
+                            Tax included
+                          </Badge>
+                        )}
+                      </div>
+
+                      {(form.expires_at || form.max_uses) && (
+                        <div className="text-xs text-gray-500 space-y-1">
+                          {form.expires_at && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              Expires: {new Date(form.expires_at).toLocaleDateString()}
+                            </div>
+                          )}
+                          {form.max_uses && (
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              Max uses: {form.max_uses}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  
-                  <div className="flex justify-between text-sm">
-                    <span>Gateway Fee ({fees.feePercentage}%):</span>
-                    <span>{form.currency} {fees.feeAmount.toFixed(2)}</span>
                   </div>
-                  
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between font-medium">
-                      <span>Customer Pays:</span>
-                      <span>{form.currency} {fees.totalAmount.toFixed(2)}</span>
-                    </div>
+
+                  {/* Fee Breakdown */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-gray-700 border-b pb-2">Payment Breakdown</div>
                     
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>You Receive:</span>
-                      <span>{form.currency} {fees.merchantReceives.toFixed(2)}</span>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Base Amount:</span>
+                        <span className="font-medium">{form.currency} {fees.baseAmount.toFixed(2)}</span>
+                      </div>
+                      
+                      {form.tax_enabled && fees.totalTaxAmount > 0 && (
+                        <>
+                          {form.tax_rates.map((taxRate) => {
+                            const percentage = parseFloat(taxRate.percentage) || 0;
+                            const amount = (fees.baseAmount * percentage) / 100;
+                            return amount > 0 && taxRate.label ? (
+                              <div key={taxRate.id} className="flex justify-between text-green-700">
+                                <span>{taxRate.label} ({percentage}%):</span>
+                                <span>+{form.currency} {amount.toFixed(2)}</span>
+                              </div>
+                            ) : null;
+                          })}
+                          
+                          <div className="flex justify-between font-medium text-green-700 border-t pt-2">
+                            <span>Total Tax ({fees.totalTaxPercentage.toFixed(3)}%):</span>
+                            <span>+{form.currency} {fees.totalTaxAmount.toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
+                      
+                      {form.tax_enabled && (
+                        <div className="flex justify-between font-medium border-t pt-2">
+                          <span>Subtotal with Tax:</span>
+                          <span>{form.currency} {fees.subtotalWithTax.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between text-blue-700">
+                        <span>Gateway Fee ({fees.feePercentage}%):</span>
+                        <span>{fees.effectiveSettings.charge_customer_fee ? '+' : ''}{form.currency} {fees.feeAmount.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="border-t pt-2 space-y-1">
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>Customer Pays:</span>
+                          <span className="text-blue-600">{form.currency} {fees.totalAmount.toFixed(2)}</span>
+                        </div>
+                        
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>You Receive:</span>
+                          <span className="font-medium text-green-600">{form.currency} {fees.merchantReceives.toFixed(2)}</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  {form.auto_convert_enabled && (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription className="text-xs">
-                        Auto-convert enabled: 1% gateway fee applies
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </CardContent>
-              </Card>
+                    {fees.effectiveSettings.auto_convert_enabled && (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          Auto-convert enabled: 1% gateway fee applies (crypto will be converted to your preferred currency)
+                        </AlertDescription>
+                      </Alert>
+                    )}
 
-              {/* Quick Preview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Preview</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="font-medium">{form.title || 'Payment Link Title'}</p>
-                    <p className="text-sm text-gray-600">{form.description || 'Payment description'}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">
-                      {form.currency} {fees.totalAmount.toFixed(2)}
-                    </Badge>
-                    {form.accepted_cryptos.length > 0 && (
-                      <Badge variant="secondary">
-                        {form.accepted_cryptos.length} crypto{form.accepted_cryptos.length !== 1 ? 's' : ''}
-                      </Badge>
+                    {!fees.effectiveSettings.charge_customer_fee && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          Gateway fee will be deducted from your payout
+                        </AlertDescription>
+                      </Alert>
                     )}
                   </div>
-
-                  {(form.expires_at || form.max_uses) && (
-                    <div className="text-xs text-gray-500 space-y-1">
-                      {form.expires_at && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          Expires: {new Date(form.expires_at).toLocaleDateString()}
-                        </div>
-                      )}
-                      {form.max_uses && (
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          Max uses: {form.max_uses}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>

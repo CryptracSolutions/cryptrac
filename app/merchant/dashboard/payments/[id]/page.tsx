@@ -28,6 +28,7 @@ interface PaymentLink {
   title: string;
   description: string;
   amount: number;
+  base_amount?: number;
   currency: string;
   status: string;
   accepted_cryptos: string[];
@@ -38,11 +39,25 @@ interface PaymentLink {
   updated_at: string;
   payment_url: string;
   auto_convert_enabled?: boolean;
+  charge_customer_fee?: boolean;
   fee_percentage?: number;
+  tax_enabled?: boolean;
+  tax_amount?: number;
+  tax_rates?: Array<{
+    label: string;
+    percentage: number;
+  }>;
+  subtotal_with_tax?: number;
   metadata?: {
     fee_percentage?: number;
     fee_amount?: number;
     total_amount?: number;
+    fee_breakdown?: {
+      fee_amount?: number;
+      merchant_receives?: number;
+      effective_charge_customer_fee?: boolean;
+      effective_auto_convert_enabled?: boolean;
+    };
   };
 }
 
@@ -232,10 +247,17 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
   }
 
   const feePercentage = paymentLink.fee_percentage ? paymentLink.fee_percentage * 100 : 0;
-  const feeAmount = paymentLink.metadata?.fee_amount || (paymentLink.amount * (paymentLink.fee_percentage || 0));
-  const totalAmount = paymentLink.amount;
+  const baseAmount = paymentLink.base_amount || paymentLink.amount;
+  const subtotalWithTax = paymentLink.subtotal_with_tax || baseAmount;
+  const feeAmount = paymentLink.metadata?.fee_breakdown?.fee_amount || (subtotalWithTax * (paymentLink.fee_percentage || 0));
+  const chargeCustomerFee = paymentLink.charge_customer_fee || false;
   const autoConvertEnabled = paymentLink.auto_convert_enabled || false;
-  const feeLabel = autoConvertEnabled ? `${feePercentage.toFixed(1)}% (Auto-conversion enabled)` : `${feePercentage.toFixed(1)}% (Direct crypto)`;
+  
+  // Calculate correct amounts based on who pays the fee
+  const customerPaysTotal = chargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax;
+  const merchantReceives = chargeCustomerFee ? subtotalWithTax : subtotalWithTax - feeAmount;
+  
+  const feeLabel = autoConvertEnabled ? `${feePercentage.toFixed(1)}% (Auto-convert)` : `${feePercentage.toFixed(1)}% (Direct crypto)`;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -290,16 +312,32 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Fee Breakdown</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Payment Amount:</span>
-                    <span>{formatCurrency(paymentLink.amount, paymentLink.currency)}</span>
+                    <span className="text-gray-600">Base Amount:</span>
+                    <span>{formatCurrency(baseAmount, paymentLink.currency)}</span>
                   </div>
+                  {paymentLink.tax_enabled && (paymentLink.tax_amount || 0) > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tax:</span>
+                      <span>{formatCurrency(paymentLink.tax_amount || 0, paymentLink.currency)}</span>
+                    </div>
+                  )}
+                  {paymentLink.tax_enabled && (
+                    <div className="flex justify-between font-medium">
+                      <span className="text-gray-600">Subtotal with Tax:</span>
+                      <span>{formatCurrency(subtotalWithTax, paymentLink.currency)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Processing Fee ({feeLabel}):</span>
-                    <span>{formatCurrency(feeAmount, paymentLink.currency)}</span>
+                    <span className="text-gray-600">Gateway Fee ({feeLabel}):</span>
+                    <span>{chargeCustomerFee ? '+' : ''}{formatCurrency(feeAmount, paymentLink.currency)}</span>
                   </div>
                   <div className="flex justify-between font-medium border-t pt-1">
+                    <span>Customer Pays:</span>
+                    <span>{formatCurrency(customerPaysTotal, paymentLink.currency)}</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
                     <span>You Receive:</span>
-                    <span>{formatCurrency(totalAmount - feeAmount, paymentLink.currency)}</span>
+                    <span>{formatCurrency(merchantReceives, paymentLink.currency)}</span>
                   </div>
                 </div>
               </div>

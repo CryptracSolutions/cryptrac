@@ -42,7 +42,31 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   // Get configured wallet currencies
   const configuredCurrencies = Object.keys(walletConfig.wallets || {})
   
-  // Currency display names mapping
+  // Stable coin associations for automatic inclusion
+  const stableCoinAssociations: Record<string, string[]> = {
+    'SOL': ['USDCSOL', 'USDTSOL'],
+    'ETH': ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
+    'BNB': ['USDTBSC', 'USDCBSC', 'BUSDBSC', 'DAIBSC', 'TUSDBSC', 'FDUSDBSC'],
+    'MATIC': ['USDTMATIC', 'USDCMATIC', 'DAIMATIC'],
+    'AVAX': ['USDTAVAX', 'USDCAVAX'],
+    'TRX': ['USDTTRC20', 'USDDTRC20'],
+    'ARB': ['USDTARB', 'USDCARB'],
+    'OP': ['USDTOP', 'USDCOP']
+  }
+
+  // Expand configured currencies to include available stable coins
+  const expandedCurrencies = React.useMemo(() => {
+    const expanded = [...configuredCurrencies]
+    
+    configuredCurrencies.forEach(currency => {
+      const associatedStableCoins = stableCoinAssociations[currency] || []
+      expanded.push(...associatedStableCoins)
+    })
+    
+    return expanded
+  }, [configuredCurrencies])
+  
+  // Currency display names mapping (updated with comprehensive stable coins)
   const CURRENCY_NAMES: Record<string, string> = {
     'BTC': 'Bitcoin',
     'ETH': 'Ethereum',
@@ -54,17 +78,45 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     'DOGE': 'Dogecoin',
     'XRP': 'XRP',
     'SUI': 'Sui',
-    'USDT_ERC20': 'Tether (ERC-20)',
-    'USDC_ERC20': 'USD Coin (ERC-20)',
-    'USDT_BEP20': 'Tether (BEP-20)',
-    'USDC_BEP20': 'USD Coin (BEP-20)',
-    'USDT_SOL': 'Tether (Solana)',
-    'USDC_SOL': 'USD Coin (Solana)',
-    'USDT_TRC20': 'Tether (TRC-20)',
-    'USDC_TRC20': 'USD Coin (TRC-20)',
-    'USDT_TON': 'Tether (TON)',
-    'USDT_AVAX': 'Tether (Avalanche)',
-    'USDC_AVAX': 'USD Coin (Avalanche)'
+    'MATIC': 'Polygon',
+    'ADA': 'Cardano',
+    'DOT': 'Polkadot',
+    'LTC': 'Litecoin',
+    'XLM': 'Stellar',
+    'ARB': 'Arbitrum',
+    'OP': 'Optimism',
+    // Stable coins
+    'USDT': 'Tether (Ethereum)',
+    'USDC': 'USD Coin (Ethereum)', 
+    'DAI': 'Dai (Ethereum)',
+    'BUSD': 'BUSD (Ethereum)',
+    'TUSD': 'TrueUSD (Ethereum)',
+    'FRAX': 'Frax (Ethereum)',
+    'LUSD': 'Liquity USD (Ethereum)',
+    'USDP': 'Pax Dollar (Ethereum)',
+    'GUSD': 'Gemini Dollar (Ethereum)',
+    'PYUSD': 'PayPal USD (Ethereum)',
+    'USDE': 'Ethena USDe (Ethereum)',
+    'FDUSD': 'First Digital USD (Ethereum)',
+    'USDCSOL': 'USD Coin (Solana)',
+    'USDTSOL': 'Tether (Solana)',
+    'USDTBSC': 'Tether (BSC)',
+    'USDCBSC': 'USD Coin (BSC)',
+    'BUSDBSC': 'BUSD (BSC)',
+    'DAIBSC': 'Dai (BSC)',
+    'TUSDBSC': 'TrueUSD (BSC)',
+    'FDUSDBSC': 'First Digital USD (BSC)',
+    'USDTMATIC': 'Tether (Polygon)',
+    'USDCMATIC': 'USD Coin (Polygon)',
+    'DAIMATIC': 'Dai (Polygon)',
+    'USDTAVAX': 'Tether (Avalanche)',
+    'USDCAVAX': 'USD Coin (Avalanche)',
+    'USDTTRC20': 'Tether (Tron)',
+    'USDDTRC20': 'USDD (Tron)',
+    'USDTARB': 'Tether (Arbitrum)',
+    'USDCARB': 'USD Coin (Arbitrum)',
+    'USDTOP': 'Tether (Optimism)',
+    'USDCOP': 'USD Coin (Optimism)'
   }
 
   const getCurrencyDisplayName = (code: string) => {
@@ -75,11 +127,11 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     try {
       setIsSubmitting(true)
       
-      // Ensure accepted cryptos includes all configured wallet currencies
+      // Ensure accepted cryptos includes all configured wallet currencies and their stable coins
       // and autoForward is always true for non-custodial compliance
       const finalData = {
         ...formData,
-        acceptedCryptos: configuredCurrencies, // Always use wallet configured currencies
+        acceptedCryptos: expandedCurrencies, // Use expanded currencies including stable coins
         autoForward: true // Always enabled for non-custodial compliance
       }
       
@@ -121,38 +173,68 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
           <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
             <span>Accepted Cryptocurrencies</span>
             <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
-              {configuredCurrencies.length} Configured
+              {expandedCurrencies.length} Total ({configuredCurrencies.length} Base + {expandedCurrencies.length - configuredCurrencies.length} Stable Coins)
             </Badge>
           </h3>
           
           <Alert className="border-blue-200 bg-blue-50">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800">
-              <strong>Auto-configured:</strong> All cryptocurrencies from your wallet setup are automatically accepted. 
-              You can add more currencies later in your dashboard settings.
+              <strong>Smart Configuration:</strong> Your {configuredCurrencies.length} base cryptocurrencies automatically include {expandedCurrencies.length - configuredCurrencies.length} stable coins for maximum payment flexibility.
             </AlertDescription>
           </Alert>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {configuredCurrencies.map((currency) => (
-              <div
-                key={currency}
-                className="border border-green-200 bg-green-50 rounded-lg p-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm text-green-900">
-                      {currency}
-                    </div>
-                    <div className="text-xs text-green-700">
-                      {getCurrencyDisplayName(currency)}
+          {/* Base Currencies */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700">Base Cryptocurrencies</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {configuredCurrencies.map((currency) => (
+                <div
+                  key={currency}
+                  className="border border-green-200 bg-green-50 rounded-lg p-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm text-green-900">
+                        {currency}
+                      </div>
+                      <div className="text-xs text-green-700">
+                        {getCurrencyDisplayName(currency)}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
+          {/* Stable Coins */}
+          {expandedCurrencies.length > configuredCurrencies.length && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-gray-700">Included Stable Coins</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {expandedCurrencies.filter(currency => !configuredCurrencies.includes(currency)).map((currency) => (
+                  <div
+                    key={currency}
+                    className="border border-blue-200 bg-blue-50 rounded-lg p-3"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm text-blue-900">
+                          {currency}
+                        </div>
+                        <div className="text-xs text-blue-700">
+                          {getCurrencyDisplayName(currency)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {configuredCurrencies.length === 0 && (
             <Alert className="border-yellow-200 bg-yellow-50">
@@ -292,7 +374,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     <SelectValue placeholder="Select preferred payout currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {configuredCurrencies.map((currency) => (
+                    {expandedCurrencies.map((currency) => (
                       <SelectItem key={currency} value={currency}>
                         {currency} - {getCurrencyDisplayName(currency)}
                       </SelectItem>

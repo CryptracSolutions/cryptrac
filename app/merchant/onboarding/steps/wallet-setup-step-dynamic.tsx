@@ -56,45 +56,33 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
   {
     id: 'ethereum',
     name: 'Ethereum Ecosystem',
-    description: 'Ethereum and major ERC-20 stablecoins',
+    description: 'Ethereum network - automatically includes 12+ stable coins',
     primary: { code: 'ETH', name: 'Ethereum', network: 'Ethereum', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDT_ERC20', name: 'USDT (ERC-20)', network: 'Ethereum', trust_wallet_compatible: true },
-      { code: 'USDC_ERC20', name: 'USDC (ERC-20)', network: 'Ethereum', trust_wallet_compatible: true }
-    ],
+    autoIncludedStablecoins: [],
     others: []
   },
   {
     id: 'binance',
     name: 'Binance Smart Chain',
-    description: 'BNB and major BEP-20 stablecoins',
+    description: 'BSC network - automatically includes 6+ stable coins',
     primary: { code: 'BNB', name: 'BNB', network: 'BSC', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDT_BEP20', name: 'USDT (BEP-20)', network: 'BSC', trust_wallet_compatible: true },
-      { code: 'USDC_BEP20', name: 'USDC (BEP-20)', network: 'BSC', trust_wallet_compatible: true }
-    ],
+    autoIncludedStablecoins: [],
     others: []
   },
   {
     id: 'solana',
     name: 'Solana Ecosystem',
-    description: 'Solana and major SPL stablecoins',
+    description: 'Solana network - automatically includes USDC & USDT',
     primary: { code: 'SOL', name: 'Solana', network: 'Solana', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDT_SOL', name: 'USDT (Solana)', network: 'Solana', trust_wallet_compatible: true },
-      { code: 'USDC_SOL', name: 'USDC (Solana)', network: 'Solana', trust_wallet_compatible: true }
-    ],
+    autoIncludedStablecoins: [],
     others: []
   },
   {
     id: 'tron',
     name: 'TRON Ecosystem',
-    description: 'TRON and major TRC-20 stablecoins',
+    description: 'TRON network - automatically includes USDT & USDD',
     primary: { code: 'TRX', name: 'TRON', network: 'TRON', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDT_TRC20', name: 'USDT (TRC-20)', network: 'TRON', trust_wallet_compatible: true },
-      { code: 'USDC_TRC20', name: 'USDC (TRC-20)', network: 'TRON', trust_wallet_compatible: true }
-    ],
+    autoIncludedStablecoins: [],
     others: []
   },
   {
@@ -398,6 +386,49 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               {getValidationMessage(currency.code)}
             </p>
           )}
+          
+          {/* Show included stable coins for validated base currencies */}
+          {validationStatus[currency.code] === 'valid' && wallets[currency.code] && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="text-xs font-medium text-green-800 mb-2">
+                ✅ Automatically includes these stable coins:
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {(() => {
+                  const stableCoins = {
+                    'SOL': ['USDC (Solana)', 'USDT (Solana)'],
+                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
+                    'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
+                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
+                    'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
+                    'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                  }[currency.code] || [];
+                  
+                  return stableCoins.map((coin, index) => (
+                    <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                      {coin}
+                    </span>
+                  ));
+                })()}
+              </div>
+              {(() => {
+                const stableCoins = {
+                  'SOL': ['USDC (Solana)', 'USDT (Solana)'],
+                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
+                  'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
+                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
+                  'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
+                  'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                }[currency.code] || [];
+                
+                return stableCoins.length === 0 ? null : (
+                  <div className="mt-2 text-xs text-green-700">
+                    Customers can pay with {currency.code} or any of these {stableCoins.length} stable coins using the same address.
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -447,6 +478,28 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         />
       )}
 
+      {/* Stable Coin Information */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+          <div className="text-blue-800">
+            <h3 className="font-semibold mb-2">Smart Wallet Setup - Automatic Stable Coin Support</h3>
+            <p className="text-sm mb-2">
+              Configure one wallet address per ecosystem and automatically support multiple payment options:
+            </p>
+            <div className="text-sm space-y-1">
+              • <strong>SOL wallet</strong> → enables SOL + USDC & USDT on Solana
+              • <strong>ETH wallet</strong> → enables ETH + USDT, USDC, DAI & 9 more stable coins
+              • <strong>BNB wallet</strong> → enables BNB + USDT, USDC, BUSD & 3 more on BSC
+              • <strong>TRX wallet</strong> → enables TRX + USDT & USDD on Tron
+            </div>
+            <p className="text-sm mt-2 font-medium">
+              No need for separate addresses - stable coins use the same wallet as their base currency!
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Recommended Cryptocurrency Groups */}
       <div className="space-y-6">
         <div className="text-center">
@@ -454,7 +507,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
             Recommended Cryptocurrencies
           </h3>
           <p className="text-sm text-gray-600">
-            Configure at least one cryptocurrency. Major stablecoins are automatically included.
+            Configure at least one cryptocurrency to start accepting payments.
           </p>
         </div>
 
@@ -466,7 +519,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                 <p className="text-sm text-gray-600 mt-1">{group.description}</p>
                 {group.autoIncludedStablecoins.length > 0 && (
                   <p className="text-xs text-blue-600 mt-2">
-                    ✨ Includes {group.autoIncludedStablecoins.map(c => c.name).join(' and ')} automatically
+                    ✨ Automatically includes stable coins for customer payments
                   </p>
                 )}
               </div>
@@ -474,20 +527,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
             <CardContent className="space-y-4">
               {/* Primary Currency */}
               {renderCurrencyInput(group.primary)}
-
-              {/* Auto-included Stablecoins */}
-              {group.autoIncludedStablecoins.length > 0 && wallets[group.primary.code] && validationStatus[group.primary.code] === 'valid' && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-px bg-blue-200 flex-1"></div>
-                    <span className="text-xs text-blue-600 bg-white px-2">Auto-included Stablecoins</span>
-                    <div className="h-px bg-blue-200 flex-1"></div>
-                  </div>
-                  {group.autoIncludedStablecoins.map(currency => 
-                    renderCurrencyInput(currency, true)
-                  )}
-                </div>
-              )}
 
               {/* Other currencies */}
               {group.others.length > 0 && (

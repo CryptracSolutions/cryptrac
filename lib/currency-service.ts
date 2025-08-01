@@ -2,7 +2,7 @@
 // Replaces hardcoded SUPPORTED_CRYPTOS with NOWPayments API integration
 // Implements caching and rate limiting for optimal performance
 
-import { getNOWPaymentsClient } from './nowpayments-dynamic';
+import { fetchAvailableCurrencies } from './nowpayments-dynamic';
 import { getCachedData, setCachedData, CacheKeys, CacheTTL } from './cache';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -181,13 +181,10 @@ export async function syncCurrenciesFromNOWPayments(): Promise<{
   try {
     console.log('Starting currency sync from NOWPayments...');
 
-    // Get NOWPayments client
-    const nowPayments = getNOWPaymentsClient();
-
     // Fetch currencies from NOWPayments with caching
-    let nowPaymentsCurrencies: (string | NOWPaymentsCurrency)[] = [];
+    let nowPaymentsCurrencies: any[] = [];
     
-    const cached = await getCachedData<(string | NOWPaymentsCurrency)[]>(
+    const cached = await getCachedData<any[]>(
       CacheKeys.currencies(),
       { ttl: CacheTTL.currencies }
     );
@@ -197,27 +194,12 @@ export async function syncCurrenciesFromNOWPayments(): Promise<{
       console.log(`Using cached NOWPayments currencies: ${nowPaymentsCurrencies.length} currencies`);
     } else {
       console.log('Fetching fresh currencies from NOWPayments API...');
-      const currenciesResponse = await nowPayments.getCurrencies();
+      const currenciesResponse = await fetchAvailableCurrencies();
       
-      // Handle different response formats
-      if (currenciesResponse && typeof currenciesResponse === 'object') {
-        if (Array.isArray(currenciesResponse)) {
-          nowPaymentsCurrencies = currenciesResponse;
-        } else {
-          const response = currenciesResponse as Record<string, unknown>;
-          if (response.currencies && Array.isArray(response.currencies)) {
-            nowPaymentsCurrencies = response.currencies;
-          } else if (typeof currenciesResponse === 'object') {
-            // If it's an object with currency codes as keys
-            nowPaymentsCurrencies = Object.keys(currenciesResponse).map(code => ({
-              currency: code,
-              name: code.toUpperCase(),
-              logo_url: null,
-              min_amount: 0.00000001,
-              max_amount: null
-            } as NOWPaymentsCurrency));
-          }
-        }
+      if (currenciesResponse && Array.isArray(currenciesResponse)) {
+        nowPaymentsCurrencies = currenciesResponse;
+      } else {
+        throw new Error('Invalid response format from NOWPayments API');
       }
 
       if (nowPaymentsCurrencies.length === 0) {
@@ -236,26 +218,11 @@ export async function syncCurrenciesFromNOWPayments(): Promise<{
     const supabase = await getSupabaseClient();
 
     // Process and update currencies in database
-    const currencyUpdates = nowPaymentsCurrencies.map((currency: string | NOWPaymentsCurrency) => {
-      let currencyCode: string;
-      let currencyName: string;
-      let minAmount: number;
-      let maxAmount: number | null;
-      let logoUrl: string | null;
-
-      if (typeof currency === 'string') {
-        currencyCode = currency;
-        currencyName = currency.toUpperCase();
-        minAmount = 0.00000001;
-        maxAmount = null;
-        logoUrl = null;
-      } else {
-        currencyCode = currency.currency || currency.code || '';
-        currencyName = currency.name || currencyCode.toUpperCase();
-        minAmount = currency.min_amount || 0.00000001;
-        maxAmount = currency.max_amount || null;
-        logoUrl = currency.logo_url || null;
-      }
+    const currencyUpdates = nowPaymentsCurrencies.map((currency: any) => {
+      const currencyCode = currency.code || '';
+      const currencyName = currency.name || currencyCode.toUpperCase();
+      const minAmount = currency.min_amount || 0.00000001;
+      const maxAmount = currency.max_amount || null;
 
       return {
         code: currencyCode.toUpperCase(),
@@ -265,7 +232,7 @@ export async function syncCurrenciesFromNOWPayments(): Promise<{
         min_amount: minAmount,
         max_amount: maxAmount,
         decimals: 8,
-        icon_url: logoUrl,
+        icon_url: null,
         nowpayments_code: currencyCode.toLowerCase(),
         updated_at: new Date().toISOString()
       };

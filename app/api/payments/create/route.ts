@@ -166,13 +166,17 @@ export async function POST(request: NextRequest) {
     const autoConvertFeePercentage = effectiveAutoConvertEnabled ? 0.005 : 0; // Additional 0.5% for auto-convert
     const totalFeePercentage = baseFeePercentage + autoConvertFeePercentage;
     const feeAmount = amountForFeeCalculation * totalFeePercentage;
-    const merchantReceives = amountForFeeCalculation - feeAmount;
+    
+    // Calculate final amounts based on who pays the fee
+    const customerPaysTotal = effectiveChargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax;
+    const merchantReceives = effectiveChargeCustomerFee ? subtotalWithTax : subtotalWithTax - feeAmount;
 
     console.log('Fee calculation:', {
       effectiveChargeCustomerFee,
       effectiveAutoConvertEnabled,
       totalFeePercentage: totalFeePercentage * 100 + '%',
       feeAmount,
+      customerPaysTotal,
       merchantReceives
     });
 
@@ -199,9 +203,9 @@ export async function POST(request: NextRequest) {
         expires_at: expires_at ? new Date(expires_at).toISOString() : null,
         max_uses: max_uses || null,
         status: 'active',
-        charge_customer_fee: charge_customer_fee, // Store the override (null = inherit)
-        auto_convert_enabled: auto_convert_enabled, // Store the override (null = inherit)
-        preferred_payout_currency: preferred_payout_currency, // Store the override (null = inherit)
+        charge_customer_fee: effectiveChargeCustomerFee, // Store the effective value
+        auto_convert_enabled: effectiveAutoConvertEnabled, // Store the effective value
+        preferred_payout_currency: effectivePreferredPayoutCurrency, // Store the effective value
         fee_percentage: totalFeePercentage,
         tax_enabled: tax_enabled,
         tax_rates: tax_enabled ? tax_rates : [],

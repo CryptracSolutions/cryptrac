@@ -29,7 +29,10 @@ export async function GET(
       }
     )
 
-    // Fetch payment link by link_id with merchant information
+    // Check if the ID is a UUID (database ID) or a link_id
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    
+    // Fetch payment link by either database ID or link_id
     const { data: paymentLink, error } = await supabase
       .from('payment_links')
       .select(`
@@ -38,6 +41,7 @@ export async function GET(
         title,
         description,
         amount,
+        base_amount,
         currency,
         status,
         accepted_cryptos,
@@ -45,13 +49,23 @@ export async function GET(
         max_uses,
         current_uses,
         charge_customer_fee,
+        auto_convert_enabled,
+        fee_percentage,
+        tax_enabled,
+        tax_rates,
+        tax_amount,
+        subtotal_with_tax,
+        metadata,
+        created_at,
+        updated_at,
         merchant:merchants(
           id,
           business_name,
-          charge_customer_fee
+          charge_customer_fee,
+          auto_convert_enabled
         )
       `)
-      .eq('link_id', id)
+      .eq(isUUID ? 'id' : 'link_id', id)
       .eq('status', 'active')
       .single()
 
@@ -76,11 +90,19 @@ export async function GET(
       )
     }
 
-    console.log('✅ Payment link found:', paymentLink)
+    console.log('✅ Payment link found:', paymentLink.id)
 
+    // Construct the payment URL
+    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${paymentLink.link_id}`;
+
+    // Return with consistent structure (using 'data' field to match frontend expectations)
     return NextResponse.json({
       success: true,
-      payment_link: paymentLink
+      data: {
+        ...paymentLink,
+        payment_url: paymentUrl,
+        qr_code_data: paymentUrl
+      }
     })
 
   } catch (error) {
