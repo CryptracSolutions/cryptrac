@@ -9,9 +9,10 @@ const supabase = createClient(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const merchantId = params.id
 
     console.log(`🔍 Getting supported currencies for merchant: ${merchantId}`)
@@ -123,4 +124,3 @@ export async function GET(
     )
   }
 }
-

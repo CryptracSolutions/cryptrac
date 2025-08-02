@@ -1,18 +1,27 @@
 import { NextResponse } from 'next/server';
-import { getNOWPaymentsClient } from '@/lib/nowpayments-dynamic';
 
 export async function GET() {
   try {
-    // Get NOWPayments client
-    const nowPayments = getNOWPaymentsClient();
+    // Make direct API call to NOWPayments
+    const response = await fetch('https://api.nowpayments.io/v1/payout-currencies', {
+      method: 'GET',
+      headers: {
+        'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
+        'Content-Type': 'application/json',
+      },
+    });
 
-    // Fetch supported payout currencies from NOWPayments
-    const payoutCurrencies = await nowPayments.getPayoutCurrencies();
+    if (!response.ok) {
+      throw new Error(`NOWPayments API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const payoutCurrencies = data.currencies || [];
 
     // Filter and format currencies for the frontend
     const formattedCurrencies = payoutCurrencies
-      .filter(currency => currency.currency && currency.name)
-      .map(currency => ({
+      .filter((currency: any) => currency.currency && currency.name)
+      .map((currency: any) => ({
         code: currency.currency.toLowerCase(),
         name: currency.name,
         symbol: currency.currency.toUpperCase(),
@@ -20,7 +29,7 @@ export async function GET() {
         max_amount: currency.max_amount || null,
         logo_url: currency.logo_url || null
       }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
     return NextResponse.json({
       success: true,
@@ -51,4 +60,3 @@ export async function GET() {
     });
   }
 }
-
