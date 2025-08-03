@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
     let merchantPayoutAddress = payout_address
     let merchantPayoutCurrency = payout_currency
     let paymentLinkData = null
+    let merchantId = null
 
     if (payment_link_id && !payout_address) {
       console.log('🔍 Looking up merchant wallet address for payment link:', payment_link_id)
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
         }
 
         paymentLinkData = paymentLink
+        merchantId = paymentLink.merchant_id
 
         // Access merchant data correctly (it's an array due to the join)
         const merchant = Array.isArray(paymentLink.merchants) 
@@ -141,7 +143,7 @@ export async function POST(request: NextRequest) {
 
         console.log('✅ Payment link found:', {
           id: paymentLink.id,
-          merchant_id: merchant.id,
+          merchant_id: merchantId,
           has_wallets: !!merchant.wallets
         })
 
@@ -299,21 +301,21 @@ export async function POST(request: NextRequest) {
       payout_configured: !!merchantPayoutAddress
     })
 
-    // Create transaction record in database
+    // Create transaction record in database with correct column names
     console.log('💾 Creating transaction record in database...')
     
     try {
       const transactionData = {
+        merchant_id: merchantId,
         nowpayments_invoice_id: payment.payment_id,
         payment_link_id: payment_link_id,
         order_id: payment.order_id,
         status: 'waiting', // Initial status
         amount: payment.price_amount,
         currency: payment.price_currency.toUpperCase(),
-        crypto_amount: payment.pay_amount,
-        crypto_currency: payment.pay_currency.toUpperCase(),
+        pay_amount: payment.pay_amount,
+        pay_currency: payment.pay_currency.toUpperCase(),
         pay_address: payment.pay_address,
-        payout_address: merchantPayoutAddress,
         payout_currency: merchantPayoutCurrency?.toUpperCase(),
         customer_email: customer_email,
         // Tax information
@@ -322,8 +324,9 @@ export async function POST(request: NextRequest) {
         tax_rates: tax_rates || [],
         tax_amount: tax_amount || 0,
         subtotal_with_tax: subtotal_with_tax || payment.price_amount,
-        // Additional metadata
-        metadata: {
+        total_amount_paid: subtotal_with_tax || payment.price_amount,
+        // Additional metadata in payment_data JSONB field
+        payment_data: {
           nowpayments_data: {
             purchase_id: payment.purchase_id,
             outcome_amount: payment.outcome_amount,
@@ -332,11 +335,23 @@ export async function POST(request: NextRequest) {
             updated_at: payment.updated_at
           },
           payout_configured: !!merchantPayoutAddress,
-          auto_forwarding_enabled: !!merchantPayoutAddress
+          auto_forwarding_enabled: !!merchantPayoutAddress,
+          payout_address: merchantPayoutAddress
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
+
+      console.log('💾 Transaction data to insert:', {
+        merchant_id: transactionData.merchant_id,
+        nowpayments_invoice_id: transactionData.nowpayments_invoice_id,
+        payment_link_id: transactionData.payment_link_id,
+        status: transactionData.status,
+        amount: transactionData.amount,
+        currency: transactionData.currency,
+        pay_amount: transactionData.pay_amount,
+        pay_currency: transactionData.pay_currency
+      })
 
       const { data: transaction, error: transactionError } = await supabase
         .from('transactions')
