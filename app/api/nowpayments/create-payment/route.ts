@@ -7,6 +7,39 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Address validation functions
+function isValidEthereumAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address)
+}
+
+function isValidBitcoinAddress(address: string): boolean {
+  return /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || /^bc1[a-z0-9]{39,59}$/.test(address)
+}
+
+function isValidSolanaAddress(address: string): boolean {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
+}
+
+function sanitizeAddress(address: string): string {
+  return address.trim().replace(/\s+/g, '')
+}
+
+function validateAddressForCurrency(address: string, currency: string): boolean {
+  const sanitized = sanitizeAddress(address)
+  const currencyUpper = currency.toUpperCase()
+  
+  if (currencyUpper.includes('ETH') || currencyUpper === 'USDT_ERC20' || currencyUpper === 'USDC_ERC20' || currencyUpper.includes('ERC20')) {
+    return isValidEthereumAddress(sanitized)
+  } else if (currencyUpper === 'BTC' || currencyUpper === 'BITCOIN') {
+    return isValidBitcoinAddress(sanitized)
+  } else if (currencyUpper === 'SOL' || currencyUpper === 'SOLANA' || currencyUpper.includes('SOL')) {
+    return isValidSolanaAddress(sanitized)
+  }
+  
+  // For other currencies, assume valid if not empty
+  return sanitized.length > 10
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -118,15 +151,17 @@ export async function POST(request: NextRequest) {
         const allWallets = { ...merchantWallets, ...metadataWallets }
 
         console.log('💰 Available wallet addresses:', Object.keys(allWallets))
+        console.log('🔍 Looking for wallet for currency:', pay_currency)
 
-        // Map pay_currency to wallet address
-        // Handle currency code variations (e.g., USDT_ERC20 -> USDT_ERC20, usdt -> USDT, etc.)
+        // Map pay_currency to wallet address with enhanced logging
         const payCurrencyUpper = pay_currency.toUpperCase()
         let walletAddress = null
+        let matchedKey = null
 
         // Direct match first
         if (allWallets[payCurrencyUpper]) {
           walletAddress = allWallets[payCurrencyUpper]
+          matchedKey = payCurrencyUpper
           console.log(`✅ Direct wallet match for ${payCurrencyUpper}:`, walletAddress ? '***' : 'null')
         } else {
           // Try common variations
@@ -140,6 +175,7 @@ export async function POST(request: NextRequest) {
           for (const variation of variations) {
             if (allWallets[variation]) {
               walletAddress = allWallets[variation]
+              matchedKey = variation
               console.log(`✅ Wallet match found for ${payCurrencyUpper} via variation ${variation}:`, walletAddress ? '***' : 'null')
               break
             }
@@ -148,20 +184,22 @@ export async function POST(request: NextRequest) {
           // Special handling for common currency mappings
           if (!walletAddress) {
             const currencyMappings: Record<string, string[]> = {
+              'ETH': ['ETH', 'ETHEREUM', 'USDT_ERC20', 'USDC_ERC20'],
               'USDT': ['USDT_ERC20', 'USDT_TRC20', 'USDT_BSC', 'USDT_POLYGON'],
               'USDC': ['USDC_ERC20', 'USDC_POLYGON', 'USDC_BSC'],
-              'ETH': ['ETH', 'ETHEREUM'],
               'BTC': ['BTC', 'BITCOIN'],
               'BNB': ['BNB', 'BSC'],
               'MATIC': ['MATIC', 'POLYGON'],
-              'TRX': ['TRX', 'TRON']
+              'TRX': ['TRX', 'TRON'],
+              'SOL': ['SOL', 'SOLANA']
             }
 
             for (const [baseCode, variants] of Object.entries(currencyMappings)) {
-              if (payCurrencyUpper.includes(baseCode)) {
+              if (payCurrencyUpper.includes(baseCode) || variants.includes(payCurrencyUpper)) {
                 for (const variant of variants) {
                   if (allWallets[variant]) {
                     walletAddress = allWallets[variant]
+                    matchedKey = variant
                     console.log(`✅ Wallet match found for ${payCurrencyUpper} via mapping ${variant}:`, walletAddress ? '***' : 'null')
                     break
                   }
@@ -177,22 +215,35 @@ export async function POST(request: NextRequest) {
           console.log('Available wallets:', Object.keys(allWallets))
           // Don't fail the payment - NOWPayments will handle without auto-forwarding
         } else {
-          merchantPayoutAddress = walletAddress
-          console.log(`✅ Using merchant wallet address for auto-forwarding: ${payCurrencyUpper}`)
-          
-          // Set payout currency for auto-convert if enabled
-          const autoConvertEnabled = merchant.auto_convert_enabled || 
-                                   paymentLink.metadata?.fee_breakdown?.effective_auto_convert_enabled
-          const preferredPayoutCurrency = merchant.preferred_payout_currency ||
-                                        paymentLink.metadata?.fee_breakdown?.effective_preferred_payout_currency
+          // Sanitize and validate the wallet address
+          const sanitizedAddress = sanitizeAddress(walletAddress)
+          console.log(`🔍 Raw wallet address: "${walletAddress}"`)
+          console.log(`🧹 Sanitized wallet address: "${sanitizedAddress}"`)
+          console.log(`🔍 Address length: ${sanitizedAddress.length}`)
+          console.log(`🔍 Address validation for ${payCurrencyUpper}:`, validateAddressForCurrency(sanitizedAddress, payCurrencyUpper))
 
-          if (autoConvertEnabled && preferredPayoutCurrency) {
-            merchantPayoutCurrency = formatCurrencyForNOWPayments(preferredPayoutCurrency)
-            console.log(`🔄 Auto-convert enabled, payout currency: ${merchantPayoutCurrency}`)
+          if (!validateAddressForCurrency(sanitizedAddress, payCurrencyUpper)) {
+            console.error(`❌ Invalid wallet address for ${payCurrencyUpper}: ${sanitizedAddress}`)
+            console.warn('⚠️ Skipping auto-forwarding due to invalid address')
+            // Skip auto-forwarding rather than failing the payment
           } else {
-            // Use the same currency as payment for direct forwarding
-            merchantPayoutCurrency = formatCurrencyForNOWPayments(pay_currency)
-            console.log(`➡️ Direct forwarding, payout currency: ${merchantPayoutCurrency}`)
+            merchantPayoutAddress = sanitizedAddress
+            console.log(`✅ Using validated merchant wallet address for auto-forwarding: ${payCurrencyUpper}`)
+            
+            // Set payout currency for auto-convert if enabled
+            const autoConvertEnabled = merchant.auto_convert_enabled || 
+                                     paymentLink.metadata?.fee_breakdown?.effective_auto_convert_enabled
+            const preferredPayoutCurrency = merchant.preferred_payout_currency ||
+                                          paymentLink.metadata?.fee_breakdown?.effective_preferred_payout_currency
+
+            if (autoConvertEnabled && preferredPayoutCurrency) {
+              merchantPayoutCurrency = formatCurrencyForNOWPayments(preferredPayoutCurrency)
+              console.log(`🔄 Auto-convert enabled, payout currency: ${merchantPayoutCurrency}`)
+            } else {
+              // Use the same currency as payment for direct forwarding
+              merchantPayoutCurrency = formatCurrencyForNOWPayments(pay_currency)
+              console.log(`➡️ Direct forwarding, payout currency: ${merchantPayoutCurrency}`)
+            }
           }
         }
 
@@ -202,7 +253,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Prepare payment request
+    // Prepare payment request with enhanced logging
     const paymentRequest = {
       price_amount: amount,
       price_currency: formatCurrencyForNOWPayments(price_currency),
@@ -215,10 +266,15 @@ export async function POST(request: NextRequest) {
       fixed_rate: false // Use floating rate for better success rate
     }
 
-    console.log('📡 Sending payment request to NOWPayments:', {
-      ...paymentRequest,
-      payout_address: paymentRequest.payout_address ? '***' : undefined
-    })
+    console.log('📡 Sending payment request to NOWPayments:')
+    console.log('  - price_amount:', paymentRequest.price_amount)
+    console.log('  - price_currency:', paymentRequest.price_currency)
+    console.log('  - pay_currency:', paymentRequest.pay_currency)
+    console.log('  - order_id:', paymentRequest.order_id)
+    console.log('  - payout_address:', paymentRequest.payout_address ? `${paymentRequest.payout_address.substring(0, 6)}...${paymentRequest.payout_address.substring(paymentRequest.payout_address.length - 4)}` : 'null')
+    console.log('  - payout_currency:', paymentRequest.payout_currency)
+    console.log('  - ipn_callback_url:', paymentRequest.ipn_callback_url)
+    console.log('  - fixed_rate:', paymentRequest.fixed_rate)
 
     // Create payment with NOWPayments
     const payment = await createPayment(paymentRequest)
@@ -334,8 +390,8 @@ export async function POST(request: NextRequest) {
       } else if (errorText.includes('currency not supported') || errorText.includes('invalid currency')) {
         errorMessage = 'Currency not supported'
         statusCode = 400
-      } else if (errorText.includes('invalid address') || errorText.includes('payout_address')) {
-        errorMessage = 'Invalid payout address for auto-forwarding'
+      } else if (errorText.includes('invalid address') || errorText.includes('payout_address') || errorText.includes('validate address')) {
+        errorMessage = 'Invalid payout address for auto-forwarding. Payment will proceed without auto-forwarding.'
         statusCode = 400
       } else if (errorText.includes('rate')) {
         errorMessage = 'Unable to get exchange rate for this currency pair'
