@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     // Get merchant wallet address for auto-forwarding if payment_link_id is provided
     let merchantPayoutAddress = payout_address
     let merchantPayoutCurrency = payout_currency
+    let paymentLinkData = null
 
     if (payment_link_id && !payout_address) {
       console.log('🔍 Looking up merchant wallet address for payment link:', payment_link_id)
@@ -97,6 +98,8 @@ export async function POST(request: NextRequest) {
             { status: 404 }
           )
         }
+
+        paymentLinkData = paymentLink
 
         // Access merchant data correctly (it's an array due to the join)
         const merchant = Array.isArray(paymentLink.merchants) 
@@ -227,6 +230,68 @@ export async function POST(request: NextRequest) {
       pay_currency: payment.pay_currency,
       payout_configured: !!merchantPayoutAddress
     })
+
+    // Create transaction record in database
+    console.log('💾 Creating transaction record in database...')
+    
+    try {
+      const transactionData = {
+        nowpayments_invoice_id: payment.payment_id,
+        payment_link_id: payment_link_id,
+        order_id: payment.order_id,
+        status: 'waiting', // Initial status
+        amount: payment.price_amount,
+        currency: payment.price_currency.toUpperCase(),
+        crypto_amount: payment.pay_amount,
+        crypto_currency: payment.pay_currency.toUpperCase(),
+        pay_address: payment.pay_address,
+        payout_address: merchantPayoutAddress,
+        payout_currency: merchantPayoutCurrency?.toUpperCase(),
+        customer_email: customer_email,
+        // Tax information
+        tax_enabled: tax_enabled || false,
+        base_amount: base_amount || payment.price_amount,
+        tax_rates: tax_rates || [],
+        tax_amount: tax_amount || 0,
+        subtotal_with_tax: subtotal_with_tax || payment.price_amount,
+        // Additional metadata
+        metadata: {
+          nowpayments_data: {
+            purchase_id: payment.purchase_id,
+            outcome_amount: payment.outcome_amount,
+            outcome_currency: payment.outcome_currency,
+            created_at: payment.created_at,
+            updated_at: payment.updated_at
+          },
+          payout_configured: !!merchantPayoutAddress,
+          auto_forwarding_enabled: !!merchantPayoutAddress
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      const { data: transaction, error: transactionError } = await supabase
+        .from('transactions')
+        .insert(transactionData)
+        .select()
+        .single()
+
+      if (transactionError) {
+        console.error('❌ Error creating transaction record:', transactionError)
+        // Don't fail the payment creation, but log the error
+        console.warn('⚠️ Payment created but transaction record failed - webhook may not work')
+      } else {
+        console.log('✅ Transaction record created:', {
+          id: transaction.id,
+          nowpayments_invoice_id: transaction.nowpayments_invoice_id,
+          status: transaction.status
+        })
+      }
+
+    } catch (dbError) {
+      console.error('❌ Database error creating transaction:', dbError)
+      // Don't fail the payment creation
+    }
 
     return NextResponse.json({
       success: true,
