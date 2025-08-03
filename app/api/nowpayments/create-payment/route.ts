@@ -151,32 +151,56 @@ export async function POST(request: NextRequest) {
         const allWallets = { ...merchantWallets, ...metadataWallets }
 
         console.log('💰 Available wallet addresses:', Object.keys(allWallets))
-        console.log('🔍 Looking for wallet for currency:', pay_currency)
 
-        // Map pay_currency to wallet address with enhanced logging
-        const payCurrencyUpper = pay_currency.toUpperCase()
+        // Determine auto-convert settings
+        const autoConvertEnabled = merchant.auto_convert_enabled || 
+                                 paymentLink.metadata?.fee_breakdown?.effective_auto_convert_enabled
+        const preferredPayoutCurrency = merchant.preferred_payout_currency ||
+                                      paymentLink.metadata?.fee_breakdown?.effective_preferred_payout_currency
+
+        console.log('🔄 Auto-convert settings:', {
+          auto_convert_enabled: autoConvertEnabled,
+          preferred_payout_currency: preferredPayoutCurrency,
+          payment_currency: pay_currency
+        })
+
+        // Determine which currency to look for wallet address
+        let targetCurrency = pay_currency
+        if (autoConvertEnabled && preferredPayoutCurrency) {
+          targetCurrency = preferredPayoutCurrency
+          merchantPayoutCurrency = formatCurrencyForNOWPayments(preferredPayoutCurrency)
+          console.log(`🔄 Auto-convert enabled: Looking for ${preferredPayoutCurrency} wallet (not ${pay_currency})`)
+        } else {
+          merchantPayoutCurrency = formatCurrencyForNOWPayments(pay_currency)
+          console.log(`➡️ Direct forwarding: Looking for ${pay_currency} wallet`)
+        }
+
+        console.log('🔍 Target currency for wallet lookup:', targetCurrency)
+
+        // Map target currency to wallet address with enhanced logging
+        const targetCurrencyUpper = targetCurrency.toUpperCase()
         let walletAddress = null
         let matchedKey = null
 
         // Direct match first
-        if (allWallets[payCurrencyUpper]) {
-          walletAddress = allWallets[payCurrencyUpper]
-          matchedKey = payCurrencyUpper
-          console.log(`✅ Direct wallet match for ${payCurrencyUpper}:`, walletAddress ? '***' : 'null')
+        if (allWallets[targetCurrencyUpper]) {
+          walletAddress = allWallets[targetCurrencyUpper]
+          matchedKey = targetCurrencyUpper
+          console.log(`✅ Direct wallet match for ${targetCurrencyUpper}:`, walletAddress ? '***' : 'null')
         } else {
           // Try common variations
           const variations = [
-            pay_currency.toLowerCase(),
-            pay_currency.toUpperCase(),
-            payCurrencyUpper.replace('_', ''),
-            payCurrencyUpper.replace('-', '_'),
+            targetCurrency.toLowerCase(),
+            targetCurrency.toUpperCase(),
+            targetCurrencyUpper.replace('_', ''),
+            targetCurrencyUpper.replace('-', '_'),
           ]
 
           for (const variation of variations) {
             if (allWallets[variation]) {
               walletAddress = allWallets[variation]
               matchedKey = variation
-              console.log(`✅ Wallet match found for ${payCurrencyUpper} via variation ${variation}:`, walletAddress ? '***' : 'null')
+              console.log(`✅ Wallet match found for ${targetCurrencyUpper} via variation ${variation}:`, walletAddress ? '***' : 'null')
               break
             }
           }
@@ -195,12 +219,12 @@ export async function POST(request: NextRequest) {
             }
 
             for (const [baseCode, variants] of Object.entries(currencyMappings)) {
-              if (payCurrencyUpper.includes(baseCode) || variants.includes(payCurrencyUpper)) {
+              if (targetCurrencyUpper.includes(baseCode) || variants.includes(targetCurrencyUpper)) {
                 for (const variant of variants) {
                   if (allWallets[variant]) {
                     walletAddress = allWallets[variant]
                     matchedKey = variant
-                    console.log(`✅ Wallet match found for ${payCurrencyUpper} via mapping ${variant}:`, walletAddress ? '***' : 'null')
+                    console.log(`✅ Wallet match found for ${targetCurrencyUpper} via mapping ${variant}:`, walletAddress ? '***' : 'null')
                     break
                   }
                 }
@@ -211,8 +235,9 @@ export async function POST(request: NextRequest) {
         }
 
         if (!walletAddress) {
-          console.warn(`⚠️ No wallet address found for currency: ${payCurrencyUpper}`)
+          console.warn(`⚠️ No wallet address found for target currency: ${targetCurrencyUpper}`)
           console.log('Available wallets:', Object.keys(allWallets))
+          console.log('Auto-convert scenario:', autoConvertEnabled ? `${pay_currency} → ${preferredPayoutCurrency}` : 'disabled')
           // Don't fail the payment - NOWPayments will handle without auto-forwarding
         } else {
           // Sanitize and validate the wallet address
@@ -220,30 +245,17 @@ export async function POST(request: NextRequest) {
           console.log(`🔍 Raw wallet address: "${walletAddress}"`)
           console.log(`🧹 Sanitized wallet address: "${sanitizedAddress}"`)
           console.log(`🔍 Address length: ${sanitizedAddress.length}`)
-          console.log(`🔍 Address validation for ${payCurrencyUpper}:`, validateAddressForCurrency(sanitizedAddress, payCurrencyUpper))
+          console.log(`🔍 Validating address for currency: ${targetCurrencyUpper}`)
+          console.log(`🔍 Address validation result:`, validateAddressForCurrency(sanitizedAddress, targetCurrencyUpper))
 
-          if (!validateAddressForCurrency(sanitizedAddress, payCurrencyUpper)) {
-            console.error(`❌ Invalid wallet address for ${payCurrencyUpper}: ${sanitizedAddress}`)
+          if (!validateAddressForCurrency(sanitizedAddress, targetCurrencyUpper)) {
+            console.error(`❌ Invalid wallet address for ${targetCurrencyUpper}: ${sanitizedAddress}`)
             console.warn('⚠️ Skipping auto-forwarding due to invalid address')
             // Skip auto-forwarding rather than failing the payment
           } else {
             merchantPayoutAddress = sanitizedAddress
-            console.log(`✅ Using validated merchant wallet address for auto-forwarding: ${payCurrencyUpper}`)
-            
-            // Set payout currency for auto-convert if enabled
-            const autoConvertEnabled = merchant.auto_convert_enabled || 
-                                     paymentLink.metadata?.fee_breakdown?.effective_auto_convert_enabled
-            const preferredPayoutCurrency = merchant.preferred_payout_currency ||
-                                          paymentLink.metadata?.fee_breakdown?.effective_preferred_payout_currency
-
-            if (autoConvertEnabled && preferredPayoutCurrency) {
-              merchantPayoutCurrency = formatCurrencyForNOWPayments(preferredPayoutCurrency)
-              console.log(`🔄 Auto-convert enabled, payout currency: ${merchantPayoutCurrency}`)
-            } else {
-              // Use the same currency as payment for direct forwarding
-              merchantPayoutCurrency = formatCurrencyForNOWPayments(pay_currency)
-              console.log(`➡️ Direct forwarding, payout currency: ${merchantPayoutCurrency}`)
-            }
+            console.log(`✅ Using validated merchant wallet address for auto-forwarding`)
+            console.log(`✅ Payment flow: ${pay_currency} → ${autoConvertEnabled ? `convert to ${targetCurrencyUpper}` : 'direct'} → ${sanitizedAddress.substring(0, 6)}...${sanitizedAddress.substring(sanitizedAddress.length - 4)}`)
           }
         }
 
