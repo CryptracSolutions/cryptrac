@@ -57,6 +57,8 @@ const CURRENCY_WALLET_MAPPING: Record<string, string[]> = {
   // ERC-20 tokens use ETH addresses
   'USDT': ['ETH', 'ETHEREUM'],
   'USDC': ['ETH', 'ETHEREUM'],
+  'DAI': ['ETH', 'ETHEREUM'],
+  'PYUSD': ['ETH', 'ETHEREUM'],
   
   // BSC tokens use BNB addresses
   'USDTBSC': ['BNB', 'BINANCE', 'BSC'],
@@ -184,19 +186,10 @@ export async function POST(request: NextRequest) {
     if (payment_link_id && !merchantPayoutAddress) {
       console.log('🔍 Looking up merchant wallet address for payment link:', payment_link_id)
       
-      // Fixed Supabase query - use proper join syntax
+      // First get the payment link
       const { data: paymentLinkData, error: linkError } = await supabase
         .from('payment_links')
-        .select(`
-          id,
-          merchant_id,
-          merchants (
-            id,
-            auto_convert_enabled,
-            preferred_payout_currency,
-            wallet_addresses
-          )
-        `)
+        .select('id, merchant_id')
         .eq('id', payment_link_id)
         .single()
 
@@ -217,22 +210,30 @@ export async function POST(request: NextRequest) {
 
       console.log('✅ Payment link found:', {
         id: paymentLinkData.id,
-        merchant_id: paymentLinkData.merchant_id,
-        has_wallets: !!(paymentLinkData.merchants as any)?.wallet_addresses
+        merchant_id: paymentLinkData.merchant_id
       })
 
       merchantId = paymentLinkData.merchant_id
-      const merchant = paymentLinkData.merchants as any
 
-      if (merchant?.wallet_addresses) {
-        const walletAddresses = merchant.wallet_addresses as Record<string, string>
+      // Then get the merchant data separately
+      const { data: merchantData, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id, auto_convert_enabled, preferred_payout_currency, wallet_addresses')
+        .eq('id', paymentLinkData.merchant_id)
+        .single()
+
+      if (merchantError) {
+        console.error('Error fetching merchant:', merchantError)
+        console.log('⚠️ Merchant not found, proceeding without auto-forwarding')
+      } else if (merchantData?.wallet_addresses) {
+        const walletAddresses = merchantData.wallet_addresses as Record<string, string>
         const availableWallets = Object.keys(walletAddresses)
         
         console.log('💰 Available wallet addresses:', availableWallets)
 
         // Determine auto-convert settings
-        const autoConvertEnabled = merchant.auto_convert_enabled
-        const preferredPayoutCurrency = merchant.preferred_payout_currency
+        const autoConvertEnabled = merchantData.auto_convert_enabled
+        const preferredPayoutCurrency = merchantData.preferred_payout_currency
 
         console.log('🔄 Auto-convert settings:', {
           auto_convert_enabled: autoConvertEnabled,

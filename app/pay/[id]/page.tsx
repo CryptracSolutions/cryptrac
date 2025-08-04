@@ -113,63 +113,6 @@ const FIAT_CURRENCIES = [
   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
 ]
 
-// Complete mapping of base currencies to their USDT/USDC variants based on NOWPayments list
-const STABLE_COIN_MAPPING: Record<string, string[]> = {
-  // Ethereum network
-  'ETH': ['USDT', 'USDTERC20', 'USDC'],
-  
-  // Binance Smart Chain
-  'BNB': ['USDTBSC', 'USDCBSC'],
-  
-  // Solana
-  'SOL': ['USDTSOL', 'USDCSOL'],
-  
-  // Polygon/MATIC
-  'MATIC': ['USDTMATIC', 'USDCMATIC'],
-  
-  // Avalanche
-  'AVAX': ['USDTAVAX', 'USDCAVAX'],
-  
-  // Arbitrum (Layer 2)
-  'ARB': ['USDTARBITRUM', 'USDCARBITRUM'],
-  
-  // Optimism (Layer 2)  
-  'OP': ['USDTOP', 'USDCOP'],
-  
-  // Base (Layer 2)
-  'BASE': ['USDCBASE'],
-  
-  // Tron
-  'TRX': ['USDTTRC20', 'TUSDTRON'],
-  
-  // TON
-  'TON': ['USDTTON'],
-  
-  // Stellar
-  'XLM': ['USDCXLM'],
-  
-  // NEAR
-  'NEAR': ['USDTNEAR'],
-  
-  // Polkadot
-  'DOT': ['USDTDOT'],
-  
-  // Algorand
-  'ALGO': ['USDTALGO', 'USDCALGO'],
-  
-  // KuCoin Chain
-  'KCC': ['USDCKCC'],
-  
-  // EOS
-  'EOS': ['USDTEOS'],
-  
-  // Tezos
-  'XTZ': ['USDTXTZ'],
-  
-  // KAVA
-  'KAVA': ['USDTKAVA']
-}
-
 const STATUS_CONFIG = {
   waiting: {
     title: 'Waiting for Payment',
@@ -468,32 +411,145 @@ export default function PaymentPage() {
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Simple currency filtering: base currencies + their USDT/USDC variants
+      // Research-based currency filtering: find actual relationships
       const expandedAcceptedCryptos = [...acceptedCryptos]
       
-      // For each accepted crypto, add its USDT/USDC variants if they exist
+      // For each accepted crypto, find its related stable coins by researching actual NOWPayments data
       acceptedCryptos.forEach(crypto => {
-        console.log(`🔍 Processing crypto: ${crypto}`)
+        console.log(`🔍 Researching stable coins for: ${crypto}`)
         
-        const stableCoins = STABLE_COIN_MAPPING[crypto.toUpperCase()] || []
-        stableCoins.forEach(stableCoin => {
-          // Check if this stable coin exists in NOWPayments
-          const exists = data.currencies.some((c: CurrencyInfo) => 
-            c.code.toUpperCase() === stableCoin.toUpperCase() && c.enabled
-          )
+        // Find all USDT and USDC variants that might be related to this crypto
+        const relatedStableCoins = data.currencies.filter((currency: CurrencyInfo) => {
+          const currencyCode = currency.code.toUpperCase()
+          const cryptoUpper = crypto.toUpperCase()
           
-          if (exists && !expandedAcceptedCryptos.includes(stableCoin)) {
-            console.log(`✅ Adding stable coin: ${stableCoin} (for ${crypto})`)
-            expandedAcceptedCryptos.push(stableCoin)
-          } else if (!exists) {
-            console.log(`❌ Stable coin not available: ${stableCoin}`)
+          // Check for USDT variants
+          if (currencyCode.includes('USDT')) {
+            // ETH relationships
+            if (cryptoUpper === 'ETH' && (currencyCode === 'USDT' || currencyCode === 'USDTERC20')) {
+              return true
+            }
+            // BSC relationships  
+            if (cryptoUpper === 'BNB' && currencyCode.includes('BSC')) {
+              return true
+            }
+            // Solana relationships
+            if (cryptoUpper === 'SOL' && currencyCode.includes('SOL')) {
+              return true
+            }
+            // Polygon relationships
+            if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
+              return true
+            }
+            // Avalanche relationships
+            if (cryptoUpper === 'AVAX' && (currencyCode.includes('AVAX') || currencyCode.includes('AVALANCHE'))) {
+              return true
+            }
+            // Tron relationships
+            if (cryptoUpper === 'TRX' && (currencyCode.includes('TRC20') || currencyCode.includes('TRON'))) {
+              return true
+            }
+            // TON relationships
+            if (cryptoUpper === 'TON' && currencyCode.includes('TON')) {
+              return true
+            }
+            // Other network relationships
+            if (cryptoUpper === 'NEAR' && currencyCode.includes('NEAR')) {
+              return true
+            }
+            if (cryptoUpper === 'DOT' && (currencyCode.includes('DOT') || currencyCode.includes('POLKADOT'))) {
+              return true
+            }
+            if (cryptoUpper === 'ALGO' && (currencyCode.includes('ALGO') || currencyCode.includes('ALGORAND'))) {
+              return true
+            }
+            if (cryptoUpper === 'XLM' && (currencyCode.includes('XLM') || currencyCode.includes('STELLAR'))) {
+              return true
+            }
+            if (cryptoUpper === 'EOS' && currencyCode.includes('EOS')) {
+              return true
+            }
+            if (cryptoUpper === 'XTZ' && (currencyCode.includes('XTZ') || currencyCode.includes('TEZOS'))) {
+              return true
+            }
+            if (cryptoUpper === 'KAVA' && currencyCode.includes('KAVA')) {
+              return true
+            }
+          }
+          
+          // Check for USDC variants
+          if (currencyCode.includes('USDC')) {
+            // ETH relationships
+            if (cryptoUpper === 'ETH' && currencyCode === 'USDC') {
+              return true
+            }
+            // BSC relationships
+            if (cryptoUpper === 'BNB' && currencyCode.includes('BSC')) {
+              return true
+            }
+            // Solana relationships
+            if (cryptoUpper === 'SOL' && currencyCode.includes('SOL')) {
+              return true
+            }
+            // Polygon relationships
+            if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
+              return true
+            }
+            // Avalanche relationships
+            if (cryptoUpper === 'AVAX' && (currencyCode.includes('AVAX') || currencyCode.includes('AVALANCHE'))) {
+              return true
+            }
+            // Stellar relationships
+            if (cryptoUpper === 'XLM' && (currencyCode.includes('XLM') || currencyCode.includes('STELLAR'))) {
+              return true
+            }
+            // Algorand relationships
+            if (cryptoUpper === 'ALGO' && (currencyCode.includes('ALGO') || currencyCode.includes('ALGORAND'))) {
+              return true
+            }
+            // Arbitrum relationships
+            if (cryptoUpper === 'ARB' && currencyCode.includes('ARBITRUM')) {
+              return true
+            }
+            // Optimism relationships
+            if (cryptoUpper === 'OP' && (currencyCode.includes('OP') || currencyCode.includes('OPTIMISM'))) {
+              return true
+            }
+            // Base relationships
+            if (cryptoUpper === 'BASE' && currencyCode.includes('BASE')) {
+              return true
+            }
+            // KuCoin relationships
+            if (cryptoUpper === 'KCC' && currencyCode.includes('KCC')) {
+              return true
+            }
+          }
+          
+          // Check for DAI (only on ETH)
+          if (currencyCode === 'DAI' && cryptoUpper === 'ETH') {
+            return true
+          }
+          
+          // Check for PYUSD (only on ETH)
+          if (currencyCode === 'PYUSD' && cryptoUpper === 'ETH') {
+            return true
+          }
+          
+          return false
+        })
+        
+        // Add found stable coins
+        relatedStableCoins.forEach((stableCoin: CurrencyInfo) => {
+          if (stableCoin.enabled && !expandedAcceptedCryptos.includes(stableCoin.code)) {
+            console.log(`✅ Found stable coin: ${stableCoin.code} (for ${crypto})`)
+            expandedAcceptedCryptos.push(stableCoin.code)
           }
         })
       })
 
       console.log('📈 Expanded accepted cryptos (with stable coins):', expandedAcceptedCryptos)
 
-      // Filter to only accepted cryptocurrencies
+      // Filter to only accepted cryptocurrencies (including base currencies)
       const filtered = data.currencies.filter((currency: CurrencyInfo) => {
         const currencyCodeUpper = currency.code.toUpperCase()
         const isAccepted = expandedAcceptedCryptos.some(acceptedCode => 
@@ -510,7 +566,7 @@ export default function PaymentPage() {
 
       console.log(`✅ Loaded ${filtered.length} available currencies:`, filtered.map((c: CurrencyInfo) => c.code))
       
-      // Simple sorting: base currencies first, then stable coins
+      // Smart sorting: base currencies first, then stable coins
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
         const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'ALGO', 'ARB', 'OP', 'BASE', 'KCC', 'EOS', 'XTZ', 'KAVA']
