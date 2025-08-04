@@ -52,37 +52,23 @@ function validateAddressForCurrency(address: string, currency: string): boolean 
   return sanitized.length > 10
 }
 
-// Currency mapping for auto-forwarding
+// Simple currency mapping for auto-forwarding
 const CURRENCY_WALLET_MAPPING: Record<string, string[]> = {
   // ERC-20 tokens use ETH addresses
   'USDT': ['ETH', 'ETHEREUM'],
   'USDC': ['ETH', 'ETHEREUM'],
-  'DAI': ['ETH', 'ETHEREUM'],
-  'TUSD': ['ETH', 'ETHEREUM'],
-  'USDP': ['ETH', 'ETHEREUM'],
-  'PYUSD': ['ETH', 'ETHEREUM'],
-  'BUSD': ['ETH', 'ETHEREUM'],
-  'FRAX': ['ETH', 'ETHEREUM'],
-  'LUSD': ['ETH', 'ETHEREUM'],
-  'CUSD': ['ETH', 'ETHEREUM'],
   
   // BSC tokens use BNB addresses
   'USDTBSC': ['BNB', 'BINANCE', 'BSC'],
   'USDCBSC': ['BNB', 'BINANCE', 'BSC'],
-  'BUSDBSC': ['BNB', 'BINANCE', 'BSC'],
-  'FDUSDBSC': ['BNB', 'BINANCE', 'BSC'],
-  'USDDBSC': ['BNB', 'BINANCE', 'BSC'],
   
   // Solana tokens use SOL addresses
   'USDTSOL': ['SOL', 'SOLANA'],
   'USDCSOL': ['SOL', 'SOLANA'],
-  'USDT_SOL': ['SOL', 'SOLANA'],
-  'USDC_SOL': ['SOL', 'SOLANA'],
   
   // Polygon tokens use MATIC addresses
   'USDTMATIC': ['MATIC', 'POLYGON'],
   'USDCMATIC': ['MATIC', 'POLYGON'],
-  'DAIMATIC': ['MATIC', 'POLYGON'],
   
   // Avalanche tokens use AVAX addresses
   'USDTAVAX': ['AVAX', 'AVALANCHE'],
@@ -90,7 +76,6 @@ const CURRENCY_WALLET_MAPPING: Record<string, string[]> = {
   
   // Tron tokens use TRX addresses
   'USDTTRC20': ['TRX', 'TRON'],
-  'USDT_TRC20': ['TRX', 'TRON'],
   
   // TON tokens use TON addresses
   'USDTTON': ['TON'],
@@ -199,12 +184,13 @@ export async function POST(request: NextRequest) {
     if (payment_link_id && !merchantPayoutAddress) {
       console.log('🔍 Looking up merchant wallet address for payment link:', payment_link_id)
       
+      // Fixed Supabase query - use proper join syntax
       const { data: paymentLinkData, error: linkError } = await supabase
         .from('payment_links')
         .select(`
           id,
           merchant_id,
-          merchants!inner(
+          merchants (
             id,
             auto_convert_enabled,
             preferred_payout_currency,
@@ -232,11 +218,11 @@ export async function POST(request: NextRequest) {
       console.log('✅ Payment link found:', {
         id: paymentLinkData.id,
         merchant_id: paymentLinkData.merchant_id,
-        has_wallets: !!(Array.isArray(paymentLinkData.merchants) ? (paymentLinkData.merchants[0] as any)?.wallet_addresses : (paymentLinkData.merchants as any)?.wallet_addresses)
+        has_wallets: !!(paymentLinkData.merchants as any)?.wallet_addresses
       })
 
       merchantId = paymentLinkData.merchant_id
-      const merchant = Array.isArray(paymentLinkData.merchants) ? (paymentLinkData.merchants[0] as any) : (paymentLinkData.merchants as any)
+      const merchant = paymentLinkData.merchants as any
 
       if (merchant?.wallet_addresses) {
         const walletAddresses = merchant.wallet_addresses as Record<string, string>

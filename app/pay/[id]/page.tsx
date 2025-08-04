@@ -91,7 +91,7 @@ interface PaymentData {
 
 interface PaymentStatus {
   id: string
-  nowpayments_payment_id: string
+  payment_id: string
   order_id: string
   status: string
   pay_currency: string
@@ -112,6 +112,63 @@ const FIAT_CURRENCIES = [
   { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
 ]
+
+// Complete mapping of base currencies to their USDT/USDC variants based on NOWPayments list
+const STABLE_COIN_MAPPING: Record<string, string[]> = {
+  // Ethereum network
+  'ETH': ['USDT', 'USDTERC20', 'USDC'],
+  
+  // Binance Smart Chain
+  'BNB': ['USDTBSC', 'USDCBSC'],
+  
+  // Solana
+  'SOL': ['USDTSOL', 'USDCSOL'],
+  
+  // Polygon/MATIC
+  'MATIC': ['USDTMATIC', 'USDCMATIC'],
+  
+  // Avalanche
+  'AVAX': ['USDTAVAX', 'USDCAVAX'],
+  
+  // Arbitrum (Layer 2)
+  'ARB': ['USDTARBITRUM', 'USDCARBITRUM'],
+  
+  // Optimism (Layer 2)  
+  'OP': ['USDTOP', 'USDCOP'],
+  
+  // Base (Layer 2)
+  'BASE': ['USDCBASE'],
+  
+  // Tron
+  'TRX': ['USDTTRC20', 'TUSDTRON'],
+  
+  // TON
+  'TON': ['USDTTON'],
+  
+  // Stellar
+  'XLM': ['USDCXLM'],
+  
+  // NEAR
+  'NEAR': ['USDTNEAR'],
+  
+  // Polkadot
+  'DOT': ['USDTDOT'],
+  
+  // Algorand
+  'ALGO': ['USDTALGO', 'USDCALGO'],
+  
+  // KuCoin Chain
+  'KCC': ['USDCKCC'],
+  
+  // EOS
+  'EOS': ['USDTEOS'],
+  
+  // Tezos
+  'XTZ': ['USDTXTZ'],
+  
+  // KAVA
+  'KAVA': ['USDTKAVA']
+}
 
 const STATUS_CONFIG = {
   waiting: {
@@ -411,54 +468,32 @@ export default function PaymentPage() {
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Smart currency detection: Find all currencies that are related to accepted cryptos
+      // Simple currency filtering: base currencies + their USDT/USDC variants
       const expandedAcceptedCryptos = [...acceptedCryptos]
-      const availableCurrencyCodes = new Set(data.currencies.map((c: CurrencyInfo) => c.code.toUpperCase()))
       
-      console.log('🔍 Sample of available currency codes:', Array.from(availableCurrencyCodes).slice(0, 30))
-
-      // For each accepted crypto, find ALL related currencies in NOWPayments
+      // For each accepted crypto, add its USDT/USDC variants if they exist
       acceptedCryptos.forEach(crypto => {
         console.log(`🔍 Processing crypto: ${crypto}`)
         
-        // Find all currencies that contain this crypto name
-        data.currencies.forEach((currency: CurrencyInfo) => {
-          const currencyCode = currency.code.toUpperCase()
-          const cryptoUpper = crypto.toUpperCase()
-          
-          // Check if this currency is related to the accepted crypto
-          const isRelated = (
-            // Direct match
-            currencyCode === cryptoUpper ||
-            // Contains the crypto name
-            currencyCode.includes(cryptoUpper) ||
-            // Crypto name contains the currency (for variations like BNBBSC)
-            cryptoUpper.includes(currencyCode) ||
-            // Special stable coin relationships
-            (cryptoUpper === 'ETH' && ['USDT', 'USDC', 'DAI', 'TUSD', 'USDP', 'PYUSD', 'BUSD', 'FRAX', 'LUSD', 'CUSD'].includes(currencyCode)) ||
-            (cryptoUpper === 'BNB' && currencyCode.includes('BSC')) ||
-            (cryptoUpper === 'SOL' && currencyCode.includes('SOL')) ||
-            (cryptoUpper === 'MATIC' && (currencyCode.includes('POLYGON') || currencyCode.includes('MATIC'))) ||
-            (cryptoUpper === 'AVAX' && (currencyCode.includes('AVAX') || currencyCode.includes('AVALANCHE'))) ||
-            (cryptoUpper === 'TRX' && (currencyCode.includes('TRC') || currencyCode.includes('TRON'))) ||
-            (cryptoUpper === 'DOT' && (currencyCode.includes('DOT') || currencyCode.includes('POLKADOT'))) ||
-            (cryptoUpper === 'TON' && currencyCode.includes('TON')) ||
-            (cryptoUpper === 'XLM' && currencyCode.includes('XLM')) ||
-            (cryptoUpper === 'NEAR' && currencyCode.includes('NEAR')) ||
-            (cryptoUpper === 'ALGO' && currencyCode.includes('ALGO')) ||
-            (cryptoUpper === 'KAVA' && currencyCode.includes('KAVA'))
+        const stableCoins = STABLE_COIN_MAPPING[crypto.toUpperCase()] || []
+        stableCoins.forEach(stableCoin => {
+          // Check if this stable coin exists in NOWPayments
+          const exists = data.currencies.some((c: CurrencyInfo) => 
+            c.code.toUpperCase() === stableCoin.toUpperCase() && c.enabled
           )
           
-          if (isRelated && !expandedAcceptedCryptos.includes(currency.code)) {
-            console.log(`✅ Adding related currency: ${currency.code} (related to ${crypto})`)
-            expandedAcceptedCryptos.push(currency.code)
+          if (exists && !expandedAcceptedCryptos.includes(stableCoin)) {
+            console.log(`✅ Adding stable coin: ${stableCoin} (for ${crypto})`)
+            expandedAcceptedCryptos.push(stableCoin)
+          } else if (!exists) {
+            console.log(`❌ Stable coin not available: ${stableCoin}`)
           }
         })
       })
 
-      console.log('📈 Expanded accepted cryptos (smart detection):', expandedAcceptedCryptos)
+      console.log('📈 Expanded accepted cryptos (with stable coins):', expandedAcceptedCryptos)
 
-      // Filter to only accepted cryptocurrencies and their related currencies
+      // Filter to only accepted cryptocurrencies
       const filtered = data.currencies.filter((currency: CurrencyInfo) => {
         const currencyCodeUpper = currency.code.toUpperCase()
         const isAccepted = expandedAcceptedCryptos.some(acceptedCode => 
@@ -473,20 +508,16 @@ export default function PaymentPage() {
         return isAccepted && isEnabled
       })
 
-      console.log(`✅ Loaded ${filtered.length} available currencies (smart detection):`, filtered.map((c: CurrencyInfo) => c.code))
+      console.log(`✅ Loaded ${filtered.length} available currencies:`, filtered.map((c: CurrencyInfo) => c.code))
       
-      // Enhanced sorting: base currencies first, then stable coins grouped by network
+      // Simple sorting: base currencies first, then stable coins
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
-        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'BNBBSC', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'KAVA', 'ALGO']
+        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'ALGO', 'ARB', 'OP', 'BASE', 'KCC', 'EOS', 'XTZ', 'KAVA']
         
         // Check if currencies are base currencies
-        const aIsBase = baseCurrencyOrder.includes(a.code)
-        const bIsBase = baseCurrencyOrder.includes(b.code)
-        
-        // Check if currencies are stable coins
-        const aIsStable = a.code.includes('USDT') || a.code.includes('USDC') || a.code.includes('DAI') || a.code.includes('BUSD') || a.code.includes('TUSD') || a.code.includes('USDD') || a.code.includes('USDP') || a.code.includes('PYUSD') || a.code.includes('FDUSD') || a.code.includes('CUSD')
-        const bIsStable = b.code.includes('USDT') || b.code.includes('USDC') || b.code.includes('DAI') || b.code.includes('BUSD') || b.code.includes('TUSD') || b.code.includes('USDD') || b.code.includes('USDP') || b.code.includes('PYUSD') || b.code.includes('FDUSD') || b.code.includes('CUSD')
+        const aIsBase = baseCurrencyOrder.includes(a.code.toUpperCase())
+        const bIsBase = baseCurrencyOrder.includes(b.code.toUpperCase())
         
         // Base currencies come first
         if (aIsBase && !bIsBase) return -1
@@ -494,64 +525,12 @@ export default function PaymentPage() {
         
         // Among base currencies, sort by priority order
         if (aIsBase && bIsBase) {
-          const aIndex = baseCurrencyOrder.indexOf(a.code)
-          const bIndex = baseCurrencyOrder.indexOf(b.code)
+          const aIndex = baseCurrencyOrder.indexOf(a.code.toUpperCase())
+          const bIndex = baseCurrencyOrder.indexOf(b.code.toUpperCase())
           return aIndex - bIndex
         }
         
-        // Among stable coins, group by network and prioritize USDT > USDC > others
-        if (aIsStable && bIsStable) {
-          // Network grouping priority: ETH > SOL > BSC > MATIC > others
-          const getNetworkPriority = (code: string) => {
-            if (!code.includes('SOL') && !code.includes('BSC') && !code.includes('POLYGON') && !code.includes('AVAX') && !code.includes('TRC20') && !code.includes('ALGO') && !code.includes('XLM') && !code.includes('TON') && !code.includes('KAVA') && !code.includes('POLKADOT') && !code.includes('ARBITRUM') && !code.includes('OPTIMISM') && !code.includes('DOT') && !code.includes('NEAR')) return 0 // ETH
-            if (code.includes('SOL')) return 1
-            if (code.includes('BSC')) return 2
-            if (code.includes('POLYGON')) return 3
-            if (code.includes('AVAX') || code.includes('AVALANCHE')) return 4
-            if (code.includes('TRC20') || code.includes('TRX')) return 5
-            if (code.includes('DOT') || code.includes('POLKADOT')) return 6
-            if (code.includes('ALGO')) return 7
-            if (code.includes('XLM')) return 8
-            if (code.includes('TON')) return 9
-            if (code.includes('NEAR')) return 10
-            if (code.includes('KAVA')) return 11
-            if (code.includes('ARBITRUM')) return 12
-            if (code.includes('OPTIMISM')) return 13
-            return 14
-          }
-          
-          const aNetworkPriority = getNetworkPriority(a.code)
-          const bNetworkPriority = getNetworkPriority(b.code)
-          
-          if (aNetworkPriority !== bNetworkPriority) {
-            return aNetworkPriority - bNetworkPriority
-          }
-          
-          // Within same network: USDT > USDC > USDD > DAI > others
-          const getStablePriority = (code: string) => {
-            if (code.includes('USDT')) return 0
-            if (code.includes('USDC')) return 1
-            if (code.includes('USDD')) return 2
-            if (code.includes('DAI')) return 3
-            if (code.includes('BUSD')) return 4
-            if (code.includes('TUSD')) return 5
-            if (code.includes('USDP')) return 6
-            if (code.includes('PYUSD')) return 7
-            if (code.includes('FDUSD')) return 8
-            return 9
-          }
-          
-          const aStablePriority = getStablePriority(a.code)
-          const bStablePriority = getStablePriority(b.code)
-          
-          return aStablePriority - bStablePriority
-        }
-        
-        // Stable coins come after base currencies
-        if (!aIsStable && bIsStable) return -1
-        if (aIsStable && !bIsStable) return 1
-        
-        // Default alphabetical sort
+        // Among stable coins, sort alphabetically
         return a.code.localeCompare(b.code)
       })
       
@@ -653,23 +632,9 @@ export default function PaymentPage() {
       console.log('✅ Payment created successfully:', data.payment)
       setPaymentData(data.payment)
 
-      // Generate QR code for payment address with improved wallet compatibility
+      // Generate QR code for payment address
       try {
-        // For maximum wallet compatibility, use address-only format for most currencies
-        let qrContent = data.payment.pay_address
-        
-        // Special handling for different wallet types
-        if (selectedCurrency.toLowerCase() === 'btc') {
-          // Bitcoin URI is widely supported
-          qrContent = `bitcoin:${data.payment.pay_address}?amount=${data.payment.pay_amount}`
-        } else if (selectedCurrency.toLowerCase() === 'eth' || selectedCurrency.includes('USDT') || selectedCurrency.includes('USDC') || selectedCurrency.includes('DAI')) {
-          // For Ethereum and ERC-20 tokens, MetaMask prefers simple address format
-          // Some wallets support ethereum: URI, but address-only is more universal
-          qrContent = data.payment.pay_address
-        }
-        // For all other currencies, use address-only for maximum compatibility
-        
-        const qrDataUrl = await QRCode.toDataURL(qrContent, {
+        const qrDataUrl = await QRCode.toDataURL(data.payment.pay_address, {
           width: 256,
           margin: 2,
           color: {
@@ -679,24 +644,9 @@ export default function PaymentPage() {
           errorCorrectionLevel: 'M'
         })
         setQrCodeDataUrl(qrDataUrl)
-        console.log('✅ QR code generated with content:', qrContent)
+        console.log('✅ QR code generated')
       } catch (qrError) {
         console.error('Error generating QR code:', qrError)
-        // Fallback to simple address if any error occurs
-        try {
-          const fallbackQrDataUrl = await QRCode.toDataURL(data.payment.pay_address, {
-            width: 256,
-            margin: 2,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          })
-          setQrCodeDataUrl(fallbackQrDataUrl)
-          console.log('✅ Fallback QR code generated with address only')
-        } catch (fallbackError) {
-          console.error('Error generating fallback QR code:', fallbackError)
-        }
       }
 
       toast.success('Payment created! Send the exact amount to the address below.')
