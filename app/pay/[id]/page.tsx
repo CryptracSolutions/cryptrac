@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
@@ -9,7 +9,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, QrCode, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight } from 'lucide-react'
+import { Copy, QrCode, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 
@@ -89,6 +89,22 @@ interface PaymentData {
   outcome_currency?: string
 }
 
+interface PaymentStatus {
+  id: string
+  nowpayments_payment_id: string
+  order_id: string
+  status: string
+  pay_currency: string
+  pay_amount: number
+  pay_address: string
+  price_amount: number
+  price_currency: string
+  created_at: string
+  updated_at: string
+  tx_hash?: string
+  customer_email?: string
+}
+
 const FIAT_CURRENCIES = [
   { code: 'USD', name: 'US Dollar', symbol: '$' },
   { code: 'EUR', name: 'Euro', symbol: '€' },
@@ -97,10 +113,59 @@ const FIAT_CURRENCIES = [
   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
 ]
 
+const STATUS_CONFIG = {
+  waiting: {
+    title: 'Waiting for Payment',
+    description: 'Send the exact amount to the address below',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-50',
+    borderColor: 'border-yellow-200',
+    icon: Clock,
+    showSpinner: false
+  },
+  confirming: {
+    title: 'Payment Received',
+    description: 'Your payment is being confirmed on the blockchain',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    icon: RefreshCw,
+    showSpinner: true
+  },
+  confirmed: {
+    title: 'Payment Confirmed',
+    description: 'Your payment has been successfully processed',
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    icon: CheckCircle,
+    showSpinner: false
+  },
+  failed: {
+    title: 'Payment Failed',
+    description: 'There was an issue with your payment',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    icon: AlertCircle,
+    showSpinner: false
+  },
+  expired: {
+    title: 'Payment Expired',
+    description: 'This payment has expired',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50',
+    borderColor: 'border-gray-200',
+    icon: AlertCircle,
+    showSpinner: false
+  }
+}
+
 export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
   const linkId = params.id as string
+  const statusCheckIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null)
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
@@ -108,12 +173,18 @@ export default function PaymentPage() {
   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
   const [customerEmail, setCustomerEmail] = useState<string>('')
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
   
   const [loading, setLoading] = useState(true)
   const [estimatesLoading, setEstimatesLoading] = useState(false)
   const [creatingPayment, setCreatingPayment] = useState(false)
   const [error, setError] = useState<string>('')
+  
+  // Real-time status checking states
+  const [statusChecking, setStatusChecking] = useState(false)
+  const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null)
+  const [statusCheckCount, setStatusCheckCount] = useState(0)
 
   useEffect(() => {
     if (linkId) {
@@ -126,6 +197,116 @@ export default function PaymentPage() {
       loadEstimates()
     }
   }, [paymentLink, availableCurrencies])
+
+  // Start status checking when payment is created
+  useEffect(() => {
+    if (paymentData && linkId) {
+      startStatusChecking()
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current)
+        statusCheckIntervalRef.current = null
+      }
+    }
+  }, [paymentData, linkId])
+
+  const startStatusChecking = () => {
+    console.log('🔄 Starting real-time status checking for payment link:', linkId)
+    
+    // Clear any existing interval
+    if (statusCheckIntervalRef.current) {
+      clearInterval(statusCheckIntervalRef.current)
+    }
+
+    // Initial status check
+    checkPaymentStatus()
+
+    // Set up polling every 5 seconds
+    statusCheckIntervalRef.current = setInterval(() => {
+      checkPaymentStatus()
+    }, 5000)
+  }
+
+  const checkPaymentStatus = async () => {
+    if (!linkId || statusChecking) return
+
+    try {
+      setStatusChecking(true)
+      setLastStatusCheck(new Date())
+      setStatusCheckCount(prev => prev + 1)
+
+      console.log(`🔍 Checking payment status (check #${statusCheckCount + 1})`)
+
+      const response = await fetch(`/api/payments/${linkId}/status`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to check payment status')
+      }
+
+      const data = await response.json()
+
+      if (data.success && data.payment) {
+        const newStatus = data.payment.status
+        const previousStatus = paymentStatus?.status
+
+        console.log(`📊 Payment status: ${previousStatus} → ${newStatus}`)
+
+        setPaymentStatus(data.payment)
+
+        // Show status change notifications
+        if (previousStatus !== newStatus) {
+          switch (newStatus) {
+            case 'confirming':
+              toast.success('Payment received! Confirming on blockchain...')
+              break
+            case 'confirmed':
+              toast.success('Payment confirmed successfully!')
+              // Stop status checking
+              if (statusCheckIntervalRef.current) {
+                clearInterval(statusCheckIntervalRef.current)
+                statusCheckIntervalRef.current = null
+              }
+              // Redirect to success page after a short delay
+              setTimeout(() => {
+                router.push(`/payment/success/${linkId}?payment_id=${data.payment.id}`)
+              }, 2000)
+              break
+            case 'failed':
+              toast.error('Payment failed. Please try again.')
+              if (statusCheckIntervalRef.current) {
+                clearInterval(statusCheckIntervalRef.current)
+                statusCheckIntervalRef.current = null
+              }
+              break
+            case 'expired':
+              toast.error('Payment expired. Please create a new payment.')
+              if (statusCheckIntervalRef.current) {
+                clearInterval(statusCheckIntervalRef.current)
+                statusCheckIntervalRef.current = null
+              }
+              break
+          }
+        }
+
+        // Stop checking if payment is in final state
+        if (['confirmed', 'failed', 'expired'].includes(newStatus)) {
+          if (statusCheckIntervalRef.current) {
+            clearInterval(statusCheckIntervalRef.current)
+            statusCheckIntervalRef.current = null
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ Error checking payment status:', error)
+      // Don't show error toast for status checks to avoid spam
+    } finally {
+      setStatusChecking(false)
+    }
+  }
 
   const loadPaymentLink = async () => {
     try {
@@ -204,200 +385,50 @@ export default function PaymentPage() {
         }
       }
 
-      console.log('✅ Payment link loaded:', transformedData)
       setPaymentLink(transformedData)
-
-      // Load available currencies from dynamic API
-      await loadAvailableCurrencies(transformedData.accepted_cryptos)
+      await loadCurrencies()
 
     } catch (error) {
       console.error('Error loading payment link:', error)
-      setError('Failed to load payment information')
+      setError(error instanceof Error ? error.message : 'Failed to load payment link')
     } finally {
       setLoading(false)
     }
   }
 
-  const loadAvailableCurrencies = async (acceptedCryptos: string[]) => {
+  const loadCurrencies = async () => {
     try {
-      console.log('📡 Loading currencies from dynamic API...')
-      console.log('🔍 Accepted cryptos from payment link:', acceptedCryptos)
-      
-      const response = await fetch('/api/currencies?popular=false')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
+      console.log('💱 Loading available currencies...')
 
+      const response = await fetch('/api/nowpayments/currencies')
       const data = await response.json()
-      if (!data.success) {
+
+      if (!data.success || !data.currencies) {
         throw new Error('Failed to load currencies')
       }
 
-      console.log('📊 Total currencies from API:', data.currencies.length)
+      console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
 
-      // Create comprehensive mapping between our internal currency codes and NOWPayments API codes
-      const currencyCodeMapping: Record<string, string> = {
-        // === USDT (Tether) Variants ===
-        'USDT_SOL': 'USDTSOL',           // Tether on Solana
-        'USDT_ERC20': 'USDTERC20',       // Tether on Ethereum
-        'USDT_ETH': 'USDTERC20',         // Alternative naming for Ethereum
-        'USDT_BSC': 'USDTBSC',           // Tether on BSC
-        'USDT_BNB': 'USDTBSC',           // Alternative naming for BSC
-        'USDT_POLYGON': 'USDTMATIC',     // Tether on Polygon
-        'USDT_MATIC': 'USDTMATIC',       // Alternative naming for Polygon
-        'USDT_AVALANCHE': 'USDTAVAX',    // Tether on Avalanche
-        'USDT_AVAX': 'USDTAVAX',         // Alternative naming for Avalanche
-        'USDT_TRON': 'USDTTRC20',        // Tether on Tron
-        'USDT_TRX': 'USDTTRC20',         // Alternative naming for Tron
-        'USDT_ARBITRUM': 'USDTARB',      // Tether on Arbitrum
-        'USDT_ARB': 'USDTARB',           // Alternative naming for Arbitrum
-        'USDT_OPTIMISM': 'USDTOP',       // Tether on Optimism
-        'USDT_OP': 'USDTOP',             // Alternative naming for Optimism
-        
-        // === USDC (USD Coin) Variants ===
-        'USDC_SOL': 'USDCSOL',           // USD Coin on Solana
-        'USDC_ERC20': 'USDCERC20',       // USD Coin on Ethereum
-        'USDC_ETH': 'USDCERC20',         // Alternative naming for Ethereum
-        'USDC_BSC': 'USDCBSC',           // USD Coin on BSC
-        'USDC_BNB': 'USDCBSC',           // Alternative naming for BSC
-        'USDC_POLYGON': 'USDCMATIC',     // USD Coin on Polygon
-        'USDC_MATIC': 'USDCMATIC',       // Alternative naming for Polygon
-        'USDC_AVALANCHE': 'USDCAVAX',    // USD Coin on Avalanche
-        'USDC_AVAX': 'USDCAVAX',         // Alternative naming for Avalanche
-        'USDC_ARBITRUM': 'USDCARB',      // USD Coin on Arbitrum
-        'USDC_ARB': 'USDCARB',           // Alternative naming for Arbitrum
-        'USDC_OPTIMISM': 'USDCOP',       // USD Coin on Optimism
-        'USDC_OP': 'USDCOP',             // Alternative naming for Optimism
-        
-        // === BUSD (Binance USD) Variants ===
-        'BUSD_BSC': 'BUSDBSC',           // Binance USD on BSC
-        'BUSD_BNB': 'BUSDBSC',           // Alternative naming for BSC
-        'BUSD_ERC20': 'BUSDERC20',       // Binance USD on Ethereum
-        'BUSD_ETH': 'BUSDERC20',         // Alternative naming for Ethereum
-        
-        // === DAI Variants ===
-        'DAI_ERC20': 'DAIERC20',         // DAI on Ethereum
-        'DAI_ETH': 'DAIERC20',           // Alternative naming for Ethereum
-        'DAI_BSC': 'DAIBSC',             // DAI on BSC
-        'DAI_BNB': 'DAIBSC',             // Alternative naming for BSC
-        'DAI_POLYGON': 'DAIMATIC',       // DAI on Polygon
-        'DAI_MATIC': 'DAIMATIC',         // Alternative naming for Polygon
-        
-        // === TUSD (TrueUSD) Variants ===
-        'TUSD_ERC20': 'TUSDERC20',       // TrueUSD on Ethereum
-        'TUSD_ETH': 'TUSDERC20',         // Alternative naming for Ethereum
-        'TUSD_BSC': 'TUSDBSC',           // TrueUSD on BSC
-        'TUSD_BNB': 'TUSDBSC',           // Alternative naming for BSC
-        
-        // === FRAX Variants ===
-        'FRAX_ERC20': 'FRAXERC20',       // FRAX on Ethereum
-        'FRAX_ETH': 'FRAXERC20',         // Alternative naming for Ethereum
-        
-        // === LUSD Variants ===
-        'LUSD_ERC20': 'LUSDERC20',       // LUSD on Ethereum
-        'LUSD_ETH': 'LUSDERC20',         // Alternative naming for Ethereum
-        
-        // === USDD Variants ===
-        'USDD_TRON': 'USDDTRC20',        // USDD on Tron
-        'USDD_TRX': 'USDDTRC20',         // Alternative naming for Tron
-        
-        // === USDP (Pax Dollar) Variants ===
-        'USDP_ERC20': 'USDPERC20',       // USDP on Ethereum
-        'USDP_ETH': 'USDPERC20',         // Alternative naming for Ethereum
-        
-        // === GUSD (Gemini Dollar) Variants ===
-        'GUSD_ERC20': 'GUSDERC20',       // GUSD on Ethereum
-        'GUSD_ETH': 'GUSDERC20',         // Alternative naming for Ethereum
-        
-        // === PYUSD (PayPal USD) Variants ===
-        'PYUSD_ERC20': 'PYUSDERC20',     // PYUSD on Ethereum
-        'PYUSD_ETH': 'PYUSDERC20',       // Alternative naming for Ethereum
-        
-        // === USDE (Ethena USDe) Variants ===
-        'USDE_ERC20': 'USDEERC20',       // USDe on Ethereum
-        'USDE_ETH': 'USDEERC20',         // Alternative naming for Ethereum
-        
-        // === FDUSD Variants ===
-        'FDUSD_ERC20': 'FDUSDERC20',     // FDUSD on Ethereum
-        'FDUSD_ETH': 'FDUSDERC20',       // Alternative naming for Ethereum
-        'FDUSD_BSC': 'FDUSDBSC',         // FDUSD on BSC
-        'FDUSD_BNB': 'FDUSDBSC',         // Alternative naming for BSC
-      }
+      // Get accepted cryptos from payment link
+      const acceptedCryptos = paymentLink?.accepted_cryptos || []
+      console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Create reverse mapping for NOWPayments codes to our internal codes
-      const reverseMapping: Record<string, string> = {}
-      Object.entries(currencyCodeMapping).forEach(([internal, nowpayments]) => {
-        reverseMapping[nowpayments] = internal
-      })
-
-      // Convert accepted cryptos to NOWPayments format for filtering
-      const nowpaymentsAcceptedCryptos = acceptedCryptos.map(crypto => 
-        currencyCodeMapping[crypto] || crypto
-      )
-
-      console.log('🔍 Accepted cryptos (internal format):', acceptedCryptos)
-      console.log('🔍 Accepted cryptos (NOWPayments format):', nowpaymentsAcceptedCryptos)
-
-      // Define comprehensive stable coin associations based on NOWPayments API
+      // Define stable coin associations for auto-inclusion
       const stableCoinAssociations: Record<string, string[]> = {
-        'ETH': [
-          'USDT', 'USDTERC20',           // Tether variants
-          'USDC', 'USDCERC20',           // USD Coin variants  
-          'DAI', 'DAIERC20',             // DAI variants
-          'BUSD', 'BUSDERC20',           // Binance USD variants
-          'TUSD', 'TUSDERC20',           // TrueUSD variants
-          'FRAXERC20',                   // FRAX
-          'LUSDERC20',                   // LUSD
-          'USDPERC20',                   // USDP (Pax Dollar)
-          'GUSDERC20',                   // GUSD (Gemini Dollar)
-          'PYUSDERC20',                  // PYUSD (PayPal USD)
-          'USDEERC20',                   // USDE (Ethena USDe)
-          'FDUSDERC20'                   // FDUSD
-        ],
-        'SOL': [
-          'USDCSOL',                     // USD Coin on Solana
-          'USDTSOL'                      // Tether on Solana
-        ],
-        'BNB': [
-          'USDTBSC',                     // Tether on BSC
-          'USDCBSC',                     // USD Coin on BSC
-          'BUSDBSC',                     // Binance USD on BSC
-          'DAIBSC',                      // DAI on BSC
-          'TUSDBSC',                     // TrueUSD on BSC
-          'FDUSDBSC'                     // FDUSD on BSC
-        ],
-        'MATIC': [
-          'USDTMATIC',                   // Tether on Polygon
-          'USDCMATIC',                   // USD Coin on Polygon
-          'DAIMATIC'                     // DAI on Polygon
-        ],
-        'AVAX': [
-          'USDTAVAX',                    // Tether on Avalanche
-          'USDCAVAX'                     // USD Coin on Avalanche
-        ],
-        'TRX': [
-          'USDTTRC20',                   // Tether on Tron
-          'USDDTRC20'                    // USDD on Tron
-        ],
-        'ARB': [
-          'USDTARB',                     // Tether on Arbitrum
-          'USDCARB'                      // USD Coin on Arbitrum
-        ],
-        'OP': [
-          'USDTOP',                      // Tether on Optimism
-          'USDCOP'                       // USD Coin on Optimism
-        ]
+        'ETH': ['USDT_ERC20', 'USDC_ERC20', 'DAI'],
+        'SOL': ['USDT_SOL', 'USDC_SOL'],
+        'BNB': ['USDT_BSC', 'USDC_BSC'],
+        'MATIC': ['USDT_POLYGON', 'USDC_POLYGON'],
+        'AVAX': ['USDT_AVAX', 'USDC_AVAX'],
+        'TRX': ['USDT_TRC20']
       }
 
-      // Create expanded list including associated stable coins that exist in the API
-      const expandedAcceptedCryptos = [...nowpaymentsAcceptedCryptos]
-      
-      // First, get all available currency codes from the API
+      // Expand accepted cryptos to include associated stable coins
+      const expandedAcceptedCryptos = [...acceptedCryptos]
       const availableCurrencyCodes = data.currencies.map((c: CurrencyInfo) => c.code)
-      
+
       acceptedCryptos.forEach(crypto => {
         if (stableCoinAssociations[crypto]) {
-          console.log(`🔗 Checking stable coins for ${crypto}:`, stableCoinAssociations[crypto])
           stableCoinAssociations[crypto].forEach(stableCoin => {
             if (availableCurrencyCodes.includes(stableCoin) && !expandedAcceptedCryptos.includes(stableCoin)) {
               console.log(`✅ Adding available stable coin: ${stableCoin}`)
@@ -671,6 +702,28 @@ export default function PaymentPage() {
     return `${amount.toFixed(decimals)} ${currencyCode}`
   }
 
+  const getBlockExplorerUrl = (txHash: string, currency: string) => {
+    const currencyUpper = currency.toUpperCase()
+    
+    if (currencyUpper === 'BTC') {
+      return `https://blockstream.info/tx/${txHash}`
+    } else if (currencyUpper === 'ETH' || currencyUpper.includes('ERC20') || currencyUpper.includes('USDT') || currencyUpper.includes('USDC')) {
+      return `https://etherscan.io/tx/${txHash}`
+    } else if (currencyUpper === 'LTC') {
+      return `https://blockchair.com/litecoin/transaction/${txHash}`
+    } else if (currencyUpper === 'SOL') {
+      return `https://solscan.io/tx/${txHash}`
+    } else if (currencyUpper === 'TRX' || currencyUpper.includes('TRC20')) {
+      return `https://tronscan.org/#/transaction/${txHash}`
+    } else if (currencyUpper === 'BNB' || currencyUpper.includes('BSC')) {
+      return `https://bscscan.com/tx/${txHash}`
+    } else if (currencyUpper === 'MATIC' || currencyUpper.includes('POLYGON')) {
+      return `https://polygonscan.com/tx/${txHash}`
+    }
+    
+    return null
+  }
+
   // Calculate fee breakdown for display
   const calculateFeeBreakdown = () => {
     if (!paymentLink) return null
@@ -742,6 +795,9 @@ export default function PaymentPage() {
   }
 
   const feeBreakdown = calculateFeeBreakdown()
+  const currentStatus = paymentStatus?.status || 'waiting'
+  const statusConfig = STATUS_CONFIG[currentStatus as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.waiting
+  const StatusIcon = statusConfig.icon
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -951,88 +1007,188 @@ export default function PaymentPage() {
             </Button>
           </>
         ) : (
-          /* Payment Created - Show Payment Details */
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-6 w-6 text-green-500" />
-                Payment Created
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                Send the exact amount to the address below
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Payment Amount */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Amount to Send</Label>
-                <div className="mt-1">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
-                  </p>
-                </div>
-              </div>
-
-              {/* Payment Address */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Payment Address</Label>
-                <div className="mt-1 flex gap-2">
-                  <Input
-                    value={paymentData.pay_address}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(paymentData.pay_address)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* QR Code */}
-              {qrCodeDataUrl && (
-                <div className="text-center">
-                  <Label className="text-sm font-medium text-gray-700">QR Code</Label>
-                  <div className="mt-2">
-                    <img
-                      src={qrCodeDataUrl}
-                      alt="Payment Address QR Code"
-                      className="mx-auto border rounded-lg"
-                    />
-                    <p className="text-xs text-gray-500 mt-2">
-                      Scan with your wallet app
-                    </p>
+          /* Payment Created - Show Payment Details with Real-time Status */
+          <>
+            {/* Real-time Status Banner */}
+            <Card className={`mb-6 ${statusConfig.bgColor} border ${statusConfig.borderColor}`}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <StatusIcon className={`h-6 w-6 ${statusConfig.color} ${statusConfig.showSpinner ? 'animate-spin' : ''}`} />
+                  <div className="flex-1">
+                    <h3 className={`font-semibold ${statusConfig.color}`}>{statusConfig.title}</h3>
+                    <p className="text-sm text-gray-600">{statusConfig.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className={`w-2 h-2 rounded-full ${statusChecking ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`} />
+                      {statusChecking ? 'Checking...' : 'Live'}
+                    </div>
+                    {lastStatusCheck && (
+                      <p className="text-xs text-gray-500">
+                        Last check: {lastStatusCheck.toLocaleTimeString()}
+                      </p>
+                    )}
                   </div>
                 </div>
-              )}
+              </CardContent>
+            </Card>
 
-              {/* Payment Status */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-yellow-600" />
-                  <div>
-                    <p className="font-medium text-yellow-800">Waiting for Payment</p>
-                    <p className="text-sm text-yellow-700">
-                      Send the exact amount to complete your payment
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment ID */}
-              <div className="text-center">
-                <p className="text-xs text-gray-500">
-                  Payment ID: {paymentData.payment_id}
+            {/* Payment Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <StatusIcon className={`h-6 w-6 ${statusConfig.color}`} />
+                  Payment Details
+                </CardTitle>
+                <p className="text-sm text-gray-600">
+                  {currentStatus === 'waiting' ? 'Send the exact amount to the address below' :
+                   currentStatus === 'confirming' ? 'Your payment is being confirmed on the blockchain' :
+                   currentStatus === 'confirmed' ? 'Payment completed successfully' :
+                   'Payment status updated'}
                 </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Payment Amount */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Amount to Send</Label>
+                  <div className="mt-1">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Payment Address */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Payment Address</Label>
+                  <div className="mt-1 flex gap-2">
+                    <Input
+                      value={paymentData.pay_address}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(paymentData.pay_address)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* QR Code */}
+                {qrCodeDataUrl && (
+                  <div className="text-center">
+                    <Label className="text-sm font-medium text-gray-700">QR Code</Label>
+                    <div className="mt-2 inline-block p-4 bg-white rounded-lg border">
+                      <img 
+                        src={qrCodeDataUrl} 
+                        alt="Payment QR Code" 
+                        className="w-48 h-48 mx-auto"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Scan with your crypto wallet
+                    </p>
+                  </div>
+                )}
+
+                {/* Transaction Hash (if available) */}
+                {paymentStatus?.tx_hash && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Transaction Hash</Label>
+                    <div className="mt-1 flex gap-2">
+                      <Input
+                        value={paymentStatus.tx_hash}
+                        readOnly
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(paymentStatus.tx_hash!)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      {getBlockExplorerUrl(paymentStatus.tx_hash, paymentStatus.pay_currency) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const explorerUrl = getBlockExplorerUrl(paymentStatus.tx_hash!, paymentStatus.pay_currency)
+                            if (explorerUrl) {
+                              window.open(explorerUrl, '_blank')
+                            }
+                          }}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment Instructions */}
+                {currentStatus === 'waiting' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-800 mb-2">Important Instructions:</h4>
+                    <ul className="text-sm text-yellow-700 space-y-1">
+                      <li>• Send the exact amount shown above</li>
+                      <li>• Use the exact address provided</li>
+                      <li>• Payment will be confirmed automatically</li>
+                      <li>• Do not close this page until payment is confirmed</li>
+                    </ul>
+                  </div>
+                )}
+
+                {/* Confirming Message */}
+                {currentStatus === 'confirming' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 mb-2">Payment Received!</h4>
+                    <p className="text-sm text-blue-700">
+                      Your payment has been detected and is being confirmed on the blockchain. This usually takes a few minutes.
+                    </p>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {currentStatus === 'confirmed' && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="font-medium text-green-800 mb-2">Payment Confirmed!</h4>
+                    <p className="text-sm text-green-700">
+                      Your payment has been successfully processed. You will be redirected to the confirmation page shortly.
+                    </p>
+                  </div>
+                )}
+
+                {/* Failed Message */}
+                {currentStatus === 'failed' && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h4 className="font-medium text-red-800 mb-2">Payment Failed</h4>
+                    <p className="text-sm text-red-700">
+                      There was an issue with your payment. Please try creating a new payment or contact support.
+                    </p>
+                  </div>
+                )}
+
+                {/* Payment ID */}
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">
+                    Payment ID: {paymentData.payment_id}
+                  </p>
+                  {statusCheckCount > 0 && (
+                    <p className="text-xs text-gray-400">
+                      Status checks: {statusCheckCount}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </div>
