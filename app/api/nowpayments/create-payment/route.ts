@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { createPayment, formatCurrencyForNOWPayments } from '@/lib/nowpayments-dynamic'
 import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,7 +28,16 @@ function validateAddressForCurrency(address: string, currency: string): boolean 
   const sanitized = sanitizeAddress(address)
   const currencyUpper = currency.toUpperCase()
   
-  if (currencyUpper.includes('ETH') || currencyUpper === 'USDT_ERC20' || currencyUpper === 'USDC_ERC20' || currencyUpper.includes('ERC20')) {
+  // Enhanced ERC-20 token detection
+  if (currencyUpper === 'ETH' || 
+      currencyUpper === 'USDT' || 
+      currencyUpper === 'USDC' || 
+      currencyUpper === 'DAI' ||
+      currencyUpper === 'TUSD' ||
+      currencyUpper === 'USDP' ||
+      currencyUpper === 'PYUSD' ||
+      currencyUpper.includes('ERC20') || 
+      currencyUpper.includes('ETHEREUM')) {
     return isValidEthereumAddress(sanitized)
   } else if (currencyUpper === 'BTC' || currencyUpper === 'BITCOIN') {
     return isValidBitcoinAddress(sanitized)
@@ -41,26 +50,31 @@ function validateAddressForCurrency(address: string, currency: string): boolean 
 }
 
 export async function POST(request: NextRequest) {
+  // Parse request body first to ensure variables are in scope for error handling
+  const body = await request.json()
+  const { 
+    price_amount, 
+    price_currency, 
+    pay_currency, 
+    order_id, 
+    order_description,
+    payout_address,
+    payout_currency,
+    ipn_callback_url,
+    payment_link_id,
+    customer_email,
+    // Tax information
+    tax_enabled,
+    base_amount,
+    tax_rates,
+    tax_amount,
+    subtotal_with_tax
+  } = body
+
+  // Validate amount early
+  const amount = parseFloat(price_amount)
+
   try {
-    const body = await request.json()
-    const { 
-      price_amount, 
-      price_currency, 
-      pay_currency, 
-      order_id, 
-      order_description,
-      payout_address,
-      payout_currency,
-      ipn_callback_url,
-      payment_link_id,
-      customer_email,
-      // Tax information
-      tax_enabled,
-      base_amount,
-      tax_rates,
-      tax_amount,
-      subtotal_with_tax
-    } = body
 
     console.log('💳 Payment creation request:', {
       price_amount,
@@ -83,8 +97,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate amount
-    const amount = parseFloat(price_amount)
+    // Validate amount (already parsed above)
     if (isNaN(amount) || amount <= 0) {
       return NextResponse.json(
         { 
@@ -207,12 +220,16 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // Special handling for common currency mappings
+          // Enhanced currency mappings for ERC-20 tokens
           if (!walletAddress) {
             const currencyMappings: Record<string, string[]> = {
-              'ETH': ['ETH', 'ETHEREUM', 'USDT_ERC20', 'USDC_ERC20'],
-              'USDT': ['USDT_ERC20', 'USDT_TRC20', 'USDT_BSC', 'USDT_POLYGON'],
-              'USDC': ['USDC_ERC20', 'USDC_POLYGON', 'USDC_BSC'],
+              'ETH': ['ETH', 'ETHEREUM'],
+              'USDT': ['ETH', 'ETHEREUM', 'USDT_ERC20', 'USDT_TRC20', 'USDT_BSC', 'USDT_POLYGON'], // USDT defaults to ETH address
+              'USDC': ['ETH', 'ETHEREUM', 'USDC_ERC20', 'USDC_POLYGON', 'USDC_BSC'], // USDC defaults to ETH address
+              'DAI': ['ETH', 'ETHEREUM'], // DAI is ERC-20
+              'TUSD': ['ETH', 'ETHEREUM'], // TUSD is ERC-20
+              'USDP': ['ETH', 'ETHEREUM'], // USDP is ERC-20
+              'PYUSD': ['ETH', 'ETHEREUM'], // PYUSD is ERC-20
               'BTC': ['BTC', 'BITCOIN'],
               'BNB': ['BNB', 'BSC'],
               'MATIC': ['MATIC', 'POLYGON'],
@@ -252,8 +269,10 @@ export async function POST(request: NextRequest) {
 
           if (!validateAddressForCurrency(sanitizedAddress, targetCurrencyUpper)) {
             console.error(`❌ Invalid wallet address for ${targetCurrencyUpper}: ${sanitizedAddress}`)
-            console.warn('⚠️ Skipping auto-forwarding due to invalid address')
-            // Skip auto-forwarding rather than failing the payment
+            console.warn('⚠️ Proceeding without auto-forwarding due to invalid address')
+            // Clear the payout address to proceed without auto-forwarding
+            merchantPayoutAddress = null
+            merchantPayoutCurrency = null
           } else {
             merchantPayoutAddress = sanitizedAddress
             console.log(`✅ Using validated merchant wallet address for auto-forwarding`)
@@ -264,6 +283,8 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('❌ Error looking up merchant wallet:', error)
         // Continue without auto-forwarding rather than failing the payment
+        merchantPayoutAddress = null
+        merchantPayoutCurrency = null
       }
     }
 
@@ -285,7 +306,7 @@ export async function POST(request: NextRequest) {
     console.log('  - price_currency:', paymentRequest.price_currency)
     console.log('  - pay_currency:', paymentRequest.pay_currency)
     console.log('  - order_id:', paymentRequest.order_id)
-    console.log('  - payout_address:', paymentRequest.payout_address ? `${paymentRequest.payout_address.substring(0, 6)}...${paymentRequest.payout_address.substring(paymentRequest.payout_address.length - 4)}` : 'null')
+    console.log('  - payout_address:', paymentRequest.payout_address ? `${paymentRequest.payout_address.substring(0, 6)}...${paymentRequest.payout_address.substring(paymentRequest.payout_address.length - 4)}` : 'null (no auto-forwarding)')
     console.log('  - payout_currency:', paymentRequest.payout_currency)
     console.log('  - ipn_callback_url:', paymentRequest.ipn_callback_url)
     console.log('  - fixed_rate:', paymentRequest.fixed_rate)
@@ -307,12 +328,12 @@ export async function POST(request: NextRequest) {
     try {
       const transactionData = {
         merchant_id: merchantId,
-        nowpayments_invoice_id: payment.payment_id,
+        nowpayments_payment_id: payment.payment_id, // Fixed: use correct column name
         payment_link_id: payment_link_id,
         order_id: payment.order_id,
         status: 'waiting', // Initial status
-        amount: payment.price_amount,
-        currency: payment.price_currency.toUpperCase(),
+        price_amount: payment.price_amount,
+        price_currency: payment.price_currency.toUpperCase(),
         pay_amount: payment.pay_amount,
         pay_currency: payment.pay_currency.toUpperCase(),
         pay_address: payment.pay_address,
@@ -324,7 +345,6 @@ export async function POST(request: NextRequest) {
         tax_rates: tax_rates || [],
         tax_amount: tax_amount || 0,
         subtotal_with_tax: subtotal_with_tax || payment.price_amount,
-        total_amount_paid: subtotal_with_tax || payment.price_amount,
         // Additional metadata in payment_data JSONB field
         payment_data: {
           nowpayments_data: {
@@ -344,13 +364,12 @@ export async function POST(request: NextRequest) {
 
       console.log('💾 Transaction data to insert:', {
         merchant_id: transactionData.merchant_id,
-        nowpayments_invoice_id: transactionData.nowpayments_invoice_id,
+        nowpayments_payment_id: transactionData.nowpayments_payment_id,
         payment_link_id: transactionData.payment_link_id,
         status: transactionData.status,
-        amount: transactionData.amount,
-        currency: transactionData.currency,
-        pay_amount: transactionData.pay_amount,
-        pay_currency: transactionData.pay_currency
+        price_amount: transactionData.price_amount,
+        pay_currency: transactionData.pay_currency,
+        payout_configured: !!merchantPayoutAddress
       })
 
       const { data: transaction, error: transactionError } = await supabase
@@ -361,68 +380,87 @@ export async function POST(request: NextRequest) {
 
       if (transactionError) {
         console.error('❌ Error creating transaction record:', transactionError)
-        // Don't fail the payment creation, but log the error
-        console.warn('⚠️ Payment created but transaction record failed - webhook may not work')
+        // Don't fail the payment creation, just log the error
+        console.warn('⚠️ Payment created but transaction record failed - webhook will handle it')
       } else {
-        console.log('✅ Transaction record created:', {
-          id: transaction.id,
-          nowpayments_invoice_id: transaction.nowpayments_invoice_id,
-          status: transaction.status
-        })
+        console.log('✅ Transaction record created successfully:', transaction.id)
+        
+        // Update payment link usage count if applicable
+        if (payment_link_id) {
+          try {
+            const { error: usageError } = await supabase
+              .rpc('increment_payment_link_usage', { payment_link_id })
+            
+            if (usageError) {
+              console.error('❌ Error updating payment link usage:', usageError)
+            } else {
+              console.log('✅ Payment link usage count updated')
+            }
+          } catch (usageUpdateError) {
+            console.error('❌ Error calling increment_payment_link_usage:', usageUpdateError)
+          }
+        }
       }
 
     } catch (dbError) {
-      console.error('❌ Database error creating transaction:', dbError)
-      // Don't fail the payment creation
+      console.error('❌ Database error during transaction creation:', dbError)
+      // Don't fail the payment creation, just log the error
+      console.warn('⚠️ Payment created but database record failed - webhook will handle it')
     }
 
+    // Return successful payment response
     return NextResponse.json({
       success: true,
-      payment: {
-        payment_id: payment.payment_id,
-        payment_status: payment.payment_status,
-        pay_address: payment.pay_address,
-        price_amount: payment.price_amount,
-        price_currency: payment.price_currency.toUpperCase(),
-        pay_amount: payment.pay_amount,
-        pay_currency: payment.pay_currency.toUpperCase(),
-        order_id: payment.order_id,
-        order_description: payment.order_description,
-        purchase_id: payment.purchase_id,
-        created_at: payment.created_at,
-        updated_at: payment.updated_at,
-        outcome_amount: payment.outcome_amount,
-        outcome_currency: payment.outcome_currency?.toUpperCase(),
-        payout_configured: !!merchantPayoutAddress
-      },
-      source: 'nowpayments_dynamic_api'
+      payment: payment,
+      message: merchantPayoutAddress 
+        ? 'Payment created with auto-forwarding enabled'
+        : 'Payment created (auto-forwarding not configured)'
     })
 
   } catch (error) {
-    console.error('💥 Error creating payment:', error)
+    console.error('❌ Error creating payment:', error)
     
-    // Parse NOWPayments error messages for better user feedback
+    // Enhanced error handling for common NOWPayments errors
     let errorMessage = 'Failed to create payment'
-    let statusCode = 500
-
+    
     if (error instanceof Error) {
-      const errorText = error.message.toLowerCase()
+      const errorMsg = error.message.toLowerCase()
       
-      if (errorText.includes('amount too small') || errorText.includes('min_amount')) {
-        errorMessage = 'Payment amount is too small for this currency'
-        statusCode = 400
-      } else if (errorText.includes('amount too large') || errorText.includes('max_amount')) {
-        errorMessage = 'Payment amount is too large for this currency'
-        statusCode = 400
-      } else if (errorText.includes('currency not supported') || errorText.includes('invalid currency')) {
-        errorMessage = 'Currency not supported'
-        statusCode = 400
-      } else if (errorText.includes('invalid address') || errorText.includes('payout_address') || errorText.includes('validate address')) {
+      if (errorMsg.includes('invalid payout address')) {
         errorMessage = 'Invalid payout address for auto-forwarding. Payment will proceed without auto-forwarding.'
-        statusCode = 400
-      } else if (errorText.includes('rate')) {
-        errorMessage = 'Unable to get exchange rate for this currency pair'
-        statusCode = 400
+        
+        // Try to create payment without auto-forwarding
+        try {
+          console.log('🔄 Retrying payment creation without auto-forwarding...')
+          
+          const retryPaymentRequest = {
+            price_amount: amount,
+            price_currency: formatCurrencyForNOWPayments(price_currency),
+            pay_currency: formatCurrencyForNOWPayments(pay_currency),
+            order_id: order_id || `cryptrac_${Date.now()}`,
+            order_description: order_description || 'Cryptrac Payment',
+            ipn_callback_url: ipn_callback_url || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
+            fixed_rate: false
+            // No payout_address or payout_currency
+          }
+          
+          console.log('📡 Retry payment request (no auto-forwarding):', retryPaymentRequest)
+          
+          const retryPayment = await createPayment(retryPaymentRequest)
+          
+          console.log('✅ Payment created successfully without auto-forwarding:', retryPayment.payment_id)
+          
+          return NextResponse.json({
+            success: true,
+            payment: retryPayment,
+            message: 'Payment created without auto-forwarding (address validation failed)',
+            warning: 'Auto-forwarding disabled due to invalid payout address'
+          })
+          
+        } catch (retryError) {
+          console.error('❌ Retry payment creation also failed:', retryError)
+          errorMessage = retryError instanceof Error ? retryError.message : 'Failed to create payment'
+        }
       } else {
         errorMessage = error.message
       }
@@ -431,10 +469,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: errorMessage,
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage 
       },
-      { status: statusCode }
+      { status: 400 }
     )
   }
 }

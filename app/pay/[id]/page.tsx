@@ -413,62 +413,6 @@ export default function PaymentPage() {
       // Use the passed accepted cryptos parameter
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // EXACT stable coin associations based on NOWPayments screenshot
-      const stableCoinAssociations: Record<string, string[]> = {
-        'ETH': [
-          // Ethereum-based stable coins (from screenshot)
-          'USDT', 'USDC', 'TUSD', 'USDP', 'PYUSD', 'FDUSD'
-        ],
-        'SOL': [
-          // Solana-based stable coins (from screenshot)
-          'USDCSOL', 'USDCSOL' // USDC (Solana) from screenshot
-        ],
-        'BNB': [
-          // BSC-based stable coins (from screenshot)
-          'USDTBSC', 'USDCBSC', 'USDD', 'FDUSD' // USDD (BSC), FDUSD (BSC) from screenshot
-        ],
-        'MATIC': [
-          // Polygon-based stable coins (from screenshot)
-          'USDCPOLYGON', 'USDTPOLYGON', 'BUSD' // USDC (Polygon), USDT (Polygon), BUSD (Polygon) from screenshot
-        ],
-        'AVAX': [
-          // Avalanche-based stable coins (from screenshot)
-          'USDTAVAX', 'USDCAVAX' // USDT (AVAX), USDC (AVAX) from screenshot
-        ],
-        'TRX': [
-          // Tron-based stable coins (from screenshot)
-          'USDTTRC20', 'USDD', 'TUSD' // USDT (TRX), USDD (TRX), TUSD (TRX) from screenshot
-        ],
-        'ALGO': [
-          // Algorand-based stable coins (from screenshot)
-          'USDTALGO', 'USDCALGO' // USDT (Algorand), USDC (Algorand) from screenshot
-        ],
-        'XLM': [
-          // Stellar-based stable coins (from screenshot)
-          'USDCXLM' // USDC (XLM) from screenshot
-        ],
-        'TON': [
-          // TON-based stable coins (from screenshot)
-          'USDTTON' // USDT (TON) from screenshot
-        ],
-        'KAVA': [
-          // KAVA-based stable coins (from screenshot)
-          'USDTKAVA' // USDT (KAVA) from screenshot
-        ],
-        'DOT': [
-          // Polkadot-based stable coins (from screenshot)
-          'USDTPOLKADOT' // USDT (Polkadot) from screenshot
-        ],
-        'ARBITRUM': [
-          // Arbitrum-based stable coins (from screenshot)
-          'USDTARBITRUM', 'USDCARBITRUM', 'DAI' // USDT (Arbitrum), USDC (Arbitrum), DAI (Arbitrum) from screenshot
-        ],
-        'OPTIMISM': [
-          // Optimism-based stable coins (from screenshot)
-          'USDCOPTIMISM' // USDC (Optimism) from screenshot
-        ]
-      }
-
       // Create a map of available currency codes for quick lookup
       const availableCurrencyCodes = new Set(data.currencies.map((c: CurrencyInfo) => c.code.toUpperCase()))
       
@@ -481,39 +425,46 @@ export default function PaymentPage() {
       acceptedCryptos.forEach(crypto => {
         console.log(`🔍 Processing crypto: ${crypto}`)
         
-        // Check predefined associations first
-        if (stableCoinAssociations[crypto]) {
-          stableCoinAssociations[crypto].forEach(stableCoin => {
-            if (availableCurrencyCodes.has(stableCoin.toUpperCase())) {
-              if (!expandedAcceptedCryptos.includes(stableCoin)) {
-                console.log(`✅ Adding available stable coin: ${stableCoin}`)
-                expandedAcceptedCryptos.push(stableCoin)
-              }
-            } else {
-              console.log(`❌ Stable coin not available in API: ${stableCoin}`)
-            }
-          })
-        }
-
         // Dynamic search: Look for any stable coin that might be associated with this crypto
         const stableCoinPrefixes = ['USDT', 'USDC', 'USDD', 'BUSD', 'TUSD', 'USDP', 'DAI', 'FRAX', 'LUSD', 'PYUSD', 'FDUSD', 'CUSD']
         
         stableCoinPrefixes.forEach(prefix => {
           // Check for variations like USDTBSC, USDCPOLYGON, etc.
           const variations = [
+            // Direct combinations
             `${prefix}${crypto}`,
             `${prefix}${crypto.toLowerCase()}`,
+            `${prefix}${crypto.toUpperCase()}`,
+            // With underscores
             `${prefix}_${crypto}`,
             `${prefix}_${crypto.toLowerCase()}`,
-            `${prefix}${crypto.toUpperCase()}`,
-            `${prefix}_${crypto.toUpperCase()}`
-          ]
+            `${prefix}_${crypto.toUpperCase()}`,
+            // Special cases for ETH (no suffix for main Ethereum tokens)
+            crypto === 'ETH' ? prefix : null,
+            // Special network names
+            crypto === 'BNB' ? `${prefix}BSC` : null,
+            crypto === 'MATIC' ? `${prefix}POLYGON` : null,
+            crypto === 'TRX' ? `${prefix}TRC20` : null,
+            crypto === 'AVAX' ? `${prefix}AVALANCHE` : null,
+            crypto === 'AVAX' ? `${prefix}AVAX` : null,
+            // Additional variations found in console logs
+            crypto === 'DOT' ? `${prefix}DOT` : null,
+            crypto === 'TON' ? `${prefix}TON` : null,
+            crypto === 'NEAR' ? `${prefix}NEAR` : null,
+            crypto === 'XLM' ? `${prefix}XLM` : null,
+            crypto === 'ALGO' ? `${prefix}ALGO` : null,
+          ].filter(Boolean) as string[]
           
           variations.forEach(variation => {
             if (availableCurrencyCodes.has(variation.toUpperCase())) {
               if (!expandedAcceptedCryptos.includes(variation)) {
                 console.log(`✅ Adding dynamically found stable coin: ${variation}`)
                 expandedAcceptedCryptos.push(variation)
+              }
+            } else {
+              // Only log missing for main variations to reduce noise
+              if (variation === `${prefix}${crypto}` || (crypto === 'ETH' && variation === prefix) || (crypto === 'AVAX' && variation === `${prefix}AVAX`)) {
+                console.log(`❌ Stable coin not available in API: ${variation}`)
               }
             }
           })
@@ -555,7 +506,7 @@ export default function PaymentPage() {
       // Enhanced sorting: base currencies first, then stable coins grouped by network
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
-        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'KAVA', 'ALGO']
+        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'BNBBSC', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'KAVA', 'ALGO']
         
         // Check if currencies are base currencies
         const aIsBase = baseCurrencyOrder.includes(a.code)
@@ -580,20 +531,21 @@ export default function PaymentPage() {
         if (aIsStable && bIsStable) {
           // Network grouping priority: ETH > SOL > BSC > MATIC > others
           const getNetworkPriority = (code: string) => {
-            if (!code.includes('SOL') && !code.includes('BSC') && !code.includes('POLYGON') && !code.includes('AVAX') && !code.includes('TRC20') && !code.includes('ALGO') && !code.includes('XLM') && !code.includes('TON') && !code.includes('KAVA') && !code.includes('POLKADOT') && !code.includes('ARBITRUM') && !code.includes('OPTIMISM')) return 0 // ETH
+            if (!code.includes('SOL') && !code.includes('BSC') && !code.includes('POLYGON') && !code.includes('AVAX') && !code.includes('TRC20') && !code.includes('ALGO') && !code.includes('XLM') && !code.includes('TON') && !code.includes('KAVA') && !code.includes('POLKADOT') && !code.includes('ARBITRUM') && !code.includes('OPTIMISM') && !code.includes('DOT') && !code.includes('NEAR')) return 0 // ETH
             if (code.includes('SOL')) return 1
             if (code.includes('BSC')) return 2
             if (code.includes('POLYGON')) return 3
-            if (code.includes('AVAX')) return 4
+            if (code.includes('AVAX') || code.includes('AVALANCHE')) return 4
             if (code.includes('TRC20') || code.includes('TRX')) return 5
-            if (code.includes('ALGO')) return 6
-            if (code.includes('XLM')) return 7
-            if (code.includes('TON')) return 8
-            if (code.includes('KAVA')) return 9
-            if (code.includes('POLKADOT')) return 10
-            if (code.includes('ARBITRUM')) return 11
-            if (code.includes('OPTIMISM')) return 12
-            return 13
+            if (code.includes('DOT') || code.includes('POLKADOT')) return 6
+            if (code.includes('ALGO')) return 7
+            if (code.includes('XLM')) return 8
+            if (code.includes('TON')) return 9
+            if (code.includes('NEAR')) return 10
+            if (code.includes('KAVA')) return 11
+            if (code.includes('ARBITRUM')) return 12
+            if (code.includes('OPTIMISM')) return 13
+            return 14
           }
           
           const aNetworkPriority = getNetworkPriority(a.code)
