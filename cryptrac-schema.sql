@@ -465,7 +465,7 @@ $_$;
 ALTER FUNCTION "public"."handle_partner_referral"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") RETURNS "void"
+CREATE OR REPLACE FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") RETURNS "void"
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
@@ -473,12 +473,12 @@ BEGIN
   SET 
     current_uses = COALESCE(current_uses, 0) + 1,
     last_payment_at = NOW()
-  WHERE id = link_id;
+  WHERE id = p_link_id;
 END;
 $$;
 
 
-ALTER FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") OWNER TO "postgres";
+ALTER FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_expired_payment_links"() RETURNS integer
@@ -2103,9 +2103,9 @@ GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("link_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") TO "service_role";
 
 
 
@@ -2308,7 +2308,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
-
 
 
 -- Create buckets
