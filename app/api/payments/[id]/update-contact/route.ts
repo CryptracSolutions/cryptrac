@@ -8,10 +8,10 @@ const supabase = createClient(
 
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const paymentId = context.params.id
+    const { id: paymentId } = await params
     const body = await request.json()
     
     console.log('📞 Updating customer contact for payment:', paymentId)
