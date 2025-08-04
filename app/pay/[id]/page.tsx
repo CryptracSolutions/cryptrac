@@ -409,84 +409,56 @@ export default function PaymentPage() {
       }
 
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
-
-      // Use the passed accepted cryptos parameter
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Create a map of available currency codes for quick lookup
+      // Smart currency detection: Find all currencies that are related to accepted cryptos
+      const expandedAcceptedCryptos = [...acceptedCryptos]
       const availableCurrencyCodes = new Set(data.currencies.map((c: CurrencyInfo) => c.code.toUpperCase()))
       
       console.log('🔍 Sample of available currency codes:', Array.from(availableCurrencyCodes).slice(0, 30))
 
-      // Expand accepted cryptos to include ALL associated stable coins
-      const expandedAcceptedCryptos = [...acceptedCryptos]
-
-      // Dynamic approach: Check ALL possible stable coin variations for each accepted crypto
+      // For each accepted crypto, find ALL related currencies in NOWPayments
       acceptedCryptos.forEach(crypto => {
         console.log(`🔍 Processing crypto: ${crypto}`)
         
-        // Dynamic search: Look for any stable coin that might be associated with this crypto
-        const stableCoinPrefixes = ['USDT', 'USDC', 'USDD', 'BUSD', 'TUSD', 'USDP', 'DAI', 'FRAX', 'LUSD', 'PYUSD', 'FDUSD', 'CUSD']
-        
-        stableCoinPrefixes.forEach(prefix => {
-          // Check for variations like USDTBSC, USDCPOLYGON, etc.
-          const variations = [
-            // Direct combinations
-            `${prefix}${crypto}`,
-            `${prefix}${crypto.toLowerCase()}`,
-            `${prefix}${crypto.toUpperCase()}`,
-            // With underscores
-            `${prefix}_${crypto}`,
-            `${prefix}_${crypto.toLowerCase()}`,
-            `${prefix}_${crypto.toUpperCase()}`,
-            // Special cases for ETH (no suffix for main Ethereum tokens)
-            crypto === 'ETH' ? prefix : null,
-            // Special network names
-            crypto === 'BNB' ? `${prefix}BSC` : null,
-            crypto === 'MATIC' ? `${prefix}POLYGON` : null,
-            crypto === 'TRX' ? `${prefix}TRC20` : null,
-            crypto === 'AVAX' ? `${prefix}AVALANCHE` : null,
-            crypto === 'AVAX' ? `${prefix}AVAX` : null,
-            // Additional variations found in console logs
-            crypto === 'DOT' ? `${prefix}DOT` : null,
-            crypto === 'TON' ? `${prefix}TON` : null,
-            crypto === 'NEAR' ? `${prefix}NEAR` : null,
-            crypto === 'XLM' ? `${prefix}XLM` : null,
-            crypto === 'ALGO' ? `${prefix}ALGO` : null,
-          ].filter(Boolean) as string[]
+        // Find all currencies that contain this crypto name
+        data.currencies.forEach((currency: CurrencyInfo) => {
+          const currencyCode = currency.code.toUpperCase()
+          const cryptoUpper = crypto.toUpperCase()
           
-          variations.forEach(variation => {
-            if (availableCurrencyCodes.has(variation.toUpperCase())) {
-              if (!expandedAcceptedCryptos.includes(variation)) {
-                console.log(`✅ Adding dynamically found stable coin: ${variation}`)
-                expandedAcceptedCryptos.push(variation)
-              }
-            } else {
-              // Only log missing for main variations to reduce noise
-              if (variation === `${prefix}${crypto}` || (crypto === 'ETH' && variation === prefix) || (crypto === 'AVAX' && variation === `${prefix}AVAX`)) {
-                console.log(`❌ Stable coin not available in API: ${variation}`)
-              }
-            }
-          })
+          // Check if this currency is related to the accepted crypto
+          const isRelated = (
+            // Direct match
+            currencyCode === cryptoUpper ||
+            // Contains the crypto name
+            currencyCode.includes(cryptoUpper) ||
+            // Crypto name contains the currency (for variations like BNBBSC)
+            cryptoUpper.includes(currencyCode) ||
+            // Special stable coin relationships
+            (cryptoUpper === 'ETH' && ['USDT', 'USDC', 'DAI', 'TUSD', 'USDP', 'PYUSD', 'BUSD', 'FRAX', 'LUSD', 'CUSD'].includes(currencyCode)) ||
+            (cryptoUpper === 'BNB' && currencyCode.includes('BSC')) ||
+            (cryptoUpper === 'SOL' && currencyCode.includes('SOL')) ||
+            (cryptoUpper === 'MATIC' && (currencyCode.includes('POLYGON') || currencyCode.includes('MATIC'))) ||
+            (cryptoUpper === 'AVAX' && (currencyCode.includes('AVAX') || currencyCode.includes('AVALANCHE'))) ||
+            (cryptoUpper === 'TRX' && (currencyCode.includes('TRC') || currencyCode.includes('TRON'))) ||
+            (cryptoUpper === 'DOT' && (currencyCode.includes('DOT') || currencyCode.includes('POLKADOT'))) ||
+            (cryptoUpper === 'TON' && currencyCode.includes('TON')) ||
+            (cryptoUpper === 'XLM' && currencyCode.includes('XLM')) ||
+            (cryptoUpper === 'NEAR' && currencyCode.includes('NEAR')) ||
+            (cryptoUpper === 'ALGO' && currencyCode.includes('ALGO')) ||
+            (cryptoUpper === 'KAVA' && currencyCode.includes('KAVA'))
+          )
+          
+          if (isRelated && !expandedAcceptedCryptos.includes(currency.code)) {
+            console.log(`✅ Adding related currency: ${currency.code} (related to ${crypto})`)
+            expandedAcceptedCryptos.push(currency.code)
+          }
         })
       })
 
-      // Special handling for BNB variations
-      if (acceptedCryptos.includes('BNB')) {
-        const bnbVariations = ['BNB', 'BNBBSC', 'BNB_BSC', 'BINANCECOIN', 'BINANCE']
-        bnbVariations.forEach(variation => {
-          if (availableCurrencyCodes.has(variation.toUpperCase())) {
-            if (!expandedAcceptedCryptos.includes(variation)) {
-              console.log(`✅ Adding BNB variation: ${variation}`)
-              expandedAcceptedCryptos.push(variation)
-            }
-          }
-        })
-      }
+      console.log('📈 Expanded accepted cryptos (smart detection):', expandedAcceptedCryptos)
 
-      console.log('📈 Expanded accepted cryptos (with ALL available stable coins):', expandedAcceptedCryptos)
-
-      // Filter to only accepted cryptocurrencies and their associated stable coins
+      // Filter to only accepted cryptocurrencies and their related currencies
       const filtered = data.currencies.filter((currency: CurrencyInfo) => {
         const currencyCodeUpper = currency.code.toUpperCase()
         const isAccepted = expandedAcceptedCryptos.some(acceptedCode => 
@@ -501,7 +473,7 @@ export default function PaymentPage() {
         return isAccepted && isEnabled
       })
 
-      console.log(`✅ Loaded ${filtered.length} available currencies (including ALL stable coins):`, filtered.map((c: CurrencyInfo) => c.code))
+      console.log(`✅ Loaded ${filtered.length} available currencies (smart detection):`, filtered.map((c: CurrencyInfo) => c.code))
       
       // Enhanced sorting: base currencies first, then stable coins grouped by network
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
@@ -588,19 +560,6 @@ export default function PaymentPage() {
       // Auto-select first currency if available
       if (sortedCurrencies.length > 0 && !selectedCurrency) {
         setSelectedCurrency(sortedCurrencies[0].code)
-      }
-
-      // Debug: Log what we're missing
-      if (acceptedCryptos.includes('BNB') && !sortedCurrencies.some((c: CurrencyInfo) => c.code.includes('BNB'))) {
-        console.log('❌ BNB is accepted but not found in filtered currencies')
-        console.log('🔍 Looking for BNB variations in all currencies...')
-        const bnbCurrencies = data.currencies.filter((c: CurrencyInfo) => 
-          c.code.toUpperCase().includes('BNB') || 
-          c.code.toUpperCase().includes('BINANCE') ||
-          c.name.toUpperCase().includes('BNB') ||
-          c.name.toUpperCase().includes('BINANCE')
-        )
-        console.log('🔍 Found BNB-related currencies:', bnbCurrencies.map((c: CurrencyInfo) => ({ code: c.code, name: c.name, enabled: c.enabled })))
       }
 
     } catch (error) {
