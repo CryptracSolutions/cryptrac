@@ -171,7 +171,6 @@ export default function PaymentPage() {
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
   const [estimates, setEstimates] = useState<Record<string, EstimateData>>({})
   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
-  const [customerEmail, setCustomerEmail] = useState<string>('')
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
@@ -414,27 +413,75 @@ export default function PaymentPage() {
       // Use the passed accepted cryptos parameter
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Enhanced stable coin associations with correct NOWPayments currency codes
+      // EXACT stable coin associations based on NOWPayments screenshot
       const stableCoinAssociations: Record<string, string[]> = {
-        'ETH': ['USDT', 'USDC', 'DAI'], // NOWPayments uses simple codes
-        'SOL': ['USDTSOL', 'USDCSOL'], // Check if these exist
-        'BNB': ['USDTBSC', 'USDCBSC'], // Check if these exist  
-        'MATIC': ['USDTMATIC', 'USDCMATIC'], // Check if these exist
-        'AVAX': ['USDTAVAX', 'USDCAVAX'], // Check if these exist
-        'TRX': ['USDTTRC20'] // Check if this exists
+        'ETH': [
+          // Ethereum-based stable coins (from screenshot)
+          'USDT', 'USDC', 'TUSD', 'USDP', 'PYUSD', 'FDUSD'
+        ],
+        'SOL': [
+          // Solana-based stable coins (from screenshot)
+          'USDCSOL', 'USDCSOL' // USDC (Solana) from screenshot
+        ],
+        'BNB': [
+          // BSC-based stable coins (from screenshot)
+          'USDTBSC', 'USDCBSC', 'USDD', 'FDUSD' // USDD (BSC), FDUSD (BSC) from screenshot
+        ],
+        'MATIC': [
+          // Polygon-based stable coins (from screenshot)
+          'USDCPOLYGON', 'USDTPOLYGON', 'BUSD' // USDC (Polygon), USDT (Polygon), BUSD (Polygon) from screenshot
+        ],
+        'AVAX': [
+          // Avalanche-based stable coins (from screenshot)
+          'USDTAVAX', 'USDCAVAX' // USDT (AVAX), USDC (AVAX) from screenshot
+        ],
+        'TRX': [
+          // Tron-based stable coins (from screenshot)
+          'USDTTRC20', 'USDD', 'TUSD' // USDT (TRX), USDD (TRX), TUSD (TRX) from screenshot
+        ],
+        'ALGO': [
+          // Algorand-based stable coins (from screenshot)
+          'USDTALGO', 'USDCALGO' // USDT (Algorand), USDC (Algorand) from screenshot
+        ],
+        'XLM': [
+          // Stellar-based stable coins (from screenshot)
+          'USDCXLM' // USDC (XLM) from screenshot
+        ],
+        'TON': [
+          // TON-based stable coins (from screenshot)
+          'USDTTON' // USDT (TON) from screenshot
+        ],
+        'KAVA': [
+          // KAVA-based stable coins (from screenshot)
+          'USDTKAVA' // USDT (KAVA) from screenshot
+        ],
+        'DOT': [
+          // Polkadot-based stable coins (from screenshot)
+          'USDTPOLKADOT' // USDT (Polkadot) from screenshot
+        ],
+        'ARBITRUM': [
+          // Arbitrum-based stable coins (from screenshot)
+          'USDTARBITRUM', 'USDCARBITRUM', 'DAI' // USDT (Arbitrum), USDC (Arbitrum), DAI (Arbitrum) from screenshot
+        ],
+        'OPTIMISM': [
+          // Optimism-based stable coins (from screenshot)
+          'USDCOPTIMISM' // USDC (Optimism) from screenshot
+        ]
       }
 
       // Create a map of available currency codes for quick lookup
       const availableCurrencyCodes = new Set(data.currencies.map((c: CurrencyInfo) => c.code.toUpperCase()))
       
-      console.log('🔍 Sample of available currency codes:', Array.from(availableCurrencyCodes).slice(0, 20))
+      console.log('🔍 Sample of available currency codes:', Array.from(availableCurrencyCodes).slice(0, 30))
 
-      // Expand accepted cryptos to include associated stable coins
+      // Expand accepted cryptos to include ALL associated stable coins
       const expandedAcceptedCryptos = [...acceptedCryptos]
 
+      // Dynamic approach: Check ALL possible stable coin variations for each accepted crypto
       acceptedCryptos.forEach(crypto => {
         console.log(`🔍 Processing crypto: ${crypto}`)
         
+        // Check predefined associations first
         if (stableCoinAssociations[crypto]) {
           stableCoinAssociations[crypto].forEach(stableCoin => {
             if (availableCurrencyCodes.has(stableCoin.toUpperCase())) {
@@ -447,9 +494,46 @@ export default function PaymentPage() {
             }
           })
         }
+
+        // Dynamic search: Look for any stable coin that might be associated with this crypto
+        const stableCoinPrefixes = ['USDT', 'USDC', 'USDD', 'BUSD', 'TUSD', 'USDP', 'DAI', 'FRAX', 'LUSD', 'PYUSD', 'FDUSD', 'CUSD']
+        
+        stableCoinPrefixes.forEach(prefix => {
+          // Check for variations like USDTBSC, USDCPOLYGON, etc.
+          const variations = [
+            `${prefix}${crypto}`,
+            `${prefix}${crypto.toLowerCase()}`,
+            `${prefix}_${crypto}`,
+            `${prefix}_${crypto.toLowerCase()}`,
+            `${prefix}${crypto.toUpperCase()}`,
+            `${prefix}_${crypto.toUpperCase()}`
+          ]
+          
+          variations.forEach(variation => {
+            if (availableCurrencyCodes.has(variation.toUpperCase())) {
+              if (!expandedAcceptedCryptos.includes(variation)) {
+                console.log(`✅ Adding dynamically found stable coin: ${variation}`)
+                expandedAcceptedCryptos.push(variation)
+              }
+            }
+          })
+        })
       })
 
-      console.log('📈 Expanded accepted cryptos (with available stable coins):', expandedAcceptedCryptos)
+      // Special handling for BNB variations
+      if (acceptedCryptos.includes('BNB')) {
+        const bnbVariations = ['BNB', 'BNBBSC', 'BNB_BSC', 'BINANCECOIN', 'BINANCE']
+        bnbVariations.forEach(variation => {
+          if (availableCurrencyCodes.has(variation.toUpperCase())) {
+            if (!expandedAcceptedCryptos.includes(variation)) {
+              console.log(`✅ Adding BNB variation: ${variation}`)
+              expandedAcceptedCryptos.push(variation)
+            }
+          }
+        })
+      }
+
+      console.log('📈 Expanded accepted cryptos (with ALL available stable coins):', expandedAcceptedCryptos)
 
       // Filter to only accepted cryptocurrencies and their associated stable coins
       const filtered = data.currencies.filter((currency: CurrencyInfo) => {
@@ -466,20 +550,20 @@ export default function PaymentPage() {
         return isAccepted && isEnabled
       })
 
-      console.log(`✅ Loaded ${filtered.length} available currencies (including stable coins):`, filtered.map((c: CurrencyInfo) => c.code))
+      console.log(`✅ Loaded ${filtered.length} available currencies (including ALL stable coins):`, filtered.map((c: CurrencyInfo) => c.code))
       
-      // Sort currencies for better organization: base currencies first, then their stable coins
+      // Enhanced sorting: base currencies first, then stable coins grouped by network
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
-        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR']
+        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'KAVA', 'ALGO']
         
         // Check if currencies are base currencies
         const aIsBase = baseCurrencyOrder.includes(a.code)
         const bIsBase = baseCurrencyOrder.includes(b.code)
         
         // Check if currencies are stable coins
-        const aIsStable = a.code.includes('USDT') || a.code.includes('USDC') || a.code === 'DAI'
-        const bIsStable = b.code.includes('USDT') || b.code.includes('USDC') || b.code === 'DAI'
+        const aIsStable = a.code.includes('USDT') || a.code.includes('USDC') || a.code.includes('DAI') || a.code.includes('BUSD') || a.code.includes('TUSD') || a.code.includes('USDD') || a.code.includes('USDP') || a.code.includes('PYUSD') || a.code.includes('FDUSD') || a.code.includes('CUSD')
+        const bIsStable = b.code.includes('USDT') || b.code.includes('USDC') || b.code.includes('DAI') || b.code.includes('BUSD') || b.code.includes('TUSD') || b.code.includes('USDD') || b.code.includes('USDP') || b.code.includes('PYUSD') || b.code.includes('FDUSD') || b.code.includes('CUSD')
         
         // Base currencies come first
         if (aIsBase && !bIsBase) return -1
@@ -492,15 +576,51 @@ export default function PaymentPage() {
           return aIndex - bIndex
         }
         
-        // Among stable coins, group by chain and sort USDT before USDC
+        // Among stable coins, group by network and prioritize USDT > USDC > others
         if (aIsStable && bIsStable) {
-          // Same chain: USDT before USDC
-          if (a.code.includes('USDT') && b.code.includes('USDC')) return -1
-          if (a.code.includes('USDC') && b.code.includes('USDT')) return 1
+          // Network grouping priority: ETH > SOL > BSC > MATIC > others
+          const getNetworkPriority = (code: string) => {
+            if (!code.includes('SOL') && !code.includes('BSC') && !code.includes('POLYGON') && !code.includes('AVAX') && !code.includes('TRC20') && !code.includes('ALGO') && !code.includes('XLM') && !code.includes('TON') && !code.includes('KAVA') && !code.includes('POLKADOT') && !code.includes('ARBITRUM') && !code.includes('OPTIMISM')) return 0 // ETH
+            if (code.includes('SOL')) return 1
+            if (code.includes('BSC')) return 2
+            if (code.includes('POLYGON')) return 3
+            if (code.includes('AVAX')) return 4
+            if (code.includes('TRC20') || code.includes('TRX')) return 5
+            if (code.includes('ALGO')) return 6
+            if (code.includes('XLM')) return 7
+            if (code.includes('TON')) return 8
+            if (code.includes('KAVA')) return 9
+            if (code.includes('POLKADOT')) return 10
+            if (code.includes('ARBITRUM')) return 11
+            if (code.includes('OPTIMISM')) return 12
+            return 13
+          }
           
-          // DAI comes after USDT/USDC
-          if (a.code === 'DAI') return 1
-          if (b.code === 'DAI') return -1
+          const aNetworkPriority = getNetworkPriority(a.code)
+          const bNetworkPriority = getNetworkPriority(b.code)
+          
+          if (aNetworkPriority !== bNetworkPriority) {
+            return aNetworkPriority - bNetworkPriority
+          }
+          
+          // Within same network: USDT > USDC > USDD > DAI > others
+          const getStablePriority = (code: string) => {
+            if (code.includes('USDT')) return 0
+            if (code.includes('USDC')) return 1
+            if (code.includes('USDD')) return 2
+            if (code.includes('DAI')) return 3
+            if (code.includes('BUSD')) return 4
+            if (code.includes('TUSD')) return 5
+            if (code.includes('USDP')) return 6
+            if (code.includes('PYUSD')) return 7
+            if (code.includes('FDUSD')) return 8
+            return 9
+          }
+          
+          const aStablePriority = getStablePriority(a.code)
+          const bStablePriority = getStablePriority(b.code)
+          
+          return aStablePriority - bStablePriority
         }
         
         // Stable coins come after base currencies
@@ -519,15 +639,16 @@ export default function PaymentPage() {
       }
 
       // Debug: Log what we're missing
-      if (acceptedCryptos.includes('BNB') && !sortedCurrencies.some((c: CurrencyInfo) => c.code === 'BNB')) {
+      if (acceptedCryptos.includes('BNB') && !sortedCurrencies.some((c: CurrencyInfo) => c.code.includes('BNB'))) {
         console.log('❌ BNB is accepted but not found in filtered currencies')
-        console.log('🔍 Looking for BNB in all currencies...')
-        const bnbCurrency = data.currencies.find((c: CurrencyInfo) => c.code.toUpperCase() === 'BNB')
-        if (bnbCurrency) {
-          console.log('✅ BNB found in all currencies:', bnbCurrency)
-        } else {
-          console.log('❌ BNB not found in any currencies')
-        }
+        console.log('🔍 Looking for BNB variations in all currencies...')
+        const bnbCurrencies = data.currencies.filter((c: CurrencyInfo) => 
+          c.code.toUpperCase().includes('BNB') || 
+          c.code.toUpperCase().includes('BINANCE') ||
+          c.name.toUpperCase().includes('BNB') ||
+          c.name.toUpperCase().includes('BINANCE')
+        )
+        console.log('🔍 Found BNB-related currencies:', bnbCurrencies.map((c: CurrencyInfo) => ({ code: c.code, name: c.name, enabled: c.enabled })))
       }
 
     } catch (error) {
@@ -598,7 +719,6 @@ export default function PaymentPage() {
           order_id: `cryptrac_${paymentLink.link_id}_${Date.now()}`,
           order_description: paymentLink.title,
           payment_link_id: paymentLink.id,
-          customer_email: customerEmail,
           // Tax information
           tax_enabled: paymentLink.tax_enabled,
           base_amount: paymentLink.base_amount,
@@ -828,9 +948,9 @@ export default function PaymentPage() {
             <p className="text-gray-600">{paymentLink.description}</p>
           )}
           
-          {/* Enhanced Payment Amount with Complete Fee Breakdown */}
+          {/* Simplified Payment Amount with Fee Breakdown */}
           <div className="mt-6 bg-white rounded-lg p-6 shadow-sm border">
-            {feeBreakdown && (paymentLink.tax_enabled || feeBreakdown.feeAmount > 0) ? (
+            {feeBreakdown && (paymentLink.tax_enabled || (feeBreakdown.effectiveChargeCustomerFee && feeBreakdown.feeAmount > 0)) ? (
               <div className="space-y-3">
                 {/* Base Amount */}
                 <div className="flex justify-between items-center">
@@ -877,14 +997,14 @@ export default function PaymentPage() {
                   </div>
                 )}
 
-                {/* Gateway Fee */}
-                {feeBreakdown.feeAmount > 0 && (
+                {/* Gateway Fee - Only show if customer pays the fee */}
+                {feeBreakdown.effectiveChargeCustomerFee && feeBreakdown.feeAmount > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">
-                      Gateway Fee ({feeBreakdown.feePercentage.toFixed(1)}% {feeBreakdown.effectiveAutoConvert ? 'Auto-convert' : 'Direct crypto'}):
+                      Gateway Fee ({feeBreakdown.feePercentage.toFixed(1)}%):
                     </span>
                     <span className="text-gray-600">
-                      {feeBreakdown.effectiveChargeCustomerFee ? '+' : ''}{formatCurrency(feeBreakdown.feeAmount, paymentLink.currency)}
+                      +{formatCurrency(feeBreakdown.feeAmount, paymentLink.currency)}
                     </span>
                   </div>
                 )}
@@ -897,8 +1017,8 @@ export default function PaymentPage() {
                   </span>
                 </div>
 
-                {/* Merchant Receives (for transparency) */}
-                {!feeBreakdown.effectiveChargeCustomerFee && (
+                {/* Merchant Receives (for transparency) - Only show if customer doesn't pay fee */}
+                {!feeBreakdown.effectiveChargeCustomerFee && feeBreakdown.feeAmount > 0 && (
                   <div className="flex justify-between items-center text-sm text-gray-500">
                     <span>Merchant receives:</span>
                     <span>{formatCurrency(feeBreakdown.merchantReceives, paymentLink.currency)}</span>
@@ -986,28 +1106,6 @@ export default function PaymentPage() {
                     })}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Customer Email (Optional) */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-                <p className="text-sm text-gray-600">
-                  Optional: Receive payment confirmation
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address (Optional)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                  />
-                </div>
               </CardContent>
             </Card>
 

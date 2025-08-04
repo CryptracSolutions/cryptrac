@@ -1,26 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, use } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useParams, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
+import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
-import { Alert, AlertDescription } from '@/app/components/ui/alert'
-import { 
-  CheckCircle,
-  Copy,
-  ExternalLink,
-  Mail,
-  Phone,
-  Download,
-  Wallet,
-  Clock,
-  DollarSign,
-  Hash,
-  Building,
-  Loader2,
-  AlertCircle
-} from 'lucide-react'
+import { Separator } from '@/app/components/ui/separator'
+import { CheckCircle, Copy, ExternalLink, Mail, MessageSquare, Loader2, AlertCircle, Download } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface PaymentData {
   id: string
@@ -32,18 +21,23 @@ interface PaymentData {
   pay_address: string
   price_amount: number
   price_currency: string
-  payout_currency: string
+  amount_received: number
+  currency_received: string
+  gateway_fee: number
+  merchant_receives: number
   payout_amount: number
+  payout_currency: string
+  is_fee_paid_by_user: boolean
+  tx_hash?: string
+  payin_hash?: string
+  payout_hash?: string
+  customer_email?: string
+  customer_phone?: string
   created_at: string
   updated_at: string
-  tx_hash?: string
-  is_fee_paid_by_user: boolean
-  gateway_fee?: number
-  merchant_receives?: number
-  amount_received?: number
-  currency_received?: string
   payment_link: {
     title: string
+    link_id: string
     description?: string
     merchant: {
       business_name: string
@@ -51,48 +45,67 @@ interface PaymentData {
   }
 }
 
-export default function PaymentSuccessPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
-  
-  const [payment, setPayment] = useState<PaymentData | null>(null)
+const FIAT_CURRENCIES = [
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
+]
+
+export default function PaymentSuccessPage() {
+  const params = useParams()
+  const searchParams = useSearchParams()
+  const linkId = params.id as string
+  const paymentId = searchParams.get('payment_id')
+
+  const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [emailForReceipt, setEmailForReceipt] = useState('')
-  const [phoneForReceipt, setPhoneForReceipt] = useState('')
-  const [sendingEmail, setSendingEmail] = useState(false)
-  const [sendingSMS, setSendingSMS] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-  const [smsSent, setSmsSent] = useState(false)
-  const [txHashCopied, setTxHashCopied] = useState(false)
+  const [error, setError] = useState<string>('')
+  
+  // Receipt delivery states
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [sendingEmailReceipt, setSendingEmailReceipt] = useState(false)
+  const [sendingSmsReceipt, setSendingSmsReceipt] = useState(false)
+  const [emailReceiptSent, setEmailReceiptSent] = useState(false)
+  const [smsReceiptSent, setSmsReceiptSent] = useState(false)
 
   useEffect(() => {
-    if (id) {
+    if (linkId) {
       loadPaymentData()
     }
-  }, [id])
+  }, [linkId, paymentId])
 
   const loadPaymentData = async () => {
     try {
       setLoading(true)
-      setError(null)
+      console.log('🔍 Loading payment success data for ID:', linkId)
 
-      console.log('🔍 Loading payment success data for ID:', id)
-
-      const response = await fetch(`/api/payments/success/${id}`)
+      const response = await fetch(`/api/payments/success/${linkId}`)
+      
       if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Payment not found')
-        }
         throw new Error('Failed to load payment data')
       }
 
       const data = await response.json()
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to load payment data')
+
+      if (!data.success || !data.payment) {
+        throw new Error(data.error || 'Payment not found')
       }
 
       console.log('✅ Payment data loaded:', data.payment)
-      setPayment(data.payment)
+      setPaymentData(data.payment)
+
+      // Pre-fill email if already provided
+      if (data.payment.customer_email) {
+        setEmail(data.payment.customer_email)
+      }
+
+      // Pre-fill phone if already provided
+      if (data.payment.customer_phone) {
+        setPhone(data.payment.customer_phone)
+      }
 
     } catch (error) {
       console.error('Error loading payment data:', error)
@@ -103,98 +116,179 @@ export default function PaymentSuccessPage({ params }: { params: Promise<{ id: s
   }
 
   const sendEmailReceipt = async () => {
-    if (!payment || !emailForReceipt.trim()) return
+    if (!email.trim()) {
+      toast.error('Please enter your email address')
+      return
+    }
+
+    if (!paymentData) {
+      toast.error('Payment data not available')
+      return
+    }
 
     try {
-      setSendingEmail(true)
-      
+      setSendingEmailReceipt(true)
+
       const response = await fetch('/api/receipts/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          payment_id: payment.id,
-          email: emailForReceipt.trim(),
+          payment_id: paymentData.id,
+          email: email.trim()
         }),
       })
 
-      if (response.ok) {
-        setEmailSent(true)
-        console.log('✅ Email receipt sent successfully')
-      } else {
-        throw new Error('Failed to send email receipt')
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send email receipt')
       }
+
+      console.log('✅ Email receipt sent successfully')
+      setEmailReceiptSent(true)
+      toast.success('Email receipt sent successfully!')
+
+      // Update payment record with customer email
+      await updateCustomerContact('email', email.trim())
+
     } catch (error) {
       console.error('Error sending email receipt:', error)
-      alert('Failed to send email receipt. Please try again.')
+      toast.error(error instanceof Error ? error.message : 'Failed to send email receipt')
     } finally {
-      setSendingEmail(false)
+      setSendingEmailReceipt(false)
     }
   }
 
-  const sendSMSReceipt = async () => {
-    if (!payment || !phoneForReceipt.trim()) return
+  const sendSmsReceipt = async () => {
+    if (!phone.trim()) {
+      toast.error('Please enter your phone number')
+      return
+    }
+
+    if (!paymentData) {
+      toast.error('Payment data not available')
+      return
+    }
 
     try {
-      setSendingSMS(true)
-      
+      setSendingSmsReceipt(true)
+
       const response = await fetch('/api/receipts/sms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          payment_id: payment.id,
-          phone: phoneForReceipt.trim(),
+          payment_id: paymentData.id,
+          phone: phone.trim()
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send SMS receipt')
+      }
+
+      console.log('✅ SMS receipt sent successfully')
+      setSmsReceiptSent(true)
+      toast.success('SMS receipt sent successfully!')
+
+      // Update payment record with customer phone
+      await updateCustomerContact('phone', phone.trim())
+
+    } catch (error) {
+      console.error('Error sending SMS receipt:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to send SMS receipt')
+    } finally {
+      setSendingSmsReceipt(false)
+    }
+  }
+
+  const updateCustomerContact = async (type: 'email' | 'phone', value: string) => {
+    try {
+      const response = await fetch(`/api/payments/${paymentData?.id}/update-contact`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          [type === 'email' ? 'customer_email' : 'customer_phone']: value
         }),
       })
 
       if (response.ok) {
-        setSmsSent(true)
-        console.log('✅ SMS receipt sent successfully')
+        console.log(`✅ Customer ${type} updated in database`)
       } else {
-        throw new Error('Failed to send SMS receipt')
+        console.error(`❌ Failed to update customer ${type}`)
       }
     } catch (error) {
-      console.error('Error sending SMS receipt:', error)
-      alert('Failed to send SMS receipt. Please try again.')
-    } finally {
-      setSendingSMS(false)
+      console.error(`Error updating customer ${type}:`, error)
     }
   }
 
-  const copyTransactionHash = async () => {
-    if (!payment?.tx_hash) return
-
+  const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(payment.tx_hash)
-      setTxHashCopied(true)
-      setTimeout(() => setTxHashCopied(false), 2000)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text)
+        toast.success('Copied!', {
+          duration: 2000,
+          position: 'top-center'
+        })
+      } else {
+        // Fallback for older browsers or insecure contexts
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        textArea.remove()
+        toast.success('Copied!', {
+          duration: 2000,
+          position: 'top-center'
+        })
+      }
     } catch (error) {
-      console.error('Failed to copy transaction hash:', error)
+      console.error('Failed to copy to clipboard:', error)
+      toast.error('Failed to copy to clipboard')
     }
   }
 
-  const formatAmount = (amount: number, decimals: number = 8) => {
-    return amount.toFixed(decimals).replace(/\.?0+$/, '')
+  const formatCurrency = (amount: number, currencyCode: string) => {
+    const currency = FIAT_CURRENCIES.find(c => c.code === currencyCode)
+    if (currency) {
+      return `${currency.symbol}${amount.toFixed(2)}`
+    }
+    return `${amount.toFixed(2)} ${currencyCode}`
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
+  const formatCrypto = (amount: number, currencyCode: string, decimals: number = 8) => {
+    return `${amount.toFixed(decimals)} ${currencyCode}`
   }
 
   const getBlockExplorerUrl = (txHash: string, currency: string) => {
-    const lowerCurrency = currency.toLowerCase()
+    const currencyUpper = currency.toUpperCase()
     
-    if (lowerCurrency === 'btc') {
+    if (currencyUpper === 'BTC') {
       return `https://blockstream.info/tx/${txHash}`
-    } else if (lowerCurrency === 'eth' || lowerCurrency.includes('erc20')) {
+    } else if (currencyUpper === 'ETH' || currencyUpper.includes('ERC20') || currencyUpper.includes('USDT') || currencyUpper.includes('USDC')) {
       return `https://etherscan.io/tx/${txHash}`
-    } else if (lowerCurrency === 'bnb' || lowerCurrency.includes('bep20')) {
-      return `https://bscscan.com/tx/${txHash}`
-    } else if (lowerCurrency === 'sol') {
+    } else if (currencyUpper === 'LTC') {
+      return `https://blockchair.com/litecoin/transaction/${txHash}`
+    } else if (currencyUpper === 'SOL') {
       return `https://solscan.io/tx/${txHash}`
+    } else if (currencyUpper === 'TRX' || currencyUpper.includes('TRC20')) {
+      return `https://tronscan.org/#/transaction/${txHash}`
+    } else if (currencyUpper === 'BNB' || currencyUpper.includes('BSC')) {
+      return `https://bscscan.com/tx/${txHash}`
+    } else if (currencyUpper === 'MATIC' || currencyUpper.includes('POLYGON')) {
+      return `https://polygonscan.com/tx/${txHash}`
     }
     
     return null
@@ -202,291 +296,351 @@ export default function PaymentSuccessPage({ params }: { params: Promise<{ id: s
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#7f5efd]" />
-          <p className="text-gray-600">Loading payment details...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading payment confirmation...</p>
         </div>
       </div>
     )
   }
 
-  if (error) {
+  if (error || !paymentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5 flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Try Again
-            </Button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Payment Not Found</h2>
+              <p className="text-gray-600 mb-4">
+                {error || "The payment confirmation you're looking for doesn't exist."}
+              </p>
+              <Button onClick={() => window.location.href = '/'}>
+                Go Home
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
     )
   }
-
-  if (!payment) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5 flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Payment Not Found</h2>
-            <p className="text-gray-600">This payment does not exist or could not be loaded.</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  const blockExplorerUrl = payment.tx_hash ? getBlockExplorerUrl(payment.tx_hash, payment.pay_currency) : null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          
-          {/* Success Header */}
-          <Card>
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        {/* Success Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+            <CheckCircle className="h-8 w-8 text-green-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Confirmed!</h1>
+          <p className="text-gray-600">
+            Your payment has been successfully processed and confirmed on the blockchain.
+          </p>
+        </div>
+
+        {/* Payment Summary */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Payment Summary</CardTitle>
+            <p className="text-sm text-gray-600">
+              Payment to {paymentData.payment_link.merchant.business_name}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Payment Details */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Amount Paid</Label>
+                <p className="text-lg font-semibold text-green-600">
+                  {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
+                </p>
+                <p className="text-sm text-gray-500">
+                  ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
+                </p>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-              <p className="text-gray-600 mb-4">
-                Your payment has been confirmed and processed successfully.
-              </p>
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                Confirmed
-              </Badge>
-            </CardContent>
-          </Card>
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Payment Method</Label>
+                <p className="text-lg font-semibold">{paymentData.pay_currency.toUpperCase()}</p>
+                <Badge variant="secondary" className="text-xs mt-1">
+                  {paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
+                </Badge>
+              </div>
+            </div>
 
-          {/* Payment Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Wallet className="w-5 h-5" />
-                <span>Payment Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              
-              {/* Payment Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Payment For</label>
-                    <p className="font-semibold">{payment.payment_link.title}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Merchant</label>
-                    <p className="font-semibold flex items-center">
-                      <Building className="w-4 h-4 mr-1" />
-                      {payment.payment_link.merchant.business_name}
-                    </p>
-                  </div>
+            <Separator />
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Amount Paid</label>
-                    <p className="font-semibold text-lg">
-                      {formatAmount(payment.pay_amount)} {payment.pay_currency}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">USD Value</label>
-                    <p className="font-semibold flex items-center">
-                      <DollarSign className="w-4 h-4 mr-1" />
-                      ${payment.price_amount.toFixed(2)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Payment Time</label>
-                    <p className="font-semibold flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {formatDate(payment.updated_at)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Order ID</label>
-                    <p className="font-mono text-sm">{payment.order_id}</p>
-                  </div>
+            {/* Transaction Details */}
+            <div className="space-y-3">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Order ID</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    value={paymentData.order_id}
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(paymentData.order_id)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
               {/* Transaction Hash */}
-              {payment.tx_hash && (
-                <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-500">Transaction Hash</label>
-                  <div className="flex items-center space-x-2 mt-1">
+              {paymentData.tx_hash && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Transaction Hash</Label>
+                  <div className="flex gap-2 mt-1">
                     <Input
-                      value={payment.tx_hash}
+                      value={paymentData.tx_hash}
                       readOnly
                       className="font-mono text-sm"
                     />
                     <Button
-                      onClick={copyTransactionHash}
                       variant="outline"
                       size="sm"
-                      className="flex-shrink-0"
+                      onClick={() => copyToClipboard(paymentData.tx_hash!)}
                     >
-                      {txHashCopied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      <Copy className="h-4 w-4" />
                     </Button>
-                    {blockExplorerUrl && (
+                    {getBlockExplorerUrl(paymentData.tx_hash, paymentData.pay_currency) && (
                       <Button
-                        onClick={() => window.open(blockExplorerUrl, '_blank')}
                         variant="outline"
                         size="sm"
-                        className="flex-shrink-0"
+                        onClick={() => {
+                          const explorerUrl = getBlockExplorerUrl(paymentData.tx_hash!, paymentData.pay_currency)
+                          if (explorerUrl) {
+                            window.open(explorerUrl, '_blank')
+                          }
+                        }}
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
-                  {blockExplorerUrl && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Click the external link icon to view on blockchain explorer
-                    </p>
-                  )}
                 </div>
               )}
 
-              {/* Fee Information */}
-              {payment.gateway_fee && payment.gateway_fee > 0 && (
-                <Alert>
-                  <DollarSign className="w-4 h-4" />
-                  <AlertDescription>
-                    {payment.is_fee_paid_by_user 
-                      ? `Gateway fee of $${payment.gateway_fee.toFixed(2)} was included in your payment.`
-                      : `Gateway fee of $${payment.gateway_fee.toFixed(2)} was deducted from the merchant payout.`
-                    }
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Receipt Options */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Get Your Receipt</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              
-              {/* Email Receipt */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Email Receipt
-                </h3>
-                {emailSent ? (
-                  <Alert>
-                    <CheckCircle className="w-4 h-4" />
-                    <AlertDescription>
-                      Receipt sent successfully to {emailForReceipt}
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <div className="flex space-x-2">
+              {/* Payin Hash */}
+              {paymentData.payin_hash && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Payin Hash (Customer Transaction)</Label>
+                  <div className="flex gap-2 mt-1">
                     <Input
-                      type="email"
-                      placeholder="Enter your email address"
-                      value={emailForReceipt}
-                      onChange={(e) => setEmailForReceipt(e.target.value)}
-                      className="flex-1"
+                      value={paymentData.payin_hash}
+                      readOnly
+                      className="font-mono text-sm"
                     />
                     <Button
-                      onClick={sendEmailReceipt}
-                      disabled={!emailForReceipt.trim() || sendingEmail}
-                      className="bg-[#7f5efd] hover:bg-[#6d4fd2] text-white"
-                    >
-                      {sendingEmail ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Mail className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* SMS Receipt */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <Phone className="w-4 h-4 mr-2" />
-                  SMS Receipt
-                </h3>
-                {smsSent ? (
-                  <Alert>
-                    <CheckCircle className="w-4 h-4" />
-                    <AlertDescription>
-                      Receipt sent successfully to {phoneForReceipt}
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <div className="flex space-x-2">
-                    <Input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={phoneForReceipt}
-                      onChange={(e) => setPhoneForReceipt(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={sendSMSReceipt}
-                      disabled={!phoneForReceipt.trim() || sendingSMS}
                       variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(paymentData.payin_hash!)}
                     >
-                      {sendingSMS ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Phone className="w-4 h-4" />
-                      )}
+                      <Copy className="h-4 w-4" />
                     </Button>
+                    {getBlockExplorerUrl(paymentData.payin_hash, paymentData.pay_currency) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const explorerUrl = getBlockExplorerUrl(paymentData.payin_hash!, paymentData.pay_currency)
+                          if (explorerUrl) {
+                            window.open(explorerUrl, '_blank')
+                          }
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Download Receipt */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Receipt
-                </h3>
+              {/* Payout Hash */}
+              {paymentData.payout_hash && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Payout Hash (Merchant Transaction)</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      value={paymentData.payout_hash}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(paymentData.payout_hash!)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    {getBlockExplorerUrl(paymentData.payout_hash, paymentData.payout_currency || paymentData.pay_currency) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const explorerUrl = getBlockExplorerUrl(paymentData.payout_hash!, paymentData.payout_currency || paymentData.pay_currency)
+                          if (explorerUrl) {
+                            window.open(explorerUrl, '_blank')
+                          }
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Timestamps */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Created</Label>
+                  <p className="text-gray-600">
+                    {new Date(paymentData.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Confirmed</Label>
+                  <p className="text-gray-600">
+                    {new Date(paymentData.updated_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Receipt Delivery */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Get Your Receipt</CardTitle>
+            <p className="text-sm text-gray-600">
+              Receive a detailed receipt for your records
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Email Receipt */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Email Receipt</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={emailReceiptSent}
+                  className="flex-1"
+                />
                 <Button
-                  onClick={() => window.print()}
-                  variant="outline"
-                  className="w-full"
+                  onClick={sendEmailReceipt}
+                  disabled={sendingEmailReceipt || emailReceiptSent || !email.trim()}
+                  variant={emailReceiptSent ? "secondary" : "default"}
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PDF Receipt
+                  {sendingEmailReceipt ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : emailReceiptSent ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">
+                    {emailReceiptSent ? 'Sent' : 'Send Email'}
+                  </span>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Cryptrac Branding */}
-          <Card>
-            <CardContent className="p-6 text-center">
-              <div className="text-sm text-gray-500">
-                <p>Payment processed securely by</p>
-                <p className="font-semibold text-[#7f5efd] text-lg mt-1">Cryptrac</p>
-                <p className="text-xs mt-2">
-                  Non-custodial crypto payment processing
+              {emailReceiptSent && (
+                <p className="text-sm text-green-600 mt-1">
+                  ✅ Receipt sent to {email}
                 </p>
+              )}
+            </div>
+
+            {/* SMS Receipt */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">SMS Receipt</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={smsReceiptSent}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={sendSmsReceipt}
+                  disabled={sendingSmsReceipt || smsReceiptSent || !phone.trim()}
+                  variant={smsReceiptSent ? "secondary" : "default"}
+                >
+                  {sendingSmsReceipt ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : smsReceiptSent ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <MessageSquare className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">
+                    {smsReceiptSent ? 'Sent' : 'Send SMS'}
+                  </span>
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              {smsReceiptSent && (
+                <p className="text-sm text-green-600 mt-1">
+                  ✅ Receipt sent to {phone}
+                </p>
+              )}
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                Receipts include complete transaction details for your records
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Additional Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Need Help?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                If you have any questions about this payment, please contact{' '}
+                <span className="font-medium">{paymentData.payment_link.merchant.business_name}</span>{' '}
+                with your Order ID: <span className="font-mono">{paymentData.order_id}</span>
+              </p>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyToClipboard(paymentData.order_id)}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Order ID
+                </Button>
+                
+                {paymentData.tx_hash && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(paymentData.tx_hash!)}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Transaction Hash
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
