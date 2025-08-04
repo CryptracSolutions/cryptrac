@@ -5,7 +5,11 @@ import { cookies } from 'next/headers'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log('🔔 NOWPayments webhook received:', body)
+    
+    // Enhanced logging to see exactly what NOWPayments sends
+    console.log('🔔 NOWPayments webhook received - FULL PAYLOAD:')
+    console.log('📋 Raw webhook body:', JSON.stringify(body, null, 2))
+    console.log('📋 Webhook headers:', Object.fromEntries(request.headers.entries()))
 
     // Verify webhook authenticity (basic check)
     const signature = request.headers.get('x-nowpayments-sig')
@@ -13,7 +17,7 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ Webhook received without signature')
     }
 
-    // Extract payment data from webhook
+    // Extract payment data from webhook with detailed logging
     const {
       payment_id,
       order_id,
@@ -32,8 +36,27 @@ export async function POST(request: NextRequest) {
       payin_hash,
       payout_hash,
       burning_percent,
-      type
+      type,
+      // Check for other possible hash field names
+      hash,
+      tx_hash,
+      transaction_hash,
+      payin_extra_id,
+      payout_extra_id
     } = body
+
+    // Log all hash-related fields we found
+    console.log('🔗 Hash fields analysis:')
+    console.log('  - outcome:', outcome)
+    console.log('  - payin_hash:', payin_hash)
+    console.log('  - payout_hash:', payout_hash)
+    console.log('  - hash:', hash)
+    console.log('  - tx_hash:', tx_hash)
+    console.log('  - transaction_hash:', transaction_hash)
+    console.log('  - payin_extra_id:', payin_extra_id)
+    console.log('  - payout_extra_id:', payout_extra_id)
+    console.log('  - type:', type)
+    console.log('  - payment_status:', payment_status)
 
     if (!payment_id || !order_id) {
       console.error('❌ Invalid webhook data: missing payment_id or order_id')
@@ -114,34 +137,67 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
-    // Enhanced transaction hash logging
-    console.log('🔗 Processing transaction hashes:', {
-      outcome_hash: outcome?.hash,
-      payin_hash: payin_hash,
-      payout_hash: payout_hash,
-      type: type
-    })
+    // Enhanced transaction hash logging with all possible sources
+    console.log('🔗 Processing transaction hashes from all sources:')
+    
+    let capturedHashes = {
+      payin_hash: null,
+      payout_hash: null,
+      tx_hash: null,
+      source: 'none'
+    }
 
-    // Handle different hash sources and types
+    // Try to capture payin hash from multiple possible fields
     if (payin_hash) {
       updateData.payin_hash = payin_hash
-      console.log('✅ Payin hash captured:', payin_hash)
+      capturedHashes.payin_hash = payin_hash
+      capturedHashes.source = 'direct_payin_hash'
+      console.log('✅ Payin hash captured from payin_hash field:', payin_hash)
+    } else if (type === 'payin' && (hash || tx_hash || transaction_hash)) {
+      const payinHashValue = hash || tx_hash || transaction_hash
+      updateData.payin_hash = payinHashValue
+      capturedHashes.payin_hash = payinHashValue
+      capturedHashes.source = 'type_payin_with_hash'
+      console.log('✅ Payin hash captured from type=payin with hash:', payinHashValue)
+    } else if (outcome && outcome.hash && payment_status === 'confirming') {
+      updateData.payin_hash = outcome.hash
+      capturedHashes.payin_hash = outcome.hash
+      capturedHashes.source = 'outcome_hash_confirming'
+      console.log('✅ Payin hash captured from outcome.hash (confirming status):', outcome.hash)
     }
 
+    // Try to capture payout hash from multiple possible fields
     if (payout_hash) {
       updateData.payout_hash = payout_hash
-      console.log('✅ Payout hash captured:', payout_hash)
+      capturedHashes.payout_hash = payout_hash
+      capturedHashes.source = capturedHashes.source + '_direct_payout_hash'
+      console.log('✅ Payout hash captured from payout_hash field:', payout_hash)
+    } else if (type === 'payout' && (hash || tx_hash || transaction_hash)) {
+      const payoutHashValue = hash || tx_hash || transaction_hash
+      updateData.payout_hash = payoutHashValue
+      capturedHashes.payout_hash = payoutHashValue
+      capturedHashes.source = capturedHashes.source + '_type_payout_with_hash'
+      console.log('✅ Payout hash captured from type=payout with hash:', payoutHashValue)
+    } else if (outcome && outcome.hash && payment_status === 'confirmed') {
+      updateData.payout_hash = outcome.hash
+      capturedHashes.payout_hash = outcome.hash
+      capturedHashes.source = capturedHashes.source + '_outcome_hash_confirmed'
+      console.log('✅ Payout hash captured from outcome.hash (confirmed status):', outcome.hash)
     }
 
-    // Legacy support: if outcome.hash exists and no specific hashes, use it as primary
+    // Legacy support: if outcome.hash exists, always capture it
     if (outcome && outcome.hash) {
       if (!updateData.payin_hash && !updateData.payout_hash) {
         // If no specific hashes, use outcome.hash as tx_hash
         updateData.tx_hash = outcome.hash
+        capturedHashes.tx_hash = outcome.hash
+        capturedHashes.source = capturedHashes.source + '_outcome_as_tx_hash'
         console.log('✅ Legacy tx_hash captured from outcome:', outcome.hash)
       } else {
         // If we have specific hashes, use outcome.hash as tx_hash for backward compatibility
         updateData.tx_hash = outcome.hash
+        capturedHashes.tx_hash = outcome.hash
+        capturedHashes.source = capturedHashes.source + '_outcome_as_primary'
         console.log('✅ Primary tx_hash captured from outcome:', outcome.hash)
       }
     }
@@ -151,13 +207,20 @@ export async function POST(request: NextRequest) {
       if (newStatus === 'confirmed' && updateData.payout_hash) {
         // For confirmed payments, prefer payout hash as primary
         updateData.tx_hash = updateData.payout_hash
+        capturedHashes.tx_hash = updateData.payout_hash
+        capturedHashes.source = capturedHashes.source + '_payout_as_primary'
         console.log('✅ Using payout_hash as primary tx_hash for confirmed payment')
       } else if (updateData.payin_hash) {
         // For other statuses, use payin hash as primary
         updateData.tx_hash = updateData.payin_hash
+        capturedHashes.tx_hash = updateData.payin_hash
+        capturedHashes.source = capturedHashes.source + '_payin_as_primary'
         console.log('✅ Using payin_hash as primary tx_hash')
       }
     }
+
+    // Log final hash capture summary
+    console.log('📊 Final hash capture summary:', capturedHashes)
 
     // Update received amounts if payment is confirmed
     if (newStatus === 'confirmed' && actually_paid) {
@@ -188,6 +251,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Log what we're about to update in the database
+    console.log('💾 Database update data:', updateData)
+
     // Update the payment record
     const { error: updateError } = await supabase
       .from('transactions')
@@ -210,7 +276,8 @@ export async function POST(request: NextRequest) {
       payin_hash: updateData.payin_hash,
       payout_hash: updateData.payout_hash,
       amount_received: updateData.amount_received,
-      merchant_receives: updateData.merchant_receives
+      merchant_receives: updateData.merchant_receives,
+      hash_source: capturedHashes.source
     })
 
     // If payment is confirmed, trigger post-confirmation actions
@@ -248,12 +315,6 @@ export async function POST(request: NextRequest) {
       } catch (linkUpdateError) {
         console.warn('⚠️ Error updating payment link usage:', linkUpdateError)
       }
-
-      // Here you could add additional post-confirmation actions:
-      // - Send confirmation email to customer
-      // - Send notification to merchant
-      // - Update analytics/metrics
-      // - Trigger any business logic
     }
 
     return NextResponse.json({
@@ -264,7 +325,21 @@ export async function POST(request: NextRequest) {
       hashes_captured: {
         tx_hash: !!updateData.tx_hash,
         payin_hash: !!updateData.payin_hash,
-        payout_hash: !!updateData.payout_hash
+        payout_hash: !!updateData.payout_hash,
+        source: capturedHashes.source
+      },
+      debug_info: {
+        webhook_type: type,
+        payment_status: payment_status,
+        outcome_present: !!outcome,
+        outcome_hash: outcome?.hash,
+        raw_hashes: {
+          payin_hash,
+          payout_hash,
+          hash,
+          tx_hash,
+          transaction_hash
+        }
       }
     })
 
