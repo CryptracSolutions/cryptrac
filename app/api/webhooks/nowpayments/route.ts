@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
       outcome,
       created_at,
       updated_at,
+      // Additional hash fields from NOWPayments
+      payin_hash,
+      payout_hash,
+      burning_percent,
+      type
     } = body
 
     if (!payment_id || !order_id) {
@@ -95,6 +100,9 @@ export async function POST(request: NextRequest) {
       case 'expired':
         newStatus = 'expired'
         break
+      case 'sending':
+        newStatus = 'confirming' // Map 'sending' to 'confirming' for our UI
+        break
       default:
         console.warn('⚠️ Unknown payment status:', payment_status)
         newStatus = payment_status
@@ -106,15 +114,78 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
-    // Add transaction hash if available
+    // Enhanced transaction hash logging
+    console.log('🔗 Processing transaction hashes:', {
+      outcome_hash: outcome?.hash,
+      payin_hash: payin_hash,
+      payout_hash: payout_hash,
+      type: type
+    })
+
+    // Handle different hash sources and types
+    if (payin_hash) {
+      updateData.payin_hash = payin_hash
+      console.log('✅ Payin hash captured:', payin_hash)
+    }
+
+    if (payout_hash) {
+      updateData.payout_hash = payout_hash
+      console.log('✅ Payout hash captured:', payout_hash)
+    }
+
+    // Legacy support: if outcome.hash exists and no specific hashes, use it as primary
     if (outcome && outcome.hash) {
-      updateData.tx_hash = outcome.hash
+      if (!updateData.payin_hash && !updateData.payout_hash) {
+        // If no specific hashes, use outcome.hash as tx_hash
+        updateData.tx_hash = outcome.hash
+        console.log('✅ Legacy tx_hash captured from outcome:', outcome.hash)
+      } else {
+        // If we have specific hashes, use outcome.hash as tx_hash for backward compatibility
+        updateData.tx_hash = outcome.hash
+        console.log('✅ Primary tx_hash captured from outcome:', outcome.hash)
+      }
+    }
+
+    // Determine primary tx_hash based on payment status and available hashes
+    if (!updateData.tx_hash) {
+      if (newStatus === 'confirmed' && updateData.payout_hash) {
+        // For confirmed payments, prefer payout hash as primary
+        updateData.tx_hash = updateData.payout_hash
+        console.log('✅ Using payout_hash as primary tx_hash for confirmed payment')
+      } else if (updateData.payin_hash) {
+        // For other statuses, use payin hash as primary
+        updateData.tx_hash = updateData.payin_hash
+        console.log('✅ Using payin_hash as primary tx_hash')
+      }
     }
 
     // Update received amounts if payment is confirmed
     if (newStatus === 'confirmed' && actually_paid) {
       updateData.amount_received = actually_paid
       updateData.currency_received = pay_currency?.toUpperCase()
+      console.log('💰 Payment confirmed - updating received amounts:', {
+        amount_received: actually_paid,
+        currency_received: pay_currency?.toUpperCase()
+      })
+    }
+
+    // Update payout information if available
+    if (payout_amount && payout_currency) {
+      updateData.merchant_receives = payout_amount
+      updateData.payout_currency = payout_currency.toUpperCase()
+      console.log('💸 Payout information updated:', {
+        merchant_receives: payout_amount,
+        payout_currency: payout_currency.toUpperCase()
+      })
+    }
+
+    // Calculate gateway fee if we have the data
+    if (price_amount && actually_paid && pay_currency === price_currency) {
+      const gatewayFee = Math.max(0, actually_paid - price_amount)
+      if (gatewayFee > 0) {
+        updateData.gateway_fee = gatewayFee
+        console.log('💳 Gateway fee calculated:', gatewayFee)
+      }
     }
 
     // Update the payment record
@@ -135,40 +206,50 @@ export async function POST(request: NextRequest) {
       payment_id: payment.id,
       old_status: payment.status,
       new_status: newStatus,
-      tx_hash: outcome?.hash,
+      tx_hash: updateData.tx_hash,
+      payin_hash: updateData.payin_hash,
+      payout_hash: updateData.payout_hash,
+      amount_received: updateData.amount_received,
+      merchant_receives: updateData.merchant_receives
     })
 
-    // If payment is confirmed, we could trigger additional actions here
-    // such as sending confirmation emails, updating analytics, etc.
+    // If payment is confirmed, trigger post-confirmation actions
     if (newStatus === 'confirmed' && payment.status !== 'confirmed') {
       console.log('🎉 Payment confirmed! Triggering post-confirmation actions...')
       
-      // Update payment link usage statistics using increment
-      const { error: incrementError } = await supabase.rpc('increment_payment_link_usage', {
-        link_id: payment.payment_link_id
-      })
+      // Update payment link usage statistics
+      try {
+        const { error: incrementError } = await supabase.rpc('increment_payment_link_usage', {
+          p_link_id: payment.payment_link_id
+        })
 
-      if (incrementError) {
-        console.warn('⚠️ Failed to update payment link usage:', incrementError)
-        // Try alternative approach
-        const { data: currentLink } = await supabase
-          .from('payment_links')
-          .select('current_uses')
-          .eq('id', payment.payment_link_id)
-          .single()
-
-        if (currentLink) {
-          await supabase
+        if (incrementError) {
+          console.warn('⚠️ Failed to update payment link usage via function:', incrementError)
+          // Try alternative approach
+          const { data: currentLink } = await supabase
             .from('payment_links')
-            .update({
-              current_uses: (currentLink.current_uses || 0) + 1,
-              last_payment_at: new Date().toISOString(),
-            })
+            .select('current_uses')
             .eq('id', payment.payment_link_id)
+            .single()
+
+          if (currentLink) {
+            await supabase
+              .from('payment_links')
+              .update({
+                current_uses: (currentLink.current_uses || 0) + 1,
+                last_payment_at: new Date().toISOString(),
+              })
+              .eq('id', payment.payment_link_id)
+            console.log('✅ Payment link usage updated via direct query')
+          }
+        } else {
+          console.log('✅ Payment link usage updated via function')
         }
+      } catch (linkUpdateError) {
+        console.warn('⚠️ Error updating payment link usage:', linkUpdateError)
       }
 
-      // Here you could add:
+      // Here you could add additional post-confirmation actions:
       // - Send confirmation email to customer
       // - Send notification to merchant
       // - Update analytics/metrics
@@ -178,6 +259,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Webhook processed successfully',
+      payment_id: payment.id,
+      status: newStatus,
+      hashes_captured: {
+        tx_hash: !!updateData.tx_hash,
+        payin_hash: !!updateData.payin_hash,
+        payout_hash: !!updateData.payout_hash
+      }
     })
 
   } catch (error) {

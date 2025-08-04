@@ -29,21 +29,57 @@ export async function GET(
       }
     )
 
-    // Fetch payment with related data
-    const { data: payment, error } = await supabase
-      .from('transactions')
-      .select(`
-        *,
-        payment_link:payment_links(
-          title,
-          description,
-          merchant:merchants(
-            business_name
+    let payment = null
+    let error = null
+
+    // Check if ID is a UUID (payment ID) or link_id
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+
+    if (isUUID) {
+      // Direct payment ID lookup
+      console.log('🔍 Looking up by payment ID (UUID):', id)
+      const result = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          payment_link:payment_links(
+            title,
+            description,
+            merchant:merchants(
+              business_name
+            )
           )
-        )
-      `)
-      .eq('id', id)
-      .single()
+        `)
+        .eq('id', id)
+        .single()
+      
+      payment = result.data
+      error = result.error
+    } else {
+      // Link ID lookup - find the most recent confirmed payment for this link
+      console.log('🔍 Looking up by link_id:', id)
+      const result = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          payment_link:payment_links!inner(
+            title,
+            description,
+            link_id,
+            merchant:merchants(
+              business_name
+            )
+          )
+        `)
+        .eq('payment_link.link_id', id)
+        .eq('status', 'confirmed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+      
+      payment = result.data
+      error = result.error
+    }
 
     if (error) {
       console.error('❌ Error fetching payment:', error)
@@ -79,6 +115,7 @@ export async function GET(
       status: payment.status,
       amount: payment.pay_amount,
       currency: payment.pay_currency,
+      lookup_method: isUUID ? 'payment_id' : 'link_id'
     })
 
     // Prepare response data
@@ -97,6 +134,8 @@ export async function GET(
       created_at: payment.created_at,
       updated_at: payment.updated_at,
       tx_hash: payment.tx_hash,
+      payin_hash: payment.payin_hash,
+      payout_hash: payment.payout_hash,
       is_fee_paid_by_user: payment.gateway_fee > 0,
       gateway_fee: payment.gateway_fee,
       merchant_receives: payment.merchant_receives,
