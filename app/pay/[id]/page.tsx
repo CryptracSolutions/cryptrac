@@ -414,27 +414,35 @@ export default function PaymentPage() {
       // Use the passed accepted cryptos parameter
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Define stable coin associations for auto-inclusion
+      // Enhanced stable coin associations with correct NOWPayments currency codes
       const stableCoinAssociations: Record<string, string[]> = {
-        'ETH': ['USDT_ERC20', 'USDC_ERC20', 'DAI'],
-        'SOL': ['USDT_SOL', 'USDC_SOL'],
-        'BNB': ['USDT_BSC', 'USDC_BSC'],
-        'MATIC': ['USDT_POLYGON', 'USDC_POLYGON'],
-        'AVAX': ['USDT_AVAX', 'USDC_AVAX'],
-        'TRX': ['USDT_TRC20']
+        'ETH': ['USDT', 'USDC', 'DAI'], // NOWPayments uses simple codes
+        'SOL': ['USDTSOL', 'USDCSOL'], // Check if these exist
+        'BNB': ['USDTBSC', 'USDCBSC'], // Check if these exist  
+        'MATIC': ['USDTMATIC', 'USDCMATIC'], // Check if these exist
+        'AVAX': ['USDTAVAX', 'USDCAVAX'], // Check if these exist
+        'TRX': ['USDTTRC20'] // Check if this exists
       }
+
+      // Create a map of available currency codes for quick lookup
+      const availableCurrencyCodes = new Set(data.currencies.map((c: CurrencyInfo) => c.code.toUpperCase()))
+      
+      console.log('🔍 Sample of available currency codes:', Array.from(availableCurrencyCodes).slice(0, 20))
 
       // Expand accepted cryptos to include associated stable coins
       const expandedAcceptedCryptos = [...acceptedCryptos]
-      const availableCurrencyCodes = data.currencies.map((c: CurrencyInfo) => c.code)
 
       acceptedCryptos.forEach(crypto => {
+        console.log(`🔍 Processing crypto: ${crypto}`)
+        
         if (stableCoinAssociations[crypto]) {
           stableCoinAssociations[crypto].forEach(stableCoin => {
-            if (availableCurrencyCodes.includes(stableCoin) && !expandedAcceptedCryptos.includes(stableCoin)) {
-              console.log(`✅ Adding available stable coin: ${stableCoin}`)
-              expandedAcceptedCryptos.push(stableCoin)
-            } else if (!availableCurrencyCodes.includes(stableCoin)) {
+            if (availableCurrencyCodes.has(stableCoin.toUpperCase())) {
+              if (!expandedAcceptedCryptos.includes(stableCoin)) {
+                console.log(`✅ Adding available stable coin: ${stableCoin}`)
+                expandedAcceptedCryptos.push(stableCoin)
+              }
+            } else {
               console.log(`❌ Stable coin not available in API: ${stableCoin}`)
             }
           })
@@ -445,11 +453,16 @@ export default function PaymentPage() {
 
       // Filter to only accepted cryptocurrencies and their associated stable coins
       const filtered = data.currencies.filter((currency: CurrencyInfo) => {
-        const isAccepted = expandedAcceptedCryptos.includes(currency.code)
+        const currencyCodeUpper = currency.code.toUpperCase()
+        const isAccepted = expandedAcceptedCryptos.some(acceptedCode => 
+          acceptedCode.toUpperCase() === currencyCodeUpper
+        )
         const isEnabled = currency.enabled
+        
         if (isAccepted) {
           console.log(`🔍 Currency ${currency.code}: accepted=${isAccepted}, enabled=${isEnabled}`)
         }
+        
         return isAccepted && isEnabled
       })
 
@@ -458,15 +471,15 @@ export default function PaymentPage() {
       // Sort currencies for better organization: base currencies first, then their stable coins
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
-        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP']
+        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR']
         
         // Check if currencies are base currencies
         const aIsBase = baseCurrencyOrder.includes(a.code)
         const bIsBase = baseCurrencyOrder.includes(b.code)
         
         // Check if currencies are stable coins
-        const aIsStable = a.code.includes('USDT') || a.code.includes('USDC')
-        const bIsStable = b.code.includes('USDT') || b.code.includes('USDC')
+        const aIsStable = a.code.includes('USDT') || a.code.includes('USDC') || a.code === 'DAI'
+        const bIsStable = b.code.includes('USDT') || b.code.includes('USDC') || b.code === 'DAI'
         
         // Base currencies come first
         if (aIsBase && !bIsBase) return -1
@@ -481,20 +494,13 @@ export default function PaymentPage() {
         
         // Among stable coins, group by chain and sort USDT before USDC
         if (aIsStable && bIsStable) {
-          const aChain = a.code.split('_')[1] || a.code.split('_')[0]
-          const bChain = b.code.split('_')[1] || b.code.split('_')[0]
+          // Same chain: USDT before USDC
+          if (a.code.includes('USDT') && b.code.includes('USDC')) return -1
+          if (a.code.includes('USDC') && b.code.includes('USDT')) return 1
           
-          if (aChain === bChain) {
-            // Same chain: USDT before USDC
-            if (a.code.includes('USDT') && b.code.includes('USDC')) return -1
-            if (a.code.includes('USDC') && b.code.includes('USDT')) return 1
-          }
-          
-          // Different chains: sort by chain priority
-          const chainOrder = ['ETH', 'SOL', 'BSC', 'POLYGON', 'AVAX', 'TRX', 'ADA']
-          const aChainIndex = chainOrder.indexOf(aChain)
-          const bChainIndex = chainOrder.indexOf(bChain)
-          return aChainIndex - bChainIndex
+          // DAI comes after USDT/USDC
+          if (a.code === 'DAI') return 1
+          if (b.code === 'DAI') return -1
         }
         
         // Stable coins come after base currencies
@@ -510,6 +516,18 @@ export default function PaymentPage() {
       // Auto-select first currency if available
       if (sortedCurrencies.length > 0 && !selectedCurrency) {
         setSelectedCurrency(sortedCurrencies[0].code)
+      }
+
+      // Debug: Log what we're missing
+      if (acceptedCryptos.includes('BNB') && !sortedCurrencies.some((c: CurrencyInfo) => c.code === 'BNB')) {
+        console.log('❌ BNB is accepted but not found in filtered currencies')
+        console.log('🔍 Looking for BNB in all currencies...')
+        const bnbCurrency = data.currencies.find((c: CurrencyInfo) => c.code.toUpperCase() === 'BNB')
+        if (bnbCurrency) {
+          console.log('✅ BNB found in all currencies:', bnbCurrency)
+        } else {
+          console.log('❌ BNB not found in any currencies')
+        }
       }
 
     } catch (error) {
