@@ -1,12 +1,13 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3 } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, TrendingDown, CreditCard } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
+import { Alert, AlertDescription } from "@/app/components/ui/alert";
+import { Separator } from "@/app/components/ui/separator";
 import { Logo } from "@/app/components/ui/logo";
 import { CryptoIcon } from "@/app/components/ui/crypto-icon";
+import FeeDocumentation from "@/app/components/fee-documentation";
 
 export default function Home() {
   const features = [
@@ -53,11 +54,32 @@ export default function Home() {
 
   const benefits = [
     "30-day free trial",
-    "$19/month or $199/year subscription – 30 days free",
-    "Cryptrac Gateway Fee: 0.5% (no conversion), 1% (auto-convert enabled)",
+    "No transaction fees to Cryptrac",
+    "Gateway fees: 0.5% (direct) or 1% (auto-convert)",
     "Non-custodial security",
     "Real-time notifications",
-    "Mobile-friendly interface"
+    "Mobile-friendly interface",
+    "Comprehensive analytics",
+    "Multi-currency support"
+  ];
+
+  const faqItems = [
+    {
+      question: "What does Cryptrac cost?",
+      answer: "Cryptrac charges $19/month (or $199/year) for platform access. We don't take any transaction fees - you only pay gateway processing fees (0.5% for direct payments, 1% for auto-convert) which go to the payment processor, not to Cryptrac."
+    },
+    {
+      question: "Are there any hidden fees?",
+      answer: "Absolutely not. Our pricing is completely transparent: $19/month subscription + gateway fees (0.5% or 1%). Network fees may apply depending on the cryptocurrency and blockchain congestion, but these are blockchain costs, not Cryptrac fees."
+    },
+    {
+      question: "How do gateway fees work?",
+      answer: "Gateway fees are charged by the payment processor (not Cryptrac) for handling transactions. You can choose whether you or your customers pay these fees. Direct payments: 0.5%, Auto-convert payments: 1%."
+    },
+    {
+      question: "Why is crypto cheaper than credit cards?",
+      answer: "Traditional processors like Stripe charge 2.9% + $0.30 per transaction. Crypto gateway fees are typically 0.5-1% with no fixed fees, making them cheaper for most transaction sizes, especially larger payments."
+    }
   ];
 
   return (
@@ -72,6 +94,9 @@ export default function Home() {
             </Link>
             <Link href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">
               Pricing
+            </Link>
+            <Link href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+              FAQ
             </Link>
             <Link href="#about" className="text-sm font-medium text-muted-foreground hover:text-foreground">
               About
@@ -102,19 +127,31 @@ export default function Home() {
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
             </p>
+            
+            {/* Hero Transparency Callout */}
+            <div className="mt-8 mx-auto max-w-2xl">
+              <Alert className="border-green-200 bg-green-50">
+                <DollarSign className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <strong>Transparent Pricing:</strong> $19/month subscription - no transaction fees to Cryptrac. 
+                  Gateway fees (0.5-1%) go to payment processor, not us.
+                </AlertDescription>
+              </Alert>
+            </div>
+
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button size="lg" className="text-base" asChild>
                 <Link href="/signup">
-                  Get Started Free - 30-Day Trial Available
+                  Start Free 30-Day Trial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="text-base" asChild>
-                <Link href="#features">Learn More</Link>
+                <Link href="#pricing">View Pricing</Link>
               </Button>
             </div>
-            <div className="mt-8 text-sm text-muted-foreground">
-              30-day free trial • $19/month or $199/year • Cryptrac Gateway Fee applies (see pricing)
+            <div className="mt-6 text-sm text-muted-foreground">
+              30-day free trial • $19/month • No setup fees • Cancel anytime
             </div>
           </div>
         </div>
@@ -183,10 +220,12 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Simple, transparent pricing
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Cryptrac does not charge any transaction fee. A Gateway Fee (0.5% or 1%) is automatically deducted by the platform per transaction—see dashboard for breakdown. This fee is not Cryptrac revenue.
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              No hidden fees, no transaction fees to Cryptrac. Just a simple monthly subscription and transparent gateway fees.
             </p>
           </div>
+
+          {/* Main Pricing Card */}
           <div className="max-w-lg mx-auto">
             <Card className="border-2 border-primary shadow-xl">
               <CardHeader className="text-center pb-8">
@@ -220,10 +259,69 @@ export default function Home() {
                   <Link href="/signup">Start Free Trial</Link>
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  Accept all cryptos, 0.5% Gateway fee, 30-day trial for setup
+                  30-day free trial • No setup fees • Cancel anytime
                 </p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Fee Transparency Notice */}
+          <div className="mt-16 max-w-4xl mx-auto">
+            <Alert className="border-blue-200 bg-blue-50">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <strong>Complete Transparency:</strong> Cryptrac's only revenue is the $19/month subscription. 
+                Gateway fees (0.5% or 1%) are charged by the payment processor for handling transactions and go directly to them, not to Cryptrac. 
+                Network fees may vary by cryptocurrency and blockchain congestion.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 bg-gray-50">
+        <div className="container-wide">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Everything you need to know about Cryptrac pricing and fees
+            </p>
+          </div>
+          <div className="max-w-3xl mx-auto space-y-6">
+            {faqItems.map((item, index) => (
+              <Card key={index} className="border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5 text-primary" />
+                    {item.question}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{item.answer}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {/* Detailed Fee Documentation */}
+          <div className="mt-16">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Understanding Payment Fees: Crypto vs Traditional
+              </h3>
+              <p className="text-muted-foreground">
+                Complete breakdown of how crypto payments compare to traditional processors
+              </p>
+            </div>
+            <FeeDocumentation 
+              variant="full" 
+              showComparison={true}
+              showNetworkFees={true}
+              showGatewayFees={true}
+            />
           </div>
         </div>
       </section>
@@ -240,13 +338,16 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" className="text-base" asChild>
               <Link href="/signup">
-                Get Started Free
+                Start Free 30-Day Trial
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="text-base border-white text-white hover:bg-white hover:text-primary" asChild>
               <Link href="/login">Sign In</Link>
             </Button>
+          </div>
+          <div className="mt-6 text-primary-100 text-sm">
+            No credit card required • Full access during trial • $19/month after trial
           </div>
         </div>
       </section>
@@ -260,12 +361,16 @@ export default function Home() {
               <p className="text-gray-400 max-w-md">
                 The simplest way to accept cryptocurrency payments. Non-custodial, secure, and designed for modern businesses.
               </p>
+              <div className="mt-4 text-sm text-gray-500">
+                Transparent pricing: $19/month subscription, no transaction fees to Cryptrac
+              </div>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="#features" className="hover:text-white">Features</Link></li>
                 <li><Link href="#pricing" className="hover:text-white">Pricing</Link></li>
+                <li><Link href="#faq" className="hover:text-white">FAQ</Link></li>
                 <li><Link href="/signup" className="hover:text-white">Get Started</Link></li>
               </ul>
             </div>
