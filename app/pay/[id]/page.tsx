@@ -362,7 +362,7 @@ export default function PaymentPage() {
         amount: paymentLinkData.amount,
         base_amount: paymentLinkData.base_amount || paymentLinkData.amount,
         currency: paymentLinkData.currency,
-        accepted_cryptos: paymentLinkData.accepted_cryptos,
+        accepted_cryptos: paymentLinkData.accepted_cryptos || [],
         expires_at: paymentLinkData.expires_at,
         max_uses: paymentLinkData.max_uses,
         charge_customer_fee: paymentLinkData.charge_customer_fee,
@@ -386,7 +386,9 @@ export default function PaymentPage() {
       }
 
       setPaymentLink(transformedData)
-      await loadCurrencies()
+      
+      // Load currencies with the accepted cryptos from the payment link
+      await loadCurrencies(transformedData.accepted_cryptos)
 
     } catch (error) {
       console.error('Error loading payment link:', error)
@@ -396,7 +398,7 @@ export default function PaymentPage() {
     }
   }
 
-  const loadCurrencies = async () => {
+  const loadCurrencies = async (acceptedCryptos: string[]) => {
     try {
       console.log('💱 Loading available currencies...')
 
@@ -409,8 +411,7 @@ export default function PaymentPage() {
 
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
 
-      // Get accepted cryptos from payment link
-      const acceptedCryptos = paymentLink?.accepted_cryptos || []
+      // Use the passed accepted cryptos parameter
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
       // Define stable coin associations for auto-inclusion
@@ -916,6 +917,11 @@ export default function PaymentPage() {
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Loading conversion rates...</p>
                   </div>
+                ) : availableCurrencies.length === 0 ? (
+                  <div className="text-center py-8">
+                    <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">No supported cryptocurrencies available for this payment link.</p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {availableCurrencies.map((currency) => {
@@ -990,7 +996,7 @@ export default function PaymentPage() {
             {/* Create Payment Button */}
             <Button
               onClick={createPayment}
-              disabled={!selectedCurrency || creatingPayment}
+              disabled={!selectedCurrency || creatingPayment || availableCurrencies.length === 0}
               className="w-full h-12 text-lg"
             >
               {creatingPayment ? (
