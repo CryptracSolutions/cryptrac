@@ -441,12 +441,15 @@ export default function PaymentPage() {
             if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
               return true
             }
-            // Avalanche relationships - FIXED: handle both underscore and no underscore
+            // Avalanche relationships - FIXED: more comprehensive detection
             if (cryptoUpper === 'AVAX' && (
               currencyCode.includes('AVAX') || 
               currencyCode.includes('AVALANCHE') ||
               currencyCode === 'USDT_AVAX' ||
-              currencyCode === 'USDTAVAX'
+              currencyCode === 'USDTAVAX' ||
+              currencyCode === 'USDTAVALANCHE' ||
+              currencyCode.includes('AVAXC') ||
+              currencyCode.includes('AVAX_C')
             )) {
               return true
             }
@@ -508,12 +511,15 @@ export default function PaymentPage() {
             if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
               return true
             }
-            // Avalanche relationships - FIXED: handle both underscore and no underscore
+            // Avalanche relationships - FIXED: more comprehensive detection
             if (cryptoUpper === 'AVAX' && (
               currencyCode.includes('AVAX') || 
               currencyCode.includes('AVALANCHE') ||
               currencyCode === 'USDC_AVAX' ||
-              currencyCode === 'USDCAVAX'
+              currencyCode === 'USDCAVAX' ||
+              currencyCode === 'USDCAVALANCHE' ||
+              currencyCode.includes('AVAXC') ||
+              currencyCode.includes('AVAX_C')
             )) {
               return true
             }
@@ -651,6 +657,21 @@ export default function PaymentPage() {
         })
         
         setEstimates(estimatesMap)
+
+        // Filter out currencies that don't have estimates (like USDTDOT, USDTNEAR)
+        const currenciesWithEstimates = availableCurrencies.filter(currency => 
+          estimatesMap[currency.code.toUpperCase()]
+        )
+        
+        if (currenciesWithEstimates.length !== availableCurrencies.length) {
+          console.log(`🔧 Filtered out ${availableCurrencies.length - currenciesWithEstimates.length} currencies without estimates`)
+          setAvailableCurrencies(currenciesWithEstimates)
+          
+          // Update selected currency if it was filtered out
+          if (selectedCurrency && !estimatesMap[selectedCurrency.toUpperCase()]) {
+            setSelectedCurrency(currenciesWithEstimates.length > 0 ? currenciesWithEstimates[0].code : '')
+          }
+        }
       } else {
         console.error('Failed to load estimates:', data.error)
       }
