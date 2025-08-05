@@ -1088,7 +1088,7 @@ CREATE TABLE IF NOT EXISTS "public"."transactions" (
     "status" "text" DEFAULT 'pending'::"text",
     "tx_hash" "text",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "nowpayments_invoice_id" character varying(100),
+    "nowpayments_payment_id" character varying(100),
     "payment_link_id" "uuid",
     "order_id" character varying(255),
     "amount_received" numeric(18,8) DEFAULT 0,
@@ -1124,6 +1124,10 @@ ALTER TABLE "public"."transactions" OWNER TO "postgres";
 
 
 COMMENT ON TABLE "public"."transactions" IS 'Updated for Phase 5 NOWPayments integration - all required columns added';
+
+
+
+COMMENT ON COLUMN "public"."transactions"."nowpayments_payment_id" IS 'NOWPayments payment ID returned from their API';
 
 
 
@@ -1444,7 +1448,7 @@ CREATE INDEX "idx_merchant_payments_merchant_id" ON "public"."transactions" USIN
 
 
 
-CREATE INDEX "idx_merchant_payments_nowpayments_invoice_id" ON "public"."transactions" USING "btree" ("nowpayments_invoice_id");
+CREATE INDEX "idx_merchant_payments_nowpayments_invoice_id" ON "public"."transactions" USING "btree" ("nowpayments_payment_id");
 
 
 
@@ -1565,6 +1569,10 @@ CREATE INDEX "idx_tier_history_rep_id" ON "public"."tier_history" USING "btree" 
 
 
 CREATE INDEX "idx_transactions_date_tax" ON "public"."transactions" USING "btree" ("created_at", "tax_enabled", "merchant_id");
+
+
+
+CREATE INDEX "idx_transactions_nowpayments_payment_id" ON "public"."transactions" USING "btree" ("nowpayments_payment_id");
 
 
 
@@ -2358,7 +2366,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
-
 
 
 -- Create buckets
