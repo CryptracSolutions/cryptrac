@@ -12,32 +12,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    console.log('🔍 Checking payment status for link ID:', id);
+    console.log('🔍 Checking payment status for payment ID:', id);
 
-    // Step 1: Get payment link ID from link_id
-    const { data: paymentLinkData, error: linkError } = await supabase
-      .from('payment_links')
-      .select('id')
-      .eq('link_id', id)
-      .single();
-
-    if (linkError) {
-      console.error('❌ Payment link not found:', linkError);
-      return NextResponse.json(
-        { success: false, error: 'Payment link not found' },
-        { status: 404 }
-      );
-    }
-
-    console.log('✅ Payment link found:', paymentLinkData.id);
-
-    // Step 2: Get most recent payment using payment_link_id and CORRECT column name
+    // FIXED: Query transactions table by nowpayments_payment_id instead of payment_links
     const { data: payment, error: paymentError } = await supabase
       .from('transactions')
       .select('*')
-      .eq('payment_link_id', paymentLinkData.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .eq('nowpayments_payment_id', id)
       .single();
 
     if (paymentError) {
@@ -50,17 +31,17 @@ export async function GET(
 
     console.log('✅ Payment found:', {
       id: payment.id,
-      nowpayments_invoice_id: payment.nowpayments_invoice_id, // CORRECT column name
+      nowpayments_payment_id: payment.nowpayments_payment_id,
       status: payment.status
     });
 
-    // Step 3: Check NOWPayments for status updates using CORRECT column name
-    if (payment.nowpayments_invoice_id && payment.status !== 'confirmed') {
+    // Step 2: Check NOWPayments for status updates
+    if (payment.nowpayments_payment_id && payment.status !== 'confirmed') {
       try {
-        console.log('🔄 Checking NOWPayments status for payment:', payment.nowpayments_invoice_id);
+        console.log('🔄 Checking NOWPayments status for payment:', payment.nowpayments_payment_id);
         
         const nowPaymentsResponse = await fetch(
-          `https://api.nowpayments.io/v1/payment/${payment.nowpayments_invoice_id}`,
+          `https://api.nowpayments.io/v1/payment/${payment.nowpayments_payment_id}`,
           {
             headers: {
               'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
@@ -163,32 +144,22 @@ export async function GET(
     return NextResponse.json({
       success: true,
       payment: {
-        id: payment.id,
-        nowpayments_payment_id: payment.nowpayments_invoice_id, // For frontend compatibility
-        status: payment.status,
-        amount: payment.amount,
-        currency: payment.currency,
+        payment_id: payment.nowpayments_payment_id,
+        payment_status: payment.status,
+        pay_address: payment.pay_address,
         pay_amount: payment.pay_amount,
         pay_currency: payment.pay_currency,
-        pay_address: payment.pay_address,
-        payout_amount: payment.merchant_receives,
-        payout_currency: payment.payout_currency,
-        gateway_fee: payment.gateway_fee,
-        amount_received: payment.amount_received,
-        currency_received: payment.currency_received,
-        merchant_receives: payment.merchant_receives,
-        tx_hash: payment.tx_hash,
-        payin_hash: payment.payin_hash,
-        payout_hash: payment.payout_hash,
+        price_amount: payment.amount,
+        price_currency: payment.currency,
+        order_id: payment.order_id,
+        order_description: payment.description || '',
         created_at: payment.created_at,
         updated_at: payment.updated_at,
-        order_id: payment.order_id,
-        // Tax information
-        base_amount: payment.base_amount,
-        tax_enabled: payment.tax_enabled,
-        tax_amount: payment.tax_amount,
-        subtotal_with_tax: payment.subtotal_with_tax,
-        tax_rates: payment.tax_rates
+        outcome_amount: payment.merchant_receives,
+        outcome_currency: payment.payout_currency,
+        actually_paid: payment.amount_received,
+        tx_hash: payment.tx_hash,
+        network: payment.pay_currency
       }
     });
 

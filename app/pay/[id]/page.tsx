@@ -778,11 +778,11 @@ export default function PaymentPage() {
                 currency_from: paymentLink.currency,
                 currency_to: currency.code,
                 amount_from: amount,
-                estimated_amount: data.estimate,
+                estimated_amount: data.estimate.estimated_amount,
                 fee_amount: 0,
                 fee_percentage: 0
               }
-              console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate}`)
+              console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
             } else {
               console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
             }
