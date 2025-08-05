@@ -465,15 +465,55 @@ $_$;
 ALTER FUNCTION "public"."handle_partner_referral"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") RETURNS "void"
+CREATE OR REPLACE FUNCTION "public"."increment_payment_link_usage"("input_id" "text") RETURNS "void"
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
+  -- Try to update by link_id first (string format like 'pl_xxx')
+  UPDATE payment_links 
+  SET 
+    usage_count = COALESCE(usage_count, 0) + 1,
+    last_payment_at = NOW(),
+    updated_at = NOW()
+  WHERE link_id = input_id;
+  
+  -- If no rows affected, try by UUID
+  IF NOT FOUND THEN
+    UPDATE payment_links 
+    SET 
+      usage_count = COALESCE(usage_count, 0) + 1,
+      last_payment_at = NOW(),
+      updated_at = NOW()
+    WHERE id::text = input_id;
+  END IF;
+  
+  -- If still no rows affected, raise an exception
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Payment link with ID % not found', input_id;
+  END IF;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."increment_payment_link_usage"("input_id" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+  -- Update the payment link usage statistics
   UPDATE payment_links 
   SET 
     current_uses = COALESCE(current_uses, 0) + 1,
-    last_payment_at = NOW()
+    last_payment_at = NOW(),
+    updated_at = NOW()
   WHERE id = p_link_id;
+  
+  -- Check if the update affected any rows
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Payment link with ID % not found', p_link_id;
+  END IF;
 END;
 $$;
 
@@ -1072,7 +1112,11 @@ CREATE TABLE IF NOT EXISTS "public"."transactions" (
     "total_amount_paid" numeric(18,2),
     "tax_rates" "jsonb" DEFAULT '[]'::"jsonb",
     "tax_breakdown" "jsonb" DEFAULT '{}'::"jsonb",
-    "receipt_metadata" "jsonb" DEFAULT '{}'::"jsonb"
+    "receipt_metadata" "jsonb" DEFAULT '{}'::"jsonb",
+    "payin_hash" "text",
+    "payout_hash" "text",
+    "customer_phone" "text",
+    "is_fee_paid_by_user" boolean DEFAULT false
 );
 
 
@@ -2103,6 +2147,12 @@ GRANT ALL ON FUNCTION "public"."handle_partner_referral"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("input_id" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("input_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("input_id" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") TO "service_role";
@@ -2308,6 +2358,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
+
 
 
 -- Create buckets
