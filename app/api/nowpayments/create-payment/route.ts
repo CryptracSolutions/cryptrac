@@ -17,7 +17,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   // Ethereum network (includes ERC-20 tokens)
   'ETH': ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20'],
   
-  // Binance Smart Chain - FIXED: Use correct NOWPayments currency codes
+  // Binance Smart Chain
   'BNB': ['BNB', 'BSC', 'BINANCE', 'BNBBSC', 'USDTBSC', 'USDCBSC'],
   
   // Solana network
@@ -96,32 +96,43 @@ function isValidWalletAddress(address: string, currency: string): boolean {
   return true
 }
 
-// Enhanced error response handler
+// Enhanced error response handler with retry logic
 function handleNOWPaymentsError(error: any, context: string): NextResponse {
   console.error(`❌ ${context}:`, error)
   
   let errorMessage = 'Payment creation failed'
   let statusCode = 500
+  let retryAfter = null
   
   if (error.message?.includes('429')) {
     errorMessage = 'Too many requests. Please wait a moment and try again.'
     statusCode = 429
+    retryAfter = 30 // Suggest 30 second retry
   } else if (error.message?.includes('400')) {
     errorMessage = 'Invalid payment request. Please check your payment details.'
     statusCode = 400
   } else if (error.message?.includes('HTML error page')) {
     errorMessage = 'Payment service temporarily unavailable. Please try again.'
     statusCode = 503
+    retryAfter = 60 // Suggest 1 minute retry for service issues
   }
   
-  return NextResponse.json(
-    { 
-      success: false, 
-      error: errorMessage,
-      details: error.message || 'Unknown error'
-    },
-    { status: statusCode }
-  )
+  const response: any = { 
+    success: false, 
+    error: errorMessage,
+    details: error.message || 'Unknown error'
+  }
+  
+  if (retryAfter) {
+    response.retry_after = retryAfter
+  }
+  
+  const headers: any = {}
+  if (retryAfter) {
+    headers['Retry-After'] = retryAfter.toString()
+  }
+  
+  return NextResponse.json(response, { status: statusCode, headers })
 }
 
 export async function POST(request: NextRequest) {
@@ -161,7 +172,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get payment link and merchant info - FIXED: Get merchant_id correctly
+    // Get payment link and merchant info
     const { data: paymentLinkData, error: paymentLinkError } = await supabase
       .from('payment_links')
       .select(`
@@ -209,7 +220,7 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`
     }
 
-    // Enhanced auto-forwarding logic - FIXED: Use 'wallets' instead of 'wallet_addresses'
+    // Enhanced auto-forwarding logic
     let autoForwardingConfigured = false
     const wallets = merchant.wallets || {}
     
@@ -227,7 +238,7 @@ export async function POST(request: NextRequest) {
         if (isValidWalletAddress(walletAddress, pay_currency)) {
           paymentRequest.payout_address = walletAddress
           paymentRequest.payout_currency = pay_currency.toLowerCase()
-          paymentRequest.payout_extra_id = null
+          // FIXED: Don't set payout_extra_id to null - omit it entirely
           autoForwardingConfigured = true
           
           console.log(`✅ Auto-forwarding configured for ${pay_currency}: ${walletAddress.substring(0, 10)}...`)
@@ -282,7 +293,10 @@ export async function POST(request: NextRequest) {
         console.error('NOWPayments API error:', response.status, responseData)
         
         // If auto-forwarding failed, try without it
-        if (autoForwardingConfigured && responseData.code === 'BAD_CREATE_PAYMENT_REQUEST') {
+        if (autoForwardingConfigured && (
+          responseData.code === 'BAD_CREATE_PAYMENT_REQUEST' || 
+          responseData.message?.includes('payout_extra_id')
+        )) {
           console.log('🔄 Auto-forwarding failed, retrying without auto-forwarding...')
           retryWithoutForwarding = true
         } else {
@@ -306,7 +320,7 @@ export async function POST(request: NextRequest) {
       const retryRequest = { ...paymentRequest }
       delete retryRequest.payout_address
       delete retryRequest.payout_currency
-      delete retryRequest.payout_extra_id
+      // FIXED: Don't add payout_extra_id at all
       
       console.log('🔄 Retrying payment creation without auto-forwarding...')
       
@@ -359,13 +373,11 @@ export async function POST(request: NextRequest) {
       auto_forwarding: autoForwardingConfigured
     })
 
-    // FIXED: Save transaction to database with correct field names and merchant_id
+    // Save transaction to database
     const transactionData = {
-      // FIXED: Use the correct column name from schema
       nowpayments_payment_id: paymentResponse.payment_id,
       order_id: paymentResponse.order_id,
       payment_link_id: payment_link_id,
-      // FIXED: Use the correct merchant_id from payment link
       merchant_id: paymentLinkData.merchant_id,
       amount: paymentResponse.price_amount,
       currency: paymentResponse.price_currency.toUpperCase(),

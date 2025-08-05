@@ -20,23 +20,14 @@ export async function POST(request: NextRequest) {
     try {
       console.log(`📊 Getting estimate for ${currency_from} -> ${currency_to}`)
       
-      // Call NOWPayments estimate API
-      const response = await fetch('https://api.nowpayments.io/v1/estimate', {
-        method: 'GET',
-        headers: {
-          'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
-          'Content-Type': 'application/json',
-        },
-        // Use query parameters for GET request
-      })
-
-      // Build query string manually for GET request
+      // Build query string for GET request (FIXED: Proper NOWPayments API usage)
       const params = new URLSearchParams({
         amount: amount.toString(),
         currency_from: currency_from.toLowerCase(),
         currency_to: currency_to.toLowerCase()
       })
 
+      // Call NOWPayments estimate API with proper GET method
       const estimateResponse = await fetch(`https://api.nowpayments.io/v1/estimate?${params}`, {
         method: 'GET',
         headers: {
@@ -48,6 +39,19 @@ export async function POST(request: NextRequest) {
       if (!estimateResponse.ok) {
         const errorText = await estimateResponse.text()
         console.error(`❌ NOWPayments estimate error (${estimateResponse.status}):`, errorText)
+        
+        // Handle 429 rate limiting gracefully
+        if (estimateResponse.status === 429) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Rate limit exceeded. Please try again in a moment.',
+              retry_after: 30 // Suggest 30 second retry
+            },
+            { status: 429 }
+          )
+        }
+        
         throw new Error(`NOWPayments API error: ${estimateResponse.status}`)
       }
 
@@ -71,13 +75,27 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error(`❌ Error getting estimate for ${currency_to}:`, error)
       
+      // Handle different error types
+      let errorMessage = 'Failed to get estimate from NOWPayments'
+      let statusCode = 500
+      
+      if (error instanceof Error) {
+        if (error.message.includes('429')) {
+          errorMessage = 'Rate limit exceeded. Please try again in a moment.'
+          statusCode = 429
+        } else if (error.message.includes('400')) {
+          errorMessage = 'Invalid currency pair or amount'
+          statusCode = 400
+        }
+      }
+      
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Failed to get estimate from NOWPayments',
+          error: errorMessage,
           message: error instanceof Error ? error.message : 'Unknown error'
         },
-        { status: 500 }
+        { status: statusCode }
       )
     }
 
