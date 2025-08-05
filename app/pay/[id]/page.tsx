@@ -423,6 +423,15 @@ export default function PaymentPage() {
           const currencyCode = currency.code.toUpperCase()
           const cryptoUpper = crypto.toUpperCase()
           
+          // SPECIAL CASE: Handle USDC_AVAX and USDT_AVAX directly
+          if (cryptoUpper === 'USDC_AVAX' || cryptoUpper === 'USDT_AVAX') {
+            // These are already stable coins, check if they exist in NOWPayments
+            return currencyCode === cryptoUpper || 
+                   currencyCode === cryptoUpper.replace('_', '') || // USDCAVAX, USDTAVAX
+                   (cryptoUpper === 'USDC_AVAX' && (currencyCode === 'USDCAVALANCHE' || currencyCode.includes('USDCAVAX'))) ||
+                   (cryptoUpper === 'USDT_AVAX' && (currencyCode === 'USDTAVALANCHE' || currencyCode.includes('USDTAVAX')))
+          }
+          
           // Check for USDT variants
           if (currencyCode.includes('USDT')) {
             // ETH relationships - handle both USDT and USDTERC20
@@ -441,7 +450,7 @@ export default function PaymentPage() {
             if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
               return true
             }
-            // Avalanche relationships - FIXED: more comprehensive detection
+            // Avalanche relationships - FIXED: comprehensive detection
             if (cryptoUpper === 'AVAX' && (
               currencyCode.includes('AVAX') || 
               currencyCode.includes('AVALANCHE') ||
@@ -511,7 +520,7 @@ export default function PaymentPage() {
             if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
               return true
             }
-            // Avalanche relationships - FIXED: more comprehensive detection
+            // Avalanche relationships - FIXED: comprehensive detection
             if (cryptoUpper === 'AVAX' && (
               currencyCode.includes('AVAX') || 
               currencyCode.includes('AVALANCHE') ||

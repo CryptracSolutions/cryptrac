@@ -45,21 +45,21 @@ function formatCurrencyForNOWPayments(currency: string): string {
   return currency.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
-function findWalletAddress(walletAddresses: Record<string, string>, targetCurrency: string): string | null {
+function findWalletAddress(wallets: Record<string, string>, targetCurrency: string): string | null {
   const currencyUpper = targetCurrency.toUpperCase()
   
   // Direct match first
-  if (walletAddresses[currencyUpper]) {
-    return walletAddresses[currencyUpper]
+  if (wallets[currencyUpper]) {
+    return wallets[currencyUpper]
   }
   
   // Check currency mapping
   const possibleWallets = CURRENCY_WALLET_MAPPING[currencyUpper]
   if (possibleWallets) {
     for (const walletType of possibleWallets) {
-      if (walletAddresses[walletType]) {
+      if (wallets[walletType]) {
         console.log(`✅ Found wallet address for ${currencyUpper} using ${walletType} wallet`)
-        return walletAddresses[walletType]
+        return wallets[walletType]
       }
     }
   }
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Payment link found:', paymentLinkData)
 
-    // Step 2: Get merchant data separately
+    // Step 2: Get merchant data separately using correct column name 'wallets'
     let merchant = null
     let walletAddress = null
     let payoutCurrency = null
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     try {
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
-        .select('wallet_addresses, auto_convert_enabled, preferred_payout_currency')
+        .select('wallets, auto_convert_enabled, preferred_payout_currency')
         .eq('id', paymentLinkData.merchant_id)
         .single()
 
@@ -159,12 +159,12 @@ export async function POST(request: NextRequest) {
         console.log('✅ Merchant found:', {
           auto_convert_enabled: merchant.auto_convert_enabled,
           preferred_payout_currency: merchant.preferred_payout_currency,
-          wallet_count: Object.keys(merchant.wallet_addresses || {}).length
+          wallet_count: Object.keys(merchant.wallets || {}).length
         })
 
         // Find appropriate wallet address for the selected currency
-        if (merchant.wallet_addresses) {
-          walletAddress = findWalletAddress(merchant.wallet_addresses, pay_currency)
+        if (merchant.wallets) {
+          walletAddress = findWalletAddress(merchant.wallets, pay_currency)
           
           if (walletAddress) {
             console.log(`✅ Found wallet address for ${pay_currency}:`, walletAddress.substring(0, 10) + '...')
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
             }
           } else {
             console.log(`⚠️ No wallet address found for target currency: ${pay_currency}`)
-            console.log('Available wallets:', Object.keys(merchant.wallet_addresses))
+            console.log('Available wallets:', Object.keys(merchant.wallets))
           }
         }
       }
@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
     const gatewayFee = nowPaymentsData.fee_amount || 0
     const merchantReceives = nowPaymentsData.outcome_amount || (amount - gatewayFee)
 
-    // Store payment in database
+    // Store payment in database using correct column names
     const transactionData = {
       payment_link_id: payment_link_id,
       payment_id: nowPaymentsData.payment_id.toString(),
@@ -295,10 +295,10 @@ export async function POST(request: NextRequest) {
       console.log('✅ Transaction stored successfully:', transaction.id)
     }
 
-    // Update payment link usage count
+    // Update payment link usage count using the payment link's link_id (not UUID)
     try {
       const { error: usageError } = await supabase.rpc('increment_payment_link_usage', {
-        link_id: payment_link_id
+        input_id: paymentLinkData.id // Use the UUID, function will handle both cases
       })
       
       if (usageError) {
