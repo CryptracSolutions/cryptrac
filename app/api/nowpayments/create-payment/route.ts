@@ -17,8 +17,8 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   // Ethereum network (includes ERC-20 tokens)
   'ETH': ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20'],
   
-  // Binance Smart Chain
-  'BNB': ['BNB', 'BSC', 'BINANCE', 'USDTBSC', 'USDCBSC'],
+  // Binance Smart Chain - FIXED: Use correct NOWPayments currency codes
+  'BNB': ['BNB', 'BSC', 'BINANCE', 'BNBBSC', 'USDTBSC', 'USDCBSC'],
   
   // Solana network
   'SOL': ['SOL', 'SOLANA', 'USDTSOL', 'USDCSOL'],
@@ -49,11 +49,11 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
 }
 
 // Function to determine which wallet to use for a given currency
-function getWalletKeyForCurrency(currency: string, walletAddresses: Record<string, string>): string | null {
+function getWalletKeyForCurrency(currency: string, wallets: Record<string, string>): string | null {
   const currencyUpper = currency.toUpperCase()
   
   // First, try exact match
-  if (walletAddresses[currencyUpper]) {
+  if (wallets[currencyUpper]) {
     return currencyUpper
   }
   
@@ -61,12 +61,12 @@ function getWalletKeyForCurrency(currency: string, walletAddresses: Record<strin
   for (const [networkKey, currencies] of Object.entries(NETWORK_WALLET_MAPPING)) {
     if (currencies.includes(currencyUpper)) {
       // Check if we have a wallet for this network
-      if (walletAddresses[networkKey]) {
+      if (wallets[networkKey]) {
         return networkKey
       }
       // Also check alternative names
       for (const altName of currencies) {
-        if (walletAddresses[altName]) {
+        if (wallets[altName]) {
           return altName
         }
       }
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Look up payment link and merchant
+    // Look up payment link and merchant - FIXED: Use correct column name 'wallets'
     console.log('🔍 Looking up payment link:', payment_link_id)
     
     const { data: paymentLinkData, error: linkError } = await supabase
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
           id,
           user_id,
           business_name,
-          wallet_addresses,
+          wallets,
           auto_convert_enabled,
           charge_customer_fee
         )
@@ -223,17 +223,17 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`
     }
 
-    // Enhanced auto-forwarding logic
+    // Enhanced auto-forwarding logic - FIXED: Use 'wallets' instead of 'wallet_addresses'
     let autoForwardingConfigured = false
-    const walletAddresses = merchant.wallet_addresses || {}
+    const wallets = merchant.wallets || {}
     
-    console.log('🔍 Available wallet addresses:', Object.keys(walletAddresses))
+    console.log('🔍 Available wallets:', Object.keys(wallets))
     
-    if (merchant.auto_convert_enabled && Object.keys(walletAddresses).length > 0) {
-      const walletKey = getWalletKeyForCurrency(pay_currency, walletAddresses)
+    if (merchant.auto_convert_enabled && Object.keys(wallets).length > 0) {
+      const walletKey = getWalletKeyForCurrency(pay_currency, wallets)
       
-      if (walletKey && walletAddresses[walletKey]) {
-        const walletAddress = walletAddresses[walletKey]
+      if (walletKey && wallets[walletKey]) {
+        const walletAddress = wallets[walletKey]
         
         console.log(`🔍 Found wallet for ${pay_currency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`)
         
@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         console.warn(`⚠️ No wallet address found for ${pay_currency}`)
-        console.log('Available wallet keys:', Object.keys(walletAddresses))
+        console.log('Available wallet keys:', Object.keys(wallets))
       }
     }
 
@@ -373,7 +373,7 @@ export async function POST(request: NextRequest) {
       auto_forwarding: autoForwardingConfigured
     })
 
-    // Save transaction to database
+    // Save transaction to database - FIXED: Use correct column name
     const transactionData = {
       nowpayments_payment_id: paymentResponse.payment_id,
       order_id: paymentResponse.order_id,

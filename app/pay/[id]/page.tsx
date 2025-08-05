@@ -50,350 +50,373 @@ interface PaymentLink {
 interface CurrencyInfo {
   code: string
   name: string
-  symbol: string
-  network: string
-  rate_usd: number
-  min_amount: number
-  max_amount: number
-  decimals: number
   enabled: boolean
-  trust_wallet_compatible: boolean
-  display_name: string
-}
-
-interface EstimateData {
-  currency: string
-  estimated_amount: number
-  currency_from: string
-  amount_from: number
-  fiat_equivalent?: number
   min_amount?: number
   max_amount?: number
-  rate: number
 }
 
 interface PaymentData {
   payment_id: string
   payment_status: string
   pay_address: string
-  price_amount: number
-  price_currency: string
   pay_amount: number
   pay_currency: string
-  order_id?: string
-  order_description?: string
-  purchase_id?: string
+  price_amount: number
+  price_currency: string
+  order_id: string
+  order_description: string
   created_at: string
   updated_at: string
   outcome_amount?: number
   outcome_currency?: string
+  actually_paid?: number
+  tx_hash?: string
+  network?: string
 }
 
 interface PaymentStatus {
-  id: string
   payment_id: string
-  order_id: string
-  status: string
-  pay_currency: string
-  pay_amount: number
+  payment_status: string
   pay_address: string
+  pay_amount: number
+  pay_currency: string
   price_amount: number
   price_currency: string
+  order_id: string
+  order_description: string
   created_at: string
   updated_at: string
+  outcome_amount?: number
+  outcome_currency?: string
+  actually_paid?: number
   tx_hash?: string
-  customer_email?: string
+  network?: string
 }
 
-const FIAT_CURRENCIES = [
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
-]
+interface FeeBreakdown {
+  baseAmount: number
+  taxAmount: number
+  subtotalWithTax: number
+  platformFee: number
+  customerTotal: number
+  merchantReceives: number
+}
 
-const STATUS_CONFIG = {
-  waiting: {
-    title: 'Waiting for Payment',
-    description: 'Send the exact amount to the address below',
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    icon: Clock,
-    showSpinner: false
-  },
-  confirming: {
-    title: 'Payment Received',
-    description: 'Your payment is being confirmed on the blockchain',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    icon: RefreshCw,
-    showSpinner: true
-  },
-  confirmed: {
-    title: 'Payment Confirmed',
-    description: 'Your payment has been successfully processed',
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
-    icon: CheckCircle,
-    showSpinner: false
-  },
-  failed: {
-    title: 'Payment Failed',
-    description: 'There was an issue with your payment',
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    icon: AlertCircle,
-    showSpinner: false
-  },
-  expired: {
-    title: 'Payment Expired',
-    description: 'This payment has expired',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
-    icon: AlertCircle,
-    showSpinner: false
+interface EstimateData {
+  currency_from: string
+  currency_to: string
+  amount_from: number
+  estimated_amount: number
+  fee_amount: number
+  fee_percentage: number
+}
+
+// Block explorer URLs for different networks
+const getBlockExplorerUrl = (txHash: string, currency: string): string | null => {
+  if (!txHash) return null
+  
+  const currency_upper = currency.toUpperCase()
+  
+  // Bitcoin
+  if (currency_upper === 'BTC') {
+    return `https://blockchair.com/bitcoin/transaction/${txHash}`
   }
+  
+  // Ethereum and ERC-20 tokens
+  if (['ETH', 'USDT', 'USDC', 'USDTERC20'].includes(currency_upper)) {
+    return `https://etherscan.io/tx/${txHash}`
+  }
+  
+  // BSC and BEP-20 tokens
+  if (['BNB', 'BNBBSC', 'BSC', 'USDTBSC', 'USDCBSC'].includes(currency_upper)) {
+    return `https://bscscan.com/tx/${txHash}`
+  }
+  
+  // Solana and SPL tokens
+  if (['SOL', 'USDTSOL', 'USDCSOL'].includes(currency_upper)) {
+    return `https://solscan.io/tx/${txHash}`
+  }
+  
+  // Polygon and Polygon tokens
+  if (['MATIC', 'USDTMATIC', 'USDCMATIC'].includes(currency_upper)) {
+    return `https://polygonscan.com/tx/${txHash}`
+  }
+  
+  // Tron and TRC-20 tokens
+  if (['TRX', 'USDTTRC20'].includes(currency_upper)) {
+    return `https://tronscan.org/#/transaction/${txHash}`
+  }
+  
+  // Avalanche
+  if (currency_upper === 'AVAX') {
+    return `https://snowtrace.io/tx/${txHash}`
+  }
+  
+  // Arbitrum
+  if (['ARB', 'USDTARB', 'USDCARB'].includes(currency_upper)) {
+    return `https://arbiscan.io/tx/${txHash}`
+  }
+  
+  // Optimism
+  if (['OP', 'USDTOP', 'USDCOP'].includes(currency_upper)) {
+    return `https://optimistic.etherscan.io/tx/${txHash}`
+  }
+  
+  // Base
+  if (['BASE', 'USDCBASE'].includes(currency_upper)) {
+    return `https://basescan.org/tx/${txHash}`
+  }
+  
+  // TON
+  if (['TON', 'USDTTON'].includes(currency_upper)) {
+    return `https://tonscan.org/tx/${txHash}`
+  }
+  
+  // Algorand
+  if (['ALGO', 'USDCALGO'].includes(currency_upper)) {
+    return `https://algoexplorer.io/tx/${txHash}`
+  }
+  
+  // Litecoin
+  if (currency_upper === 'LTC') {
+    return `https://blockchair.com/litecoin/transaction/${txHash}`
+  }
+  
+  // Cardano
+  if (currency_upper === 'ADA') {
+    return `https://cardanoscan.io/transaction/${txHash}`
+  }
+  
+  // XRP
+  if (currency_upper === 'XRP') {
+    return `https://xrpscan.com/tx/${txHash}`
+  }
+  
+  // Polkadot
+  if (currency_upper === 'DOT') {
+    return `https://polkadot.subscan.io/extrinsic/${txHash}`
+  }
+  
+  // Stellar
+  if (currency_upper === 'XLM') {
+    return `https://stellar.expert/explorer/public/tx/${txHash}`
+  }
+  
+  // NEAR
+  if (currency_upper === 'NEAR') {
+    return `https://explorer.near.org/transactions/${txHash}`
+  }
+  
+  return null
 }
 
 export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
-  const linkId = params.id as string
-  const statusCheckIntervalRef = useRef<NodeJS.Timeout | null>(null)
-
+  const id = params?.id as string
+  
+  // State management
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null)
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
-  const [estimates, setEstimates] = useState<Record<string, EstimateData>>({})
   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
+  const [estimates, setEstimates] = useState<EstimateData[]>([])
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
-  
   const [loading, setLoading] = useState(true)
   const [estimatesLoading, setEstimatesLoading] = useState(false)
   const [creatingPayment, setCreatingPayment] = useState(false)
   const [error, setError] = useState<string>('')
   
-  // Optimized status checking states
-  const [statusChecking, setStatusChecking] = useState(false)
-  const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null)
-  const [statusCheckCount, setStatusCheckCount] = useState(0)
-  const [pollingInterval, setPollingInterval] = useState(5000) // Start with 5 seconds
+  // Status monitoring state
+  const [isMonitoring, setIsMonitoring] = useState(false)
+  const [monitoringInterval, setMonitoringInterval] = useState(5000) // Start with 5 seconds
   const [consecutiveFailures, setConsecutiveFailures] = useState(0)
-  const [isPollingActive, setIsPollingActive] = useState(false)
-  const [lastSuccessfulCheck, setLastSuccessfulCheck] = useState<Date | null>(null)
+  const [lastStatusCheck, setLastStatusCheck] = useState<number>(0)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const visibilityRef = useRef<boolean>(true)
+  
+  // Fee calculation
+  const feeBreakdown = paymentLink ? calculateFeeBreakdown(paymentLink) : null
 
-  useEffect(() => {
-    if (linkId) {
-      loadPaymentLink()
-    }
-  }, [linkId])
-
-  useEffect(() => {
-    if (paymentLink && availableCurrencies.length > 0) {
-      loadEstimates()
-    }
-  }, [paymentLink, availableCurrencies])
-
-  // Adaptive polling intervals based on payment status and time elapsed
-  const getAdaptivePollingInterval = (status: string, timeElapsed: number): number => {
-    // If payment is confirmed or failed, stop polling
-    if (['confirmed', 'failed', 'expired'].includes(status)) {
-      return 0 // Stop polling
-    }
+  function calculateFeeBreakdown(link: PaymentLink): FeeBreakdown {
+    const baseAmount = link.base_amount
+    const taxAmount = link.tax_amount
+    const subtotalWithTax = link.subtotal_with_tax
     
-    // For waiting status, poll more frequently initially
-    if (status === 'waiting') {
-      if (timeElapsed < 60000) return 3000 // First minute: every 3 seconds
-      if (timeElapsed < 300000) return 5000 // Next 4 minutes: every 5 seconds
-      if (timeElapsed < 900000) return 10000 // Next 10 minutes: every 10 seconds
-      return 15000 // After 15 minutes: every 15 seconds
-    }
+    // Platform fee calculation
+    const platformFeeRate = link.merchant.charge_customer_fee ? link.fee_percentage : 0
+    const platformFee = subtotalWithTax * (platformFeeRate / 100)
     
-    // For confirming status, poll more frequently
-    if (status === 'confirming') {
-      if (timeElapsed < 120000) return 2000 // First 2 minutes: every 2 seconds
-      if (timeElapsed < 600000) return 5000 // Next 8 minutes: every 5 seconds
-      return 10000 // After 10 minutes: every 10 seconds
-    }
+    const customerTotal = subtotalWithTax + platformFee
+    const merchantReceives = subtotalWithTax - (link.merchant.charge_customer_fee ? 0 : subtotalWithTax * (link.fee_percentage / 100))
     
-    // Default fallback
-    return 5000
+    return {
+      baseAmount,
+      taxAmount,
+      subtotalWithTax,
+      platformFee,
+      customerTotal,
+      merchantReceives
+    }
   }
 
-  // Optimized status checking with exponential backoff on failures
+  // Optimized status checking with adaptive intervals and page visibility
   const checkPaymentStatusOptimized = async () => {
-    if (!linkId || statusChecking || !isPollingActive) return
+    if (!paymentData?.payment_id || !visibilityRef.current) {
+      return
+    }
 
     try {
-      setStatusChecking(true)
-      setLastStatusCheck(new Date())
-      setStatusCheckCount(prev => prev + 1)
-
-      console.log(`🔍 Checking payment status (check #${statusCheckCount + 1}, interval: ${pollingInterval}ms)`)
-
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-
-      const response = await fetch(`/api/payments/${linkId}/status`, {
+      
+      const response = await fetch(`/api/nowpayments/payment-status?payment_id=${paymentData.payment_id}`, {
         signal: controller.signal,
         headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       })
       
       clearTimeout(timeoutId)
-
+      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(`HTTP ${response.status}`)
       }
-
+      
       const data = await response.json()
-
+      
       if (data.success && data.payment) {
-        const newStatus = data.payment.status
-        const previousStatus = paymentStatus?.status
-
-        console.log(`📊 Payment status: ${previousStatus} → ${newStatus}`)
-
+        console.log('📊 Payment status update:', data.payment.payment_status)
         setPaymentStatus(data.payment)
-        setConsecutiveFailures(0) // Reset failure counter on success
-        setLastSuccessfulCheck(new Date())
-
-        // Calculate time elapsed since payment creation
-        const paymentCreated = paymentData?.created_at ? new Date(paymentData.created_at) : new Date()
-        const timeElapsed = Date.now() - paymentCreated.getTime()
-
-        // Update polling interval based on status and time
-        const newInterval = getAdaptivePollingInterval(newStatus, timeElapsed)
-        if (newInterval !== pollingInterval) {
-          console.log(`🔄 Updating polling interval: ${pollingInterval}ms → ${newInterval}ms`)
-          setPollingInterval(newInterval)
+        setLastStatusCheck(Date.now())
+        setConsecutiveFailures(0) // Reset failure count on success
+        
+        // Adaptive interval based on status and time elapsed
+        const status = data.payment.payment_status
+        const timeElapsed = Date.now() - new Date(paymentData.created_at).getTime()
+        
+        let newInterval = 5000 // Default 5 seconds
+        
+        if (status === 'waiting') {
+          // Waiting status: start fast, then slow down
+          if (timeElapsed < 60000) { // First minute
+            newInterval = 3000 // 3 seconds
+          } else if (timeElapsed < 300000) { // First 5 minutes
+            newInterval = 5000 // 5 seconds
+          } else if (timeElapsed < 900000) { // First 15 minutes
+            newInterval = 10000 // 10 seconds
+          } else {
+            newInterval = 15000 // 15 seconds after 15 minutes
+          }
+        } else if (status === 'confirming') {
+          // Confirming status: check more frequently
+          if (timeElapsed < 120000) { // First 2 minutes
+            newInterval = 2000 // 2 seconds
+          } else if (timeElapsed < 600000) { // First 10 minutes
+            newInterval = 5000 // 5 seconds
+          } else {
+            newInterval = 10000 // 10 seconds after 10 minutes
+          }
+        } else if (['finished', 'partially_paid', 'failed', 'refunded', 'expired'].includes(status)) {
+          // Final states: stop monitoring
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+          }
+          setIsMonitoring(false)
+          
+          // Redirect to success page for completed payments
+          if (status === 'finished') {
+            setTimeout(() => {
+              router.push(`/payment/success/${paymentData.payment_id}`)
+            }, 2000)
+          }
+          
+          return
         }
-
-        // Show status change notifications
-        if (previousStatus !== newStatus) {
-          switch (newStatus) {
-            case 'confirming':
-              toast.success('Payment received! Confirming on blockchain...')
-              break
-            case 'confirmed':
-              toast.success('Payment confirmed successfully!')
-              setIsPollingActive(false) // Stop polling
-              // Redirect to success page after a short delay
-              setTimeout(() => {
-                router.push(`/payment/success/${linkId}?payment_id=${data.payment.id}`)
-              }, 2000)
-              break
-            case 'failed':
-              toast.error('Payment failed. Please try again.')
-              setIsPollingActive(false) // Stop polling
-              break
-            case 'expired':
-              toast.error('Payment expired. Please create a new payment.')
-              setIsPollingActive(false) // Stop polling
-              break
+        
+        // Update interval if it changed significantly
+        if (Math.abs(newInterval - monitoringInterval) > 1000) {
+          setMonitoringInterval(newInterval)
+          
+          // Restart interval with new timing
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+            intervalRef.current = setInterval(checkPaymentStatusOptimized, newInterval)
           }
         }
-
-        // Stop checking if payment is in final state
-        if (['confirmed', 'failed', 'expired'].includes(newStatus)) {
-          setIsPollingActive(false)
-        }
+        
       } else {
-        throw new Error(data.error || 'Invalid response from status API')
+        throw new Error(data.error || 'Failed to get payment status')
       }
-
-    } catch (error) {
-      console.error('❌ Error checking payment status:', error)
       
+    } catch (error) {
+      console.error('Error checking payment status:', error)
+      
+      // Exponential backoff on consecutive failures
       const newFailureCount = consecutiveFailures + 1
       setConsecutiveFailures(newFailureCount)
       
-      // Implement exponential backoff on failures
-      if (newFailureCount >= 3) {
-        const backoffInterval = Math.min(pollingInterval * Math.pow(2, newFailureCount - 3), 30000)
-        console.warn(`⚠️ ${newFailureCount} consecutive failures, backing off to ${backoffInterval}ms`)
-        setPollingInterval(backoffInterval)
-      }
+      // Increase interval on failures, max 30 seconds
+      const backoffInterval = Math.min(5000 * Math.pow(1.5, newFailureCount), 30000)
       
-      // Stop polling after too many failures
-      if (newFailureCount >= 10) {
-        console.error('❌ Too many consecutive failures, stopping status polling')
-        setIsPollingActive(false)
-        toast.error('Unable to check payment status. Please refresh the page.')
+      if (Math.abs(backoffInterval - monitoringInterval) > 1000) {
+        setMonitoringInterval(backoffInterval)
+        
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+          intervalRef.current = setInterval(checkPaymentStatusOptimized, backoffInterval)
+        }
       }
-      
-    } finally {
-      setStatusChecking(false)
     }
   }
 
-  // Optimized status checking starter
-  const startOptimizedStatusChecking = () => {
-    console.log('🔄 Starting optimized real-time status checking for payment link:', linkId)
+  // Start monitoring payment status
+  const startStatusMonitoring = () => {
+    if (isMonitoring || !paymentData?.payment_id) return
     
-    // Clear any existing interval
-    if (statusCheckIntervalRef.current) {
-      clearInterval(statusCheckIntervalRef.current)
-      statusCheckIntervalRef.current = null
-    }
-
-    setIsPollingActive(true)
+    console.log('🔄 Starting optimized payment status monitoring...')
+    setIsMonitoring(true)
+    setMonitoringInterval(5000) // Start with 5 seconds
     setConsecutiveFailures(0)
-    setPollingInterval(5000) // Start with 5 seconds
-
-    // Initial status check
+    
+    // Initial check
     checkPaymentStatusOptimized()
+    
+    // Set up interval
+    intervalRef.current = setInterval(checkPaymentStatusOptimized, 5000)
   }
 
-  // Dynamic interval management
-  useEffect(() => {
-    if (!isPollingActive || pollingInterval === 0) {
-      // Clear interval if polling is inactive or interval is 0
-      if (statusCheckIntervalRef.current) {
-        clearInterval(statusCheckIntervalRef.current)
-        statusCheckIntervalRef.current = null
-      }
-      return
+  // Stop monitoring
+  const stopStatusMonitoring = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
     }
+    setIsMonitoring(false)
+    console.log('⏹️ Stopped payment status monitoring')
+  }
 
-    // Set up new interval with current polling interval
-    if (statusCheckIntervalRef.current) {
-      clearInterval(statusCheckIntervalRef.current)
-    }
-
-    statusCheckIntervalRef.current = setInterval(() => {
-      checkPaymentStatusOptimized()
-    }, pollingInterval)
-
-    // Cleanup function
-    return () => {
-      if (statusCheckIntervalRef.current) {
-        clearInterval(statusCheckIntervalRef.current)
-        statusCheckIntervalRef.current = null
-      }
-    }
-  }, [pollingInterval, isPollingActive, linkId])
-
-  // Page visibility optimization - pause polling when page is hidden
+  // Page visibility handling
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        console.log('📱 Page hidden, pausing status polling')
-        setIsPollingActive(false)
-      } else {
-        console.log('📱 Page visible, resuming status polling')
-        if (paymentData && !['confirmed', 'failed', 'expired'].includes(paymentStatus?.status || '')) {
-          setIsPollingActive(true)
+      const isVisible = !document.hidden
+      visibilityRef.current = isVisible
+      
+      if (isVisible && isMonitoring && paymentData?.payment_id) {
+        console.log('👁️ Page visible - resuming status monitoring')
+        // Resume monitoring when page becomes visible
+        if (!intervalRef.current) {
+          intervalRef.current = setInterval(checkPaymentStatusOptimized, monitoringInterval)
         }
+      } else if (!isVisible && intervalRef.current) {
+        console.log('🙈 Page hidden - pausing status monitoring')
+        // Pause monitoring when page is hidden
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
       }
     }
 
@@ -402,21 +425,23 @@ export default function PaymentPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [paymentData, paymentStatus])
+  }, [isMonitoring, paymentData?.payment_id, monitoringInterval])
 
-  // Connection status monitoring
+  // Connection monitoring
   useEffect(() => {
     const handleOnline = () => {
-      console.log('🌐 Connection restored, resuming status polling')
-      if (paymentData && !['confirmed', 'failed', 'expired'].includes(paymentStatus?.status || '')) {
-        setIsPollingActive(true)
-        setConsecutiveFailures(0) // Reset failures on reconnection
+      console.log('🌐 Connection restored - resuming monitoring')
+      if (isMonitoring && paymentData?.payment_id && visibilityRef.current && !intervalRef.current) {
+        intervalRef.current = setInterval(checkPaymentStatusOptimized, monitoringInterval)
       }
     }
 
     const handleOffline = () => {
-      console.log('🌐 Connection lost, pausing status polling')
-      setIsPollingActive(false)
+      console.log('📡 Connection lost - pausing monitoring')
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
 
     window.addEventListener('online', handleOnline)
@@ -426,105 +451,63 @@ export default function PaymentPage() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [paymentData, paymentStatus])
+  }, [isMonitoring, paymentData?.payment_id, monitoringInterval])
 
-  // Replace the existing useEffect that starts status checking
+  // Cleanup on unmount
   useEffect(() => {
-    if (paymentData && linkId) {
-      startOptimizedStatusChecking()
-    }
-
-    // Cleanup on unmount
     return () => {
-      setIsPollingActive(false)
-      if (statusCheckIntervalRef.current) {
-        clearInterval(statusCheckIntervalRef.current)
-        statusCheckIntervalRef.current = null
-      }
+      stopStatusMonitoring()
     }
-  }, [paymentData, linkId])
+  }, [])
+
+  // Start monitoring when payment is created
+  useEffect(() => {
+    if (paymentData && !isMonitoring) {
+      startStatusMonitoring()
+    }
+  }, [paymentData])
 
   const loadPaymentLink = async () => {
     try {
-      setLoading(true)
-      console.log('🔄 Loading payment link:', linkId)
-
-      const { data: paymentLinkData, error: linkError } = await supabase
+      console.log('🔍 Loading payment link:', id)
+      
+      const { data, error } = await supabase
         .from('payment_links')
         .select(`
-          id,
-          link_id,
-          title,
-          description,
-          amount,
-          base_amount,
-          currency,
-          accepted_cryptos,
-          expires_at,
-          max_uses,
-          charge_customer_fee,
-          auto_convert_enabled,
-          fee_percentage,
-          tax_enabled,
-          tax_rates,
-          tax_amount,
-          subtotal_with_tax,
-          merchant:merchants(
-            business_name,
-            charge_customer_fee,
-            auto_convert_enabled
-          )
+          *,
+          merchant:merchants(business_name, charge_customer_fee, auto_convert_enabled)
         `)
-        .eq('link_id', linkId)
+        .eq('link_id', id)
         .single()
 
-      if (linkError) {
-        console.error('Supabase error:', linkError)
+      if (error) {
+        console.error('Supabase error:', error)
         throw new Error('Payment link not found')
       }
 
-      if (!paymentLinkData) {
+      if (!data) {
         throw new Error('Payment link not found')
       }
 
-      console.log('📄 Raw payment link data:', paymentLinkData)
+      // Check if payment link has expired
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        throw new Error('This payment link has expired')
+      }
+
+      console.log('✅ Payment link loaded:', data)
 
       // Transform the data to match our interface
       const transformedData: PaymentLink = {
-        id: paymentLinkData.id,
-        link_id: paymentLinkData.link_id,
-        title: paymentLinkData.title,
-        description: paymentLinkData.description,
-        amount: paymentLinkData.amount,
-        base_amount: paymentLinkData.base_amount || paymentLinkData.amount,
-        currency: paymentLinkData.currency,
-        accepted_cryptos: paymentLinkData.accepted_cryptos || [],
-        expires_at: paymentLinkData.expires_at,
-        max_uses: paymentLinkData.max_uses,
-        charge_customer_fee: paymentLinkData.charge_customer_fee,
-        auto_convert_enabled: paymentLinkData.auto_convert_enabled,
-        fee_percentage: paymentLinkData.fee_percentage || 0.01,
-        tax_enabled: paymentLinkData.tax_enabled || false,
-        tax_rates: paymentLinkData.tax_rates || [],
-        tax_amount: paymentLinkData.tax_amount || 0,
-        subtotal_with_tax: paymentLinkData.subtotal_with_tax || paymentLinkData.amount,
-        merchant: {
-          business_name: Array.isArray(paymentLinkData.merchant) 
-            ? (paymentLinkData.merchant[0] as any)?.business_name || 'Unknown Business'
-            : (paymentLinkData.merchant as any)?.business_name || 'Unknown Business',
-          charge_customer_fee: Array.isArray(paymentLinkData.merchant) 
-            ? (paymentLinkData.merchant[0] as any)?.charge_customer_fee || false
-            : (paymentLinkData.merchant as any)?.charge_customer_fee || false,
-          auto_convert_enabled: Array.isArray(paymentLinkData.merchant) 
-            ? (paymentLinkData.merchant[0] as any)?.auto_convert_enabled || false
-            : (paymentLinkData.merchant as any)?.auto_convert_enabled || false
-        }
+        ...data,
+        merchant: Array.isArray(data.merchant) ? data.merchant[0] : data.merchant
       }
 
       setPaymentLink(transformedData)
       
-      // Load currencies with the accepted cryptos from the payment link
-      await loadCurrencies(transformedData.accepted_cryptos)
+      // Load available currencies after payment link is loaded
+      if (transformedData.accepted_cryptos && transformedData.accepted_cryptos.length > 0) {
+        await loadCurrencies(transformedData.accepted_cryptos)
+      }
 
     } catch (error) {
       console.error('Error loading payment link:', error)
@@ -548,10 +531,77 @@ export default function PaymentPage() {
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Enhanced currency filtering: include base currencies AND their stable coins
-      const expandedAcceptedCryptos = [...acceptedCryptos]
+      // COMPREHENSIVE BACKEND DETECTION - Find all possible alternatives
+      const CURRENCY_ALTERNATIVES: Record<string, string[]> = {
+        // Bitcoin alternatives
+        'BTC': ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
+        
+        // Ethereum alternatives
+        'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP'],
+        
+        // BNB/BSC alternatives
+        'BNB': ['BNB', 'BNBBSC', 'BSC', 'BNB_BSC', 'BINANCE', 'BNBCHAIN'],
+        
+        // Solana alternatives
+        'SOL': ['SOL', 'SOLANA', 'SOLSPL'],
+        
+        // Polygon/Matic alternatives
+        'MATIC': ['MATIC', 'POLYGON', 'MATICMATIC', 'POLYGONMATIC'],
+        
+        // Avalanche alternatives
+        'AVAX': ['AVAX', 'AVALANCHE', 'AVAXC', 'AVAXCCHAIN'],
+        
+        // Tron alternatives
+        'TRX': ['TRX', 'TRON', 'TRXTRC20'],
+        
+        // TON alternatives
+        'TON': ['TON', 'TONCOIN', 'TONCHAIN'],
+        
+        // Litecoin alternatives
+        'LTC': ['LTC', 'LITECOIN', 'LTCLN'],
+        
+        // Cardano alternatives
+        'ADA': ['ADA', 'CARDANO', 'ADACARDANO'],
+        
+        // Polkadot alternatives
+        'DOT': ['DOT', 'POLKADOT', 'DOTPOLKADOT'],
+        
+        // XRP alternatives
+        'XRP': ['XRP', 'RIPPLE', 'XRPRIPPLE'],
+        
+        // NEAR alternatives
+        'NEAR': ['NEAR', 'NEARPROTOCOL', 'NEARNEAR'],
+        
+        // Algorand alternatives
+        'ALGO': ['ALGO', 'ALGORAND', 'ALGOALGORAND'],
+        
+        // Stellar alternatives
+        'XLM': ['XLM', 'STELLAR', 'XLMSTELLAR'],
+        
+        // Arbitrum alternatives
+        'ARB': ['ARB', 'ARBITRUM', 'ARBARBITRUM', 'ARBETH'],
+        
+        // Optimism alternatives
+        'OP': ['OP', 'OPTIMISM', 'OPOPTIMISM', 'OPETH'],
+        
+        // Base alternatives
+        'BASE': ['BASE', 'BASECHAIN', 'BASECOIN'],
+        
+        // Additional popular currencies with alternatives
+        'DOGE': ['DOGE', 'DOGECOIN', 'DOGEBSC'],
+        'SHIB': ['SHIB', 'SHIBAINU', 'SHIBBSC'],
+        'UNI': ['UNI', 'UNISWAP', 'UNIBSC'],
+        'LINK': ['LINK', 'CHAINLINK', 'LINKBSC'],
+        'ATOM': ['ATOM', 'COSMOS', 'ATOMCOSMOS'],
+        'FTM': ['FTM', 'FANTOM', 'FTMFANTOM'],
+        'AAVE': ['AAVE', 'AAVEBSC', 'AAVEMATIC'],
+        'CRO': ['CRO', 'CRONOS', 'CROCRONOS']
+      }
+
+      // BACKEND MAPPING - Create mapping from display currency to actual NOWPayments currency
+      const currencyMapping: Record<string, string> = {}
       
-      // Updated stable coin mappings - ONLY USDT/USDC variations allowed
+      // Stable coin mappings - ONLY USDT/USDC variations allowed
       const STABLE_COIN_MAPPING: Record<string, string[]> = {
         'ETH': ['USDT', 'USDTERC20', 'USDC'], // Ethereum network - only USDT/USDC
         'BNB': ['USDTBSC', 'USDCBSC'], // BSC network - only USDT/USDC
@@ -573,102 +623,145 @@ export default function PaymentPage() {
         'ADA': [], 
         'XRP': []
       }
+
+      // STEP 1: Find backend mappings for primary currencies
+      console.log('🔍 Step 1: Creating backend mappings for primary currencies...')
       
-      // For each accepted crypto, find its related stable coins (USDT/USDC only)
       acceptedCryptos.forEach(crypto => {
+        const cryptoUpper = crypto.toUpperCase()
+        console.log(`🔍 Finding backend mapping for: ${crypto}`)
+        
+        // Get all possible alternatives for this currency
+        const alternatives = CURRENCY_ALTERNATIVES[cryptoUpper] || [cryptoUpper]
+        
+        // Find which alternative exists in NOWPayments
+        let foundMapping = false
+        for (const alt of alternatives) {
+          const found = data.currencies.find((currency: CurrencyInfo) => 
+            currency.code.toUpperCase() === alt && currency.enabled
+          )
+          if (found) {
+            currencyMapping[cryptoUpper] = found.code
+            console.log(`✅ Backend mapping: ${crypto} → ${found.code}`)
+            foundMapping = true
+            break
+          }
+        }
+        
+        // If no predefined alternative found, try dynamic search
+        if (!foundMapping) {
+          const dynamicMatch = data.currencies.find((currency: CurrencyInfo) => {
+            const code = currency.code.toUpperCase()
+            return (
+              code.includes(cryptoUpper) || 
+              code.startsWith(cryptoUpper) ||
+              code === `${cryptoUpper}BSC` ||
+              code === `${cryptoUpper}ERC20` ||
+              code === `${cryptoUpper}TRC20`
+            ) && currency.enabled
+          })
+          
+          if (dynamicMatch) {
+            currencyMapping[cryptoUpper] = dynamicMatch.code
+            console.log(`✅ Dynamic backend mapping: ${crypto} → ${dynamicMatch.code}`)
+            foundMapping = true
+          }
+        }
+        
+        if (!foundMapping) {
+          console.warn(`⚠️ No backend mapping found for: ${crypto}`)
+        }
+      })
+
+      // STEP 2: Create clean customer-facing currency list
+      console.log('🔍 Step 2: Creating clean customer-facing currency list...')
+      
+      const customerFacingCurrencies: CurrencyInfo[] = []
+      
+      // Add primary currencies (only if backend mapping exists)
+      acceptedCryptos.forEach(crypto => {
+        const cryptoUpper = crypto.toUpperCase()
+        const backendCode = currencyMapping[cryptoUpper]
+        
+        if (backendCode) {
+          // Find the actual currency info from NOWPayments
+          const backendCurrency = data.currencies.find((currency: CurrencyInfo) => 
+            currency.code === backendCode
+          )
+          
+          if (backendCurrency) {
+            // Create a customer-facing version with clean display name
+            const customerCurrency: CurrencyInfo = {
+              ...backendCurrency,
+              code: crypto, // Display the clean primary code (BNB, not BNBBSC)
+              name: backendCurrency.name.replace(/BSC|ERC20|TRC20|SOL|MATIC|ARB|OP/gi, '').trim()
+            }
+            
+            customerFacingCurrencies.push(customerCurrency)
+            console.log(`✅ Added primary currency: ${crypto} (backend: ${backendCode})`)
+          }
+        }
+      })
+
+      // Add USDT/USDC stablecoins (only for networks that support them)
+      acceptedCryptos.forEach(crypto => {
+        const cryptoUpper = crypto.toUpperCase()
+        const stableCoins = STABLE_COIN_MAPPING[cryptoUpper] || []
+        
         console.log(`🔍 Researching USDT/USDC stable coins for: ${crypto}`)
         
-        const cryptoUpper = crypto.toUpperCase()
-        const relatedStableCoins = STABLE_COIN_MAPPING[cryptoUpper] || []
-        
-        // Find stable coins that actually exist in NOWPayments
-        const availableStableCoins = data.currencies.filter((currency: CurrencyInfo) => {
-          const currencyCode = currency.code.toUpperCase()
-          return relatedStableCoins.includes(currencyCode) && currency.enabled
-        })
-        
-        // Add found stable coins
-        availableStableCoins.forEach((stableCoin: CurrencyInfo) => {
-          if (!expandedAcceptedCryptos.includes(stableCoin.code)) {
-            console.log(`✅ Found USDT/USDC stable coin: ${stableCoin.code} (for ${crypto})`)
-            expandedAcceptedCryptos.push(stableCoin.code)
+        stableCoins.forEach(stableCoinCode => {
+          const stableCoin = data.currencies.find((currency: CurrencyInfo) => 
+            currency.code.toUpperCase() === stableCoinCode && currency.enabled
+          )
+          
+          if (stableCoin) {
+            // Create backend mapping for stablecoin
+            currencyMapping[stableCoin.code.toUpperCase()] = stableCoin.code
+            
+            customerFacingCurrencies.push(stableCoin)
+            console.log(`✅ Added USDT/USDC stable coin: ${stableCoin.code} (for ${crypto})`)
           }
         })
       })
 
-      console.log('📈 Expanded accepted cryptos (with USDT/USDC only):', expandedAcceptedCryptos)
+      console.log(`✅ Created ${customerFacingCurrencies.length} customer-facing currencies`)
+      console.log('📋 Backend mappings:', currencyMapping)
 
-      // FIXED: Enhanced filtering to handle case-insensitive matching and ensure BNB is included
-      const filtered = data.currencies.filter((currency: CurrencyInfo) => {
-        const currencyCodeUpper = currency.code.toUpperCase()
-        
-        // Check if this currency is in our accepted list (case-insensitive)
-        const isAccepted = expandedAcceptedCryptos.some(acceptedCode => 
-          acceptedCode.toUpperCase() === currencyCodeUpper
-        )
-        
-        const isEnabled = currency.enabled
-        
-        // Debug logging for troubleshooting
-        if (currencyCodeUpper === 'BNB') {
-          console.log(`🔍 BNB Currency Debug:`, {
-            code: currency.code,
-            enabled: currency.enabled,
-            isAccepted: isAccepted,
-            acceptedCryptos: acceptedCryptos,
-            expandedAcceptedCryptos: expandedAcceptedCryptos
-          })
-        }
-        
-        if (isAccepted) {
-          console.log(`🔍 Currency ${currency.code}: accepted=${isAccepted}, enabled=${isEnabled}`)
-        }
-        
-        return isAccepted && isEnabled
-      })
-
-      // Additional check: Ensure BNB is included if it's in acceptedCryptos
-      const bnbMissing = acceptedCryptos.some(crypto => crypto.toUpperCase() === 'BNB') && 
-                         !filtered.some((currency: CurrencyInfo) => currency.code.toUpperCase() === 'BNB')
-      
-      if (bnbMissing) {
-        console.warn('⚠️ BNB is missing from filtered currencies, searching manually...')
-        const bnbCurrency = data.currencies.find((currency: CurrencyInfo) => 
-          currency.code.toUpperCase() === 'BNB' && currency.enabled
-        )
-        if (bnbCurrency) {
-          console.log('✅ Found BNB manually, adding to filtered currencies')
-          filtered.push(bnbCurrency)
-        } else {
-          console.error('❌ BNB not found in NOWPayments currencies or is disabled')
-        }
-      }
-
-      console.log(`✅ Loaded ${filtered.length} available currencies:`, filtered.map((c: CurrencyInfo) => c.code))
-      
-      // Smart sorting: base currencies first, then stable coins
-      const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
+      // STEP 3: Smart sorting - Primary currencies first, then stablecoins
+      const sortedCurrencies = customerFacingCurrencies.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
         const baseCurrencyOrder = ['BTC', 'ETH', 'BNB', 'SOL', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'ALGO', 'ARB', 'OP', 'BASE']
         
-        // Check if currencies are base currencies
+        // Check if currencies are base currencies (primary tokens)
         const aIsBase = baseCurrencyOrder.includes(a.code.toUpperCase())
         const bIsBase = baseCurrencyOrder.includes(b.code.toUpperCase())
         
-        // Base currencies come first
-        if (aIsBase && !bIsBase) return -1
-        if (!aIsBase && bIsBase) return 1
+        // Check if currencies are stable coins
+        const aIsStable = a.code.toUpperCase().includes('USD')
+        const bIsStable = b.code.toUpperCase().includes('USD')
         
-        // Among base currencies, sort by priority order
-        if (aIsBase && bIsBase) {
+        // Primary currencies come first
+        if (aIsBase && !aIsStable && (!bIsBase || bIsStable)) return -1
+        if (bIsBase && !bIsStable && (!aIsBase || aIsStable)) return 1
+        
+        // Among primary currencies, sort by priority order
+        if (aIsBase && bIsBase && !aIsStable && !bIsStable) {
           const aIndex = baseCurrencyOrder.indexOf(a.code.toUpperCase())
           const bIndex = baseCurrencyOrder.indexOf(b.code.toUpperCase())
           return aIndex - bIndex
         }
         
-        // Among stable coins, sort alphabetically
+        // Stablecoins come after primary currencies
+        if (!aIsStable && bIsStable) return -1
+        if (aIsStable && !bIsStable) return 1
+        
+        // Among stablecoins, sort alphabetically
         return a.code.localeCompare(b.code)
       })
+      
+      // Store the backend mapping globally for payment processing
+      ;(window as any).cryptracCurrencyMapping = currencyMapping
       
       setAvailableCurrencies(sortedCurrencies)
 
@@ -676,6 +769,9 @@ export default function PaymentPage() {
       if (sortedCurrencies.length > 0 && !selectedCurrency) {
         setSelectedCurrency(sortedCurrencies[0].code)
       }
+
+      console.log('🎯 Final customer-facing currencies:', sortedCurrencies.map((c: CurrencyInfo) => c.code))
+      console.log('🔧 Backend mapping stored for payment processing')
 
     } catch (error) {
       console.error('Error loading currencies:', error)
@@ -688,49 +784,49 @@ export default function PaymentPage() {
 
     try {
       setEstimatesLoading(true)
-      console.log('💱 Loading estimates for', availableCurrencies.length, 'currencies')
+      console.log('📊 Loading payment estimates...')
 
-      const response = await fetch('/api/nowpayments/estimate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: paymentLink.amount,
-          currency_from: paymentLink.currency.toLowerCase(),
-          currencies: availableCurrencies.map(c => c.code.toLowerCase())
-        })
+      const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
+      const estimatePromises = availableCurrencies.map(async (currency) => {
+        try {
+          const response = await fetch('/api/nowpayments/estimate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              currency_from: paymentLink.currency.toLowerCase(),
+              currency_to: currency.code.toLowerCase(),
+              amount: amount,
+            }),
+          })
+
+          const data = await response.json()
+          
+          if (data.success) {
+            return {
+              currency_from: paymentLink.currency,
+              currency_to: currency.code,
+              amount_from: amount,
+              estimated_amount: data.estimate.estimated_amount,
+              fee_amount: data.estimate.fee_amount || 0,
+              fee_percentage: data.estimate.fee_percentage || 0
+            }
+          }
+          
+          return null
+        } catch (error) {
+          console.error(`Error getting estimate for ${currency.code}:`, error)
+          return null
+        }
       })
 
-      const data = await response.json()
+      const results = await Promise.all(estimatePromises)
+      const validEstimates = results.filter((estimate): estimate is EstimateData => estimate !== null)
       
-      if (data.success && data.estimates) {
-        console.log(`✅ Loaded ${data.estimates.length} estimates`)
-        
-        const estimatesMap: Record<string, EstimateData> = {}
-        data.estimates.forEach((estimate: EstimateData) => {
-          estimatesMap[estimate.currency.toUpperCase()] = estimate
-        })
-        
-        setEstimates(estimatesMap)
+      setEstimates(validEstimates)
+      console.log(`✅ Loaded ${validEstimates.length} estimates`)
 
-        // Filter out currencies that don't have estimates
-        const currenciesWithEstimates = availableCurrencies.filter(currency => 
-          estimatesMap[currency.code.toUpperCase()]
-        )
-        
-        if (currenciesWithEstimates.length !== availableCurrencies.length) {
-          console.log(`🔧 Filtered out ${availableCurrencies.length - currenciesWithEstimates.length} currencies without estimates`)
-          setAvailableCurrencies(currenciesWithEstimates)
-          
-          // Update selected currency if it was filtered out
-          if (selectedCurrency && !estimatesMap[selectedCurrency.toUpperCase()]) {
-            setSelectedCurrency(currenciesWithEstimates.length > 0 ? currenciesWithEstimates[0].code : '')
-          }
-        }
-      } else {
-        console.error('Failed to load estimates:', data.error)
-      }
     } catch (error) {
       console.error('Error loading estimates:', error)
     } finally {
@@ -748,6 +844,12 @@ export default function PaymentPage() {
       console.log('🔄 Creating payment for currency:', selectedCurrency)
       setCreatingPayment(true)
 
+      // Get the backend currency mapping
+      const currencyMapping = (window as any).cryptracCurrencyMapping || {}
+      const backendCurrency = currencyMapping[selectedCurrency.toUpperCase()] || selectedCurrency
+      
+      console.log(`🔧 Currency mapping: ${selectedCurrency} → ${backendCurrency}`)
+
       const response = await fetch('/api/nowpayments/create-payment', {
         method: 'POST',
         headers: {
@@ -756,7 +858,7 @@ export default function PaymentPage() {
         body: JSON.stringify({
           price_amount: feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount,
           price_currency: paymentLink.currency.toLowerCase(),
-          pay_currency: selectedCurrency.toLowerCase(),
+          pay_currency: backendCurrency.toLowerCase(), // Use backend currency code
           order_id: `cryptrac_${paymentLink.link_id}_${Date.now()}`,
           order_description: paymentLink.title,
           payment_link_id: paymentLink.id,
@@ -805,150 +907,49 @@ export default function PaymentPage() {
 
   const copyToClipboard = async (text: string) => {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text)
-        toast.success('Copied!', {
-          duration: 2000,
-          position: 'top-center'
-        })
-      } else {
-        // Fallback for older browsers or insecure contexts
-        const textArea = document.createElement('textarea')
-        textArea.value = text
-        textArea.style.position = 'fixed'
-        textArea.style.left = '-999999px'
-        textArea.style.top = '-999999px'
-        document.body.appendChild(textArea)
-        textArea.focus()
-        textArea.select()
-        document.execCommand('copy')
-        textArea.remove()
-        toast.success('Copied!', {
-          duration: 2000,
-          position: 'top-center'
-        })
-      }
+      await navigator.clipboard.writeText(text)
+      toast.success('Copied to clipboard!')
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error)
+      console.error('Failed to copy:', error)
       toast.error('Failed to copy to clipboard')
     }
   }
 
-  const formatCurrency = (amount: number, currencyCode: string) => {
-    const currency = FIAT_CURRENCIES.find(c => c.code === currencyCode)
-    if (currency) {
-      return `${currency.symbol}${amount.toFixed(2)}`
+  // Load payment link on component mount
+  useEffect(() => {
+    if (id) {
+      loadPaymentLink()
     }
-    return `${amount.toFixed(2)} ${currencyCode}`
-  }
+  }, [id])
 
-  const formatCrypto = (amount: number, currencyCode: string, decimals: number = 8) => {
-    return `${amount.toFixed(decimals)} ${currencyCode}`
-  }
-
-  // FIXED: getBlockExplorerUrl function with proper null handling
-  const getBlockExplorerUrl = (txHash: string, currency: string): string | null => {
-    const currencyUpper = currency.toUpperCase()
-    
-    if (currencyUpper === 'BTC') {
-      return `https://blockstream.info/tx/${txHash}`
-    } else if (currencyUpper === 'ETH' || currencyUpper.includes('ERC20') || currencyUpper.includes('USDT') || currencyUpper.includes('USDC')) {
-      return `https://etherscan.io/tx/${txHash}`
-    } else if (currencyUpper === 'LTC') {
-      return `https://blockchair.com/litecoin/transaction/${txHash}`
-    } else if (currencyUpper === 'SOL') {
-      return `https://solscan.io/tx/${txHash}`
-    } else if (currencyUpper === 'TRX' || currencyUpper.includes('TRC20')) {
-      return `https://tronscan.org/#/transaction/${txHash}`
-    } else if (currencyUpper === 'BNB' || currencyUpper.includes('BSC')) {
-      return `https://bscscan.com/tx/${txHash}`
-    } else if (currencyUpper === 'MATIC' || currencyUpper.includes('POLYGON')) {
-      return `https://polygonscan.com/tx/${txHash}`
+  // Load estimates when currencies are available
+  useEffect(() => {
+    if (paymentLink && availableCurrencies.length > 0) {
+      loadEstimates()
     }
-    
-    return null
-  }
-
-  // Calculate fee breakdown for display
-  const calculateFeeBreakdown = () => {
-    if (!paymentLink) return null
-
-    const baseAmount = paymentLink.base_amount
-    const taxAmount = paymentLink.tax_amount || 0
-    const subtotalWithTax = paymentLink.subtotal_with_tax || baseAmount
-    const feePercentage = paymentLink.fee_percentage || 0.01
-    
-    // Determine effective settings (payment link overrides or merchant defaults)
-    const effectiveChargeCustomerFee = paymentLink.charge_customer_fee !== null 
-      ? paymentLink.charge_customer_fee 
-      : paymentLink.merchant.charge_customer_fee
-
-    const effectiveAutoConvert = paymentLink.auto_convert_enabled !== null
-      ? paymentLink.auto_convert_enabled
-      : paymentLink.merchant.auto_convert_enabled
-
-    // Calculate fee amount
-    const feeAmount = subtotalWithTax * feePercentage
-
-    // Calculate totals based on who pays the fee
-    const customerTotal = effectiveChargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax
-    const merchantReceives = effectiveChargeCustomerFee ? subtotalWithTax : subtotalWithTax - feeAmount
-
-    return {
-      baseAmount,
-      taxAmount,
-      subtotalWithTax,
-      feeAmount,
-      feePercentage: feePercentage * 100,
-      customerTotal,
-      merchantReceives,
-      effectiveChargeCustomerFee,
-      effectiveAutoConvert
-    }
-  }
-
-  // Status indicator component for debugging (optional)
-  const StatusPollingIndicator = () => {
-    if (!isPollingActive) return null
-    
-    return (
-      <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm shadow-lg">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-          <span>Checking status every {pollingInterval / 1000}s</span>
-        </div>
-        {consecutiveFailures > 0 && (
-          <div className="text-xs text-blue-200 mt-1">
-            {consecutiveFailures} consecutive failures
-          </div>
-        )}
-      </div>
-    )
-  }
+  }, [paymentLink, availableCurrencies])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading payment information...</p>
+          <p className="text-gray-600">Loading payment details...</p>
         </div>
       </div>
     )
   }
 
-  if (error || !paymentLink) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Payment Link Not Found</h2>
-              <p className="text-gray-600 mb-4">
-                {error || "The payment link you're looking for doesn't exist or you don't have permission to view it."}
-              </p>
-              <Button onClick={() => router.push('/')}>
+              <h2 className="text-xl font-semibold mb-2">Payment Error</h2>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <Button onClick={() => router.push('/')} variant="outline">
                 Go Home
               </Button>
             </div>
@@ -958,168 +959,129 @@ export default function PaymentPage() {
     )
   }
 
-  const feeBreakdown = calculateFeeBreakdown()
-  const currentStatus = paymentStatus?.status || 'waiting'
-  const statusConfig = STATUS_CONFIG[currentStatus as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.waiting
-  const StatusIcon = statusConfig.icon
+  if (!paymentLink) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Payment Link Not Found</h2>
+              <p className="text-gray-600 mb-4">The payment link you're looking for doesn't exist or has expired.</p>
+              <Button onClick={() => router.push('/')} variant="outline">
+                Go Home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{paymentLink.title}</h1>
-          {paymentLink.description && (
-            <p className="text-gray-600">{paymentLink.description}</p>
-          )}
-          
-          {/* Simplified Payment Amount with Fee Breakdown */}
-          <div className="mt-6 bg-white rounded-lg p-6 shadow-sm border">
-            {feeBreakdown && (paymentLink.tax_enabled || (feeBreakdown.effectiveChargeCustomerFee && feeBreakdown.feeAmount > 0)) ? (
-              <div className="space-y-3">
-                {/* Base Amount */}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Base Amount:</span>
-                  <span className="font-medium">
-                    {formatCurrency(feeBreakdown.baseAmount, paymentLink.currency)}
-                  </span>
+  // Show payment interface if no payment created yet
+  if (!paymentData) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl">{paymentLink.title}</CardTitle>
+                  <p className="text-gray-600 mt-1">{paymentLink.merchant.business_name}</p>
                 </div>
-                
-                {/* Individual Tax Rates */}
-                {paymentLink.tax_enabled && paymentLink.tax_rates.map((taxRate, index) => {
-                  // Use the actual tax amount from the payment link to avoid rounding discrepancies
-                  const totalTaxPercentage = paymentLink.tax_rates.reduce((sum, rate) => sum + rate.percentage, 0)
-                  const taxAmount = totalTaxPercentage > 0 ? (feeBreakdown.taxAmount * taxRate.percentage) / totalTaxPercentage : 0
-                  return (
-                    <div key={index} className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">
-                        {taxRate.label} ({taxRate.percentage}%):
-                      </span>
-                      <span className="text-gray-600">
-                        {formatCurrency(taxAmount, paymentLink.currency)}
-                      </span>
-                    </div>
-                  );
-                })}
-                
-                {/* Total Tax */}
-                {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
-                  <div className="flex justify-between items-center text-sm border-t pt-2">
-                    <span className="text-gray-600">Total Tax:</span>
-                    <span className="font-medium text-gray-700">
-                      {formatCurrency(feeBreakdown.taxAmount, paymentLink.currency)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Subtotal with Tax */}
-                {paymentLink.tax_enabled && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Subtotal with Tax:</span>
-                    <span className="font-medium">
-                      {formatCurrency(feeBreakdown.subtotalWithTax, paymentLink.currency)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Gateway Fee - Only show if customer pays the fee */}
-                {feeBreakdown.effectiveChargeCustomerFee && feeBreakdown.feeAmount > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">
-                      Gateway Fee ({feeBreakdown.feePercentage.toFixed(1)}%):
-                    </span>
-                    <span className="text-gray-600">
-                      +{formatCurrency(feeBreakdown.feeAmount, paymentLink.currency)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Customer Pays Total */}
-                <div className="flex justify-between items-center border-t pt-2">
-                  <span className="text-lg font-medium">You Pay:</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(feeBreakdown.customerTotal, paymentLink.currency)}
-                  </span>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">
+                    {feeBreakdown ? `$${feeBreakdown.customerTotal.toFixed(2)}` : `$${paymentLink.amount.toFixed(2)}`}
+                  </p>
+                  <p className="text-sm text-gray-500">{paymentLink.currency}</p>
                 </div>
-
-                {/* Merchant Receives (for transparency) - Only show if customer doesn't pay fee */}
-                {!feeBreakdown.effectiveChargeCustomerFee && feeBreakdown.feeAmount > 0 && (
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Merchant receives:</span>
-                    <span>{formatCurrency(feeBreakdown.merchantReceives, paymentLink.currency)}</span>
-                  </div>
-                )}
               </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">
-                  {formatCurrency(paymentLink.amount, paymentLink.currency)}
-                </p>
-              </div>
-            )}
+            </CardHeader>
             
-            <p className="text-sm text-gray-500 mt-4 text-center">
-              Payment to {paymentLink.merchant.business_name}
-            </p>
-          </div>
-        </div>
+            <CardContent className="space-y-6">
+              {paymentLink.description && (
+                <div>
+                  <p className="text-gray-700">{paymentLink.description}</p>
+                </div>
+              )}
 
-        {!paymentData ? (
-          <>
-            {/* Cryptocurrency Selection */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Select Cryptocurrency</CardTitle>
-                <p className="text-sm text-gray-600">
-                  Choose how you'd like to pay
-                </p>
-              </CardHeader>
-              <CardContent>
-                {estimatesLoading ? (
+              {/* Fee Breakdown */}
+              {feeBreakdown && (feeBreakdown.taxAmount > 0 || feeBreakdown.platformFee > 0) && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium mb-3">Payment Breakdown</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Base Amount:</span>
+                      <span>${feeBreakdown.baseAmount.toFixed(2)}</span>
+                    </div>
+                    {feeBreakdown.taxAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span>Tax:</span>
+                        <span>${feeBreakdown.taxAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {feeBreakdown.platformFee > 0 && (
+                      <div className="flex justify-between">
+                        <span>Processing Fee ({paymentLink.fee_percentage}%):</span>
+                        <span>${feeBreakdown.platformFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-medium">
+                      <span>Total:</span>
+                      <span>${feeBreakdown.customerTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Currency Selection */}
+              <div>
+                <Label className="text-base font-medium">Select Payment Method</Label>
+                <p className="text-sm text-gray-600 mb-4">Choose your preferred cryptocurrency</p>
+                
+                {availableCurrencies.length === 0 ? (
                   <div className="text-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Loading conversion rates...</p>
+                    <p className="text-gray-600">Loading payment methods...</p>
                   </div>
-                ) : availableCurrencies.length > 0 ? (
-                  <div className="grid gap-3">
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {availableCurrencies.map((currency) => {
-                      const estimate = estimates[currency.code.toUpperCase()]
-                      const isSelected = selectedCurrency === currency.code
+                      const estimate = estimates.find(e => e.currency_to === currency.code)
                       
                       return (
                         <div
                           key={currency.code}
-                          className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                            isSelected 
-                              ? 'border-blue-500 bg-blue-50' 
+                          className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                            selectedCurrency === currency.code
+                              ? 'border-blue-500 bg-blue-50'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                           onClick={() => setSelectedCurrency(currency.code)}
                         >
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-medium">
-                                  {currency.symbol || currency.code.substring(0, 2)}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="font-medium">{currency.display_name || currency.name}</p>
-                                <p className="text-sm text-gray-500">{currency.code}</p>
-                              </div>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{currency.code}</div>
+                              <div className="text-sm text-gray-600">{currency.name}</div>
                             </div>
                             <div className="text-right">
-                              {estimate ? (
+                              {estimatesLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : estimate ? (
                                 <>
-                                  <p className="font-medium">
-                                    {formatCrypto(estimate.estimated_amount, currency.code, currency.decimals)}
-                                  </p>
-                                  <p className="text-sm text-gray-500">
-                                    ≈ {formatCurrency(estimate.fiat_equivalent || estimate.amount_from, estimate.currency_from.toUpperCase())}
-                                  </p>
+                                  <div className="font-medium">
+                                    {estimate.estimated_amount.toFixed(6)}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {currency.code}
+                                  </div>
                                 </>
                               ) : (
-                                <p className="text-sm text-gray-400">Loading...</p>
+                                <div className="text-sm text-gray-400">
+                                  Calculating...
+                                </div>
                               )}
                             </div>
                           </div>
@@ -1127,180 +1089,253 @@ export default function PaymentPage() {
                       )
                     })}
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600">No cryptocurrencies available</p>
-                  </div>
                 )}
+              </div>
 
-                {selectedCurrency && availableCurrencies.length > 0 && (
-                  <div className="mt-6">
-                    <Button 
-                      onClick={createPayment}
-                      disabled={creatingPayment || !selectedCurrency}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {creatingPayment ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Creating Payment...
-                        </>
-                      ) : (
-                        <>
-                          Continue with {selectedCurrency}
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
+              {/* Continue Button */}
+              <Button
+                onClick={createPayment}
+                disabled={!selectedCurrency || creatingPayment || availableCurrencies.length === 0}
+                className="w-full"
+                size="lg"
+              >
+                {creatingPayment ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Creating Payment...
+                  </>
+                ) : (
+                  <>
+                    Continue with {selectedCurrency || 'Cryptocurrency'}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </>
                 )}
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          <>
-            {/* Payment Status */}
-            <Card className={`mb-6 ${statusConfig.borderColor} border-2`}>
-              <CardContent className={`pt-6 ${statusConfig.bgColor}`}>
-                <div className="flex items-center justify-center mb-4">
-                  <div className={`p-3 rounded-full ${statusConfig.bgColor}`}>
-                    <StatusIcon className={`h-8 w-8 ${statusConfig.color} ${statusConfig.showSpinner ? 'animate-spin' : ''}`} />
-                  </div>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // Show payment details and status
+  const currentStatus = paymentStatus || paymentData
+  const statusColor = {
+    'waiting': 'text-yellow-600',
+    'confirming': 'text-blue-600',
+    'confirmed': 'text-green-600',
+    'finished': 'text-green-600',
+    'partially_paid': 'text-orange-600',
+    'failed': 'text-red-600',
+    'refunded': 'text-gray-600',
+    'expired': 'text-red-600'
+  }[currentStatus.payment_status] || 'text-gray-600'
+
+  const statusIcon = {
+    'waiting': <Clock className="h-5 w-5" />,
+    'confirming': <Loader2 className="h-5 w-5 animate-spin" />,
+    'confirmed': <CheckCircle className="h-5 w-5" />,
+    'finished': <CheckCircle className="h-5 w-5" />,
+    'partially_paid': <AlertCircle className="h-5 w-5" />,
+    'failed': <AlertCircle className="h-5 w-5" />,
+    'refunded': <AlertCircle className="h-5 w-5" />,
+    'expired': <AlertCircle className="h-5 w-5" />
+  }[currentStatus.payment_status] || <Clock className="h-5 w-5" />
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl">{paymentLink.title}</CardTitle>
+                <p className="text-gray-600 mt-1">{paymentLink.merchant.business_name}</p>
+              </div>
+              <div className="text-right">
+                <div className={`flex items-center gap-2 ${statusColor}`}>
+                  {statusIcon}
+                  <Badge variant={currentStatus.payment_status === 'finished' ? 'default' : 'secondary'}>
+                    {currentStatus.payment_status.replace('_', ' ').toUpperCase()}
+                  </Badge>
                 </div>
-                <div className="text-center">
-                  <h3 className={`text-xl font-semibold ${statusConfig.color} mb-2`}>
-                    {statusConfig.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    {statusConfig.description}
-                  </p>
-                  
-                  {paymentStatus?.tx_hash && (
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-600 mb-2">Transaction Hash:</p>
-                      <div className="flex items-center justify-center space-x-2">
-                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          {paymentStatus.tx_hash.substring(0, 20)}...
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(paymentStatus.tx_hash!)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                        {/* FIXED: Proper null handling for getBlockExplorerUrl */}
-                        {(() => {
-                          const explorerUrl = getBlockExplorerUrl(paymentStatus.tx_hash, paymentStatus.pay_currency)
-                          return explorerUrl ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(explorerUrl, '_blank')}
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          ) : null
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Payment Instructions */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-medium text-blue-900 mb-2">Payment Instructions</h3>
+              <p className="text-blue-800 text-sm">
+                Send exactly <strong>{currentStatus.pay_amount} {currentStatus.pay_currency}</strong> to the address below.
+                {currentStatus.payment_status === 'waiting' && ' Your payment will be confirmed automatically.'}
+              </p>
+            </div>
 
             {/* Payment Details */}
-            {currentStatus === 'waiting' && (
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Payment Details</CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Send exactly {formatCrypto(paymentData.pay_amount, paymentData.pay_currency)} to the address below
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Amount */}
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Amount to Send</Label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Input
-                          value={formatCrypto(paymentData.pay_amount, paymentData.pay_currency)}
-                          readOnly
-                          className="font-mono"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(paymentData.pay_amount.toString())}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Payment Address</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input
+                    value={currentStatus.pay_address}
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(currentStatus.pay_address)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-                    {/* Address */}
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Payment Address</Label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Input
-                          value={paymentData.pay_address}
-                          readOnly
-                          className="font-mono text-sm"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(paymentData.pay_address)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* QR Code */}
-                    {qrCodeDataUrl && (
-                      <div className="text-center">
-                        <Label className="text-sm font-medium text-gray-700">QR Code</Label>
-                        <div className="mt-2 inline-block p-4 bg-white rounded-lg border">
-                          <img 
-                            src={qrCodeDataUrl} 
-                            alt="Payment QR Code" 
-                            className="w-48 h-48 mx-auto"
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Scan with your crypto wallet
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Payment Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-start space-x-3">
-                        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div className="text-sm">
-                          <p className="font-medium text-blue-900 mb-1">Important:</p>
-                          <ul className="text-blue-800 space-y-1">
-                            <li>• Send exactly the amount shown above</li>
-                            <li>• Use the {paymentData.pay_currency} network only</li>
-                            <li>• Payment will be confirmed automatically</li>
-                            <li>• Do not send from an exchange directly</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Amount</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      value={`${currentStatus.pay_amount} ${currentStatus.pay_currency}`}
+                      readOnly
+                      className="font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(currentStatus.pay_amount.toString())}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+                </div>
 
-        {/* Status Polling Indicator */}
-        <StatusPollingIndicator />
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Network</Label>
+                  <Input
+                    value={currentStatus.pay_currency}
+                    readOnly
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* QR Code */}
+              {qrCodeDataUrl && (
+                <div className="text-center">
+                  <Label className="text-sm font-medium text-gray-700">QR Code</Label>
+                  <div className="mt-2 inline-block p-4 bg-white rounded-lg border">
+                    <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-48 h-48" />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Scan with your wallet app</p>
+                </div>
+              )}
+
+              {/* Transaction Hash */}
+              {currentStatus.tx_hash && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Transaction Hash</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      value={currentStatus.tx_hash}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(currentStatus.tx_hash!)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    {(() => {
+                      const explorerUrl = getBlockExplorerUrl(currentStatus.tx_hash!, currentStatus.pay_currency)
+                      return explorerUrl ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(explorerUrl, '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      ) : null
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Status Updates */}
+              {isMonitoring && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Monitoring payment status...</span>
+                    <span className="text-xs">
+                      (checking every {Math.round(monitoringInterval / 1000)}s)
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Status Messages */}
+              {currentStatus.payment_status === 'waiting' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-yellow-800">
+                    <Clock className="h-5 w-5" />
+                    <span className="font-medium">Waiting for Payment</span>
+                  </div>
+                  <p className="text-yellow-700 text-sm mt-1">
+                    Please send the exact amount to the address above. We'll automatically detect your payment.
+                  </p>
+                </div>
+              )}
+
+              {currentStatus.payment_status === 'confirming' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-blue-800">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span className="font-medium">Confirming Payment</span>
+                  </div>
+                  <p className="text-blue-700 text-sm mt-1">
+                    Your payment has been detected and is being confirmed on the blockchain.
+                  </p>
+                </div>
+              )}
+
+              {currentStatus.payment_status === 'finished' && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="font-medium">Payment Completed</span>
+                  </div>
+                  <p className="text-green-700 text-sm mt-1">
+                    Your payment has been successfully processed. You will be redirected shortly.
+                  </p>
+                </div>
+              )}
+
+              {['failed', 'expired', 'partially_paid'].includes(currentStatus.payment_status) && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-red-800">
+                    <AlertCircle className="h-5 w-5" />
+                    <span className="font-medium">
+                      {currentStatus.payment_status === 'failed' && 'Payment Failed'}
+                      {currentStatus.payment_status === 'expired' && 'Payment Expired'}
+                      {currentStatus.payment_status === 'partially_paid' && 'Partial Payment'}
+                    </span>
+                  </div>
+                  <p className="text-red-700 text-sm mt-1">
+                    {currentStatus.payment_status === 'failed' && 'There was an issue processing your payment. Please try again or contact support.'}
+                    {currentStatus.payment_status === 'expired' && 'This payment has expired. Please create a new payment.'}
+                    {currentStatus.payment_status === 'partially_paid' && 'We received a partial payment. Please send the remaining amount or contact support.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
