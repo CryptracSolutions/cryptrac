@@ -32,32 +32,12 @@ export async function GET(
     let payment = null
     let error = null
 
-    // Check if ID is a UUID (payment ID) or link_id
+    // Check if ID is a UUID (payment link ID) or nowpayments payment ID
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
     if (isUUID) {
-      // Direct payment ID lookup
-      console.log('🔍 Looking up by payment ID (UUID):', id)
-      const result = await supabase
-        .from('transactions')
-        .select(`
-          *,
-          payment_link:payment_links(
-            title,
-            description,
-            merchant:merchants(
-              business_name
-            )
-          )
-        `)
-        .eq('id', id)
-        .single()
-      
-      payment = result.data
-      error = result.error
-    } else {
-      // Link ID lookup - find the most recent confirmed payment for this link
-      console.log('🔍 Looking up by link_id:', id)
+      // Payment link ID lookup - find the most recent confirmed payment for this link
+      console.log('🔍 Looking up by payment link ID (UUID):', id)
       const result = await supabase
         .from('transactions')
         .select(`
@@ -71,10 +51,30 @@ export async function GET(
             )
           )
         `)
-        .eq('payment_link.link_id', id)
+        .eq('payment_link_id', id)
         .eq('status', 'confirmed')
         .order('created_at', { ascending: false })
         .limit(1)
+        .single()
+      
+      payment = result.data
+      error = result.error
+    } else {
+      // NOWPayments payment ID lookup
+      console.log('🔍 Looking up by NOWPayments payment ID:', id)
+      const result = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          payment_link:payment_links(
+            title,
+            description,
+            merchant:merchants(
+              business_name
+            )
+          )
+        `)
+        .eq('nowpayments_payment_id', id)
         .single()
       
       payment = result.data
@@ -115,13 +115,13 @@ export async function GET(
       status: payment.status,
       amount: payment.pay_amount,
       currency: payment.pay_currency,
-      lookup_method: isUUID ? 'payment_id' : 'link_id'
+      lookup_method: isUUID ? 'payment_link_id' : 'nowpayments_payment_id'
     })
 
-    // Prepare response data
+    // Prepare response data with CORRECT column names
     const responsePayment = {
       id: payment.id,
-      nowpayments_payment_id: payment.nowpayments_invoice_id,
+      nowpayments_payment_id: payment.nowpayments_payment_id, // FIXED: Use correct column name
       order_id: payment.order_id,
       status: payment.status,
       pay_currency: payment.pay_currency,
