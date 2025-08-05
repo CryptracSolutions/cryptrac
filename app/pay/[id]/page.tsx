@@ -598,13 +598,27 @@ export default function PaymentPage() {
 
       console.log('📈 Expanded accepted cryptos (with USDT/USDC only):', expandedAcceptedCryptos)
 
-      // Filter to only accepted cryptocurrencies (including base currencies)
+      // FIXED: Enhanced filtering to handle case-insensitive matching and ensure BNB is included
       const filtered = data.currencies.filter((currency: CurrencyInfo) => {
         const currencyCodeUpper = currency.code.toUpperCase()
+        
+        // Check if this currency is in our accepted list (case-insensitive)
         const isAccepted = expandedAcceptedCryptos.some(acceptedCode => 
           acceptedCode.toUpperCase() === currencyCodeUpper
         )
+        
         const isEnabled = currency.enabled
+        
+        // Debug logging for troubleshooting
+        if (currencyCodeUpper === 'BNB') {
+          console.log(`🔍 BNB Currency Debug:`, {
+            code: currency.code,
+            enabled: currency.enabled,
+            isAccepted: isAccepted,
+            acceptedCryptos: acceptedCryptos,
+            expandedAcceptedCryptos: expandedAcceptedCryptos
+          })
+        }
         
         if (isAccepted) {
           console.log(`🔍 Currency ${currency.code}: accepted=${isAccepted}, enabled=${isEnabled}`)
@@ -613,12 +627,29 @@ export default function PaymentPage() {
         return isAccepted && isEnabled
       })
 
+      // Additional check: Ensure BNB is included if it's in acceptedCryptos
+      const bnbMissing = acceptedCryptos.some(crypto => crypto.toUpperCase() === 'BNB') && 
+                         !filtered.some((currency: CurrencyInfo) => currency.code.toUpperCase() === 'BNB')
+      
+      if (bnbMissing) {
+        console.warn('⚠️ BNB is missing from filtered currencies, searching manually...')
+        const bnbCurrency = data.currencies.find((currency: CurrencyInfo) => 
+          currency.code.toUpperCase() === 'BNB' && currency.enabled
+        )
+        if (bnbCurrency) {
+          console.log('✅ Found BNB manually, adding to filtered currencies')
+          filtered.push(bnbCurrency)
+        } else {
+          console.error('❌ BNB not found in NOWPayments currencies or is disabled')
+        }
+      }
+
       console.log(`✅ Loaded ${filtered.length} available currencies:`, filtered.map((c: CurrencyInfo) => c.code))
       
       // Smart sorting: base currencies first, then stable coins
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
-        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'ALGO', 'ARB', 'OP', 'BASE']
+        const baseCurrencyOrder = ['BTC', 'ETH', 'BNB', 'SOL', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'ALGO', 'ARB', 'OP', 'BASE']
         
         // Check if currencies are base currencies
         const aIsBase = baseCurrencyOrder.includes(a.code.toUpperCase())
