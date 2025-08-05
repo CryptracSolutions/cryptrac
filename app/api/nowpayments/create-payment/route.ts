@@ -172,7 +172,6 @@ export async function POST(request: NextRequest) {
     // Step 2: Get merchant data separately
     let merchant = null;
     let walletAddress = null;
-    let payoutCurrency = null;
 
     try {
       const { data: merchantData, error: merchantError } = await supabase
@@ -198,32 +197,6 @@ export async function POST(request: NextRequest) {
           
           if (walletAddress) {
             console.log(`✅ Found wallet address for ${pay_currency}: ${walletAddress.substring(0, 10)}...`);
-            
-            // Set payout currency based on merchant settings
-            if (merchant.auto_convert_enabled && merchant.preferred_payout_currency) {
-              // Validate that the preferred payout currency is compatible with the wallet address
-              const preferredCurrency = merchant.preferred_payout_currency.toUpperCase();
-              const payCurrencyUpper = pay_currency.toUpperCase();
-              
-              // Check if the preferred payout currency can use the same wallet as the pay currency
-              const payWalletKeys = CURRENCY_TO_WALLET_MAPPING[payCurrencyUpper] || [payCurrencyUpper];
-              const preferredWalletKeys = CURRENCY_TO_WALLET_MAPPING[preferredCurrency] || [preferredCurrency];
-              
-              // Find if they share a common wallet type
-              const hasCommonWallet = payWalletKeys.some(payKey => 
-                preferredWalletKeys.some(prefKey => payKey === prefKey)
-              );
-              
-              if (hasCommonWallet) {
-                payoutCurrency = formatCurrencyForNOWPayments(merchant.preferred_payout_currency);
-                console.log('💱 Auto-convert enabled, payout currency:', payoutCurrency);
-              } else {
-                console.log(`⚠️ Preferred payout currency ${preferredCurrency} not compatible with ${payCurrencyUpper} wallet, using direct payout`);
-                payoutCurrency = formatCurrencyForNOWPayments(pay_currency);
-              }
-            } else {
-              payoutCurrency = formatCurrencyForNOWPayments(pay_currency);
-            }
           }
         }
       }
@@ -233,13 +206,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine payment flow
-    if (walletAddress && payoutCurrency) {
-      console.log('ℹ️ Payment flow: Auto-forwarding enabled');
+    if (walletAddress) {
+      console.log('ℹ️ Payment flow: Auto-forwarding enabled (NOWPayments will handle auto-convert based on your dashboard settings)');
     } else {
       console.log('ℹ️ Payment flow: No auto-forwarding (manual withdrawal)');
     }
 
-    // Prepare NOWPayments request
+    // Prepare NOWPayments request - Let NOWPayments handle auto-convert automatically
     const nowPaymentsPayload = {
       price_amount: amount,
       price_currency: formatCurrencyForNOWPayments(price_currency),
@@ -248,9 +221,9 @@ export async function POST(request: NextRequest) {
       order_description: order_description || 'Cryptrac Payment',
       ipn_callback_url: ipn_callback_url || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       fixed_rate: false,
-      ...(walletAddress && payoutCurrency && {
-        payout_address: walletAddress,
-        payout_currency: payoutCurrency
+      // Only add payout_address if we have one - let NOWPayments handle payout_currency automatically
+      ...(walletAddress && {
+        payout_address: walletAddress
       })
     };
 
@@ -259,8 +232,7 @@ export async function POST(request: NextRequest) {
     console.log('- price_currency:', nowPaymentsPayload.price_currency);
     console.log('- pay_currency:', nowPaymentsPayload.pay_currency);
     console.log('- order_id:', nowPaymentsPayload.order_id);
-    console.log('- payout_address:', nowPaymentsPayload.payout_address || 'undefined');
-    console.log('- payout_currency:', nowPaymentsPayload.payout_currency || 'undefined');
+    console.log('- payout_address:', nowPaymentsPayload.payout_address || 'undefined (NOWPayments will handle auto-convert)');
     console.log('- ipn_callback_url:', nowPaymentsPayload.ipn_callback_url);
     console.log('- fixed_rate:', nowPaymentsPayload.fixed_rate);
 
@@ -325,11 +297,11 @@ export async function POST(request: NextRequest) {
     // Calculate gateway fee (approximate)
     const gatewayFee = nowPaymentsData.price_amount * 0.005; // Approximate 0.5% fee
 
-    // Store transaction in database
+    // Store transaction in database using CORRECT column names from schema
     console.log('💾 Storing transaction in database:', {
-      payment_id: nowPaymentsData.payment_id,
+      nowpayments_invoice_id: nowPaymentsData.payment_id, // CORRECT: Use nowpayments_invoice_id
       status: nowPaymentsData.payment_status,
-      price_amount: nowPaymentsData.price_amount,
+      amount: nowPaymentsData.price_amount,
       pay_amount: nowPaymentsData.pay_amount,
       gateway_fee: gatewayFee
     });
@@ -337,22 +309,20 @@ export async function POST(request: NextRequest) {
     const { data: transactionData, error: transactionError } = await supabase
       .from('transactions')
       .insert({
-        payment_id: nowPaymentsData.payment_id,
+        nowpayments_invoice_id: nowPaymentsData.payment_id.toString(), // FIXED: Use correct column name
         payment_link_id: payment_link_id,
         order_id: nowPaymentsData.order_id,
         status: nowPaymentsData.payment_status,
-        price_amount: nowPaymentsData.price_amount,
-        price_currency: nowPaymentsData.price_currency?.toUpperCase(),
+        amount: nowPaymentsData.price_amount, // price_amount -> amount
+        currency: nowPaymentsData.price_currency?.toUpperCase(), // price_currency -> currency
         pay_amount: nowPaymentsData.pay_amount,
         pay_currency: nowPaymentsData.pay_currency?.toUpperCase(),
         pay_address: nowPaymentsData.pay_address,
-        payout_amount: nowPaymentsData.outcome_amount || 0,
         payout_currency: nowPaymentsData.outcome_currency?.toUpperCase(),
         gateway_fee: gatewayFee,
         amount_received: 0,
         currency_received: nowPaymentsData.pay_currency?.toUpperCase(),
         merchant_receives: nowPaymentsData.outcome_amount || (nowPaymentsData.pay_amount - gatewayFee),
-        is_fee_paid_by_user: false, // NOWPayments always charges merchant
         // Tax information
         base_amount: base_amount || amount,
         tax_enabled: tax_enabled || false,
