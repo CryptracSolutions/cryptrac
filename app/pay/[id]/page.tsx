@@ -414,166 +414,44 @@ export default function PaymentPage() {
       // Enhanced currency filtering: include base currencies AND their stable coins
       const expandedAcceptedCryptos = [...acceptedCryptos]
       
+      // REAL NOWPayments stable coin mappings (based on actual API data)
+      const REAL_STABLE_COIN_MAPPING: Record<string, string[]> = {
+        'ETH': ['USDT', 'USDTERC20', 'USDC', 'DAI', 'PYUSD'], // Ethereum network
+        'BNB': ['USDTBSC', 'USDCBSC'], // BSC network
+        'SOL': ['USDTSOL', 'USDCSOL'], // Solana network
+        'MATIC': ['USDTMATIC', 'USDCMATIC'], // Polygon network
+        'TRX': ['USDTTRC20', 'TUSDTRC20'], // Tron network
+        'TON': ['USDTTON'], // TON network
+        'NEAR': [], // NEAR has no stable coins in NOWPayments
+        'DOT': [], // DOT has no stable coins in NOWPayments
+        'ALGO': ['USDCALGO'], // Algorand network
+        'ARB': ['USDTARB', 'USDCARB'], // Arbitrum network
+        'OP': ['USDTOP', 'USDCOP'], // Optimism network
+        'BASE': ['USDCBASE'], // Base network
+        'XLM': [], // Stellar has no stable coins in NOWPayments
+        'AVAX': [], // ❌ AVAX has NO stable coins in NOWPayments API
+        'BTC': [], // Bitcoin has no stable coins
+        'LTC': [], // Litecoin has no stable coins
+        'ADA': [], // Cardano has no stable coins
+        'XRP': [] // XRP has no stable coins
+      }
+      
       // For each accepted crypto, find its related stable coins
       acceptedCryptos.forEach(crypto => {
         console.log(`🔍 Researching stable coins for: ${crypto}`)
         
-        // Find all USDT and USDC variants that might be related to this crypto
-        const relatedStableCoins = data.currencies.filter((currency: CurrencyInfo) => {
+        const cryptoUpper = crypto.toUpperCase()
+        const relatedStableCoins = REAL_STABLE_COIN_MAPPING[cryptoUpper] || []
+        
+        // Find stable coins that actually exist in NOWPayments
+        const availableStableCoins = data.currencies.filter((currency: CurrencyInfo) => {
           const currencyCode = currency.code.toUpperCase()
-          const cryptoUpper = crypto.toUpperCase()
-          
-          // SPECIAL CASE: Handle USDC_AVAX and USDT_AVAX directly
-          if (cryptoUpper === 'USDC_AVAX' || cryptoUpper === 'USDT_AVAX') {
-            // These are already stable coins, check if they exist in NOWPayments
-            return currencyCode === cryptoUpper || 
-                   currencyCode === cryptoUpper.replace('_', '') || // USDCAVAX, USDTAVAX
-                   (cryptoUpper === 'USDC_AVAX' && (currencyCode === 'USDCAVALANCHE' || currencyCode.includes('USDCAVAX'))) ||
-                   (cryptoUpper === 'USDT_AVAX' && (currencyCode === 'USDTAVALANCHE' || currencyCode.includes('USDTAVAX')))
-          }
-          
-          // Check for USDT variants
-          if (currencyCode.includes('USDT')) {
-            // ETH relationships - handle both USDT and USDTERC20
-            if (cryptoUpper === 'ETH' && (currencyCode === 'USDT' || currencyCode === 'USDTERC20')) {
-              return true
-            }
-            // BSC relationships  
-            if (cryptoUpper === 'BNB' && currencyCode.includes('BSC')) {
-              return true
-            }
-            // Solana relationships
-            if (cryptoUpper === 'SOL' && currencyCode.includes('SOL')) {
-              return true
-            }
-            // Polygon relationships
-            if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
-              return true
-            }
-            // Avalanche relationships - FIXED: comprehensive detection
-            if (cryptoUpper === 'AVAX' && (
-              currencyCode.includes('AVAX') || 
-              currencyCode.includes('AVALANCHE') ||
-              currencyCode === 'USDT_AVAX' ||
-              currencyCode === 'USDTAVAX' ||
-              currencyCode === 'USDTAVALANCHE' ||
-              currencyCode.includes('AVAXC') ||
-              currencyCode.includes('AVAX_C')
-            )) {
-              return true
-            }
-            // Tron relationships
-            if (cryptoUpper === 'TRX' && (currencyCode.includes('TRC20') || currencyCode.includes('TRON'))) {
-              return true
-            }
-            // TON relationships
-            if (cryptoUpper === 'TON' && currencyCode.includes('TON')) {
-              return true
-            }
-            // Other network relationships
-            if (cryptoUpper === 'NEAR' && currencyCode.includes('NEAR')) {
-              return true
-            }
-            if (cryptoUpper === 'DOT' && (currencyCode.includes('DOT') || currencyCode.includes('POLKADOT'))) {
-              return true
-            }
-            if (cryptoUpper === 'ALGO' && (currencyCode.includes('ALGO') || currencyCode.includes('ALGORAND'))) {
-              return true
-            }
-            if (cryptoUpper === 'XLM' && (currencyCode.includes('XLM') || currencyCode.includes('STELLAR'))) {
-              return true
-            }
-            if (cryptoUpper === 'EOS' && currencyCode.includes('EOS')) {
-              return true
-            }
-            if (cryptoUpper === 'XTZ' && (currencyCode.includes('XTZ') || currencyCode.includes('TEZOS'))) {
-              return true
-            }
-            if (cryptoUpper === 'KAVA' && currencyCode.includes('KAVA')) {
-              return true
-            }
-            // Arbitrum relationships
-            if (cryptoUpper === 'ARB' && currencyCode.includes('ARBITRUM')) {
-              return true
-            }
-            // Optimism relationships
-            if (cryptoUpper === 'OP' && (currencyCode.includes('OP') || currencyCode.includes('OPTIMISM'))) {
-              return true
-            }
-          }
-          
-          // Check for USDC variants
-          if (currencyCode.includes('USDC')) {
-            // ETH relationships
-            if (cryptoUpper === 'ETH' && currencyCode === 'USDC') {
-              return true
-            }
-            // BSC relationships
-            if (cryptoUpper === 'BNB' && currencyCode.includes('BSC')) {
-              return true
-            }
-            // Solana relationships
-            if (cryptoUpper === 'SOL' && currencyCode.includes('SOL')) {
-              return true
-            }
-            // Polygon relationships
-            if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
-              return true
-            }
-            // Avalanche relationships - FIXED: comprehensive detection
-            if (cryptoUpper === 'AVAX' && (
-              currencyCode.includes('AVAX') || 
-              currencyCode.includes('AVALANCHE') ||
-              currencyCode === 'USDC_AVAX' ||
-              currencyCode === 'USDCAVAX' ||
-              currencyCode === 'USDCAVALANCHE' ||
-              currencyCode.includes('AVAXC') ||
-              currencyCode.includes('AVAX_C')
-            )) {
-              return true
-            }
-            // Stellar relationships
-            if (cryptoUpper === 'XLM' && (currencyCode.includes('XLM') || currencyCode.includes('STELLAR'))) {
-              return true
-            }
-            // Algorand relationships
-            if (cryptoUpper === 'ALGO' && (currencyCode.includes('ALGO') || currencyCode.includes('ALGORAND'))) {
-              return true
-            }
-            // Arbitrum relationships
-            if (cryptoUpper === 'ARB' && currencyCode.includes('ARBITRUM')) {
-              return true
-            }
-            // Optimism relationships
-            if (cryptoUpper === 'OP' && (currencyCode.includes('OP') || currencyCode.includes('OPTIMISM'))) {
-              return true
-            }
-            // Base relationships - FIXED: handle Base network
-            if (cryptoUpper === 'BASE' && currencyCode.includes('BASE')) {
-              return true
-            }
-            // KuCoin relationships
-            if (cryptoUpper === 'KCC' && currencyCode.includes('KCC')) {
-              return true
-            }
-          }
-          
-          // Check for DAI (only on ETH)
-          if (currencyCode === 'DAI' && cryptoUpper === 'ETH') {
-            return true
-          }
-          
-          // Check for PYUSD (only on ETH)
-          if (currencyCode === 'PYUSD' && cryptoUpper === 'ETH') {
-            return true
-          }
-          
-          return false
+          return relatedStableCoins.includes(currencyCode) && currency.enabled
         })
         
         // Add found stable coins
-        relatedStableCoins.forEach((stableCoin: CurrencyInfo) => {
-          if (stableCoin.enabled && !expandedAcceptedCryptos.includes(stableCoin.code)) {
+        availableStableCoins.forEach((stableCoin: CurrencyInfo) => {
+          if (!expandedAcceptedCryptos.includes(stableCoin.code)) {
             console.log(`✅ Found stable coin: ${stableCoin.code} (for ${crypto})`)
             expandedAcceptedCryptos.push(stableCoin.code)
           }
@@ -602,7 +480,7 @@ export default function PaymentPage() {
       // Smart sorting: base currencies first, then stable coins
       const sortedCurrencies = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         // Define base currency priority order
-        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'ALGO', 'ARB', 'OP', 'BASE', 'KCC', 'EOS', 'XTZ', 'KAVA']
+        const baseCurrencyOrder = ['BTC', 'ETH', 'SOL', 'BNB', 'MATIC', 'AVAX', 'TRX', 'ADA', 'LTC', 'XRP', 'DOT', 'TON', 'XLM', 'NEAR', 'ALGO', 'ARB', 'OP', 'BASE']
         
         // Check if currencies are base currencies
         const aIsBase = baseCurrencyOrder.includes(a.code.toUpperCase())
@@ -667,7 +545,7 @@ export default function PaymentPage() {
         
         setEstimates(estimatesMap)
 
-        // Filter out currencies that don't have estimates (like USDTDOT, USDTNEAR)
+        // Filter out currencies that don't have estimates
         const currenciesWithEstimates = availableCurrencies.filter(currency => 
           estimatesMap[currency.code.toUpperCase()]
         )
