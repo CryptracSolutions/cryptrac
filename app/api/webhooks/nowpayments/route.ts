@@ -1,20 +1,165 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import crypto from 'crypto'
+
+// Rate limiting for webhook endpoints
+const webhookAttempts = new Map<string, { count: number; lastAttempt: number }>()
+const WEBHOOK_RATE_LIMIT = 100 // Max 100 requests per minute per IP
+const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const attempts = webhookAttempts.get(ip)
+  
+  if (!attempts) {
+    webhookAttempts.set(ip, { count: 1, lastAttempt: now })
+    return true
+  }
+  
+  // Reset counter if window has passed
+  if (now - attempts.lastAttempt > RATE_LIMIT_WINDOW) {
+    webhookAttempts.set(ip, { count: 1, lastAttempt: now })
+    return true
+  }
+  
+  // Check if limit exceeded
+  if (attempts.count >= WEBHOOK_RATE_LIMIT) {
+    return false
+  }
+  
+  // Increment counter
+  attempts.count++
+  attempts.lastAttempt = now
+  return true
+}
+
+function verifyNOWPaymentsSignature(body: string, signature: string, secret: string): boolean {
+  try {
+    // NOWPayments uses HMAC-SHA512 for signature verification
+    const expectedSignature = crypto
+      .createHmac('sha512', secret)
+      .update(body)
+      .digest('hex')
+    
+    // Compare signatures using timing-safe comparison
+    return crypto.timingSafeEqual(
+      Buffer.from(signature, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
+    )
+  } catch (error) {
+    console.error('❌ Signature verification error:', error)
+    return false
+  }
+}
+
+function validateWebhookPayload(body: any): { isValid: boolean; errors: string[] } {
+  const errors: string[] = []
+  
+  // Required fields validation
+  if (!body.payment_id) {
+    errors.push('Missing payment_id')
+  }
+  
+  if (!body.order_id) {
+    errors.push('Missing order_id')
+  }
+  
+  if (!body.payment_status) {
+    errors.push('Missing payment_status')
+  }
+  
+  // Validate payment_status is a known value
+  const validStatuses = ['waiting', 'confirming', 'confirmed', 'finished', 'failed', 'refunded', 'expired', 'sending']
+  if (body.payment_status && !validStatuses.includes(body.payment_status)) {
+    errors.push(`Invalid payment_status: ${body.payment_status}`)
+  }
+  
+  // Validate numeric fields
+  if (body.pay_amount && (isNaN(parseFloat(body.pay_amount)) || parseFloat(body.pay_amount) < 0)) {
+    errors.push('Invalid pay_amount')
+  }
+  
+  if (body.price_amount && (isNaN(parseFloat(body.price_amount)) || parseFloat(body.price_amount) < 0)) {
+    errors.push('Invalid price_amount')
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  
   try {
-    const body = await request.json()
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    if (!checkRateLimit(ip)) {
+      console.warn(`⚠️ Rate limit exceeded for IP: ${ip}`)
+      return NextResponse.json(
+        { success: false, message: 'Rate limit exceeded' },
+        { status: 429 }
+      )
+    }
+    
+    // Get raw body for signature verification
+    const rawBody = await request.text()
+    let body: any
+    
+    try {
+      body = JSON.parse(rawBody)
+    } catch (parseError) {
+      console.error('❌ Invalid JSON in webhook payload')
+      return NextResponse.json(
+        { success: false, message: 'Invalid JSON payload' },
+        { status: 400 }
+      )
+    }
     
     // Enhanced logging to see exactly what NOWPayments sends
     console.log('🔔 NOWPayments webhook received - FULL PAYLOAD:')
     console.log('📋 Raw webhook body:', JSON.stringify(body, null, 2))
     console.log('📋 Webhook headers:', Object.fromEntries(request.headers.entries()))
 
-    // Verify webhook authenticity (basic check)
+    // Enhanced signature verification
     const signature = request.headers.get('x-nowpayments-sig')
+    const ipnSecret = process.env.NOWPAYMENTS_IPN_SECRET
+    
+    if (!ipnSecret) {
+      console.error('❌ NOWPAYMENTS_IPN_SECRET not configured')
+      return NextResponse.json(
+        { success: false, message: 'Webhook secret not configured' },
+        { status: 500 }
+      )
+    }
+    
     if (!signature) {
-      console.warn('⚠️ Webhook received without signature')
+      console.warn('⚠️ Webhook received without signature - this may be a security risk')
+      // In production, you might want to reject unsigned webhooks
+      // return NextResponse.json({ success: false, message: 'Missing signature' }, { status: 401 })
+    } else {
+      // Verify signature
+      const isValidSignature = verifyNOWPaymentsSignature(rawBody, signature, ipnSecret)
+      if (!isValidSignature) {
+        console.error('❌ Invalid webhook signature')
+        return NextResponse.json(
+          { success: false, message: 'Invalid signature' },
+          { status: 401 }
+        )
+      }
+      console.log('✅ Webhook signature verified')
+    }
+
+    // Validate payload structure
+    const validation = validateWebhookPayload(body)
+    if (!validation.isValid) {
+      console.error('❌ Invalid webhook payload:', validation.errors)
+      return NextResponse.json(
+        { success: false, message: 'Invalid payload', errors: validation.errors },
+        { status: 400 }
+      )
     }
 
     // Extract payment data from webhook with detailed logging
@@ -58,14 +203,6 @@ export async function POST(request: NextRequest) {
     console.log('  - type:', type)
     console.log('  - payment_status:', payment_status)
 
-    if (!payment_id || !order_id) {
-      console.error('❌ Invalid webhook data: missing payment_id or order_id')
-      return NextResponse.json(
-        { success: false, message: 'Invalid webhook data' },
-        { status: 400 }
-      )
-    }
-
     // Create Supabase client (use service role for webhooks)
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,11 +219,11 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    // Find the payment record
+    // Find the payment record using the updated column name
     const { data: payment, error: findError } = await supabase
       .from('transactions')
       .select('*')
-      .eq('nowpayments_invoice_id', payment_id)
+      .eq('nowpayments_payment_id', payment_id) // UPDATED: Use correct column name
       .single()
 
     if (findError || !payment) {
@@ -102,6 +239,16 @@ export async function POST(request: NextRequest) {
       current_status: payment.status,
       new_status: payment_status,
     })
+
+    // Prevent duplicate processing
+    if (payment.status === 'confirmed' && payment_status === 'confirmed') {
+      console.log('ℹ️ Payment already confirmed, skipping duplicate webhook')
+      return NextResponse.json({
+        success: true,
+        message: 'Payment already processed',
+        payment_id: payment.id
+      })
+    }
 
     // Map NOWPayments status to our status
     let newStatus = payment.status
@@ -254,14 +401,34 @@ export async function POST(request: NextRequest) {
     // Log what we're about to update in the database
     console.log('💾 Database update data:', updateData)
 
-    // Update the payment record
-    const { error: updateError } = await supabase
-      .from('transactions')
-      .update(updateData)
-      .eq('id', payment.id)
+    // Update the payment record with retry logic
+    let updateError: any = null
+    let retryCount = 0
+    const maxRetries = 3
+    
+    while (retryCount < maxRetries) {
+      const { error } = await supabase
+        .from('transactions')
+        .update(updateData)
+        .eq('id', payment.id)
+      
+      if (!error) {
+        updateError = null
+        break
+      }
+      
+      updateError = error
+      retryCount++
+      console.warn(`⚠️ Database update attempt ${retryCount} failed:`, error)
+      
+      if (retryCount < maxRetries) {
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000))
+      }
+    }
 
     if (updateError) {
-      console.error('❌ Error updating payment from webhook:', updateError)
+      console.error('❌ Error updating payment from webhook after retries:', updateError)
       return NextResponse.json(
         { success: false, message: 'Failed to update payment' },
         { status: 500 }
@@ -277,7 +444,8 @@ export async function POST(request: NextRequest) {
       payout_hash: updateData.payout_hash,
       amount_received: updateData.amount_received,
       merchant_receives: updateData.merchant_receives,
-      hash_source: capturedHashes.source
+      hash_source: capturedHashes.source,
+      processing_time_ms: Date.now() - startTime
     })
 
     // If payment is confirmed, trigger post-confirmation actions
@@ -322,6 +490,7 @@ export async function POST(request: NextRequest) {
       message: 'Webhook processed successfully',
       payment_id: payment.id,
       status: newStatus,
+      processing_time_ms: Date.now() - startTime,
       hashes_captured: {
         tx_hash: !!updateData.tx_hash,
         payin_hash: !!updateData.payin_hash,
@@ -333,6 +502,7 @@ export async function POST(request: NextRequest) {
         payment_status: payment_status,
         outcome_present: !!outcome,
         outcome_hash: outcome?.hash,
+        signature_verified: !!signature,
         raw_hashes: {
           payin_hash,
           payout_hash,
@@ -346,7 +516,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ Error processing NOWPayments webhook:', error)
     return NextResponse.json(
-      { success: false, message: 'Webhook processing failed' },
+      { 
+        success: false, 
+        message: 'Webhook processing failed',
+        processing_time_ms: Date.now() - startTime
+      },
       { status: 500 }
     )
   }
@@ -368,6 +542,13 @@ export async function GET(request: NextRequest) {
     success: true,
     message: 'NOWPayments webhook endpoint is active',
     timestamp: new Date().toISOString(),
+    security_features: [
+      'HMAC-SHA512 signature verification',
+      'Rate limiting (100 req/min per IP)',
+      'Payload validation',
+      'Duplicate processing prevention',
+      'Retry logic for database updates'
+    ]
   })
 }
 

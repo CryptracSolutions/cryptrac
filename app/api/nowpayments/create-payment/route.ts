@@ -6,68 +6,138 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Enhanced currency to wallet mapping for auto-forwarding
-const CURRENCY_TO_WALLET_MAPPING: Record<string, string[]> = {
-  // Ethereum and ERC-20 tokens
-  'ETH': ['ETH', 'ETHEREUM'],
-  'USDT': ['ETH', 'ETHEREUM'], // USDT on Ethereum
-  'USDTERC20': ['ETH', 'ETHEREUM'], // USDT ERC-20
-  'USDC': ['ETH', 'ETHEREUM'], // USDC on Ethereum
-  'DAI': ['ETH', 'ETHEREUM'], // DAI on Ethereum
-  'PYUSD': ['ETH', 'ETHEREUM'], // PYUSD on Ethereum
-  
-  // Binance Smart Chain
-  'BNB': ['BNB', 'BSC', 'BINANCE'],
-  'USDTBSC': ['BNB', 'BSC', 'BINANCE'],
-  'USDCBSC': ['BNB', 'BSC', 'BINANCE'],
-  
-  // Solana
-  'SOL': ['SOL', 'SOLANA'],
-  'USDTSOL': ['SOL', 'SOLANA'],
-  'USDCSOL': ['SOL', 'SOLANA'],
-  
-  // Polygon/MATIC
-  'MATIC': ['MATIC', 'POLYGON'],
-  'USDTMATIC': ['MATIC', 'POLYGON'],
-  'USDCMATIC': ['MATIC', 'POLYGON'],
-  
-  // Tron
-  'TRX': ['TRX', 'TRON'],
-  'USDTTRC20': ['TRX', 'TRON'],
-  'TUSDTRC20': ['TRX', 'TRON'],
-  
-  // TON
-  'TON': ['TON'],
-  'USDTTON': ['TON'],
-  
-  // Arbitrum
-  'ARB': ['ARB', 'ARBITRUM'],
-  'USDTARB': ['ARB', 'ARBITRUM'],
-  'USDCARB': ['ARB', 'ARBITRUM'],
-  
-  // Optimism
-  'OP': ['OP', 'OPTIMISM'],
-  'USDTOP': ['OP', 'OPTIMISM'],
-  'USDCOP': ['OP', 'OPTIMISM'],
-  
-  // Base
-  'BASE': ['BASE'],
-  'USDCBASE': ['BASE'],
-  
-  // Algorand
-  'ALGO': ['ALGO', 'ALGORAND'],
-  'USDCALGO': ['ALGO', 'ALGORAND'],
-  
-  // Other major currencies (no stable coins)
+// Dynamic currency to wallet mapping for auto-forwarding
+// This will be populated from NOWPayments API and cached
+let DYNAMIC_CURRENCY_MAPPING: Record<string, string[]> = {};
+
+// Static fallback mapping for critical currencies
+const FALLBACK_CURRENCY_MAPPING: Record<string, string[]> = {
+  // Major cryptocurrencies
   'BTC': ['BTC', 'BITCOIN'],
+  'ETH': ['ETH', 'ETHEREUM'],
   'LTC': ['LTC', 'LITECOIN'],
-  'ADA': ['ADA', 'CARDANO'],
   'XRP': ['XRP', 'RIPPLE'],
+  'ADA': ['ADA', 'CARDANO'],
   'DOT': ['DOT', 'POLKADOT'],
+  'SOL': ['SOL', 'SOLANA'],
   'AVAX': ['AVAX', 'AVALANCHE'],
+  'MATIC': ['MATIC', 'POLYGON'],
+  'BNB': ['BNB', 'BSC', 'BINANCE'],
+  'TRX': ['TRX', 'TRON'],
+  'TON': ['TON'],
+  'NEAR': ['NEAR'],
+  'ALGO': ['ALGO', 'ALGORAND'],
   'XLM': ['XLM', 'STELLAR'],
-  'NEAR': ['NEAR']
+  'ARB': ['ARB', 'ARBITRUM'],
+  'OP': ['OP', 'OPTIMISM'],
+  'BASE': ['BASE'],
+  
+  // USDT variations (only USDT allowed as stablecoin)
+  'USDT': ['ETH', 'ETHEREUM'], // USDT on Ethereum
+  'USDTERC20': ['ETH', 'ETHEREUM'],
+  'USDTBSC': ['BNB', 'BSC', 'BINANCE'],
+  'USDTSOL': ['SOL', 'SOLANA'],
+  'USDTMATIC': ['MATIC', 'POLYGON'],
+  'USDTTRC20': ['TRX', 'TRON'],
+  'USDTTON': ['TON'],
+  'USDTARB': ['ARB', 'ARBITRUM'],
+  'USDTOP': ['OP', 'OPTIMISM'],
+  
+  // USDC variations (only USDC allowed as stablecoin)
+  'USDC': ['ETH', 'ETHEREUM'], // USDC on Ethereum
+  'USDCERC20': ['ETH', 'ETHEREUM'],
+  'USDCBSC': ['BNB', 'BSC', 'BINANCE'],
+  'USDCSOL': ['SOL', 'SOLANA'],
+  'USDCMATIC': ['MATIC', 'POLYGON'],
+  'USDCARB': ['ARB', 'ARBITRUM'],
+  'USDCOP': ['OP', 'OPTIMISM'],
+  'USDCBASE': ['BASE'],
+  'USDCALGO': ['ALGO', 'ALGORAND']
 };
+
+// Cache for NOWPayments currencies (refreshed every hour)
+let currencyCache: any[] = [];
+let cacheTimestamp = 0;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+async function loadNOWPaymentsCurrencies(): Promise<any[]> {
+  const now = Date.now();
+  
+  // Return cached data if still valid
+  if (currencyCache.length > 0 && (now - cacheTimestamp) < CACHE_DURATION) {
+    return currencyCache;
+  }
+
+  try {
+    console.log('🔄 Refreshing NOWPayments currency cache...');
+    
+    const response = await fetch('https://api.nowpayments.io/v1/currencies', {
+      headers: {
+        'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`NOWPayments API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    currencyCache = data.currencies || [];
+    cacheTimestamp = now;
+    
+    // Build dynamic mapping
+    buildDynamicCurrencyMapping(currencyCache);
+    
+    console.log(`✅ Loaded ${currencyCache.length} currencies from NOWPayments`);
+    return currencyCache;
+    
+  } catch (error) {
+    console.error('❌ Failed to load NOWPayments currencies:', error);
+    // Return cached data if available, otherwise empty array
+    return currencyCache;
+  }
+}
+
+function buildDynamicCurrencyMapping(currencies: any[]) {
+  DYNAMIC_CURRENCY_MAPPING = { ...FALLBACK_CURRENCY_MAPPING };
+  
+  currencies.forEach(currency => {
+    const code = currency.toUpperCase();
+    
+    // Skip if already mapped
+    if (DYNAMIC_CURRENCY_MAPPING[code]) {
+      return;
+    }
+    
+    // Determine network based on currency code patterns
+    if (code.includes('ERC20') || code.includes('ETH')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['ETH', 'ETHEREUM'];
+    } else if (code.includes('BSC') || code.includes('BEP20')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['BNB', 'BSC', 'BINANCE'];
+    } else if (code.includes('TRC20') || code.includes('TRON')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['TRX', 'TRON'];
+    } else if (code.includes('SOL') || code.includes('SOLANA')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['SOL', 'SOLANA'];
+    } else if (code.includes('MATIC') || code.includes('POLYGON')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['MATIC', 'POLYGON'];
+    } else if (code.includes('ARB') || code.includes('ARBITRUM')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['ARB', 'ARBITRUM'];
+    } else if (code.includes('OP') || code.includes('OPTIMISM')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['OP', 'OPTIMISM'];
+    } else if (code.includes('BASE')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['BASE'];
+    } else if (code.includes('TON')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['TON'];
+    } else if (code.includes('ALGO')) {
+      DYNAMIC_CURRENCY_MAPPING[code] = ['ALGO', 'ALGORAND'];
+    } else {
+      // For standalone currencies, map to themselves
+      DYNAMIC_CURRENCY_MAPPING[code] = [code];
+    }
+  });
+  
+  console.log(`🗺️ Built dynamic currency mapping for ${Object.keys(DYNAMIC_CURRENCY_MAPPING).length} currencies`);
+}
 
 function formatCurrencyForNOWPayments(currency: string): string {
   return currency.toLowerCase().trim();
@@ -75,7 +145,7 @@ function formatCurrencyForNOWPayments(currency: string): string {
 
 function findWalletAddress(wallets: Record<string, string>, targetCurrency: string): string | null {
   const currencyUpper = targetCurrency.toUpperCase();
-  const possibleWalletKeys = CURRENCY_TO_WALLET_MAPPING[currencyUpper] || [currencyUpper];
+  const possibleWalletKeys = DYNAMIC_CURRENCY_MAPPING[currencyUpper] || FALLBACK_CURRENCY_MAPPING[currencyUpper] || [currencyUpper];
   
   console.log(`🔍 Looking for wallet address for ${currencyUpper}, checking keys:`, possibleWalletKeys);
   
@@ -99,6 +169,48 @@ function findWalletAddress(wallets: Record<string, string>, targetCurrency: stri
   console.log(`⚠️ No wallet address found for target currency: ${currencyUpper}`);
   console.log(`Available wallets: [${Object.keys(wallets).map(k => `'${k}'`).join(', ')}]`);
   return null;
+}
+
+async function ensureAutoForwardingConfigured(merchantId: string, payCurrency: string): Promise<string | null> {
+  try {
+    // Get merchant data
+    const { data: merchant, error: merchantError } = await supabase
+      .from('merchants')
+      .select('wallets, auto_convert_enabled, preferred_payout_currency')
+      .eq('id', merchantId)
+      .single();
+
+    if (merchantError || !merchant) {
+      console.error('❌ Merchant not found:', merchantError);
+      return null;
+    }
+
+    // Ensure auto-forwarding is always enabled
+    if (!merchant.auto_convert_enabled) {
+      console.log('🔧 Enabling auto-forwarding for merchant...');
+      await supabase
+        .from('merchants')
+        .update({ auto_convert_enabled: true })
+        .eq('id', merchantId);
+    }
+
+    // Find appropriate wallet address
+    if (merchant.wallets && typeof merchant.wallets === 'object') {
+      const walletAddress = findWalletAddress(merchant.wallets, payCurrency);
+      
+      if (walletAddress) {
+        console.log(`✅ Auto-forwarding configured for ${payCurrency}: ${walletAddress.substring(0, 10)}...`);
+        return walletAddress;
+      }
+    }
+
+    console.log(`⚠️ No wallet configured for ${payCurrency}, payment will require manual withdrawal`);
+    return null;
+    
+  } catch (error) {
+    console.error('❌ Error ensuring auto-forwarding configuration:', error);
+    return null;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -127,9 +239,7 @@ export async function POST(request: NextRequest) {
       price_currency: price_currency,
       pay_currency: pay_currency,
       order_id: order_id,
-      payment_link_id: payment_link_id,
-      payout_address: undefined,
-      payout_currency: undefined
+      payment_link_id: payment_link_id
     });
 
     // Validate required fields
@@ -147,8 +257,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Load latest currency data
+    await loadNOWPaymentsCurrencies();
+
     // Step 1: Get payment link data
-    console.log('🔍 Looking up merchant wallet address for payment link:', payment_link_id);
+    console.log('🔍 Looking up payment link:', payment_link_id);
     
     const { data: paymentLinkData, error: linkError } = await supabase
       .from('payment_links')
@@ -169,50 +282,10 @@ export async function POST(request: NextRequest) {
       merchant_id: paymentLinkData.merchant_id
     });
 
-    // Step 2: Get merchant data separately
-    let merchant = null;
-    let walletAddress = null;
+    // Step 2: Ensure auto-forwarding is configured
+    const walletAddress = await ensureAutoForwardingConfigured(paymentLinkData.merchant_id, pay_currency);
 
-    try {
-      const { data: merchantData, error: merchantError } = await supabase
-        .from('merchants')
-        .select('wallets, auto_convert_enabled, preferred_payout_currency')
-        .eq('id', paymentLinkData.merchant_id)
-        .single();
-
-      if (merchantError) {
-        console.error('Error fetching merchant:', merchantError);
-        console.log('⚠️ Merchant not found, proceeding without auto-forwarding');
-      } else {
-        merchant = merchantData;
-        console.log('✅ Merchant found:', {
-          auto_convert_enabled: merchant.auto_convert_enabled,
-          preferred_payout_currency: merchant.preferred_payout_currency,
-          wallet_count: merchant.wallets ? Object.keys(merchant.wallets).length : 0
-        });
-
-        // Find appropriate wallet address for the payment currency
-        if (merchant.wallets && typeof merchant.wallets === 'object') {
-          walletAddress = findWalletAddress(merchant.wallets, pay_currency);
-          
-          if (walletAddress) {
-            console.log(`✅ Found wallet address for ${pay_currency}: ${walletAddress.substring(0, 10)}...`);
-          }
-        }
-      }
-    } catch (merchantError) {
-      console.error('Error fetching merchant:', merchantError);
-      console.log('⚠️ Merchant not found, proceeding without auto-forwarding');
-    }
-
-    // Determine payment flow
-    if (walletAddress) {
-      console.log('ℹ️ Payment flow: Auto-forwarding enabled (NOWPayments will handle auto-convert based on your dashboard settings)');
-    } else {
-      console.log('ℹ️ Payment flow: No auto-forwarding (manual withdrawal)');
-    }
-
-    // Prepare NOWPayments request - Let NOWPayments handle auto-convert automatically
+    // Prepare NOWPayments request with auto-forwarding
     const nowPaymentsPayload = {
       price_amount: amount,
       price_currency: formatCurrencyForNOWPayments(price_currency),
@@ -221,7 +294,7 @@ export async function POST(request: NextRequest) {
       order_description: order_description || 'Cryptrac Payment',
       ipn_callback_url: ipn_callback_url || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       fixed_rate: false,
-      // Only add payout_address if we have one - let NOWPayments handle payout_currency automatically
+      // Always include payout_address if available (auto-forwarding should always be configured)
       ...(walletAddress && {
         payout_address: walletAddress
       })
@@ -232,9 +305,8 @@ export async function POST(request: NextRequest) {
     console.log('- price_currency:', nowPaymentsPayload.price_currency);
     console.log('- pay_currency:', nowPaymentsPayload.pay_currency);
     console.log('- order_id:', nowPaymentsPayload.order_id);
-    console.log('- payout_address:', nowPaymentsPayload.payout_address || 'undefined (NOWPayments will handle auto-convert)');
-    console.log('- ipn_callback_url:', nowPaymentsPayload.ipn_callback_url);
-    console.log('- fixed_rate:', nowPaymentsPayload.fixed_rate);
+    console.log('- payout_address:', walletAddress ? `${walletAddress.substring(0, 10)}...` : 'NOT CONFIGURED');
+    console.log('- auto_forwarding_enabled:', !!walletAddress);
 
     // Make request to NOWPayments
     const nowPaymentsResponse = await fetch('https://api.nowpayments.io/v1/payment', {
@@ -251,7 +323,7 @@ export async function POST(request: NextRequest) {
     if (!nowPaymentsResponse.ok) {
       console.error('NOWPayments API error:', nowPaymentsResponse.status, nowPaymentsData);
       
-      // If auto-forwarding failed, try without it
+      // If auto-forwarding failed, try without it as fallback
       if (walletAddress && nowPaymentsData.message?.includes('address')) {
         console.log('🔄 Auto-forwarding failed, retrying without auto-forwarding...');
         
@@ -291,25 +363,27 @@ export async function POST(request: NextRequest) {
       payment_id: nowPaymentsData.payment_id,
       payment_status: nowPaymentsData.payment_status,
       pay_address: nowPaymentsData.pay_address?.substring(0, 20) + '...',
-      pay_amount: nowPaymentsData.pay_amount
+      pay_amount: nowPaymentsData.pay_amount,
+      auto_forwarding_active: !!walletAddress
     });
 
     // Calculate gateway fee (approximate)
     const gatewayFee = nowPaymentsData.price_amount * 0.005; // Approximate 0.5% fee
 
-    // Store transaction in database using CORRECT column names from schema
+    // Store transaction in database using CORRECT column names
     console.log('💾 Storing transaction in database:', {
-      nowpayments_invoice_id: nowPaymentsData.payment_id, // CORRECT: Use nowpayments_invoice_id
+      nowpayments_payment_id: nowPaymentsData.payment_id, // UPDATED: Use correct column name
       status: nowPaymentsData.payment_status,
       amount: nowPaymentsData.price_amount,
       pay_amount: nowPaymentsData.pay_amount,
-      gateway_fee: gatewayFee
+      gateway_fee: gatewayFee,
+      auto_forwarding_enabled: !!walletAddress
     });
 
     const { data: transactionData, error: transactionError } = await supabase
       .from('transactions')
       .insert({
-        nowpayments_invoice_id: nowPaymentsData.payment_id.toString(), // FIXED: Use correct column name
+        nowpayments_payment_id: nowPaymentsData.payment_id.toString(), // UPDATED: Use correct column name
         payment_link_id: payment_link_id,
         order_id: nowPaymentsData.order_id,
         status: nowPaymentsData.payment_status,
@@ -369,7 +443,8 @@ export async function POST(request: NextRequest) {
         created_at: nowPaymentsData.created_at,
         updated_at: nowPaymentsData.updated_at,
         outcome_amount: nowPaymentsData.outcome_amount,
-        outcome_currency: nowPaymentsData.outcome_currency
+        outcome_currency: nowPaymentsData.outcome_currency,
+        auto_forwarding_enabled: !!walletAddress
       }
     });
 

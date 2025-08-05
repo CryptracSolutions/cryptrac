@@ -180,10 +180,14 @@ export default function PaymentPage() {
   const [creatingPayment, setCreatingPayment] = useState(false)
   const [error, setError] = useState<string>('')
   
-  // Real-time status checking states
+  // Optimized status checking states
   const [statusChecking, setStatusChecking] = useState(false)
   const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null)
   const [statusCheckCount, setStatusCheckCount] = useState(0)
+  const [pollingInterval, setPollingInterval] = useState(5000) // Start with 5 seconds
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0)
+  const [isPollingActive, setIsPollingActive] = useState(false)
+  const [lastSuccessfulCheck, setLastSuccessfulCheck] = useState<Date | null>(null)
 
   useEffect(() => {
     if (linkId) {
@@ -197,52 +201,58 @@ export default function PaymentPage() {
     }
   }, [paymentLink, availableCurrencies])
 
-  // Start status checking when payment is created
-  useEffect(() => {
-    if (paymentData && linkId) {
-      startStatusChecking()
+  // Adaptive polling intervals based on payment status and time elapsed
+  const getAdaptivePollingInterval = (status: string, timeElapsed: number): number => {
+    // If payment is confirmed or failed, stop polling
+    if (['confirmed', 'failed', 'expired'].includes(status)) {
+      return 0 // Stop polling
     }
-
-    // Cleanup on unmount
-    return () => {
-      if (statusCheckIntervalRef.current) {
-        clearInterval(statusCheckIntervalRef.current)
-        statusCheckIntervalRef.current = null
-      }
-    }
-  }, [paymentData, linkId])
-
-  const startStatusChecking = () => {
-    console.log('🔄 Starting real-time status checking for payment link:', linkId)
     
-    // Clear any existing interval
-    if (statusCheckIntervalRef.current) {
-      clearInterval(statusCheckIntervalRef.current)
+    // For waiting status, poll more frequently initially
+    if (status === 'waiting') {
+      if (timeElapsed < 60000) return 3000 // First minute: every 3 seconds
+      if (timeElapsed < 300000) return 5000 // Next 4 minutes: every 5 seconds
+      if (timeElapsed < 900000) return 10000 // Next 10 minutes: every 10 seconds
+      return 15000 // After 15 minutes: every 15 seconds
     }
-
-    // Initial status check
-    checkPaymentStatus()
-
-    // Set up polling every 5 seconds
-    statusCheckIntervalRef.current = setInterval(() => {
-      checkPaymentStatus()
-    }, 5000)
+    
+    // For confirming status, poll more frequently
+    if (status === 'confirming') {
+      if (timeElapsed < 120000) return 2000 // First 2 minutes: every 2 seconds
+      if (timeElapsed < 600000) return 5000 // Next 8 minutes: every 5 seconds
+      return 10000 // After 10 minutes: every 10 seconds
+    }
+    
+    // Default fallback
+    return 5000
   }
 
-  const checkPaymentStatus = async () => {
-    if (!linkId || statusChecking) return
+  // Optimized status checking with exponential backoff on failures
+  const checkPaymentStatusOptimized = async () => {
+    if (!linkId || statusChecking || !isPollingActive) return
 
     try {
       setStatusChecking(true)
       setLastStatusCheck(new Date())
       setStatusCheckCount(prev => prev + 1)
 
-      console.log(`🔍 Checking payment status (check #${statusCheckCount + 1})`)
+      console.log(`🔍 Checking payment status (check #${statusCheckCount + 1}, interval: ${pollingInterval}ms)`)
 
-      const response = await fetch(`/api/payments/${linkId}/status`)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+      const response = await fetch(`/api/payments/${linkId}/status`, {
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
       
+      clearTimeout(timeoutId)
+
       if (!response.ok) {
-        throw new Error('Failed to check payment status')
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
@@ -254,6 +264,19 @@ export default function PaymentPage() {
         console.log(`📊 Payment status: ${previousStatus} → ${newStatus}`)
 
         setPaymentStatus(data.payment)
+        setConsecutiveFailures(0) // Reset failure counter on success
+        setLastSuccessfulCheck(new Date())
+
+        // Calculate time elapsed since payment creation
+        const paymentCreated = paymentData?.created_at ? new Date(paymentData.created_at) : new Date()
+        const timeElapsed = Date.now() - paymentCreated.getTime()
+
+        // Update polling interval based on status and time
+        const newInterval = getAdaptivePollingInterval(newStatus, timeElapsed)
+        if (newInterval !== pollingInterval) {
+          console.log(`🔄 Updating polling interval: ${pollingInterval}ms → ${newInterval}ms`)
+          setPollingInterval(newInterval)
+        }
 
         // Show status change notifications
         if (previousStatus !== newStatus) {
@@ -263,11 +286,7 @@ export default function PaymentPage() {
               break
             case 'confirmed':
               toast.success('Payment confirmed successfully!')
-              // Stop status checking
-              if (statusCheckIntervalRef.current) {
-                clearInterval(statusCheckIntervalRef.current)
-                statusCheckIntervalRef.current = null
-              }
+              setIsPollingActive(false) // Stop polling
               // Redirect to success page after a short delay
               setTimeout(() => {
                 router.push(`/payment/success/${linkId}?payment_id=${data.payment.id}`)
@@ -275,37 +294,155 @@ export default function PaymentPage() {
               break
             case 'failed':
               toast.error('Payment failed. Please try again.')
-              if (statusCheckIntervalRef.current) {
-                clearInterval(statusCheckIntervalRef.current)
-                statusCheckIntervalRef.current = null
-              }
+              setIsPollingActive(false) // Stop polling
               break
             case 'expired':
               toast.error('Payment expired. Please create a new payment.')
-              if (statusCheckIntervalRef.current) {
-                clearInterval(statusCheckIntervalRef.current)
-                statusCheckIntervalRef.current = null
-              }
+              setIsPollingActive(false) // Stop polling
               break
           }
         }
 
         // Stop checking if payment is in final state
         if (['confirmed', 'failed', 'expired'].includes(newStatus)) {
-          if (statusCheckIntervalRef.current) {
-            clearInterval(statusCheckIntervalRef.current)
-            statusCheckIntervalRef.current = null
-          }
+          setIsPollingActive(false)
         }
+      } else {
+        throw new Error(data.error || 'Invalid response from status API')
       }
 
     } catch (error) {
       console.error('❌ Error checking payment status:', error)
-      // Don't show error toast for status checks to avoid spam
+      
+      const newFailureCount = consecutiveFailures + 1
+      setConsecutiveFailures(newFailureCount)
+      
+      // Implement exponential backoff on failures
+      if (newFailureCount >= 3) {
+        const backoffInterval = Math.min(pollingInterval * Math.pow(2, newFailureCount - 3), 30000)
+        console.warn(`⚠️ ${newFailureCount} consecutive failures, backing off to ${backoffInterval}ms`)
+        setPollingInterval(backoffInterval)
+      }
+      
+      // Stop polling after too many failures
+      if (newFailureCount >= 10) {
+        console.error('❌ Too many consecutive failures, stopping status polling')
+        setIsPollingActive(false)
+        toast.error('Unable to check payment status. Please refresh the page.')
+      }
+      
     } finally {
       setStatusChecking(false)
     }
   }
+
+  // Optimized status checking starter
+  const startOptimizedStatusChecking = () => {
+    console.log('🔄 Starting optimized real-time status checking for payment link:', linkId)
+    
+    // Clear any existing interval
+    if (statusCheckIntervalRef.current) {
+      clearInterval(statusCheckIntervalRef.current)
+      statusCheckIntervalRef.current = null
+    }
+
+    setIsPollingActive(true)
+    setConsecutiveFailures(0)
+    setPollingInterval(5000) // Start with 5 seconds
+
+    // Initial status check
+    checkPaymentStatusOptimized()
+  }
+
+  // Dynamic interval management
+  useEffect(() => {
+    if (!isPollingActive || pollingInterval === 0) {
+      // Clear interval if polling is inactive or interval is 0
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current)
+        statusCheckIntervalRef.current = null
+      }
+      return
+    }
+
+    // Set up new interval with current polling interval
+    if (statusCheckIntervalRef.current) {
+      clearInterval(statusCheckIntervalRef.current)
+    }
+
+    statusCheckIntervalRef.current = setInterval(() => {
+      checkPaymentStatusOptimized()
+    }, pollingInterval)
+
+    // Cleanup function
+    return () => {
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current)
+        statusCheckIntervalRef.current = null
+      }
+    }
+  }, [pollingInterval, isPollingActive, linkId])
+
+  // Page visibility optimization - pause polling when page is hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log('📱 Page hidden, pausing status polling')
+        setIsPollingActive(false)
+      } else {
+        console.log('📱 Page visible, resuming status polling')
+        if (paymentData && !['confirmed', 'failed', 'expired'].includes(paymentStatus?.status || '')) {
+          setIsPollingActive(true)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [paymentData, paymentStatus])
+
+  // Connection status monitoring
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('🌐 Connection restored, resuming status polling')
+      if (paymentData && !['confirmed', 'failed', 'expired'].includes(paymentStatus?.status || '')) {
+        setIsPollingActive(true)
+        setConsecutiveFailures(0) // Reset failures on reconnection
+      }
+    }
+
+    const handleOffline = () => {
+      console.log('🌐 Connection lost, pausing status polling')
+      setIsPollingActive(false)
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [paymentData, paymentStatus])
+
+  // Replace the existing useEffect that starts status checking
+  useEffect(() => {
+    if (paymentData && linkId) {
+      startOptimizedStatusChecking()
+    }
+
+    // Cleanup on unmount
+    return () => {
+      setIsPollingActive(false)
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current)
+        statusCheckIntervalRef.current = null
+      }
+    }
+  }, [paymentData, linkId])
 
   const loadPaymentLink = async () => {
     try {
@@ -414,34 +551,35 @@ export default function PaymentPage() {
       // Enhanced currency filtering: include base currencies AND their stable coins
       const expandedAcceptedCryptos = [...acceptedCryptos]
       
-      // REAL NOWPayments stable coin mappings (based on actual API data)
-      const REAL_STABLE_COIN_MAPPING: Record<string, string[]> = {
-        'ETH': ['USDT', 'USDTERC20', 'USDC', 'DAI', 'PYUSD'], // Ethereum network
-        'BNB': ['USDTBSC', 'USDCBSC'], // BSC network
-        'SOL': ['USDTSOL', 'USDCSOL'], // Solana network
-        'MATIC': ['USDTMATIC', 'USDCMATIC'], // Polygon network
-        'TRX': ['USDTTRC20', 'TUSDTRC20'], // Tron network
-        'TON': ['USDTTON'], // TON network
-        'NEAR': [], // NEAR has no stable coins in NOWPayments
-        'DOT': [], // DOT has no stable coins in NOWPayments
-        'ALGO': ['USDCALGO'], // Algorand network
-        'ARB': ['USDTARB', 'USDCARB'], // Arbitrum network
-        'OP': ['USDTOP', 'USDCOP'], // Optimism network
-        'BASE': ['USDCBASE'], // Base network
-        'XLM': [], // Stellar has no stable coins in NOWPayments
-        'AVAX': [], // ❌ AVAX has NO stable coins in NOWPayments API
-        'BTC': [], // Bitcoin has no stable coins
-        'LTC': [], // Litecoin has no stable coins
-        'ADA': [], // Cardano has no stable coins
-        'XRP': [] // XRP has no stable coins
+      // Updated stable coin mappings - ONLY USDT/USDC variations allowed
+      const STABLE_COIN_MAPPING: Record<string, string[]> = {
+        'ETH': ['USDT', 'USDTERC20', 'USDC'], // Ethereum network - only USDT/USDC
+        'BNB': ['USDTBSC', 'USDCBSC'], // BSC network - only USDT/USDC
+        'SOL': ['USDTSOL', 'USDCSOL'], // Solana network - only USDT/USDC
+        'MATIC': ['USDTMATIC', 'USDCMATIC'], // Polygon network - only USDT/USDC
+        'TRX': ['USDTTRC20'], // Tron network - only USDT (no USDC on Tron in NOWPayments)
+        'TON': ['USDTTON'], // TON network - only USDT
+        'ALGO': ['USDCALGO'], // Algorand network - only USDC
+        'ARB': ['USDTARB', 'USDCARB'], // Arbitrum network - only USDT/USDC
+        'OP': ['USDTOP', 'USDCOP'], // Optimism network - only USDT/USDC
+        'BASE': ['USDCBASE'], // Base network - only USDC
+        // Networks with no USDT/USDC support
+        'NEAR': [], 
+        'DOT': [], 
+        'XLM': [], 
+        'AVAX': [], 
+        'BTC': [], 
+        'LTC': [], 
+        'ADA': [], 
+        'XRP': []
       }
       
-      // For each accepted crypto, find its related stable coins
+      // For each accepted crypto, find its related stable coins (USDT/USDC only)
       acceptedCryptos.forEach(crypto => {
-        console.log(`🔍 Researching stable coins for: ${crypto}`)
+        console.log(`🔍 Researching USDT/USDC stable coins for: ${crypto}`)
         
         const cryptoUpper = crypto.toUpperCase()
-        const relatedStableCoins = REAL_STABLE_COIN_MAPPING[cryptoUpper] || []
+        const relatedStableCoins = STABLE_COIN_MAPPING[cryptoUpper] || []
         
         // Find stable coins that actually exist in NOWPayments
         const availableStableCoins = data.currencies.filter((currency: CurrencyInfo) => {
@@ -452,13 +590,13 @@ export default function PaymentPage() {
         // Add found stable coins
         availableStableCoins.forEach((stableCoin: CurrencyInfo) => {
           if (!expandedAcceptedCryptos.includes(stableCoin.code)) {
-            console.log(`✅ Found stable coin: ${stableCoin.code} (for ${crypto})`)
+            console.log(`✅ Found USDT/USDC stable coin: ${stableCoin.code} (for ${crypto})`)
             expandedAcceptedCryptos.push(stableCoin.code)
           }
         })
       })
 
-      console.log('📈 Expanded accepted cryptos (with stable coins):', expandedAcceptedCryptos)
+      console.log('📈 Expanded accepted cryptos (with USDT/USDC only):', expandedAcceptedCryptos)
 
       // Filter to only accepted cryptocurrencies (including base currencies)
       const filtered = data.currencies.filter((currency: CurrencyInfo) => {
@@ -600,38 +738,31 @@ export default function PaymentPage() {
         }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create payment')
-      }
-
       const data = await response.json()
 
-      if (!data.success || !data.payment) {
+      if (!data.success) {
         throw new Error(data.error || 'Failed to create payment')
       }
 
       console.log('✅ Payment created successfully:', data.payment)
       setPaymentData(data.payment)
 
-      // Generate QR code for payment address
-      try {
-        const qrDataUrl = await QRCode.toDataURL(data.payment.pay_address, {
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          },
-          errorCorrectionLevel: 'M'
-        })
-        setQrCodeDataUrl(qrDataUrl)
-        console.log('✅ QR code generated')
-      } catch (qrError) {
-        console.error('Error generating QR code:', qrError)
+      // Generate QR code
+      if (data.payment.pay_address) {
+        try {
+          const qrDataUrl = await QRCode.toDataURL(data.payment.pay_address, {
+            width: 256,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
+            }
+          })
+          setQrCodeDataUrl(qrDataUrl)
+        } catch (qrError) {
+          console.error('Error generating QR code:', qrError)
+        }
       }
-
-      toast.success('Payment created! Send the exact amount to the address below.')
 
     } catch (error) {
       console.error('Error creating payment:', error)
@@ -684,7 +815,8 @@ export default function PaymentPage() {
     return `${amount.toFixed(decimals)} ${currencyCode}`
   }
 
-  const getBlockExplorerUrl = (txHash: string, currency: string) => {
+  // FIXED: getBlockExplorerUrl function with proper null handling
+  const getBlockExplorerUrl = (txHash: string, currency: string): string | null => {
     const currencyUpper = currency.toUpperCase()
     
     if (currencyUpper === 'BTC') {
@@ -742,6 +874,25 @@ export default function PaymentPage() {
       effectiveChargeCustomerFee,
       effectiveAutoConvert
     }
+  }
+
+  // Status indicator component for debugging (optional)
+  const StatusPollingIndicator = () => {
+    if (!isPollingActive) return null
+    
+    return (
+      <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm shadow-lg">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          <span>Checking status every {pollingInterval / 1000}s</span>
+        </div>
+        {consecutiveFailures > 0 && (
+          <div className="text-xs text-blue-200 mt-1">
+            {consecutiveFailures} consecutive failures
+          </div>
+        )}
+      </div>
+    )
   }
 
   if (loading) {
@@ -898,36 +1049,33 @@ export default function PaymentPage() {
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Loading conversion rates...</p>
                   </div>
-                ) : availableCurrencies.length === 0 ? (
-                  <div className="text-center py-8">
-                    <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">No supported cryptocurrencies available for this payment link.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
+                ) : availableCurrencies.length > 0 ? (
+                  <div className="grid gap-3">
                     {availableCurrencies.map((currency) => {
-                      const estimate = estimates[currency.code]
+                      const estimate = estimates[currency.code.toUpperCase()]
                       const isSelected = selectedCurrency === currency.code
                       
                       return (
                         <div
                           key={currency.code}
-                          className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                          className={`p-4 border rounded-lg cursor-pointer transition-all ${
                             isSelected 
                               ? 'border-blue-500 bg-blue-50' 
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                           onClick={() => setSelectedCurrency(currency.code)}
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{currency.code}</span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {currency.network}
-                                </Badge>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-medium">
+                                  {currency.symbol || currency.code.substring(0, 2)}
+                                </span>
                               </div>
-                              <p className="text-sm text-gray-600">{currency.display_name}</p>
+                              <div>
+                                <p className="font-medium">{currency.display_name || currency.name}</p>
+                                <p className="text-sm text-gray-500">{currency.code}</p>
+                              </div>
                             </div>
                             <div className="text-right">
                               {estimate ? (
@@ -936,11 +1084,11 @@ export default function PaymentPage() {
                                     {formatCrypto(estimate.estimated_amount, currency.code, currency.decimals)}
                                   </p>
                                   <p className="text-sm text-gray-500">
-                                    Rate: 1 {paymentLink.currency} = {estimate.rate.toFixed(6)} {currency.code}
+                                    ≈ {formatCurrency(estimate.fiat_equivalent || estimate.amount_from, estimate.currency_from.toUpperCase())}
                                   </p>
                                 </>
                               ) : (
-                                <p className="text-sm text-gray-500">Loading rate...</p>
+                                <p className="text-sm text-gray-400">Loading...</p>
                               )}
                             </div>
                           </div>
@@ -948,213 +1096,180 @@ export default function PaymentPage() {
                       )
                     })}
                   </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">No cryptocurrencies available</p>
+                  </div>
+                )}
+
+                {selectedCurrency && availableCurrencies.length > 0 && (
+                  <div className="mt-6">
+                    <Button 
+                      onClick={createPayment}
+                      disabled={creatingPayment || !selectedCurrency}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {creatingPayment ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Creating Payment...
+                        </>
+                      ) : (
+                        <>
+                          Continue with {selectedCurrency}
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
-
-            {/* Create Payment Button */}
-            <Button
-              onClick={createPayment}
-              disabled={!selectedCurrency || creatingPayment || availableCurrencies.length === 0}
-              className="w-full h-12 text-lg"
-            >
-              {creatingPayment ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  Creating Payment...
-                </>
-              ) : (
-                <>
-                  Create Payment
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </>
-              )}
-            </Button>
           </>
         ) : (
-          /* Payment Created - Show Payment Details with Real-time Status */
           <>
-            {/* Real-time Status Banner */}
-            <Card className={`mb-6 ${statusConfig.bgColor} border ${statusConfig.borderColor}`}>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <StatusIcon className={`h-6 w-6 ${statusConfig.color} ${statusConfig.showSpinner ? 'animate-spin' : ''}`} />
-                  <div className="flex-1">
-                    <h3 className={`font-semibold ${statusConfig.color}`}>{statusConfig.title}</h3>
-                    <p className="text-sm text-gray-600">{statusConfig.description}</p>
+            {/* Payment Status */}
+            <Card className={`mb-6 ${statusConfig.borderColor} border-2`}>
+              <CardContent className={`pt-6 ${statusConfig.bgColor}`}>
+                <div className="flex items-center justify-center mb-4">
+                  <div className={`p-3 rounded-full ${statusConfig.bgColor}`}>
+                    <StatusIcon className={`h-8 w-8 ${statusConfig.color} ${statusConfig.showSpinner ? 'animate-spin' : ''}`} />
                   </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <div className={`w-2 h-2 rounded-full ${statusChecking ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}`} />
-                      {statusChecking ? 'Checking...' : 'Live'}
+                </div>
+                <div className="text-center">
+                  <h3 className={`text-xl font-semibold ${statusConfig.color} mb-2`}>
+                    {statusConfig.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    {statusConfig.description}
+                  </p>
+                  
+                  {paymentStatus?.tx_hash && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-2">Transaction Hash:</p>
+                      <div className="flex items-center justify-center space-x-2">
+                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          {paymentStatus.tx_hash.substring(0, 20)}...
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(paymentStatus.tx_hash!)}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        {/* FIXED: Proper null handling for getBlockExplorerUrl */}
+                        {(() => {
+                          const explorerUrl = getBlockExplorerUrl(paymentStatus.tx_hash, paymentStatus.pay_currency)
+                          return explorerUrl ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(explorerUrl, '_blank')}
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          ) : null
+                        })()}
+                      </div>
                     </div>
-                    {lastStatusCheck && (
-                      <p className="text-xs text-gray-500">
-                        Last check: {lastStatusCheck.toLocaleTimeString()}
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
             {/* Payment Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <StatusIcon className={`h-6 w-6 ${statusConfig.color}`} />
-                  Payment Details
-                </CardTitle>
-                <p className="text-sm text-gray-600">
-                  {currentStatus === 'waiting' ? 'Send the exact amount to the address below' :
-                   currentStatus === 'confirming' ? 'Your payment is being confirmed on the blockchain' :
-                   currentStatus === 'confirmed' ? 'Payment completed successfully' :
-                   'Payment status updated'}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Payment Amount */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Amount to Send</Label>
-                  <div className="mt-1">
-                    <p className="text-2xl font-bold text-blue-600">
-                      {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Payment Address */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Payment Address</Label>
-                  <div className="mt-1 flex gap-2">
-                    <Input
-                      value={paymentData.pay_address}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(paymentData.pay_address)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* QR Code */}
-                {qrCodeDataUrl && (
-                  <div className="text-center">
-                    <Label className="text-sm font-medium text-gray-700">QR Code</Label>
-                    <div className="mt-2 inline-block p-4 bg-white rounded-lg border">
-                      <img 
-                        src={qrCodeDataUrl} 
-                        alt="Payment QR Code" 
-                        className="w-48 h-48 mx-auto"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Scan with your crypto wallet
-                    </p>
-                  </div>
-                )}
-
-                {/* Transaction Hash (if available) */}
-                {paymentStatus?.tx_hash && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Transaction Hash</Label>
-                    <div className="mt-1 flex gap-2">
-                      <Input
-                        value={paymentStatus.tx_hash}
-                        readOnly
-                        className="font-mono text-sm"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(paymentStatus.tx_hash!)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      {getBlockExplorerUrl(paymentStatus.tx_hash, paymentStatus.pay_currency) && (
+            {currentStatus === 'waiting' && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Payment Details</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Send exactly {formatCrypto(paymentData.pay_amount, paymentData.pay_currency)} to the address below
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Amount */}
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Amount to Send</Label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Input
+                          value={formatCrypto(paymentData.pay_amount, paymentData.pay_currency)}
+                          readOnly
+                          className="font-mono"
+                        />
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            const explorerUrl = getBlockExplorerUrl(paymentStatus.tx_hash!, paymentStatus.pay_currency)
-                            if (explorerUrl) {
-                              window.open(explorerUrl, '_blank')
-                            }
-                          }}
+                          onClick={() => copyToClipboard(paymentData.pay_amount.toString())}
                         >
-                          <ExternalLink className="h-4 w-4" />
+                          <Copy className="h-4 w-4" />
                         </Button>
-                      )}
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Payment Address</Label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Input
+                          value={paymentData.pay_address}
+                          readOnly
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(paymentData.pay_address)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* QR Code */}
+                    {qrCodeDataUrl && (
+                      <div className="text-center">
+                        <Label className="text-sm font-medium text-gray-700">QR Code</Label>
+                        <div className="mt-2 inline-block p-4 bg-white rounded-lg border">
+                          <img 
+                            src={qrCodeDataUrl} 
+                            alt="Payment QR Code" 
+                            className="w-48 h-48 mx-auto"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Scan with your crypto wallet
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Payment Info */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-blue-900 mb-1">Important:</p>
+                          <ul className="text-blue-800 space-y-1">
+                            <li>• Send exactly the amount shown above</li>
+                            <li>• Use the {paymentData.pay_currency} network only</li>
+                            <li>• Payment will be confirmed automatically</li>
+                            <li>• Do not send from an exchange directly</li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
-
-                {/* Payment Instructions */}
-                {currentStatus === 'waiting' && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h4 className="font-medium text-yellow-800 mb-2">Important Instructions:</h4>
-                    <ul className="text-sm text-yellow-700 space-y-1">
-                      <li>• Send the exact amount shown above</li>
-                      <li>• Use the exact address provided</li>
-                      <li>• Payment will be confirmed automatically</li>
-                      <li>• Do not close this page until payment is confirmed</li>
-                    </ul>
-                  </div>
-                )}
-
-                {/* Confirming Message */}
-                {currentStatus === 'confirming' && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 mb-2">Payment Received!</h4>
-                    <p className="text-sm text-blue-700">
-                      Your payment has been detected and is being confirmed on the blockchain. This usually takes a few minutes.
-                    </p>
-                  </div>
-                )}
-
-                {/* Success Message */}
-                {currentStatus === 'confirmed' && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-medium text-green-800 mb-2">Payment Confirmed!</h4>
-                    <p className="text-sm text-green-700">
-                      Your payment has been successfully processed. You will be redirected to the confirmation page shortly.
-                    </p>
-                  </div>
-                )}
-
-                {/* Failed Message */}
-                {currentStatus === 'failed' && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h4 className="font-medium text-red-800 mb-2">Payment Failed</h4>
-                    <p className="text-sm text-red-700">
-                      There was an issue with your payment. Please try creating a new payment or contact support.
-                    </p>
-                  </div>
-                )}
-
-                {/* Payment ID */}
-                <div className="text-center">
-                  <p className="text-xs text-gray-500">
-                    Payment ID: {paymentData.payment_id}
-                  </p>
-                  {statusCheckCount > 0 && (
-                    <p className="text-xs text-gray-400">
-                      Status checks: {statusCheckCount}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
+
+        {/* Status Polling Indicator */}
+        <StatusPollingIndicator />
       </div>
     </div>
   )
