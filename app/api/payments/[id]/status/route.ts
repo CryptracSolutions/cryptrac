@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { getPaymentStatus } from '@/lib/nowpayments-dynamic'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+async function getPaymentStatus(paymentId: string) {
+  const response = await fetch(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
+    method: 'GET',
+    headers: {
+      'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`NOWPayments API error: ${response.status}`)
+  }
+
+  return await response.json()
+}
 
 export async function GET(
   request: NextRequest,
@@ -11,46 +30,36 @@ export async function GET(
     const { id } = await params
     console.log('🔍 Checking payment status for link ID:', id)
 
-    // Create Supabase client
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
+    // First, get the payment link to find the most recent payment
+    const { data: paymentLinkData, error: linkError } = await supabase
+      .from('payment_links')
+      .select('id')
+      .eq('link_id', id)
+      .single()
+
+    if (linkError || !paymentLinkData) {
+      console.error('❌ Payment link not found:', linkError)
+      return NextResponse.json(
+        { success: false, message: 'Payment link not found' },
+        { status: 404 }
+      )
+    }
+
+    console.log('✅ Payment link found:', paymentLinkData.id)
 
     // Get the most recent payment for this payment link
-    const { data: payment, error } = await supabase
+    const { data: payment, error: paymentError } = await supabase
       .from('transactions')
       .select(`
-        *,
-        payment_link:payment_links(
-          id,
-          link_id,
-          title,
-          merchant:merchants(
-            business_name
-          )
-        )
+        *
       `)
-      .eq('payment_link.link_id', id)
+      .eq('payment_link_id', paymentLinkData.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
 
-    if (error || !payment) {
-      console.error('❌ Payment not found:', error)
+    if (paymentError || !payment) {
+      console.error('❌ Payment not found:', paymentError)
       return NextResponse.json(
         { success: false, message: 'Payment not found' },
         { status: 404 }
@@ -60,37 +69,39 @@ export async function GET(
     console.log('✅ Payment found:', {
       id: payment.id,
       status: payment.status,
-      nowpayments_id: payment.nowpayments_invoice_id,
+      payment_id: payment.payment_id,
     })
 
     // If payment is still waiting or confirming, check NOWPayments for updates
-    if (['waiting', 'confirming'].includes(payment.status) && payment.nowpayments_invoice_id) {
+    if (['waiting', 'confirming'].includes(payment.status) && payment.payment_id) {
       try {
         console.log('🔄 Checking NOWPayments status...')
-        const nowPaymentStatus = await getPaymentStatus(payment.nowpayments_invoice_id)
+        const nowPaymentStatus = await getPaymentStatus(payment.payment_id)
         
         // Map NOWPayments status to our status
         let newStatus = payment.status
         let txHash = payment.tx_hash
+        let payinHash = payment.payin_hash
+        let payoutHash = payment.payout_hash
+        
+        console.log('📊 NOWPayments status response:', {
+          payment_status: nowPaymentStatus.payment_status,
+          payin_hash: nowPaymentStatus.payin_hash,
+          payout_hash: nowPaymentStatus.payout_hash,
+          outcome: nowPaymentStatus.outcome
+        })
         
         switch (nowPaymentStatus.payment_status) {
           case 'waiting':
             newStatus = 'waiting'
             break
           case 'confirming':
+          case 'sending':
             newStatus = 'confirming'
             break
           case 'confirmed':
           case 'finished':
             newStatus = 'confirmed'
-            // Extract transaction hash if available (check multiple possible fields)
-            if ((nowPaymentStatus as any).outcome?.hash) {
-              txHash = (nowPaymentStatus as any).outcome.hash
-            } else if ((nowPaymentStatus as any).tx_hash) {
-              txHash = (nowPaymentStatus as any).tx_hash
-            } else if ((nowPaymentStatus as any).txid) {
-              txHash = (nowPaymentStatus as any).txid
-            }
             break
           case 'failed':
           case 'refunded':
@@ -101,8 +112,32 @@ export async function GET(
             break
         }
 
+        // Extract transaction hashes
+        if (nowPaymentStatus.payin_hash && nowPaymentStatus.payin_hash !== payinHash) {
+          payinHash = nowPaymentStatus.payin_hash
+          console.log('✅ Payin hash captured:', payinHash)
+        }
+
+        if (nowPaymentStatus.payout_hash && nowPaymentStatus.payout_hash !== payoutHash) {
+          payoutHash = nowPaymentStatus.payout_hash
+          console.log('✅ Payout hash captured:', payoutHash)
+        }
+
+        // Set primary tx_hash based on status
+        if (newStatus === 'confirmed' && payoutHash) {
+          txHash = payoutHash // Use payout hash for confirmed payments
+          console.log('✅ Using payout_hash as primary tx_hash for confirmed payment')
+        } else if (payinHash && !txHash) {
+          txHash = payinHash // Use payin hash if no tx_hash yet
+          console.log('✅ Using payin_hash as primary tx_hash')
+        }
+
         // Update payment status if it changed
-        if (newStatus !== payment.status || (txHash && txHash !== payment.tx_hash)) {
+        if (newStatus !== payment.status || 
+            (txHash && txHash !== payment.tx_hash) ||
+            (payinHash && payinHash !== payment.payin_hash) ||
+            (payoutHash && payoutHash !== payment.payout_hash)) {
+          
           console.log(`📝 Updating payment status: ${payment.status} -> ${newStatus}`)
           
           const updateData: any = {
@@ -114,9 +149,17 @@ export async function GET(
             updateData.tx_hash = txHash
           }
 
+          if (payinHash && payinHash !== payment.payin_hash) {
+            updateData.payin_hash = payinHash
+          }
+
+          if (payoutHash && payoutHash !== payment.payout_hash) {
+            updateData.payout_hash = payoutHash
+          }
+
           // If payment is confirmed, update received amounts
-          if (newStatus === 'confirmed' && (nowPaymentStatus as any).actually_paid) {
-            updateData.amount_received = (nowPaymentStatus as any).actually_paid
+          if (newStatus === 'confirmed' && nowPaymentStatus.actually_paid) {
+            updateData.amount_received = nowPaymentStatus.actually_paid
             updateData.currency_received = nowPaymentStatus.pay_currency?.toUpperCase()
           }
 
@@ -132,6 +175,8 @@ export async function GET(
             // Update the payment object with new data
             payment.status = newStatus
             payment.tx_hash = txHash
+            payment.payin_hash = payinHash
+            payment.payout_hash = payoutHash
             if (updateData.amount_received) payment.amount_received = updateData.amount_received
             if (updateData.currency_received) payment.currency_received = updateData.currency_received
           }
@@ -142,27 +187,48 @@ export async function GET(
       }
     }
 
+    // Get payment link and merchant info for response
+    const { data: paymentLinkInfo, error: linkInfoError } = await supabase
+      .from('payment_links')
+      .select(`
+        id,
+        link_id,
+        title,
+        merchant:merchants(
+          business_name
+        )
+      `)
+      .eq('id', payment.payment_link_id)
+      .single()
+
     // Prepare response data
     const responsePayment = {
       id: payment.id,
-      nowpayments_payment_id: payment.nowpayments_invoice_id,
+      nowpayments_payment_id: payment.payment_id,
       order_id: payment.order_id,
       status: payment.status,
       pay_currency: payment.pay_currency,
       pay_amount: payment.pay_amount,
       pay_address: payment.pay_address,
-      price_amount: payment.amount,
-      price_currency: payment.currency,
-      payout_currency: payment.currency_received || payment.pay_currency,
-      payout_amount: payment.merchant_receives,
+      price_amount: payment.price_amount,
+      price_currency: payment.price_currency,
+      payout_currency: payment.payout_currency || payment.pay_currency,
+      payout_amount: payment.payout_amount,
       created_at: payment.created_at,
       updated_at: payment.updated_at,
       tx_hash: payment.tx_hash,
-      is_fee_paid_by_user: payment.gateway_fee > 0,
-      gateway_fee: payment.gateway_fee,
+      payin_hash: payment.payin_hash,
+      payout_hash: payment.payout_hash,
+      is_fee_paid_by_user: payment.is_fee_paid_by_user || false,
+      gateway_fee: payment.gateway_fee || 0,
       merchant_receives: payment.merchant_receives,
       amount_received: payment.amount_received,
       currency_received: payment.currency_received,
+      payment_link: paymentLinkInfo ? {
+        title: paymentLinkInfo.title,
+        link_id: paymentLinkInfo.link_id,
+        merchant: paymentLinkInfo.merchant
+      } : null
     }
 
     return NextResponse.json({

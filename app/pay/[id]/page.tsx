@@ -411,10 +411,10 @@ export default function PaymentPage() {
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Research-based currency filtering: find actual relationships
+      // Enhanced currency filtering: include base currencies AND their stable coins
       const expandedAcceptedCryptos = [...acceptedCryptos]
       
-      // For each accepted crypto, find its related stable coins by researching actual NOWPayments data
+      // For each accepted crypto, find its related stable coins
       acceptedCryptos.forEach(crypto => {
         console.log(`🔍 Researching stable coins for: ${crypto}`)
         
@@ -425,7 +425,7 @@ export default function PaymentPage() {
           
           // Check for USDT variants
           if (currencyCode.includes('USDT')) {
-            // ETH relationships
+            // ETH relationships - handle both USDT and USDTERC20
             if (cryptoUpper === 'ETH' && (currencyCode === 'USDT' || currencyCode === 'USDTERC20')) {
               return true
             }
@@ -441,8 +441,13 @@ export default function PaymentPage() {
             if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
               return true
             }
-            // Avalanche relationships
-            if (cryptoUpper === 'AVAX' && (currencyCode.includes('AVAX') || currencyCode.includes('AVALANCHE'))) {
+            // Avalanche relationships - FIXED: handle both underscore and no underscore
+            if (cryptoUpper === 'AVAX' && (
+              currencyCode.includes('AVAX') || 
+              currencyCode.includes('AVALANCHE') ||
+              currencyCode === 'USDT_AVAX' ||
+              currencyCode === 'USDTAVAX'
+            )) {
               return true
             }
             // Tron relationships
@@ -475,6 +480,14 @@ export default function PaymentPage() {
             if (cryptoUpper === 'KAVA' && currencyCode.includes('KAVA')) {
               return true
             }
+            // Arbitrum relationships
+            if (cryptoUpper === 'ARB' && currencyCode.includes('ARBITRUM')) {
+              return true
+            }
+            // Optimism relationships
+            if (cryptoUpper === 'OP' && (currencyCode.includes('OP') || currencyCode.includes('OPTIMISM'))) {
+              return true
+            }
           }
           
           // Check for USDC variants
@@ -495,8 +508,13 @@ export default function PaymentPage() {
             if (cryptoUpper === 'MATIC' && (currencyCode.includes('MATIC') || currencyCode.includes('POLYGON'))) {
               return true
             }
-            // Avalanche relationships
-            if (cryptoUpper === 'AVAX' && (currencyCode.includes('AVAX') || currencyCode.includes('AVALANCHE'))) {
+            // Avalanche relationships - FIXED: handle both underscore and no underscore
+            if (cryptoUpper === 'AVAX' && (
+              currencyCode.includes('AVAX') || 
+              currencyCode.includes('AVALANCHE') ||
+              currencyCode === 'USDC_AVAX' ||
+              currencyCode === 'USDCAVAX'
+            )) {
               return true
             }
             // Stellar relationships
@@ -515,7 +533,7 @@ export default function PaymentPage() {
             if (cryptoUpper === 'OP' && (currencyCode.includes('OP') || currencyCode.includes('OPTIMISM'))) {
               return true
             }
-            // Base relationships
+            // Base relationships - FIXED: handle Base network
             if (cryptoUpper === 'BASE' && currencyCode.includes('BASE')) {
               return true
             }
