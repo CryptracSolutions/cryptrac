@@ -1069,7 +1069,7 @@ export default function PaymentPage() {
                             <div className="text-right">
                               {estimatesLoading ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : estimate ? (
+                              ) : estimate && estimate.estimated_amount && typeof estimate.estimated_amount === 'number' ? (
                                 <>
                                   <div className="font-medium">
                                     {estimate.estimated_amount.toFixed(6)}
