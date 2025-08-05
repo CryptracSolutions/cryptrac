@@ -103,39 +103,22 @@ function handleNOWPaymentsError(error: any, context: string): NextResponse {
   let errorMessage = 'Payment creation failed'
   let statusCode = 500
   
-  if (error.response) {
-    statusCode = error.response.status
-    try {
-      const errorData = typeof error.response.data === 'string' 
-        ? JSON.parse(error.response.data) 
-        : error.response.data
-      
-      if (errorData.message) {
-        errorMessage = errorData.message
-      } else if (errorData.error) {
-        errorMessage = errorData.error
-      }
-      
-      // Specific error handling
-      if (errorData.code === 'BAD_CREATE_PAYMENT_REQUEST') {
-        if (errorData.message.includes('validate address')) {
-          errorMessage = 'Invalid wallet address configuration. Please contact support.'
-        }
-      }
-      
-    } catch (parseError) {
-      console.error('❌ Error parsing NOWPayments response:', parseError)
-      errorMessage = 'Invalid response from payment processor'
-    }
-  } else if (error.message) {
-    errorMessage = error.message
+  if (error.message?.includes('429')) {
+    errorMessage = 'Too many requests. Please wait a moment and try again.'
+    statusCode = 429
+  } else if (error.message?.includes('400')) {
+    errorMessage = 'Invalid payment request. Please check your payment details.'
+    statusCode = 400
+  } else if (error.message?.includes('HTML error page')) {
+    errorMessage = 'Payment service temporarily unavailable. Please try again.'
+    statusCode = 503
   }
   
   return NextResponse.json(
     { 
       success: false, 
       error: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? error : undefined
+      details: error.message || 'Unknown error'
     },
     { status: statusCode }
   )
@@ -151,6 +134,7 @@ export async function POST(request: NextRequest) {
       order_id,
       order_description,
       payment_link_id,
+      // Tax information
       tax_enabled,
       base_amount,
       tax_rates,
@@ -169,35 +153,37 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!price_amount || !price_currency || !pay_currency || !order_id || !payment_link_id) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { 
+          success: false, 
+          error: 'Missing required fields' 
+        },
         { status: 400 }
       )
     }
 
-    // Look up payment link and merchant - FIXED: Use correct column name 'wallets'
-    console.log('🔍 Looking up payment link:', payment_link_id)
-    
-    const { data: paymentLinkData, error: linkError } = await supabase
+    // Get payment link and merchant info - FIXED: Get merchant_id correctly
+    const { data: paymentLinkData, error: paymentLinkError } = await supabase
       .from('payment_links')
       .select(`
-        id,
-        merchant_id,
+        *,
         merchants!inner(
           id,
-          user_id,
           business_name,
-          wallets,
           auto_convert_enabled,
-          charge_customer_fee
+          charge_customer_fee,
+          wallets
         )
       `)
       .eq('id', payment_link_id)
       .single()
 
-    if (linkError || !paymentLinkData) {
-      console.error('❌ Payment link not found:', linkError)
+    if (paymentLinkError || !paymentLinkData) {
+      console.error('❌ Payment link not found:', paymentLinkError)
       return NextResponse.json(
-        { success: false, error: 'Payment link not found' },
+        { 
+          success: false, 
+          error: 'Payment link not found' 
+        },
         { status: 404 }
       )
     }
@@ -373,12 +359,14 @@ export async function POST(request: NextRequest) {
       auto_forwarding: autoForwardingConfigured
     })
 
-    // Save transaction to database - FIXED: Use correct column name
+    // FIXED: Save transaction to database with correct field names and merchant_id
     const transactionData = {
+      // FIXED: Use the correct column name from schema
       nowpayments_payment_id: paymentResponse.payment_id,
       order_id: paymentResponse.order_id,
       payment_link_id: payment_link_id,
-      merchant_id: merchant.id,
+      // FIXED: Use the correct merchant_id from payment link
+      merchant_id: paymentLinkData.merchant_id,
       amount: paymentResponse.price_amount,
       currency: paymentResponse.price_currency.toUpperCase(),
       pay_amount: paymentResponse.pay_amount,
@@ -391,12 +379,22 @@ export async function POST(request: NextRequest) {
       tax_rates: tax_rates || [],
       tax_amount: tax_amount || 0,
       subtotal_with_tax: subtotal_with_tax || paymentResponse.price_amount,
-      // Auto-forwarding info
-      auto_forwarding_enabled: autoForwardingConfigured,
-      payout_address: autoForwardingConfigured ? paymentRequest.payout_address : null,
+      // Auto-forwarding info - store in payment_data JSONB field
+      payment_data: {
+        auto_forwarding_enabled: autoForwardingConfigured,
+        payout_address: autoForwardingConfigured ? paymentRequest.payout_address : null,
+        payout_currency: autoForwardingConfigured ? paymentRequest.payout_currency : null
+      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
+
+    console.log('💾 Saving transaction to database:', {
+      nowpayments_payment_id: transactionData.nowpayments_payment_id,
+      merchant_id: transactionData.merchant_id,
+      amount: transactionData.amount,
+      currency: transactionData.currency
+    })
 
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
@@ -407,6 +405,7 @@ export async function POST(request: NextRequest) {
     if (transactionError) {
       console.error('❌ Error saving transaction:', transactionError)
       // Don't fail the payment creation, just log the error
+      console.error('Transaction data that failed:', transactionData)
     } else {
       console.log('✅ Transaction saved to database:', transaction.id)
     }
