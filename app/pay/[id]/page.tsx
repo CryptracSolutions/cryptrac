@@ -219,7 +219,7 @@ export default function PaymentPage() {
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null)
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
-  const [estimates, setEstimates] = useState<EstimateData[]>([])
+  const [estimates, setEstimates] = useState<Record<string, EstimateData>>({})
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
@@ -231,10 +231,13 @@ export default function PaymentPage() {
   // Status monitoring state
   const [isMonitoring, setIsMonitoring] = useState(false)
   const [monitoringInterval, setMonitoringInterval] = useState(5000) // Start with 5 seconds
-  const [consecutiveFailures, setConsecutiveFailures] = useState(0)
-  const [lastStatusCheck, setLastStatusCheck] = useState<number>(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const visibilityRef = useRef<boolean>(true)
+  const consecutiveFailures = useRef<number>(0)
+  const monitoringStartTime = useRef<number>(Date.now())
+  
+  // Currency backend mapping for payment processing
+  const [currencyBackendMapping, setCurrencyBackendMapping] = useState<Record<string, string>>({})
   
   // Fee calculation
   const feeBreakdown = paymentLink ? calculateFeeBreakdown(paymentLink) : null
@@ -290,86 +293,75 @@ export default function PaymentPage() {
       const data = await response.json()
       
       if (data.success && data.payment) {
-        console.log('📊 Payment status update:', data.payment.payment_status)
-        setPaymentStatus(data.payment)
-        setLastStatusCheck(Date.now())
-        setConsecutiveFailures(0) // Reset failure count on success
+        const currentStatus = data.payment
+        setPaymentStatus(currentStatus)
         
-        // Adaptive interval based on status and time elapsed
-        const status = data.payment.payment_status
-        const timeElapsed = Date.now() - new Date(paymentData.created_at).getTime()
+        console.log(`🔄 Payment status: ${currentStatus.payment_status}`)
         
-        let newInterval = 5000 // Default 5 seconds
-        
-        if (status === 'waiting') {
-          // Waiting status: start fast, then slow down
-          if (timeElapsed < 60000) { // First minute
-            newInterval = 3000 // 3 seconds
-          } else if (timeElapsed < 300000) { // First 5 minutes
-            newInterval = 5000 // 5 seconds
-          } else if (timeElapsed < 900000) { // First 15 minutes
-            newInterval = 10000 // 10 seconds
-          } else {
-            newInterval = 15000 // 15 seconds after 15 minutes
-          }
-        } else if (status === 'confirming') {
-          // Confirming status: check more frequently
-          if (timeElapsed < 120000) { // First 2 minutes
-            newInterval = 2000 // 2 seconds
-          } else if (timeElapsed < 600000) { // First 10 minutes
-            newInterval = 5000 // 5 seconds
-          } else {
-            newInterval = 10000 // 10 seconds after 10 minutes
-          }
-        } else if (['finished', 'partially_paid', 'failed', 'refunded', 'expired'].includes(status)) {
-          // Final states: stop monitoring
+        // Handle status changes
+        if (currentStatus.payment_status === 'finished' || 
+            currentStatus.payment_status === 'confirmed' ||
+            currentStatus.payment_status === 'sending') {
+          
+          console.log('✅ Payment completed, stopping monitoring')
           if (intervalRef.current) {
             clearInterval(intervalRef.current)
             intervalRef.current = null
           }
-          setIsMonitoring(false)
           
-          // Redirect to success page for completed payments
-          if (status === 'finished') {
-            setTimeout(() => {
-              router.push(`/payment/success/${paymentData.payment_id}`)
-            }, 2000)
-          }
-          
+          // Redirect to success page
+          router.push(`/payment/success/${paymentLink?.id}?payment_id=${paymentData.payment_id}`)
           return
         }
         
-        // Update interval if it changed significantly
-        if (Math.abs(newInterval - monitoringInterval) > 1000) {
+        // Adaptive interval based on status and time elapsed
+        const timeElapsed = Date.now() - monitoringStartTime.current
+        let newInterval = 5000 // Default 5 seconds
+        
+        if (currentStatus.payment_status === 'waiting') {
+          if (timeElapsed < 60000) newInterval = 3000      // First minute: 3s
+          else if (timeElapsed < 300000) newInterval = 5000 // Next 4 minutes: 5s
+          else if (timeElapsed < 600000) newInterval = 10000 // Next 5 minutes: 10s
+          else newInterval = 15000                          // After 10 minutes: 15s
+        } else if (currentStatus.payment_status === 'confirming') {
+          newInterval = 2000 // More frequent for confirming status
+        }
+        
+        // Update interval if it changed
+        if (newInterval !== monitoringInterval) {
           setMonitoringInterval(newInterval)
-          
-          // Restart interval with new timing
           if (intervalRef.current) {
             clearInterval(intervalRef.current)
             intervalRef.current = setInterval(checkPaymentStatusOptimized, newInterval)
           }
         }
         
+        // Reset consecutive failures on success
+        consecutiveFailures.current = 0
+        
       } else {
-        throw new Error(data.error || 'Failed to get payment status')
+        console.warn('⚠️ Invalid payment status response:', data)
       }
       
     } catch (error) {
-      console.error('Error checking payment status:', error)
+      console.error('❌ Error checking payment status:', error)
       
-      // Exponential backoff on consecutive failures
-      const newFailureCount = consecutiveFailures + 1
-      setConsecutiveFailures(newFailureCount)
+      // Increment consecutive failures
+      consecutiveFailures.current++
       
-      // Increase interval on failures, max 30 seconds
-      const backoffInterval = Math.min(5000 * Math.pow(1.5, newFailureCount), 30000)
-      
-      if (Math.abs(backoffInterval - monitoringInterval) > 1000) {
-        setMonitoringInterval(backoffInterval)
+      // Exponential backoff for failures
+      if (consecutiveFailures.current >= 3) {
+        const backoffInterval = Math.min(30000, 5000 * Math.pow(2, consecutiveFailures.current - 3))
+        console.log(`⚠️ ${consecutiveFailures.current} consecutive failures, backing off to ${backoffInterval}ms`)
         
         if (intervalRef.current) {
           clearInterval(intervalRef.current)
-          intervalRef.current = setInterval(checkPaymentStatusOptimized, backoffInterval)
+          if (consecutiveFailures.current < 10) { // Stop after 10 failures
+            intervalRef.current = setInterval(checkPaymentStatusOptimized, backoffInterval)
+          } else {
+            console.error('❌ Too many consecutive failures, stopping status monitoring')
+            intervalRef.current = null
+          }
         }
       }
     }
@@ -382,7 +374,8 @@ export default function PaymentPage() {
     console.log('🔄 Starting optimized payment status monitoring...')
     setIsMonitoring(true)
     setMonitoringInterval(5000) // Start with 5 seconds
-    setConsecutiveFailures(0)
+    consecutiveFailures.current = 0
+    monitoringStartTime.current = Date.now()
     
     // Initial check
     checkPaymentStatusOptimized()
@@ -530,30 +523,214 @@ export default function PaymentPage() {
       }
 
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
+      console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Filter currencies based on accepted cryptos
-      const filtered = data.currencies.filter((currency: CurrencyInfo) => {
-        return currency.enabled && acceptedCryptos.some(crypto => 
-          crypto.toLowerCase() === currency.code.toLowerCase()
-        )
-      })
-
-      // Sort currencies by priority
-      const priorityOrder = ['BTC', 'ETH', 'BNB', 'SOL', 'MATIC', 'TRX', 'TON', 'AVAX', 'NEAR']
-      const sorted = filtered.sort((a: CurrencyInfo, b: CurrencyInfo) => {
-        const aIndex = priorityOrder.indexOf(a.code.toUpperCase())
-        const bIndex = priorityOrder.indexOf(b.code.toUpperCase())
+      // Comprehensive alternative mapping for all currencies
+      const currencyAlternatives: Record<string, string[]> = {
+        // Major cryptocurrencies
+        'BTC': ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
+        'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP'],
+        'BNB': ['BNB', 'BNBBSC', 'BSC', 'BNB_BSC', 'BINANCE', 'BNBCHAIN'],
+        'SOL': ['SOL', 'SOLANA', 'SOLSPL'],
+        'ADA': ['ADA', 'CARDANO'],
+        'DOT': ['DOT', 'POLKADOT'],
+        'MATIC': ['MATIC', 'POLYGON', 'MATICMATIC'],
+        'AVAX': ['AVAX', 'AVALANCHE', 'AVAXC'],
+        'TRX': ['TRX', 'TRON'],
+        'LTC': ['LTC', 'LITECOIN'],
+        'XRP': ['XRP', 'RIPPLE'],
+        'TON': ['TON', 'TONCOIN'],
+        'NEAR': ['NEAR', 'NEARPROTOCOL'],
+        'ALGO': ['ALGO', 'ALGORAND'],
+        'XLM': ['XLM', 'STELLAR'],
+        'ARB': ['ARB', 'ARBITRUM'],
+        'OP': ['OP', 'OPTIMISM'],
+        'BASE': ['BASE', 'BASECHAIN'],
         
-        if (aIndex !== -1 && bIndex !== -1) {
-          return aIndex - bIndex
+        // Stablecoins
+        'USDT': ['USDT', 'USDTERC20', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
+        'USDC': ['USDC', 'USDCERC20', 'USDCBSC', 'USDCMATIC', 'USDCSOL', 'USDCALGO', 'USDCARB', 'USDCOP', 'USDCBASE'],
+        'DAI': ['DAI', 'DAIERC20', 'DAIBSC', 'DAIMATIC'],
+        'BUSD': ['BUSD', 'BUSDBSC', 'BUSDERC20'],
+        'TUSD': ['TUSD', 'TUSDERC20', 'TUSDBSC'],
+        'PYUSD': ['PYUSD', 'PYUSDERC20']
+      }
+
+      // Dynamic network patterns for comprehensive detection
+      const networkPatterns = [
+        'BSC', 'ERC20', 'TRC20', 'SOL', 'MATIC', 'ARB', 'OP', 'BASE', 'AVAX', 'TON', 'ALGO', 'NEAR'
+      ]
+
+      console.log('🔍 Step 1: Creating backend mappings for primary currencies...')
+      
+      // Step 1: Create backend mappings for all accepted currencies
+      const backendMappings: Record<string, string> = {}
+      
+      for (const acceptedCrypto of acceptedCryptos) {
+        console.log(`🔍 Finding backend mapping for: ${acceptedCrypto}`)
+        
+        // Try predefined alternatives first
+        const alternatives = currencyAlternatives[acceptedCrypto.toUpperCase()] || []
+        let backendCurrency = null
+        
+        // Check predefined alternatives
+        for (const alt of alternatives) {
+          const found = data.currencies.find((c: CurrencyInfo) => 
+            c.code.toUpperCase() === alt.toUpperCase() && c.enabled
+          )
+          if (found) {
+            backendCurrency = found.code
+            break
+          }
         }
-        if (aIndex !== -1) return -1
-        if (bIndex !== -1) return 1
+        
+        // If no predefined alternative found, try dynamic patterns
+        if (!backendCurrency) {
+          const baseCode = acceptedCrypto.toUpperCase()
+          for (const pattern of networkPatterns) {
+            const dynamicCode = `${baseCode}${pattern}`
+            const found = data.currencies.find((c: CurrencyInfo) => 
+              c.code.toUpperCase() === dynamicCode && c.enabled
+            )
+            if (found) {
+              backendCurrency = found.code
+              break
+            }
+          }
+        }
+        
+        // Fallback to exact match
+        if (!backendCurrency) {
+          const exactMatch = data.currencies.find((c: CurrencyInfo) => 
+            c.code.toUpperCase() === acceptedCrypto.toUpperCase() && c.enabled
+          )
+          if (exactMatch) {
+            backendCurrency = exactMatch.code
+          }
+        }
+        
+        if (backendCurrency) {
+          backendMappings[acceptedCrypto] = backendCurrency
+          console.log(`✅ Backend mapping: ${acceptedCrypto} → ${backendCurrency}`)
+        } else {
+          console.warn(`⚠️ No backend mapping found for: ${acceptedCrypto}`)
+        }
+      }
+      
+      // Store backend mappings globally
+      setCurrencyBackendMapping(backendMappings)
+      
+      console.log('🔍 Step 2: Creating clean customer-facing currency list...')
+      
+      // Step 2: Create clean customer-facing currency list
+      const customerCurrencies: CurrencyInfo[] = []
+      
+      // Add primary currencies (clean display names)
+      for (const acceptedCrypto of acceptedCryptos) {
+        if (backendMappings[acceptedCrypto]) {
+          // Find the actual currency info from NOWPayments
+          const backendCode = backendMappings[acceptedCrypto]
+          const currencyInfo = data.currencies.find((c: CurrencyInfo) => 
+            c.code === backendCode && c.enabled
+          )
+          
+          if (currencyInfo) {
+            // Create clean customer-facing currency
+            customerCurrencies.push({
+              code: acceptedCrypto, // Display the clean code (BNB, not BNBBSC)
+              name: currencyInfo.name,
+              enabled: true,
+              min_amount: currencyInfo.min_amount,
+              max_amount: currencyInfo.max_amount
+            })
+            console.log(`✅ Added primary currency: ${acceptedCrypto} (backend: ${backendCode})`)
+          }
+        }
+      }
+      
+      // Add USDT/USDC stablecoins for supported networks
+      const stablecoinMapping: Record<string, string[]> = {
+        'BNB': ['USDTBSC', 'USDCBSC'],
+        'ETH': ['USDTERC20', 'USDC'],
+        'SOL': ['USDTSOL', 'USDCSOL'],
+        'TRX': ['USDTTRC20'],
+        'TON': ['USDTTON'],
+        'MATIC': ['USDTMATIC', 'USDCMATIC'],
+        'ARB': ['USDTARB', 'USDCARB'],
+        'OP': ['USDTOP', 'USDCOP'],
+        'BASE': ['USDCBASE'],
+        'ALGO': ['USDCALGO']
+      }
+      
+      for (const acceptedCrypto of acceptedCryptos) {
+        const stablecoins = stablecoinMapping[acceptedCrypto] || []
+        console.log(`🔍 Researching USDT/USDC stable coins for: ${acceptedCrypto}`)
+        
+        for (const stablecoin of stablecoins) {
+          const stablecoinInfo = data.currencies.find((c: CurrencyInfo) => 
+            c.code.toUpperCase() === stablecoin.toUpperCase() && c.enabled
+          )
+          
+          if (stablecoinInfo) {
+            // Only add USDT and USDC variants
+            if (stablecoin.toUpperCase().includes('USDT') || stablecoin.toUpperCase().includes('USDC')) {
+              customerCurrencies.push({
+                code: stablecoinInfo.code,
+                name: stablecoinInfo.name,
+                enabled: true,
+                min_amount: stablecoinInfo.min_amount,
+                max_amount: stablecoinInfo.max_amount
+              })
+              
+              // Add to backend mapping (stablecoins use their actual code)
+              backendMappings[stablecoinInfo.code] = stablecoinInfo.code
+              
+              console.log(`✅ Added USDT/USDC stable coin: ${stablecoinInfo.code} (for ${acceptedCrypto})`)
+            }
+          }
+        }
+      }
+      
+      // Sort currencies: Primary currencies first, then stablecoins
+      const sortedCurrencies = customerCurrencies.sort((a: CurrencyInfo, b: CurrencyInfo) => {
+        const aPrimary = acceptedCryptos.includes(a.code)
+        const bPrimary = acceptedCryptos.includes(b.code)
+        const aStablecoin = a.code.toUpperCase().includes('USDT') || a.code.toUpperCase().includes('USDC')
+        const bStablecoin = b.code.toUpperCase().includes('USDT') || b.code.toUpperCase().includes('USDC')
+        
+        // Primary currencies first
+        if (aPrimary && !bPrimary) return -1
+        if (!aPrimary && bPrimary) return 1
+        
+        // Among primary currencies, sort by priority
+        if (aPrimary && bPrimary) {
+          const priorityOrder = ['BTC', 'ETH', 'BNB', 'SOL', 'MATIC', 'TRX', 'TON', 'AVAX', 'NEAR']
+          const aIndex = priorityOrder.indexOf(a.code.toUpperCase())
+          const bIndex = priorityOrder.indexOf(b.code.toUpperCase())
+          
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
+          if (aIndex !== -1) return -1
+          if (bIndex !== -1) return 1
+          return a.code.localeCompare(b.code)
+        }
+        
+        // Stablecoins last, sorted alphabetically
+        if (aStablecoin && bStablecoin) {
+          return a.code.localeCompare(b.code)
+        }
+        
         return a.code.localeCompare(b.code)
       })
 
-      console.log('✅ Available currencies:', sorted.map((c: CurrencyInfo) => c.code))
-      setAvailableCurrencies(sorted)
+      console.log(`✅ Created ${sortedCurrencies.length} customer-facing currencies`)
+      console.log('📋 Backend mappings:', backendMappings)
+      console.log('🎯 Final customer-facing currencies:', sortedCurrencies.map((c: CurrencyInfo) => c.code))
+      
+      // Update state
+      setAvailableCurrencies(sortedCurrencies)
+      setCurrencyBackendMapping(backendMappings)
+      
+      console.log('🔧 Backend mapping stored for payment processing')
 
     } catch (error) {
       console.error('Error loading currencies:', error)
@@ -570,7 +747,7 @@ export default function PaymentPage() {
       console.log('📊 Loading payment estimates sequentially...')
 
       const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
-      const newEstimates: EstimateData[] = []
+      const newEstimates: Record<string, EstimateData> = {}
       
       // FIXED: Load estimates sequentially with delays to avoid rate limiting
       for (let i = 0; i < availableCurrencies.length; i++) {
@@ -579,29 +756,25 @@ export default function PaymentPage() {
         try {
           console.log(`📊 Loading estimate ${i + 1}/${availableCurrencies.length}: ${currency.code}`)
           
+          // Use backend mapping for API call
+          const backendCurrency = currencyBackendMapping[currency.code] || currency.code
+          
           const response = await fetch('/api/nowpayments/estimate', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              currency_from: paymentLink.currency.toLowerCase(),
-              currency_to: currency.code.toLowerCase(),
               amount: amount,
+              currency_from: paymentLink.currency.toLowerCase(),
+              currency_to: backendCurrency.toLowerCase()
             }),
           })
 
           if (response.ok) {
             const data = await response.json()
-            if (data.success) {
-              newEstimates.push({
-                currency_from: paymentLink.currency,
-                currency_to: currency.code,
-                amount_from: amount,
-                estimated_amount: data.estimate.estimated_amount,
-                fee_amount: data.estimate.fee_amount || 0,
-                fee_percentage: data.estimate.fee_percentage || 0
-              })
+            if (data.success && data.estimate) {
+              newEstimates[currency.code] = data.estimate
               console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
             } else {
               console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
@@ -625,7 +798,7 @@ export default function PaymentPage() {
       }
 
       setEstimates(newEstimates)
-      console.log(`✅ Loaded ${newEstimates.length} estimates`)
+      console.log(`✅ Loaded ${Object.keys(newEstimates).length} estimates`)
       
     } catch (error) {
       console.error('❌ Error loading estimates:', error)
@@ -647,6 +820,10 @@ export default function PaymentPage() {
     try {
       setCreatingPayment(true)
       console.log('🔄 Creating payment for currency:', selectedCurrency)
+      
+      // Use backend mapping for payment creation
+      const backendCurrency = currencyBackendMapping[selectedCurrency] || selectedCurrency
+      console.log('🔧 Currency mapping:', `${selectedCurrency} → ${backendCurrency}`)
 
       const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
 
@@ -658,7 +835,7 @@ export default function PaymentPage() {
         body: JSON.stringify({
           price_amount: amount,
           price_currency: paymentLink.currency,
-          pay_currency: selectedCurrency,
+          pay_currency: backendCurrency, // Use backend currency for API
           order_id: `cryptrac_${paymentLink.link_id}_${Date.now()}`,
           order_description: paymentLink.description || paymentLink.title,
           payment_link_id: paymentLink.id,
@@ -899,7 +1076,7 @@ export default function PaymentPage() {
               ) : (
                 <div className="grid gap-3">
                   {availableCurrencies.map((currency) => {
-                    const estimate = estimates.find(e => e.currency_to === currency.code)
+                    const estimate = estimates[currency.code]
                     const isSelected = selectedCurrency === currency.code
                     
                     return (
@@ -929,7 +1106,7 @@ export default function PaymentPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            {estimate ? (
+                            {estimate && estimate.estimated_amount && typeof estimate.estimated_amount === 'number' ? (
                               <div className="font-medium">
                                 {estimate.estimated_amount.toFixed(6)}
                               </div>
