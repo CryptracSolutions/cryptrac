@@ -738,75 +738,64 @@ export default function PaymentPage() {
     }
   }
 
-  // FIXED: Sequential Estimate Loading Function
+  // Load all currency estimates in parallel for faster UX
   const loadEstimates = async () => {
     if (!paymentLink || availableCurrencies.length === 0) return
 
-    try {
-      setEstimatesLoading(true)
-      console.log('📊 Loading payment estimates sequentially...')
+    setEstimatesLoading(true)
+    console.log('📊 Loading payment estimates in parallel...')
 
-      const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
-      const newEstimates: Record<string, EstimateData> = {}
-      
-      // FIXED: Load estimates sequentially with delays to avoid rate limiting
-      for (let i = 0; i < availableCurrencies.length; i++) {
-        const currency = availableCurrencies[i]
-        
-        try {
-          console.log(`📊 Loading estimate ${i + 1}/${availableCurrencies.length}: ${currency.code}`)
-          
-          // Use backend mapping for API call
-          const backendCurrency = currencyBackendMapping[currency.code] || currency.code
-          
-          const response = await fetch('/api/nowpayments/estimate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              amount: amount,
-              currency_from: paymentLink.currency.toLowerCase(),
-              currency_to: backendCurrency.toLowerCase()
-            }),
-          })
+    const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
+    const newEstimates: Record<string, EstimateData> = {}
 
-          if (response.ok) {
-            const data = await response.json()
-            if (data.success && data.estimate) {
-              newEstimates[currency.code] = {
-                currency_from: paymentLink.currency,
-                currency_to: currency.code,
-                amount_from: amount,
-                estimated_amount: data.estimate.estimated_amount,
-                fee_amount: data.estimate.fee_amount || 0,
-                fee_percentage: data.estimate.fee_percentage || 0
-              }
-              console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
-            } else {
-              console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
+    const fetchEstimate = async (currency: CurrencyInfo, attempt = 0): Promise<void> => {
+      const backendCurrency = currencyBackendMapping[currency.code] || currency.code
+      try {
+        const response = await fetch('/api/nowpayments/estimate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount,
+            currency_from: paymentLink.currency.toLowerCase(),
+            currency_to: backendCurrency.toLowerCase()
+          }),
+        })
+
+        if (response.status === 429 && attempt < 2) {
+          console.warn(`⚠️ Rate limited for ${currency.code}, retrying...`)
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+          return fetchEstimate(currency, attempt + 1)
+        }
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.estimate) {
+            newEstimates[currency.code] = {
+              currency_from: paymentLink.currency,
+              currency_to: currency.code,
+              amount_from: amount,
+              estimated_amount: data.estimate.estimated_amount,
+              fee_amount: data.estimate.fee_amount || 0,
+              fee_percentage: data.estimate.fee_percentage || 0
             }
-          } else if (response.status === 429) {
-            console.warn(`⚠️ Rate limited for ${currency.code}, skipping`)
-            // Add longer delay after rate limit
-            await new Promise(resolve => setTimeout(resolve, 2000))
+            console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
           } else {
-            console.warn(`⚠️ HTTP ${response.status} for ${currency.code}`)
+            console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
           }
-          
-        } catch (error) {
-          console.error(`❌ Error loading estimate for ${currency.code}:`, error)
+        } else {
+          console.warn(`⚠️ HTTP ${response.status} for ${currency.code}`)
         }
-        
-        // Add delay between requests to avoid rate limiting (except for last request)
-        if (i < availableCurrencies.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500)) // 500ms delay between requests
-        }
+      } catch (error) {
+        console.error(`❌ Error loading estimate for ${currency.code}:`, error)
       }
+    }
 
+    try {
+      await Promise.all(availableCurrencies.map(c => fetchEstimate(c)))
       setEstimates(newEstimates)
       console.log(`✅ Loaded ${Object.keys(newEstimates).length} estimates`)
-      
     } catch (error) {
       console.error('❌ Error loading estimates:', error)
     } finally {
