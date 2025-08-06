@@ -2,18 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   DollarSign,
-  Calendar,
-  Link,
   LinkIcon,
-  Settings, 
-  Wallet, 
-  CreditCard, 
-  Users, 
-  AlertCircle, 
-  CheckCircle, 
+  Settings,
+  CreditCard,
+  Users,
+  AlertCircle,
+  CheckCircle,
   Clock,
   Plus,
   Trash2,
@@ -95,9 +92,9 @@ export default function CreatePaymentLinkPage() {
     tax_rates: []
   });
 
-  useEffect(() => {
-    loadMerchantSettings();
-  }, []);
+    useEffect(() => {
+      loadMerchantSettings();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMerchantSettings = async () => {
     try {
@@ -455,7 +452,7 @@ export default function CreatePaymentLinkPage() {
                   {/* Accepted Cryptocurrencies */}
                   <div className="space-y-3">
                     <Label>Accepted Cryptocurrencies *</Label>
-                    <p className="text-sm text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don't want to accept.</p>
+                      <p className="text-sm text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don&apos;t want to accept.</p>
                     
                     {/* Stable Coin Information */}
                     <Alert className="bg-blue-50 border-blue-200">
@@ -541,9 +538,9 @@ export default function CreatePaymentLinkPage() {
                           </Button>
                         </div>
                         
-                        <div className="space-y-3">
-                          {form.tax_rates.map((taxRate, index) => (
-                            <div key={taxRate.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                          <div className="space-y-3">
+                            {form.tax_rates.map((taxRate) => (
+                              <div key={taxRate.id} className="flex items-center gap-3 p-3 border rounded-lg">
                               <div className="flex-1">
                                 <Input
                                   placeholder="Tax Label (e.g., State Tax, Local Tax)"
@@ -745,9 +742,9 @@ export default function CreatePaymentLinkPage() {
 
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-sm">
-                      After successful payment, customers will be automatically redirected to Cryptrac's branded thank you page with options to receive their receipt.
-                    </AlertDescription>
+                      <AlertDescription className="text-sm">
+                        After successful payment, customers will be automatically redirected to Cryptrac&apos;s branded thank you page with options to receive their receipt.
+                      </AlertDescription>
                   </Alert>
                 </CardContent>
               </Card>

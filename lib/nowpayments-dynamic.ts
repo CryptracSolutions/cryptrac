@@ -4,7 +4,7 @@ const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY
 
 // Cache for currency data
 let currencyCache: {
-  data: any[] | null
+  data: NOWPaymentsCurrency[] | null
   timestamp: number
 } = {
   data: null,
@@ -103,27 +103,37 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
     }
 
     // Transform and cache the data
-    const currencies = data.currencies.map((currency: any) => ({
-      code: currency.code?.toLowerCase() || currency.ticker?.toLowerCase(),
-      name: currency.name || currency.code,
-      network: currency.network || 'Unknown',
-      is_available: currency.is_available !== false,
-      min_amount: parseFloat(currency.min_amount) || 0.00000001,
-      max_amount: parseFloat(currency.max_amount) || 1000000,
-      rate_usd: parseFloat(currency.rate_usd) || 0
-    })).filter((currency: NOWPaymentsCurrency) => 
-      currency.code && 
-      currency.is_available && 
-      currency.code.length >= 2
+    const currencies = (data.currencies as Array<Record<string, unknown>>)
+      .map((currency) => {
+        const codeValue =
+          typeof currency.code === 'string'
+            ? currency.code
+            : typeof currency.ticker === 'string'
+              ? currency.ticker
+              : ''
+
+        return {
+          code: codeValue.toLowerCase(),
+          name: String(currency.name ?? currency.code ?? codeValue),
+          network: String(currency.network ?? 'Unknown'),
+          is_available: currency.is_available !== false,
+          min_amount: parseFloat(String(currency.min_amount)) || 0.00000001,
+          max_amount: parseFloat(String(currency.max_amount)) || 1000000,
+          rate_usd: parseFloat(String(currency.rate_usd)) || 0
+        }
+      }) as NOWPaymentsCurrency[]
+
+    const filtered = currencies.filter(
+      (currency) => currency.is_available && currency.code.length >= 2
     )
 
     // Update cache
     currencyCache = {
-      data: currencies,
+      data: filtered,
       timestamp: now
     }
 
-    return currencies
+    return filtered
 
   } catch (error) {
     console.error('Error fetching currencies from NOWPayments:', error)

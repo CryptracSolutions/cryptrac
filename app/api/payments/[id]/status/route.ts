@@ -69,7 +69,7 @@ export async function GET(
             console.log(`📈 Status changed: ${payment.status} → ${mappedStatus}`);
 
             // Prepare update data
-            const updateData: any = {
+            const updateData: Record<string, unknown> = {
               status: mappedStatus,
               updated_at: new Date().toISOString()
             };

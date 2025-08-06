@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate receipt content
-    const receiptContent = generateReceiptHTML(payment, email)
+    generateReceiptHTML(payment, email)
 
     // Here you would integrate with your email service (SendGrid, AWS SES, etc.)
     // For now, we'll simulate sending the email
@@ -102,7 +102,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateReceiptHTML(payment: any, email: string): string {
+interface ReceiptPayment {
+  payment_link: { title: string; merchant: { business_name: string } }
+  pay_amount: number
+  pay_currency: string
+  amount: number
+  updated_at: string
+  order_id: string
+  tx_hash?: string
+}
+
+function generateReceiptHTML(payment: ReceiptPayment, email: string): string {
   const formatAmount = (amount: number, decimals: number = 8) => {
     return amount.toFixed(decimals).replace(/\.?0+$/, '')
   }

@@ -26,7 +26,7 @@ export async function PATCH(
     }
 
     // Prepare update data
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     if (body.customer_email) {
       updateData.customer_email = body.customer_email

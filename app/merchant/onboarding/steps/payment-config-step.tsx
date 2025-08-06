@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { ArrowRight, ArrowLeft, Settings, DollarSign, HelpCircle, Info, Loader2, Shield } from 'lucide-react'
@@ -58,16 +58,16 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   }
 
   // Expand configured currencies to include available stable coins
-  const expandedCurrencies = React.useMemo(() => {
-    const expanded = [...configuredCurrencies]
+    const expandedCurrencies = React.useMemo(() => {
+      const expanded = [...configuredCurrencies]
     
     configuredCurrencies.forEach(currency => {
       const associatedStableCoins = stableCoinAssociations[currency] || []
       expanded.push(...associatedStableCoins)
     })
     
-    return expanded
-  }, [configuredCurrencies])
+      return expanded
+    }, [configuredCurrencies]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Currency display names mapping (updated with comprehensive stable coins)
   const CURRENCY_NAMES: Record<string, string> = {

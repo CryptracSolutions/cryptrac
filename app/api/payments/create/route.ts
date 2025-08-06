@@ -142,15 +142,13 @@ export async function POST(request: NextRequest) {
 
     // Calculate taxes from tax rates
     let totalTaxAmount = 0;
-    let totalTaxPercentage = 0;
     const taxBreakdown: Record<string, number> = {};
     
     if (tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0) {
-      tax_rates.forEach((taxRate: any) => {
-        const percentage = parseFloat(taxRate.percentage) || 0;
+      tax_rates.forEach((taxRate: { percentage: number | string; label: string }) => {
+        const percentage = parseFloat(taxRate.percentage as string) || 0;
         const taxAmount = (amountNum * percentage) / 100;
         totalTaxAmount += taxAmount;
-        totalTaxPercentage += percentage;
         
         // Create breakdown key from label
         const breakdownKey = taxRate.label.toLowerCase().replace(/\s+/g, '_');

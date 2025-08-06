@@ -2,8 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Cache configuration
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
+
+interface Currency {
+  code: string
+  name: string
+  symbol: string
+  network: string
+  rate_usd: number
+  min_amount: number
+  max_amount: number | null
+  decimals: number
+  enabled: boolean
+  trust_wallet_compatible: boolean
+  display_name: string
+}
+
 let currencyCache: {
-  data: any[] | null
+  data: Currency[] | null
   timestamp: number
 } = {
   data: null,
@@ -104,7 +119,7 @@ const FALLBACK_CURRENCIES = [
 ]
 
 // Function to fetch currencies from NOWPayments API
-async function fetchNOWPaymentsCurrencies(): Promise<any[]> {
+async function fetchNOWPaymentsCurrencies(): Promise<Currency[]> {
   if (!NOWPAYMENTS_API_KEY) {
     console.warn('⚠️ NOWPayments API key not found, using fallback currencies')
     return FALLBACK_CURRENCIES
@@ -136,24 +151,26 @@ async function fetchNOWPaymentsCurrencies(): Promise<any[]> {
     }
 
     // Transform NOWPayments data to our format
-    const transformedCurrencies = data.currencies.map((currency: any) => ({
-      code: currency.code?.toUpperCase() || currency.ticker?.toUpperCase(),
-      name: currency.name || currency.code,
-      symbol: currency.code?.toUpperCase() || currency.ticker?.toUpperCase(),
-      network: currency.network || 'Unknown',
-      rate_usd: parseFloat(currency.rate_usd) || 0,
-      min_amount: parseFloat(currency.min_amount) || 0.00000001,
-      max_amount: parseFloat(currency.max_amount) || 1000000,
-      decimals: parseInt(currency.decimals) || 8,
-      enabled: currency.is_available !== false,
-      trust_wallet_compatible: true, // Assume compatible unless specified
-      display_name: currency.name || currency.code?.toUpperCase()
-    })).filter((currency: any) => 
-      currency.code && 
-      currency.enabled && 
-      currency.code.length >= 2 && 
-      currency.code.length <= 20
-    )
+    const transformedCurrencies = (data.currencies as Array<Record<string, unknown>>)
+      .map((currency) => ({
+        code: String(currency.code ?? currency.ticker ?? '').toUpperCase(),
+        name: String(currency.name ?? currency.code ?? ''),
+        symbol: String(currency.code ?? currency.ticker ?? '').toUpperCase(),
+        network: String(currency.network ?? 'Unknown'),
+        rate_usd: Number(currency.rate_usd ?? 0),
+        min_amount: Number(currency.min_amount ?? 0.00000001),
+        max_amount: currency.max_amount ? Number(currency.max_amount) : 1000000,
+        decimals: Number(currency.decimals ?? 8),
+        enabled: (currency.is_available as boolean) !== false,
+        trust_wallet_compatible: true, // Assume compatible unless specified
+        display_name: String(currency.name ?? String(currency.code ?? '').toUpperCase())
+      }))
+      .filter((currency: Currency) =>
+        currency.code &&
+        currency.enabled &&
+        currency.code.length >= 2 &&
+        currency.code.length <= 20
+      )
 
     return transformedCurrencies
 
@@ -165,7 +182,7 @@ async function fetchNOWPaymentsCurrencies(): Promise<any[]> {
 }
 
 // Function to get currencies with caching
-async function getCurrenciesWithCache(): Promise<any[]> {
+async function getCurrenciesWithCache(): Promise<Currency[]> {
   const now = Date.now()
   
   // Check if cache is valid
@@ -198,7 +215,7 @@ export async function GET(request: NextRequest) {
 
     if (popularOnly) {
       // Return only top currencies
-      const topCurrencies = allCurrencies.filter(currency => 
+      const topCurrencies = allCurrencies.filter((currency: Currency) =>
         TOP_CURRENCY_CODES.includes(currency.code)
       ).sort((a, b) => {
         const aIndex = TOP_CURRENCY_CODES.indexOf(a.code)
@@ -220,7 +237,7 @@ export async function GET(request: NextRequest) {
       })
     } else {
       // Return all currencies, sorted with top currencies first
-      const sortedCurrencies = allCurrencies.sort((a, b) => {
+      const sortedCurrencies = allCurrencies.sort((a: Currency, b: Currency) => {
         const aIsTop = TOP_CURRENCY_CODES.includes(a.code)
         const bIsTop = TOP_CURRENCY_CODES.includes(b.code)
         

@@ -154,13 +154,19 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update merchant settings
+    interface PaymentConfig {
+      auto_forward: boolean
+      fee_percentage: number
+      auto_convert_fee: number
+    }
+
     const updateData: {
       updated_at: string;
       auto_convert_enabled?: boolean;
       preferred_payout_currency?: string | null;
       wallets?: Record<string, string>;
       charge_customer_fee?: boolean;
-      payment_config?: any;
+      payment_config?: PaymentConfig;
     } = {
       updated_at: new Date().toISOString()
     };

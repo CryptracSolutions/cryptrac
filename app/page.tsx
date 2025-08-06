@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, TrendingDown, CreditCard } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
-import { Separator } from "@/app/components/ui/separator";
 import { Logo } from "@/app/components/ui/logo";
 import { CryptoIcon } from "@/app/components/ui/crypto-icon";
 import FeeDocumentation from "@/app/components/fee-documentation";
@@ -270,7 +269,7 @@ export default function Home() {
             <Alert className="border-blue-200 bg-blue-50">
               <Info className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                <strong>Complete Transparency:</strong> Cryptrac's only revenue is the $19/month subscription. 
+                  <strong>Complete Transparency:</strong> Cryptrac&apos;s only revenue is the $19/month subscription.
                 Gateway fees (0.5% or 1%) are charged by the payment processor for handling transactions and go directly to them, not to Cryptrac. 
                 Network fees may vary by cryptocurrency and blockchain congestion.
               </AlertDescription>

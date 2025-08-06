@@ -182,9 +182,16 @@ export async function syncCurrenciesFromNOWPayments(): Promise<{
     console.log('Starting currency sync from NOWPayments...');
 
     // Fetch currencies from NOWPayments with caching
-    let nowPaymentsCurrencies: any[] = [];
-    
-    const cached = await getCachedData<any[]>(
+    interface NowPaymentsCurrency {
+      code: string;
+      name: string;
+      min_amount?: number;
+      max_amount?: number | null;
+    }
+
+    let nowPaymentsCurrencies: NowPaymentsCurrency[] = [];
+
+    const cached = await getCachedData<NowPaymentsCurrency[]>(
       CacheKeys.currencies(),
       { ttl: CacheTTL.currencies }
     );
@@ -218,7 +225,7 @@ export async function syncCurrenciesFromNOWPayments(): Promise<{
     const supabase = await getSupabaseClient();
 
     // Process and update currencies in database
-    const currencyUpdates = nowPaymentsCurrencies.map((currency: any) => {
+    const currencyUpdates = nowPaymentsCurrencies.map((currency: NowPaymentsCurrency) => {
       const currencyCode = currency.code || '';
       const currencyName = currency.name || currencyCode.toUpperCase();
       const minAmount = currency.min_amount || 0.00000001;

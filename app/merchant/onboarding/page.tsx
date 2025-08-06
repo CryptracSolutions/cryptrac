@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Stepper } from '@/app/components/ui/stepper'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
@@ -151,7 +151,7 @@ export default function OnboardingPage() {
         return (
           <BusinessInfoStep
             data={onboardingData.businessInfo}
-            onComplete={(data: any) => {
+            onComplete={(data: OnboardingData['businessInfo']) => {
               handleStepComplete({ businessInfo: data })
               handleNext()
             }}
@@ -178,7 +178,7 @@ export default function OnboardingPage() {
           <PaymentConfigStep
             data={onboardingData.paymentConfig}
             walletConfig={onboardingData.walletConfig}
-            onComplete={(data: any) => {
+            onComplete={(data: OnboardingData['paymentConfig']) => {
               handleStepComplete({ paymentConfig: data })
               handleNext()
             }}
@@ -207,9 +207,9 @@ export default function OnboardingPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome to Cryptrac
           </h1>
-          <p className="text-gray-600">
-            Let's get your crypto payment system set up in just a few steps
-          </p>
+            <p className="text-gray-600">
+              Let&apos;s get your crypto payment system set up in just a few steps
+            </p>
         </div>
 
         {/* Progress Stepper */}

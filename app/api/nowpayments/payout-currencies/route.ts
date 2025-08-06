@@ -19,17 +19,34 @@ export async function GET() {
     const payoutCurrencies = data.currencies || [];
 
     // Filter and format currencies for the frontend
-    const formattedCurrencies = payoutCurrencies
-      .filter((currency: any) => currency.currency && currency.name)
-      .map((currency: any) => ({
+    interface PayoutCurrencyRaw {
+      currency: string
+      name: string
+      min_amount?: number
+      max_amount?: number | null
+      logo_url?: string | null
+    }
+
+    interface FormattedCurrency {
+      code: string
+      name: string
+      symbol: string
+      min_amount: number
+      max_amount: number | null
+      logo_url: string | null
+    }
+
+    const formattedCurrencies = (payoutCurrencies as PayoutCurrencyRaw[])
+      .filter((currency) => currency.currency && currency.name)
+      .map((currency) => ({
         code: currency.currency.toLowerCase(),
         name: currency.name,
         symbol: currency.currency.toUpperCase(),
         min_amount: currency.min_amount || 0,
-        max_amount: currency.max_amount || null,
-        logo_url: currency.logo_url || null
+        max_amount: currency.max_amount ?? null,
+        logo_url: currency.logo_url ?? null
       }))
-      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+      .sort((a: FormattedCurrency, b: FormattedCurrency) => a.name.localeCompare(b.name));
 
     return NextResponse.json({
       success: true,

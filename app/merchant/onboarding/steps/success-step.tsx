@@ -59,7 +59,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
     })
     
     return expanded
-  }, [paymentConfig.acceptedCryptos])
+    }, [paymentConfig.acceptedCryptos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="max-w-2xl mx-auto">

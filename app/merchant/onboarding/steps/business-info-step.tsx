@@ -6,7 +6,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { ArrowRight, ArrowLeft, Building2, Globe, Tag, FileText, MapPin, Phone, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Building2, MapPin, Phone, CheckCircle, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Badge } from '@/app/components/ui/badge'
 
@@ -97,7 +97,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
     timezone: data.timezone || 'America/New_York'
   })
   
-  const [errors, setErrors] = useState<any>({})
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [addressValidation, setAddressValidation] = useState<{
     isValidating: boolean
@@ -157,19 +157,19 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
   }
 
   // Debounced address validation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (formData.businessAddress.street && formData.businessAddress.city && 
-          formData.businessAddress.state && formData.businessAddress.zip_code) {
-        validateAddress(formData.businessAddress)
-      }
-    }, 1000)
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        if (formData.businessAddress.street && formData.businessAddress.city &&
+            formData.businessAddress.state && formData.businessAddress.zip_code) {
+          validateAddress(formData.businessAddress)
+        }
+      }, 1000)
 
-    return () => clearTimeout(timer)
-  }, [formData.businessAddress])
+      return () => clearTimeout(timer)
+    }, [formData.businessAddress]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const validateForm = (): boolean => {
-    const newErrors: any = {}
+    const newErrors: Record<string, string> = {}
 
     // Required fields
     if (!formData.businessName.trim()) {
@@ -266,22 +266,22 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
   }
 
   const handleInputChange = (field: string, value: string) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.')
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...(prev as any)[parent],
-          [child]: value
-        }
-      }))
+      if (field.includes('.')) {
+        const [, child] = field.split('.')
+        setFormData(prev => ({
+          ...prev,
+          businessAddress: {
+            ...prev.businessAddress,
+            [child]: value
+          }
+        }))
     } else {
       setFormData(prev => ({ ...prev, [field]: value }))
     }
     
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors((prev: any) => ({ ...prev, [field]: undefined }))
+      setErrors(prev => ({ ...prev, [field]: undefined }))
     }
   }
 

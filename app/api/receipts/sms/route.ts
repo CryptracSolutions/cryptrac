@@ -102,7 +102,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateSMSContent(payment: any): string {
+interface SmsPayment {
+  payment_link: { title: string; merchant: { business_name: string } }
+  pay_amount: number
+  pay_currency: string
+  amount: number
+  updated_at: string
+  order_id: string
+}
+
+function generateSMSContent(payment: SmsPayment): string {
   const formatAmount = (amount: number, decimals: number = 8) => {
     return amount.toFixed(decimals).replace(/\.?0+$/, '')
   }

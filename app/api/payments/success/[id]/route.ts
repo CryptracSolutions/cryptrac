@@ -127,7 +127,7 @@ export async function GET(
 
         if (npResponse.ok) {
           const npData = await npResponse.json()
-          const updateData: any = {}
+          const updateData: Record<string, unknown> = {}
 
           const payinHash = npData.payin_hash || npData.hash
           const payoutHash = npData.payout_hash || npData.outcome?.hash

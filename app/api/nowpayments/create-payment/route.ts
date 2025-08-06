@@ -97,41 +97,48 @@ function isValidWalletAddress(address: string, currency: string): boolean {
 }
 
 // Enhanced error response handler with retry logic
-function handleNOWPaymentsError(error: any, context: string): NextResponse {
+function handleNOWPaymentsError(error: unknown, context: string): NextResponse {
   console.error(`❌ ${context}:`, error)
-  
+
   let errorMessage = 'Payment creation failed'
   let statusCode = 500
-  let retryAfter = null
-  
-  if (error.message?.includes('429')) {
+  let retryAfter: number | null = null
+
+  const message = error instanceof Error ? error.message : ''
+
+  if (message.includes('429')) {
     errorMessage = 'Too many requests. Please wait a moment and try again.'
     statusCode = 429
     retryAfter = 30 // Suggest 30 second retry
-  } else if (error.message?.includes('400')) {
+  } else if (message.includes('400')) {
     errorMessage = 'Invalid payment request. Please check your payment details.'
     statusCode = 400
-  } else if (error.message?.includes('HTML error page')) {
+  } else if (message.includes('HTML error page')) {
     errorMessage = 'Payment service temporarily unavailable. Please try again.'
     statusCode = 503
     retryAfter = 60 // Suggest 1 minute retry for service issues
   }
-  
-  const response: any = { 
-    success: false, 
+
+  const response: {
+    success: false
+    error: string
+    details: string
+    retry_after?: number
+  } = {
+    success: false,
     error: errorMessage,
-    details: error.message || 'Unknown error'
+    details: message || 'Unknown error',
   }
-  
+
   if (retryAfter) {
     response.retry_after = retryAfter
   }
-  
-  const headers: any = {}
+
+  const headers: Record<string, string> = {}
   if (retryAfter) {
     headers['Retry-After'] = retryAfter.toString()
   }
-  
+
   return NextResponse.json(response, { status: statusCode, headers })
 }
 
@@ -218,7 +225,20 @@ export async function POST(request: NextRequest) {
       !!preferredPayoutCurrency
 
     // Prepare payment request for NOWPayments
-    const paymentRequest: any = {
+    interface PaymentRequest {
+      price_amount: number
+      price_currency: string
+      pay_currency: string
+      order_id: string
+      order_description: string
+      ipn_callback_url: string
+      success_url: string
+      cancel_url: string
+      payout_address?: string
+      payout_currency?: string
+    }
+
+    const paymentRequest: PaymentRequest = {
       price_amount: parseFloat(price_amount.toString()),
       price_currency: price_currency.toLowerCase(),
       pay_currency: pay_currency.toLowerCase(),
@@ -278,7 +298,22 @@ export async function POST(request: NextRequest) {
       console.log('- payout_address:', paymentRequest.payout_address?.substring(0, 10) + '...')
     }
 
-    let paymentResponse
+    interface PaymentResponse {
+      payment_id: string
+      payment_status: string
+      pay_address: string
+      price_amount: number
+      price_currency: string
+      pay_amount: number
+      pay_currency: string
+      order_id?: string
+      order_description?: string
+      created_at?: string
+      updated_at?: string
+      [key: string]: unknown
+    }
+
+    let paymentResponse: PaymentResponse | undefined
     let retryWithoutForwarding = false
 
     try {
@@ -298,31 +333,33 @@ export async function POST(request: NextRequest) {
         throw new Error(`NOWPayments returned HTML error page: ${responseText.substring(0, 100)}...`)
       }
 
-      let responseData
+      let responseData: unknown
       try {
-        responseData = JSON.parse(responseText)
-      } catch (parseError) {
+        responseData = JSON.parse(responseText) as Record<string, unknown>
+      } catch {
         throw new Error(`Invalid JSON response from NOWPayments: ${responseText.substring(0, 100)}...`)
       }
 
       if (!response.ok) {
         console.error('NOWPayments API error:', response.status, responseData)
-        
+
+        const errorData = responseData as { code?: string; message?: string }
+
         // If auto-forwarding failed, try without it
         if (autoForwardingConfigured && (
-          responseData.code === 'BAD_CREATE_PAYMENT_REQUEST' || 
-          responseData.message?.includes('payout_extra_id')
+          errorData.code === 'BAD_CREATE_PAYMENT_REQUEST' ||
+          errorData.message?.includes('payout_extra_id')
         )) {
           console.log('🔄 Auto-forwarding failed, retrying without auto-forwarding...')
           retryWithoutForwarding = true
         } else {
-          throw new Error(`NOWPayments API error: ${response.status} ${JSON.stringify(responseData, null, 2)}`)
+          throw new Error(`NOWPayments API error: ${response.status} ${JSON.stringify(errorData, null, 2)}`)
         }
       } else {
-        paymentResponse = responseData
+        paymentResponse = responseData as PaymentResponse
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (autoForwardingConfigured && !retryWithoutForwarding) {
         console.log('🔄 Auto-forwarding failed, retrying without auto-forwarding...')
         retryWithoutForwarding = true
@@ -357,10 +394,10 @@ export async function POST(request: NextRequest) {
           throw new Error(`NOWPayments returned HTML error page: ${retryResponseText.substring(0, 100)}...`)
         }
 
-        let retryResponseData
+        let retryResponseData: unknown
         try {
-          retryResponseData = JSON.parse(retryResponseText)
-        } catch (parseError) {
+          retryResponseData = JSON.parse(retryResponseText) as Record<string, unknown>
+        } catch {
           throw new Error(`Invalid JSON response from NOWPayments: ${retryResponseText.substring(0, 100)}...`)
         }
 
@@ -368,7 +405,7 @@ export async function POST(request: NextRequest) {
           throw new Error(`NOWPayments API error: ${retryResponse.status} ${JSON.stringify(retryResponseData, null, 2)}`)
         }
 
-        paymentResponse = retryResponseData
+        paymentResponse = retryResponseData as PaymentResponse
         autoForwardingConfigured = false
         console.log('✅ Payment created successfully without auto-forwarding')
         
@@ -456,7 +493,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleNOWPaymentsError(error, 'Payment creation error')
   }
 }

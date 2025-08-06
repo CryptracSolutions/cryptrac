@@ -39,7 +39,7 @@ export function FeeDocumentation({
         
         <div className="bg-blue-50 p-2 rounded mt-3">
           <p className="text-xs text-blue-700">
-            <strong>Note:</strong> Cryptrac doesn't earn from these fees. Our revenue is the $19/month subscription.
+              <strong>Note:</strong> Cryptrac doesn&apos;t earn from these fees. Our revenue is the $19/month subscription.
           </p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export function FeeDocumentation({
             <div className="bg-white p-2 rounded border border-blue-200">
               <p className="text-xs text-blue-700">
                 <CheckCircle className="h-3 w-3 inline mr-1" />
-                <strong>Cryptrac Revenue:</strong> Only the $19/month subscription. We don't earn from transaction fees.
+                  <strong>Cryptrac Revenue:</strong> Only the $19/month subscription. We don&apos;t earn from transaction fees.
               </p>
             </div>
           </div>
@@ -111,7 +111,7 @@ export function FeeDocumentation({
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <h3 className="font-semibold text-blue-900 mb-2">Key Principle</h3>
             <p className="text-blue-800">
-              Every payment processor charges a "per-transaction fee." With crypto payments, there are two separate fees: 
+              Every payment processor charges a &quot;per-transaction fee.&quot; With crypto payments, there are two separate fees:
               <strong> network fees</strong> (paid to blockchain) and <strong>gateway fees</strong> (paid to payment processor).
             </p>
           </div>
@@ -172,7 +172,7 @@ export function FeeDocumentation({
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-gray-700">
-                      Charged by the <strong>blockchain network</strong> (not by Cryptrac). This pays the "miners" or "validators" 
+                        Charged by the <strong>blockchain network</strong> (not by Cryptrac). This pays the &quot;miners&quot; or &quot;validators&quot;
                       who process transactions on the blockchain.
                     </p>
                     

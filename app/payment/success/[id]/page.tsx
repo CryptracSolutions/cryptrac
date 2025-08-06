@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { CheckCircle, Copy, ExternalLink, Mail, MessageSquare, Loader2, AlertCircle, Download } from 'lucide-react'
+import { CheckCircle, Copy, ExternalLink, Mail, MessageSquare, Loader2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface PaymentData {
@@ -71,11 +71,11 @@ export default function PaymentSuccessPage() {
   const [emailReceiptSent, setEmailReceiptSent] = useState(false)
   const [smsReceiptSent, setSmsReceiptSent] = useState(false)
 
-  useEffect(() => {
-    if (linkId) {
-      loadPaymentData()
-    }
-  }, [linkId, paymentId])
+    useEffect(() => {
+      if (linkId) {
+        loadPaymentData()
+      }
+    }, [linkId, paymentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadPaymentData = async () => {
     try {

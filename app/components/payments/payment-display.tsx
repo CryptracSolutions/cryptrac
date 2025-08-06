@@ -14,7 +14,6 @@ interface PaymentDisplayProps {
   merchantName?: string
   description?: string
   orderId?: string
-  onPaymentDetected?: () => void
 }
 
 // Payment instructions and network info (inline implementation)
@@ -136,8 +135,7 @@ export default function PaymentDisplay({
   usdAmount,
   merchantName,
   description,
-  orderId,
-  onPaymentDetected
+  orderId
 }: PaymentDisplayProps) {
   const [addressCopied, setAddressCopied] = useState(false)
   const [showQR, setShowQR] = useState(false)
@@ -152,7 +150,7 @@ export default function PaymentDisplay({
       setAddressCopied(true)
       toast.success('Address copied to clipboard!')
       setTimeout(() => setAddressCopied(false), 2000)
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy address')
     }
   }

@@ -543,11 +543,11 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                   })
                 )}
                 
-                {searchTerm && filteredAdditionalCurrencies.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    No cryptocurrencies found matching "{searchTerm}"
-                  </div>
-                )}
+                  {searchTerm && filteredAdditionalCurrencies.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No cryptocurrencies found matching &quot;{searchTerm}&quot;
+                    </div>
+                  )}
               </div>
             )}
           </CardContent>

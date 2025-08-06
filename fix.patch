@@ -1,0 +1,69 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/app/payment/success/[id]/page.tsx b/app/payment/success/[id]/page.tsx
+index dbe29ad6b5f6ef7b95d0cf002b414524c4b04e59..e49171de3fa3d3f3d1c37c47da1cf17f95de1c2a 100644
+--- a/app/payment/success/[id]/page.tsx
++++ b/app/payment/success/[id]/page.tsx
+@@ -49,55 +49,55 @@ const FIAT_CURRENCIES = [
+   { code: 'USD', name: 'US Dollar', symbol: '$' },
+   { code: 'EUR', name: 'Euro', symbol: '€' },
+   { code: 'GBP', name: 'British Pound', symbol: '£' },
+   { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
+ ]
+ 
+ export default function PaymentSuccessPage() {
+   const params = useParams()
+   const searchParams = useSearchParams()
+   const linkId = params.id as string
+   const paymentId = searchParams.get('payment_id')
+ 
+   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
+   const [loading, setLoading] = useState(true)
+   const [error, setError] = useState<string>('')
+   
+   // Receipt delivery states
+   const [email, setEmail] = useState('')
+   const [phone, setPhone] = useState('')
+   const [sendingEmailReceipt, setSendingEmailReceipt] = useState(false)
+   const [sendingSmsReceipt, setSendingSmsReceipt] = useState(false)
+   const [emailReceiptSent, setEmailReceiptSent] = useState(false)
+   const [smsReceiptSent, setSmsReceiptSent] = useState(false)
+ 
+-  useEffect(() => {
+-    if (linkId) {
+-      loadPaymentData()
+-    }
+-  }, [linkId, paymentId])
++    useEffect(() => {
++      if (linkId) {
++        loadPaymentData()
++      }
++    }, [linkId, paymentId]); // eslint-disable-line react-hooks/exhaustive-deps
+ 
+   const loadPaymentData = async () => {
+     try {
+       setLoading(true)
+       console.log('🔍 Loading payment success data for ID:', linkId)
+ 
+       const response = await fetch(`/api/payments/success/${linkId}`)
+       
+       if (!response.ok) {
+         throw new Error('Failed to load payment data')
+       }
+ 
+       const data = await response.json()
+ 
+       if (!data.success || !data.payment) {
+         throw new Error(data.error || 'Payment not found')
+       }
+ 
+       console.log('✅ Payment data loaded:', data.payment)
+       setPaymentData(data.payment)
+ 
+       // Pre-fill email if already provided
+       if (data.payment.customer_email) {
+         setEmail(data.payment.customer_email)
+       }
+ 
+EOF
+)

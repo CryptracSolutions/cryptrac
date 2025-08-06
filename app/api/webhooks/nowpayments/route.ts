@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
 // Rate limiting for webhook endpoints
@@ -53,7 +52,7 @@ function verifyNOWPaymentsSignature(body: string, signature: string, secret: str
   }
 }
 
-function validateWebhookPayload(body: any): { isValid: boolean; errors: string[] } {
+function validateWebhookPayload(body: Record<string, unknown>): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
   
   // Required fields validation
@@ -71,16 +70,16 @@ function validateWebhookPayload(body: any): { isValid: boolean; errors: string[]
   
   // Validate payment_status is a known value
   const validStatuses = ['waiting', 'confirming', 'confirmed', 'finished', 'failed', 'refunded', 'expired', 'sending']
-  if (body.payment_status && !validStatuses.includes(body.payment_status)) {
+  if (body.payment_status && !validStatuses.includes(body.payment_status as string)) {
     errors.push(`Invalid payment_status: ${body.payment_status}`)
   }
   
   // Validate numeric fields
-  if (body.pay_amount && (isNaN(parseFloat(body.pay_amount)) || parseFloat(body.pay_amount) < 0)) {
+  if (body.pay_amount && (isNaN(parseFloat(body.pay_amount as string)) || parseFloat(body.pay_amount as string) < 0)) {
     errors.push('Invalid pay_amount')
   }
   
-  if (body.price_amount && (isNaN(parseFloat(body.price_amount)) || parseFloat(body.price_amount) < 0)) {
+  if (body.price_amount && (isNaN(parseFloat(body.price_amount as string)) || parseFloat(body.price_amount as string) < 0)) {
     errors.push('Invalid price_amount')
   }
   
@@ -106,11 +105,11 @@ export async function POST(request: NextRequest) {
     
     // Get raw body for signature verification
     const rawBody = await request.text()
-    let body: any
+    let body: unknown
     
     try {
       body = JSON.parse(rawBody)
-    } catch (parseError) {
+    } catch {
       console.error('❌ Invalid JSON in webhook payload')
       return NextResponse.json(
         { success: false, message: 'Invalid JSON payload' },
@@ -153,7 +152,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate payload structure
-    const validation = validateWebhookPayload(body)
+    const validation = validateWebhookPayload(body as Record<string, unknown>)
     if (!validation.isValid) {
       console.error('❌ Invalid webhook payload:', validation.errors)
       return NextResponse.json(
@@ -165,22 +164,17 @@ export async function POST(request: NextRequest) {
     // Extract payment data from webhook with detailed logging
     const {
       payment_id,
-      order_id,
       payment_status,
       pay_currency,
-      pay_amount,
       actually_paid,
       price_amount,
       price_currency,
       payout_currency,
       payout_amount,
       outcome,
-      created_at,
-      updated_at,
       // Additional hash fields from NOWPayments
       payin_hash,
       payout_hash,
-      burning_percent,
       type,
       // Check for other possible hash field names
       hash,
@@ -188,7 +182,25 @@ export async function POST(request: NextRequest) {
       transaction_hash,
       payin_extra_id,
       payout_extra_id
-    } = body
+    } = body as {
+      payment_id: string
+      payment_status: string
+      pay_currency?: string
+      actually_paid?: number
+      price_amount?: number
+      price_currency?: string
+      payout_currency?: string
+      payout_amount?: number
+        outcome?: { hash?: string }
+      payin_hash?: string
+      payout_hash?: string
+      type?: string
+      hash?: string
+      tx_hash?: string
+      transaction_hash?: string
+      payin_extra_id?: string
+      payout_extra_id?: string
+    }
 
     // Log all hash-related fields we found
     console.log('🔗 Hash fields analysis:')
@@ -279,7 +291,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status: newStatus,
       updated_at: new Date().toISOString(),
     }
@@ -287,7 +299,12 @@ export async function POST(request: NextRequest) {
     // Enhanced transaction hash logging with all possible sources
     console.log('🔗 Processing transaction hashes from all sources:')
     
-    let capturedHashes = {
+    const capturedHashes: {
+      payin_hash: string | null
+      payout_hash: string | null
+      tx_hash: string | null
+      source: string
+    } = {
       payin_hash: null,
       payout_hash: null,
       tx_hash: null,
@@ -301,7 +318,7 @@ export async function POST(request: NextRequest) {
       capturedHashes.source = 'direct_payin_hash'
       console.log('✅ Payin hash captured from payin_hash field:', payin_hash)
     } else if (type === 'payin' && (hash || tx_hash || transaction_hash)) {
-      const payinHashValue = hash || tx_hash || transaction_hash
+      const payinHashValue = (hash || tx_hash || transaction_hash) as string
       updateData.payin_hash = payinHashValue
       capturedHashes.payin_hash = payinHashValue
       capturedHashes.source = 'type_payin_with_hash'
@@ -320,7 +337,7 @@ export async function POST(request: NextRequest) {
       capturedHashes.source = capturedHashes.source + '_direct_payout_hash'
       console.log('✅ Payout hash captured from payout_hash field:', payout_hash)
     } else if (type === 'payout' && (hash || tx_hash || transaction_hash)) {
-      const payoutHashValue = hash || tx_hash || transaction_hash
+      const payoutHashValue = (hash || tx_hash || transaction_hash) as string
       updateData.payout_hash = payoutHashValue
       capturedHashes.payout_hash = payoutHashValue
       capturedHashes.source = capturedHashes.source + '_type_payout_with_hash'
@@ -354,13 +371,13 @@ export async function POST(request: NextRequest) {
       if (newStatus === 'confirmed' && updateData.payout_hash) {
         // For confirmed payments, prefer payout hash as primary
         updateData.tx_hash = updateData.payout_hash
-        capturedHashes.tx_hash = updateData.payout_hash
+        capturedHashes.tx_hash = updateData.payout_hash as string
         capturedHashes.source = capturedHashes.source + '_payout_as_primary'
         console.log('✅ Using payout_hash as primary tx_hash for confirmed payment')
       } else if (updateData.payin_hash) {
         // For other statuses, use payin hash as primary
         updateData.tx_hash = updateData.payin_hash
-        capturedHashes.tx_hash = updateData.payin_hash
+        capturedHashes.tx_hash = updateData.payin_hash as string
         capturedHashes.source = capturedHashes.source + '_payin_as_primary'
         console.log('✅ Using payin_hash as primary tx_hash')
       }
@@ -402,7 +419,7 @@ export async function POST(request: NextRequest) {
     console.log('💾 Database update data:', updateData)
 
     // Update the payment record with retry logic
-    let updateError: any = null
+    let updateError: unknown = null
     let retryCount = 0
     const maxRetries = 3
     

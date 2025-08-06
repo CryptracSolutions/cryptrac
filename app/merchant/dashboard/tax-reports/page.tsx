@@ -2,17 +2,14 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
+import {
   Calculator,
   Download,
-  Calendar,
   Filter,
-  FileText,
   TrendingUp,
   DollarSign,
   Receipt,
   AlertCircle,
-  CheckCircle,
   Loader2,
   RefreshCw
 } from 'lucide-react'
@@ -27,6 +24,7 @@ import { Badge } from '@/app/components/ui/badge'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
+import type { User } from '@supabase/supabase-js'
 
 interface TaxReportFilters {
   start_date: string
@@ -75,7 +73,8 @@ interface TaxReportData {
 
 export default function TaxReportsPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [reportData, setReportData] = useState<TaxReportData | null>(null)
   const [loadingReport, setLoadingReport] = useState(false)
@@ -94,15 +93,15 @@ export default function TaxReportsPage() {
     tax_only: false
   })
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
+    useEffect(() => {
+      checkAuth()
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (user) {
-      loadTaxReport()
-    }
-  }, [user])
+    useEffect(() => {
+      if (user) {
+        loadTaxReport()
+      }
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAuth = async () => {
     try {
@@ -309,7 +308,7 @@ export default function TaxReportsPage() {
                 <Label>Report Type</Label>
                 <Select
                   value={filters.report_type}
-                  onValueChange={(value: any) => updateFilters({ report_type: value })}
+                  onValueChange={(value: string) => updateFilters({ report_type: value as TaxReportFilters['report_type'] })}
                 >
                   <SelectTrigger>
                     <SelectValue />

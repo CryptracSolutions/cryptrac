@@ -310,7 +310,7 @@ export class SlidingWindowRateLimiter {
 }
 
 // Cleanup sliding window requests every 5 minutes
-const slidingWindowCleanup = setInterval(() => {
-  // This would need to be called on any SlidingWindowRateLimiter instances
-}, 5 * 60 * 1000)
+  setInterval(() => {
+    // This would need to be called on any SlidingWindowRateLimiter instances
+  }, 5 * 60 * 1000)
 

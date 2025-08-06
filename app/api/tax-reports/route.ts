@@ -103,12 +103,12 @@ export async function GET(request: NextRequest) {
     const filters: TaxReportFilters = {
       start_date: searchParams.get('start_date') || undefined,
       end_date: searchParams.get('end_date') || undefined,
-      report_type: (searchParams.get('report_type') as any) || 'custom',
+      report_type: (searchParams.get('report_type') as TaxReportFilters['report_type']) || 'custom',
       year: searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined,
       quarter: searchParams.get('quarter') ? parseInt(searchParams.get('quarter')!) : undefined,
       fiscal_year_start: searchParams.get('fiscal_year_start') || '01-01',
       tax_only: searchParams.get('tax_only') === 'true',
-      export_format: (searchParams.get('export_format') as any) || 'json',
+      export_format: (searchParams.get('export_format') as TaxReportFilters['export_format']) || 'json',
       page: Math.max(1, parseInt(searchParams.get('page') || '1')),
       limit: Math.min(1000, Math.max(10, parseInt(searchParams.get('limit') || '100'))), // Max 1000 per page
       include_summary: searchParams.get('include_summary') !== 'false'
@@ -355,7 +355,10 @@ function calculateDateRange(filters: TaxReportFilters): { start_date: string; en
   }
 }
 
-function calculateSummary(transactions: any[], dateRange: { start_date: string; end_date: string }): TransactionSummary {
+function calculateSummary(
+  transactions: Array<Record<string, unknown>>,
+  dateRange: { start_date: string; end_date: string }
+): TransactionSummary {
   const summary: TransactionSummary = {
     total_transactions: transactions.length,
     total_revenue: 0,
@@ -371,9 +374,9 @@ function calculateSummary(transactions: any[], dateRange: { start_date: string; 
   let totalTaxableAmount = 0
 
   transactions.forEach(transaction => {
-    const amount = parseFloat(transaction.amount || 0)
-    const taxAmount = parseFloat(transaction.tax_amount || 0)
-    const baseAmount = parseFloat(transaction.base_amount || amount)
+    const amount = parseFloat(String(transaction.amount ?? 0))
+    const taxAmount = parseFloat(String(transaction.tax_amount ?? 0))
+    const baseAmount = parseFloat(String(transaction.base_amount ?? amount))
     
     summary.total_revenue += amount
     summary.total_tax_collected += taxAmount
@@ -474,7 +477,7 @@ async function calculateSummaryOptimized(userId: string, dateRange: { start_date
   }
 }
 
-function generateOptimizedCSV(transactions: any[]): string {
+function generateOptimizedCSV(transactions: Array<Record<string, unknown>>): string {
   const headers = [
     'Transaction Date',
     'Payment ID',
@@ -508,8 +511,8 @@ function generateOptimizedCSV(transactions: any[]): string {
       ? (Array.isArray(paymentLink.merchants) ? paymentLink.merchants[0] : paymentLink.merchants)
       : null
 
-    return [
-      new Date(transaction.created_at).toLocaleDateString(),
+      return [
+        new Date(String(transaction.created_at)).toLocaleDateString(),
       transaction.nowpayments_payment_id || '',
       transaction.order_id || '',
       merchant?.business_name || '',
@@ -528,10 +531,10 @@ function generateOptimizedCSV(transactions: any[]): string {
       transaction.merchant_receives || 0,
       JSON.stringify(transaction.tax_rates || []),
       JSON.stringify(transaction.tax_breakdown || {}),
-      transaction.created_at || '',
-      transaction.updated_at || ''
-    ]
-  })
+        String(transaction.created_at ?? ''),
+        String(transaction.updated_at ?? '')
+      ]
+    })
 
   const csvContent = [
     headers.join(','),

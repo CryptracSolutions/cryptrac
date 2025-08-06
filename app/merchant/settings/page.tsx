@@ -428,10 +428,10 @@ export default function MerchantSettingsPage() {
   const getCurrencyDisplayName = (code: string) =>
     CURRENCY_NAMES[code] || code;
 
-  useEffect(() => {
-    loadMerchantData();
-    loadAdditionalCurrencies();
-  }, []);
+    useEffect(() => {
+      loadMerchantData();
+      loadAdditionalCurrencies();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMerchantData = async () => {
     try {
