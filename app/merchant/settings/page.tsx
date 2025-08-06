@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Settings, 
-  Wallet, 
-  Save, 
+import {
+  Wallet,
+  Save,
   AlertCircle,
   CheckCircle,
   Loader2,
@@ -14,29 +13,79 @@ import {
   Trash2,
   DollarSign,
   HelpCircle,
-  Star,
-  AlertTriangle,
   Shield,
   Calculator,
   MapPin,
   Building,
   User,
   Phone,
-  Globe,
-  Clock
+  Globe
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 import { Input } from '@/app/components/ui/input';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { Badge } from '@/app/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
+
+// Stable coin associations for automatic inclusion
+const stableCoinAssociations: Record<string, string[]> = {
+  SOL: ['USDCSOL', 'USDTSOL'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
+  BNB: ['USDTBSC', 'USDCBSC'],
+  MATIC: ['USDTMATIC', 'USDCMATIC'],
+  TRX: ['USDTTRC20'],
+  TON: ['USDTTON'],
+  ARB: ['USDTARB', 'USDCARB'],
+  OP: ['USDTOP', 'USDCOP'],
+  BASE: ['USDCBASE'],
+  ALGO: ['USDCALGO'],
+};
+
+const CURRENCY_NAMES: Record<string, string> = {
+  BTC: 'Bitcoin',
+  ETH: 'Ethereum',
+  BNB: 'BNB',
+  SOL: 'Solana',
+  TRX: 'TRON',
+  TON: 'Toncoin',
+  AVAX: 'Avalanche',
+  DOGE: 'Dogecoin',
+  XRP: 'XRP',
+  SUI: 'Sui',
+  MATIC: 'Polygon',
+  ADA: 'Cardano',
+  DOT: 'Polkadot',
+  LTC: 'Litecoin',
+  XLM: 'Stellar',
+  ARB: 'Arbitrum',
+  OP: 'Optimism',
+  BASE: 'Base',
+  ALGO: 'Algorand',
+  USDT: 'Tether (Ethereum)',
+  USDC: 'USD Coin (Ethereum)',
+  DAI: 'Dai (Ethereum)',
+  PYUSD: 'PayPal USD (Ethereum)',
+  USDCSOL: 'USD Coin (Solana)',
+  USDTSOL: 'Tether (Solana)',
+  USDTBSC: 'Tether (BSC)',
+  USDCBSC: 'USD Coin (BSC)',
+  USDTMATIC: 'Tether (Polygon)',
+  USDCMATIC: 'USD Coin (Polygon)',
+  USDTTRC20: 'Tether (Tron)',
+  USDTTON: 'Tether (TON)',
+  USDTARB: 'Tether (Arbitrum)',
+  USDCARB: 'USD Coin (Arbitrum)',
+  USDTOP: 'Tether (Optimism)',
+  USDCOP: 'USD Coin (Optimism)',
+  USDCBASE: 'USD Coin (Base)',
+  USDCALGO: 'USD Coin (Algorand)',
+};
 
 interface CurrencyInfo {
   code: string;
@@ -228,14 +277,6 @@ const TOP_10_CURRENCIES = [
   }
 ];
 
-const FIAT_CURRENCIES = [
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' }
-];
-
 const US_STATES = [
   { code: 'AL', name: 'Alabama' },
   { code: 'AK', name: 'Alaska' },
@@ -368,6 +409,24 @@ export default function MerchantSettingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
+
+  const configuredCurrencies = React.useMemo(
+    () => Object.keys(settings.wallets || {}),
+    [settings.wallets]
+  );
+
+  const expandedPayoutCurrencies = React.useMemo(() => {
+    const expanded = new Set<string>();
+    configuredCurrencies.forEach((currency) => {
+      expanded.add(currency);
+      const stableCoins = stableCoinAssociations[currency] || [];
+      stableCoins.forEach((sc) => expanded.add(sc));
+    });
+    return Array.from(expanded);
+  }, [configuredCurrencies]);
+
+  const getCurrencyDisplayName = (code: string) =>
+    CURRENCY_NAMES[code] || code;
 
   useEffect(() => {
     loadMerchantData();
@@ -1301,8 +1360,8 @@ export default function MerchantSettingsPage() {
                     <SelectValue placeholder="Select preferred payout currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Show all configured cryptocurrencies */}
-                    {Object.keys(settings.wallets).filter(code => settings.wallets[code]).map(currencyCode => {
+                    {/* Show all configured currencies including stable coins */}
+                    {expandedPayoutCurrencies.map(currencyCode => {
                       const currency = [...TOP_10_CURRENCIES, ...additionalCurrencies].find(c => c.code === currencyCode);
                       return currency ? (
                         <SelectItem key={currency.code} value={currency.code}>
@@ -1310,7 +1369,7 @@ export default function MerchantSettingsPage() {
                         </SelectItem>
                       ) : (
                         <SelectItem key={currencyCode} value={currencyCode}>
-                          {currencyCode}
+                          {getCurrencyDisplayName(currencyCode)}
                         </SelectItem>
                       );
                     })}

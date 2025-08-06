@@ -9,7 +9,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, QrCode, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 
@@ -224,7 +224,6 @@ export default function PaymentPage() {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
   const [loading, setLoading] = useState(true)
-  const [estimatesLoading, setEstimatesLoading] = useState(false)
   const [creatingPayment, setCreatingPayment] = useState(false)
   const [error, setError] = useState<string>('')
   
@@ -744,17 +743,16 @@ export default function PaymentPage() {
     }
   }
 
-  // Load all currency estimates in parallel for faster UX
+  // Load currency estimates sequentially to avoid rate limits
   const loadEstimates = async () => {
     if (!paymentLink || availableCurrencies.length === 0) return
 
-    setEstimatesLoading(true)
-    console.log('📊 Loading payment estimates in parallel...')
+    console.log('📊 Loading payment estimates...')
 
     const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
     const newEstimates: Record<string, EstimateData> = {}
 
-    const fetchEstimate = async (currency: CurrencyInfo, attempt = 0): Promise<void> => {
+    for (const currency of availableCurrencies) {
       const backendCurrency = currencyBackendMapping[currency.code] || currency.code
       try {
         const response = await fetch('/api/nowpayments/estimate', {
@@ -765,15 +763,9 @@ export default function PaymentPage() {
           body: JSON.stringify({
             amount,
             currency_from: paymentLink.currency.toLowerCase(),
-            currency_to: backendCurrency.toLowerCase()
+            currency_to: backendCurrency.toLowerCase(),
           }),
         })
-
-        if (response.status === 429 && attempt < 2) {
-          console.warn(`⚠️ Rate limited for ${currency.code}, retrying...`)
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
-          return fetchEstimate(currency, attempt + 1)
-        }
 
         if (response.ok) {
           const data = await response.json()
@@ -784,7 +776,7 @@ export default function PaymentPage() {
               amount_from: amount,
               estimated_amount: data.estimate.estimated_amount,
               fee_amount: data.estimate.fee_amount || 0,
-              fee_percentage: data.estimate.fee_percentage || 0
+              fee_percentage: data.estimate.fee_percentage || 0,
             }
             console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
           } else {
@@ -796,17 +788,13 @@ export default function PaymentPage() {
       } catch (error) {
         console.error(`❌ Error loading estimate for ${currency.code}:`, error)
       }
+
+      // Small delay between requests to avoid hitting rate limits
+      await new Promise(resolve => setTimeout(resolve, 200))
     }
 
-    try {
-      await Promise.all(availableCurrencies.map(c => fetchEstimate(c)))
-      setEstimates(newEstimates)
-      console.log(`✅ Loaded ${Object.keys(newEstimates).length} estimates`)
-    } catch (error) {
-      console.error('❌ Error loading estimates:', error)
-    } finally {
-      setEstimatesLoading(false)
-    }
+    setEstimates(newEstimates)
+    console.log(`✅ Loaded ${Object.keys(newEstimates).length} estimates`)
   }
 
   // Load estimates when currencies are available
@@ -991,7 +979,7 @@ export default function PaymentPage() {
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Link Not Found</h1>
-          <p className="text-gray-600">The payment link you're looking for doesn't exist or has expired.</p>
+          <p className="text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
         </div>
       </div>
     )
