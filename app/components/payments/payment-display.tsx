@@ -59,6 +59,24 @@ const PAYMENT_INFO: Record<string, {
     ],
     warning: 'This is an ERC-20 token on Ethereum network'
   },
+  DAI: {
+    currency: { code: 'DAI', symbol: '$', name: 'Dai', network: 'Ethereum' },
+    instructions: [
+      'Open your Ethereum wallet',
+      'Send DAI to the address below',
+      'Ensure sufficient ETH for gas fees'
+    ],
+    warning: 'This is an ERC-20 token on Ethereum network'
+  },
+  PYUSD: {
+    currency: { code: 'PYUSD', symbol: '$', name: 'PayPal USD', network: 'Ethereum' },
+    instructions: [
+      'Open your Ethereum wallet',
+      'Send PYUSD to the address below',
+      'Ensure sufficient ETH for gas fees'
+    ],
+    warning: 'This is an ERC-20 token on Ethereum network'
+  },
   TRX: {
     currency: { code: 'TRX', symbol: 'TRX', name: 'TRON', network: 'Tron' },
     instructions: [

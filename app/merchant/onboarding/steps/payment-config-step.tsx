@@ -46,13 +46,15 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   // Stable coin associations for automatic inclusion
   const stableCoinAssociations: Record<string, string[]> = {
     'SOL': ['USDCSOL', 'USDTSOL'],
-    'ETH': ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
-    'BNB': ['USDTBSC', 'USDCBSC', 'BUSDBSC', 'DAIBSC', 'TUSDBSC', 'FDUSDBSC'],
-    'MATIC': ['USDTMATIC', 'USDCMATIC', 'DAIMATIC'],
-    'AVAX': ['USDTAVAX', 'USDCAVAX'],
-    'TRX': ['USDTTRC20', 'USDDTRC20'],
+    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+    'BNB': ['USDTBSC', 'USDCBSC'],
+    'MATIC': ['USDTMATIC', 'USDCMATIC'],
+    'TRX': ['USDTTRC20'],
+    'TON': ['USDTTON'],
     'ARB': ['USDTARB', 'USDCARB'],
-    'OP': ['USDTOP', 'USDCOP']
+    'OP': ['USDTOP', 'USDCOP'],
+    'BASE': ['USDCBASE'],
+    'ALGO': ['USDCALGO']
   }
 
   // Expand configured currencies to include available stable coins
@@ -88,36 +90,23 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     'OP': 'Optimism',
     // Stable coins
     'USDT': 'Tether (Ethereum)',
-    'USDC': 'USD Coin (Ethereum)', 
+    'USDC': 'USD Coin (Ethereum)',
     'DAI': 'Dai (Ethereum)',
-    'BUSD': 'BUSD (Ethereum)',
-    'TUSD': 'TrueUSD (Ethereum)',
-    'FRAX': 'Frax (Ethereum)',
-    'LUSD': 'Liquity USD (Ethereum)',
-    'USDP': 'Pax Dollar (Ethereum)',
-    'GUSD': 'Gemini Dollar (Ethereum)',
     'PYUSD': 'PayPal USD (Ethereum)',
-    'USDE': 'Ethena USDe (Ethereum)',
-    'FDUSD': 'First Digital USD (Ethereum)',
     'USDCSOL': 'USD Coin (Solana)',
     'USDTSOL': 'Tether (Solana)',
     'USDTBSC': 'Tether (BSC)',
     'USDCBSC': 'USD Coin (BSC)',
-    'BUSDBSC': 'BUSD (BSC)',
-    'DAIBSC': 'Dai (BSC)',
-    'TUSDBSC': 'TrueUSD (BSC)',
-    'FDUSDBSC': 'First Digital USD (BSC)',
     'USDTMATIC': 'Tether (Polygon)',
     'USDCMATIC': 'USD Coin (Polygon)',
-    'DAIMATIC': 'Dai (Polygon)',
-    'USDTAVAX': 'Tether (Avalanche)',
-    'USDCAVAX': 'USD Coin (Avalanche)',
     'USDTTRC20': 'Tether (Tron)',
-    'USDDTRC20': 'USDD (Tron)',
+    'USDTTON': 'Tether (TON)',
     'USDTARB': 'Tether (Arbitrum)',
     'USDCARB': 'USD Coin (Arbitrum)',
     'USDTOP': 'Tether (Optimism)',
-    'USDCOP': 'USD Coin (Optimism)'
+    'USDCOP': 'USD Coin (Optimism)',
+    'USDCBASE': 'USD Coin (Base)',
+    'USDCALGO': 'USD Coin (Algorand)'
   }
 
   const getCurrencyDisplayName = (code: string) => {

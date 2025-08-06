@@ -123,7 +123,7 @@ const getBlockExplorerUrl = (txHash: string, currency: string): string | null =>
   }
   
   // Ethereum and ERC-20 tokens
-  if (['ETH', 'USDT', 'USDC', 'USDTERC20'].includes(currency_upper)) {
+  if (['ETH', 'USDT', 'USDC', 'USDTERC20', 'DAI', 'PYUSD'].includes(currency_upper)) {
     return `https://etherscan.io/tx/${txHash}`
   }
   
@@ -550,9 +550,7 @@ export default function PaymentPage() {
         // Stablecoins
         'USDT': ['USDT', 'USDTERC20', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
         'USDC': ['USDC', 'USDCERC20', 'USDCBSC', 'USDCMATIC', 'USDCSOL', 'USDCALGO', 'USDCARB', 'USDCOP', 'USDCBASE'],
-        'DAI': ['DAI', 'DAIERC20', 'DAIBSC', 'DAIMATIC'],
-        'BUSD': ['BUSD', 'BUSDBSC', 'BUSDERC20'],
-        'TUSD': ['TUSD', 'TUSDERC20', 'TUSDBSC'],
+        'DAI': ['DAI', 'DAIERC20'],
         'PYUSD': ['PYUSD', 'PYUSDERC20']
       }
 
@@ -648,10 +646,10 @@ export default function PaymentPage() {
         }
       }
       
-      // Add USDT/USDC stablecoins for supported networks
+      // Add supported stablecoins for each network
       const stablecoinMapping: Record<string, string[]> = {
         'BNB': ['USDTBSC', 'USDCBSC'],
-        'ETH': ['USDTERC20', 'USDC'],
+        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD'],
         'SOL': ['USDTSOL', 'USDCSOL'],
         'TRX': ['USDTTRC20'],
         'TON': ['USDTTON'],
@@ -664,7 +662,7 @@ export default function PaymentPage() {
       
       for (const acceptedCrypto of acceptedCryptos) {
         const stablecoins = stablecoinMapping[acceptedCrypto] || []
-        console.log(`🔍 Researching USDT/USDC stable coins for: ${acceptedCrypto}`)
+        console.log(`🔍 Researching stable coins for: ${acceptedCrypto}`)
         
         for (const stablecoin of stablecoins) {
           const stablecoinInfo = data.currencies.find((c: CurrencyInfo) => 
@@ -672,8 +670,11 @@ export default function PaymentPage() {
           )
           
           if (stablecoinInfo) {
-            // Only add USDT and USDC variants
-            if (stablecoin.toUpperCase().includes('USDT') || stablecoin.toUpperCase().includes('USDC')) {
+            if (
+              stablecoin.toUpperCase().includes('USDT') ||
+              stablecoin.toUpperCase().includes('USDC') ||
+              ['DAI', 'PYUSD'].includes(stablecoin.toUpperCase())
+            ) {
               customerCurrencies.push({
                 code: stablecoinInfo.code,
                 name: stablecoinInfo.name,
@@ -681,11 +682,10 @@ export default function PaymentPage() {
                 min_amount: stablecoinInfo.min_amount,
                 max_amount: stablecoinInfo.max_amount
               })
-              
-              // Add to backend mapping (stablecoins use their actual code)
+
               backendMappings[stablecoinInfo.code] = stablecoinInfo.code
-              
-              console.log(`✅ Added USDT/USDC stable coin: ${stablecoinInfo.code} (for ${acceptedCrypto})`)
+
+              console.log(`✅ Added stable coin: ${stablecoinInfo.code} (for ${acceptedCrypto})`)
             }
           }
         }
@@ -695,8 +695,14 @@ export default function PaymentPage() {
       const sortedCurrencies = customerCurrencies.sort((a: CurrencyInfo, b: CurrencyInfo) => {
         const aPrimary = acceptedCryptos.includes(a.code)
         const bPrimary = acceptedCryptos.includes(b.code)
-        const aStablecoin = a.code.toUpperCase().includes('USDT') || a.code.toUpperCase().includes('USDC')
-        const bStablecoin = b.code.toUpperCase().includes('USDT') || b.code.toUpperCase().includes('USDC')
+        const aStablecoin =
+          a.code.toUpperCase().includes('USDT') ||
+          a.code.toUpperCase().includes('USDC') ||
+          ['DAI', 'PYUSD'].includes(a.code.toUpperCase())
+        const bStablecoin =
+          b.code.toUpperCase().includes('USDT') ||
+          b.code.toUpperCase().includes('USDC') ||
+          ['DAI', 'PYUSD'].includes(b.code.toUpperCase())
         
         // Primary currencies first
         if (aPrimary && !bPrimary) return -1

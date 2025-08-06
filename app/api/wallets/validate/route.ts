@@ -26,7 +26,6 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   // TRON and TRC-20 tokens - starts with T, 34 characters
   TRX: /^T[A-Za-z1-9]{33}$/,
   USDT_TRC20: /^T[A-Za-z1-9]{33}$/,
-  USDC_TRC20: /^T[A-Za-z1-9]{33}$/,
   
   // TON ecosystem - supports multiple formats
   TON: /^(0:[a-fA-F0-9]{64}|[A-Za-z0-9\-_]{48}|UQ[A-Za-z0-9\-_]{46})$/,
@@ -34,8 +33,6 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // Avalanche ecosystem - same as Ethereum format
   AVAX: /^0x[a-fA-F0-9]{40}$/,
-  USDT_AVAX: /^0x[a-fA-F0-9]{40}$/,
-  USDC_AVAX: /^0x[a-fA-F0-9]{40}$/,
   
   // Other major cryptocurrencies with comprehensive format support
   DOGE: /^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{32}$/,
@@ -271,12 +268,9 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   USDC_SOL: { name: 'USD Coin (Solana)', network: 'Solana', addressType: 'Solana address' },
   TRX: { name: 'TRON', network: 'TRON', addressType: 'TRON address' },
   USDT_TRC20: { name: 'Tether (TRC-20)', network: 'TRON', addressType: 'TRON address' },
-  USDC_TRC20: { name: 'USD Coin (TRC-20)', network: 'TRON', addressType: 'TRON address' },
   TON: { name: 'Toncoin', network: 'TON', addressType: 'TON address (multiple formats)' },
   USDT_TON: { name: 'Tether (TON)', network: 'TON', addressType: 'TON address' },
   AVAX: { name: 'Avalanche', network: 'Avalanche', addressType: 'Avalanche address' },
-  USDT_AVAX: { name: 'Tether (Avalanche)', network: 'Avalanche', addressType: 'Avalanche address' },
-  USDC_AVAX: { name: 'USD Coin (Avalanche)', network: 'Avalanche', addressType: 'Avalanche address' },
   DOGE: { name: 'Dogecoin', network: 'Dogecoin', addressType: 'Dogecoin address' },
   XRP: { name: 'XRP', network: 'XRP Ledger', addressType: 'XRP address' },
   SUI: { name: 'Sui', network: 'Sui', addressType: 'Sui address' },

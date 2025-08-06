@@ -464,11 +464,11 @@ export default function CreatePaymentLinkPage() {
                         <strong>Bonus:</strong> Selecting base cryptocurrencies automatically includes their stable coins for customers:
                         <div className="mt-2 text-sm">
                           • <strong>SOL</strong> → includes USDC & USDT on Solana
-                          • <strong>ETH</strong> → includes USDT, USDC, DAI & 9 more stable coins
-                          • <strong>BNB</strong> → includes USDT, USDC, BUSD & 3 more on BSC
-                          • <strong>MATIC</strong> → includes USDT, USDC & DAI on Polygon
-                          • <strong>AVAX</strong> → includes USDT & USDC on Avalanche
-                          • <strong>TRX</strong> → includes USDT & USDD on Tron
+                          • <strong>ETH</strong> → includes USDT, USDC, DAI & PYUSD on Ethereum
+                          • <strong>BNB</strong> → includes USDT & USDC on BSC
+                          • <strong>MATIC</strong> → includes USDT & USDC on Polygon
+                          • <strong>TRX</strong> → includes USDT on Tron
+                          • <strong>TON</strong> → includes USDT on TON
                         </div>
                       </AlertDescription>
                     </Alert>

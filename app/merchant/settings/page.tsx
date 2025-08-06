@@ -726,19 +726,7 @@ export default function MerchantSettingsPage() {
 
   const filteredAdditionalCurrencies = additionalCurrencies.filter(currency => {
     // Filter out stable coins
-    const isStableCoin = currency.code.includes('USDT') || 
-                        currency.code.includes('USDC') || 
-                        currency.code.includes('DAI') || 
-                        currency.code.includes('BUSD') || 
-                        currency.code.includes('TUSD') || 
-                        currency.code.includes('FRAX') || 
-                        currency.code.includes('LUSD') || 
-                        currency.code.includes('USDP') || 
-                        currency.code.includes('GUSD') || 
-                        currency.code.includes('PYUSD') || 
-                        currency.code.includes('USDE') || 
-                        currency.code.includes('FDUSD') || 
-                        currency.code.includes('USDD');
+    const isStableCoin = ['USDT', 'USDC', 'DAI', 'PYUSD'].some(sc => currency.code.includes(sc));
     
     // Include if not a stable coin and matches search term
     return !isStableCoin && (
@@ -1115,11 +1103,11 @@ export default function MerchantSettingsPage() {
                                 {(() => {
                                   const stableCoins = {
                                     'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
-                                    'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
-                                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
-                                    'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
-                                    'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
+                                    'BNB': ['USDT (BSC)', 'USDC (BSC)'],
+                                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
+                                    'TRX': ['USDT (TRC-20)'],
+                                    'TON': ['USDT (TON)']
                                   }[currency.code] || [];
                                   
                                   return stableCoins.map((coin, index) => (
@@ -1132,11 +1120,11 @@ export default function MerchantSettingsPage() {
                               {(() => {
                                 const stableCoins = {
                                   'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
-                                  'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
-                                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
-                                  'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
-                                  'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
+                                  'BNB': ['USDT (BSC)', 'USDC (BSC)'],
+                                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
+                                  'TRX': ['USDT (TRC-20)'],
+                                  'TON': ['USDT (TON)']
                                 }[currency.code] || [];
                                 
                                 return stableCoins.length === 0 ? null : (

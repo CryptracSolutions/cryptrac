@@ -15,7 +15,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'BTC': ['BTC', 'BITCOIN'],
   
   // Ethereum network (includes ERC-20 tokens)
-  'ETH': ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20'],
+  'ETH': ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20', 'DAI', 'PYUSD'],
   
   // Binance Smart Chain
   'BNB': ['BNB', 'BSC', 'BINANCE', 'BNBBSC', 'USDTBSC', 'USDCBSC'],

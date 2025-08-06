@@ -18,7 +18,7 @@ const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY
 const TOP_CURRENCY_CODES = [
   'BTC', 'ETH', 'BNB', 'SOL', 'TRX', 'TON', 'AVAX', 'DOGE', 'XRP', 'SUI',
   'USDT_ERC20', 'USDC_ERC20', 'USDT_BEP20', 'USDC_BEP20', 'USDT_SOL', 'USDC_SOL',
-  'USDT_TRC20', 'USDC_TRC20', 'USDT_TON', 'USDT_AVAX', 'USDC_AVAX'
+  'USDT_TRC20', 'USDT_TON', 'USDTMATIC', 'USDCMATIC', 'USDTARB', 'USDCARB', 'USDTOP', 'USDCOP', 'USDCBASE', 'USDCALGO', 'DAI', 'PYUSD'
 ]
 
 // Fallback static currencies in case NOWPayments API fails
@@ -74,6 +74,32 @@ const FALLBACK_CURRENCIES = [
     enabled: true,
     trust_wallet_compatible: true,
     display_name: 'USDC (ERC-20)'
+  },
+  {
+    code: 'DAI',
+    name: 'Dai',
+    symbol: 'DAI',
+    network: 'Ethereum',
+    rate_usd: 1.00,
+    min_amount: 0.01,
+    max_amount: 1000000,
+    decimals: 18,
+    enabled: true,
+    trust_wallet_compatible: true,
+    display_name: 'DAI'
+  },
+  {
+    code: 'PYUSD',
+    name: 'PayPal USD',
+    symbol: 'PYUSD',
+    network: 'Ethereum',
+    rate_usd: 1.00,
+    min_amount: 0.01,
+    max_amount: 1000000,
+    decimals: 6,
+    enabled: true,
+    trust_wallet_compatible: true,
+    display_name: 'PYUSD'
   }
 ]
 

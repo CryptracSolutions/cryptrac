@@ -38,13 +38,15 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
   // Stable coin associations for automatic inclusion
   const stableCoinAssociations: Record<string, string[]> = {
     'SOL': ['USDCSOL', 'USDTSOL'],
-    'ETH': ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
-    'BNB': ['USDTBSC', 'USDCBSC', 'BUSDBSC', 'DAIBSC', 'TUSDBSC', 'FDUSDBSC'],
-    'MATIC': ['USDTMATIC', 'USDCMATIC', 'DAIMATIC'],
-    'AVAX': ['USDTAVAX', 'USDCAVAX'],
-    'TRX': ['USDTTRC20', 'USDDTRC20'],
+    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+    'BNB': ['USDTBSC', 'USDCBSC'],
+    'MATIC': ['USDTMATIC', 'USDCMATIC'],
+    'TRX': ['USDTTRC20'],
+    'TON': ['USDTTON'],
     'ARB': ['USDTARB', 'USDCARB'],
-    'OP': ['USDTOP', 'USDCOP']
+    'OP': ['USDTOP', 'USDCOP'],
+    'BASE': ['USDCBASE'],
+    'ALGO': ['USDCALGO']
   }
 
   // Expand accepted cryptos to include available stable coins

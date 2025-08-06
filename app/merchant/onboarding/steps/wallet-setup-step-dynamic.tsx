@@ -56,7 +56,7 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
   {
     id: 'ethereum',
     name: 'Ethereum Ecosystem',
-    description: 'Ethereum network - automatically includes 12+ stable coins',
+    description: 'Ethereum network - automatically includes USDT, USDC, DAI & PYUSD',
     primary: { code: 'ETH', name: 'Ethereum', network: 'Ethereum', trust_wallet_compatible: true },
     autoIncludedStablecoins: [],
     others: []
@@ -64,7 +64,7 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
   {
     id: 'binance',
     name: 'Binance Smart Chain',
-    description: 'BSC network - automatically includes 6+ stable coins',
+    description: 'BSC network - automatically includes USDT & USDC',
     primary: { code: 'BNB', name: 'BNB', network: 'BSC', trust_wallet_compatible: true },
     autoIncludedStablecoins: [],
     others: []
@@ -80,7 +80,7 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
   {
     id: 'tron',
     name: 'TRON Ecosystem',
-    description: 'TRON network - automatically includes USDT & USDD',
+    description: 'TRON network - automatically includes USDT',
     primary: { code: 'TRX', name: 'TRON', network: 'TRON', trust_wallet_compatible: true },
     autoIncludedStablecoins: [],
     others: []
@@ -88,12 +88,9 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
   {
     id: 'avalanche',
     name: 'Avalanche Ecosystem',
-    description: 'Avalanche and major AVAX stablecoins',
+    description: 'Avalanche network',
     primary: { code: 'AVAX', name: 'Avalanche', network: 'Avalanche', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDT_AVAX', name: 'USDT (Avalanche)', network: 'Avalanche', trust_wallet_compatible: true },
-      { code: 'USDC_AVAX', name: 'USDC (Avalanche)', network: 'Avalanche', trust_wallet_compatible: true }
-    ],
+    autoIncludedStablecoins: [],
     others: []
   }
 ]
@@ -138,9 +135,11 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
             ...OTHER_POPULAR_CURRENCIES.map(c => c.code)
           ]
           
-          const additional = result.currencies.filter((c: CurrencyInfo) => 
-            !groupedCodes.includes(c.code) && c.enabled
-          )
+          const additional = result.currencies.filter((c: CurrencyInfo) => {
+            const stableCoins = ['USDT', 'USDC', 'DAI', 'PYUSD', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'USDE', 'FDUSD', 'USDD']
+            const isStable = stableCoins.some(sc => c.code.toUpperCase().includes(sc))
+            return !groupedCodes.includes(c.code) && c.enabled && !isStable
+          })
           console.log(`📊 Loaded ${additional.length} additional currencies:`, additional.map((c: CurrencyInfo) => c.code))
           setAdditionalCurrencies(additional)
         } else {
@@ -204,40 +203,9 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     setWallets(prev => ({ ...prev, [currency]: address }))
     
     if (address.trim()) {
-      const isValid = await validateAddress(currency, address)
-      
-      // Auto-include stablecoins when primary currency is validated
-      if (isValid) {
-        const group = CURRENCY_GROUPS.find(g => g.primary.code === currency)
-        if (group && group.autoIncludedStablecoins.length > 0) {
-          console.log(`🔄 Auto-including stablecoins for ${currency}:`, group.autoIncludedStablecoins.map(c => c.code))
-          const newWallets = { ...wallets, [currency]: address }
-          
-          group.autoIncludedStablecoins.forEach(stablecoin => {
-            newWallets[stablecoin.code] = address
-            setValidationStatus(prev => ({ ...prev, [stablecoin.code]: 'valid' }))
-          })
-          
-          setWallets(newWallets)
-        }
-      }
+      await validateAddress(currency, address)
     } else {
       setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }))
-      
-      // Remove auto-included stablecoins when primary currency is cleared
-      const group = CURRENCY_GROUPS.find(g => g.primary.code === currency)
-      if (group && group.autoIncludedStablecoins.length > 0) {
-        const newWallets = { ...wallets }
-        const newValidationStatus = { ...validationStatus }
-        
-        group.autoIncludedStablecoins.forEach(stablecoin => {
-          delete newWallets[stablecoin.code]
-          delete newValidationStatus[stablecoin.code]
-        })
-        
-        setWallets(newWallets)
-        setValidationStatus(newValidationStatus)
-      }
     }
   }
 
@@ -252,21 +220,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       delete newStatus[currency]
       return newStatus
     })
-    
-    // Also remove auto-included stablecoins if removing primary currency
-    const group = CURRENCY_GROUPS.find(g => g.primary.code === currency)
-    if (group && group.autoIncludedStablecoins.length > 0) {
-      const newWallets = { ...wallets }
-      const newValidationStatus = { ...validationStatus }
-      
-      group.autoIncludedStablecoins.forEach(stablecoin => {
-        delete newWallets[stablecoin.code]
-        delete newValidationStatus[stablecoin.code]
-      })
-      
-      setWallets(newWallets)
-      setValidationStatus(newValidationStatus)
-    }
   }
 
   const getValidationIcon = (currency: string) => {
@@ -397,11 +350,11 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                 {(() => {
                   const stableCoins = {
                     'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
-                    'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
-                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
-                    'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
-                    'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
+                    'BNB': ['USDT (BSC)', 'USDC (BSC)'],
+                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
+                    'TRX': ['USDT (TRC-20)'],
+                    'TON': ['USDT (TON)']
                   }[currency.code] || [];
                   
                   return stableCoins.map((coin, index) => (
@@ -414,11 +367,11 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               {(() => {
                 const stableCoins = {
                   'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'PYUSD', 'USDE', 'FDUSD'],
-                  'BNB': ['USDT (BSC)', 'USDC (BSC)', 'BUSD (BSC)', 'DAI (BSC)', 'TUSD (BSC)', 'FDUSD (BSC)'],
-                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)', 'DAI (Polygon)'],
-                  'AVAX': ['USDT (Avalanche)', 'USDC (Avalanche)'],
-                  'TRX': ['USDT (TRC-20)', 'USDD (TRC-20)']
+                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
+                  'BNB': ['USDT (BSC)', 'USDC (BSC)'],
+                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
+                  'TRX': ['USDT (TRC-20)'],
+                  'TON': ['USDT (TON)']
                 }[currency.code] || [];
                 
                 return stableCoins.length === 0 ? null : (
@@ -489,9 +442,11 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
             </p>
             <div className="text-sm space-y-1">
               • <strong>SOL wallet</strong> → enables SOL + USDC & USDT on Solana
-              • <strong>ETH wallet</strong> → enables ETH + USDT, USDC, DAI & 9 more stable coins
-              • <strong>BNB wallet</strong> → enables BNB + USDT, USDC, BUSD & 3 more on BSC
-              • <strong>TRX wallet</strong> → enables TRX + USDT & USDD on Tron
+              • <strong>ETH wallet</strong> → enables ETH + USDT, USDC, DAI & PYUSD on Ethereum
+              • <strong>BNB wallet</strong> → enables BNB + USDT & USDC on BSC
+              • <strong>MATIC wallet</strong> → enables MATIC + USDT & USDC on Polygon
+              • <strong>TRX wallet</strong> → enables TRX + USDT on Tron
+              • <strong>TON wallet</strong> → enables TON + USDT on TON
             </div>
             <p className="text-sm mt-2 font-medium">
               No need for separate addresses - stable coins use the same wallet as their base currency!

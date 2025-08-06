@@ -277,7 +277,14 @@ export default function PaymentSuccessPage() {
     
     if (currencyUpper === 'BTC') {
       return `https://blockstream.info/tx/${txHash}`
-    } else if (currencyUpper === 'ETH' || currencyUpper.includes('ERC20') || currencyUpper.includes('USDT') || currencyUpper.includes('USDC')) {
+    } else if (
+      currencyUpper === 'ETH' ||
+      currencyUpper.includes('ERC20') ||
+      currencyUpper.includes('USDT') ||
+      currencyUpper.includes('USDC') ||
+      currencyUpper === 'DAI' ||
+      currencyUpper === 'PYUSD'
+    ) {
       return `https://etherscan.io/tx/${txHash}`
     } else if (currencyUpper === 'LTC') {
       return `https://blockchair.com/litecoin/transaction/${txHash}`

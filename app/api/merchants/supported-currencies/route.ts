@@ -93,7 +93,7 @@ export async function GET() {
     }));
 
     // Sort currencies by priority (BTC, ETH, stablecoins first)
-    const priorityOrder = ['BTC', 'ETH', 'USDT_ERC20', 'USDC_ERC20', 'USDT_TRC20', 'USDC_SOL'];
+    const priorityOrder = ['BTC', 'ETH', 'USDT_ERC20', 'USDC_ERC20', 'DAI', 'PYUSD', 'USDT_TRC20', 'USDTSOL', 'USDC_SOL'];
     enhancedCurrencies.sort((a, b) => {
       const aIndex = priorityOrder.indexOf(a.code);
       const bIndex = priorityOrder.indexOf(b.code);
