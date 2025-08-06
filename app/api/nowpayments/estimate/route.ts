@@ -64,11 +64,11 @@ export async function POST(request: NextRequest) {
           currency_from: currency_from.toUpperCase(),
           currency_to: currency_to.toUpperCase(),
           amount_from: parseFloat(amount),
-          estimated_amount: estimateData.estimated_amount,
-          fee_amount: estimateData.fee_amount || 0,
-          fee_percentage: estimateData.fee_percentage || 0,
-          min_amount: estimateData.min_amount,
-          max_amount: estimateData.max_amount
+          estimated_amount: parseFloat(estimateData.estimated_amount),
+          fee_amount: parseFloat(estimateData.fee_amount || '0'),
+          fee_percentage: parseFloat(estimateData.fee_percentage || '0'),
+          min_amount: parseFloat(estimateData.min_amount || '0'),
+          max_amount: parseFloat(estimateData.max_amount || '0')
         }
       })
 
