@@ -110,12 +110,89 @@ export async function GET(
       )
     }
 
+    // Ensure hash fields are populated for confirmed payments
+    if (
+      payment.nowpayments_payment_id &&
+      (!payment.payin_hash || !payment.payout_hash || !payment.tx_hash)
+    ) {
+      try {
+        const npResponse = await fetch(
+          `https://api.nowpayments.io/v1/payment/${payment.nowpayments_payment_id}`,
+          {
+            headers: {
+              'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
+            },
+          }
+        )
+
+        if (npResponse.ok) {
+          const npData = await npResponse.json()
+          const updateData: any = {}
+
+          const payinHash = npData.payin_hash || npData.hash
+          const payoutHash = npData.payout_hash || npData.outcome?.hash
+
+          if (!payment.payin_hash && payinHash) {
+            updateData.payin_hash = payinHash
+          }
+
+          if (!payment.payout_hash && payoutHash) {
+            updateData.payout_hash = payoutHash
+          }
+
+          // Determine primary tx_hash
+          if (!payment.tx_hash) {
+            if (payoutHash) {
+              updateData.tx_hash = payoutHash
+            } else if (payinHash) {
+              updateData.tx_hash = payinHash
+            }
+          }
+
+          if (npData.actually_paid && !payment.amount_received) {
+            updateData.amount_received = npData.actually_paid
+          }
+
+          if (npData.outcome_amount && !payment.merchant_receives) {
+            updateData.merchant_receives = npData.outcome_amount
+          }
+
+          if (npData.outcome_currency && !payment.payout_currency) {
+            updateData.payout_currency = npData.outcome_currency.toUpperCase()
+          }
+
+          if (Object.keys(updateData).length > 0) {
+            updateData.updated_at = new Date().toISOString()
+            const { error: updateError } = await supabase
+              .from('transactions')
+              .update(updateData)
+              .eq('id', payment.id)
+
+            if (!updateError) {
+              Object.assign(payment, updateData)
+              console.log('✅ Payment hashes updated from NOWPayments:', {
+                payin_hash: updateData.payin_hash,
+                payout_hash: updateData.payout_hash,
+                tx_hash: updateData.tx_hash,
+              })
+            } else {
+              console.warn('⚠️ Failed to update payment hashes:', updateError)
+            }
+          }
+        } else {
+          console.warn('⚠️ Failed to fetch payment from NOWPayments:', npResponse.status)
+        }
+      } catch (hashError) {
+        console.warn('⚠️ Error fetching hashes from NOWPayments:', hashError)
+      }
+    }
+
     console.log('✅ Payment success data found:', {
       id: payment.id,
       status: payment.status,
       amount: payment.pay_amount,
       currency: payment.pay_currency,
-      lookup_method: isUUID ? 'payment_link_id' : 'nowpayments_payment_id'
+      lookup_method: isUUID ? 'payment_link_id' : 'nowpayments_payment_id',
     })
 
     // Prepare response data with CORRECT column names
