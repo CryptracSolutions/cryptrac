@@ -182,7 +182,8 @@ export async function POST(request: NextRequest) {
           business_name,
           auto_convert_enabled,
           charge_customer_fee,
-          wallets
+          wallets,
+          preferred_payout_currency
         )
       `)
       .eq('id', payment_link_id)
@@ -204,9 +205,17 @@ export async function POST(request: NextRequest) {
       merchant_id: paymentLinkData.merchant_id
     })
 
-    const merchant = Array.isArray(paymentLinkData.merchants) 
-      ? paymentLinkData.merchants[0] 
+    const merchant = Array.isArray(paymentLinkData.merchants)
+      ? paymentLinkData.merchants[0]
       : paymentLinkData.merchants
+
+    const preferredPayoutCurrency =
+      paymentLinkData.preferred_payout_currency ||
+      merchant.preferred_payout_currency
+
+    const autoConvertEnabled =
+      paymentLinkData.auto_convert_enabled &&
+      !!preferredPayoutCurrency
 
     // Prepare payment request for NOWPayments
     const paymentRequest: any = {
@@ -223,30 +232,37 @@ export async function POST(request: NextRequest) {
     // Enhanced auto-forwarding logic
     let autoForwardingConfigured = false
     const wallets = merchant.wallets || {}
-    
+
     console.log('🔍 Available wallets:', Object.keys(wallets))
-    
-    if (merchant.auto_convert_enabled && Object.keys(wallets).length > 0) {
-      const walletKey = getWalletKeyForCurrency(pay_currency, wallets)
-      
+
+    if (autoConvertEnabled && preferredPayoutCurrency && Object.keys(wallets).length > 0) {
+      const walletKey = getWalletKeyForCurrency(preferredPayoutCurrency, wallets)
+
       if (walletKey && wallets[walletKey]) {
         const walletAddress = wallets[walletKey]
-        
-        console.log(`🔍 Found wallet for ${pay_currency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`)
-        
+
+        console.log(
+          `🔍 Found wallet for ${preferredPayoutCurrency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`
+        )
+
         // Validate wallet address format
-        if (isValidWalletAddress(walletAddress, pay_currency)) {
+        if (isValidWalletAddress(walletAddress, preferredPayoutCurrency)) {
           paymentRequest.payout_address = walletAddress
-          paymentRequest.payout_currency = pay_currency.toLowerCase()
-          // FIXED: Don't set payout_extra_id to null - omit it entirely
+          paymentRequest.payout_currency = preferredPayoutCurrency.toLowerCase()
           autoForwardingConfigured = true
-          
-          console.log(`✅ Auto-forwarding configured for ${pay_currency}: ${walletAddress.substring(0, 10)}...`)
+
+          console.log(
+            `✅ Auto-forwarding configured for ${preferredPayoutCurrency}: ${walletAddress.substring(0, 10)}...`
+          )
         } else {
-          console.warn(`⚠️ Invalid wallet address format for ${pay_currency}: ${walletAddress}`)
+          console.warn(
+            `⚠️ Invalid wallet address format for ${preferredPayoutCurrency}: ${walletAddress}`
+          )
         }
       } else {
-        console.warn(`⚠️ No wallet address found for ${pay_currency}`)
+        console.warn(
+          `⚠️ No wallet address found for preferred payout currency ${preferredPayoutCurrency}`
+        )
         console.log('Available wallet keys:', Object.keys(wallets))
       }
     }
