@@ -74,6 +74,23 @@ interface PaginationInfo {
   has_previous_page: boolean
 }
 
+interface ReportTransaction {
+  id: string
+  payment_id: string
+  created_at: string | null
+  product_description: string
+  gross_amount: number
+  tax_label: string
+  tax_percentage: number
+  tax_amount: number
+  total_paid: number
+  fees: number
+  net_amount: number
+  status: string
+  refund_amount: number
+  refund_date: string | null
+}
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
   
@@ -197,7 +214,7 @@ export async function GET(request: NextRequest) {
     const safeTransactions = transactions || []
     console.log(`✅ Fetched ${safeTransactions.length} transactions (total: ${count}) in ${Date.now() - startTime}ms`)
 
-    const formattedTransactions = safeTransactions.map(t => {
+    const formattedTransactions: ReportTransaction[] = safeTransactions.map(t => {
       const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
       const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
       const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
@@ -217,7 +234,7 @@ export async function GET(request: NextRequest) {
         status: t.status,
         refund_amount: Number(t.refund_amount || 0),
         refund_date: t.refunded_at
-      }
+      } as ReportTransaction
     })
 
     // Calculate summary statistics
@@ -423,7 +440,7 @@ function calculateSummary(
   return summary
 }
 
-function generateAuditCSV(transactions: Array<Record<string, any>>, summary: TransactionSummary): string {
+function generateAuditCSV(transactions: ReportTransaction[], summary: TransactionSummary): string {
   const headers = [
     'Payment ID',
     'Transaction Date (UTC)',
@@ -445,10 +462,10 @@ function generateAuditCSV(transactions: Array<Record<string, any>>, summary: Tra
     tx.payment_id,
     tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
     tx.created_at ? new Date(tx.created_at).toISOString().split('T')[1].split('.')[0] : '',
-    tx.product_description || '',
+    tx.product_description,
     tx.gross_amount.toFixed(2),
-    tx.tax_label || '',
-    tx.tax_percentage?.toFixed ? tx.tax_percentage.toFixed(2) : Number(tx.tax_percentage || 0),
+    tx.tax_label,
+    tx.tax_percentage.toFixed(2),
     tx.tax_amount.toFixed(2),
     tx.total_paid.toFixed(2),
     tx.fees.toFixed(2),

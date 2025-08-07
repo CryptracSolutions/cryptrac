@@ -590,7 +590,12 @@ export default function TaxReportsPage() {
                                     {tx.status === 'refunded' ? 'Refunded' : 'Confirmed'}
                                   </Badge>
                                   {tx.status !== 'refunded' && (
-                                    <Button variant="outline" size="xs" className="ml-2" onClick={() => markAsRefunded(tx)}>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="ml-2 h-6 px-2 text-xs"
+                                      onClick={() => markAsRefunded(tx)}
+                                    >
                                       Mark Refunded
                                     </Button>
                                   )}
