@@ -549,7 +549,7 @@ export default function TaxReportsPage() {
                       {reportData.transactions.map((transaction) => (
                         <tr key={transaction.id} className="border-b hover:bg-gray-50">
                           <td className="p-2">{formatDate(transaction.created_at)}</td>
-                          <td className="p-2 font-mono text-xs">{transaction.payment_id}</td>
+                          <td className="p-2 font-mono text-xs">{transaction.order_id}</td>
                           <td className="p-2">{transaction.customer_email || 'N/A'}</td>
                           <td className="p-2 text-right">{formatCurrency(transaction.base_amount || transaction.amount)}</td>
                           <td className="p-2 text-right">

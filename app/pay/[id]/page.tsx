@@ -245,14 +245,14 @@ export default function PaymentPage() {
     const baseAmount = link.base_amount
     const taxAmount = link.tax_amount
     const subtotalWithTax = link.subtotal_with_tax
-    
-    // Platform fee calculation
-    const platformFeeRate = link.merchant.charge_customer_fee ? link.fee_percentage : 0
-    const platformFee = subtotalWithTax * (platformFeeRate / 100)
-    
-    const customerTotal = subtotalWithTax + platformFee
-    const merchantReceives = subtotalWithTax - (link.merchant.charge_customer_fee ? 0 : subtotalWithTax * (link.fee_percentage / 100))
-    
+
+    // Platform fee calculation using effective link setting
+    const chargeCustomerFee = !!link.charge_customer_fee
+    const feeAmount = subtotalWithTax * link.fee_percentage
+    const platformFee = chargeCustomerFee ? feeAmount : 0
+    const customerTotal = chargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax
+    const merchantReceives = chargeCustomerFee ? subtotalWithTax : subtotalWithTax - feeAmount
+
     return {
       baseAmount,
       taxAmount,

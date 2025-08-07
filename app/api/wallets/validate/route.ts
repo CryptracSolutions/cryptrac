@@ -338,63 +338,11 @@ export async function POST(request: NextRequest) {
 
     // Check if we have a validation pattern for this currency
     const pattern = ADDRESS_PATTERNS[upperCurrency]
-    
+
     if (!pattern) {
       console.log(`❌ No validation pattern found for currency: ${upperCurrency}`)
-      
-      // Try network-based fallback
-      const currencyInfo = CURRENCY_INFO[upperCurrency]
-      if (currencyInfo) {
-        const networkPattern = ADDRESS_PATTERNS[currencyInfo.network.toLowerCase()]
-        if (networkPattern) {
-          console.log(`🔄 Using network fallback pattern for ${upperCurrency} (${currencyInfo.network})`)
-          const isValid = networkPattern.test(trimmedAddress)
-          
-          return NextResponse.json({
-            success: true,
-            validation: {
-              valid: isValid,
-              currency: upperCurrency,
-              address: trimmedAddress,
-              network: currencyInfo.network,
-              addressType: currencyInfo.addressType,
-              error: isValid ? null : `Invalid ${currencyInfo.addressType} format`
-            }
-          })
-        }
-      }
-      
-      // If no pattern found, try a generic approach based on common patterns
-      console.log(`🔄 Attempting generic validation for ${upperCurrency}`)
-      
-      // Generic patterns for common address types
-      const genericPatterns = [
-        /^0x[a-fA-F0-9]{40}$/, // Ethereum-like
-        /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, // Base58 (Bitcoin/Solana-like)
-        /^[A-Za-z0-9]{26,62}$/, // General alphanumeric
-        /^[a-z0-9]{40,64}$/, // Lowercase hex
-        /^[A-Z0-9]{26,62}$/, // Uppercase alphanumeric
-      ]
-      
-      for (const genericPattern of genericPatterns) {
-        if (genericPattern.test(trimmedAddress)) {
-          console.log(`✅ Generic validation passed for ${upperCurrency}`)
-          return NextResponse.json({
-            success: true,
-            validation: {
-              valid: true,
-              currency: upperCurrency,
-              address: trimmedAddress,
-              network: 'Unknown',
-              addressType: 'Address',
-              error: null
-            }
-          })
-        }
-      }
-      
       return NextResponse.json({
-        success: false,
+        success: true,
         validation: {
           valid: false,
           error: `Validation not supported for ${upperCurrency}`

@@ -13,7 +13,6 @@ import toast from 'react-hot-toast'
 
 interface PaymentConfigData {
   acceptedCryptos: string[]
-  feePercentage: number
   autoForward: boolean
   autoConvert: boolean
   preferredPayoutCurrency: string | null
@@ -43,11 +42,20 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
   // Get configured wallet currencies
   const configuredCurrencies = Object.keys(walletConfig.wallets || {})
-  
+
+  // Determine base currencies, automatically including ETH on Base if ETH is configured
+  const baseCurrencies = React.useMemo(() => {
+    const bases = [...configuredCurrencies]
+    if (configuredCurrencies.includes('ETH') && !bases.includes('BASE')) {
+      bases.push('BASE')
+    }
+    return bases
+  }, [configuredCurrencies])
+
   // Stable coin associations for automatic inclusion
   const stableCoinAssociations: Record<string, string[]> = {
     'SOL': ['USDCSOL', 'USDTSOL'],
-    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
+    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
     'BNB': ['USDTBSC', 'USDCBSC'],
     'MATIC': ['USDTMATIC', 'USDCMATIC'],
     'TRX': ['USDTTRC20'],
@@ -58,17 +66,15 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     'ALGO': ['USDCALGO']
   }
 
-  // Expand configured currencies to include available stable coins
-    const expandedCurrencies = React.useMemo(() => {
-      const expanded = [...configuredCurrencies]
-    
-    configuredCurrencies.forEach(currency => {
+  // Expand base currencies to include available stable coins
+  const expandedCurrencies = React.useMemo(() => {
+    const expanded = [...baseCurrencies]
+    baseCurrencies.forEach(currency => {
       const associatedStableCoins = stableCoinAssociations[currency] || []
       expanded.push(...associatedStableCoins)
     })
-    
-      return expanded
-    }, [configuredCurrencies]); // eslint-disable-line react-hooks/exhaustive-deps
+    return expanded
+  }, [baseCurrencies]) // eslint-disable-line react-hooks/exhaustive-deps
   
   // Currency display names mapping (updated with comprehensive stable coins)
   const CURRENCY_NAMES: Record<string, string> = {
@@ -89,7 +95,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     'XLM': 'Stellar',
     'ARB': 'Arbitrum',
     'OP': 'Optimism',
-    'BASE': 'Base',
+    'BASE': 'ETH (Base)',
     'ALGO': 'Algorand',
     // Stable coins
     'USDT': 'Tether (Ethereum)',
@@ -120,11 +126,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     try {
       setIsSubmitting(true)
       
-      // Ensure accepted cryptos includes all configured wallet currencies and their stable coins
-      // and autoForward is always true for non-custodial compliance
+      // Save only base currencies; stable coins are derived automatically
       const finalData = {
         ...formData,
-        acceptedCryptos: expandedCurrencies, // Use expanded currencies including stable coins
+        acceptedCryptos: baseCurrencies,
         autoForward: true // Always enabled for non-custodial compliance
       }
       
@@ -168,14 +173,14 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
               <span>Accepted Cryptocurrencies</span>
               <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
-                {expandedCurrencies.length} Total ({configuredCurrencies.length} Base + {expandedCurrencies.length - configuredCurrencies.length} Stable Coins)
+                {expandedCurrencies.length} Total ({baseCurrencies.length} Base + {expandedCurrencies.length - baseCurrencies.length} Stable Coins)
               </Badge>
             </h3>
             
             <Alert className="border-blue-200 bg-blue-50">
               <Info className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                <strong>Smart Configuration:</strong> Your {configuredCurrencies.length} base cryptocurrencies automatically include {expandedCurrencies.length - configuredCurrencies.length} stable coins for maximum payment flexibility.
+                <strong>Smart Configuration:</strong> Your {baseCurrencies.length} base cryptocurrencies automatically include {expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility.
               </AlertDescription>
             </Alert>
 
@@ -183,7 +188,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-gray-700">Base Cryptocurrencies</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {configuredCurrencies.map((currency) => (
+                {baseCurrencies.map((currency) => (
                   <div
                     key={currency}
                     className="border border-green-200 bg-green-50 rounded-lg p-3"
@@ -205,11 +210,11 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             </div>
 
             {/* Stable Coins */}
-            {expandedCurrencies.length > configuredCurrencies.length && (
+              {expandedCurrencies.length > baseCurrencies.length && (
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-700">Included Stable Coins</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {expandedCurrencies.filter(currency => !configuredCurrencies.includes(currency)).map((currency) => (
+                  {expandedCurrencies.filter(currency => !baseCurrencies.includes(currency)).map((currency) => (
                     <div
                       key={currency}
                       className="border border-blue-200 bg-blue-50 rounded-lg p-3"

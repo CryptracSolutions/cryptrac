@@ -21,7 +21,6 @@ interface OnboardingData {
   }
   paymentConfig: {
     acceptedCryptos: string[]
-    feePercentage: number
     autoForward: boolean
   }
 }
@@ -49,17 +48,15 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
     'ALGO': ['USDCALGO']
   }
 
-  // Expand accepted cryptos to include available stable coins
+  // Expand base cryptos to include stable coins
   const expandedCurrencies = React.useMemo(() => {
     const expanded = [...paymentConfig.acceptedCryptos]
-    
     paymentConfig.acceptedCryptos.forEach(currency => {
       const associatedStableCoins = stableCoinAssociations[currency] || []
       expanded.push(...associatedStableCoins)
     })
-    
     return expanded
-    }, [paymentConfig.acceptedCryptos]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [paymentConfig.acceptedCryptos]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="max-w-2xl mx-auto">

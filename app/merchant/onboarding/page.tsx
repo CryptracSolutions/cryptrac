@@ -47,7 +47,6 @@ interface OnboardingData {
   }
   paymentConfig: {
     acceptedCryptos: string[]
-    feePercentage: number
     autoForward: boolean
     autoConvert: boolean
     preferredPayoutCurrency: string | null
@@ -85,7 +84,6 @@ export default function OnboardingPage() {
     },
     paymentConfig: {
       acceptedCryptos: [],
-      feePercentage: 2.5,
       autoForward: false,
       autoConvert: false,
       preferredPayoutCurrency: null,

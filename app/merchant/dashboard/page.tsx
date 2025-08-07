@@ -2,13 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  DollarSign, 
-  CreditCard, 
-  TrendingUp, 
-  LinkIcon, 
+import {
+  DollarSign,
+  CreditCard,
+  LinkIcon,
   ArrowUpRight,
-  ArrowDownRight,
   Plus,
   Calendar,
   Clock,
@@ -19,11 +17,95 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { supabase } from '@/lib/supabase-browser';
+import Link from 'next/link';
+
+// Stable coin associations for automatic inclusion
+const stableCoinAssociations: Record<string, string[]> = {
+  SOL: ['USDCSOL', 'USDTSOL'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
+  BNB: ['USDTBSC', 'USDCBSC'],
+  MATIC: ['USDTMATIC', 'USDCMATIC'],
+  TRX: ['USDTTRC20'],
+  TON: ['USDTTON'],
+  ARB: ['USDTARB', 'USDCARB'],
+  OP: ['USDTOP', 'USDCOP'],
+  BASE: ['USDCBASE'],
+  ALGO: ['USDCALGO'],
+};
+
+const CURRENCY_NAMES: Record<string, string> = {
+  BTC: 'Bitcoin',
+  ETH: 'Ethereum',
+  BNB: 'BNB',
+  SOL: 'Solana',
+  TRX: 'TRON',
+  TON: 'Toncoin',
+  AVAX: 'Avalanche',
+  DOGE: 'Dogecoin',
+  XRP: 'XRP',
+  SUI: 'Sui',
+  MATIC: 'Polygon',
+  ADA: 'Cardano',
+  DOT: 'Polkadot',
+  LTC: 'Litecoin',
+  XLM: 'Stellar',
+  ARB: 'Arbitrum',
+  OP: 'Optimism',
+  BASE: 'Base',
+  ALGO: 'Algorand',
+  USDT: 'Tether (Ethereum)',
+  USDC: 'USD Coin (Ethereum)',
+  DAI: 'Dai (Ethereum)',
+  PYUSD: 'PayPal USD (Ethereum)',
+  USDCSOL: 'USD Coin (Solana)',
+  USDTSOL: 'Tether (Solana)',
+  USDTBSC: 'Tether (BSC)',
+  USDCBSC: 'USD Coin (BSC)',
+  USDTMATIC: 'Tether (Polygon)',
+  USDCMATIC: 'USD Coin (Polygon)',
+  USDTTRC20: 'Tether (Tron)',
+  USDTTON: 'Tether (TON)',
+  USDTARB: 'Tether (Arbitrum)',
+  USDCARB: 'USD Coin (Arbitrum)',
+  USDTOP: 'Tether (Optimism)',
+  USDCOP: 'USD Coin (Optimism)',
+  USDCBASE: 'USD Coin (Base)',
+  USDCALGO: 'USD Coin (Algorand)',
+};
 
 export default function MerchantDashboard() {
   const [user, setUser] = useState<{ email?: string; user_metadata?: { business_name?: string; trial_end?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [merchant, setMerchant] = useState<{ id: string; wallets: Record<string, string>; trial_end?: string } | null>(null);
+  const [stats, setStats] = useState({ totalRevenue: 0, paymentLinks: 0, successfulPayments: 0 });
+  const [supportedCurrencies, setSupportedCurrencies] = useState<{ symbol: string; name: string }[]>([]);
+  const [trialCountdown, setTrialCountdown] = useState('');
   const router = useRouter();
+
+  const fetchStats = async (merchantId: string) => {
+    try {
+      const { count: linksCount } = await supabase
+        .from('payment_links')
+        .select('id', { count: 'exact', head: true })
+        .eq('merchant_id', merchantId);
+
+      const { data: transactions, count: paymentsCount } = await supabase
+        .from('transactions')
+        .select('amount', { count: 'exact' })
+        .eq('merchant_id', merchantId)
+        .in('status', ['confirmed', 'finished']);
+
+      const totalRevenue = transactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+
+      setStats({
+        totalRevenue,
+        paymentLinks: linksCount || 0,
+        successfulPayments: paymentsCount || 0,
+      });
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   useEffect(() => {
     const getUser = async () => {
@@ -53,6 +135,19 @@ export default function MerchantDashboard() {
         }
 
         setUser(user);
+
+        const { data: merchantData, error: merchantErrorFetch } = await supabase
+          .from('merchants')
+          .select('id, wallets, trial_end')
+          .eq('user_id', user.id)
+          .single();
+
+        if (merchantErrorFetch) {
+          console.error('Failed to fetch merchant:', merchantErrorFetch);
+        } else if (merchantData) {
+          setMerchant(merchantData);
+          await fetchStats(merchantData.id);
+        }
       } catch (error) {
         console.error('Failed to get user:', error);
         router.push('/login');
@@ -63,6 +158,42 @@ export default function MerchantDashboard() {
 
     getUser();
   }, [router]);
+
+  useEffect(() => {
+    if (!merchant) return;
+    const baseCurrencies = Object.keys(merchant.wallets || {});
+    const currencySet = new Set<string>();
+    baseCurrencies.forEach((currency) => {
+      currencySet.add(currency);
+      (stableCoinAssociations[currency] || []).forEach((sc) => currencySet.add(sc));
+    });
+    const list = Array.from(currencySet).map((code) => ({
+      symbol: code,
+      name: CURRENCY_NAMES[code] || code,
+    }));
+    setSupportedCurrencies(list);
+  }, [merchant]);
+
+  const trialEnd = merchant?.trial_end || user?.user_metadata?.trial_end;
+
+  useEffect(() => {
+    if (!trialEnd) return;
+    const end = new Date(trialEnd).getTime();
+    const updateCountdown = () => {
+      const diff = end - Date.now();
+      if (diff <= 0) {
+        setTrialCountdown('0d 0h 0m');
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        setTrialCountdown(`${days}d ${hours}h ${minutes}m`);
+      }
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 60000);
+    return () => clearInterval(interval);
+  }, [trialEnd]);
 
   if (loading) {
     return (
@@ -79,8 +210,6 @@ export default function MerchantDashboard() {
   }
 
   const businessName = user.user_metadata?.business_name || user.email?.split('@')[0] || 'Your Business';
-  const trialEnd = user.user_metadata?.trial_end;
-
   return (
     <DashboardLayout user={user}>
       <div className="space-y-6">
@@ -122,27 +251,29 @@ export default function MerchantDashboard() {
                 <div>
                   <p className="font-medium text-orange-900">Free Trial Active</p>
                   <p className="text-sm text-orange-700">
-                    Your trial ends on {new Date(trialEnd).toLocaleDateString()}. 
-                    Upgrade to continue accepting payments.
+                    Your trial ends on {new Date(trialEnd).toLocaleDateString()}. Upgrade to continue accepting payments.
                   </p>
                 </div>
-                <Button variant="outline" size="sm" className="ml-auto">
-                  Upgrade Now
-                </Button>
+                <div className="ml-auto flex items-center gap-4">
+                  <span className="text-sm text-orange-700">Ends in {trialCountdown}</span>
+                  <Link href="/merchant/settings" className="text-sm text-orange-700 underline">
+                    Cancel Subscription
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$0.00</div>
+              <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground">
                 <span className="inline-flex items-center text-green-600">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
@@ -159,7 +290,7 @@ export default function MerchantDashboard() {
               <LinkIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">{stats.paymentLinks}</div>
               <p className="text-xs text-muted-foreground">
                 <span className="inline-flex items-center text-blue-600">
                   <Plus className="h-3 w-3 mr-1" />
@@ -175,29 +306,13 @@ export default function MerchantDashboard() {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">{stats.successfulPayments}</div>
               <p className="text-xs text-muted-foreground">
                 <span className="inline-flex items-center text-green-600">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
                   +0%
                 </span>
                 from last week
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0%</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="inline-flex items-center text-gray-500">
-                  <ArrowDownRight className="h-3 w-3 mr-1" />
-                  No data yet
-                </span>
               </p>
             </CardContent>
           </Card>
@@ -302,13 +417,7 @@ export default function MerchantDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {[
-                { symbol: 'BTC', name: 'Bitcoin' },
-                { symbol: 'ETH', name: 'Ethereum' },
-                { symbol: 'LTC', name: 'Litecoin' },
-                { symbol: 'USDT', name: 'Tether' },
-                { symbol: 'USDC', name: 'USD Coin' }
-              ].map((crypto) => (
+              {supportedCurrencies.map((crypto) => (
                 <div key={crypto.symbol} className="flex items-center gap-3 p-3 border rounded-lg">
                   <CryptoIcon currency={crypto.symbol} className="h-8 w-8" />
                   <div>

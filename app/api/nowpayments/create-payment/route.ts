@@ -48,6 +48,15 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'BASE': ['BASE', 'USDCBASE']
 }
 
+// Stable coins that can fall back to a base network wallet if no direct key exists
+const stableCoinAssociations: Record<string, string> = {
+  USDTARB: 'ETH',
+  USDCARB: 'ETH',
+  USDTOP: 'ETH',
+  USDCOP: 'ETH',
+  USDCBASE: 'ETH'
+}
+
 // Function to determine which wallet to use for a given currency
 function getWalletKeyForCurrency(currency: string, wallets: Record<string, string>): string | null {
   const currencyUpper = currency.toUpperCase()
@@ -72,7 +81,13 @@ function getWalletKeyForCurrency(currency: string, wallets: Record<string, strin
       }
     }
   }
-  
+
+  // Fallback to associated base currency wallet for stable coins
+  const associatedBase = stableCoinAssociations[currencyUpper]
+  if (associatedBase && wallets[associatedBase]) {
+    return associatedBase
+  }
+
   return null
 }
 

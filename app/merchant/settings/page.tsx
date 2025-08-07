@@ -608,14 +608,16 @@ export default function MerchantSettingsPage() {
     }));
   };
 
-  const updateTaxRate = (id: string, field: 'label' | 'percentage', value: string | number) => {
+  const updateTaxRate = (id: string, field: 'label' | 'percentage', value: string) => {
     setSettings(prev => ({
       ...prev,
-      tax_rates: prev.tax_rates.map(rate => 
-        rate.id === id ? { 
-          ...rate, 
-          [field]: field === 'percentage' ? parseFloat(value.toString()) || 0 : value 
-        } : rate
+      tax_rates: prev.tax_rates.map(rate =>
+        rate.id === id
+          ? {
+              ...rate,
+              [field]: field === 'percentage' ? parseFloat(value) || 0 : value
+            }
+          : rate
       )
     }));
   };
@@ -1160,39 +1162,22 @@ export default function MerchantSettingsPage() {
                               </div>
                               <div className="flex flex-wrap gap-1">
                                 {(() => {
-                                  const stableCoins = {
-                                    'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
-                                    'BNB': ['USDT (BSC)', 'USDC (BSC)'],
-                                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
-                                    'TRX': ['USDT (TRC-20)'],
-                                    'TON': ['USDT (TON)'],
-                                    'BASE': ['USDC (Base)'],
-                                    'ALGO': ['USDC (Algorand)']
-                                  }[currency.code] || [];
-                                  
-                                  return stableCoins.map((coin, index) => (
-                                    <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                                      {coin}
+                                  const stableCoinCodes = stableCoinAssociations[currency.code] || [];
+                                  return stableCoinCodes.map((code, index) => (
+                                    <span
+                                      key={index}
+                                      className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
+                                    >
+                                      {getCurrencyDisplayName(code)}
                                     </span>
                                   ));
                                 })()}
                               </div>
                               {(() => {
-                                const stableCoins = {
-                                  'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
-                                  'BNB': ['USDT (BSC)', 'USDC (BSC)'],
-                                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
-                                  'TRX': ['USDT (TRC-20)'],
-                                  'TON': ['USDT (TON)'],
-                                  'BASE': ['USDC (Base)'],
-                                  'ALGO': ['USDC (Algorand)']
-                                }[currency.code] || [];
-                                
-                                return stableCoins.length === 0 ? null : (
+                                const stableCoinCodes = stableCoinAssociations[currency.code] || [];
+                                return stableCoinCodes.length === 0 ? null : (
                                   <div className="mt-2 text-xs text-green-700">
-                                    Customers can pay with {currency.code} or any of these {stableCoins.length} stable coins using the same address.
+                                    Customers can pay with {currency.code} or any of these {stableCoinCodes.length} stable coins using the same address.
                                   </div>
                                 );
                               })()}
@@ -1519,12 +1504,13 @@ export default function MerchantSettingsPage() {
                             />
                             <div className="flex items-center gap-2">
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
+                                step="any"
                                 placeholder="0.0"
                                 value={rate.percentage}
                                 onChange={(e) => updateTaxRate(rate.id, 'percentage', e.target.value)}
                                 className="w-20"
-                                step="0.1"
                                 min="0"
                                 max="100"
                               />

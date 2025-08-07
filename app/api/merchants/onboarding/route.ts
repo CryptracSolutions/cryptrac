@@ -31,7 +31,6 @@ interface OnboardingData {
     autoConvert: boolean;
     payoutCurrency?: string;
     preferredPayoutCurrency?: string; // Handle both naming conventions
-    feePercentage: number;
     autoForward?: boolean;
   };
 }
@@ -123,7 +122,6 @@ export async function POST(request: NextRequest) {
       charge_customer_fee: onboardingData.paymentConfig.chargeCustomerFee || false,
       payment_config: {
         auto_forward: true, // Always enabled for non-custodial compliance
-        fee_percentage: onboardingData.paymentConfig.feePercentage || 0.5,
         auto_convert: onboardingData.paymentConfig.autoConvert || false,
         payout_currency: payoutCurrency,
         auto_convert_fee: 1.0

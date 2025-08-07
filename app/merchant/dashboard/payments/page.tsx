@@ -179,17 +179,18 @@ export default function PaymentsPage() {
   const updatePaymentLinkStatus = async (linkId: string, newStatus: string, reason?: string) => {
     try {
       setStatusUpdateLoading(linkId);
-      
+
       const response = await makeAuthenticatedRequest(`/api/payments/${linkId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus, reason })
+        body: JSON.stringify({ status: newStatus, reason: reason ?? null })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update payment link status');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to update payment link status');
       }
 
       const result = await response.json();
@@ -197,10 +198,14 @@ export default function PaymentsPage() {
 
       // Refresh the payment links
       await fetchPaymentLinks();
-      
+
     } catch (error) {
       console.error('Error updating status:', error);
-      setError('Failed to update payment link status');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Failed to update payment link status');
+      }
     } finally {
       setStatusUpdateLoading(null);
     }
