@@ -119,11 +119,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
-
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error(`PATCH /api/payments/${id} - missing or invalid Authorization header`);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const token = authHeader.substring(7);
@@ -135,12 +135,19 @@ export async function PATCH(
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
+      console.error(`PATCH /api/payments/${id} - auth error:`, authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY is not configured');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     }
 
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      serviceKey
     );
 
     const { status, reason } = await request.json();
@@ -151,7 +158,7 @@ export async function PATCH(
       .eq('id', id);
 
     if (updateError) {
-      console.error('Error updating payment link:', updateError);
+      console.error(`PATCH /api/payments/${id} - update error:`, updateError);
       return NextResponse.json(
         { error: 'Failed to update payment link status' },
         { status: 500 }
@@ -160,7 +167,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating payment link status:', error);
+    console.error(`PATCH /api/payments/${id} - unexpected error:`, error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
