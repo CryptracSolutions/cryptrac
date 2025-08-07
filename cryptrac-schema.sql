@@ -1154,9 +1154,8 @@ COMMENT ON COLUMN "public"."transactions"."receipt_metadata" IS 'Complete receip
 
 
 CREATE OR REPLACE VIEW "public"."tax_report_view" AS
- SELECT
-    "t"."id" AS "transaction_id",
-    COALESCE("t"."invoice_id", "pl"."link_id", "t"."nowpayments_payment_id", "t"."id"::text) AS "payment_id",
+ SELECT "t"."id" AS "transaction_id",
+    COALESCE("t"."invoice_id", ("pl"."link_id")::"text", ("t"."nowpayments_payment_id")::"text", ("t"."id")::"text") AS "payment_id",
     "t"."merchant_id",
     "t"."created_at",
     "pl"."description" AS "product_description",
@@ -1165,8 +1164,8 @@ CREATE OR REPLACE VIEW "public"."tax_report_view" AS
     "t"."tax_percentage",
     "t"."tax_amount",
     "t"."total_amount_paid",
-    (COALESCE("t"."gateway_fee", 0::numeric) + COALESCE("t"."cryptrac_fee", 0::numeric)) AS "fees",
-    (COALESCE("t"."total_amount_paid", 0::numeric) - COALESCE("t"."gateway_fee", 0::numeric) - COALESCE("t"."cryptrac_fee", 0::numeric)) AS "net_amount",
+    (COALESCE("t"."gateway_fee", (0)::numeric) + COALESCE("t"."cryptrac_fee", (0)::numeric)) AS "fees",
+    ((COALESCE("t"."total_amount_paid", (0)::numeric) - COALESCE("t"."gateway_fee", (0)::numeric)) - COALESCE("t"."cryptrac_fee", (0)::numeric)) AS "net_amount",
     "t"."status",
     "t"."refund_amount",
     "t"."refunded_at",
