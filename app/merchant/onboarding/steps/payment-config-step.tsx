@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Separator } from '@/app/components/ui/separator'
 import FeeDocumentation from '@/app/components/fee-documentation'
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog'
 import toast from 'react-hot-toast'
 
 interface PaymentConfigData {
@@ -46,7 +47,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   // Stable coin associations for automatic inclusion
   const stableCoinAssociations: Record<string, string[]> = {
     'SOL': ['USDCSOL', 'USDTSOL'],
-    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
     'BNB': ['USDTBSC', 'USDCBSC'],
     'MATIC': ['USDTMATIC', 'USDCMATIC'],
     'TRX': ['USDTTRC20'],
@@ -88,6 +89,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     'XLM': 'Stellar',
     'ARB': 'Arbitrum',
     'OP': 'Optimism',
+    'BASE': 'Base',
+    'ALGO': 'Algorand',
     // Stable coins
     'USDT': 'Tether (Ethereum)',
     'USDC': 'USD Coin (Ethereum)',
@@ -328,8 +331,46 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
           {/* Auto-Conversion Feature */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Auto-Conversion</h3>
-            
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-gray-900">Auto-Conversion</h3>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <HelpCircle className="h-4 w-4" />
+                    <span className="sr-only">About Auto-Convert OFF</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Auto-Convert OFF (Receive the Same Crypto)</DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription className="space-y-2 text-sm">
+                    <p><strong>How it works:</strong> You receive exactly the same coin or token that your customer pays.</p>
+                    <p><strong>Fees:</strong> Gateway Fee 0.5% per payment plus network fee. No conversion spread.</p>
+                    <p><strong>Pros:</strong> Maximum payout predictability and lowest total fees—ideal for merchants comfortable holding or managing crypto.</p>
+                  </DialogDescription>
+                </DialogContent>
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <HelpCircle className="h-4 w-4" />
+                    <span className="sr-only">About Auto-Convert ON</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Auto-Convert ON (Auto-Convert to Preferred Cryptocurrency)</DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription className="space-y-2 text-sm">
+                    <p><strong>How it works:</strong> Your payment is automatically converted to your chosen asset before being sent to your wallet.</p>
+                    <p><strong>Fees:</strong> Gateway Fee 1% per payment plus conversion spread and network fee.</p>
+                    <p><strong>Pros:</strong> Stable value and simplified accounting—ideal if you want payouts in one asset without price swings.</p>
+                  </DialogDescription>
+                </DialogContent>
+              </Dialog>
+            </div>
+
             <Alert className="border-blue-200 bg-blue-50">
               <Info className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
@@ -17,7 +17,6 @@ import {
   TrendingUp,
   Link as LinkIcon,
   Play,
-  Pause,
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
@@ -92,6 +91,7 @@ export default function PaymentsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
+  const notifiedLinksRef = useRef<Set<string>>(new Set());
 
   const router = useRouter();
 
@@ -142,6 +142,12 @@ export default function PaymentsPage() {
 
       if (data.success) {
         setPaymentLinks(data.data.payment_links || []);
+        (data.data.payment_links || []).forEach(link => {
+          if (link.usage_count > 0 && !notifiedLinksRef.current.has(link.id)) {
+            console.log(`📧 [Simulation] Payment received for "${link.title}"`);
+            notifiedLinksRef.current.add(link.id);
+          }
+        });
         setStatistics(data.data.statistics || {
           total_links: 0,
           active_links: 0,
@@ -174,7 +180,7 @@ export default function PaymentsPage() {
     try {
       setStatusUpdateLoading(linkId);
       
-      const response = await makeAuthenticatedRequest(`/api/payments/${linkId}/status`, {
+      const response = await makeAuthenticatedRequest(`/api/payments/${linkId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -261,19 +267,6 @@ export default function PaymentsPage() {
     if (link.status === 'active') {
       actions.push(
         <Button
-          key="pause"
-          variant="outline"
-          size="sm"
-          onClick={() => updatePaymentLinkStatus(link.id, 'paused', 'Manually paused by merchant')}
-          disabled={statusUpdateLoading === link.id}
-          className="flex items-center gap-1"
-        >
-          <Pause className="h-3 w-3" />
-          Pause
-        </Button>
-      );
-      actions.push(
-        <Button
           key="complete"
           variant="outline"
           size="sm"
@@ -283,22 +276,6 @@ export default function PaymentsPage() {
         >
           <CheckCircle className="h-3 w-3" />
           Complete
-        </Button>
-      );
-    }
-
-    if (link.status === 'paused') {
-      actions.push(
-        <Button
-          key="resume"
-          variant="outline"
-          size="sm"
-          onClick={() => updatePaymentLinkStatus(link.id, 'active', 'Resumed by merchant')}
-          disabled={statusUpdateLoading === link.id}
-          className="flex items-center gap-1"
-        >
-          <Play className="h-3 w-3" />
-          Resume
         </Button>
       );
     }
@@ -364,12 +341,17 @@ export default function PaymentsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Payment Links</h1>
           <p className="text-gray-600 mt-1">Manage your cryptocurrency payment links</p>
         </div>
-        <Link href="/merchant/dashboard/payments/create">
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Create Payment Link
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/merchant/dashboard">
+            <Button variant="outline">Dashboard</Button>
+          </Link>
+          <Link href="/merchant/dashboard/payments/create">
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create Payment Link
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Enhanced Statistics Cards */}
@@ -470,7 +452,6 @@ export default function PaymentsPage() {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
               </SelectContent>
             </Select>
@@ -506,6 +487,11 @@ export default function PaymentsPage() {
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-gray-900">{link.title}</h3>
                         {getStatusBadge(link.status, link)}
+                        {link.usage_count > 0 && (
+                          <Badge variant="outline" className="bg-green-100 text-green-700">
+                            Payment received
+                          </Badge>
+                        )}
                       </div>
                       
                       {link.description && (

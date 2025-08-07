@@ -648,7 +648,7 @@ export default function PaymentPage() {
       // Add supported stablecoins for each network
       const stablecoinMapping: Record<string, string[]> = {
         'BNB': ['USDTBSC', 'USDCBSC'],
-        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD'],
+        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
         'SOL': ['USDTSOL', 'USDCSOL'],
         'TRX': ['USDTTRC20'],
         'TON': ['USDTTON'],

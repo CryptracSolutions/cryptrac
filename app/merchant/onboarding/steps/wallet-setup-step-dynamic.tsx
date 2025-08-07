@@ -56,9 +56,16 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
   {
     id: 'ethereum',
     name: 'Ethereum Ecosystem',
-    description: 'Ethereum network - automatically includes USDT, USDC, DAI & PYUSD',
+    description: 'Ethereum network - automatically includes USDT, USDC, DAI, PYUSD, ETH (Base) & USDC (Base)',
     primary: { code: 'ETH', name: 'Ethereum', network: 'Ethereum', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [],
+    autoIncludedStablecoins: [
+      { code: 'USDT', name: 'USDT', network: 'Ethereum', trust_wallet_compatible: true },
+      { code: 'USDC', name: 'USDC', network: 'Ethereum', trust_wallet_compatible: true },
+      { code: 'DAI', name: 'DAI', network: 'Ethereum', trust_wallet_compatible: true },
+      { code: 'PYUSD', name: 'PYUSD', network: 'Ethereum', trust_wallet_compatible: true },
+      { code: 'BASE', name: 'ETH (Base)', network: 'Base', trust_wallet_compatible: true },
+      { code: 'USDCBASE', name: 'USDC (Base)', network: 'Base', trust_wallet_compatible: true },
+    ],
     others: []
   },
   {
@@ -66,7 +73,10 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
     name: 'Binance Smart Chain',
     description: 'BSC network - automatically includes USDT & USDC',
     primary: { code: 'BNB', name: 'BNB', network: 'BSC', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [],
+    autoIncludedStablecoins: [
+      { code: 'USDTBSC', name: 'USDT (BSC)', network: 'BSC', trust_wallet_compatible: true },
+      { code: 'USDCBSC', name: 'USDC (BSC)', network: 'BSC', trust_wallet_compatible: true },
+    ],
     others: []
   },
   {
@@ -74,7 +84,10 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
     name: 'Solana Ecosystem',
     description: 'Solana network - automatically includes USDC & USDT',
     primary: { code: 'SOL', name: 'Solana', network: 'Solana', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [],
+    autoIncludedStablecoins: [
+      { code: 'USDCSOL', name: 'USDC (Solana)', network: 'Solana', trust_wallet_compatible: true },
+      { code: 'USDTSOL', name: 'USDT (Solana)', network: 'Solana', trust_wallet_compatible: true },
+    ],
     others: []
   },
   {
@@ -82,7 +95,9 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
     name: 'TRON Ecosystem',
     description: 'TRON network - automatically includes USDT',
     primary: { code: 'TRX', name: 'TRON', network: 'TRON', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [],
+    autoIncludedStablecoins: [
+      { code: 'USDTTRC20', name: 'USDT (TRC-20)', network: 'TRON', trust_wallet_compatible: true },
+    ],
     others: []
   },
   {
@@ -101,7 +116,8 @@ const OTHER_POPULAR_CURRENCIES: CompatibleCurrency[] = [
   { code: 'LTC', name: 'Litecoin', network: 'Litecoin', trust_wallet_compatible: true },
   { code: 'ADA', name: 'Cardano', network: 'Cardano', trust_wallet_compatible: true },
   { code: 'TON', name: 'TON', network: 'TON', trust_wallet_compatible: true },
-  { code: 'SUI', name: 'Sui', network: 'Sui', trust_wallet_compatible: true }
+  { code: 'SUI', name: 'Sui', network: 'Sui', trust_wallet_compatible: true },
+  { code: 'ALGO', name: 'Algorand', network: 'Algorand', trust_wallet_compatible: true }
 ]
 
 export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
@@ -350,11 +366,13 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                 {(() => {
                   const stableCoins = {
                     'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
+                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
                     'BNB': ['USDT (BSC)', 'USDC (BSC)'],
                     'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
                     'TRX': ['USDT (TRC-20)'],
-                    'TON': ['USDT (TON)']
+                    'TON': ['USDT (TON)'],
+                    'BASE': ['USDC (Base)'],
+                    'ALGO': ['USDC (Algorand)']
                   }[currency.code] || [];
                   
                   return stableCoins.map((coin, index) => (
@@ -365,14 +383,16 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                 })()}
               </div>
               {(() => {
-                const stableCoins = {
-                  'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
-                  'BNB': ['USDT (BSC)', 'USDC (BSC)'],
-                  'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
-                  'TRX': ['USDT (TRC-20)'],
-                  'TON': ['USDT (TON)']
-                }[currency.code] || [];
+                  const stableCoins = {
+                    'SOL': ['USDC (Solana)', 'USDT (Solana)'],
+                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
+                    'BNB': ['USDT (BSC)', 'USDC (BSC)'],
+                    'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
+                    'TRX': ['USDT (TRC-20)'],
+                    'TON': ['USDT (TON)'],
+                    'BASE': ['USDC (Base)'],
+                    'ALGO': ['USDC (Algorand)']
+                  }[currency.code] || [];
                 
                 return stableCoins.length === 0 ? null : (
                   <div className="mt-2 text-xs text-green-700">

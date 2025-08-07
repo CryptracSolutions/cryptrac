@@ -36,7 +36,7 @@ import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
   SOL: ['USDCSOL', 'USDTSOL'],
-  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
   BNB: ['USDTBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
   TRX: ['USDTTRC20'],
@@ -1162,11 +1162,13 @@ export default function MerchantSettingsPage() {
                                 {(() => {
                                   const stableCoins = {
                                     'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
+                                    'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
                                     'BNB': ['USDT (BSC)', 'USDC (BSC)'],
                                     'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
                                     'TRX': ['USDT (TRC-20)'],
-                                    'TON': ['USDT (TON)']
+                                    'TON': ['USDT (TON)'],
+                                    'BASE': ['USDC (Base)'],
+                                    'ALGO': ['USDC (Algorand)']
                                   }[currency.code] || [];
                                   
                                   return stableCoins.map((coin, index) => (
@@ -1179,11 +1181,13 @@ export default function MerchantSettingsPage() {
                               {(() => {
                                 const stableCoins = {
                                   'SOL': ['USDC (Solana)', 'USDT (Solana)'],
-                                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD'],
+                                  'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
                                   'BNB': ['USDT (BSC)', 'USDC (BSC)'],
                                   'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
                                   'TRX': ['USDT (TRC-20)'],
-                                  'TON': ['USDT (TON)']
+                                  'TON': ['USDT (TON)'],
+                                  'BASE': ['USDC (Base)'],
+                                  'ALGO': ['USDC (Algorand)']
                                 }[currency.code] || [];
                                 
                                 return stableCoins.length === 0 ? null : (
