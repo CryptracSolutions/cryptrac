@@ -49,16 +49,15 @@ interface TaxReportFilters {
   page?: number
   limit?: number
   include_summary?: boolean
+  status?: 'confirmed' | 'refunded' | 'all'
 }
 
 interface TransactionSummary {
   total_transactions: number
-  total_revenue: number
+  total_gross_sales: number
   total_tax_collected: number
-  tax_breakdown: Record<string, number>
-  transactions_with_tax: number
-  transactions_without_tax: number
-  average_tax_rate: number
+  total_fees: number
+  total_net_revenue: number
   date_range: {
     start_date: string
     end_date: string
@@ -111,7 +110,8 @@ export async function GET(request: NextRequest) {
       export_format: (searchParams.get('export_format') as TaxReportFilters['export_format']) || 'json',
       page: Math.max(1, parseInt(searchParams.get('page') || '1')),
       limit: Math.min(1000, Math.max(10, parseInt(searchParams.get('limit') || '100'))), // Max 1000 per page
-      include_summary: searchParams.get('include_summary') !== 'false'
+      include_summary: searchParams.get('include_summary') !== 'false',
+      status: (searchParams.get('status') as TaxReportFilters['status']) || 'confirmed'
     }
 
     console.log('📊 Tax report request:', { user_id, filters, processing_time_start: startTime })
@@ -137,36 +137,40 @@ export async function GET(request: NextRequest) {
       .from('transactions')
       .select(`
         id,
+        invoice_id,
         nowpayments_payment_id,
         order_id,
-        amount,
-        currency,
-        pay_currency,
-        pay_amount,
-        status,
         base_amount,
-        tax_enabled,
+        tax_label,
+        tax_percentage,
         tax_amount,
-        tax_rates,
-        tax_breakdown,
-        subtotal_with_tax,
+        total_amount_paid,
+        currency,
+        status,
         gateway_fee,
-        merchant_receives,
-        customer_email,
-        customer_phone,
+        cryptrac_fee,
+        refund_amount,
+        refunded_at,
         created_at,
-        updated_at,
         payment_links!inner(
-          title,
+          link_id,
           description,
-          merchants!inner(user_id, business_name)
+          merchants!inner(user_id)
         )
       `, { count: 'exact' })
       .eq('payment_links.merchants.user_id', user_id)
       .gte('created_at', dateRange.start_date)
       .lte('created_at', dateRange.end_date)
-      .in('status', ['confirmed', 'finished']) // Only include successful payments
       .order('created_at', { ascending: false })
+
+    // Apply status filtering
+    let statusFilter = ['confirmed', 'finished', 'refunded']
+    if (filters.status === 'confirmed') {
+      statusFilter = ['confirmed', 'finished']
+    } else if (filters.status === 'refunded') {
+      statusFilter = ['refunded']
+    }
+    baseQuery = baseQuery.in('status', statusFilter)
 
     // Apply tax filter if requested
     if (filters.tax_only) {
@@ -193,16 +197,31 @@ export async function GET(request: NextRequest) {
     const safeTransactions = transactions || []
     console.log(`✅ Fetched ${safeTransactions.length} transactions (total: ${count}) in ${Date.now() - startTime}ms`)
 
-    // Calculate summary statistics (always include for performance monitoring)
-    let summary: TransactionSummary | null = null
-    if (filters.include_summary) {
-      // For large datasets, calculate summary from a separate optimized query
-      if (count && count > 1000) {
-        summary = await calculateSummaryOptimized(user_id, dateRange, filters.tax_only)
-      } else {
-        summary = calculateSummary(safeTransactions, dateRange)
+    const formattedTransactions = safeTransactions.map(t => {
+      const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
+      const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
+      const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
+      const net = Number(t.total_amount_paid || 0) - fees
+      return {
+        id: t.id,
+        payment_id: paymentId,
+        created_at: t.created_at,
+        product_description: paymentLink?.description || '',
+        gross_amount: Number(t.base_amount || 0),
+        tax_label: t.tax_label || '',
+        tax_percentage: Number(t.tax_percentage || 0),
+        tax_amount: Number(t.tax_amount || 0),
+        total_paid: Number(t.total_amount_paid || 0),
+        fees,
+        net_amount: net,
+        status: t.status,
+        refund_amount: Number(t.refund_amount || 0),
+        refund_date: t.refunded_at
       }
-    }
+    })
+
+    // Calculate summary statistics
+    const summary: TransactionSummary = calculateSummary(formattedTransactions, dateRange)
 
     // Prepare pagination info
     const pagination: PaginationInfo = {
@@ -216,52 +235,72 @@ export async function GET(request: NextRequest) {
 
     // Format response based on export format
     if (filters.export_format === 'csv') {
-      // For CSV export, fetch all data if not already paginated
-      let allTransactions = safeTransactions
-      
-      if (count && count > safeTransactions.length) {
+      let allData = formattedTransactions
+      if (count && count > formattedTransactions.length) {
         console.log('📄 Fetching all transactions for CSV export...')
-        const { data: fullData } = await supabase
+        let fullQuery = supabase
           .from('transactions')
           .select(`
             id,
+            invoice_id,
             nowpayments_payment_id,
             order_id,
-            amount,
-            currency,
-            pay_currency,
-            pay_amount,
-            status,
             base_amount,
-            tax_enabled,
+            tax_label,
+            tax_percentage,
             tax_amount,
-            tax_rates,
-            tax_breakdown,
-            subtotal_with_tax,
+            total_amount_paid,
+            currency,
+            status,
             gateway_fee,
-            merchant_receives,
-            customer_email,
-            customer_phone,
+            cryptrac_fee,
+            refund_amount,
+            refunded_at,
             created_at,
-            updated_at,
             payment_links!inner(
-              title,
+              link_id,
               description,
-              merchants!inner(user_id, business_name)
+              merchants!inner(user_id)
             )
           `)
           .eq('payment_links.merchants.user_id', user_id)
           .gte('created_at', dateRange.start_date)
           .lte('created_at', dateRange.end_date)
-          .in('status', ['confirmed', 'finished'])
-          .eq('tax_enabled', filters.tax_only || false)
+          .in('status', statusFilter)
           .order('created_at', { ascending: false })
-        
-        allTransactions = fullData || []
+
+        if (filters.tax_only) {
+          fullQuery = fullQuery.eq('tax_enabled', true)
+        }
+
+        const { data: fullData } = await fullQuery
+        allData = (fullData || []).map(t => {
+          const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
+          const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
+          const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
+          const net = Number(t.total_amount_paid || 0) - fees
+          return {
+            id: t.id,
+            payment_id: paymentId,
+            created_at: t.created_at,
+            product_description: paymentLink?.description || '',
+            gross_amount: Number(t.base_amount || 0),
+            tax_label: t.tax_label || '',
+            tax_percentage: Number(t.tax_percentage || 0),
+            tax_amount: Number(t.tax_amount || 0),
+            total_paid: Number(t.total_amount_paid || 0),
+            fees,
+            net_amount: net,
+            status: t.status,
+            refund_amount: Number(t.refund_amount || 0),
+            refund_date: t.refunded_at
+          }
+        })
       }
-      
-      const csv = generateOptimizedCSV(allTransactions)
-      
+
+      const csvSummary = calculateSummary(allData, dateRange)
+      const csv = generateAuditCSV(allData, csvSummary)
+
       return new NextResponse(csv, {
         status: 200,
         headers: {
@@ -276,7 +315,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        transactions: safeTransactions,
+        transactions: formattedTransactions,
         summary,
         pagination,
         filters: {
@@ -286,7 +325,7 @@ export async function GET(request: NextRequest) {
         performance: {
           processing_time_ms: Date.now() - startTime,
           total_records: count || 0,
-          returned_records: safeTransactions.length
+          returned_records: formattedTransactions.length
         }
       }
     })
@@ -356,196 +395,96 @@ function calculateDateRange(filters: TaxReportFilters): { start_date: string; en
 }
 
 function calculateSummary(
-  transactions: Array<Record<string, unknown>>,
+  transactions: Array<{
+    gross_amount: number
+    tax_amount: number
+    fees: number
+    net_amount: number
+  }>,
   dateRange: { start_date: string; end_date: string }
 ): TransactionSummary {
   const summary: TransactionSummary = {
     total_transactions: transactions.length,
-    total_revenue: 0,
+    total_gross_sales: 0,
     total_tax_collected: 0,
-    tax_breakdown: {},
-    transactions_with_tax: 0,
-    transactions_without_tax: 0,
-    average_tax_rate: 0,
+    total_fees: 0,
+    total_net_revenue: 0,
     date_range: dateRange,
     generated_at: new Date().toISOString()
   }
 
-  let totalTaxableAmount = 0
-
-  transactions.forEach(transaction => {
-    const amount = parseFloat(String(transaction.amount ?? 0))
-    const taxAmount = parseFloat(String(transaction.tax_amount ?? 0))
-    const baseAmount = parseFloat(String(transaction.base_amount ?? amount))
-    
-    summary.total_revenue += amount
-    summary.total_tax_collected += taxAmount
-    
-    if (transaction.tax_enabled && taxAmount > 0) {
-      summary.transactions_with_tax++
-      totalTaxableAmount += baseAmount
-      
-      // Process tax breakdown
-      if (transaction.tax_breakdown && typeof transaction.tax_breakdown === 'object') {
-        Object.entries(transaction.tax_breakdown).forEach(([key, value]) => {
-          const taxValue = parseFloat(value as string) || 0
-          summary.tax_breakdown[key] = (summary.tax_breakdown[key] || 0) + taxValue
-        })
-      }
-    } else {
-      summary.transactions_without_tax++
-    }
+  transactions.forEach(t => {
+    summary.total_gross_sales += t.gross_amount
+    summary.total_tax_collected += t.tax_amount
+    summary.total_fees += t.fees
+    summary.total_net_revenue += t.net_amount
   })
-
-  // Calculate average tax rate
-  if (totalTaxableAmount > 0) {
-    summary.average_tax_rate = (summary.total_tax_collected / totalTaxableAmount) * 100
-  }
 
   return summary
 }
 
-async function calculateSummaryOptimized(userId: string, dateRange: { start_date: string; end_date: string }, taxOnly?: boolean): Promise<TransactionSummary> {
-  try {
-    // Use database aggregation for better performance on large datasets
-    let query = supabase
-      .from('transactions')
-      .select(`
-        amount.sum(),
-        tax_amount.sum(),
-        base_amount.sum(),
-        count(),
-        tax_enabled
-      `)
-      .eq('payment_links.merchants.user_id', userId)
-      .gte('created_at', dateRange.start_date)
-      .lte('created_at', dateRange.end_date)
-      .in('status', ['confirmed', 'finished'])
-
-    if (taxOnly) {
-      query = query.eq('tax_enabled', true)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('❌ Error calculating optimized summary:', error)
-      // Fallback to basic summary
-      return {
-        total_transactions: 0,
-        total_revenue: 0,
-        total_tax_collected: 0,
-        tax_breakdown: {},
-        transactions_with_tax: 0,
-        transactions_without_tax: 0,
-        average_tax_rate: 0,
-        date_range: dateRange,
-        generated_at: new Date().toISOString()
-      }
-    }
-
-    // Process aggregated data
-    const summary: TransactionSummary = {
-      total_transactions: data?.length || 0,
-      total_revenue: 0,
-      total_tax_collected: 0,
-      tax_breakdown: {},
-      transactions_with_tax: 0,
-      transactions_without_tax: 0,
-      average_tax_rate: 0,
-      date_range: dateRange,
-      generated_at: new Date().toISOString()
-    }
-
-    // Note: This is a simplified version. For full tax breakdown,
-    // you might need additional queries or a more complex aggregation
-    return summary
-
-  } catch (error) {
-    console.error('❌ Error in optimized summary calculation:', error)
-    return {
-      total_transactions: 0,
-      total_revenue: 0,
-      total_tax_collected: 0,
-      tax_breakdown: {},
-      transactions_with_tax: 0,
-      transactions_without_tax: 0,
-      average_tax_rate: 0,
-      date_range: dateRange,
-      generated_at: new Date().toISOString()
-    }
-  }
-}
-
-function generateOptimizedCSV(transactions: Array<Record<string, unknown>>): string {
+function generateAuditCSV(transactions: Array<Record<string, any>>, summary: TransactionSummary): string {
   const headers = [
-    'Transaction Date',
     'Payment ID',
-    'Order ID',
-    'Business Name',
-    'Payment Link Title',
-    'Customer Email',
-    'Customer Phone',
-    'Base Amount',
-    'Tax Enabled',
+    'Transaction Date (UTC)',
+    'Transaction Time (UTC)',
+    'Product/Service Description',
+    'Gross Amount',
+    'Tax Label',
+    'Tax Rate (%)',
     'Tax Amount',
-    'Total Amount',
-    'Currency',
-    'Crypto Amount',
-    'Crypto Currency',
+    'Total Paid by Customer',
+    'Fees',
+    'Net Amount Received',
     'Payment Status',
-    'Gateway Fee',
-    'Merchant Receives',
-    'Tax Rates',
-    'Tax Breakdown',
-    'Created At',
-    'Updated At'
+    'Refund Amount',
+    'Refund Date'
   ]
 
-  const rows = transactions.map(transaction => {
-    const paymentLink = Array.isArray(transaction.payment_links) 
-      ? transaction.payment_links[0] 
-      : transaction.payment_links
+  const rows = transactions.map(tx => [
+    tx.payment_id,
+    tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
+    tx.created_at ? new Date(tx.created_at).toISOString().split('T')[1].split('.')[0] : '',
+    tx.product_description || '',
+    tx.gross_amount.toFixed(2),
+    tx.tax_label || '',
+    tx.tax_percentage?.toFixed ? tx.tax_percentage.toFixed(2) : Number(tx.tax_percentage || 0),
+    tx.tax_amount.toFixed(2),
+    tx.total_paid.toFixed(2),
+    tx.fees.toFixed(2),
+    tx.net_amount.toFixed(2),
+    tx.status === 'refunded' ? 'Refunded' : 'Confirmed',
+    tx.refund_amount.toFixed(2),
+    tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : ''
+  ])
 
-    const merchant = paymentLink?.merchants 
-      ? (Array.isArray(paymentLink.merchants) ? paymentLink.merchants[0] : paymentLink.merchants)
-      : null
-
-      return [
-        new Date(String(transaction.created_at)).toLocaleDateString(),
-      transaction.nowpayments_payment_id || '',
-      transaction.order_id || '',
-      merchant?.business_name || '',
-      paymentLink?.title || '',
-      transaction.customer_email || '',
-      transaction.customer_phone || '',
-      transaction.base_amount || transaction.amount || 0,
-      transaction.tax_enabled ? 'Yes' : 'No',
-      transaction.tax_amount || 0,
-      transaction.amount || 0,
-      transaction.currency || '',
-      transaction.pay_amount || 0,
-      transaction.pay_currency || '',
-      transaction.status || '',
-      transaction.gateway_fee || 0,
-      transaction.merchant_receives || 0,
-      JSON.stringify(transaction.tax_rates || []),
-      JSON.stringify(transaction.tax_breakdown || {}),
-        String(transaction.created_at ?? ''),
-        String(transaction.updated_at ?? '')
-      ]
-    })
+  const totalsRow = [
+    'TOTALS',
+    '',
+    '',
+    '',
+    summary.total_gross_sales.toFixed(2),
+    '',
+    '',
+    summary.total_tax_collected.toFixed(2),
+    '',
+    summary.total_fees.toFixed(2),
+    summary.total_net_revenue.toFixed(2),
+    '',
+    '',
+    ''
+  ]
 
   const csvContent = [
     headers.join(','),
     ...rows.map(row => row.map(field => {
-      // Escape fields that contain commas, quotes, or newlines
       const stringField = String(field)
       if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
         return `"${stringField.replace(/"/g, '""')}"`
       }
       return stringField
-    }).join(','))
+    }).join(',')),
+    totalsRow.join(',')
   ].join('\n')
 
   return csvContent

@@ -1116,7 +1116,9 @@ CREATE TABLE IF NOT EXISTS "public"."transactions" (
     "payin_hash" "text",
     "payout_hash" "text",
     "customer_phone" "text",
-    "is_fee_paid_by_user" boolean DEFAULT false
+    "is_fee_paid_by_user" boolean DEFAULT false,
+    "refund_amount" numeric(18,2),
+    "refunded_at" timestamp with time zone
 );
 
 
@@ -1152,25 +1154,23 @@ COMMENT ON COLUMN "public"."transactions"."receipt_metadata" IS 'Complete receip
 
 
 CREATE OR REPLACE VIEW "public"."tax_report_view" AS
- SELECT "t"."id" AS "transaction_id",
+ SELECT
+    "t"."id" AS "transaction_id",
+    COALESCE("t"."invoice_id", "pl"."link_id", "t"."nowpayments_payment_id", "t"."id"::text) AS "payment_id",
     "t"."merchant_id",
     "t"."created_at",
+    "pl"."description" AS "product_description",
     "t"."base_amount",
-    "t"."tax_enabled",
     "t"."tax_label",
     "t"."tax_percentage",
     "t"."tax_amount",
-    "t"."tax_rates",
-    "t"."tax_breakdown",
-    "t"."subtotal_with_tax",
-    "t"."gateway_fee",
     "t"."total_amount_paid",
-    "t"."merchant_receives",
-    "t"."customer_email",
-    "t"."currency",
+    (COALESCE("t"."gateway_fee", 0::numeric) + COALESCE("t"."cryptrac_fee", 0::numeric)) AS "fees",
+    (COALESCE("t"."total_amount_paid", 0::numeric) - COALESCE("t"."gateway_fee", 0::numeric) - COALESCE("t"."cryptrac_fee", 0::numeric)) AS "net_amount",
     "t"."status",
-    "pl"."title" AS "payment_link_title",
-    "pl"."description" AS "payment_link_description"
+    "t"."refund_amount",
+    "t"."refunded_at",
+    "t"."currency"
    FROM ("public"."transactions" "t"
      LEFT JOIN "public"."payment_links" "pl" ON (("t"."payment_link_id" = "pl"."id")))
   WHERE ("t"."tax_enabled" = true);

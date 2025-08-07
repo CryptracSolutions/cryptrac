@@ -34,34 +34,32 @@ interface TaxReportFilters {
   quarter: number
   fiscal_year_start: string
   tax_only: boolean
+  status: 'confirmed' | 'refunded' | 'all'
 }
 
 interface TransactionSummary {
   total_transactions: number
-  total_revenue: number
+  total_gross_sales: number
   total_tax_collected: number
-  tax_breakdown: Record<string, number>
-  transactions_with_tax: number
-  transactions_without_tax: number
-  average_tax_rate: number
+  total_fees: number
+  total_net_revenue: number
 }
 
 interface Transaction {
   id: string
   payment_id: string
-  order_id: string
-  customer_email: string
-  amount: number
-  base_amount: number
-  currency: string
-  crypto_amount: number
-  crypto_currency: string
-  status: string
-  tax_enabled: boolean
-  tax_amount: number
-  tax_rates: Array<{ label: string; percentage: number }>
-  tax_breakdown: Record<string, number>
   created_at: string
+  product_description: string
+  gross_amount: number
+  tax_label: string
+  tax_percentage: number
+  tax_amount: number
+  total_paid: number
+  fees: number
+  net_amount: number
+  status: string
+  refund_amount: number
+  refund_date: string | null
 }
 
 interface TaxReportData {
@@ -90,7 +88,8 @@ export default function TaxReportsPage() {
     year: currentYear,
     quarter: currentQuarter,
     fiscal_year_start: '01-01',
-    tax_only: false
+    tax_only: false,
+    status: 'confirmed'
   })
 
     useEffect(() => {
@@ -135,6 +134,7 @@ export default function TaxReportsPage() {
         quarter: filters.quarter.toString(),
         fiscal_year_start: filters.fiscal_year_start,
         tax_only: filters.tax_only.toString(),
+        status: filters.status,
         export_format: 'json'
       })
 
@@ -180,6 +180,7 @@ export default function TaxReportsPage() {
         quarter: filters.quarter.toString(),
         fiscal_year_start: filters.fiscal_year_start,
         tax_only: filters.tax_only.toString(),
+        status: filters.status,
         export_format: 'csv'
       })
 
@@ -215,6 +216,30 @@ export default function TaxReportsPage() {
     }
   }
 
+  const markAsRefunded = async (transaction: Transaction) => {
+    if (!user) return
+    const refundAmountStr = prompt('Refund amount', transaction.total_paid.toString())
+    if (refundAmountStr === null) return
+    const refundAmount = parseFloat(refundAmountStr)
+    const refundDate = prompt('Refund date (YYYY-MM-DD)', new Date().toISOString().split('T')[0])
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({
+          status: 'refunded',
+          refund_amount: refundAmount,
+          refunded_at: refundDate ? `${refundDate}T00:00:00.000Z` : new Date().toISOString()
+        })
+        .eq('id', transaction.id)
+      if (error) throw error
+      toast.success('Transaction marked as refunded')
+      loadTaxReport()
+    } catch (error) {
+      console.error('Refund error:', error)
+      toast.error('Failed to mark as refunded')
+    }
+  }
+
   const updateFilters = (updates: Partial<TaxReportFilters>) => {
     setFilters(prev => ({ ...prev, ...updates }))
   }
@@ -224,14 +249,6 @@ export default function TaxReportsPage() {
       style: 'currency',
       currency: 'USD'
     }).format(amount)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
   }
 
   if (loading) {
@@ -409,6 +426,21 @@ export default function TaxReportsPage() {
               </div>
             )}
 
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value as TaxReportFilters['status'] })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="refunded">Refunded</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Additional Filters */}
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -452,8 +484,8 @@ export default function TaxReportsPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold">{formatCurrency(reportData.summary.total_revenue)}</p>
+                    <p className="text-sm font-medium text-gray-600">Gross Sales</p>
+                    <p className="text-2xl font-bold">{formatCurrency(reportData.summary.total_gross_sales)}</p>
                   </div>
                   <DollarSign className="h-8 w-8 text-green-600" />
                 </div>
@@ -476,40 +508,14 @@ export default function TaxReportsPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Avg Tax Rate</p>
-                    <p className="text-2xl font-bold">{reportData.summary.average_tax_rate.toFixed(1)}%</p>
+                    <p className="text-sm font-medium text-gray-600">Net Revenue</p>
+                    <p className="text-2xl font-bold">{formatCurrency(reportData.summary.total_net_revenue)}</p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-orange-600" />
                 </div>
               </CardContent>
             </Card>
           </div>
-        )}
-
-        {/* Tax Breakdown */}
-        {reportData && Object.keys(reportData.summary.tax_breakdown).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Tax Breakdown</CardTitle>
-              <CardDescription>
-                Detailed breakdown of taxes collected by type
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(reportData.summary.tax_breakdown).map(([taxType, amount]) => (
-                  <div key={taxType} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium capitalize">
-                      {taxType.replace(/_/g, ' ')}
-                    </span>
-                    <span className="font-bold text-green-600">
-                      {formatCurrency(amount)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         {/* Transactions Table */}
@@ -527,44 +533,92 @@ export default function TaxReportsPage() {
                 <div className="text-center py-8">
                   <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
-                  <p className="text-gray-600">
-                    Try adjusting your filters to see more results.
-                  </p>
+                  <p className="text-gray-600">Try adjusting your filters to see more results.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">Date</th>
-                        <th className="text-left p-2">Payment ID</th>
-                        <th className="text-left p-2">Customer</th>
-                        <th className="text-right p-2">Base Amount</th>
-                        <th className="text-right p-2">Tax</th>
-                        <th className="text-right p-2">Total</th>
-                        <th className="text-center p-2">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData.transactions.map((transaction) => (
-                        <tr key={transaction.id} className="border-b hover:bg-gray-50">
-                          <td className="p-2">{formatDate(transaction.created_at)}</td>
-                          <td className="p-2 font-mono text-xs">{transaction.order_id}</td>
-                          <td className="p-2">{transaction.customer_email || 'N/A'}</td>
-                          <td className="p-2 text-right">{formatCurrency(transaction.base_amount || transaction.amount)}</td>
-                          <td className="p-2 text-right">
-                            {transaction.tax_enabled ? formatCurrency(transaction.tax_amount) : '-'}
-                          </td>
-                          <td className="p-2 text-right font-medium">{formatCurrency(transaction.amount)}</td>
-                          <td className="p-2 text-center">
-                            <Badge variant={transaction.status === 'finished' ? 'default' : 'secondary'}>
-                              {transaction.status}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {(() => {
+                    const totals = reportData.transactions.reduce(
+                      (acc, t) => {
+                        acc.gross += t.gross_amount
+                        acc.tax += t.tax_amount
+                        acc.fees += t.fees
+                        acc.net += t.net_amount
+                        acc.paid += t.total_paid
+                        return acc
+                      },
+                      { gross: 0, tax: 0, fees: 0, net: 0, paid: 0 }
+                    )
+                    return (
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-2">Payment ID</th>
+                            <th className="text-left p-2">Date</th>
+                            <th className="text-left p-2">Time</th>
+                            <th className="text-left p-2">Description</th>
+                            <th className="text-right p-2">Gross Amount</th>
+                            <th className="text-left p-2">Tax Label</th>
+                            <th className="text-right p-2">Tax Rate (%)</th>
+                            <th className="text-right p-2">Tax Amount</th>
+                            <th className="text-right p-2">Total Paid</th>
+                            <th className="text-right p-2">Fees</th>
+                            <th className="text-right p-2">Net Amount</th>
+                            <th className="text-center p-2">Status</th>
+                            <th className="text-right p-2">Refund Amount</th>
+                            <th className="text-left p-2">Refund Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.transactions.map((tx) => {
+                            const date = new Date(tx.created_at)
+                            return (
+                              <tr key={tx.id} className="border-b hover:bg-gray-50">
+                                <td className="p-2 font-mono text-xs">{tx.payment_id}</td>
+                                <td className="p-2">{date.toISOString().split('T')[0]}</td>
+                                <td className="p-2">{date.toISOString().split('T')[1].split('.')[0]}</td>
+                                <td className="p-2">{tx.product_description || 'N/A'}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.gross_amount)}</td>
+                                <td className="p-2">{tx.tax_label}</td>
+                                <td className="p-2 text-right">{tx.tax_percentage.toFixed(2)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.tax_amount)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.total_paid)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.fees)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.net_amount)}</td>
+                                <td className="p-2 text-center">
+                                  <Badge variant={tx.status === 'refunded' ? 'destructive' : 'default'}>
+                                    {tx.status === 'refunded' ? 'Refunded' : 'Confirmed'}
+                                  </Badge>
+                                  {tx.status !== 'refunded' && (
+                                    <Button variant="outline" size="xs" className="ml-2" onClick={() => markAsRefunded(tx)}>
+                                      Mark Refunded
+                                    </Button>
+                                  )}
+                                </td>
+                                <td className="p-2 text-right">{tx.refund_amount ? formatCurrency(tx.refund_amount) : '-'}</td>
+                                <td className="p-2">{tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : '-'}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                        <tfoot>
+                          <tr className="font-semibold bg-gray-50">
+                            <td className="p-2 text-right" colSpan={4}>Totals</td>
+                            <td className="p-2 text-right">{formatCurrency(totals.gross)}</td>
+                            <td></td>
+                            <td></td>
+                            <td className="p-2 text-right">{formatCurrency(totals.tax)}</td>
+                            <td className="p-2 text-right">{formatCurrency(totals.paid)}</td>
+                            <td className="p-2 text-right">{formatCurrency(totals.fees)}</td>
+                            <td className="p-2 text-right">{formatCurrency(totals.net)}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    )
+                  })()}
                 </div>
               )}
             </CardContent>

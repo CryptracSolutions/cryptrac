@@ -1,0 +1,1401 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/app/api/tax-reports/route.ts b/app/api/tax-reports/route.ts
+index cfdfe2ea975134640244fc3199b5ac24e094c888..39ab6e3ba1a93ad42e1ebb9762728b5b62094d24 100644
+--- a/app/api/tax-reports/route.ts
++++ b/app/api/tax-reports/route.ts
+@@ -27,60 +27,59 @@ function checkAPIRateLimit(ip: string): boolean {
+   }
+   
+   // Check if limit exceeded
+   if (attempts.count >= API_RATE_LIMIT) {
+     return false
+   }
+   
+   // Increment counter
+   attempts.count++
+   attempts.lastAttempt = now
+   return true
+ }
+ 
+ interface TaxReportFilters {
+   start_date?: string
+   end_date?: string
+   report_type?: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom'
+   year?: number
+   quarter?: number
+   fiscal_year_start?: string // Format: 'MM-DD' (e.g., '04-01' for April 1st)
+   tax_only?: boolean
+   export_format?: 'json' | 'csv'
+   page?: number
+   limit?: number
+   include_summary?: boolean
++  status?: 'confirmed' | 'refunded' | 'all'
+ }
+ 
+ interface TransactionSummary {
+   total_transactions: number
+-  total_revenue: number
++  total_gross_sales: number
+   total_tax_collected: number
+-  tax_breakdown: Record<string, number>
+-  transactions_with_tax: number
+-  transactions_without_tax: number
+-  average_tax_rate: number
++  total_fees: number
++  total_net_revenue: number
+   date_range: {
+     start_date: string
+     end_date: string
+   }
+   generated_at: string
+ }
+ 
+ interface PaginationInfo {
+   current_page: number
+   total_pages: number
+   total_count: number
+   page_size: number
+   has_next_page: boolean
+   has_previous_page: boolean
+ }
+ 
+ export async function GET(request: NextRequest) {
+   const startTime = Date.now()
+   
+   try {
+     // Rate limiting
+     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+     if (!checkAPIRateLimit(ip)) {
+       console.warn(`⚠️ Rate limit exceeded for IP: ${ip}`)
+       return NextResponse.json(
+@@ -89,226 +88,266 @@ export async function GET(request: NextRequest) {
+       )
+     }
+ 
+     const { searchParams } = new URL(request.url)
+     const user_id = searchParams.get('user_id')
+     
+     if (!user_id) {
+       return NextResponse.json(
+         { success: false, error: 'User ID is required' },
+         { status: 400 }
+       )
+     }
+ 
+     // Parse filters with enhanced validation
+     const filters: TaxReportFilters = {
+       start_date: searchParams.get('start_date') || undefined,
+       end_date: searchParams.get('end_date') || undefined,
+       report_type: (searchParams.get('report_type') as TaxReportFilters['report_type']) || 'custom',
+       year: searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined,
+       quarter: searchParams.get('quarter') ? parseInt(searchParams.get('quarter')!) : undefined,
+       fiscal_year_start: searchParams.get('fiscal_year_start') || '01-01',
+       tax_only: searchParams.get('tax_only') === 'true',
+       export_format: (searchParams.get('export_format') as TaxReportFilters['export_format']) || 'json',
+       page: Math.max(1, parseInt(searchParams.get('page') || '1')),
+       limit: Math.min(1000, Math.max(10, parseInt(searchParams.get('limit') || '100'))), // Max 1000 per page
+-      include_summary: searchParams.get('include_summary') !== 'false'
++      include_summary: searchParams.get('include_summary') !== 'false',
++      status: (searchParams.get('status') as TaxReportFilters['status']) || 'confirmed'
+     }
+ 
+     console.log('📊 Tax report request:', { user_id, filters, processing_time_start: startTime })
+ 
+     // Validate date range
+     const dateRange = calculateDateRange(filters)
+     const daysDifference = (new Date(dateRange.end_date).getTime() - new Date(dateRange.start_date).getTime()) / (1000 * 60 * 60 * 24)
+     
+     // Warn for large date ranges
+     if (daysDifference > 365 && filters.export_format === 'csv') {
+       console.warn(`⚠️ Large date range requested: ${daysDifference} days`)
+     }
+ 
+     // For very large datasets, force pagination
+     if (daysDifference > 730 && !filters.page) { // More than 2 years
+       filters.page = 1
+       filters.limit = 100
+       console.log('📄 Large dataset detected, forcing pagination')
+     }
+     
+     // Build optimized query with pagination
+     let baseQuery = supabase
+       .from('transactions')
+       .select(`
+         id,
++        invoice_id,
+         nowpayments_payment_id,
+         order_id,
+-        amount,
+-        currency,
+-        pay_currency,
+-        pay_amount,
+-        status,
+         base_amount,
+-        tax_enabled,
++        tax_label,
++        tax_percentage,
+         tax_amount,
+-        tax_rates,
+-        tax_breakdown,
+-        subtotal_with_tax,
++        total_amount_paid,
++        currency,
++        status,
+         gateway_fee,
+-        merchant_receives,
+-        customer_email,
+-        customer_phone,
++        cryptrac_fee,
++        refund_amount,
++        refunded_at,
+         created_at,
+-        updated_at,
+         payment_links!inner(
+-          title,
++          link_id,
+           description,
+-          merchants!inner(user_id, business_name)
++          merchants!inner(user_id)
+         )
+       `, { count: 'exact' })
+       .eq('payment_links.merchants.user_id', user_id)
+       .gte('created_at', dateRange.start_date)
+       .lte('created_at', dateRange.end_date)
+-      .in('status', ['confirmed', 'finished']) // Only include successful payments
+       .order('created_at', { ascending: false })
+ 
++    // Apply status filtering
++    let statusFilter = ['confirmed', 'finished', 'refunded']
++    if (filters.status === 'confirmed') {
++      statusFilter = ['confirmed', 'finished']
++    } else if (filters.status === 'refunded') {
++      statusFilter = ['refunded']
++    }
++    baseQuery = baseQuery.in('status', statusFilter)
++
+     // Apply tax filter if requested
+     if (filters.tax_only) {
+       baseQuery = baseQuery.eq('tax_enabled', true)
+     }
+ 
+     // Apply pagination for JSON responses
+     if (filters.export_format === 'json' && filters.page) {
+       const offset = (filters.page - 1) * filters.limit!
+       baseQuery = baseQuery.range(offset, offset + filters.limit! - 1)
+     }
+ 
+     const { data: transactions, error, count } = await baseQuery
+ 
+     if (error) {
+       console.error('❌ Error fetching transactions:', error)
+       return NextResponse.json(
+         { success: false, error: 'Failed to fetch transactions' },
+         { status: 500 }
+       )
+     }
+ 
+     // Fix: Handle null transactions
+     const safeTransactions = transactions || []
+     console.log(`✅ Fetched ${safeTransactions.length} transactions (total: ${count}) in ${Date.now() - startTime}ms`)
+ 
+-    // Calculate summary statistics (always include for performance monitoring)
+-    let summary: TransactionSummary | null = null
+-    if (filters.include_summary) {
+-      // For large datasets, calculate summary from a separate optimized query
+-      if (count && count > 1000) {
+-        summary = await calculateSummaryOptimized(user_id, dateRange, filters.tax_only)
+-      } else {
+-        summary = calculateSummary(safeTransactions, dateRange)
++    const formattedTransactions = safeTransactions.map(t => {
++      const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
++      const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
++      const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
++      const net = Number(t.total_amount_paid || 0) - fees
++      return {
++        id: t.id,
++        payment_id: paymentId,
++        created_at: t.created_at,
++        product_description: paymentLink?.description || '',
++        gross_amount: Number(t.base_amount || 0),
++        tax_label: t.tax_label || '',
++        tax_percentage: Number(t.tax_percentage || 0),
++        tax_amount: Number(t.tax_amount || 0),
++        total_paid: Number(t.total_amount_paid || 0),
++        fees,
++        net_amount: net,
++        status: t.status,
++        refund_amount: Number(t.refund_amount || 0),
++        refund_date: t.refunded_at
+       }
+-    }
++    })
++
++    // Calculate summary statistics
++    const summary: TransactionSummary = calculateSummary(formattedTransactions, dateRange)
+ 
+     // Prepare pagination info
+     const pagination: PaginationInfo = {
+       current_page: filters.page || 1,
+       total_pages: Math.ceil((count || 0) / (filters.limit || 100)),
+       total_count: count || 0,
+       page_size: filters.limit || 100,
+       has_next_page: filters.page ? (filters.page * (filters.limit || 100)) < (count || 0) : false,
+       has_previous_page: (filters.page || 1) > 1
+     }
+ 
+     // Format response based on export format
+     if (filters.export_format === 'csv') {
+-      // For CSV export, fetch all data if not already paginated
+-      let allTransactions = safeTransactions
+-      
+-      if (count && count > safeTransactions.length) {
++      let allData = formattedTransactions
++      if (count && count > formattedTransactions.length) {
+         console.log('📄 Fetching all transactions for CSV export...')
+-        const { data: fullData } = await supabase
++        let fullQuery = supabase
+           .from('transactions')
+           .select(`
+             id,
++            invoice_id,
+             nowpayments_payment_id,
+             order_id,
+-            amount,
+-            currency,
+-            pay_currency,
+-            pay_amount,
+-            status,
+             base_amount,
+-            tax_enabled,
++            tax_label,
++            tax_percentage,
+             tax_amount,
+-            tax_rates,
+-            tax_breakdown,
+-            subtotal_with_tax,
++            total_amount_paid,
++            currency,
++            status,
+             gateway_fee,
+-            merchant_receives,
+-            customer_email,
+-            customer_phone,
++            cryptrac_fee,
++            refund_amount,
++            refunded_at,
+             created_at,
+-            updated_at,
+             payment_links!inner(
+-              title,
++              link_id,
+               description,
+-              merchants!inner(user_id, business_name)
++              merchants!inner(user_id)
+             )
+           `)
+           .eq('payment_links.merchants.user_id', user_id)
+           .gte('created_at', dateRange.start_date)
+           .lte('created_at', dateRange.end_date)
+-          .in('status', ['confirmed', 'finished'])
+-          .eq('tax_enabled', filters.tax_only || false)
++          .in('status', statusFilter)
+           .order('created_at', { ascending: false })
+-        
+-        allTransactions = fullData || []
++
++        if (filters.tax_only) {
++          fullQuery = fullQuery.eq('tax_enabled', true)
++        }
++
++        const { data: fullData } = await fullQuery
++        allData = (fullData || []).map(t => {
++          const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
++          const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
++          const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
++          const net = Number(t.total_amount_paid || 0) - fees
++          return {
++            id: t.id,
++            payment_id: paymentId,
++            created_at: t.created_at,
++            product_description: paymentLink?.description || '',
++            gross_amount: Number(t.base_amount || 0),
++            tax_label: t.tax_label || '',
++            tax_percentage: Number(t.tax_percentage || 0),
++            tax_amount: Number(t.tax_amount || 0),
++            total_paid: Number(t.total_amount_paid || 0),
++            fees,
++            net_amount: net,
++            status: t.status,
++            refund_amount: Number(t.refund_amount || 0),
++            refund_date: t.refunded_at
++          }
++        })
+       }
+-      
+-      const csv = generateOptimizedCSV(allTransactions)
+-      
++
++      const csvSummary = calculateSummary(allData, dateRange)
++      const csv = generateAuditCSV(allData, csvSummary)
++
+       return new NextResponse(csv, {
+         status: 200,
+         headers: {
+           'Content-Type': 'text/csv',
+           'Content-Disposition': `attachment; filename="cryptrac-tax-report-${dateRange.start_date.split('T')[0]}-to-${dateRange.end_date.split('T')[0]}.csv"`,
+           'X-Processing-Time': `${Date.now() - startTime}ms`,
+           'X-Total-Records': `${count || 0}`
+         }
+       })
+     }
+ 
+     return NextResponse.json({
+       success: true,
+       data: {
+-        transactions: safeTransactions,
++        transactions: formattedTransactions,
+         summary,
+         pagination,
+         filters: {
+           ...filters,
+           applied_date_range: dateRange
+         },
+         performance: {
+           processing_time_ms: Date.now() - startTime,
+           total_records: count || 0,
+-          returned_records: safeTransactions.length
++          returned_records: formattedTransactions.length
+         }
+       }
+     })
+ 
+   } catch (error) {
+     console.error('💥 Error generating tax report:', error)
+     return NextResponse.json(
+       { 
+         success: false, 
+         error: 'Failed to generate tax report',
+         processing_time_ms: Date.now() - startTime
+       },
+       { status: 500 }
+     )
+   }
+ }
+ 
+ function calculateDateRange(filters: TaxReportFilters): { start_date: string; end_date: string } {
+   const now = new Date()
+   const currentYear = now.getFullYear()
+   
+   switch (filters.report_type) {
+     case 'calendar_year': {
+       const year = filters.year || currentYear
+       return {
+@@ -334,220 +373,120 @@ function calculateDateRange(filters: TaxReportFilters): { start_date: string; en
+       const quarter = filters.quarter || Math.ceil((now.getMonth() + 1) / 3)
+       
+       const quarterStart = new Date(year, (quarter - 1) * 3, 1)
+       const quarterEnd = new Date(year, quarter * 3, 0, 23, 59, 59, 999)
+       
+       return {
+         start_date: quarterStart.toISOString(),
+         end_date: quarterEnd.toISOString()
+       }
+     }
+     
+     case 'custom':
+     default: {
+       const start = filters.start_date || `${currentYear}-01-01T00:00:00.000Z`
+       const end = filters.end_date || now.toISOString()
+       
+       return {
+         start_date: start,
+         end_date: end
+       }
+     }
+   }
+ }
+ 
+ function calculateSummary(
+-  transactions: Array<Record<string, unknown>>,
++  transactions: Array<{
++    gross_amount: number
++    tax_amount: number
++    fees: number
++    net_amount: number
++  }>,
+   dateRange: { start_date: string; end_date: string }
+ ): TransactionSummary {
+   const summary: TransactionSummary = {
+     total_transactions: transactions.length,
+-    total_revenue: 0,
++    total_gross_sales: 0,
+     total_tax_collected: 0,
+-    tax_breakdown: {},
+-    transactions_with_tax: 0,
+-    transactions_without_tax: 0,
+-    average_tax_rate: 0,
++    total_fees: 0,
++    total_net_revenue: 0,
+     date_range: dateRange,
+     generated_at: new Date().toISOString()
+   }
+ 
+-  let totalTaxableAmount = 0
+-
+-  transactions.forEach(transaction => {
+-    const amount = parseFloat(String(transaction.amount ?? 0))
+-    const taxAmount = parseFloat(String(transaction.tax_amount ?? 0))
+-    const baseAmount = parseFloat(String(transaction.base_amount ?? amount))
+-    
+-    summary.total_revenue += amount
+-    summary.total_tax_collected += taxAmount
+-    
+-    if (transaction.tax_enabled && taxAmount > 0) {
+-      summary.transactions_with_tax++
+-      totalTaxableAmount += baseAmount
+-      
+-      // Process tax breakdown
+-      if (transaction.tax_breakdown && typeof transaction.tax_breakdown === 'object') {
+-        Object.entries(transaction.tax_breakdown).forEach(([key, value]) => {
+-          const taxValue = parseFloat(value as string) || 0
+-          summary.tax_breakdown[key] = (summary.tax_breakdown[key] || 0) + taxValue
+-        })
+-      }
+-    } else {
+-      summary.transactions_without_tax++
+-    }
++  transactions.forEach(t => {
++    summary.total_gross_sales += t.gross_amount
++    summary.total_tax_collected += t.tax_amount
++    summary.total_fees += t.fees
++    summary.total_net_revenue += t.net_amount
+   })
+ 
+-  // Calculate average tax rate
+-  if (totalTaxableAmount > 0) {
+-    summary.average_tax_rate = (summary.total_tax_collected / totalTaxableAmount) * 100
+-  }
+-
+   return summary
+ }
+ 
+-async function calculateSummaryOptimized(userId: string, dateRange: { start_date: string; end_date: string }, taxOnly?: boolean): Promise<TransactionSummary> {
+-  try {
+-    // Use database aggregation for better performance on large datasets
+-    let query = supabase
+-      .from('transactions')
+-      .select(`
+-        amount.sum(),
+-        tax_amount.sum(),
+-        base_amount.sum(),
+-        count(),
+-        tax_enabled
+-      `)
+-      .eq('payment_links.merchants.user_id', userId)
+-      .gte('created_at', dateRange.start_date)
+-      .lte('created_at', dateRange.end_date)
+-      .in('status', ['confirmed', 'finished'])
+-
+-    if (taxOnly) {
+-      query = query.eq('tax_enabled', true)
+-    }
+-
+-    const { data, error } = await query
+-
+-    if (error) {
+-      console.error('❌ Error calculating optimized summary:', error)
+-      // Fallback to basic summary
+-      return {
+-        total_transactions: 0,
+-        total_revenue: 0,
+-        total_tax_collected: 0,
+-        tax_breakdown: {},
+-        transactions_with_tax: 0,
+-        transactions_without_tax: 0,
+-        average_tax_rate: 0,
+-        date_range: dateRange,
+-        generated_at: new Date().toISOString()
+-      }
+-    }
+-
+-    // Process aggregated data
+-    const summary: TransactionSummary = {
+-      total_transactions: data?.length || 0,
+-      total_revenue: 0,
+-      total_tax_collected: 0,
+-      tax_breakdown: {},
+-      transactions_with_tax: 0,
+-      transactions_without_tax: 0,
+-      average_tax_rate: 0,
+-      date_range: dateRange,
+-      generated_at: new Date().toISOString()
+-    }
+-
+-    // Note: This is a simplified version. For full tax breakdown,
+-    // you might need additional queries or a more complex aggregation
+-    return summary
+-
+-  } catch (error) {
+-    console.error('❌ Error in optimized summary calculation:', error)
+-    return {
+-      total_transactions: 0,
+-      total_revenue: 0,
+-      total_tax_collected: 0,
+-      tax_breakdown: {},
+-      transactions_with_tax: 0,
+-      transactions_without_tax: 0,
+-      average_tax_rate: 0,
+-      date_range: dateRange,
+-      generated_at: new Date().toISOString()
+-    }
+-  }
+-}
+-
+-function generateOptimizedCSV(transactions: Array<Record<string, unknown>>): string {
++function generateAuditCSV(transactions: Array<Record<string, any>>, summary: TransactionSummary): string {
+   const headers = [
+-    'Transaction Date',
+     'Payment ID',
+-    'Order ID',
+-    'Business Name',
+-    'Payment Link Title',
+-    'Customer Email',
+-    'Customer Phone',
+-    'Base Amount',
+-    'Tax Enabled',
++    'Transaction Date (UTC)',
++    'Transaction Time (UTC)',
++    'Product/Service Description',
++    'Gross Amount',
++    'Tax Label',
++    'Tax Rate (%)',
+     'Tax Amount',
+-    'Total Amount',
+-    'Currency',
+-    'Crypto Amount',
+-    'Crypto Currency',
++    'Total Paid by Customer',
++    'Fees',
++    'Net Amount Received',
+     'Payment Status',
+-    'Gateway Fee',
+-    'Merchant Receives',
+-    'Tax Rates',
+-    'Tax Breakdown',
+-    'Created At',
+-    'Updated At'
++    'Refund Amount',
++    'Refund Date'
+   ]
+ 
+-  const rows = transactions.map(transaction => {
+-    const paymentLink = Array.isArray(transaction.payment_links) 
+-      ? transaction.payment_links[0] 
+-      : transaction.payment_links
+-
+-    const merchant = paymentLink?.merchants 
+-      ? (Array.isArray(paymentLink.merchants) ? paymentLink.merchants[0] : paymentLink.merchants)
+-      : null
+-
+-      return [
+-        new Date(String(transaction.created_at)).toLocaleDateString(),
+-      transaction.nowpayments_payment_id || '',
+-      transaction.order_id || '',
+-      merchant?.business_name || '',
+-      paymentLink?.title || '',
+-      transaction.customer_email || '',
+-      transaction.customer_phone || '',
+-      transaction.base_amount || transaction.amount || 0,
+-      transaction.tax_enabled ? 'Yes' : 'No',
+-      transaction.tax_amount || 0,
+-      transaction.amount || 0,
+-      transaction.currency || '',
+-      transaction.pay_amount || 0,
+-      transaction.pay_currency || '',
+-      transaction.status || '',
+-      transaction.gateway_fee || 0,
+-      transaction.merchant_receives || 0,
+-      JSON.stringify(transaction.tax_rates || []),
+-      JSON.stringify(transaction.tax_breakdown || {}),
+-        String(transaction.created_at ?? ''),
+-        String(transaction.updated_at ?? '')
+-      ]
+-    })
++  const rows = transactions.map(tx => [
++    tx.payment_id,
++    tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
++    tx.created_at ? new Date(tx.created_at).toISOString().split('T')[1].split('.')[0] : '',
++    tx.product_description || '',
++    tx.gross_amount.toFixed(2),
++    tx.tax_label || '',
++    tx.tax_percentage?.toFixed ? tx.tax_percentage.toFixed(2) : Number(tx.tax_percentage || 0),
++    tx.tax_amount.toFixed(2),
++    tx.total_paid.toFixed(2),
++    tx.fees.toFixed(2),
++    tx.net_amount.toFixed(2),
++    tx.status === 'refunded' ? 'Refunded' : 'Confirmed',
++    tx.refund_amount.toFixed(2),
++    tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : ''
++  ])
++
++  const totalsRow = [
++    'TOTALS',
++    '',
++    '',
++    '',
++    summary.total_gross_sales.toFixed(2),
++    '',
++    '',
++    summary.total_tax_collected.toFixed(2),
++    '',
++    summary.total_fees.toFixed(2),
++    summary.total_net_revenue.toFixed(2),
++    '',
++    '',
++    ''
++  ]
+ 
+   const csvContent = [
+     headers.join(','),
+     ...rows.map(row => row.map(field => {
+-      // Escape fields that contain commas, quotes, or newlines
+       const stringField = String(field)
+       if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+         return `"${stringField.replace(/"/g, '""')}"`
+       }
+       return stringField
+-    }).join(','))
++    }).join(',')),
++    totalsRow.join(',')
+   ].join('\n')
+ 
+   return csvContent
+ }
+ 
+diff --git a/app/merchant/dashboard/tax-reports/page.tsx b/app/merchant/dashboard/tax-reports/page.tsx
+index bcebb5e170afd2b3c4f5c85424b27f507612a149..27badd3f48531c40fd62ef2e029f03dfa9210a09 100644
+--- a/app/merchant/dashboard/tax-reports/page.tsx
++++ b/app/merchant/dashboard/tax-reports/page.tsx
+@@ -12,250 +12,267 @@ import {
+   AlertCircle,
+   Loader2,
+   RefreshCw
+ } from 'lucide-react'
+ import { Button } from '@/app/components/ui/button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card'
+ import { DashboardLayout } from '@/app/components/layout/dashboard-layout'
+ import { Input } from '@/app/components/ui/input'
+ import { Label } from '@/app/components/ui/label'
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+ import { Checkbox } from '@/app/components/ui/checkbox'
+ import { Badge } from '@/app/components/ui/badge'
+ import { Alert, AlertDescription } from '@/app/components/ui/alert'
+ import { supabase } from '@/lib/supabase-browser'
+ import toast from 'react-hot-toast'
+ import type { User } from '@supabase/supabase-js'
+ 
+ interface TaxReportFilters {
+   start_date: string
+   end_date: string
+   report_type: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom'
+   year: number
+   quarter: number
+   fiscal_year_start: string
+   tax_only: boolean
++  status: 'confirmed' | 'refunded' | 'all'
+ }
+ 
+ interface TransactionSummary {
+   total_transactions: number
+-  total_revenue: number
++  total_gross_sales: number
+   total_tax_collected: number
+-  tax_breakdown: Record<string, number>
+-  transactions_with_tax: number
+-  transactions_without_tax: number
+-  average_tax_rate: number
++  total_fees: number
++  total_net_revenue: number
+ }
+ 
+ interface Transaction {
+   id: string
+   payment_id: string
+-  order_id: string
+-  customer_email: string
+-  amount: number
+-  base_amount: number
+-  currency: string
+-  crypto_amount: number
+-  crypto_currency: string
+-  status: string
+-  tax_enabled: boolean
+-  tax_amount: number
+-  tax_rates: Array<{ label: string; percentage: number }>
+-  tax_breakdown: Record<string, number>
+   created_at: string
++  product_description: string
++  gross_amount: number
++  tax_label: string
++  tax_percentage: number
++  tax_amount: number
++  total_paid: number
++  fees: number
++  net_amount: number
++  status: string
++  refund_amount: number
++  refund_date: string | null
+ }
+ 
+ interface TaxReportData {
+   transactions: Transaction[]
+   summary: TransactionSummary
+   filters: TaxReportFilters & { applied_date_range: { start_date: string; end_date: string } }
+   total_count: number
+ }
+ 
+ export default function TaxReportsPage() {
+   const router = useRouter()
+ 
+   const [user, setUser] = useState<User | null>(null)
+   const [loading, setLoading] = useState(true)
+   const [reportData, setReportData] = useState<TaxReportData | null>(null)
+   const [loadingReport, setLoadingReport] = useState(false)
+   const [exportingCSV, setExportingCSV] = useState(false)
+ 
+   const currentYear = new Date().getFullYear()
+   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3)
+ 
+   const [filters, setFilters] = useState<TaxReportFilters>({
+     start_date: `${currentYear}-01-01`,
+     end_date: new Date().toISOString().split('T')[0],
+     report_type: 'calendar_year',
+     year: currentYear,
+     quarter: currentQuarter,
+     fiscal_year_start: '01-01',
+-    tax_only: false
++    tax_only: false,
++    status: 'confirmed'
+   })
+ 
+     useEffect(() => {
+       checkAuth()
+     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+ 
+     useEffect(() => {
+       if (user) {
+         loadTaxReport()
+       }
+     }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+ 
+   const checkAuth = async () => {
+     try {
+       const { data: { user: authUser } } = await supabase.auth.getUser()
+       
+       if (!authUser) {
+         router.push('/auth/login')
+         return
+       }
+ 
+       setUser(authUser)
+     } catch (error) {
+       console.error('Auth error:', error)
+       router.push('/auth/login')
+     } finally {
+       setLoading(false)
+     }
+   }
+ 
+   const loadTaxReport = async () => {
+     if (!user) return
+ 
+     try {
+       setLoadingReport(true)
+       console.log('📊 Loading tax report with filters:', filters)
+ 
+       const params = new URLSearchParams({
+         user_id: user.id,
+         report_type: filters.report_type,
+         year: filters.year.toString(),
+         quarter: filters.quarter.toString(),
+         fiscal_year_start: filters.fiscal_year_start,
+         tax_only: filters.tax_only.toString(),
++        status: filters.status,
+         export_format: 'json'
+       })
+ 
+       if (filters.report_type === 'custom') {
+         params.append('start_date', `${filters.start_date}T00:00:00.000Z`)
+         params.append('end_date', `${filters.end_date}T23:59:59.999Z`)
+       }
+ 
+       const response = await fetch(`/api/tax-reports?${params}`)
+       
+       if (!response.ok) {
+         throw new Error('Failed to load tax report')
+       }
+ 
+       const data = await response.json()
+       
+       if (!data.success) {
+         throw new Error(data.error || 'Failed to load tax report')
+       }
+ 
+       console.log('✅ Tax report loaded:', data.data)
+       setReportData(data.data)
+ 
+     } catch (error) {
+       console.error('❌ Error loading tax report:', error)
+       toast.error(error instanceof Error ? error.message : 'Failed to load tax report')
+     } finally {
+       setLoadingReport(false)
+     }
+   }
+ 
+   const exportToCSV = async () => {
+     if (!user) return
+ 
+     try {
+       setExportingCSV(true)
+       console.log('📥 Exporting tax report to CSV...')
+ 
+       const params = new URLSearchParams({
+         user_id: user.id,
+         report_type: filters.report_type,
+         year: filters.year.toString(),
+         quarter: filters.quarter.toString(),
+         fiscal_year_start: filters.fiscal_year_start,
+         tax_only: filters.tax_only.toString(),
++        status: filters.status,
+         export_format: 'csv'
+       })
+ 
+       if (filters.report_type === 'custom') {
+         params.append('start_date', `${filters.start_date}T00:00:00.000Z`)
+         params.append('end_date', `${filters.end_date}T23:59:59.999Z`)
+       }
+ 
+       const response = await fetch(`/api/tax-reports?${params}`)
+       
+       if (!response.ok) {
+         throw new Error('Failed to export tax report')
+       }
+ 
+       // Download the CSV file
+       const blob = await response.blob()
+       const url = window.URL.createObjectURL(blob)
+       const a = document.createElement('a')
+       a.href = url
+       a.download = `tax-report-${filters.start_date}-to-${filters.end_date}.csv`
+       document.body.appendChild(a)
+       a.click()
+       window.URL.revokeObjectURL(url)
+       document.body.removeChild(a)
+ 
+       toast.success('Tax report exported successfully!')
+ 
+     } catch (error) {
+       console.error('❌ Error exporting tax report:', error)
+       toast.error(error instanceof Error ? error.message : 'Failed to export tax report')
+     } finally {
+       setExportingCSV(false)
+     }
+   }
+ 
++  const markAsRefunded = async (transaction: Transaction) => {
++    if (!user) return
++    const refundAmountStr = prompt('Refund amount', transaction.total_paid.toString())
++    if (refundAmountStr === null) return
++    const refundAmount = parseFloat(refundAmountStr)
++    const refundDate = prompt('Refund date (YYYY-MM-DD)', new Date().toISOString().split('T')[0])
++    try {
++      const { error } = await supabase
++        .from('transactions')
++        .update({
++          status: 'refunded',
++          refund_amount: refundAmount,
++          refunded_at: refundDate ? `${refundDate}T00:00:00.000Z` : new Date().toISOString()
++        })
++        .eq('id', transaction.id)
++      if (error) throw error
++      toast.success('Transaction marked as refunded')
++      loadTaxReport()
++    } catch (error) {
++      console.error('Refund error:', error)
++      toast.error('Failed to mark as refunded')
++    }
++  }
++
+   const updateFilters = (updates: Partial<TaxReportFilters>) => {
+     setFilters(prev => ({ ...prev, ...updates }))
+   }
+ 
+   const formatCurrency = (amount: number) => {
+     return new Intl.NumberFormat('en-US', {
+       style: 'currency',
+       currency: 'USD'
+     }).format(amount)
+   }
+ 
+-  const formatDate = (dateString: string) => {
+-    return new Date(dateString).toLocaleDateString('en-US', {
+-      year: 'numeric',
+-      month: 'short',
+-      day: 'numeric'
+-    })
+-  }
+-
+   if (loading) {
+     return (
+       <DashboardLayout>
+         <div className="flex items-center justify-center min-h-[400px]">
+           <div className="text-center">
+             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+             <p className="text-gray-600">Loading tax reports...</p>
+           </div>
+         </div>
+       </DashboardLayout>
+     )
+   }
+ 
+   return (
+     <DashboardLayout>
+       <div className="space-y-6">
+         {/* Header */}
+         <div className="flex items-center justify-between">
+           <div>
+             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+               <Calculator className="h-8 w-8" />
+               Tax Reports
+             </h1>
+             <p className="text-gray-600 mt-1">
+               Generate comprehensive tax reports for your business
+@@ -387,201 +404,238 @@ export default function TaxReportsPage() {
+               )}
+             </div>
+ 
+             {/* Custom Date Range */}
+             {filters.report_type === 'custom' && (
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                   <Label>Start Date</Label>
+                   <Input
+                     type="date"
+                     value={filters.start_date}
+                     onChange={(e) => updateFilters({ start_date: e.target.value })}
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label>End Date</Label>
+                   <Input
+                     type="date"
+                     value={filters.end_date}
+                     onChange={(e) => updateFilters({ end_date: e.target.value })}
+                   />
+                 </div>
+               </div>
+             )}
+ 
++            {/* Status Filter */}
++            <div className="space-y-2">
++              <Label>Status</Label>
++              <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value as TaxReportFilters['status'] })}>
++                <SelectTrigger>
++                  <SelectValue />
++                </SelectTrigger>
++                <SelectContent>
++                  <SelectItem value="all">All</SelectItem>
++                  <SelectItem value="confirmed">Confirmed</SelectItem>
++                  <SelectItem value="refunded">Refunded</SelectItem>
++                </SelectContent>
++              </Select>
++            </div>
++
+             {/* Additional Filters */}
+             <div className="flex items-center space-x-2">
+               <Checkbox
+                 id="tax_only"
+                 checked={filters.tax_only}
+                 onCheckedChange={(checked) => updateFilters({ tax_only: checked === true })}
+               />
+               <Label htmlFor="tax_only">
+                 Show only transactions with tax
+               </Label>
+             </div>
+ 
+             {/* Apply Filters Button */}
+             <Button onClick={loadTaxReport} disabled={loadingReport}>
+               {loadingReport ? (
+                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
+               ) : (
+                 <Filter className="h-4 w-4 mr-2" />
+               )}
+               Apply Filters
+             </Button>
+           </CardContent>
+         </Card>
+ 
+         {/* Summary Statistics */}
+         {reportData && (
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+             <Card>
+               <CardContent className="pt-6">
+                 <div className="flex items-center justify-between">
+                   <div>
+                     <p className="text-sm font-medium text-gray-600">Total Transactions</p>
+                     <p className="text-2xl font-bold">{reportData.summary.total_transactions}</p>
+                   </div>
+                   <Receipt className="h-8 w-8 text-blue-600" />
+                 </div>
+               </CardContent>
+             </Card>
+ 
+             <Card>
+               <CardContent className="pt-6">
+                 <div className="flex items-center justify-between">
+                   <div>
+-                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+-                    <p className="text-2xl font-bold">{formatCurrency(reportData.summary.total_revenue)}</p>
++                    <p className="text-sm font-medium text-gray-600">Gross Sales</p>
++                    <p className="text-2xl font-bold">{formatCurrency(reportData.summary.total_gross_sales)}</p>
+                   </div>
+                   <DollarSign className="h-8 w-8 text-green-600" />
+                 </div>
+               </CardContent>
+             </Card>
+ 
+             <Card>
+               <CardContent className="pt-6">
+                 <div className="flex items-center justify-between">
+                   <div>
+                     <p className="text-sm font-medium text-gray-600">Tax Collected</p>
+                     <p className="text-2xl font-bold">{formatCurrency(reportData.summary.total_tax_collected)}</p>
+                   </div>
+                   <Calculator className="h-8 w-8 text-purple-600" />
+                 </div>
+               </CardContent>
+             </Card>
+ 
+             <Card>
+               <CardContent className="pt-6">
+                 <div className="flex items-center justify-between">
+                   <div>
+-                    <p className="text-sm font-medium text-gray-600">Avg Tax Rate</p>
+-                    <p className="text-2xl font-bold">{reportData.summary.average_tax_rate.toFixed(1)}%</p>
++                    <p className="text-sm font-medium text-gray-600">Net Revenue</p>
++                    <p className="text-2xl font-bold">{formatCurrency(reportData.summary.total_net_revenue)}</p>
+                   </div>
+                   <TrendingUp className="h-8 w-8 text-orange-600" />
+                 </div>
+               </CardContent>
+             </Card>
+           </div>
+         )}
+ 
+-        {/* Tax Breakdown */}
+-        {reportData && Object.keys(reportData.summary.tax_breakdown).length > 0 && (
+-          <Card>
+-            <CardHeader>
+-              <CardTitle>Tax Breakdown</CardTitle>
+-              <CardDescription>
+-                Detailed breakdown of taxes collected by type
+-              </CardDescription>
+-            </CardHeader>
+-            <CardContent>
+-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+-                {Object.entries(reportData.summary.tax_breakdown).map(([taxType, amount]) => (
+-                  <div key={taxType} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+-                    <span className="font-medium capitalize">
+-                      {taxType.replace(/_/g, ' ')}
+-                    </span>
+-                    <span className="font-bold text-green-600">
+-                      {formatCurrency(amount)}
+-                    </span>
+-                  </div>
+-                ))}
+-              </div>
+-            </CardContent>
+-          </Card>
+-        )}
+-
+         {/* Transactions Table */}
+         {reportData && (
+           <Card>
+             <CardHeader>
+               <CardTitle>Transaction Details</CardTitle>
+               <CardDescription>
+                 {reportData.total_count} transactions found
+                 {filters.tax_only && ' (tax transactions only)'}
+               </CardDescription>
+             </CardHeader>
+             <CardContent>
+               {reportData.transactions.length === 0 ? (
+                 <div className="text-center py-8">
+                   <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                   <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
+-                  <p className="text-gray-600">
+-                    Try adjusting your filters to see more results.
+-                  </p>
++                  <p className="text-gray-600">Try adjusting your filters to see more results.</p>
+                 </div>
+               ) : (
+                 <div className="overflow-x-auto">
+-                  <table className="w-full text-sm">
+-                    <thead>
+-                      <tr className="border-b">
+-                        <th className="text-left p-2">Date</th>
+-                        <th className="text-left p-2">Payment ID</th>
+-                        <th className="text-left p-2">Customer</th>
+-                        <th className="text-right p-2">Base Amount</th>
+-                        <th className="text-right p-2">Tax</th>
+-                        <th className="text-right p-2">Total</th>
+-                        <th className="text-center p-2">Status</th>
+-                      </tr>
+-                    </thead>
+-                    <tbody>
+-                      {reportData.transactions.map((transaction) => (
+-                        <tr key={transaction.id} className="border-b hover:bg-gray-50">
+-                          <td className="p-2">{formatDate(transaction.created_at)}</td>
+-                          <td className="p-2 font-mono text-xs">{transaction.order_id}</td>
+-                          <td className="p-2">{transaction.customer_email || 'N/A'}</td>
+-                          <td className="p-2 text-right">{formatCurrency(transaction.base_amount || transaction.amount)}</td>
+-                          <td className="p-2 text-right">
+-                            {transaction.tax_enabled ? formatCurrency(transaction.tax_amount) : '-'}
+-                          </td>
+-                          <td className="p-2 text-right font-medium">{formatCurrency(transaction.amount)}</td>
+-                          <td className="p-2 text-center">
+-                            <Badge variant={transaction.status === 'finished' ? 'default' : 'secondary'}>
+-                              {transaction.status}
+-                            </Badge>
+-                          </td>
+-                        </tr>
+-                      ))}
+-                    </tbody>
+-                  </table>
++                  {(() => {
++                    const totals = reportData.transactions.reduce(
++                      (acc, t) => {
++                        acc.gross += t.gross_amount
++                        acc.tax += t.tax_amount
++                        acc.fees += t.fees
++                        acc.net += t.net_amount
++                        acc.paid += t.total_paid
++                        return acc
++                      },
++                      { gross: 0, tax: 0, fees: 0, net: 0, paid: 0 }
++                    )
++                    return (
++                      <table className="w-full text-sm">
++                        <thead>
++                          <tr className="border-b">
++                            <th className="text-left p-2">Payment ID</th>
++                            <th className="text-left p-2">Date</th>
++                            <th className="text-left p-2">Time</th>
++                            <th className="text-left p-2">Description</th>
++                            <th className="text-right p-2">Gross Amount</th>
++                            <th className="text-left p-2">Tax Label</th>
++                            <th className="text-right p-2">Tax Rate (%)</th>
++                            <th className="text-right p-2">Tax Amount</th>
++                            <th className="text-right p-2">Total Paid</th>
++                            <th className="text-right p-2">Fees</th>
++                            <th className="text-right p-2">Net Amount</th>
++                            <th className="text-center p-2">Status</th>
++                            <th className="text-right p-2">Refund Amount</th>
++                            <th className="text-left p-2">Refund Date</th>
++                          </tr>
++                        </thead>
++                        <tbody>
++                          {reportData.transactions.map((tx) => {
++                            const date = new Date(tx.created_at)
++                            return (
++                              <tr key={tx.id} className="border-b hover:bg-gray-50">
++                                <td className="p-2 font-mono text-xs">{tx.payment_id}</td>
++                                <td className="p-2">{date.toISOString().split('T')[0]}</td>
++                                <td className="p-2">{date.toISOString().split('T')[1].split('.')[0]}</td>
++                                <td className="p-2">{tx.product_description || 'N/A'}</td>
++                                <td className="p-2 text-right">{formatCurrency(tx.gross_amount)}</td>
++                                <td className="p-2">{tx.tax_label}</td>
++                                <td className="p-2 text-right">{tx.tax_percentage.toFixed(2)}</td>
++                                <td className="p-2 text-right">{formatCurrency(tx.tax_amount)}</td>
++                                <td className="p-2 text-right">{formatCurrency(tx.total_paid)}</td>
++                                <td className="p-2 text-right">{formatCurrency(tx.fees)}</td>
++                                <td className="p-2 text-right">{formatCurrency(tx.net_amount)}</td>
++                                <td className="p-2 text-center">
++                                  <Badge variant={tx.status === 'refunded' ? 'destructive' : 'default'}>
++                                    {tx.status === 'refunded' ? 'Refunded' : 'Confirmed'}
++                                  </Badge>
++                                  {tx.status !== 'refunded' && (
++                                    <Button variant="outline" size="xs" className="ml-2" onClick={() => markAsRefunded(tx)}>
++                                      Mark Refunded
++                                    </Button>
++                                  )}
++                                </td>
++                                <td className="p-2 text-right">{tx.refund_amount ? formatCurrency(tx.refund_amount) : '-'}</td>
++                                <td className="p-2">{tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : '-'}</td>
++                              </tr>
++                            )
++                          })}
++                        </tbody>
++                        <tfoot>
++                          <tr className="font-semibold bg-gray-50">
++                            <td className="p-2 text-right" colSpan={4}>Totals</td>
++                            <td className="p-2 text-right">{formatCurrency(totals.gross)}</td>
++                            <td></td>
++                            <td></td>
++                            <td className="p-2 text-right">{formatCurrency(totals.tax)}</td>
++                            <td className="p-2 text-right">{formatCurrency(totals.paid)}</td>
++                            <td className="p-2 text-right">{formatCurrency(totals.fees)}</td>
++                            <td className="p-2 text-right">{formatCurrency(totals.net)}</td>
++                            <td></td>
++                            <td></td>
++                            <td></td>
++                          </tr>
++                        </tfoot>
++                      </table>
++                    )
++                  })()}
+                 </div>
+               )}
+             </CardContent>
+           </Card>
+         )}
+ 
+         {/* Important Notice */}
+         <Alert>
+           <AlertCircle className="h-4 w-4" />
+           <AlertDescription>
+             <strong>Important:</strong> This report is for informational purposes only. 
+             Cryptrac helps you track and report taxes but does not file or remit taxes. 
+             Please consult with a tax professional for compliance requirements in your jurisdiction.
+           </AlertDescription>
+         </Alert>
+       </div>
+     </DashboardLayout>
+   )
+ }
+ 
+diff --git a/cryptrac-schema.sql b/cryptrac-schema.sql
+index 492bc76baa0934011b257049ba4ae9dc2b571e7c..e4d998f186a38153d08a48824d95579120fe0d94 100644
+--- a/cryptrac-schema.sql
++++ b/cryptrac-schema.sql
+@@ -1094,105 +1094,105 @@ CREATE TABLE IF NOT EXISTS "public"."transactions" (
+     "amount_received" numeric(18,8) DEFAULT 0,
+     "currency_received" character varying(10),
+     "pay_address" "text",
+     "pay_amount" numeric(18,8),
+     "cryptrac_fee" numeric(18,8) DEFAULT 0,
+     "gateway_fee" numeric(18,8) DEFAULT 0,
+     "merchant_receives" numeric(18,8) DEFAULT 0,
+     "customer_email" character varying(255),
+     "payment_data" "jsonb" DEFAULT '{}'::"jsonb",
+     "expires_at" timestamp with time zone,
+     "updated_at" timestamp with time zone DEFAULT "now"(),
+     "payout_currency" character varying(20),
+     "base_amount" numeric(18,2),
+     "tax_enabled" boolean DEFAULT false,
+     "tax_label" "text",
+     "tax_percentage" numeric(5,2) DEFAULT 0,
+     "tax_amount" numeric(18,2) DEFAULT 0,
+     "subtotal_with_tax" numeric(18,2),
+     "total_amount_paid" numeric(18,2),
+     "tax_rates" "jsonb" DEFAULT '[]'::"jsonb",
+     "tax_breakdown" "jsonb" DEFAULT '{}'::"jsonb",
+     "receipt_metadata" "jsonb" DEFAULT '{}'::"jsonb",
+     "payin_hash" "text",
+     "payout_hash" "text",
+     "customer_phone" "text",
+-    "is_fee_paid_by_user" boolean DEFAULT false
++    "is_fee_paid_by_user" boolean DEFAULT false,
++    "refund_amount" numeric(18,2),
++    "refunded_at" timestamp with time zone
+ );
+ 
+ 
+ ALTER TABLE "public"."transactions" OWNER TO "postgres";
+ 
+ 
+ COMMENT ON TABLE "public"."transactions" IS 'Updated for Phase 5 NOWPayments integration - all required columns added';
+ 
+ 
+ 
+ COMMENT ON COLUMN "public"."transactions"."nowpayments_payment_id" IS 'NOWPayments payment ID returned from their API';
+ 
+ 
+ 
+ COMMENT ON COLUMN "public"."transactions"."base_amount" IS 'Original amount before taxes and fees';
+ 
+ 
+ 
+ COMMENT ON COLUMN "public"."transactions"."total_amount_paid" IS 'Final amount paid by customer (base + taxes + fees if applicable)';
+ 
+ 
+ 
+ COMMENT ON COLUMN "public"."transactions"."tax_rates" IS 'Tax rates applied to this transaction (immutable record)';
+ 
+ 
+ 
+ COMMENT ON COLUMN "public"."transactions"."tax_breakdown" IS 'Detailed breakdown of each tax applied: {"state_tax": 8.50, "local_tax": 1.00}';
+ 
+ 
+ 
+ COMMENT ON COLUMN "public"."transactions"."receipt_metadata" IS 'Complete receipt information for customer records';
+ 
+ 
+ 
+ CREATE OR REPLACE VIEW "public"."tax_report_view" AS
+- SELECT "t"."id" AS "transaction_id",
++ SELECT
++    "t"."id" AS "transaction_id",
++    COALESCE("t"."invoice_id", "pl"."link_id", "t"."nowpayments_payment_id", "t"."id"::text) AS "payment_id",
+     "t"."merchant_id",
+     "t"."created_at",
++    "pl"."description" AS "product_description",
+     "t"."base_amount",
+-    "t"."tax_enabled",
+     "t"."tax_label",
+     "t"."tax_percentage",
+     "t"."tax_amount",
+-    "t"."tax_rates",
+-    "t"."tax_breakdown",
+-    "t"."subtotal_with_tax",
+-    "t"."gateway_fee",
+     "t"."total_amount_paid",
+-    "t"."merchant_receives",
+-    "t"."customer_email",
+-    "t"."currency",
++    (COALESCE("t"."gateway_fee", 0::numeric) + COALESCE("t"."cryptrac_fee", 0::numeric)) AS "fees",
++    (COALESCE("t"."total_amount_paid", 0::numeric) - COALESCE("t"."gateway_fee", 0::numeric) - COALESCE("t"."cryptrac_fee", 0::numeric)) AS "net_amount",
+     "t"."status",
+-    "pl"."title" AS "payment_link_title",
+-    "pl"."description" AS "payment_link_description"
++    "t"."refund_amount",
++    "t"."refunded_at",
++    "t"."currency"
+    FROM ("public"."transactions" "t"
+      LEFT JOIN "public"."payment_links" "pl" ON (("t"."payment_link_id" = "pl"."id")))
+   WHERE ("t"."tax_enabled" = true);
+ 
+ 
+ ALTER VIEW "public"."tax_report_view" OWNER TO "postgres";
+ 
+ 
+ CREATE TABLE IF NOT EXISTS "public"."tier_history" (
+     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+     "rep_id" "uuid" NOT NULL,
+     "month" "date" NOT NULL,
+     "previous_month_sales" integer NOT NULL,
+     "old_tier" integer,
+     "new_tier" integer NOT NULL,
+     "created_at" timestamp with time zone DEFAULT "now"(),
+     CONSTRAINT "tier_history_new_tier_check" CHECK (("new_tier" = ANY (ARRAY[1, 2, 3])))
+ );
+ 
+ 
+ ALTER TABLE "public"."tier_history" OWNER TO "postgres";
+ 
+ 
+ COMMENT ON TABLE "public"."tier_history" IS 'Tracks rep tier changes based on previous month sales for commission calculation';
+ 
+ 
+EOF
+)
