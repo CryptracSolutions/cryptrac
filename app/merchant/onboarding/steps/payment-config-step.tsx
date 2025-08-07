@@ -259,7 +259,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <Alert className="border-blue-200 bg-blue-50">
               <Info className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                <strong>Gateway Fee Responsibility:</strong> Choose who pays the gateway processing fees.
+                <strong>Gateway Fee Responsibility:</strong> Choose who pays the gateway fee.
                 This setting can be overridden for individual payment links.
               </AlertDescription>
             </Alert>

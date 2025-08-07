@@ -1036,7 +1036,7 @@ export default function PaymentPage() {
                 
                 {feeBreakdown.platformFee > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Processing Fee ({paymentLink.fee_percentage}%):</span>
+                    <span className="text-gray-600">Gateway Fee ({(paymentLink.fee_percentage * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%):</span>
                     <span>${feeBreakdown.platformFee.toFixed(2)}</span>
                   </div>
                 )}

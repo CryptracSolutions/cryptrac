@@ -65,7 +65,7 @@ export default function Home() {
   const faqItems = [
     {
       question: "What does Cryptrac cost?",
-      answer: "Cryptrac charges $19/month (or $199/year) for platform access. We don't take any transaction fees - you only pay gateway processing fees (0.5% for direct payments, 1% for auto-convert) which go to the payment processor, not to Cryptrac."
+      answer: "Cryptrac charges $19/month (or $199/year) for platform access. We don't take any transaction fees - you only pay gateway fees (0.5% for direct payments, 1% for auto-convert) which go to the payment processor, not to Cryptrac."
     },
     {
       question: "Are there any hidden fees?",

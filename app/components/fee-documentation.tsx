@@ -78,7 +78,7 @@ export function FeeDocumentation({
                     <Badge variant="outline" className="text-xs">0.5% - 1%</Badge>
                   </div>
                   <p className="text-xs text-gray-600">
-                    Processing fee. You choose if customer or merchant pays.
+                    Gateway fee. You choose whether the customer or merchant pays.
                   </p>
                 </div>
               )}
@@ -209,7 +209,7 @@ export function FeeDocumentation({
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-gray-700">
-                      Processing fee charged by the payment gateway for handling the transaction, 
+                      Gateway fee charged by the payment gateway for handling the transaction,
                       managing risk, and forwarding funds to your wallet.
                     </p>
                     

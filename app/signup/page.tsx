@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock, Building } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -15,7 +15,6 @@ import { createClient } from '@/lib/supabase-browser';
 export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [businessName, setBusinessName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -25,7 +24,7 @@ export default function Signup() {
     e.preventDefault();
     setLoading(true);
 
-    if (!email || !password || !businessName) {
+    if (!email || !password) {
       toast.error('Please fill in all fields');
       setLoading(false);
       return;
@@ -58,7 +57,6 @@ export default function Signup() {
         options: {
           data: {
             role: 'merchant',
-            business_name: businessName,
             country: country,
             trial_end: trialEnd.toISOString(),
             onboarded: false,
@@ -120,17 +118,6 @@ export default function Signup() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
-              <Input
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Enter your business name"
-                label="Business Name"
-                leftIcon={<Building className="h-4 w-4" />}
-                disabled={loading}
-                required
-              />
-
               <Input
                 type="email"
                 value={email}
