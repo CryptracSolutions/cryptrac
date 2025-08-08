@@ -1,0 +1,273 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/app/merchant/settings/page.tsx b/app/merchant/settings/page.tsx
+index cb45813d57ed6b5bb4beb143bfc581c42b1a359b..e2240bece1a959af8b9b60ff416803e08e67d116 100644
+--- a/app/merchant/settings/page.tsx
++++ b/app/merchant/settings/page.tsx
+@@ -442,236 +442,248 @@ export default function MerchantSettingsPage() {
+       
+       if (authError || !user) {
+         console.error('Auth error:', authError);
+         router.push('/auth/login');
+         return;
+       }
+ 
+       setUser(user);
+       console.log('✅ User loaded:', user.email);
+ 
+       // Load merchant settings
+       const { data: merchant, error: merchantError } = await supabase
+         .from('merchants')
+         .select('*')
+         .eq('user_id', user.id)
+         .single();
+ 
+       if (merchantError) {
+         console.error('Error loading merchant:', merchantError);
+         toast.error('Failed to load merchant settings');
+         return;
+       }
+ 
+       console.log('✅ Merchant loaded:', merchant);
+ 
++      const wallets = { ...(merchant.wallets || {}) };
++      if (wallets.ETH && !wallets.ETHBASE) {
++        wallets.ETHBASE = wallets.ETH;
++      }
++
+       setSettings({
+         // Profile information from database
+         business_name: merchant.business_name || '',
+         business_type: merchant.business_type || '',
+         industry: merchant.industry || '',
+         business_description: merchant.business_description || '',
+         website: merchant.website || '',
+         phone_number: merchant.phone_number || '',
+         timezone: merchant.timezone || 'America/New_York',
+         // Payment settings from database
+         charge_customer_fee: merchant.charge_customer_fee || false,
+         auto_convert_enabled: merchant.auto_convert_enabled || false,
+         preferred_payout_currency: merchant.preferred_payout_currency,
+-        wallets: merchant.wallets || {},
++        wallets,
+         payment_config: {
+           auto_forward: merchant.payment_config?.auto_forward ?? true,
+           fee_percentage: merchant.auto_convert_enabled ? 1.0 : 0.5,
+           ...(merchant.auto_convert_enabled ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
+         },
+         // Tax configuration from database or defaults
+         tax_enabled: merchant.tax_enabled || false,
+         tax_rates: (merchant.tax_rates || [
+           { id: '1', label: 'Sales Tax', percentage: 8.5 }
+         ]).map(
+           (rate: { id: string; label: string; percentage: number | string }) => ({
+             ...rate,
+             percentage: String(rate.percentage)
+           })
+         ),
+         business_address: merchant.business_address || {
+           street: '',
+           city: '',
+           state: '',
+           zip_code: '',
+           country: 'US'
+         },
+         tax_strategy: merchant.tax_strategy || 'origin',
+         sales_type: merchant.sales_type || 'local'
+       });
+ 
+       // Initialize validation status for existing wallets
+       const initialValidation: Record<string, ValidationStatus> = {};
+-      Object.keys(merchant.wallets || {}).forEach(currency => {
++      Object.keys(wallets).forEach(currency => {
+         initialValidation[currency] = 'valid'; // Assume existing wallets are valid
+       });
+       setValidationStatus(initialValidation);
+ 
+     } catch (error) {
+       console.error('Error loading merchant data:', error);
+       toast.error('Failed to load settings');
+     } finally {
+       setLoading(false);
+       console.log('✅ Loading complete');
+     }
+   };
+ 
+   const loadAdditionalCurrencies = async () => {
+     try {
+       setLoadingCurrencies(true);
+       console.log('📡 Loading additional currencies from dynamic API...');
+       
+       // Use the new dynamic currency API with popular=false to get all currencies
+       const response = await fetch('/api/currencies?popular=false');
+       const data = await response.json();
+ 
+       if (data.success) {
+         // Filter out currencies that are already in TOP_10_CURRENCIES
+         const topCurrencyCodes = TOP_10_CURRENCIES.map(c => c.code);
+         const additional = data.currencies.filter((currency: CurrencyInfo) => 
+           !topCurrencyCodes.includes(currency.code) && currency.enabled
+         );
+         
+         console.log(`📊 Loaded ${additional.length} additional currencies from NOWPayments:`, additional.map((c: CurrencyInfo) => c.code));
+         setAdditionalCurrencies(additional);
+       } else {
+         console.error('Failed to load currencies:', data.error);
+         toast.error('Failed to load additional currencies');
+       }
+     } catch (error) {
+       console.error('Error loading additional currencies:', error);
+       toast.error('Failed to load additional currencies');
+     } finally {
+       setLoadingCurrencies(false);
+     }
+   };
+ 
+   const validateAddress = async (currency: string, address: string) => {
+     if (!address.trim()) {
+-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
++      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
+       return false;
+     }
+ 
+     try {
+       setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
+ 
+       const response = await fetch('/api/wallets/validate', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({
+           currency: currency.toUpperCase(),
+           address: address.trim()
+         })
+       });
+ 
+       const result = await response.json();
+       const isValid = result.success && result.validation?.valid;
+       
+-      setValidationStatus(prev => ({ 
+-        ...prev, 
+-        [currency]: isValid ? 'valid' : 'invalid' 
++      setValidationStatus(prev => ({
++        ...prev,
++        [currency]: isValid ? 'valid' : 'invalid',
++        ...(currency === 'ETH' ? { ETHBASE: isValid ? 'valid' : 'invalid' } : {})
+       }));
+       
+       return isValid;
+ 
+     } catch (error) {
+       console.error(`Validation error for ${currency}:`, error);
+-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
++      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
+       return false;
+     }
+   };
+ 
+   const handleWalletChange = (currency: string, address: string) => {
+-    setSettings(prev => ({
+-      ...prev,
+-      wallets: {
+-        ...prev.wallets,
+-        [currency]: address
++    setSettings(prev => {
++      const newWallets = { ...prev.wallets, [currency]: address };
++      if (currency === 'ETH') {
++        newWallets['ETHBASE'] = address;
+       }
+-    }));
++      return { ...prev, wallets: newWallets };
++    });
+   };
+ 
+   // Tax rate management functions
+   const addTaxRate = () => {
+     const newId = (settings.tax_rates.length + 1).toString();
+     setSettings(prev => ({
+       ...prev,
+       tax_rates: [...prev.tax_rates, { id: newId, label: '', percentage: '0' }]
+     }));
+   };
+ 
+   const removeTaxRate = (id: string) => {
+     setSettings(prev => ({
+       ...prev,
+       tax_rates: prev.tax_rates.filter(rate => rate.id !== id)
+     }));
+   };
+ 
+   const updateTaxRate = (id: string, field: 'label' | 'percentage', value: string) => {
+     setSettings(prev => ({
+       ...prev,
+       tax_rates: prev.tax_rates.map(rate =>
+         rate.id === id
+           ? {
+               ...rate,
+               [field]: value
+             }
+           : rate
+       )
+     }));
+   };
+ 
+   const handleWalletInputChange = async (currency: string, address: string) => {
+     handleWalletChange(currency, address);
+-    
++
+     if (address.trim()) {
+       await validateAddress(currency, address);
+     } else {
+-      setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
++      setValidationStatus(prev => ({ ...prev, [currency]: 'idle', ...(currency === 'ETH' ? { ETHBASE: 'idle' } : {}) }));
+     }
+   };
+ 
+   const removeWallet = (currency: string) => {
+     setSettings(prev => {
+       const newWallets = { ...prev.wallets };
+       delete newWallets[currency];
++      if (currency === 'ETH') {
++        delete newWallets['ETHBASE'];
++      }
+       return {
+         ...prev,
+         wallets: newWallets
+       };
+     });
+-    
++
+     setValidationStatus(prev => {
+       const newStatus = { ...prev };
+       delete newStatus[currency];
++      if (currency === 'ETH') {
++        delete newStatus['ETHBASE'];
++      }
+       return newStatus;
+     });
+   };
+ 
+   const getValidationIcon = (currency: string) => {
+     const status = validationStatus[currency] || 'idle';
+     switch (status) {
+       case 'checking':
+         return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+       case 'valid':
+         return <CheckCircle className="h-4 w-4 text-green-500" />;
+       case 'invalid':
+         return <AlertCircle className="h-4 w-4 text-red-500" />;
+       default:
+         return null;
+     }
+   };
+ 
+   const getValidationMessage = (currency: string) => {
+     const status = validationStatus[currency] || 'idle';
+     switch (status) {
+       case 'checking':
+         return 'Validating address...';
+       case 'valid':
+         return 'Valid address';
+ 
+EOF
+)

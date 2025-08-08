@@ -100,7 +100,11 @@ export async function PUT(request: NextRequest) {
       charge_customer_fee: boolean;
     } = await request.json();
     
-    const { auto_convert_enabled, preferred_payout_currency, wallets, charge_customer_fee } = requestData;
+    const { auto_convert_enabled, preferred_payout_currency, wallets: rawWallets, charge_customer_fee } = requestData;
+    const wallets = { ...(rawWallets || {}) };
+    if (wallets.ETH && !wallets.ETHBASE) {
+      wallets.ETHBASE = wallets.ETH;
+    }
 
     // Initialize Supabase client
     const cookieStore = await cookies();

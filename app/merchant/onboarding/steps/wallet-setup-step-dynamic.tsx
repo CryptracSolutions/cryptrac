@@ -216,12 +216,21 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   }
 
   const handleAddressChange = async (currency: string, address: string) => {
-    setWallets(prev => ({ ...prev, [currency]: address }))
+    setWallets(prev => {
+      const updated = { ...prev, [currency]: address }
+      if (currency === 'ETH') {
+        updated['ETHBASE'] = address
+      }
+      return updated
+    })
 
     if (address.trim()) {
-      await validateAddress(currency, address)
+      const isValid = await validateAddress(currency, address)
+      if (currency === 'ETH') {
+        setValidationStatus(prev => ({ ...prev, ETHBASE: isValid ? 'valid' : 'invalid' }))
+      }
     } else {
-      setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }))
+      setValidationStatus(prev => ({ ...prev, [currency]: 'idle', ...(currency === 'ETH' ? { ETHBASE: 'idle' } : {}) }))
     }
   }
 
@@ -229,11 +238,17 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     setWallets(prev => {
       const newWallets = { ...prev }
       delete newWallets[currency]
+      if (currency === 'ETH') {
+        delete newWallets['ETHBASE']
+      }
       return newWallets
     })
     setValidationStatus(prev => {
       const newStatus = { ...prev }
       delete newStatus[currency]
+      if (currency === 'ETH') {
+        delete newStatus['ETHBASE']
+      }
       return newStatus
     })
   }

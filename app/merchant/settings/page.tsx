@@ -464,6 +464,11 @@ export default function MerchantSettingsPage() {
 
       console.log('✅ Merchant loaded:', merchant);
 
+      const wallets = { ...(merchant.wallets || {}) };
+      if (wallets.ETH && !wallets.ETHBASE) {
+        wallets.ETHBASE = wallets.ETH;
+      }
+
       setSettings({
         // Profile information from database
         business_name: merchant.business_name || '',
@@ -477,7 +482,7 @@ export default function MerchantSettingsPage() {
         charge_customer_fee: merchant.charge_customer_fee || false,
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency,
-        wallets: merchant.wallets || {},
+        wallets,
         payment_config: {
           auto_forward: merchant.payment_config?.auto_forward ?? true,
           fee_percentage: merchant.auto_convert_enabled ? 1.0 : 0.5,
@@ -506,7 +511,7 @@ export default function MerchantSettingsPage() {
 
       // Initialize validation status for existing wallets
       const initialValidation: Record<string, ValidationStatus> = {};
-      Object.keys(merchant.wallets || {}).forEach(currency => {
+      Object.keys(wallets).forEach(currency => {
         initialValidation[currency] = 'valid'; // Assume existing wallets are valid
       });
       setValidationStatus(initialValidation);
@@ -552,7 +557,7 @@ export default function MerchantSettingsPage() {
 
   const validateAddress = async (currency: string, address: string) => {
     if (!address.trim()) {
-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
       return false;
     }
 
@@ -573,28 +578,29 @@ export default function MerchantSettingsPage() {
       const result = await response.json();
       const isValid = result.success && result.validation?.valid;
       
-      setValidationStatus(prev => ({ 
-        ...prev, 
-        [currency]: isValid ? 'valid' : 'invalid' 
+      setValidationStatus(prev => ({
+        ...prev,
+        [currency]: isValid ? 'valid' : 'invalid',
+        ...(currency === 'ETH' ? { ETHBASE: isValid ? 'valid' : 'invalid' } : {})
       }));
       
       return isValid;
 
     } catch (error) {
       console.error(`Validation error for ${currency}:`, error);
-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
       return false;
     }
   };
 
   const handleWalletChange = (currency: string, address: string) => {
-    setSettings(prev => ({
-      ...prev,
-      wallets: {
-        ...prev.wallets,
-        [currency]: address
+    setSettings(prev => {
+      const newWallets = { ...prev.wallets, [currency]: address };
+      if (currency === 'ETH') {
+        newWallets['ETHBASE'] = address;
       }
-    }));
+      return { ...prev, wallets: newWallets };
+    });
   };
 
   // Tax rate management functions
@@ -629,11 +635,11 @@ export default function MerchantSettingsPage() {
 
   const handleWalletInputChange = async (currency: string, address: string) => {
     handleWalletChange(currency, address);
-    
+
     if (address.trim()) {
       await validateAddress(currency, address);
     } else {
-      setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+      setValidationStatus(prev => ({ ...prev, [currency]: 'idle', ...(currency === 'ETH' ? { ETHBASE: 'idle' } : {}) }));
     }
   };
 
@@ -641,15 +647,21 @@ export default function MerchantSettingsPage() {
     setSettings(prev => {
       const newWallets = { ...prev.wallets };
       delete newWallets[currency];
+      if (currency === 'ETH') {
+        delete newWallets['ETHBASE'];
+      }
       return {
         ...prev,
         wallets: newWallets
       };
     });
-    
+
     setValidationStatus(prev => {
       const newStatus = { ...prev };
       delete newStatus[currency];
+      if (currency === 'ETH') {
+        delete newStatus['ETHBASE'];
+      }
       return newStatus;
     });
   };

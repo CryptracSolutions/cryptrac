@@ -118,10 +118,22 @@ export default function CreatePaymentLinkPage() {
         return;
       }
 
-      setMerchantSettings(merchant);
-      const cryptos = Object.keys(merchant.wallets || {});
+      const wallets = { ...(merchant.wallets || {}) };
+      if (wallets.ETH && !wallets.ETHBASE) {
+        wallets.ETHBASE = wallets.ETH;
+
+        // Persist the ETHBASE wallet for future requests
+        await supabase
+          .from('merchants')
+          .update({ wallets, updated_at: new Date().toISOString() })
+          .eq('user_id', session.user.id);
+      }
+
+      const updatedMerchant = { ...merchant, wallets };
+      setMerchantSettings(updatedMerchant);
+      const cryptos = Object.keys(wallets);
       setAvailableCryptos(cryptos);
-      
+
       // Set default form values - all cryptocurrencies selected by default
       setForm(prev => ({
         ...prev,

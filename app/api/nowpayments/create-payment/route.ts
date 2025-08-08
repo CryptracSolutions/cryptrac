@@ -45,7 +45,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'XLM': ['XLM', 'STELLAR'],
   'ARB': ['ARB', 'ARBITRUM', 'USDTARB', 'USDCARB'],
   'OP': ['OP', 'OPTIMISM', 'USDTOP', 'USDCOP'],
-  'ETHBASE': ['ETHBASE', 'USDCBASE']
+  'ETHBASE': ['ETHBASE', 'USDCBASE', 'ETH']
 }
 
 // Stable coins that can fall back to a base network wallet if no direct key exists
