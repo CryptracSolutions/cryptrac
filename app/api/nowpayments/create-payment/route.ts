@@ -239,6 +239,11 @@ export async function POST(request: NextRequest) {
       paymentLinkData.auto_convert_enabled &&
       !!preferredPayoutCurrency
 
+    // Determine target payout currency
+    const targetPayoutCurrency = autoConvertEnabled
+      ? preferredPayoutCurrency
+      : pay_currency.toUpperCase()
+
     // Prepare payment request for NOWPayments
     interface PaymentRequest {
       price_amount: number
@@ -270,33 +275,33 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 Available wallets:', Object.keys(wallets))
 
-    if (autoConvertEnabled && preferredPayoutCurrency && Object.keys(wallets).length > 0) {
-      const walletKey = getWalletKeyForCurrency(preferredPayoutCurrency, wallets)
+    if (targetPayoutCurrency && Object.keys(wallets).length > 0) {
+      const walletKey = getWalletKeyForCurrency(targetPayoutCurrency, wallets)
 
       if (walletKey && wallets[walletKey]) {
         const walletAddress = wallets[walletKey]
 
         console.log(
-          `🔍 Found wallet for ${preferredPayoutCurrency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`
+          `🔍 Found wallet for ${targetPayoutCurrency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`
         )
 
         // Validate wallet address format
-        if (isValidWalletAddress(walletAddress, preferredPayoutCurrency)) {
+        if (isValidWalletAddress(walletAddress, targetPayoutCurrency)) {
           paymentRequest.payout_address = walletAddress
-          paymentRequest.payout_currency = preferredPayoutCurrency.toLowerCase()
+          paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
           autoForwardingConfigured = true
 
           console.log(
-            `✅ Auto-forwarding configured for ${preferredPayoutCurrency}: ${walletAddress.substring(0, 10)}...`
+            `✅ Auto-forwarding configured for ${targetPayoutCurrency}: ${walletAddress.substring(0, 10)}...`
           )
         } else {
           console.warn(
-            `⚠️ Invalid wallet address format for ${preferredPayoutCurrency}: ${walletAddress}`
+            `⚠️ Invalid wallet address format for ${targetPayoutCurrency}: ${walletAddress}`
           )
         }
       } else {
         console.warn(
-          `⚠️ No wallet address found for preferred payout currency ${preferredPayoutCurrency}`
+          `⚠️ No wallet address found for payout currency ${targetPayoutCurrency}`
         )
         console.log('Available wallet keys:', Object.keys(wallets))
       }
@@ -441,6 +446,22 @@ export async function POST(request: NextRequest) {
       auto_forwarding: autoForwardingConfigured
     })
 
+    // Calculate fee and tax details for reporting
+    const feePercentage = Number(paymentLinkData.fee_percentage || 0)
+    const feeBaseAmount = Number(paymentLinkData.subtotal_with_tax || paymentLinkData.amount || 0)
+    const feeAmount = feeBaseAmount * feePercentage
+    const chargeCustomerFee = paymentLinkData.charge_customer_fee
+    const customerTotal = chargeCustomerFee ? feeBaseAmount + feeAmount : feeBaseAmount
+    const merchantReceives = chargeCustomerFee ? feeBaseAmount : feeBaseAmount - feeAmount
+    const cryptracFee = chargeCustomerFee ? 0 : feeAmount
+
+    const taxLabel = tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0
+      ? tax_rates.map((r: { label: string }) => r.label).join(', ')
+      : ''
+    const taxPercentage = tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0
+      ? tax_rates.reduce((sum: number, r: { percentage: number | string }) => sum + (parseFloat(r.percentage as string) || 0), 0)
+      : 0
+
     // Save transaction to database
     const transactionData = {
       nowpayments_payment_id: paymentResponse.payment_id,
@@ -455,10 +476,16 @@ export async function POST(request: NextRequest) {
       pay_address: paymentResponse.pay_address,
       // Tax information
       tax_enabled: tax_enabled || false,
+      tax_label: taxLabel,
+      tax_percentage: taxPercentage,
       base_amount: base_amount || paymentResponse.price_amount,
       tax_rates: tax_rates || [],
       tax_amount: tax_amount || 0,
       subtotal_with_tax: subtotal_with_tax || paymentResponse.price_amount,
+      total_amount_paid: customerTotal,
+      cryptrac_fee: cryptracFee,
+      gateway_fee: 0,
+      merchant_receives: merchantReceives,
       // Auto-forwarding info - store in payment_data JSONB field
       payment_data: {
         auto_forwarding_enabled: autoForwardingConfigured,

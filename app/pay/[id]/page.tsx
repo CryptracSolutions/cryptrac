@@ -536,7 +536,7 @@ export default function PaymentPage() {
       const currencyAlternatives: Record<string, string[]> = {
         // Major cryptocurrencies
         'BTC': ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
-        'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP', 'ETHBASE'],
+        'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP', 'ETHBASE', 'BASEETH', 'ETH_BASE'],
         'BNB': ['BNB', 'BNBBSC', 'BSC', 'BNB_BSC', 'BINANCE', 'BNBCHAIN'],
         'SOL': ['SOL', 'SOLANA', 'SOLSPL'],
         'ADA': ['ADA', 'CARDANO'],
@@ -552,7 +552,7 @@ export default function PaymentPage() {
         'XLM': ['XLM', 'STELLAR'],
         'ARB': ['ARB', 'ARBITRUM'],
         'OP': ['OP', 'OPTIMISM'],
-        'BASE': ['ETHBASE', 'BASE', 'BASECHAIN'],
+        'BASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
         
         // Stablecoins
         'USDT': ['USDT', 'USDTERC20', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
@@ -656,7 +656,7 @@ export default function PaymentPage() {
       // Add supported stablecoins for each network
       const stablecoinMapping: Record<string, string[]> = {
         'BNB': ['USDTBSC', 'USDCBSC'],
-        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
+        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD', 'USDCBASE'],
         'SOL': ['USDTSOL', 'USDCSOL'],
         'TRX': ['USDTTRC20'],
         'TON': ['USDTTON'],

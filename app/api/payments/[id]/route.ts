@@ -149,11 +149,11 @@ export async function PATCH(
       serviceKey
     );
 
-    const { status, reason } = await request.json();
+    const { status } = await request.json();
 
     const { error: updateError } = await serviceSupabase
       .from('payment_links')
-      .update({ status, status_reason: reason, updated_at: new Date().toISOString() })
+      .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id);
 
     if (updateError) {

@@ -1,0 +1,225 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/app/api/nowpayments/create-payment/route.ts b/app/api/nowpayments/create-payment/route.ts
+index c88c00d142cd39281cb7ce190610e43c089526b5..44686dff21a791a2f769ce6399235e38b4388b80 100644
+--- a/app/api/nowpayments/create-payment/route.ts
++++ b/app/api/nowpayments/create-payment/route.ts
+@@ -217,108 +217,113 @@ export async function POST(request: NextRequest) {
+         { 
+           success: false, 
+           error: 'Payment link not found' 
+         },
+         { status: 404 }
+       )
+     }
+ 
+     console.log('✅ Payment link found:', {
+       id: paymentLinkData.id,
+       merchant_id: paymentLinkData.merchant_id
+     })
+ 
+     const merchant = Array.isArray(paymentLinkData.merchants)
+       ? paymentLinkData.merchants[0]
+       : paymentLinkData.merchants
+ 
+     const preferredPayoutCurrency =
+       paymentLinkData.preferred_payout_currency ||
+       merchant.preferred_payout_currency
+ 
+     const autoConvertEnabled =
+       paymentLinkData.auto_convert_enabled &&
+       !!preferredPayoutCurrency
+ 
++    // Determine target payout currency
++    const targetPayoutCurrency = autoConvertEnabled
++      ? preferredPayoutCurrency
++      : pay_currency.toUpperCase()
++
+     // Prepare payment request for NOWPayments
+     interface PaymentRequest {
+       price_amount: number
+       price_currency: string
+       pay_currency: string
+       order_id: string
+       order_description: string
+       ipn_callback_url: string
+       success_url: string
+       cancel_url: string
+       payout_address?: string
+       payout_currency?: string
+     }
+ 
+     const paymentRequest: PaymentRequest = {
+       price_amount: parseFloat(price_amount.toString()),
+       price_currency: price_currency.toLowerCase(),
+       pay_currency: pay_currency.toLowerCase(),
+       order_id: order_id,
+       order_description: order_description || `Payment for ${merchant.business_name}`,
+       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
+       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success/${payment_link_id}`,
+       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`
+     }
+ 
+     // Enhanced auto-forwarding logic
+     let autoForwardingConfigured = false
+     const wallets = merchant.wallets || {}
+ 
+     console.log('🔍 Available wallets:', Object.keys(wallets))
+ 
+-    if (autoConvertEnabled && preferredPayoutCurrency && Object.keys(wallets).length > 0) {
+-      const walletKey = getWalletKeyForCurrency(preferredPayoutCurrency, wallets)
++    if (targetPayoutCurrency && Object.keys(wallets).length > 0) {
++      const walletKey = getWalletKeyForCurrency(targetPayoutCurrency, wallets)
+ 
+       if (walletKey && wallets[walletKey]) {
+         const walletAddress = wallets[walletKey]
+ 
+         console.log(
+-          `🔍 Found wallet for ${preferredPayoutCurrency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`
++          `🔍 Found wallet for ${targetPayoutCurrency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`
+         )
+ 
+         // Validate wallet address format
+-        if (isValidWalletAddress(walletAddress, preferredPayoutCurrency)) {
++        if (isValidWalletAddress(walletAddress, targetPayoutCurrency)) {
+           paymentRequest.payout_address = walletAddress
+-          paymentRequest.payout_currency = preferredPayoutCurrency.toLowerCase()
++          paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
+           autoForwardingConfigured = true
+ 
+           console.log(
+-            `✅ Auto-forwarding configured for ${preferredPayoutCurrency}: ${walletAddress.substring(0, 10)}...`
++            `✅ Auto-forwarding configured for ${targetPayoutCurrency}: ${walletAddress.substring(0, 10)}...`
+           )
+         } else {
+           console.warn(
+-            `⚠️ Invalid wallet address format for ${preferredPayoutCurrency}: ${walletAddress}`
++            `⚠️ Invalid wallet address format for ${targetPayoutCurrency}: ${walletAddress}`
+           )
+         }
+       } else {
+         console.warn(
+-          `⚠️ No wallet address found for preferred payout currency ${preferredPayoutCurrency}`
++          `⚠️ No wallet address found for payout currency ${targetPayoutCurrency}`
+         )
+         console.log('Available wallet keys:', Object.keys(wallets))
+       }
+     }
+ 
+     // Create payment with NOWPayments
+     console.log('📡 Sending payment request to NOWPayments:')
+     console.log('- price_amount:', paymentRequest.price_amount)
+     console.log('- price_currency:', paymentRequest.price_currency)
+     console.log('- pay_currency:', paymentRequest.pay_currency)
+     console.log('- order_id:', paymentRequest.order_id)
+     console.log('- auto_forwarding_enabled:', autoForwardingConfigured)
+     if (autoForwardingConfigured) {
+       console.log('- payout_address:', paymentRequest.payout_address?.substring(0, 10) + '...')
+     }
+ 
+     interface PaymentResponse {
+       payment_id: string
+       payment_status: string
+       pay_address: string
+       price_amount: number
+       price_currency: string
+       pay_amount: number
+       pay_currency: string
+       order_id?: string
+diff --git a/app/api/nowpayments/create-payment/route.ts b/app/api/nowpayments/create-payment/route.ts
+index c88c00d142cd39281cb7ce190610e43c089526b5..44686dff21a791a2f769ce6399235e38b4388b80 100644
+--- a/app/api/nowpayments/create-payment/route.ts
++++ b/app/api/nowpayments/create-payment/route.ts
+@@ -419,68 +424,90 @@ export async function POST(request: NextRequest) {
+         if (!retryResponse.ok) {
+           throw new Error(`NOWPayments API error: ${retryResponse.status} ${JSON.stringify(retryResponseData, null, 2)}`)
+         }
+ 
+         paymentResponse = retryResponseData as PaymentResponse
+         autoForwardingConfigured = false
+         console.log('✅ Payment created successfully without auto-forwarding')
+         
+       } catch (retryError) {
+         console.error('❌ Retry also failed:', retryError)
+         return handleNOWPaymentsError(retryError, 'Payment creation retry failed')
+       }
+     }
+ 
+     if (!paymentResponse) {
+       throw new Error('No payment response received')
+     }
+ 
+     console.log('✅ Payment created successfully:', {
+       payment_id: paymentResponse.payment_id,
+       payment_status: paymentResponse.payment_status,
+       pay_address: paymentResponse.pay_address?.substring(0, 10) + '...',
+       auto_forwarding: autoForwardingConfigured
+     })
+ 
++    // Calculate fee and tax details for reporting
++    const feePercentage = Number(paymentLinkData.fee_percentage || 0)
++    const feeBaseAmount = Number(paymentLinkData.subtotal_with_tax || paymentLinkData.amount || 0)
++    const feeAmount = feeBaseAmount * feePercentage
++    const chargeCustomerFee = paymentLinkData.charge_customer_fee
++    const customerTotal = chargeCustomerFee ? feeBaseAmount + feeAmount : feeBaseAmount
++    const merchantReceives = chargeCustomerFee ? feeBaseAmount : feeBaseAmount - feeAmount
++    const cryptracFee = chargeCustomerFee ? 0 : feeAmount
++
++    const taxLabel = tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0
++      ? tax_rates.map((r: { label: string }) => r.label).join(', ')
++      : ''
++    const taxPercentage = tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0
++      ? tax_rates.reduce((sum: number, r: { percentage: number | string }) => sum + (parseFloat(r.percentage as string) || 0), 0)
++      : 0
++
+     // Save transaction to database
+     const transactionData = {
+       nowpayments_payment_id: paymentResponse.payment_id,
+       order_id: paymentResponse.order_id,
+       payment_link_id: payment_link_id,
+       merchant_id: paymentLinkData.merchant_id,
+       amount: paymentResponse.price_amount,
+       currency: paymentResponse.price_currency.toUpperCase(),
+       pay_amount: paymentResponse.pay_amount,
+       pay_currency: paymentResponse.pay_currency.toUpperCase(),
+       status: paymentResponse.payment_status,
+       pay_address: paymentResponse.pay_address,
+       // Tax information
+       tax_enabled: tax_enabled || false,
++      tax_label: taxLabel,
++      tax_percentage: taxPercentage,
+       base_amount: base_amount || paymentResponse.price_amount,
+       tax_rates: tax_rates || [],
+       tax_amount: tax_amount || 0,
+       subtotal_with_tax: subtotal_with_tax || paymentResponse.price_amount,
++      total_amount_paid: customerTotal,
++      cryptrac_fee: cryptracFee,
++      gateway_fee: 0,
++      merchant_receives: merchantReceives,
+       // Auto-forwarding info - store in payment_data JSONB field
+       payment_data: {
+         auto_forwarding_enabled: autoForwardingConfigured,
+         payout_address: autoForwardingConfigured ? paymentRequest.payout_address : null,
+         payout_currency: autoForwardingConfigured ? paymentRequest.payout_currency : null
+       },
+       created_at: new Date().toISOString(),
+       updated_at: new Date().toISOString()
+     }
+ 
+     console.log('💾 Saving transaction to database:', {
+       nowpayments_payment_id: transactionData.nowpayments_payment_id,
+       merchant_id: transactionData.merchant_id,
+       amount: transactionData.amount,
+       currency: transactionData.currency
+     })
+ 
+     const { data: transaction, error: transactionError } = await supabase
+       .from('transactions')
+       .insert(transactionData)
+       .select()
+       .single()
+ 
+     if (transactionError) {
+       console.error('❌ Error saving transaction:', transactionError)
+ 
+EOF
+)

@@ -158,10 +158,13 @@ export async function GET(request: NextRequest) {
         nowpayments_payment_id,
         order_id,
         base_amount,
+        subtotal_with_tax,
         tax_label,
         tax_percentage,
         tax_amount,
         total_amount_paid,
+        tax_rates,
+        merchant_receives,
         currency,
         status,
         gateway_fee,
@@ -217,18 +220,29 @@ export async function GET(request: NextRequest) {
     const formattedTransactions: ReportTransaction[] = safeTransactions.map(t => {
       const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
       const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
+      const gross = Number(t.base_amount || 0)
+      const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: any) => r.label).join(', ') : '')
+      const percentage = t.tax_percentage !== null && t.tax_percentage !== undefined
+        ? Number(t.tax_percentage)
+        : Array.isArray(t.tax_rates)
+          ? t.tax_rates.reduce((sum: number, r: any) => sum + (parseFloat(r.percentage) || 0), 0)
+          : 0
+      const taxAmt = t.tax_amount !== null && t.tax_amount !== undefined
+        ? Number(t.tax_amount)
+        : gross * (percentage / 100)
+      const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
       const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
-      const net = Number(t.total_amount_paid || 0) - fees
+      const net = Number(t.merchant_receives ?? totalPaid - fees)
       return {
         id: t.id,
         payment_id: paymentId,
         created_at: t.created_at,
         product_description: paymentLink?.description || '',
-        gross_amount: Number(t.base_amount || 0),
-        tax_label: t.tax_label || '',
-        tax_percentage: Number(t.tax_percentage || 0),
-        tax_amount: Number(t.tax_amount || 0),
-        total_paid: Number(t.total_amount_paid || 0),
+        gross_amount: gross,
+        tax_label: label,
+        tax_percentage: percentage,
+        tax_amount: taxAmt,
+        total_paid: totalPaid,
         fees,
         net_amount: net,
         status: t.status,
@@ -263,10 +277,13 @@ export async function GET(request: NextRequest) {
             nowpayments_payment_id,
             order_id,
             base_amount,
+            subtotal_with_tax,
             tax_label,
             tax_percentage,
             tax_amount,
             total_amount_paid,
+            tax_rates,
+            merchant_receives,
             currency,
             status,
             gateway_fee,
@@ -294,18 +311,29 @@ export async function GET(request: NextRequest) {
         allData = (fullData || []).map(t => {
           const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
           const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
+          const gross = Number(t.base_amount || 0)
+          const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: any) => r.label).join(', ') : '')
+          const percentage = t.tax_percentage !== null && t.tax_percentage !== undefined
+            ? Number(t.tax_percentage)
+            : Array.isArray(t.tax_rates)
+              ? t.tax_rates.reduce((sum: number, r: any) => sum + (parseFloat(r.percentage) || 0), 0)
+              : 0
+          const taxAmt = t.tax_amount !== null && t.tax_amount !== undefined
+            ? Number(t.tax_amount)
+            : gross * (percentage / 100)
+          const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
           const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
-          const net = Number(t.total_amount_paid || 0) - fees
+          const net = Number(t.merchant_receives ?? totalPaid - fees)
           return {
             id: t.id,
             payment_id: paymentId,
             created_at: t.created_at,
             product_description: paymentLink?.description || '',
-            gross_amount: Number(t.base_amount || 0),
-            tax_label: t.tax_label || '',
-            tax_percentage: Number(t.tax_percentage || 0),
-            tax_amount: Number(t.tax_amount || 0),
-            total_paid: Number(t.total_amount_paid || 0),
+            gross_amount: gross,
+            tax_label: label,
+            tax_percentage: percentage,
+            tax_amount: taxAmt,
+            total_paid: totalPaid,
             fees,
             net_amount: net,
             status: t.status,
