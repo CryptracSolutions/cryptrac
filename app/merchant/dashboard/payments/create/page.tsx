@@ -632,6 +632,7 @@ export default function CreatePaymentLinkPage() {
                     {/* Auto-convert setting */}
                     <div className="space-y-3">
                       <div className="text-sm font-medium text-gray-900">Auto-Convert Setting</div>
+                      <p className="text-sm text-gray-600">Automatically swap received funds to your payout currency.</p>
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <input
@@ -687,6 +688,7 @@ export default function CreatePaymentLinkPage() {
                     {/* Gateway fee setting */}
                     <div className="space-y-3">
                       <div className="text-sm font-medium text-gray-900">Gateway Fee Setting</div>
+                      <p className="text-sm text-gray-600">Choose who covers the NOWPayments gateway fee for this link.</p>
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <input

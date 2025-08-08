@@ -45,6 +45,11 @@ interface PaymentLink {
     charge_customer_fee: boolean
     auto_convert_enabled: boolean
   }
+  metadata?: {
+    fee_breakdown?: {
+      effective_charge_customer_fee?: boolean
+    }
+  }
 }
 
 interface CurrencyInfo {
@@ -247,7 +252,10 @@ export default function PaymentPage() {
     const subtotalWithTax = link.subtotal_with_tax
 
     // Platform fee calculation using effective link setting
-    const chargeCustomerFee = !!link.charge_customer_fee
+    const chargeCustomerFee =
+      link.charge_customer_fee ??
+      link.metadata?.fee_breakdown?.effective_charge_customer_fee ??
+      false
     const feeAmount = subtotalWithTax * link.fee_percentage
     const platformFee = chargeCustomerFee ? feeAmount : 0
     const customerTotal = chargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax
@@ -528,7 +536,7 @@ export default function PaymentPage() {
       const currencyAlternatives: Record<string, string[]> = {
         // Major cryptocurrencies
         'BTC': ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
-        'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP'],
+        'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP', 'ETHBASE'],
         'BNB': ['BNB', 'BNBBSC', 'BSC', 'BNB_BSC', 'BINANCE', 'BNBCHAIN'],
         'SOL': ['SOL', 'SOLANA', 'SOLSPL'],
         'ADA': ['ADA', 'CARDANO'],
@@ -544,7 +552,7 @@ export default function PaymentPage() {
         'XLM': ['XLM', 'STELLAR'],
         'ARB': ['ARB', 'ARBITRUM'],
         'OP': ['OP', 'OPTIMISM'],
-        'BASE': ['BASE', 'BASECHAIN'],
+        'BASE': ['ETHBASE', 'BASE', 'BASECHAIN'],
         
         // Stablecoins
         'USDT': ['USDT', 'USDTERC20', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],

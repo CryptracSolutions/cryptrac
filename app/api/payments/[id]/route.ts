@@ -67,7 +67,6 @@ export async function GET(
         )
       `)
       .eq(isUUID ? 'id' : 'link_id', id)
-      .eq('status', 'active')
       .single()
 
     if (error) {

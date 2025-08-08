@@ -3,7 +3,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info } from 'lucide-react'
+import { Loader2, Search, ExternalLink, Trash2, Info, CheckCircle, AlertCircle } from 'lucide-react'
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
 
 interface CurrencyInfo {
@@ -41,7 +41,6 @@ interface WalletSetupStepProps {
   onBack: () => void
 }
 
-type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid'
 
 // Improved currency groups with automatic stablecoin inclusion
 const CURRENCY_GROUPS: CurrencyGroup[] = [
@@ -122,7 +121,6 @@ const OTHER_POPULAR_CURRENCIES: CompatibleCurrency[] = [
 
 export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
   const [wallets, setWallets] = useState<Record<string, string>>({})
-  const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({})
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([])
   const [loadingCurrencies, setLoadingCurrencies] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -171,58 +169,8 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     }
   }
 
-  const validateAddress = async (currency: string, address: string) => {
-    console.log(`🔍 Starting validation for ${currency} with address: ${address}`)
-    
-    if (!address.trim()) {
-      console.log(`❌ Empty address for ${currency}`)
-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }))
-      return false
-    }
-
-    setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }))
-    console.log(`⏳ Set ${currency} status to checking`)
-
-    try {
-      const response = await fetch('/api/wallets/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currency: currency.toUpperCase(),
-          address: address.trim()
-        })
-      })
-
-      const result = await response.json()
-      console.log(`📨 Validation response for ${currency}:`, result)
-      
-      const isValid = result.success && result.validation?.valid
-      
-      setValidationStatus(prev => ({ 
-        ...prev, 
-        [currency]: isValid ? 'valid' : 'invalid' 
-      }))
-      
-      console.log(`✅ Set ${currency} validation status to: ${isValid ? 'valid' : 'invalid'}`)
-      return isValid
-
-    } catch (error) {
-      console.error(`❌ Validation error for ${currency}:`, error)
-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }))
-      return false
-    }
-  }
-
-  const handleAddressChange = async (currency: string, address: string) => {
+  const handleAddressChange = (currency: string, address: string) => {
     setWallets(prev => ({ ...prev, [currency]: address }))
-    
-    if (address.trim()) {
-      await validateAddress(currency, address)
-    } else {
-      setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }))
-    }
   }
 
   const handleRemoveWallet = (currency: string) => {
@@ -231,59 +179,17 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       delete newWallets[currency]
       return newWallets
     })
-    setValidationStatus(prev => {
-      const newStatus = { ...prev }
-      delete newStatus[currency]
-      return newStatus
-    })
   }
 
-  const getValidationIcon = (currency: string) => {
-    const status = validationStatus[currency] || 'idle'
-    switch (status) {
-      case 'checking':
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-      case 'valid':
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'invalid':
-        return <XCircle className="h-4 w-4 text-red-500" />
-      default:
-        return null
-    }
-  }
-
-  const getValidationMessage = (currency: string) => {
-    const status = validationStatus[currency] || 'idle'
-    switch (status) {
-      case 'checking':
-        return 'Validating address...'
-      case 'valid':
-        return 'Valid address'
-      case 'invalid':
-        return 'Invalid address format'
-      default:
-        return ''
-    }
-  }
-
-  const configuredCurrencies = Object.keys(wallets).filter(currency => 
-    wallets[currency]?.trim() && validationStatus[currency] === 'valid'
+  const configuredCurrencies = Object.keys(wallets).filter(currency =>
+    wallets[currency]?.trim()
   )
 
-  const minRequiredMet = configuredCurrencies.length >= 1
-  const allValid = Object.values(validationStatus).every(status => 
-    status === 'idle' || status === 'valid'
-  )
-  const canProceed = minRequiredMet && allValid
-
-  console.log('📊 Configured currencies count:', configuredCurrencies.length)
-  console.log('🚦 Can proceed?', canProceed, '(min required:', minRequiredMet, ', all valid:', allValid, ')')
+  const canProceed = configuredCurrencies.length >= 1
 
   const handleNext = () => {
     const validWallets = Object.fromEntries(
-      Object.entries(wallets).filter(([currency, address]) => 
-        address?.trim() && validationStatus[currency] === 'valid'
-      )
+      Object.entries(wallets).filter(([_, address]) => address?.trim())
     )
     onNext(validWallets)
   }
@@ -293,18 +199,9 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     currency.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Debug state updates
-  useEffect(() => {
-    console.log('🔄 State update - Wallets:', wallets)
-    console.log('🔄 State update - Validation Status:', validationStatus)
-  }, [wallets, validationStatus])
-
   const renderCurrencyInput = (currency: CompatibleCurrency, isAutoIncluded: boolean = false) => (
     <div key={currency.code} className={`relative border rounded-xl p-4 transition-all ${
-      validationStatus[currency.code] === 'valid' ? 'border-green-300 bg-green-50/50' :
-      validationStatus[currency.code] === 'invalid' ? 'border-red-300 bg-red-50/50' :
-      isAutoIncluded ? 'border-blue-200 bg-blue-50/30' :
-      'border-gray-200 hover:border-gray-300'
+      isAutoIncluded ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 hover:border-gray-300'
     }`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
@@ -330,34 +227,18 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               <Trash2 className="h-3 w-3" />
             </Button>
           )}
-          {getValidationIcon(currency.code)}
         </div>
       </div>
-      
+
       {!isAutoIncluded ? (
         <div className="space-y-2">
           <Input
             placeholder={`Enter your ${currency.code} wallet address`}
             value={wallets[currency.code] || ''}
             onChange={(e) => handleAddressChange(currency.code, e.target.value)}
-            className={`transition-colors ${
-              validationStatus[currency.code] === 'valid' ? 'border-green-300 focus:border-green-400' :
-              validationStatus[currency.code] === 'invalid' ? 'border-red-300 focus:border-red-400' :
-              'focus:border-blue-400'
-            }`}
+            className="transition-colors focus:border-blue-400"
           />
-          {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-            <p className={`text-xs ${
-              validationStatus[currency.code] === 'valid' ? 'text-green-600' :
-              validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-              'text-blue-600'
-            }`}>
-              {getValidationMessage(currency.code)}
-            </p>
-          )}
-          
-          {/* Show included stable coins for validated base currencies */}
-          {validationStatus[currency.code] === 'valid' && wallets[currency.code] && (
+          {wallets[currency.code] && (
             <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="text-xs font-medium text-green-800 mb-2">
                 ✅ Automatically includes these stable coins:
@@ -374,7 +255,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                     'BASE': ['USDC (Base)'],
                     'ALGO': ['USDC (Algorand)']
                   }[currency.code] || [];
-                  
+
                   return stableCoins.map((coin, index) => (
                     <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
                       {coin}
@@ -393,7 +274,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                     'BASE': ['USDC (Base)'],
                     'ALGO': ['USDC (Algorand)']
                   }[currency.code] || [];
-                
+
                 return stableCoins.length === 0 ? null : (
                   <div className="mt-2 text-xs text-green-700">
                     Customers can pay with {currency.code} or any of these {stableCoins.length} stable coins using the same address.

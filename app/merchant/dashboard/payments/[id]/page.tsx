@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { use } from 'react';
 import { 
   ArrowLeft, 
   Copy, 
@@ -62,11 +61,11 @@ interface PaymentLink {
 }
 
 interface PaymentDetailsPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) {
-  const { id } = use(params);
+  const { id } = params;
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -250,7 +249,10 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
   const baseAmount = paymentLink.base_amount || paymentLink.amount;
   const subtotalWithTax = paymentLink.subtotal_with_tax || baseAmount;
   const feeAmount = paymentLink.metadata?.fee_breakdown?.fee_amount || (subtotalWithTax * (paymentLink.fee_percentage || 0));
-  const chargeCustomerFee = paymentLink.charge_customer_fee || false;
+  const chargeCustomerFee =
+    paymentLink.charge_customer_fee ??
+    paymentLink.metadata?.fee_breakdown?.effective_charge_customer_fee ??
+    false;
   const autoConvertEnabled = paymentLink.auto_convert_enabled || false;
   
   // Calculate correct amounts based on who pays the fee

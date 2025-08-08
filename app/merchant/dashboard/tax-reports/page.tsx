@@ -578,13 +578,13 @@ export default function TaxReportsPage() {
                                 <td className="p-2">{date.toISOString().split('T')[0]}</td>
                                 <td className="p-2">{date.toISOString().split('T')[1].split('.')[0]}</td>
                                 <td className="p-2">{tx.product_description || 'N/A'}</td>
-                                <td className="p-2 text-right">{formatCurrency(tx.gross_amount)}</td>
-                                <td className="p-2">{tx.tax_label}</td>
-                                <td className="p-2 text-right">{tx.tax_percentage.toFixed(2)}</td>
-                                <td className="p-2 text-right">{formatCurrency(tx.tax_amount)}</td>
-                                <td className="p-2 text-right">{formatCurrency(tx.total_paid)}</td>
-                                <td className="p-2 text-right">{formatCurrency(tx.fees)}</td>
-                                <td className="p-2 text-right">{formatCurrency(tx.net_amount)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.gross_amount || 0)}</td>
+                                <td className="p-2">{tx.tax_label || '-'}</td>
+                                <td className="p-2 text-right">{(tx.tax_percentage ?? 0).toFixed(2)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.tax_amount || 0)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.total_paid || 0)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.fees || 0)}</td>
+                                <td className="p-2 text-right">{formatCurrency(tx.net_amount || 0)}</td>
                                 <td className="p-2 text-center">
                                   <Badge variant={tx.status === 'refunded' ? 'destructive' : 'default'}>
                                     {tx.status === 'refunded' ? 'Refunded' : 'Confirmed'}

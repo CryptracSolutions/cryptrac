@@ -6,7 +6,6 @@ import {
   DollarSign,
   CreditCard,
   LinkIcon,
-  ArrowUpRight,
   Plus,
   Calendar,
   Clock,
@@ -73,14 +72,33 @@ const CURRENCY_NAMES: Record<string, string> = {
   USDCALGO: 'USD Coin (Algorand)',
 };
 
+interface RecentTransaction {
+  id: string;
+  amount: number;
+  currency: string;
+  created_at: string;
+}
+
 export default function MerchantDashboard() {
   const [user, setUser] = useState<{ email?: string; user_metadata?: { business_name?: string; trial_end?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [merchant, setMerchant] = useState<{ id: string; wallets: Record<string, string>; trial_end?: string } | null>(null);
   const [stats, setStats] = useState({ totalRevenue: 0, paymentLinks: 0, successfulPayments: 0 });
   const [supportedCurrencies, setSupportedCurrencies] = useState<{ symbol: string; name: string }[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
   const [trialCountdown, setTrialCountdown] = useState('');
   const router = useRouter();
+
+  const formatCurrency = (amount: number, currency: string) => {
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency.toUpperCase(),
+      }).format(amount);
+    } catch {
+      return amount.toFixed(2);
+    }
+  };
 
   const fetchStats = async (merchantId: string) => {
     try {
@@ -91,9 +109,10 @@ export default function MerchantDashboard() {
 
       const { data: transactions, count: paymentsCount } = await supabase
         .from('transactions')
-        .select('amount', { count: 'exact' })
+        .select('id, amount, currency, created_at', { count: 'exact' })
         .eq('merchant_id', merchantId)
-        .in('status', ['confirmed', 'finished']);
+        .in('status', ['confirmed', 'finished'])
+        .order('created_at', { ascending: false });
 
       const totalRevenue = transactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
 
@@ -102,6 +121,15 @@ export default function MerchantDashboard() {
         paymentLinks: linksCount || 0,
         successfulPayments: paymentsCount || 0,
       });
+
+      setRecentTransactions(
+        (transactions || []).slice(0, 5).map(t => ({
+          id: t.id,
+          amount: Number(t.amount || 0),
+          currency: t.currency || 'USD',
+          created_at: t.created_at,
+        }))
+      );
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     }
@@ -175,6 +203,27 @@ export default function MerchantDashboard() {
   }, [merchant]);
 
   const trialEnd = merchant?.trial_end || user?.user_metadata?.trial_end;
+
+  const steps = [
+    {
+      id: 1,
+      title: 'Create your first payment link',
+      description: 'Set up a payment link with your desired amount and accepted cryptocurrencies.',
+      completed: stats.paymentLinks > 0,
+    },
+    {
+      id: 2,
+      title: 'Share with customers',
+      description: 'Send the link or QR code to your customers via email, social media, or your website.',
+      completed: stats.paymentLinks > 0,
+    },
+    {
+      id: 3,
+      title: 'Receive payments',
+      description: 'Get notified when payments are received and track them in your dashboard.',
+      completed: stats.successfulPayments > 0,
+    },
+  ];
 
   useEffect(() => {
     if (!trialEnd) return;
@@ -251,7 +300,7 @@ export default function MerchantDashboard() {
                 <div>
                   <p className="font-medium text-orange-900">Free Trial Active</p>
                   <p className="text-sm text-orange-700">
-                    Your trial ends on {new Date(trialEnd).toLocaleDateString()}. Upgrade to continue accepting payments.
+                    Your trial ends on {new Date(trialEnd).toLocaleDateString()}. $99 One-time setup fee + $19/mo subscription will be charged to continue accepting crypto payments.
                   </p>
                 </div>
                 <div className="ml-auto flex items-center gap-4">
@@ -274,13 +323,6 @@ export default function MerchantDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="inline-flex items-center text-green-600">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +0%
-                </span>
-                from last month
-              </p>
             </CardContent>
           </Card>
 
@@ -291,12 +333,6 @@ export default function MerchantDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.paymentLinks}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="inline-flex items-center text-blue-600">
-                  <Plus className="h-3 w-3 mr-1" />
-                  Create your first link
-                </span>
-              </p>
             </CardContent>
           </Card>
 
@@ -307,13 +343,6 @@ export default function MerchantDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.successfulPayments}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="inline-flex items-center text-green-600">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +0%
-                </span>
-                from last week
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -361,7 +390,7 @@ export default function MerchantDashboard() {
                 </div>
               </Button>
 
-              <Button 
+              <Button
                 className="w-full justify-start h-auto p-4"
                 variant="outline"
                 disabled
@@ -371,8 +400,8 @@ export default function MerchantDashboard() {
                     <CreditCard className="h-5 w-5 text-purple-600" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">View Analytics</div>
-                    <div className="text-sm text-gray-500">Coming in Phase 6</div>
+                    <div className="font-medium">Smart Terminal</div>
+                    <div className="text-sm text-gray-500">Coming soon</div>
                   </div>
                 </div>
               </Button>
@@ -388,21 +417,35 @@ export default function MerchantDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="p-3 bg-gray-100 rounded-full mb-4">
-                  <Calendar className="h-6 w-6 text-gray-400" />
+              {recentTransactions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="p-3 bg-gray-100 rounded-full mb-4">
+                    <Calendar className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 mb-2">No activity yet</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Create your first payment link to start seeing activity here.
+                  </p>
+                  <Button
+                    onClick={() => router.push('/merchant/dashboard/payments/create')}
+                    size="sm"
+                  >
+                    Create Payment Link
+                  </Button>
                 </div>
-                <h3 className="font-medium text-gray-900 mb-2">No activity yet</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Create your first payment link to start seeing activity here.
-                </p>
-                <Button 
-                  onClick={() => router.push('/merchant/dashboard/payments/create')}
-                  size="sm"
-                >
-                  Create Payment Link
-                </Button>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentTransactions.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between border-b last:border-0 pb-2">
+                      <div>
+                        <p className="text-sm font-medium">{formatCurrency(tx.amount, tx.currency)}</p>
+                        <p className="text-xs text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <span className="text-xs text-gray-500">{tx.currency}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -440,35 +483,17 @@ export default function MerchantDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
-                  1
+              {steps.map(step => (
+                <div key={step.id} className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                    {step.id}
+                  </div>
+                  <div>
+                    <h4 className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>{step.title}</h4>
+                    <p className={`text-sm ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>{step.description}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium">Create your first payment link</h4>
-                  <p className="text-sm text-gray-600">Set up a payment link with your desired amount and accepted cryptocurrencies.</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center text-sm font-medium">
-                  2
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-400">Share with customers</h4>
-                  <p className="text-sm text-gray-400">Send the link or QR code to your customers via email, social media, or your website.</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center text-sm font-medium">
-                  3
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-400">Receive payments</h4>
-                  <p className="text-sm text-gray-400">Get notified when payments are received and track them in your dashboard.</p>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>

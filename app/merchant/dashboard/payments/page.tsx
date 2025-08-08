@@ -532,15 +532,17 @@ export default function PaymentsPage() {
                         {copiedId === link.id ? 'Copied!' : 'Copy'}
                       </Button>
                       
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
-                        className="flex items-center gap-1"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Open
-                      </Button>
+                      {link.status === 'active' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
+                          className="flex items-center gap-1"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Open
+                        </Button>
+                      )}
                       
                       <Link href={`/merchant/dashboard/payments/${link.id}`}>
                         <Button variant="outline" size="sm" className="flex items-center gap-1">

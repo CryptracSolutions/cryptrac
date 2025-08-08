@@ -108,7 +108,7 @@ interface CurrencyInfo {
 interface TaxRate {
   id: string;
   label: string;
-  percentage: number;
+  percentage: string;
 }
 
 interface MerchantSettings {
@@ -390,7 +390,7 @@ export default function MerchantSettingsPage() {
     // Tax configuration defaults
     tax_enabled: false,
     tax_rates: [
-      { id: '1', label: 'Sales Tax', percentage: 8.5 }
+      { id: '1', label: 'Sales Tax', percentage: '8.5' }
     ],
     business_address: {
       street: '',
@@ -485,9 +485,14 @@ export default function MerchantSettingsPage() {
         },
         // Tax configuration from database or defaults
         tax_enabled: merchant.tax_enabled || false,
-        tax_rates: merchant.tax_rates || [
+        tax_rates: (merchant.tax_rates || [
           { id: '1', label: 'Sales Tax', percentage: 8.5 }
-        ],
+        ]).map(
+          (rate: { id: string; label: string; percentage: number | string }) => ({
+            ...rate,
+            percentage: String(rate.percentage)
+          })
+        ),
         business_address: merchant.business_address || {
           street: '',
           city: '',
@@ -597,7 +602,7 @@ export default function MerchantSettingsPage() {
     const newId = (settings.tax_rates.length + 1).toString();
     setSettings(prev => ({
       ...prev,
-      tax_rates: [...prev.tax_rates, { id: newId, label: '', percentage: 0 }]
+      tax_rates: [...prev.tax_rates, { id: newId, label: '', percentage: '0' }]
     }));
   };
 
@@ -615,7 +620,7 @@ export default function MerchantSettingsPage() {
         rate.id === id
           ? {
               ...rate,
-              [field]: field === 'percentage' ? parseFloat(value) || 0 : value
+              [field]: value
             }
           : rate
       )
@@ -762,7 +767,7 @@ export default function MerchantSettingsPage() {
           payment_config: settings.payment_config,
           // Tax configuration
           tax_enabled: settings.tax_enabled,
-          tax_rates: settings.tax_rates,
+          tax_rates: settings.tax_rates.map(rate => ({ ...rate, percentage: parseFloat(rate.percentage) || 0 })),
           tax_strategy: settings.tax_strategy,
           sales_type: settings.sales_type
         })
@@ -1531,7 +1536,7 @@ export default function MerchantSettingsPage() {
                       </div>
                       
                       <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                        <strong>Total Default Tax Rate:</strong> {settings.tax_rates.reduce((sum, rate) => sum + rate.percentage, 0).toFixed(1)}%
+                        <strong>Total Default Tax Rate:</strong> {settings.tax_rates.reduce((sum, rate) => sum + (parseFloat(rate.percentage) || 0), 0).toFixed(1)}%
                       </div>
                     </div>
 
