@@ -1,14 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { ArrowRight, ArrowLeft, Building2, MapPin, Phone, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Building2, MapPin, Phone } from 'lucide-react'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
-import { Badge } from '@/app/components/ui/badge'
 
 interface BusinessAddress {
   street: string
@@ -99,15 +98,6 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
   
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [addressValidation, setAddressValidation] = useState<{
-    isValidating: boolean
-    isValid: boolean | null
-    message: string
-  }>({
-    isValidating: false,
-    isValid: null,
-    message: ''
-  })
 
   // Format phone number as user types
   const formatPhoneNumber = (value: string): string => {
@@ -132,41 +122,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
     return /^\d{5}(-\d{4})?$/.test(zip)
   }
 
-  // Real-time address validation (simplified - in production use Google Places API)
-  const validateAddress = async (address: BusinessAddress) => {
-    if (!address.street || !address.city || !address.state || !address.zip_code) {
-      return
-    }
-
-    setAddressValidation({ isValidating: true, isValid: null, message: 'Validating address...' })
-
-    // Simulate API call - in production, use Google Places API or similar
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Basic validation logic (in production, use real address validation service)
-    const isValid = address.street.length > 5 && 
-                   address.city.length > 2 && 
-                   US_STATES.includes(address.state) && 
-                   isValidZipCode(address.zip_code)
-
-    setAddressValidation({
-      isValidating: false,
-      isValid,
-      message: isValid ? 'Address validated successfully' : 'Address could not be validated. Please check and try again.'
-    })
-  }
-
-  // Debounced address validation
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        if (formData.businessAddress.street && formData.businessAddress.city &&
-            formData.businessAddress.state && formData.businessAddress.zip_code) {
-          validateAddress(formData.businessAddress)
-        }
-      }, 1000)
-
-      return () => clearTimeout(timer)
-    }, [formData.businessAddress]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Address validation removed; accepting input without external verification
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -227,12 +183,6 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
     e.preventDefault()
     
     if (!validateForm()) {
-      return
-    }
-
-    // Check if address validation failed
-    if (addressValidation.isValid === false) {
-      setErrors({ address: 'Please enter a valid address' })
       return
     }
 
@@ -468,24 +418,11 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
             {/* Business Address Section */}
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <MapPin className="w-5 h-5 mr-2 text-[#7f5efd]" />
                   Business Address
                 </h3>
-                {addressValidation.isValid !== null && (
-                  <Badge 
-                    variant={addressValidation.isValid ? "default" : "destructive"}
-                    className="flex items-center"
-                  >
-                    {addressValidation.isValid ? (
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                    ) : (
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                    )}
-                    {addressValidation.isValid ? 'Verified' : 'Invalid'}
-                  </Badge>
-                )}
               </div>
               
               <div className="space-y-4">
@@ -568,19 +505,6 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   </div>
                 </div>
 
-                {/* Address Validation Status */}
-                {addressValidation.isValidating && (
-                  <div className="flex items-center text-sm text-blue-600">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                    Validating address...
-                  </div>
-                )}
-                
-                {addressValidation.message && !addressValidation.isValidating && (
-                  <p className={`text-sm ${addressValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
-                    {addressValidation.message}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -606,7 +530,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
               <Button
                 type="submit"
-                disabled={isSubmitting || addressValidation.isValidating}
+                disabled={isSubmitting}
                 className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center"
               >
                 {isSubmitting ? 'Saving...' : 'Continue'}
