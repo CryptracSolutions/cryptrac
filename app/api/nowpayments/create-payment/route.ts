@@ -45,7 +45,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'XLM': ['XLM', 'STELLAR'],
   'ARB': ['ARB', 'ARBITRUM', 'USDTARB', 'USDCARB'],
   'OP': ['OP', 'OPTIMISM', 'USDTOP', 'USDCOP'],
-  'BASE': ['BASE', 'USDCBASE']
+  'ETHBASE': ['ETHBASE', 'USDCBASE']
 }
 
 // Stable coins that can fall back to a base network wallet if no direct key exists
@@ -54,7 +54,7 @@ const stableCoinAssociations: Record<string, string> = {
   USDCARB: 'ETH',
   USDTOP: 'ETH',
   USDCOP: 'ETH',
-  USDCBASE: 'ETH'
+  USDCBASE: 'ETHBASE'
 }
 
 // Function to determine which wallet to use for a given currency

@@ -36,14 +36,14 @@ import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
   SOL: ['USDCSOL', 'USDTSOL'],
-  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
   BNB: ['USDTBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
   TRX: ['USDTTRC20'],
   TON: ['USDTTON'],
   ARB: ['USDTARB', 'USDCARB'],
   OP: ['USDTOP', 'USDCOP'],
-  BASE: ['USDCBASE'],
+  ETHBASE: ['USDCBASE'],
   ALGO: ['USDCALGO'],
 };
 
@@ -65,7 +65,7 @@ const CURRENCY_NAMES: Record<string, string> = {
   XLM: 'Stellar',
   ARB: 'Arbitrum',
   OP: 'Optimism',
-  BASE: 'Base',
+  ETHBASE: 'ETH (Base)',
   ALGO: 'Algorand',
   USDT: 'Tether (Ethereum)',
   USDC: 'USD Coin (Ethereum)',

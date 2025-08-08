@@ -63,7 +63,7 @@ const CURRENCY_GROUPS: CurrencyGroup[] = [
       { code: 'USDC', name: 'USDC', network: 'Ethereum', trust_wallet_compatible: true },
       { code: 'DAI', name: 'DAI', network: 'Ethereum', trust_wallet_compatible: true },
       { code: 'PYUSD', name: 'PYUSD', network: 'Ethereum', trust_wallet_compatible: true },
-      { code: 'BASE', name: 'ETH (Base)', network: 'Base', trust_wallet_compatible: true },
+      { code: 'ETHBASE', name: 'ETH (Base)', network: 'Base', trust_wallet_compatible: true },
       { code: 'USDCBASE', name: 'USDC (Base)', network: 'Base', trust_wallet_compatible: true },
     ],
     others: []
@@ -371,7 +371,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                     'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
                     'TRX': ['USDT (TRC-20)'],
                     'TON': ['USDT (TON)'],
-                    'BASE': ['USDC (Base)'],
+                    'ETHBASE': ['USDC (Base)'],
                     'ALGO': ['USDC (Algorand)']
                   }[currency.code] || [];
 
@@ -390,7 +390,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                     'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
                     'TRX': ['USDT (TRC-20)'],
                     'TON': ['USDT (TON)'],
-                    'BASE': ['USDC (Base)'],
+                    'ETHBASE': ['USDC (Base)'],
                     'ALGO': ['USDC (Algorand)']
                   }[currency.code] || [];
 

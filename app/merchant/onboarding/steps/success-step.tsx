@@ -44,7 +44,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
     'TON': ['USDTTON'],
     'ARB': ['USDTARB', 'USDCARB'],
     'OP': ['USDTOP', 'USDCOP'],
-    'BASE': ['USDCBASE'],
+    'ETHBASE': ['USDCBASE'],
     'ALGO': ['USDCALGO']
   }
 

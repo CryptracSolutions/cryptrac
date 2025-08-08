@@ -221,18 +221,22 @@ export async function GET(request: NextRequest) {
       const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
       const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
       const gross = Number(t.base_amount || 0)
-      const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: any) => r.label).join(', ') : '')
+      const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: { label: string }) => r.label).join(', ') : '')
       const percentage = t.tax_percentage !== null && t.tax_percentage !== undefined
         ? Number(t.tax_percentage)
         : Array.isArray(t.tax_rates)
-          ? t.tax_rates.reduce((sum: number, r: any) => sum + (parseFloat(r.percentage) || 0), 0)
+          ? t.tax_rates.reduce(
+              (sum: number, r: { percentage?: string | number }) =>
+                sum + (parseFloat(String(r.percentage)) || 0),
+              0
+            )
           : 0
       const taxAmt = t.tax_amount !== null && t.tax_amount !== undefined
         ? Number(t.tax_amount)
         : gross * (percentage / 100)
       const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
       const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
-      const net = Number(t.merchant_receives ?? totalPaid - fees)
+      const net = totalPaid - fees
       return {
         id: t.id,
         payment_id: paymentId,
@@ -312,18 +316,22 @@ export async function GET(request: NextRequest) {
           const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
           const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
           const gross = Number(t.base_amount || 0)
-          const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: any) => r.label).join(', ') : '')
+          const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: { label: string }) => r.label).join(', ') : '')
           const percentage = t.tax_percentage !== null && t.tax_percentage !== undefined
             ? Number(t.tax_percentage)
             : Array.isArray(t.tax_rates)
-              ? t.tax_rates.reduce((sum: number, r: any) => sum + (parseFloat(r.percentage) || 0), 0)
+              ? t.tax_rates.reduce(
+                  (sum: number, r: { percentage?: string | number }) =>
+                    sum + (parseFloat(String(r.percentage)) || 0),
+                  0
+                )
               : 0
           const taxAmt = t.tax_amount !== null && t.tax_amount !== undefined
             ? Number(t.tax_amount)
             : gross * (percentage / 100)
           const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
           const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
-          const net = Number(t.merchant_receives ?? totalPaid - fees)
+          const net = totalPaid - fees
           return {
             id: t.id,
             payment_id: paymentId,

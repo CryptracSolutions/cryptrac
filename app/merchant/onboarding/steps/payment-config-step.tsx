@@ -46,8 +46,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   // Determine base currencies, automatically including ETH on Base if ETH is configured
   const baseCurrencies = React.useMemo(() => {
     const bases = [...configuredCurrencies]
-    if (configuredCurrencies.includes('ETH') && !bases.includes('BASE')) {
-      bases.push('BASE')
+    if (configuredCurrencies.includes('ETH') && !bases.includes('ETHBASE')) {
+      bases.push('ETHBASE')
     }
     return bases
   }, [configuredCurrencies])
@@ -62,7 +62,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     'TON': ['USDTTON'],
     'ARB': ['USDTARB', 'USDCARB'],
     'OP': ['USDTOP', 'USDCOP'],
-    'BASE': ['USDCBASE'],
+    'ETHBASE': ['USDCBASE'],
     'ALGO': ['USDCALGO']
   }
 
@@ -95,7 +95,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     'XLM': 'Stellar',
     'ARB': 'Arbitrum',
     'OP': 'Optimism',
-    'BASE': 'ETH (Base)',
+    'ETHBASE': 'ETH (Base)',
     'ALGO': 'Algorand',
     // Stable coins
     'USDT': 'Tether (Ethereum)',

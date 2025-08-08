@@ -1,225 +1,1006 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/app/api/nowpayments/create-payment/route.ts b/app/api/nowpayments/create-payment/route.ts
-index c88c00d142cd39281cb7ce190610e43c089526b5..44686dff21a791a2f769ce6399235e38b4388b80 100644
+index 44686dff21a791a2f769ce6399235e38b4388b80..381f8b417763b19b976401e813d39157eb7ae23d 100644
 --- a/app/api/nowpayments/create-payment/route.ts
 +++ b/app/api/nowpayments/create-payment/route.ts
-@@ -217,108 +217,113 @@ export async function POST(request: NextRequest) {
-         { 
-           success: false, 
-           error: 'Payment link not found' 
-         },
-         { status: 404 }
+@@ -23,60 +23,60 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
+   // Solana network
+   'SOL': ['SOL', 'SOLANA', 'USDTSOL', 'USDCSOL'],
+   
+   // Polygon network
+   'MATIC': ['MATIC', 'POLYGON', 'USDTMATIC', 'USDCMATIC'],
+   
+   // Avalanche network
+   'AVAX': ['AVAX', 'AVALANCHE'],
+   
+   // Tron network
+   'TRX': ['TRX', 'TRON', 'USDTTRC20'],
+   
+   // TON network
+   'TON': ['TON', 'USDTTON'],
+   
+   // Other networks
+   'LTC': ['LTC', 'LITECOIN'],
+   'ADA': ['ADA', 'CARDANO'],
+   'DOT': ['DOT', 'POLKADOT'],
+   'XRP': ['XRP', 'RIPPLE'],
+   'NEAR': ['NEAR'],
+   'ALGO': ['ALGO', 'ALGORAND', 'USDCALGO'],
+   'XLM': ['XLM', 'STELLAR'],
+   'ARB': ['ARB', 'ARBITRUM', 'USDTARB', 'USDCARB'],
+   'OP': ['OP', 'OPTIMISM', 'USDTOP', 'USDCOP'],
+-  'BASE': ['BASE', 'USDCBASE']
++  'ETHBASE': ['ETHBASE', 'USDCBASE']
+ }
+ 
+ // Stable coins that can fall back to a base network wallet if no direct key exists
+ const stableCoinAssociations: Record<string, string> = {
+   USDTARB: 'ETH',
+   USDCARB: 'ETH',
+   USDTOP: 'ETH',
+   USDCOP: 'ETH',
+-  USDCBASE: 'ETH'
++  USDCBASE: 'ETHBASE'
+ }
+ 
+ // Function to determine which wallet to use for a given currency
+ function getWalletKeyForCurrency(currency: string, wallets: Record<string, string>): string | null {
+   const currencyUpper = currency.toUpperCase()
+   
+   // First, try exact match
+   if (wallets[currencyUpper]) {
+     return currencyUpper
+   }
+   
+   // Then, try to find the network this currency belongs to
+   for (const [networkKey, currencies] of Object.entries(NETWORK_WALLET_MAPPING)) {
+     if (currencies.includes(currencyUpper)) {
+       // Check if we have a wallet for this network
+       if (wallets[networkKey]) {
+         return networkKey
+       }
+       // Also check alternative names
+       for (const altName of currencies) {
+         if (wallets[altName]) {
+           return altName
+         }
+       }
+     }
+diff --git a/app/api/tax-reports/route.ts b/app/api/tax-reports/route.ts
+index bfed5152409c22dbb23bcd441959a2eaeb7d58cb..465e85b878131c413e1d78b80de9e8122db3595f 100644
+--- a/app/api/tax-reports/route.ts
++++ b/app/api/tax-reports/route.ts
+@@ -199,62 +199,66 @@ export async function GET(request: NextRequest) {
+ 
+     // Apply pagination for JSON responses
+     if (filters.export_format === 'json' && filters.page) {
+       const offset = (filters.page - 1) * filters.limit!
+       baseQuery = baseQuery.range(offset, offset + filters.limit! - 1)
+     }
+ 
+     const { data: transactions, error, count } = await baseQuery
+ 
+     if (error) {
+       console.error('❌ Error fetching transactions:', error)
+       return NextResponse.json(
+         { success: false, error: 'Failed to fetch transactions' },
+         { status: 500 }
        )
      }
  
-     console.log('✅ Payment link found:', {
-       id: paymentLinkData.id,
-       merchant_id: paymentLinkData.merchant_id
+     // Fix: Handle null transactions
+     const safeTransactions = transactions || []
+     console.log(`✅ Fetched ${safeTransactions.length} transactions (total: ${count}) in ${Date.now() - startTime}ms`)
+ 
+     const formattedTransactions: ReportTransaction[] = safeTransactions.map(t => {
+       const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
+       const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
+       const gross = Number(t.base_amount || 0)
+-      const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: any) => r.label).join(', ') : '')
++      const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: { label: string }) => r.label).join(', ') : '')
+       const percentage = t.tax_percentage !== null && t.tax_percentage !== undefined
+         ? Number(t.tax_percentage)
+         : Array.isArray(t.tax_rates)
+-          ? t.tax_rates.reduce((sum: number, r: any) => sum + (parseFloat(r.percentage) || 0), 0)
++          ? t.tax_rates.reduce(
++              (sum: number, r: { percentage?: string | number }) =>
++                sum + (parseFloat(String(r.percentage)) || 0),
++              0
++            )
+           : 0
+       const taxAmt = t.tax_amount !== null && t.tax_amount !== undefined
+         ? Number(t.tax_amount)
+         : gross * (percentage / 100)
+       const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
+       const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
+-      const net = Number(t.merchant_receives ?? totalPaid - fees)
++      const net = totalPaid - fees
+       return {
+         id: t.id,
+         payment_id: paymentId,
+         created_at: t.created_at,
+         product_description: paymentLink?.description || '',
+         gross_amount: gross,
+         tax_label: label,
+         tax_percentage: percentage,
+         tax_amount: taxAmt,
+         total_paid: totalPaid,
+         fees,
+         net_amount: net,
+         status: t.status,
+         refund_amount: Number(t.refund_amount || 0),
+         refund_date: t.refunded_at
+       } as ReportTransaction
      })
  
-     const merchant = Array.isArray(paymentLinkData.merchants)
-       ? paymentLinkData.merchants[0]
-       : paymentLinkData.merchants
+     // Calculate summary statistics
+     const summary: TransactionSummary = calculateSummary(formattedTransactions, dateRange)
  
-     const preferredPayoutCurrency =
-       paymentLinkData.preferred_payout_currency ||
-       merchant.preferred_payout_currency
+     // Prepare pagination info
+     const pagination: PaginationInfo = {
+       current_page: filters.page || 1,
+       total_pages: Math.ceil((count || 0) / (filters.limit || 100)),
+@@ -290,62 +294,66 @@ export async function GET(request: NextRequest) {
+             cryptrac_fee,
+             refund_amount,
+             refunded_at,
+             created_at,
+             payment_links!inner(
+               link_id,
+               description,
+               merchants!inner(user_id)
+             )
+           `)
+           .eq('payment_links.merchants.user_id', user_id)
+           .gte('created_at', dateRange.start_date)
+           .lte('created_at', dateRange.end_date)
+           .in('status', statusFilter)
+           .order('created_at', { ascending: false })
  
-     const autoConvertEnabled =
-       paymentLinkData.auto_convert_enabled &&
-       !!preferredPayoutCurrency
- 
-+    // Determine target payout currency
-+    const targetPayoutCurrency = autoConvertEnabled
-+      ? preferredPayoutCurrency
-+      : pay_currency.toUpperCase()
-+
-     // Prepare payment request for NOWPayments
-     interface PaymentRequest {
-       price_amount: number
-       price_currency: string
-       pay_currency: string
-       order_id: string
-       order_description: string
-       ipn_callback_url: string
-       success_url: string
-       cancel_url: string
-       payout_address?: string
-       payout_currency?: string
-     }
- 
-     const paymentRequest: PaymentRequest = {
-       price_amount: parseFloat(price_amount.toString()),
-       price_currency: price_currency.toLowerCase(),
-       pay_currency: pay_currency.toLowerCase(),
-       order_id: order_id,
-       order_description: order_description || `Payment for ${merchant.business_name}`,
-       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
-       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success/${payment_link_id}`,
-       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`
-     }
- 
-     // Enhanced auto-forwarding logic
-     let autoForwardingConfigured = false
-     const wallets = merchant.wallets || {}
- 
-     console.log('🔍 Available wallets:', Object.keys(wallets))
- 
--    if (autoConvertEnabled && preferredPayoutCurrency && Object.keys(wallets).length > 0) {
--      const walletKey = getWalletKeyForCurrency(preferredPayoutCurrency, wallets)
-+    if (targetPayoutCurrency && Object.keys(wallets).length > 0) {
-+      const walletKey = getWalletKeyForCurrency(targetPayoutCurrency, wallets)
- 
-       if (walletKey && wallets[walletKey]) {
-         const walletAddress = wallets[walletKey]
- 
-         console.log(
--          `🔍 Found wallet for ${preferredPayoutCurrency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`
-+          `🔍 Found wallet for ${targetPayoutCurrency} using ${walletKey}: ${walletAddress.substring(0, 10)}...`
-         )
- 
-         // Validate wallet address format
--        if (isValidWalletAddress(walletAddress, preferredPayoutCurrency)) {
-+        if (isValidWalletAddress(walletAddress, targetPayoutCurrency)) {
-           paymentRequest.payout_address = walletAddress
--          paymentRequest.payout_currency = preferredPayoutCurrency.toLowerCase()
-+          paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
-           autoForwardingConfigured = true
- 
-           console.log(
--            `✅ Auto-forwarding configured for ${preferredPayoutCurrency}: ${walletAddress.substring(0, 10)}...`
-+            `✅ Auto-forwarding configured for ${targetPayoutCurrency}: ${walletAddress.substring(0, 10)}...`
-           )
-         } else {
-           console.warn(
--            `⚠️ Invalid wallet address format for ${preferredPayoutCurrency}: ${walletAddress}`
-+            `⚠️ Invalid wallet address format for ${targetPayoutCurrency}: ${walletAddress}`
-           )
+         if (filters.tax_only) {
+           fullQuery = fullQuery.eq('tax_enabled', true)
          }
-       } else {
-         console.warn(
--          `⚠️ No wallet address found for preferred payout currency ${preferredPayoutCurrency}`
-+          `⚠️ No wallet address found for payout currency ${targetPayoutCurrency}`
-         )
-         console.log('Available wallet keys:', Object.keys(wallets))
+ 
+         const { data: fullData } = await fullQuery
+         allData = (fullData || []).map(t => {
+           const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
+           const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
+           const gross = Number(t.base_amount || 0)
+-          const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: any) => r.label).join(', ') : '')
++          const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: { label: string }) => r.label).join(', ') : '')
+           const percentage = t.tax_percentage !== null && t.tax_percentage !== undefined
+             ? Number(t.tax_percentage)
+             : Array.isArray(t.tax_rates)
+-              ? t.tax_rates.reduce((sum: number, r: any) => sum + (parseFloat(r.percentage) || 0), 0)
++              ? t.tax_rates.reduce(
++                  (sum: number, r: { percentage?: string | number }) =>
++                    sum + (parseFloat(String(r.percentage)) || 0),
++                  0
++                )
+               : 0
+           const taxAmt = t.tax_amount !== null && t.tax_amount !== undefined
+             ? Number(t.tax_amount)
+             : gross * (percentage / 100)
+           const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
+           const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
+-          const net = Number(t.merchant_receives ?? totalPaid - fees)
++          const net = totalPaid - fees
+           return {
+             id: t.id,
+             payment_id: paymentId,
+             created_at: t.created_at,
+             product_description: paymentLink?.description || '',
+             gross_amount: gross,
+             tax_label: label,
+             tax_percentage: percentage,
+             tax_amount: taxAmt,
+             total_paid: totalPaid,
+             fees,
+             net_amount: net,
+             status: t.status,
+             refund_amount: Number(t.refund_amount || 0),
+             refund_date: t.refunded_at
+           }
+         })
        }
+ 
+       const csvSummary = calculateSummary(allData, dateRange)
+       const csv = generateAuditCSV(allData, csvSummary)
+ 
+       return new NextResponse(csv, {
+         status: 200,
+         headers: {
+diff --git a/app/merchant/dashboard/page.tsx b/app/merchant/dashboard/page.tsx
+index 5c08d6823b843c1f03da9121b37e644f28dc5a80..6f65797dc3e257adcc43b220a4e77620f2f2d225 100644
+--- a/app/merchant/dashboard/page.tsx
++++ b/app/merchant/dashboard/page.tsx
+@@ -1,78 +1,78 @@
+ 'use client';
+ 
+ import React, { useState, useEffect } from 'react';
+ import { useRouter } from 'next/navigation';
+ import {
+   DollarSign,
+   CreditCard,
+   LinkIcon,
+   Plus,
+   Calendar,
+   Clock,
+   CheckCircle
+ } from 'lucide-react';
+ import { Button } from '@/app/components/ui/button';
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+ import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+ import { CryptoIcon } from '@/app/components/ui/crypto-icon';
+ import { supabase } from '@/lib/supabase-browser';
+ import Link from 'next/link';
+ 
+ // Stable coin associations for automatic inclusion
+ const stableCoinAssociations: Record<string, string[]> = {
+   SOL: ['USDCSOL', 'USDTSOL'],
+-  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
++  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD', 'ETHBASE', 'USDCBASE'],
+   BNB: ['USDTBSC', 'USDCBSC'],
+   MATIC: ['USDTMATIC', 'USDCMATIC'],
+   TRX: ['USDTTRC20'],
+   TON: ['USDTTON'],
+   ARB: ['USDTARB', 'USDCARB'],
+   OP: ['USDTOP', 'USDCOP'],
+-  BASE: ['USDCBASE'],
++  ETHBASE: ['USDCBASE'],
+   ALGO: ['USDCALGO'],
+ };
+ 
+ const CURRENCY_NAMES: Record<string, string> = {
+   BTC: 'Bitcoin',
+   ETH: 'Ethereum',
+   BNB: 'BNB',
+   SOL: 'Solana',
+   TRX: 'TRON',
+   TON: 'Toncoin',
+   AVAX: 'Avalanche',
+   DOGE: 'Dogecoin',
+   XRP: 'XRP',
+   SUI: 'Sui',
+   MATIC: 'Polygon',
+   ADA: 'Cardano',
+   DOT: 'Polkadot',
+   LTC: 'Litecoin',
+   XLM: 'Stellar',
+   ARB: 'Arbitrum',
+   OP: 'Optimism',
+-  BASE: 'Base',
++  ETHBASE: 'ETH (Base)',
+   ALGO: 'Algorand',
+   USDT: 'Tether (Ethereum)',
+   USDC: 'USD Coin (Ethereum)',
+   DAI: 'Dai (Ethereum)',
+   PYUSD: 'PayPal USD (Ethereum)',
+   USDCSOL: 'USD Coin (Solana)',
+   USDTSOL: 'Tether (Solana)',
+   USDTBSC: 'Tether (BSC)',
+   USDCBSC: 'USD Coin (BSC)',
+   USDTMATIC: 'Tether (Polygon)',
+   USDCMATIC: 'USD Coin (Polygon)',
+   USDTTRC20: 'Tether (Tron)',
+   USDTTON: 'Tether (TON)',
+   USDTARB: 'Tether (Arbitrum)',
+   USDCARB: 'USD Coin (Arbitrum)',
+   USDTOP: 'Tether (Optimism)',
+   USDCOP: 'USD Coin (Optimism)',
+   USDCBASE: 'USD Coin (Base)',
+   USDCALGO: 'USD Coin (Algorand)',
+ };
+ 
+ interface RecentTransaction {
+   id: string;
+   amount: number;
+   currency: string;
+diff --git a/app/merchant/onboarding/steps/payment-config-step.tsx b/app/merchant/onboarding/steps/payment-config-step.tsx
+index ba6b00d9ec356f5053daedfac4d41750cee7aff4..af8ee5c855d44f767cb58c0a1da593f09813a552 100644
+--- a/app/merchant/onboarding/steps/payment-config-step.tsx
++++ b/app/merchant/onboarding/steps/payment-config-step.tsx
+@@ -24,100 +24,100 @@ interface PaymentConfigStepProps {
+   walletConfig: {
+     wallets: Record<string, string>
+     selectedCurrencies?: string[]
+   }
+   onComplete: (data: PaymentConfigData) => void
+   onPrevious: () => void
+ }
+ 
+ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPrevious }: PaymentConfigStepProps) {
+   const [formData, setFormData] = useState<PaymentConfigData>({
+     ...data,
+     chargeCustomerFee: data.chargeCustomerFee ?? false,
+     autoForward: true, // Always enabled for non-custodial compliance
+     // Auto-set accepted cryptos from wallet config
+     acceptedCryptos: data.acceptedCryptos.length > 0 ? data.acceptedCryptos : Object.keys(walletConfig.wallets || {})
+   })
+   const [isSubmitting, setIsSubmitting] = useState(false)
+   const [showFeeDetails, setShowFeeDetails] = useState(false)
+ 
+   // Get configured wallet currencies
+   const configuredCurrencies = Object.keys(walletConfig.wallets || {})
+ 
+   // Determine base currencies, automatically including ETH on Base if ETH is configured
+   const baseCurrencies = React.useMemo(() => {
+     const bases = [...configuredCurrencies]
+-    if (configuredCurrencies.includes('ETH') && !bases.includes('BASE')) {
+-      bases.push('BASE')
++    if (configuredCurrencies.includes('ETH') && !bases.includes('ETHBASE')) {
++      bases.push('ETHBASE')
      }
+     return bases
+   }, [configuredCurrencies])
  
-     // Create payment with NOWPayments
-     console.log('📡 Sending payment request to NOWPayments:')
-     console.log('- price_amount:', paymentRequest.price_amount)
-     console.log('- price_currency:', paymentRequest.price_currency)
-     console.log('- pay_currency:', paymentRequest.pay_currency)
-     console.log('- order_id:', paymentRequest.order_id)
-     console.log('- auto_forwarding_enabled:', autoForwardingConfigured)
-     if (autoForwardingConfigured) {
-       console.log('- payout_address:', paymentRequest.payout_address?.substring(0, 10) + '...')
-     }
+   // Stable coin associations for automatic inclusion
+   const stableCoinAssociations: Record<string, string[]> = {
+     'SOL': ['USDCSOL', 'USDTSOL'],
+     'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+     'BNB': ['USDTBSC', 'USDCBSC'],
+     'MATIC': ['USDTMATIC', 'USDCMATIC'],
+     'TRX': ['USDTTRC20'],
+     'TON': ['USDTTON'],
+     'ARB': ['USDTARB', 'USDCARB'],
+     'OP': ['USDTOP', 'USDCOP'],
+-    'BASE': ['USDCBASE'],
++    'ETHBASE': ['USDCBASE'],
+     'ALGO': ['USDCALGO']
+   }
  
-     interface PaymentResponse {
-       payment_id: string
-       payment_status: string
-       pay_address: string
-       price_amount: number
-       price_currency: string
-       pay_amount: number
-       pay_currency: string
-       order_id?: string
-diff --git a/app/api/nowpayments/create-payment/route.ts b/app/api/nowpayments/create-payment/route.ts
-index c88c00d142cd39281cb7ce190610e43c089526b5..44686dff21a791a2f769ce6399235e38b4388b80 100644
---- a/app/api/nowpayments/create-payment/route.ts
-+++ b/app/api/nowpayments/create-payment/route.ts
-@@ -419,68 +424,90 @@ export async function POST(request: NextRequest) {
-         if (!retryResponse.ok) {
-           throw new Error(`NOWPayments API error: ${retryResponse.status} ${JSON.stringify(retryResponseData, null, 2)}`)
-         }
+   // Expand base currencies to include available stable coins
+   const expandedCurrencies = React.useMemo(() => {
+     const expanded = [...baseCurrencies]
+     baseCurrencies.forEach(currency => {
+       const associatedStableCoins = stableCoinAssociations[currency] || []
+       expanded.push(...associatedStableCoins)
+     })
+     return expanded
+   }, [baseCurrencies]) // eslint-disable-line react-hooks/exhaustive-deps
+   
+   // Currency display names mapping (updated with comprehensive stable coins)
+   const CURRENCY_NAMES: Record<string, string> = {
+     'BTC': 'Bitcoin',
+     'ETH': 'Ethereum',
+     'BNB': 'BNB',
+     'SOL': 'Solana',
+     'TRX': 'TRON',
+     'TON': 'Toncoin',
+     'AVAX': 'Avalanche',
+     'DOGE': 'Dogecoin',
+     'XRP': 'XRP',
+     'SUI': 'Sui',
+     'MATIC': 'Polygon',
+     'ADA': 'Cardano',
+     'DOT': 'Polkadot',
+     'LTC': 'Litecoin',
+     'XLM': 'Stellar',
+     'ARB': 'Arbitrum',
+     'OP': 'Optimism',
+-    'BASE': 'ETH (Base)',
++    'ETHBASE': 'ETH (Base)',
+     'ALGO': 'Algorand',
+     // Stable coins
+     'USDT': 'Tether (Ethereum)',
+     'USDC': 'USD Coin (Ethereum)',
+     'DAI': 'Dai (Ethereum)',
+     'PYUSD': 'PayPal USD (Ethereum)',
+     'USDCSOL': 'USD Coin (Solana)',
+     'USDTSOL': 'Tether (Solana)',
+     'USDTBSC': 'Tether (BSC)',
+     'USDCBSC': 'USD Coin (BSC)',
+     'USDTMATIC': 'Tether (Polygon)',
+     'USDCMATIC': 'USD Coin (Polygon)',
+     'USDTTRC20': 'Tether (Tron)',
+     'USDTTON': 'Tether (TON)',
+     'USDTARB': 'Tether (Arbitrum)',
+     'USDCARB': 'USD Coin (Arbitrum)',
+     'USDTOP': 'Tether (Optimism)',
+     'USDCOP': 'USD Coin (Optimism)',
+     'USDCBASE': 'USD Coin (Base)',
+     'USDCALGO': 'USD Coin (Algorand)'
+   }
  
-         paymentResponse = retryResponseData as PaymentResponse
-         autoForwardingConfigured = false
-         console.log('✅ Payment created successfully without auto-forwarding')
+   const getCurrencyDisplayName = (code: string) => {
+     return CURRENCY_NAMES[code] || code
+   }
+diff --git a/app/merchant/onboarding/steps/success-step.tsx b/app/merchant/onboarding/steps/success-step.tsx
+index ec810a3e83901584aec42de771d81d26d08517a4..18c0408baa98b90de8b5de64877376411ebc2dcb 100644
+--- a/app/merchant/onboarding/steps/success-step.tsx
++++ b/app/merchant/onboarding/steps/success-step.tsx
+@@ -22,51 +22,51 @@ interface OnboardingData {
+   paymentConfig: {
+     acceptedCryptos: string[]
+     autoForward: boolean
+   }
+ }
+ 
+ interface SuccessStepProps {
+   onboardingData: OnboardingData
+   onFinish: () => void
+   isLoading: boolean
+ }
+ 
+ export default function SuccessStep({ onboardingData, onFinish, isLoading }: SuccessStepProps) {
+   const { businessInfo, walletConfig, paymentConfig } = onboardingData
+ 
+   // Stable coin associations for automatic inclusion
+   const stableCoinAssociations: Record<string, string[]> = {
+     'SOL': ['USDCSOL', 'USDTSOL'],
+     'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+     'BNB': ['USDTBSC', 'USDCBSC'],
+     'MATIC': ['USDTMATIC', 'USDCMATIC'],
+     'TRX': ['USDTTRC20'],
+     'TON': ['USDTTON'],
+     'ARB': ['USDTARB', 'USDCARB'],
+     'OP': ['USDTOP', 'USDCOP'],
+-    'BASE': ['USDCBASE'],
++    'ETHBASE': ['USDCBASE'],
+     'ALGO': ['USDCALGO']
+   }
+ 
+   // Expand base cryptos to include stable coins
+   const expandedCurrencies = React.useMemo(() => {
+     const expanded = [...paymentConfig.acceptedCryptos]
+     paymentConfig.acceptedCryptos.forEach(currency => {
+       const associatedStableCoins = stableCoinAssociations[currency] || []
+       expanded.push(...associatedStableCoins)
+     })
+     return expanded
+   }, [paymentConfig.acceptedCryptos]) // eslint-disable-line react-hooks/exhaustive-deps
+ 
+   return (
+     <div className="max-w-2xl mx-auto">
+       <Card className="shadow-lg border-0 bg-white relative overflow-hidden">
+ 
+         <CardHeader className="text-center pb-6">
+           <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+             <CheckCircle className="w-10 h-10 text-white" />
+           </div>
+           <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
+             Congratulations!
+           </CardTitle>
+           <p className="text-lg text-gray-600">
+diff --git a/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx b/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx
+index 118bee2e6577b2120d37982d33ac753bec423a30..00edcfdbc8a0d4dc7269e1031f7f51ce45c06ff8 100644
+--- a/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx
++++ b/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx
+@@ -41,51 +41,51 @@ interface WalletSetupStepProps {
+   onBack: () => void
+ }
+ 
+ type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid'
+ 
+ // Improved currency groups with automatic stablecoin inclusion
+ const CURRENCY_GROUPS: CurrencyGroup[] = [
+   {
+     id: 'bitcoin',
+     name: 'Bitcoin',
+     description: 'The original cryptocurrency',
+     primary: { code: 'BTC', name: 'Bitcoin', network: 'Bitcoin', trust_wallet_compatible: true },
+     autoIncludedStablecoins: [],
+     others: []
+   },
+   {
+     id: 'ethereum',
+     name: 'Ethereum Ecosystem',
+     description: 'Ethereum network - automatically includes USDT, USDC, DAI, PYUSD, ETH (Base) & USDC (Base)',
+     primary: { code: 'ETH', name: 'Ethereum', network: 'Ethereum', trust_wallet_compatible: true },
+     autoIncludedStablecoins: [
+       { code: 'USDT', name: 'USDT', network: 'Ethereum', trust_wallet_compatible: true },
+       { code: 'USDC', name: 'USDC', network: 'Ethereum', trust_wallet_compatible: true },
+       { code: 'DAI', name: 'DAI', network: 'Ethereum', trust_wallet_compatible: true },
+       { code: 'PYUSD', name: 'PYUSD', network: 'Ethereum', trust_wallet_compatible: true },
+-      { code: 'BASE', name: 'ETH (Base)', network: 'Base', trust_wallet_compatible: true },
++      { code: 'ETHBASE', name: 'ETH (Base)', network: 'Base', trust_wallet_compatible: true },
+       { code: 'USDCBASE', name: 'USDC (Base)', network: 'Base', trust_wallet_compatible: true },
+     ],
+     others: []
+   },
+   {
+     id: 'binance',
+     name: 'Binance Smart Chain',
+     description: 'BSC network - automatically includes USDT & USDC',
+     primary: { code: 'BNB', name: 'BNB', network: 'BSC', trust_wallet_compatible: true },
+     autoIncludedStablecoins: [
+       { code: 'USDTBSC', name: 'USDT (BSC)', network: 'BSC', trust_wallet_compatible: true },
+       { code: 'USDCBSC', name: 'USDC (BSC)', network: 'BSC', trust_wallet_compatible: true },
+     ],
+     others: []
+   },
+   {
+     id: 'solana',
+     name: 'Solana Ecosystem',
+     description: 'Solana network - automatically includes USDC & USDT',
+     primary: { code: 'SOL', name: 'Solana', network: 'Solana', trust_wallet_compatible: true },
+     autoIncludedStablecoins: [
+       { code: 'USDCSOL', name: 'USDC (Solana)', network: 'Solana', trust_wallet_compatible: true },
+       { code: 'USDTSOL', name: 'USDT (Solana)', network: 'Solana', trust_wallet_compatible: true },
+     ],
+     others: []
+@@ -349,70 +349,70 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
+           {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
+             <p className={`text-xs ${
+               validationStatus[currency.code] === 'valid' ? 'text-green-600' :
+               validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
+               'text-blue-600'
+             }`}>
+               {getValidationMessage(currency.code)}
+             </p>
+           )}
+ 
+           {/* Show included stable coins for validated base currencies */}
+           {validationStatus[currency.code] === 'valid' && wallets[currency.code] && (
+             <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+               <div className="text-xs font-medium text-green-800 mb-2">
+                 ✅ Automatically includes these stable coins:
+               </div>
+               <div className="flex flex-wrap gap-1">
+                 {(() => {
+                   const stableCoins = {
+                     'SOL': ['USDC (Solana)', 'USDT (Solana)'],
+                     'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
+                     'BNB': ['USDT (BSC)', 'USDC (BSC)'],
+                     'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
+                     'TRX': ['USDT (TRC-20)'],
+                     'TON': ['USDT (TON)'],
+-                    'BASE': ['USDC (Base)'],
++                    'ETHBASE': ['USDC (Base)'],
+                     'ALGO': ['USDC (Algorand)']
+                   }[currency.code] || [];
+ 
+                   return stableCoins.map((coin, index) => (
+                     <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                       {coin}
+                     </span>
+                   ));
+                 })()}
+               </div>
+               {(() => {
+                   const stableCoins = {
+                     'SOL': ['USDC (Solana)', 'USDT (Solana)'],
+                     'ETH': ['USDT (ERC-20)', 'USDC (ERC-20)', 'DAI', 'PYUSD', 'ETH (Base)', 'USDC (Base)'],
+                     'BNB': ['USDT (BSC)', 'USDC (BSC)'],
+                     'MATIC': ['USDT (Polygon)', 'USDC (Polygon)'],
+                     'TRX': ['USDT (TRC-20)'],
+                     'TON': ['USDT (TON)'],
+-                    'BASE': ['USDC (Base)'],
++                    'ETHBASE': ['USDC (Base)'],
+                     'ALGO': ['USDC (Algorand)']
+                   }[currency.code] || [];
+ 
+                 return stableCoins.length === 0 ? null : (
+                   <div className="mt-2 text-xs text-green-700">
+                     Customers can pay with {currency.code} or any of these {stableCoins.length} stable coins using the same address.
+                   </div>
+                 );
+               })()}
+             </div>
+           )}
+         </div>
+       ) : (
+         <div className="space-y-2">
+           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+             <div className="flex items-center gap-2 text-blue-700">
+               <Info className="h-4 w-4" />
+               <span className="text-sm font-medium">Uses same address as primary currency</span>
+             </div>
+             <p className="text-xs text-blue-600 mt-1">
+               This stablecoin will automatically use your {currency.network} address
+             </p>
+           </div>
+         </div>
+       )}
+diff --git a/app/merchant/settings/page.tsx b/app/merchant/settings/page.tsx
+index d362e8aeb2ccdd42c31e9f95a396f26d096b24c6..cb45813d57ed6b5bb4beb143bfc581c42b1a359b 100644
+--- a/app/merchant/settings/page.tsx
++++ b/app/merchant/settings/page.tsx
+@@ -14,80 +14,80 @@ import {
+   DollarSign,
+   HelpCircle,
+   Shield,
+   Calculator,
+   MapPin,
+   Building,
+   User,
+   Phone,
+   Globe
+ } from 'lucide-react';
+ import { Button } from '@/app/components/ui/button';
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+ import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+ import { Input } from '@/app/components/ui/input';
+ import { Alert, AlertDescription } from '@/app/components/ui/alert';
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+ import { Checkbox } from '@/app/components/ui/checkbox';
+ import { supabase } from '@/lib/supabase-browser';
+ import toast from 'react-hot-toast';
+ import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
+ 
+ // Stable coin associations for automatic inclusion
+ const stableCoinAssociations: Record<string, string[]> = {
+   SOL: ['USDCSOL', 'USDTSOL'],
+-  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD', 'BASE', 'USDCBASE'],
++  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
+   BNB: ['USDTBSC', 'USDCBSC'],
+   MATIC: ['USDTMATIC', 'USDCMATIC'],
+   TRX: ['USDTTRC20'],
+   TON: ['USDTTON'],
+   ARB: ['USDTARB', 'USDCARB'],
+   OP: ['USDTOP', 'USDCOP'],
+-  BASE: ['USDCBASE'],
++  ETHBASE: ['USDCBASE'],
+   ALGO: ['USDCALGO'],
+ };
+ 
+ const CURRENCY_NAMES: Record<string, string> = {
+   BTC: 'Bitcoin',
+   ETH: 'Ethereum',
+   BNB: 'BNB',
+   SOL: 'Solana',
+   TRX: 'TRON',
+   TON: 'Toncoin',
+   AVAX: 'Avalanche',
+   DOGE: 'Dogecoin',
+   XRP: 'XRP',
+   SUI: 'Sui',
+   MATIC: 'Polygon',
+   ADA: 'Cardano',
+   DOT: 'Polkadot',
+   LTC: 'Litecoin',
+   XLM: 'Stellar',
+   ARB: 'Arbitrum',
+   OP: 'Optimism',
+-  BASE: 'Base',
++  ETHBASE: 'ETH (Base)',
+   ALGO: 'Algorand',
+   USDT: 'Tether (Ethereum)',
+   USDC: 'USD Coin (Ethereum)',
+   DAI: 'Dai (Ethereum)',
+   PYUSD: 'PayPal USD (Ethereum)',
+   USDCSOL: 'USD Coin (Solana)',
+   USDTSOL: 'Tether (Solana)',
+   USDTBSC: 'Tether (BSC)',
+   USDCBSC: 'USD Coin (BSC)',
+   USDTMATIC: 'Tether (Polygon)',
+   USDCMATIC: 'USD Coin (Polygon)',
+   USDTTRC20: 'Tether (Tron)',
+   USDTTON: 'Tether (TON)',
+   USDTARB: 'Tether (Arbitrum)',
+   USDCARB: 'USD Coin (Arbitrum)',
+   USDTOP: 'Tether (Optimism)',
+   USDCOP: 'USD Coin (Optimism)',
+   USDCBASE: 'USD Coin (Base)',
+   USDCALGO: 'USD Coin (Algorand)',
+ };
+ 
+ interface CurrencyInfo {
+   code: string;
+   name: string;
+   symbol: string;
+diff --git a/app/pay/[id]/page.tsx b/app/pay/[id]/page.tsx
+index 4d2f3e55ed80c4eb224143e472fc78e333b21686..cd9641160ee78f39ae8ba375c1997275cc462598 100644
+--- a/app/pay/[id]/page.tsx
++++ b/app/pay/[id]/page.tsx
+@@ -146,51 +146,51 @@ const getBlockExplorerUrl = (txHash: string, currency: string): string | null =>
+   if (['MATIC', 'USDTMATIC', 'USDCMATIC'].includes(currency_upper)) {
+     return `https://polygonscan.com/tx/${txHash}`
+   }
+   
+   // Tron and TRC-20 tokens
+   if (['TRX', 'USDTTRC20'].includes(currency_upper)) {
+     return `https://tronscan.org/#/transaction/${txHash}`
+   }
+   
+   // Avalanche
+   if (currency_upper === 'AVAX') {
+     return `https://snowtrace.io/tx/${txHash}`
+   }
+   
+   // Arbitrum
+   if (['ARB', 'USDTARB', 'USDCARB'].includes(currency_upper)) {
+     return `https://arbiscan.io/tx/${txHash}`
+   }
+   
+   // Optimism
+   if (['OP', 'USDTOP', 'USDCOP'].includes(currency_upper)) {
+     return `https://optimistic.etherscan.io/tx/${txHash}`
+   }
+   
+   // Base
+-  if (['BASE', 'USDCBASE'].includes(currency_upper)) {
++  if (['ETHBASE', 'USDCBASE'].includes(currency_upper)) {
+     return `https://basescan.org/tx/${txHash}`
+   }
+   
+   // TON
+   if (['TON', 'USDTTON'].includes(currency_upper)) {
+     return `https://tonscan.org/tx/${txHash}`
+   }
+   
+   // Algorand
+   if (['ALGO', 'USDCALGO'].includes(currency_upper)) {
+     return `https://algoexplorer.io/tx/${txHash}`
+   }
+   
+   // Litecoin
+   if (currency_upper === 'LTC') {
+     return `https://blockchair.com/litecoin/transaction/${txHash}`
+   }
+   
+   // Cardano
+   if (currency_upper === 'ADA') {
+     return `https://cardanoscan.io/transaction/${txHash}`
+   }
+   
+   // XRP
+   if (currency_upper === 'XRP') {
+@@ -530,51 +530,51 @@ export default function PaymentPage() {
+       }
+ 
+       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
+       console.log('✅ Payment link accepts:', acceptedCryptos)
+ 
+       // Comprehensive alternative mapping for all currencies
+       const currencyAlternatives: Record<string, string[]> = {
+         // Major cryptocurrencies
+         'BTC': ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
+         'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP', 'ETHBASE', 'BASEETH', 'ETH_BASE'],
+         'BNB': ['BNB', 'BNBBSC', 'BSC', 'BNB_BSC', 'BINANCE', 'BNBCHAIN'],
+         'SOL': ['SOL', 'SOLANA', 'SOLSPL'],
+         'ADA': ['ADA', 'CARDANO'],
+         'DOT': ['DOT', 'POLKADOT'],
+         'MATIC': ['MATIC', 'POLYGON', 'MATICMATIC'],
+         'AVAX': ['AVAX', 'AVALANCHE', 'AVAXC'],
+         'TRX': ['TRX', 'TRON'],
+         'LTC': ['LTC', 'LITECOIN'],
+         'XRP': ['XRP', 'RIPPLE'],
+         'TON': ['TON', 'TONCOIN'],
+         'NEAR': ['NEAR', 'NEARPROTOCOL'],
+         'ALGO': ['ALGO', 'ALGORAND'],
+         'XLM': ['XLM', 'STELLAR'],
+         'ARB': ['ARB', 'ARBITRUM'],
+         'OP': ['OP', 'OPTIMISM'],
+-        'BASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
++        'ETHBASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
          
-       } catch (retryError) {
-         console.error('❌ Retry also failed:', retryError)
-         return handleNOWPaymentsError(retryError, 'Payment creation retry failed')
+         // Stablecoins
+         'USDT': ['USDT', 'USDTERC20', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
+         'USDC': ['USDC', 'USDCERC20', 'USDCBSC', 'USDCMATIC', 'USDCSOL', 'USDCALGO', 'USDCARB', 'USDCOP', 'USDCBASE'],
+         'DAI': ['DAI', 'DAIERC20'],
+         'PYUSD': ['PYUSD', 'PYUSDERC20']
        }
+ 
+       // Dynamic network patterns for comprehensive detection
+       const networkPatterns = [
+         'BSC', 'ERC20', 'TRC20', 'SOL', 'MATIC', 'ARB', 'OP', 'BASE', 'AVAX', 'TON', 'ALGO', 'NEAR'
+       ]
+ 
+       console.log('🔍 Step 1: Creating backend mappings for primary currencies...')
+       
+       // Step 1: Create backend mappings for all accepted currencies
+       const backendMappings: Record<string, string> = {}
+       
+       for (const acceptedCrypto of acceptedCryptos) {
+         console.log(`🔍 Finding backend mapping for: ${acceptedCrypto}`)
+         
+         // Try predefined alternatives first
+         const alternatives = currencyAlternatives[acceptedCrypto.toUpperCase()] || []
+         let backendCurrency = null
+         
+@@ -634,58 +634,58 @@ export default function PaymentPage() {
+       for (const acceptedCrypto of acceptedCryptos) {
+         if (backendMappings[acceptedCrypto]) {
+           // Find the actual currency info from NOWPayments
+           const backendCode = backendMappings[acceptedCrypto]
+           const currencyInfo = data.currencies.find((c: CurrencyInfo) => 
+             c.code === backendCode && c.enabled
+           )
+           
+           if (currencyInfo) {
+             // Create clean customer-facing currency
+             customerCurrencies.push({
+               code: acceptedCrypto, // Display the clean code (BNB, not BNBBSC)
+               name: currencyInfo.name,
+               enabled: true,
+               min_amount: currencyInfo.min_amount,
+               max_amount: currencyInfo.max_amount
+             })
+             console.log(`✅ Added primary currency: ${acceptedCrypto} (backend: ${backendCode})`)
+           }
+         }
+       }
+       
+       // Add supported stablecoins for each network
+       const stablecoinMapping: Record<string, string[]> = {
+         'BNB': ['USDTBSC', 'USDCBSC'],
+-        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD', 'USDCBASE'],
++        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD'],
+         'SOL': ['USDTSOL', 'USDCSOL'],
+         'TRX': ['USDTTRC20'],
+         'TON': ['USDTTON'],
+         'MATIC': ['USDTMATIC', 'USDCMATIC'],
+         'ARB': ['USDTARB', 'USDCARB'],
+         'OP': ['USDTOP', 'USDCOP'],
+-        'BASE': ['USDCBASE'],
++        'ETHBASE': ['USDCBASE'],
+         'ALGO': ['USDCALGO']
+       }
+       
+       for (const acceptedCrypto of acceptedCryptos) {
+         const stablecoins = stablecoinMapping[acceptedCrypto] || []
+         console.log(`🔍 Researching stable coins for: ${acceptedCrypto}`)
+         
+         for (const stablecoin of stablecoins) {
+           const stablecoinInfo = data.currencies.find((c: CurrencyInfo) => 
+             c.code.toUpperCase() === stablecoin.toUpperCase() && c.enabled
+           )
+           
+           if (stablecoinInfo) {
+             if (
+               stablecoin.toUpperCase().includes('USDT') ||
+               stablecoin.toUpperCase().includes('USDC') ||
+               ['DAI', 'PYUSD'].includes(stablecoin.toUpperCase())
+             ) {
+               customerCurrencies.push({
+                 code: stablecoinInfo.code,
+                 name: stablecoinInfo.name,
+                 enabled: true,
+                 min_amount: stablecoinInfo.min_amount,
+                 max_amount: stablecoinInfo.max_amount
+               })
+@@ -729,98 +729,112 @@ export default function PaymentPage() {
+         
+         // Stablecoins last, sorted alphabetically
+         if (aStablecoin && bStablecoin) {
+           return a.code.localeCompare(b.code)
+         }
+         
+         return a.code.localeCompare(b.code)
+       })
+ 
+       console.log(`✅ Created ${sortedCurrencies.length} customer-facing currencies`)
+       console.log('📋 Backend mappings:', backendMappings)
+       console.log('🎯 Final customer-facing currencies:', sortedCurrencies.map((c: CurrencyInfo) => c.code))
+       
+       // Update state
+       setAvailableCurrencies(sortedCurrencies)
+       setCurrencyBackendMapping(backendMappings)
+       
+       console.log('🔧 Backend mapping stored for payment processing')
+ 
+     } catch (error) {
+       console.error('Error loading currencies:', error)
+       setError('Failed to load available currencies')
      }
+   }
  
-     if (!paymentResponse) {
-       throw new Error('No payment response received')
-     }
+-  // Load currency estimates sequentially to avoid rate limits
++  // Load currency estimates in small parallel batches for better performance
+   const loadEstimates = async () => {
+     if (!paymentLink || availableCurrencies.length === 0) return
  
-     console.log('✅ Payment created successfully:', {
-       payment_id: paymentResponse.payment_id,
-       payment_status: paymentResponse.payment_status,
-       pay_address: paymentResponse.pay_address?.substring(0, 10) + '...',
-       auto_forwarding: autoForwardingConfigured
-     })
+     console.log('📊 Loading payment estimates...')
  
-+    // Calculate fee and tax details for reporting
-+    const feePercentage = Number(paymentLinkData.fee_percentage || 0)
-+    const feeBaseAmount = Number(paymentLinkData.subtotal_with_tax || paymentLinkData.amount || 0)
-+    const feeAmount = feeBaseAmount * feePercentage
-+    const chargeCustomerFee = paymentLinkData.charge_customer_fee
-+    const customerTotal = chargeCustomerFee ? feeBaseAmount + feeAmount : feeBaseAmount
-+    const merchantReceives = chargeCustomerFee ? feeBaseAmount : feeBaseAmount - feeAmount
-+    const cryptracFee = chargeCustomerFee ? 0 : feeAmount
+     const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
+     const newEstimates: Record<string, EstimateData> = {}
++    const batchSize = 3
 +
-+    const taxLabel = tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0
-+      ? tax_rates.map((r: { label: string }) => r.label).join(', ')
-+      : ''
-+    const taxPercentage = tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0
-+      ? tax_rates.reduce((sum: number, r: { percentage: number | string }) => sum + (parseFloat(r.percentage as string) || 0), 0)
-+      : 0
++    for (let i = 0; i < availableCurrencies.length; i += batchSize) {
++      const batch = availableCurrencies.slice(i, i + batchSize)
 +
-     // Save transaction to database
-     const transactionData = {
-       nowpayments_payment_id: paymentResponse.payment_id,
-       order_id: paymentResponse.order_id,
-       payment_link_id: payment_link_id,
-       merchant_id: paymentLinkData.merchant_id,
-       amount: paymentResponse.price_amount,
-       currency: paymentResponse.price_currency.toUpperCase(),
-       pay_amount: paymentResponse.pay_amount,
-       pay_currency: paymentResponse.pay_currency.toUpperCase(),
-       status: paymentResponse.payment_status,
-       pay_address: paymentResponse.pay_address,
-       // Tax information
-       tax_enabled: tax_enabled || false,
-+      tax_label: taxLabel,
-+      tax_percentage: taxPercentage,
-       base_amount: base_amount || paymentResponse.price_amount,
-       tax_rates: tax_rates || [],
-       tax_amount: tax_amount || 0,
-       subtotal_with_tax: subtotal_with_tax || paymentResponse.price_amount,
-+      total_amount_paid: customerTotal,
-+      cryptrac_fee: cryptracFee,
-+      gateway_fee: 0,
-+      merchant_receives: merchantReceives,
-       // Auto-forwarding info - store in payment_data JSONB field
-       payment_data: {
-         auto_forwarding_enabled: autoForwardingConfigured,
-         payout_address: autoForwardingConfigured ? paymentRequest.payout_address : null,
-         payout_currency: autoForwardingConfigured ? paymentRequest.payout_currency : null
-       },
-       created_at: new Date().toISOString(),
-       updated_at: new Date().toISOString()
++      const results = await Promise.all(
++        batch.map(async (currency) => {
++          const backendCurrency = currencyBackendMapping[currency.code] || currency.code
++          try {
++            const response = await fetch('/api/nowpayments/estimate', {
++              method: 'POST',
++              headers: {
++                'Content-Type': 'application/json',
++              },
++              body: JSON.stringify({
++                amount,
++                currency_from: paymentLink.currency.toLowerCase(),
++                currency_to: backendCurrency.toLowerCase(),
++              }),
++            })
+ 
+-    for (const currency of availableCurrencies) {
+-      const backendCurrency = currencyBackendMapping[currency.code] || currency.code
+-      try {
+-        const response = await fetch('/api/nowpayments/estimate', {
+-          method: 'POST',
+-          headers: {
+-            'Content-Type': 'application/json',
+-          },
+-          body: JSON.stringify({
+-            amount,
+-            currency_from: paymentLink.currency.toLowerCase(),
+-            currency_to: backendCurrency.toLowerCase(),
+-          }),
+-        })
+-
+-        if (response.ok) {
+-          const data = await response.json()
+-          if (data.success && data.estimate) {
+-            newEstimates[currency.code] = {
+-              currency_from: paymentLink.currency,
+-              currency_to: currency.code,
+-              amount_from: amount,
+-              estimated_amount: data.estimate.estimated_amount,
+-              fee_amount: data.estimate.fee_amount || 0,
+-              fee_percentage: data.estimate.fee_percentage || 0,
++            if (response.ok) {
++              const data = await response.json()
++              if (data.success && data.estimate) {
++                console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
++                return {
++                  code: currency.code,
++                  estimate: {
++                    currency_from: paymentLink.currency,
++                    currency_to: currency.code,
++                    amount_from: amount,
++                    estimated_amount: data.estimate.estimated_amount,
++                    fee_amount: data.estimate.fee_amount || 0,
++                    fee_percentage: data.estimate.fee_percentage || 0,
++                  } as EstimateData,
++                }
++              } else {
++                console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
++              }
++            } else {
++              console.warn(`⚠️ HTTP ${response.status} for ${currency.code}`)
+             }
+-            console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
+-          } else {
+-            console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
++          } catch (error) {
++            console.error(`❌ Error loading estimate for ${currency.code}:`, error)
+           }
+-        } else {
+-          console.warn(`⚠️ HTTP ${response.status} for ${currency.code}`)
+-        }
+-      } catch (error) {
+-        console.error(`❌ Error loading estimate for ${currency.code}:`, error)
+-      }
++          return null
++        })
++      )
+ 
+-      // Small delay between requests to avoid hitting rate limits
+-      await new Promise(resolve => setTimeout(resolve, 200))
++      results.forEach((result) => {
++        if (result) {
++          newEstimates[result.code] = result.estimate
++        }
++      })
      }
  
-     console.log('💾 Saving transaction to database:', {
-       nowpayments_payment_id: transactionData.nowpayments_payment_id,
-       merchant_id: transactionData.merchant_id,
-       amount: transactionData.amount,
-       currency: transactionData.currency
-     })
+     setEstimates(newEstimates)
+     console.log(`✅ Loaded ${Object.keys(newEstimates).length} estimates`)
+   }
  
-     const { data: transaction, error: transactionError } = await supabase
-       .from('transactions')
-       .insert(transactionData)
-       .select()
-       .single()
+   // Load estimates when currencies are available
+   useEffect(() => {
+     if (paymentLink && availableCurrencies.length > 0) {
+       loadEstimates()
+     }
+     }, [paymentLink, availableCurrencies]); // eslint-disable-line react-hooks/exhaustive-deps
  
-     if (transactionError) {
-       console.error('❌ Error saving transaction:', transactionError)
+   const createPayment = async () => {
+     if (!selectedCurrency || !paymentLink) return
+ 
+     try {
+       setCreatingPayment(true)
+       console.log('🔄 Creating payment for currency:', selectedCurrency)
+       
+       // Use backend mapping for payment creation
+       const backendCurrency = currencyBackendMapping[selectedCurrency] || selectedCurrency
+       console.log('🔧 Currency mapping:', `${selectedCurrency} → ${backendCurrency}`)
+ 
+       const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
  
 EOF
 )

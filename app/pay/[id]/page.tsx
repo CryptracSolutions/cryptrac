@@ -168,7 +168,7 @@ const getBlockExplorerUrl = (txHash: string, currency: string): string | null =>
   }
   
   // Base
-  if (['BASE', 'USDCBASE'].includes(currency_upper)) {
+  if (['ETHBASE', 'USDCBASE'].includes(currency_upper)) {
     return `https://basescan.org/tx/${txHash}`
   }
   
@@ -552,7 +552,7 @@ export default function PaymentPage() {
         'XLM': ['XLM', 'STELLAR'],
         'ARB': ['ARB', 'ARBITRUM'],
         'OP': ['OP', 'OPTIMISM'],
-        'BASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
+        'ETHBASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
         
         // Stablecoins
         'USDT': ['USDT', 'USDTERC20', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
@@ -656,14 +656,14 @@ export default function PaymentPage() {
       // Add supported stablecoins for each network
       const stablecoinMapping: Record<string, string[]> = {
         'BNB': ['USDTBSC', 'USDCBSC'],
-        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD', 'USDCBASE'],
+        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD'],
         'SOL': ['USDTSOL', 'USDCSOL'],
         'TRX': ['USDTTRC20'],
         'TON': ['USDTTON'],
         'MATIC': ['USDTMATIC', 'USDCMATIC'],
         'ARB': ['USDTARB', 'USDCARB'],
         'OP': ['USDTOP', 'USDCOP'],
-        'BASE': ['USDCBASE'],
+        'ETHBASE': ['USDCBASE'],
         'ALGO': ['USDCALGO']
       }
       
@@ -751,7 +751,7 @@ export default function PaymentPage() {
     }
   }
 
-  // Load currency estimates sequentially to avoid rate limits
+  // Load currency estimates in small parallel batches for better performance
   const loadEstimates = async () => {
     if (!paymentLink || availableCurrencies.length === 0) return
 
@@ -759,46 +759,60 @@ export default function PaymentPage() {
 
     const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
     const newEstimates: Record<string, EstimateData> = {}
+    const batchSize = 3
 
-    for (const currency of availableCurrencies) {
-      const backendCurrency = currencyBackendMapping[currency.code] || currency.code
-      try {
-        const response = await fetch('/api/nowpayments/estimate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount,
-            currency_from: paymentLink.currency.toLowerCase(),
-            currency_to: backendCurrency.toLowerCase(),
-          }),
-        })
+    for (let i = 0; i < availableCurrencies.length; i += batchSize) {
+      const batch = availableCurrencies.slice(i, i + batchSize)
 
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.estimate) {
-            newEstimates[currency.code] = {
-              currency_from: paymentLink.currency,
-              currency_to: currency.code,
-              amount_from: amount,
-              estimated_amount: data.estimate.estimated_amount,
-              fee_amount: data.estimate.fee_amount || 0,
-              fee_percentage: data.estimate.fee_percentage || 0,
+      const results = await Promise.all(
+        batch.map(async (currency) => {
+          const backendCurrency = currencyBackendMapping[currency.code] || currency.code
+          try {
+            const response = await fetch('/api/nowpayments/estimate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                amount,
+                currency_from: paymentLink.currency.toLowerCase(),
+                currency_to: backendCurrency.toLowerCase(),
+              }),
+            })
+
+            if (response.ok) {
+              const data = await response.json()
+              if (data.success && data.estimate) {
+                console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
+                return {
+                  code: currency.code,
+                  estimate: {
+                    currency_from: paymentLink.currency,
+                    currency_to: currency.code,
+                    amount_from: amount,
+                    estimated_amount: data.estimate.estimated_amount,
+                    fee_amount: data.estimate.fee_amount || 0,
+                    fee_percentage: data.estimate.fee_percentage || 0,
+                  } as EstimateData,
+                }
+              } else {
+                console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
+              }
+            } else {
+              console.warn(`⚠️ HTTP ${response.status} for ${currency.code}`)
             }
-            console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
-          } else {
-            console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
+          } catch (error) {
+            console.error(`❌ Error loading estimate for ${currency.code}:`, error)
           }
-        } else {
-          console.warn(`⚠️ HTTP ${response.status} for ${currency.code}`)
-        }
-      } catch (error) {
-        console.error(`❌ Error loading estimate for ${currency.code}:`, error)
-      }
+          return null
+        })
+      )
 
-      // Small delay between requests to avoid hitting rate limits
-      await new Promise(resolve => setTimeout(resolve, 200))
+      results.forEach((result) => {
+        if (result) {
+          newEstimates[result.code] = result.estimate
+        }
+      })
     }
 
     setEstimates(newEstimates)
