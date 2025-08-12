@@ -24,7 +24,7 @@ async function getMerchant(request: NextRequest) {
   );
   const { data: merchant, error: merchantError } = await service
     .from('merchants')
-    .select('id')
+    .select('id, wallets, charge_customer_fee, tax_enabled, tax_rates')
     .eq('user_id', user.id)
     .single();
   if (merchantError || !merchant) return { error: 'Merchant account not found' };
@@ -39,14 +39,23 @@ export async function POST(request: NextRequest) {
   const { service, merchant } = auth;
   const body = await request.json();
   const { id, label, tip_presets, charge_customer_fee, tax_enabled, accepted_cryptos } = body;
-  const payload: Record<string, unknown> = {
-    merchant_id: merchant.id,
-    label,
-    tip_presets,
-    charge_customer_fee,
-    tax_enabled,
-    accepted_cryptos
-  };
+  const payload: Record<string, unknown> = { merchant_id: merchant.id };
+  if (label !== undefined) payload.label = label;
+  if (tip_presets !== undefined) payload.tip_presets = tip_presets;
+  if (charge_customer_fee !== undefined) payload.charge_customer_fee = charge_customer_fee;
+  if (tax_enabled !== undefined) payload.tax_enabled = tax_enabled;
+  if (accepted_cryptos !== undefined) payload.accepted_cryptos = accepted_cryptos;
+  if (!id) {
+    if (payload.accepted_cryptos === undefined) {
+      payload.accepted_cryptos = Object.keys(merchant.wallets || {});
+    }
+    if (payload.charge_customer_fee === undefined) {
+      payload.charge_customer_fee = merchant.charge_customer_fee;
+    }
+    if (payload.tax_enabled === undefined) {
+      payload.tax_enabled = merchant.tax_enabled;
+    }
+  }
   let result;
   if (id) {
     result = await service
@@ -66,5 +75,17 @@ export async function POST(request: NextRequest) {
   if (result.error) {
     return NextResponse.json({ error: 'Failed to save device' }, { status: 500 });
   }
-  return NextResponse.json({ success: true, data: result.data });
+  const data = {
+    ...result.data,
+    accepted_cryptos:
+      (result.data.accepted_cryptos && result.data.accepted_cryptos.length)
+        ? result.data.accepted_cryptos
+        : Object.keys(merchant.wallets || {}),
+    charge_customer_fee:
+      result.data.charge_customer_fee ?? merchant.charge_customer_fee,
+    tax_enabled:
+      result.data.tax_enabled ?? merchant.tax_enabled,
+    tax_rates: merchant.tax_rates || []
+  };
+  return NextResponse.json({ success: true, data });
 }
