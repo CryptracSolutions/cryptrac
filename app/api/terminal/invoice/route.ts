@@ -99,7 +99,7 @@ async function getMerchant(request: NextRequest) {
   );
   const { data: merchant, error: merchantError } = await service
     .from('merchants')
-    .select('id, wallets, charge_customer_fee, auto_convert_enabled, tax_enabled, tax_rates')
+    .select('id, wallets, charge_customer_fee, auto_convert_enabled, tax_enabled, tax_rates, preferred_payout_currency')
     .eq('user_id', user.id)
     .single();
   if (merchantError || !merchant) return { error: 'Merchant account not found' };
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
   }
   const { service, merchant } = auth;
   const body = await request.json();
-  const { amount, tip_amount = 0, pay_currency, pos_device_id } = body;
+  const { amount, tip_amount = 0, pay_currency, pos_device_id, tax_enabled, charge_customer_fee } = body;
   if (!amount || !pay_currency || !pos_device_id) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
@@ -147,8 +147,10 @@ export async function POST(request: NextRequest) {
   if (!allowed.has(pay_currency)) {
     return NextResponse.json({ error: 'Currency not accepted by device' }, { status: 400 });
   }
-  const effectiveChargeCustomerFee = device.charge_customer_fee ?? merchant.charge_customer_fee;
-  const effectiveTaxEnabled = device.tax_enabled ?? merchant.tax_enabled;
+  const effectiveChargeCustomerFee =
+    charge_customer_fee ?? device.charge_customer_fee ?? merchant.charge_customer_fee;
+  const effectiveTaxEnabled =
+    tax_enabled ?? device.tax_enabled ?? merchant.tax_enabled;
   const taxRates = effectiveTaxEnabled ? merchant.tax_rates || [] : [];
   let taxAmount = 0;
   taxRates.forEach((t: { percentage: number | string }) => {
@@ -158,10 +160,14 @@ export async function POST(request: NextRequest) {
   const subtotalWithTax = amountNum + taxAmount;
   const baseFeePercentage = 0.005;
   const autoConvertFeePercentage = merchant.auto_convert_enabled ? 0.005 : 0;
-  const feeAmount = subtotalWithTax * (baseFeePercentage + autoConvertFeePercentage);
+  const feePercentage = baseFeePercentage + autoConvertFeePercentage;
+  const feeAmount = subtotalWithTax * feePercentage;
   const gatewayFee = effectiveChargeCustomerFee ? feeAmount : 0;
   const preTipTotal = subtotalWithTax + gatewayFee;
   const finalTotal = preTipTotal + tipNum;
+  const merchantReceives = effectiveChargeCustomerFee
+    ? subtotalWithTax
+    : subtotalWithTax - feeAmount;
   const acceptedCryptos = Array.from(new Set([pay_currency, ...stableCoins]));
   const walletAddresses = Object.fromEntries(
     acceptedCryptos.map(c => {
@@ -186,13 +192,26 @@ export async function POST(request: NextRequest) {
     source: 'pos',
     pos_device_id,
     charge_customer_fee: effectiveChargeCustomerFee,
+    auto_convert_enabled: merchant.auto_convert_enabled,
+    preferred_payout_currency: merchant.preferred_payout_currency,
+    fee_percentage: feePercentage,
     tax_enabled: effectiveTaxEnabled,
     tax_rates: taxRates,
     tax_amount: taxAmount,
     subtotal_with_tax: subtotalWithTax,
     metadata: {
       pos: { device_id: pos_device_id, tip_amount: tipNum, pre_tip_total: preTipTotal },
-      wallet_addresses: walletAddresses
+      wallet_addresses: walletAddresses,
+      fee_breakdown: {
+        base_fee_percentage: baseFeePercentage * 100,
+        auto_convert_fee_percentage: autoConvertFeePercentage * 100,
+        total_fee_percentage: feePercentage * 100,
+        fee_amount: feeAmount,
+        merchant_receives: merchantReceives,
+        effective_charge_customer_fee: effectiveChargeCustomerFee,
+        effective_auto_convert_enabled: merchant.auto_convert_enabled,
+        effective_preferred_payout_currency: merchant.preferred_payout_currency
+      }
     }
   };
   const { data: paymentLink, error: linkError } = await service

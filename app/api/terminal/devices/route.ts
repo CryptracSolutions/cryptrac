@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+const BASE_STABLE_MAP: Record<string, string[]> = {
+  SOL: ['USDCSOL', 'USDTSOL'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
+  BNB: ['USDTBSC', 'USDCBSC'],
+  MATIC: ['USDTMATIC', 'USDCMATIC'],
+  TRX: ['USDTTRC20'],
+  TON: ['USDTTON'],
+  ARB: ['USDTARB', 'USDCARB'],
+  OP: ['USDTOP', 'USDCOP'],
+  ETHBASE: ['USDCBASE'],
+  ALGO: ['USDCALGO']
+};
+
+function expandStableCoins(wallets: Record<string, string>): string[] {
+  const bases = Object.keys(wallets);
+  if (wallets['ETH'] && !bases.includes('ETHBASE')) bases.push('ETHBASE');
+  const stable = new Set<string>();
+  bases.forEach(base => {
+    (BASE_STABLE_MAP[base] || []).forEach(sc => stable.add(sc));
+  });
+  return Array.from(stable);
+}
+
 async function getMerchant(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -37,6 +60,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
   const { service, merchant } = auth;
+  const merchantWallets = merchant.wallets || {};
+  const stableCoins = expandStableCoins(merchantWallets);
   const body = await request.json();
   const { id, label, tip_presets, charge_customer_fee, tax_enabled, accepted_cryptos } = body;
   const payload: Record<string, unknown> = { merchant_id: merchant.id };
@@ -47,7 +72,7 @@ export async function POST(request: NextRequest) {
   if (accepted_cryptos !== undefined) payload.accepted_cryptos = accepted_cryptos;
   if (!id) {
     if (payload.accepted_cryptos === undefined) {
-      payload.accepted_cryptos = Object.keys(merchant.wallets || {});
+      payload.accepted_cryptos = [...Object.keys(merchantWallets), ...stableCoins];
     }
     if (payload.charge_customer_fee === undefined) {
       payload.charge_customer_fee = merchant.charge_customer_fee;
@@ -79,8 +104,8 @@ export async function POST(request: NextRequest) {
     ...result.data,
     accepted_cryptos:
       (result.data.accepted_cryptos && result.data.accepted_cryptos.length)
-        ? result.data.accepted_cryptos
-        : Object.keys(merchant.wallets || {}),
+        ? Array.from(new Set([...result.data.accepted_cryptos, ...stableCoins]))
+        : [...Object.keys(merchantWallets), ...stableCoins],
     charge_customer_fee:
       result.data.charge_customer_fee ?? merchant.charge_customer_fee,
     tax_enabled:

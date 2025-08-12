@@ -33,6 +33,7 @@ export default function SmartTerminalPage() {
   const [tax, setTax] = useState(false);
   const [chargeFee, setChargeFee] = useState(false);
   const [crypto, setCrypto] = useState('BTC');
+  const [step, setStep] = useState<'amount' | 'customer'>('amount');
   const [preview, setPreview] = useState({ tax_amount: 0, subtotal_with_tax: 0, gateway_fee: 0, pre_tip_total: 0 });
   const [invoiceBreakdown, setInvoiceBreakdown] = useState<null | { tax_amount: number; subtotal_with_tax: number; gateway_fee: number; pre_tip_total: number; tip_amount: number; final_total: number }>(null);
   const [loading, setLoading] = useState(false);
@@ -84,8 +85,8 @@ export default function SmartTerminalPage() {
       const channel = supabase
         .channel('pos-' + paymentLink.id)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'transactions', filter: `payment_link_id=eq.${paymentLink.id}` }, payload => {
+          setStatus(payload.new.status);
           if (payload.new.status === 'confirmed') {
-            setStatus('confirmed');
             playBeep();
             if (navigator.vibrate) navigator.vibrate(200);
           }
@@ -108,6 +109,13 @@ export default function SmartTerminalPage() {
   const tipAmount = tipPercent ? (preTipTotal * tipPercent) / 100 : 0;
   const finalTotal = preTipTotal + tipAmount;
 
+  const readyForPayment = () => {
+    if (!amount) return;
+    setStep('customer');
+    setTipPercent(null);
+    setTipSelected(false);
+  };
+
   const generate = async () => {
     if (!device || !tipSelected || !amount || loading) return;
     setLoading(true);
@@ -115,7 +123,9 @@ export default function SmartTerminalPage() {
       amount: baseAmount,
       tip_amount: tipAmount,
       pay_currency: crypto,
-      pos_device_id: device.id
+      pos_device_id: device.id,
+      tax_enabled: tax,
+      charge_customer_fee: chargeFee
     };
     const res = await makeAuthenticatedRequest('/api/terminal/invoice', { method: 'POST', body: JSON.stringify(body) });
     const json = await res.json();
@@ -142,7 +152,7 @@ export default function SmartTerminalPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <h1 className="text-2xl font-bold mb-4">Smart Terminal</h1>
-      {!paymentLink && (
+      {step === 'amount' && !paymentLink && (
         <div className="w-full max-w-sm space-y-4">
           <div className="text-center text-3xl" aria-live="polite">{amount || '0.00'}</div>
           <div className="bg-gray-100 p-2 rounded text-sm space-y-1" aria-live="polite">
@@ -158,12 +168,6 @@ export default function SmartTerminalPage() {
             <Button className="h-16" onClick={backspace} aria-label="backspace">⌫</Button>
             <Button className="h-16" onClick={clearAmount} aria-label="clear">C</Button>
           </div>
-          <div className="flex gap-2 justify-center">
-            {(device?.tip_presets || defaultTips).map((p:number)=> (
-              <Button key={p} variant={tipPercent===p?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(p); setTipSelected(true);}} aria-label={`tip ${p}%`}>{p}%</Button>
-            ))}
-            <Button variant={tipPercent===0 && tipSelected?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(0); setTipSelected(true);}} aria-label="no tip">No Tip</Button>
-          </div>
           <div className="flex items-center gap-2">
             <label>
               <input type="checkbox" className="mr-2" checked={tax} onChange={e=>setTax(e.target.checked)} aria-label="Add tax"/>Add tax
@@ -172,11 +176,28 @@ export default function SmartTerminalPage() {
               <input type="checkbox" className="mr-2" checked={chargeFee} onChange={e=>setChargeFee(e.target.checked)} aria-label="Charge customer fee" />Charge customer fee
             </label>
           </div>
+          <Button onClick={readyForPayment} className="w-full h-14" aria-label="ready" disabled={!amount}>Ready for payment</Button>
+        </div>
+      )}
+      {step === 'customer' && !paymentLink && (
+        <div className="w-full max-w-sm space-y-4">
+          <div className="bg-gray-100 p-2 rounded text-sm space-y-1" aria-live="polite">
+            <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
+            {tax && <div className="flex justify-between"><span>Tax</span><span>{taxAmount.toFixed(2)}</span></div>}
+            {chargeFee && <div className="flex justify-between"><span>Gateway fee</span><span>{gatewayFee.toFixed(2)}</span></div>}
+            <div className="flex justify-between font-semibold"><span>Total (pre-tip)</span><span>{preTipTotal.toFixed(2)}</span></div>
+          </div>
+          <div className="flex gap-2 justify-center">
+            {(device?.tip_presets || defaultTips).map((p:number)=> (
+              <Button key={p} variant={tipPercent===p?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(p); setTipSelected(true);}} aria-label={`tip ${p}%`}>{p}%</Button>
+            ))}
+            <Button variant={tipPercent===0 && tipSelected?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(0); setTipSelected(true);}} aria-label="no tip">No Tip</Button>
+          </div>
           <select value={crypto} onChange={e=>setCrypto(e.target.value)} className="border p-2 rounded w-full" aria-label="crypto">
             {(device?.accepted_cryptos || ['BTC']).map((c:string)=> <option key={c} value={c}>{c}</option>)}
           </select>
           {tipSelected && <div className="text-center text-xl">Final Total: {finalTotal.toFixed(2)}</div>}
-          <Button onClick={generate} className="w-full h-14" aria-label="generate QR" disabled={!tipSelected || !amount || loading}>Generate QR</Button>
+          <Button onClick={generate} className="w-full h-14" aria-label="pay now" disabled={!tipSelected || loading}>Pay now</Button>
         </div>
       )}
       {paymentLink && paymentData && (
@@ -213,7 +234,7 @@ export default function SmartTerminalPage() {
                 <Input placeholder="Phone" value={receipt.phone} onChange={e=>setReceipt({...receipt,phone:e.target.value})} aria-label="receipt phone" />
                 <Button onClick={()=>sendReceipt('sms')}>SMS</Button>
               </div>
-              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false);}}>New Sale</Button>
+              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount');}}>New Sale</Button>
             </div>
           )}
         </div>
