@@ -89,6 +89,11 @@ function validateWebhookPayload(body: Record<string, unknown>): { isValid: boole
   }
 }
 
+interface NOWPaymentsWebhookBody extends Record<string, unknown> {
+  event_id?: string
+  payment_id?: string
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
@@ -105,10 +110,10 @@ export async function POST(request: NextRequest) {
     
     // Get raw body for signature verification
     const rawBody = await request.text()
-    let body: unknown
-    
+    let body: NOWPaymentsWebhookBody
+
     try {
-      body = JSON.parse(rawBody)
+      body = JSON.parse(rawBody) as NOWPaymentsWebhookBody
     } catch {
       console.error('❌ Invalid JSON in webhook payload')
       return NextResponse.json(

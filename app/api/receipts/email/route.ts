@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-async function logEmail(supabase: ReturnType<typeof createClient>, data: Record<string, unknown>) {
+async function logEmail(supabase: SupabaseClient, data: Record<string, unknown>) {
   let { error } = await supabase.from('email_logs').insert({ ...data, status: 'sent' });
   if (error) {
     if (error.message && error.message.includes('column')) {
