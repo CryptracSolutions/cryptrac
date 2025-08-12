@@ -695,6 +695,20 @@ CREATE TABLE IF NOT EXISTS "public"."automation_logs" (
 ALTER TABLE "public"."automation_logs" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."customers" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "email" "text",
+    "phone" "text",
+    "name" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."customers" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."email_logs" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "email" "text" NOT NULL,
@@ -919,7 +933,11 @@ CREATE TABLE IF NOT EXISTS "public"."payment_links" (
     "tax_percentage" numeric(5,2) DEFAULT 0,
     "tax_amount" numeric(18,2) DEFAULT 0,
     "subtotal_with_tax" numeric(18,2),
-    "tax_rates" "jsonb" DEFAULT '[]'::"jsonb"
+    "tax_rates" "jsonb" DEFAULT '[]'::"jsonb",
+    "source" "text" DEFAULT 'manual'::"text",
+    "subscription_id" "uuid",
+    "pos_device_id" "uuid",
+    CONSTRAINT "payment_links_source_check" CHECK (("source" = ANY (ARRAY['manual'::"text", 'subscription'::"text", 'pos'::"text"])))
 );
 
 
@@ -932,6 +950,20 @@ COMMENT ON COLUMN "public"."payment_links"."charge_customer_fee" IS 'Per-link ov
 
 COMMENT ON COLUMN "public"."payment_links"."tax_rates" IS 'Array of tax rate objects: [{"label": "State Tax", "percentage": 8.5}, {"label": "Local Tax", "percentage": 1.0}]';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."pos_sessions" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "device_id" "uuid" NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "opened_by" "uuid",
+    "closed_by" "uuid",
+    "started_at" timestamp with time zone DEFAULT "now"(),
+    "ended_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."pos_sessions" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
@@ -979,6 +1011,36 @@ CREATE TABLE IF NOT EXISTS "public"."reps" (
 ALTER TABLE "public"."reps" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."sms_logs" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "phone" "text" NOT NULL,
+    "type" "text" NOT NULL,
+    "status" "text" DEFAULT 'sent'::"text",
+    "payload" "jsonb",
+    "error" "text",
+    "timestamp" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."sms_logs" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."subscription_amount_overrides" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "subscription_id" "uuid" NOT NULL,
+    "effective_from" "date" NOT NULL,
+    "amount" numeric(18,2) NOT NULL,
+    "note" "text",
+    "notice_sent_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."subscription_amount_overrides" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."subscription_history" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "merchant_id" "uuid" NOT NULL,
@@ -1000,6 +1062,63 @@ ALTER TABLE "public"."subscription_history" OWNER TO "postgres";
 
 COMMENT ON TABLE "public"."subscription_history" IS 'Tracks monthly ($19) and yearly ($199) subscription payments';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."subscription_invoices" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "subscription_id" "uuid" NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "payment_link_id" "uuid",
+    "invoice_number" "text",
+    "due_date" timestamp with time zone NOT NULL,
+    "amount" numeric(18,2) NOT NULL,
+    "currency" character varying(20) NOT NULL,
+    "status" "text" DEFAULT 'pending'::"text" NOT NULL,
+    "sent_via" "text",
+    "sent_at" timestamp with time zone,
+    "paid_at" timestamp with time zone,
+    "metadata" "jsonb" DEFAULT '{}'::"jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "subscription_invoices_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'sent'::"text", 'paid'::"text", 'past_due'::"text", 'canceled'::"text"])))
+);
+
+
+ALTER TABLE "public"."subscription_invoices" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."subscriptions" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "customer_id" "uuid" NOT NULL,
+    "title" character varying(255) NOT NULL,
+    "description" "text",
+    "amount" numeric(18,2) NOT NULL,
+    "currency" character varying(20) DEFAULT 'USD'::character varying NOT NULL,
+    "accepted_cryptos" "jsonb" DEFAULT '["BTC", "ETH", "LTC"]'::"jsonb",
+    "interval" "text" NOT NULL,
+    "interval_count" integer DEFAULT 1 NOT NULL,
+    "billing_anchor" timestamp with time zone NOT NULL,
+    "next_billing_at" timestamp with time zone,
+    "status" "text" DEFAULT 'active'::"text" NOT NULL,
+    "pause_after_missed_payments" integer,
+    "missed_payments_count" integer DEFAULT 0,
+    "max_cycles" integer,
+    "total_cycles" integer DEFAULT 0,
+    "charge_customer_fee" boolean,
+    "auto_convert_enabled" boolean,
+    "preferred_payout_currency" character varying(20),
+    "tax_enabled" boolean DEFAULT false,
+    "tax_rates" "jsonb" DEFAULT '[]'::"jsonb",
+    "metadata" "jsonb" DEFAULT '{}'::"jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "subscriptions_interval_check" CHECK (("interval" = ANY (ARRAY['day'::"text", 'week'::"text", 'month'::"text", 'year'::"text"]))),
+    CONSTRAINT "subscriptions_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'paused'::"text", 'canceled'::"text", 'completed'::"text", 'past_due'::"text"])))
+);
+
+
+ALTER TABLE "public"."subscriptions" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."support_messages" (
@@ -1178,6 +1297,28 @@ CREATE OR REPLACE VIEW "public"."tax_report_view" AS
 ALTER VIEW "public"."tax_report_view" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."terminal_devices" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "merchant_id" "uuid" NOT NULL,
+    "label" "text" NOT NULL,
+    "registered_by" "uuid",
+    "public_id" "text",
+    "status" "text" DEFAULT 'active'::"text",
+    "tip_presets" "jsonb" DEFAULT '[10, 15, 20]'::"jsonb",
+    "allow_custom_tip" boolean DEFAULT true,
+    "default_currency" "text" DEFAULT 'USD'::"text",
+    "accepted_cryptos" "jsonb" DEFAULT '[]'::"jsonb",
+    "charge_customer_fee" boolean,
+    "tax_enabled" boolean,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "last_seen_at" timestamp with time zone,
+    CONSTRAINT "terminal_devices_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'revoked'::"text"])))
+);
+
+
+ALTER TABLE "public"."terminal_devices" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."tier_history" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "rep_id" "uuid" NOT NULL,
@@ -1280,7 +1421,12 @@ CREATE TABLE IF NOT EXISTS "public"."webhook_logs" (
     "provider" character varying(50) DEFAULT 'nowpayments'::character varying,
     "status" character varying(50),
     "raw_data" "jsonb" DEFAULT '{}'::"jsonb",
-    "error_message" "text"
+    "error_message" "text",
+    "event_id" "text",
+    "idempotency_key" "text",
+    "attempts" integer DEFAULT 0,
+    "next_retry_at" timestamp with time zone,
+    "last_error" "text"
 );
 
 
@@ -1298,6 +1444,21 @@ ALTER TABLE ONLY "public"."audit_logs"
 
 ALTER TABLE ONLY "public"."automation_logs"
     ADD CONSTRAINT "automation_logs_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."customers"
+    ADD CONSTRAINT "customers_email_unique" UNIQUE ("merchant_id", "email");
+
+
+
+ALTER TABLE ONLY "public"."customers"
+    ADD CONSTRAINT "customers_phone_unique" UNIQUE ("merchant_id", "phone");
+
+
+
+ALTER TABLE ONLY "public"."customers"
+    ADD CONSTRAINT "customers_pkey" PRIMARY KEY ("id");
 
 
 
@@ -1371,6 +1532,11 @@ ALTER TABLE ONLY "public"."payment_links"
 
 
 
+ALTER TABLE ONLY "public"."pos_sessions"
+    ADD CONSTRAINT "pos_sessions_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("id");
 
@@ -1391,8 +1557,28 @@ ALTER TABLE ONLY "public"."reps"
 
 
 
+ALTER TABLE ONLY "public"."sms_logs"
+    ADD CONSTRAINT "sms_logs_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."subscription_amount_overrides"
+    ADD CONSTRAINT "subscription_amount_overrides_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."subscription_history"
     ADD CONSTRAINT "subscription_history_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."subscription_invoices"
+    ADD CONSTRAINT "subscription_invoices_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."subscriptions"
+    ADD CONSTRAINT "subscriptions_pkey" PRIMARY KEY ("id");
 
 
 
@@ -1408,6 +1594,16 @@ ALTER TABLE ONLY "public"."supported_currencies"
 
 ALTER TABLE ONLY "public"."supported_currencies"
     ADD CONSTRAINT "supported_currencies_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."terminal_devices"
+    ADD CONSTRAINT "terminal_devices_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."terminal_devices"
+    ADD CONSTRAINT "terminal_devices_public_id_key" UNIQUE ("public_id");
 
 
 
@@ -1431,7 +1627,15 @@ ALTER TABLE ONLY "public"."webhook_logs"
 
 
 
+CREATE INDEX "idx_amount_overrides_effective" ON "public"."subscription_amount_overrides" USING "btree" ("subscription_id", "effective_from");
+
+
+
 CREATE INDEX "idx_audit_logs_user_id" ON "public"."audit_logs" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_customers_merchant" ON "public"."customers" USING "btree" ("merchant_id");
 
 
 
@@ -1519,6 +1723,10 @@ CREATE INDEX "idx_payment_links_merchant_status" ON "public"."payment_links" USI
 
 
 
+CREATE INDEX "idx_payment_links_source" ON "public"."payment_links" USING "btree" ("source");
+
+
+
 CREATE INDEX "idx_payment_links_status" ON "public"."payment_links" USING "btree" ("status");
 
 
@@ -1527,11 +1735,19 @@ CREATE INDEX "idx_payment_links_status_expires" ON "public"."payment_links" USIN
 
 
 
+CREATE INDEX "idx_payment_links_subscription" ON "public"."payment_links" USING "btree" ("subscription_id");
+
+
+
 CREATE INDEX "idx_payment_links_tax_enabled" ON "public"."payment_links" USING "btree" ("merchant_id", "tax_enabled");
 
 
 
 CREATE INDEX "idx_payment_links_usage" ON "public"."payment_links" USING "btree" ("usage_count", "max_uses") WHERE ("max_uses" IS NOT NULL);
+
+
+
+CREATE INDEX "idx_pos_sessions_device" ON "public"."pos_sessions" USING "btree" ("device_id", "started_at");
 
 
 
@@ -1551,11 +1767,31 @@ CREATE INDEX "idx_subscription_history_merchant_id" ON "public"."subscription_hi
 
 
 
+CREATE INDEX "idx_subscription_invoices_payment_link" ON "public"."subscription_invoices" USING "btree" ("payment_link_id");
+
+
+
+CREATE INDEX "idx_subscription_invoices_subscription" ON "public"."subscription_invoices" USING "btree" ("subscription_id", "due_date");
+
+
+
+CREATE INDEX "idx_subscriptions_customer" ON "public"."subscriptions" USING "btree" ("customer_id");
+
+
+
+CREATE INDEX "idx_subscriptions_merchant_next" ON "public"."subscriptions" USING "btree" ("merchant_id", "next_billing_at");
+
+
+
 CREATE INDEX "idx_support_messages_user_id" ON "public"."support_messages" USING "btree" ("user_id");
 
 
 
 CREATE INDEX "idx_supported_currencies_trust_wallet" ON "public"."supported_currencies" USING "btree" ("trust_wallet_compatible") WHERE ("trust_wallet_compatible" = true);
+
+
+
+CREATE INDEX "idx_terminal_devices_merchant" ON "public"."terminal_devices" USING "btree" ("merchant_id");
 
 
 
@@ -1607,7 +1843,15 @@ CREATE INDEX "idx_webhook_logs_provider" ON "public"."webhook_logs" USING "btree
 
 
 
+CREATE INDEX "idx_webhook_logs_retry" ON "public"."webhook_logs" USING "btree" ("processed", "next_retry_at");
+
+
+
 CREATE INDEX "idx_webhook_logs_source" ON "public"."webhook_logs" USING "btree" ("source");
+
+
+
+CREATE UNIQUE INDEX "idx_webhook_logs_unique_event" ON "public"."webhook_logs" USING "btree" ("provider", COALESCE("event_id", ("request_payload" ->> 'payment_id'::"text")));
 
 
 
@@ -1627,6 +1871,10 @@ CREATE OR REPLACE TRIGGER "trigger_update_payment_link_usage" AFTER INSERT OR UP
 
 
 
+CREATE OR REPLACE TRIGGER "update_customers_updated_at" BEFORE UPDATE ON "public"."customers" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
 CREATE OR REPLACE TRIGGER "update_merchant_payments_updated_at" BEFORE UPDATE ON "public"."transactions" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
@@ -1643,12 +1891,25 @@ CREATE OR REPLACE TRIGGER "update_payment_links_updated_at" BEFORE UPDATE ON "pu
 
 
 
+CREATE OR REPLACE TRIGGER "update_subscription_invoices_updated_at" BEFORE UPDATE ON "public"."subscription_invoices" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_subscriptions_updated_at" BEFORE UPDATE ON "public"."subscriptions" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
 CREATE OR REPLACE TRIGGER "update_supported_currencies_updated_at" BEFORE UPDATE ON "public"."supported_currencies" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
 ALTER TABLE ONLY "public"."audit_logs"
     ADD CONSTRAINT "audit_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."customers"
+    ADD CONSTRAINT "customers_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
 
 
 
@@ -1707,6 +1968,36 @@ ALTER TABLE ONLY "public"."payment_links"
 
 
 
+ALTER TABLE ONLY "public"."payment_links"
+    ADD CONSTRAINT "payment_links_pos_device_id_fkey" FOREIGN KEY ("pos_device_id") REFERENCES "public"."terminal_devices"("id");
+
+
+
+ALTER TABLE ONLY "public"."payment_links"
+    ADD CONSTRAINT "payment_links_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "public"."subscriptions"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."pos_sessions"
+    ADD CONSTRAINT "pos_sessions_closed_by_fkey" FOREIGN KEY ("closed_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."pos_sessions"
+    ADD CONSTRAINT "pos_sessions_device_id_fkey" FOREIGN KEY ("device_id") REFERENCES "public"."terminal_devices"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."pos_sessions"
+    ADD CONSTRAINT "pos_sessions_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."pos_sessions"
+    ADD CONSTRAINT "pos_sessions_opened_by_fkey" FOREIGN KEY ("opened_by") REFERENCES "auth"."users"("id");
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -1727,13 +2018,63 @@ ALTER TABLE ONLY "public"."reps"
 
 
 
+ALTER TABLE ONLY "public"."sms_logs"
+    ADD CONSTRAINT "sms_logs_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."subscription_amount_overrides"
+    ADD CONSTRAINT "subscription_amount_overrides_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."subscription_amount_overrides"
+    ADD CONSTRAINT "subscription_amount_overrides_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "public"."subscriptions"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."subscription_history"
     ADD CONSTRAINT "subscription_history_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
 
 
 
+ALTER TABLE ONLY "public"."subscription_invoices"
+    ADD CONSTRAINT "subscription_invoices_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."subscription_invoices"
+    ADD CONSTRAINT "subscription_invoices_payment_link_id_fkey" FOREIGN KEY ("payment_link_id") REFERENCES "public"."payment_links"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."subscription_invoices"
+    ADD CONSTRAINT "subscription_invoices_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "public"."subscriptions"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."subscriptions"
+    ADD CONSTRAINT "subscriptions_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "public"."customers"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."subscriptions"
+    ADD CONSTRAINT "subscriptions_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."support_messages"
     ADD CONSTRAINT "support_messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."terminal_devices"
+    ADD CONSTRAINT "terminal_devices_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."terminal_devices"
+    ADD CONSTRAINT "terminal_devices_registered_by_fkey" FOREIGN KEY ("registered_by") REFERENCES "auth"."users"("id");
 
 
 
@@ -1908,11 +2249,65 @@ CREATE POLICY "Merchants can view their payment data" ON "public"."transactions"
 
 
 
+CREATE POLICY "Merchants manage own POS sessions" ON "public"."pos_sessions" USING (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"())))) WITH CHECK (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants manage own amount overrides" ON "public"."subscription_amount_overrides" USING (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"())))) WITH CHECK (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants manage own customers" ON "public"."customers" USING (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"())))) WITH CHECK (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants manage own subscription invoices" ON "public"."subscription_invoices" USING (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"())))) WITH CHECK (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants manage own subscriptions" ON "public"."subscriptions" USING (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"())))) WITH CHECK (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Merchants manage own terminal devices" ON "public"."terminal_devices" USING (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"())))) WITH CHECK (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"()))));
+
+
+
 CREATE POLICY "Merchants update own" ON "public"."merchants" FOR UPDATE USING ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
 
 
 
 CREATE POLICY "Merchants view own" ON "public"."merchants" FOR SELECT USING ((("auth"."uid"() = "user_id") OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
+
+
+
+CREATE POLICY "Merchants view own sms logs" ON "public"."sms_logs" FOR SELECT USING (("merchant_id" IN ( SELECT "m"."id"
+   FROM "public"."merchants" "m"
+  WHERE ("m"."user_id" = "auth"."uid"()))));
 
 
 
@@ -1992,6 +2387,10 @@ CREATE POLICY "System can insert payment data" ON "public"."transactions" FOR IN
 
 
 
+CREATE POLICY "System can insert sms logs" ON "public"."sms_logs" FOR INSERT WITH CHECK (true);
+
+
+
 CREATE POLICY "System can insert subscription history" ON "public"."subscription_history" FOR INSERT WITH CHECK (true);
 
 
@@ -2018,6 +2417,9 @@ ALTER TABLE "public"."audit_logs" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."automation_logs" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."customers" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."email_logs" ENABLE ROW LEVEL SECURITY;
 
 
@@ -2039,6 +2441,9 @@ ALTER TABLE "public"."partners" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."payment_links" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."pos_sessions" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
@@ -2048,10 +2453,25 @@ ALTER TABLE "public"."rep_sales" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."reps" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."sms_logs" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."subscription_amount_overrides" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."subscription_history" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."subscription_invoices" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."subscriptions" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."support_messages" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."terminal_devices" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."tier_history" ENABLE ROW LEVEL SECURITY;
@@ -2208,6 +2628,12 @@ GRANT ALL ON TABLE "public"."automation_logs" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."customers" TO "anon";
+GRANT ALL ON TABLE "public"."customers" TO "authenticated";
+GRANT ALL ON TABLE "public"."customers" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."email_logs" TO "anon";
 GRANT ALL ON TABLE "public"."email_logs" TO "authenticated";
 GRANT ALL ON TABLE "public"."email_logs" TO "service_role";
@@ -2256,6 +2682,12 @@ GRANT ALL ON TABLE "public"."payment_links" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."pos_sessions" TO "anon";
+GRANT ALL ON TABLE "public"."pos_sessions" TO "authenticated";
+GRANT ALL ON TABLE "public"."pos_sessions" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."profiles" TO "anon";
 GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
@@ -2274,9 +2706,33 @@ GRANT ALL ON TABLE "public"."reps" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."sms_logs" TO "anon";
+GRANT ALL ON TABLE "public"."sms_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."sms_logs" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."subscription_amount_overrides" TO "anon";
+GRANT ALL ON TABLE "public"."subscription_amount_overrides" TO "authenticated";
+GRANT ALL ON TABLE "public"."subscription_amount_overrides" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."subscription_history" TO "anon";
 GRANT ALL ON TABLE "public"."subscription_history" TO "authenticated";
 GRANT ALL ON TABLE "public"."subscription_history" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."subscription_invoices" TO "anon";
+GRANT ALL ON TABLE "public"."subscription_invoices" TO "authenticated";
+GRANT ALL ON TABLE "public"."subscription_invoices" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."subscriptions" TO "anon";
+GRANT ALL ON TABLE "public"."subscriptions" TO "authenticated";
+GRANT ALL ON TABLE "public"."subscriptions" TO "service_role";
 
 
 
@@ -2301,6 +2757,12 @@ GRANT ALL ON TABLE "public"."transactions" TO "service_role";
 GRANT ALL ON TABLE "public"."tax_report_view" TO "anon";
 GRANT ALL ON TABLE "public"."tax_report_view" TO "authenticated";
 GRANT ALL ON TABLE "public"."tax_report_view" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."terminal_devices" TO "anon";
+GRANT ALL ON TABLE "public"."terminal_devices" TO "authenticated";
+GRANT ALL ON TABLE "public"."terminal_devices" TO "service_role";
 
 
 
