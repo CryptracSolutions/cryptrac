@@ -32,7 +32,8 @@ async function getServiceAndMerchant(request: NextRequest) {
   return { service, merchant };
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const auth = await getServiceAndMerchant(request);
   if ('error' in auth) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   const { data, error } = await service
     .from('subscriptions')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('merchant_id', merchant.id)
     .single();
   if (error || !data) {
@@ -50,7 +51,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   return NextResponse.json({ success: true, data });
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const auth = await getServiceAndMerchant(request);
   if ('error' in auth) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
@@ -73,7 +75,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       const { data: sub } = await service
         .from('subscriptions')
         .select('next_billing_at, billing_anchor, interval, interval_count')
-        .eq('id', params.id)
+        .eq('id', id)
         .eq('merchant_id', merchant.id)
         .single();
       if (sub && sub.next_billing_at && new Date(sub.next_billing_at) < new Date()) {
@@ -92,7 +94,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const { data, error } = await service
     .from('subscriptions')
     .update(updates)
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('merchant_id', merchant.id)
     .select('*')
     .single();

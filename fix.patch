@@ -1,0 +1,306 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/app/api/subscriptions/[id]/amount-overrides/route.ts b/app/api/subscriptions/[id]/amount-overrides/route.ts
+index 104789673365fba4577327ed36bcd27a22498859..3f5d0b8f0225d4f694bdbe8fb18fa8848c7266ad 100644
+--- a/app/api/subscriptions/[id]/amount-overrides/route.ts
++++ b/app/api/subscriptions/[id]/amount-overrides/route.ts
+@@ -9,51 +9,52 @@ async function getServiceAndMerchant(request: NextRequest) {
+   const token = authHeader.substring(7);
+   const supabase = createClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+   );
+   const { data: { user }, error } = await supabase.auth.getUser(token);
+   if (error || !user) return { error: 'Unauthorized' };
+   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+   if (!serviceKey) {
+     throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+   }
+   const service = createClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+     serviceKey,
+     { auth: { autoRefreshToken: false, persistSession: false } }
+   );
+   const { data: merchant, error: merchantError } = await service
+     .from('merchants')
+     .select('id')
+     .eq('user_id', user.id)
+     .single();
+   if (merchantError || !merchant) return { error: 'Merchant account not found' };
+   return { service, merchant };
+ }
+ 
+-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
++export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
++  const { id } = await context.params;
+   const auth = await getServiceAndMerchant(request);
+   if ('error' in auth) {
+     return NextResponse.json({ error: auth.error }, { status: 401 });
+   }
+   const { service, merchant } = auth;
+   const body = await request.json();
+   const { effective_from, amount, note, notice_sent_at } = body;
+   if (!effective_from || !amount) {
+     return NextResponse.json({ error: 'effective_from and amount required' }, { status: 400 });
+   }
+   const { error } = await service
+     .from('subscription_amount_overrides')
+     .insert({
+-      subscription_id: params.id,
++      subscription_id: id,
+       merchant_id: merchant.id,
+       effective_from,
+       amount,
+       note,
+       notice_sent_at: notice_sent_at || null
+     });
+   if (error) {
+     return NextResponse.json({ error: 'Failed to schedule amount change' }, { status: 500 });
+   }
+   return NextResponse.json({ success: true });
+ }
+diff --git a/app/api/subscriptions/[id]/route.ts b/app/api/subscriptions/[id]/route.ts
+index 9c8514bdecd3c5c26851981aa1327c16c4265870..a0ec6511720b9e25daf8621d95a9acc2546af40e 100644
+--- a/app/api/subscriptions/[id]/route.ts
++++ b/app/api/subscriptions/[id]/route.ts
+@@ -10,111 +10,113 @@ async function getServiceAndMerchant(request: NextRequest) {
+   const token = authHeader.substring(7);
+   const supabase = createClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+   );
+   const { data: { user }, error } = await supabase.auth.getUser(token);
+   if (error || !user) return { error: 'Unauthorized' };
+   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+   if (!serviceKey) {
+     throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+   }
+   const service = createClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+     serviceKey,
+     { auth: { autoRefreshToken: false, persistSession: false } }
+   );
+   const { data: merchant, error: merchantError } = await service
+     .from('merchants')
+     .select('id, timezone')
+     .eq('user_id', user.id)
+     .single();
+   if (merchantError || !merchant) return { error: 'Merchant account not found' };
+   return { service, merchant };
+ }
+ 
+-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
++export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
++  const { id } = await context.params;
+   const auth = await getServiceAndMerchant(request);
+   if ('error' in auth) {
+     return NextResponse.json({ error: auth.error }, { status: 401 });
+   }
+   const { service, merchant } = auth;
+   const { data, error } = await service
+     .from('subscriptions')
+     .select('*')
+-    .eq('id', params.id)
++    .eq('id', id)
+     .eq('merchant_id', merchant.id)
+     .single();
+   if (error || !data) {
+     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+   }
+   return NextResponse.json({ success: true, data });
+ }
+ 
+-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
++export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
++  const { id } = await context.params;
+   const auth = await getServiceAndMerchant(request);
+   if ('error' in auth) {
+     return NextResponse.json({ error: auth.error }, { status: 401 });
+   }
+   const { service, merchant } = auth;
+   const body = await request.json();
+   const allowed = ['status','pause_after_missed_payments','accepted_cryptos','tax_enabled','tax_rates'];
+   const updates: Record<string, unknown> = {};
+   for (const key of allowed) {
+     if (key in body) updates[key] = body[key];
+   }
+   if (body.status) {
+     if (body.status === 'paused') {
+       updates.status = 'paused';
+     } else if (body.status === 'canceled') {
+       updates.status = 'canceled';
+       updates.next_billing_at = null;
+     } else if (body.status === 'active') {
+       updates.status = 'active';
+       const { data: sub } = await service
+         .from('subscriptions')
+         .select('next_billing_at, billing_anchor, interval, interval_count')
+-        .eq('id', params.id)
++        .eq('id', id)
+         .eq('merchant_id', merchant.id)
+         .single();
+       if (sub && sub.next_billing_at && new Date(sub.next_billing_at) < new Date()) {
+         const zone = merchant.timezone || 'UTC';
+         let next = DateTime.fromISO(sub.billing_anchor as string, { zone });
+         while (next <= DateTime.now().setZone(zone)) {
+           next = incrementInterval(next, sub.interval as string, sub.interval_count as number);
+         }
+         updates.next_billing_at = next.toUTC().toISO();
+       }
+     }
+   }
+   if (Object.keys(updates).length === 0) {
+     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+   }
+   const { data, error } = await service
+     .from('subscriptions')
+     .update(updates)
+-    .eq('id', params.id)
++    .eq('id', id)
+     .eq('merchant_id', merchant.id)
+     .select('*')
+     .single();
+   if (error || !data) {
+     return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
+   }
+   return NextResponse.json({ success: true, data });
+ }
+ 
+ function incrementInterval(dt: DateTime, interval: string, count: number) {
+   switch (interval) {
+     case 'day':
+       return dt.plus({ days: count });
+     case 'week':
+       return dt.plus({ weeks: count });
+     case 'month': {
+       const added = dt.plus({ months: count });
+       const endOfMonth = added.endOf('month');
+       return added.day < dt.day ? endOfMonth : added;
+     }
+     case 'year':
+       return dt.plus({ years: count });
+     default:
+       return dt.plus({ months: count });
+   }
+diff --git a/app/smart-terminal/page.tsx b/app/smart-terminal/page.tsx
+index d533ad86d0b9808c54161661ae2848b41a4acf01..bd0df06f14804c1aaa092b057885f564d1a3213f 100644
+--- a/app/smart-terminal/page.tsx
++++ b/app/smart-terminal/page.tsx
+@@ -1,32 +1,32 @@
+ 'use client';
+ 
+ import React, { useEffect, useState } from 'react';
+ import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
+ import { Button } from '@/app/components/ui/button';
+ import { Input } from '@/app/components/ui/input';
+-import QRCode from '@/app/components/ui/qr-code';
++import { QRCode } from '@/app/components/ui/qr-code';
+ 
+ interface TerminalDevice {
+   id: string;
+   tip_presets?: number[];
+   accepted_cryptos?: string[];
+   charge_customer_fee?: boolean;
+   tax_enabled?: boolean;
+ }
+ 
+ const defaultTips = [10, 15, 20];
+ 
+ export default function SmartTerminalPage() {
+   const [device, setDevice] = useState<TerminalDevice | null>(null);
+   const [amount, setAmount] = useState('');
+   const [tipPercent, setTipPercent] = useState<number | null>(null);
+   const [tax, setTax] = useState(false);
+   const [chargeFee, setChargeFee] = useState(false);
+   const [crypto, setCrypto] = useState('BTC');
+   interface PaymentLink { id: string; link_id: string; }
+   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null);
+   const [status, setStatus] = useState('');
+   const [receipt, setReceipt] = useState({ email: '', phone: '' });
+ 
+   useEffect(() => {
+     (async () => {
+@@ -48,75 +48,80 @@ export default function SmartTerminalPage() {
+         .channel('pos-' + paymentLink.id)
+         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'transactions', filter: `payment_link_id=eq.${paymentLink.id}` }, payload => {
+           if (payload.new.status === 'confirmed') {
+             setStatus('confirmed');
+             playBeep();
+             if (navigator.vibrate) navigator.vibrate(200);
+           }
+         })
+         .subscribe();
+       return () => { supabase.removeChannel(channel); };
+     }
+   }, [paymentLink]);
+ 
+   const appendDigit = (d: string) => {
+     setAmount(prev => (prev + d).replace(/^0+(\d)/, '$1'));
+   };
+   const clearAmount = () => setAmount('');
+   const backspace = () => setAmount(prev => prev.slice(0, -1));
+ 
+   const tipAmount = () => {
+     const base = parseFloat(amount || '0');
+     return tipPercent ? (base * tipPercent) / 100 : 0;
+   };
+ 
+   const generate = async () => {
++    if (!device) return;
+     const base = parseFloat(amount || '0');
+     const tip = tipAmount();
+     const total = base + tip;
+     const body: Record<string, unknown> = {
+       title: 'POS Sale',
+       amount: total,
+       currency: 'USD',
+       accepted_cryptos: [crypto],
+       max_uses: 1,
+       expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+       source: 'pos',
+       pos_device_id: device.id,
+       metadata: { pos: { device_id: device.id, tip_amount: tip } },
+       charge_customer_fee: chargeFee,
+       tax_enabled: tax,
+     };
+     const res = await makeAuthenticatedRequest('/api/payments/create', { method: 'POST', body: JSON.stringify(body) });
+     const json = await res.json();
+     setPaymentLink(json.payment_link);
+     setStatus('pending');
+   };
+ 
+   const sendReceipt = async (type: 'email' | 'sms') => {
++    if (!paymentLink) return;
+     const url = type === 'email' ? '/api/receipts/email' : '/api/receipts/sms';
+-    const data = type === 'email' ? { email: receipt.email, payment_link_id: paymentLink.id } : { phone: receipt.phone, payment_link_id: paymentLink.id };
++    const data =
++      type === 'email'
++        ? { email: receipt.email, payment_link_id: paymentLink.id }
++        : { phone: receipt.phone, payment_link_id: paymentLink.id };
+     await makeAuthenticatedRequest(url, { method: 'POST', body: JSON.stringify(data) });
+     setReceipt({ email: '', phone: '' });
+   };
+ 
+   return (
+     <div className="flex flex-col items-center justify-center min-h-screen p-4">
+       <h1 className="text-2xl font-bold mb-4">Smart Terminal</h1>
+       {!paymentLink && (
+         <div className="w-full max-w-sm space-y-4">
+           <div className="text-center text-3xl" aria-live="polite">{amount || '0.00'}</div>
+           <div className="grid grid-cols-3 gap-2">
+             {[1,2,3,4,5,6,7,8,9,'0','.'].map((d: string | number)=> (
+               <Button key={d} className="h-16" aria-label={`digit ${d}`} onClick={()=>appendDigit(String(d))}>{d}</Button>
+             ))}
+             <Button className="h-16" onClick={backspace} aria-label="backspace">⌫</Button>
+             <Button className="h-16" onClick={clearAmount} aria-label="clear">C</Button>
+           </div>
+           <div className="flex gap-2 justify-center">
+             {(device?.tip_presets || defaultTips).map((p:number)=>(
+               <Button key={p} variant={tipPercent===p?'default':'outline'} className="h-12" onClick={()=>setTipPercent(p)} aria-label={`tip ${p}%`}>{p}%</Button>
+             ))}
+             <Button variant={tipPercent===null?'default':'outline'} className="h-12" onClick={()=>setTipPercent(null)} aria-label="no tip">No Tip</Button>
+           </div>
+           <div className="flex items-center gap-2">
+             <label>
+ 
+EOF
+)

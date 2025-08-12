@@ -31,7 +31,8 @@ async function getServiceAndMerchant(request: NextRequest) {
   return { service, merchant };
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const auth = await getServiceAndMerchant(request);
   if ('error' in auth) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const { error } = await service
     .from('subscription_amount_overrides')
     .insert({
-      subscription_id: params.id,
+      subscription_id: id,
       merchant_id: merchant.id,
       effective_from,
       amount,

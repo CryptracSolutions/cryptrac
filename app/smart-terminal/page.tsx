@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import QRCode from '@/app/components/ui/qr-code';
+import { QRCode } from '@/app/components/ui/qr-code';
 
 interface TerminalDevice {
   id: string;
@@ -70,6 +70,7 @@ export default function SmartTerminalPage() {
   };
 
   const generate = async () => {
+    if (!device) return;
     const base = parseFloat(amount || '0');
     const tip = tipAmount();
     const total = base + tip;
@@ -93,8 +94,12 @@ export default function SmartTerminalPage() {
   };
 
   const sendReceipt = async (type: 'email' | 'sms') => {
+    if (!paymentLink) return;
     const url = type === 'email' ? '/api/receipts/email' : '/api/receipts/sms';
-    const data = type === 'email' ? { email: receipt.email, payment_link_id: paymentLink.id } : { phone: receipt.phone, payment_link_id: paymentLink.id };
+    const data =
+      type === 'email'
+        ? { email: receipt.email, payment_link_id: paymentLink.id }
+        : { phone: receipt.phone, payment_link_id: paymentLink.id };
     await makeAuthenticatedRequest(url, { method: 'POST', body: JSON.stringify(data) });
     setReceipt({ email: '', phone: '' });
   };
