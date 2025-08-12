@@ -30,8 +30,8 @@ export default function SmartTerminalPage() {
   const [amount, setAmount] = useState('');
   const [tipPercent, setTipPercent] = useState<number | null>(null);
   const [tipSelected, setTipSelected] = useState(false);
-  const [tax, setTax] = useState(false);
-  const [chargeFee, setChargeFee] = useState(false);
+  const [tax, setTax] = useState<boolean | undefined>(undefined);
+  const [chargeFee, setChargeFee] = useState<boolean | undefined>(undefined);
   const [crypto, setCrypto] = useState('BTC');
   const [step, setStep] = useState<'amount' | 'customer'>('amount');
   const [preview, setPreview] = useState({ tax_amount: 0, subtotal_with_tax: 0, gateway_fee: 0, pre_tip_total: 0 });
@@ -52,8 +52,8 @@ export default function SmartTerminalPage() {
       localStorage.setItem('terminal_device_id', json.data.id);
       setDevice(json.data);
       if (json.data?.accepted_cryptos?.length) setCrypto(json.data.accepted_cryptos[0]);
-      setChargeFee(json.data.charge_customer_fee ?? false);
-      setTax(json.data.tax_enabled ?? false);
+      setChargeFee(json.data.charge_customer_fee ?? undefined);
+      setTax(json.data.tax_enabled ?? undefined);
     })();
   }, []);
 
@@ -64,7 +64,9 @@ export default function SmartTerminalPage() {
       return;
     }
     (async () => {
-      const body: Record<string, unknown> = { amount: amt, tax_enabled: tax, charge_customer_fee: chargeFee };
+      const body: Record<string, unknown> = { amount: amt };
+      if (typeof tax === 'boolean') body.tax_enabled = tax;
+      if (typeof chargeFee === 'boolean') body.charge_customer_fee = chargeFee;
       const res = await makeAuthenticatedRequest('/api/terminal/preview', { method: 'POST', body: JSON.stringify(body) });
       const json = await res.json();
       if (!json.error) {
@@ -74,8 +76,6 @@ export default function SmartTerminalPage() {
           gateway_fee: json.gateway_fee,
           pre_tip_total: json.pre_tip_total
         });
-        setTax(json.effective.tax_enabled);
-        setChargeFee(json.effective.charge_customer_fee);
       }
     })();
   }, [amount, tax, chargeFee, device]);
@@ -85,14 +85,42 @@ export default function SmartTerminalPage() {
       const channel = supabase
         .channel('pos-' + paymentLink.id)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'transactions', filter: `payment_link_id=eq.${paymentLink.id}` }, payload => {
-          setStatus(payload.new.status);
-          if (payload.new.status === 'confirmed') {
-            playBeep();
-            if (navigator.vibrate) navigator.vibrate(200);
-          }
+          setStatus(prev => {
+            if (payload.new.status !== prev) {
+              if (payload.new.status === 'confirmed') {
+                playBeep();
+                if (navigator.vibrate) navigator.vibrate(200);
+                supabase.removeChannel(channel);
+                clearInterval(interval);
+              }
+              return payload.new.status;
+            }
+            return prev;
+          });
         })
         .subscribe();
-      return () => { supabase.removeChannel(channel); };
+      const interval = setInterval(async () => {
+        const { data } = await supabase
+          .from('transactions')
+          .select('status')
+          .eq('payment_link_id', paymentLink.id)
+          .maybeSingle();
+        if (data?.status) {
+          setStatus(prev => {
+            if (data.status !== prev) {
+              if (data.status === 'confirmed') {
+                playBeep();
+                if (navigator.vibrate) navigator.vibrate(200);
+                supabase.removeChannel(channel);
+                clearInterval(interval);
+              }
+              return data.status;
+            }
+            return prev;
+          });
+        }
+      }, 3000);
+      return () => { supabase.removeChannel(channel); clearInterval(interval); };
     }
   }, [paymentLink]);
 
@@ -170,10 +198,10 @@ export default function SmartTerminalPage() {
           </div>
           <div className="flex items-center gap-2">
             <label>
-              <input type="checkbox" className="mr-2" checked={tax} onChange={e=>setTax(e.target.checked)} aria-label="Add tax"/>Add tax
+              <input type="checkbox" className="mr-2" checked={tax ?? false} disabled={tax === undefined} onChange={e=>setTax(e.target.checked)} aria-label="Add tax"/>Add tax
             </label>
             <label>
-              <input type="checkbox" className="mr-2" checked={chargeFee} onChange={e=>setChargeFee(e.target.checked)} aria-label="Charge customer fee" />Charge customer fee
+              <input type="checkbox" className="mr-2" checked={chargeFee ?? false} disabled={chargeFee === undefined} onChange={e=>setChargeFee(e.target.checked)} aria-label="Charge customer fee" />Charge customer fee
             </label>
           </div>
           <Button onClick={readyForPayment} className="w-full h-14" aria-label="ready" disabled={!amount}>Ready for payment</Button>
@@ -208,10 +236,12 @@ export default function SmartTerminalPage() {
             return (
               <>
                 <QRCode value={uri} size={256} />
-                {showAmount && <div>Send amount: {paymentData.pay_amount}</div>}
+                <div className="font-medium">{paymentData.pay_currency}</div>
+                {showAmount && <div>Send amount: {paymentData.pay_amount} {paymentData.pay_currency}</div>}
                 <div className="flex gap-2">
                   <Button onClick={() => navigator.clipboard.writeText(paymentData.pay_address)}>Copy address</Button>
                   {showAmount && <Button onClick={() => navigator.clipboard.writeText(String(paymentData.pay_amount))}>Copy amount</Button>}
+                  <Button variant="outline" onClick={() => { setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setStatus(''); setTipSelected(false); setTipPercent(null); }}>Back</Button>
                 </div>
               </>
             );
@@ -234,7 +264,7 @@ export default function SmartTerminalPage() {
                 <Input placeholder="Phone" value={receipt.phone} onChange={e=>setReceipt({...receipt,phone:e.target.value})} aria-label="receipt phone" />
                 <Button onClick={()=>sendReceipt('sms')}>SMS</Button>
               </div>
-              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount');}}>New Sale</Button>
+              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount'); setTax(device?.tax_enabled ?? tax); setChargeFee(device?.charge_customer_fee ?? chargeFee);}}>New Sale</Button>
             </div>
           )}
         </div>

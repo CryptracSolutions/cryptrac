@@ -391,9 +391,9 @@ export default function MerchantDashboard() {
               </Button>
 
               <Button
+                onClick={() => router.push('/smart-terminal')}
                 className="w-full justify-start h-auto p-4"
                 variant="outline"
-                disabled
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-purple-100 rounded-lg">
@@ -401,7 +401,7 @@ export default function MerchantDashboard() {
                   </div>
                   <div className="text-left">
                     <div className="font-medium">Smart Terminal</div>
-                    <div className="text-sm text-gray-500">Coming soon</div>
+                    <div className="text-sm text-gray-500">Accept in-person crypto payments</div>
                   </div>
                 </div>
               </Button>
