@@ -352,6 +352,12 @@ export default function PaymentsPage() {
           <Link href="/merchant/dashboard">
             <Button variant="outline">Dashboard</Button>
           </Link>
+          <Link href="/smart-terminal">
+            <Button variant="outline">Smart Terminal</Button>
+          </Link>
+          <Link href="/merchant/subscriptions">
+            <Button variant="outline">Subscriptions</Button>
+          </Link>
           <Link href="/merchant/dashboard/payments/create">
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
@@ -475,13 +481,18 @@ export default function PaymentsPage() {
                   : 'Create your first payment link to get started.'
                 }
               </p>
-              <Link href="/merchant/dashboard/payments/create">
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Payment Link
-                </Button>
-              </Link>
-            </div>
+              <div className="flex justify-center gap-2">
+                <Link href="/merchant/dashboard/payments/create">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Payment Link
+                  </Button>
+                </Link>
+                <Link href="/merchant/subscriptions/create">
+                  <Button variant="outline">Create Subscription</Button>
+                </Link>
+              </div>
+              </div>
           ) : (
             <div className="space-y-4">
               {paymentLinks.map((link) => (
@@ -595,4 +606,3 @@ export default function PaymentsPage() {
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Badge } from '@/app/components/ui/badge';
@@ -33,20 +33,27 @@ export default function SubscriptionDetailPage() {
   const [sub, setSub] = useState<Subscription | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [override, setOverride] = useState({ effective_from: '', amount: '', note: '' });
+  const [invoiceLink, setInvoiceLink] = useState<{ url: string; id: string } | null>(null);
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const fetchInvoices = useCallback(async () => {
+    const { data: invs } = await supabase
+      .from('subscription_invoices')
+      .select('*')
+      .eq('subscription_id', id)
+      .order('created_at', { ascending: false });
+    setInvoices(invs || []);
+  }, [id]);
 
   useEffect(() => {
     (async () => {
       const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}`);
       const json = await res.json();
       setSub(json.data);
-      const { data: invs } = await supabase
-        .from('subscription_invoices')
-        .select('*')
-        .eq('subscription_id', id)
-        .order('created_at', { ascending: false });
-      setInvoices(invs || []);
+      await fetchInvoices();
     })();
-  }, [id]);
+  }, [id, fetchInvoices]);
 
   const scheduleOverride = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,13 +62,42 @@ export default function SubscriptionDetailPage() {
       body: JSON.stringify({ effective_from: override.effective_from, amount: parseFloat(override.amount), note: override.note })
     });
     toast.success('Override scheduled');
-    const { data: invs } = await supabase
-      .from('subscription_invoices')
-      .select('*')
-      .eq('subscription_id', id)
-      .order('created_at', { ascending: false });
-    setInvoices(invs || []);
+    await fetchInvoices();
     setOverride({ effective_from: '', amount: '', note: '' });
+  };
+
+  const generateInvoice = async () => {
+    const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}/generate-invoice`, { method: 'POST' });
+    const json = await res.json();
+    if (res.ok) {
+      setInvoiceLink({ url: json.payment_url, id: json.payment_link_id });
+      toast.success('Invoice generated');
+      await fetchInvoices();
+    } else {
+      toast.error(json.error || 'Failed to generate invoice');
+    }
+  };
+
+  const sendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invoiceLink) return;
+    await makeAuthenticatedRequest('/api/receipts/email', {
+      method: 'POST',
+      body: JSON.stringify({ email, payment_link_id: invoiceLink.id })
+    });
+    toast.success('Email sent');
+    setEmail('');
+  };
+
+  const sendSms = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invoiceLink) return;
+    await makeAuthenticatedRequest('/api/receipts/sms', {
+      method: 'POST',
+      body: JSON.stringify({ phone, payment_link_id: invoiceLink.id })
+    });
+    toast.success('SMS sent');
+    setPhone('');
   };
 
   return (
@@ -74,6 +110,31 @@ export default function SubscriptionDetailPage() {
             <p className="text-gray-600 mb-1">Next billing: {new Date(sub.next_billing_at).toLocaleString()}</p>
           )}
           <Badge>{sub.status}</Badge>
+        </div>
+      )}
+      <Button className="mb-4" onClick={generateInvoice}>Generate invoice now</Button>
+      {invoiceLink && (
+        <div className="border p-4 rounded mb-6 space-y-2 max-w-md">
+          <div className="flex gap-2">
+            <Input value={invoiceLink.url} readOnly className="flex-1" />
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(invoiceLink.url);
+                toast.success('Link copied');
+              }}
+            >
+              Copy Link
+            </Button>
+          </div>
+          <form onSubmit={sendEmail} className="flex gap-2">
+            <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+            <Button type="submit">Send Email</Button>
+          </form>
+          <form onSubmit={sendSms} className="flex gap-2">
+            <Input placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
+            <Button type="submit">Send SMS</Button>
+          </form>
         </div>
       )}
       <h2 className="font-semibold mb-2">Invoices</h2>

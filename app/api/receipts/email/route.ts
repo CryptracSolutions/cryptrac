@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-
-async function logEmail(supabase: SupabaseClient, data: Record<string, unknown>) {
-  let { error } = await supabase.from('email_logs').insert({ ...data, status: 'sent' });
-  if (error) {
-    if (error.message && error.message.includes('column')) {
-      const minimal = { email: data.to_email, type: data.type, status: 'sent' };
-      ({ error } = await supabase.from('email_logs').insert(minimal));
-      if (error) console.error('email log error', error);
-    } else {
-      console.error('email log error', error);
-    }
-  }
-}
+import { createClient } from '@supabase/supabase-js';
 
 async function getServiceAndMerchant(request: NextRequest) {
   const auth = request.headers.get('Authorization');
@@ -36,9 +23,9 @@ export async function POST(request: NextRequest) {
   }
   const { service, merchant } = auth;
   const sendgridKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
   const appOrigin = process.env.APP_ORIGIN;
-  const body = await request.json();
-  const { email, payment_link_id } = body;
+  const { email, payment_link_id } = await request.json();
   if (!email || !payment_link_id) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
@@ -51,22 +38,27 @@ export async function POST(request: NextRequest) {
   if (!link) {
     return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
   }
-  if (sendgridKey && appOrigin) {
+
+  let status = 'queued';
+  if (sendgridKey && fromEmail && appOrigin) {
     try {
       await fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${sendgridKey}`, 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${sendgridKey}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           personalizations: [{ to: [{ email }], subject: 'Your receipt' }],
-          from: { email: 'no-reply@cryptrac.com' },
-          content: [{ type: 'text/html', value: `<p>Thank you for your payment.</p><p><a href="${appOrigin}/pay/${link.link_id}">View payment</a></p>` }]
+          from: { email: fromEmail },
+          content: [{ type: 'text/plain', value: `View receipt: ${appOrigin}/pay/${link.link_id}` }]
         })
       });
-      await logEmail(service, { merchant_id: merchant.id, type: 'receipt', to_email: email, subject: 'Your receipt' });
+      status = 'sent';
     } catch (err) {
       console.error('receipt email error', err);
     }
   }
-  return NextResponse.json({ success: true });
+  await service.from('email_logs').insert({ email, type: 'receipt', status });
+  return NextResponse.json({ success: true, queued: status !== 'sent' });
 }
-

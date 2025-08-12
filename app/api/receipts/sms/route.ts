@@ -26,8 +26,7 @@ export async function POST(request: NextRequest) {
   const twilioToken = process.env.TWILIO_AUTH_TOKEN;
   const twilioFrom = process.env.TWILIO_FROM_NUMBER;
   const appOrigin = process.env.APP_ORIGIN;
-  const body = await request.json();
-  const { phone, payment_link_id } = body;
+  const { phone, payment_link_id } = await request.json();
   if (!phone || !payment_link_id) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
@@ -40,20 +39,22 @@ export async function POST(request: NextRequest) {
   if (!link) {
     return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
   }
+
+  const message = appOrigin ? `Receipt: ${appOrigin}/pay/${link.link_id}` : undefined;
+  let status = 'queued';
   if (twilioSid && twilioToken && twilioFrom && appOrigin) {
     try {
-      const message = `Receipt: ${appOrigin}/pay/${link.link_id}`;
-      const creds = btoa(`${twilioSid}:${twilioToken}`);
+      const creds = Buffer.from(`${twilioSid}:${twilioToken}`).toString('base64');
       await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
         method: 'POST',
         headers: { 'Authorization': `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ From: twilioFrom, To: phone, Body: message })
+        body: new URLSearchParams({ From: twilioFrom, To: phone, Body: message! })
       });
-      await service.from('sms_logs').insert({ merchant_id: merchant.id, phone, type: 'receipt', status: 'sent', payload: { message, link_id: payment_link_id } });
+      status = 'sent';
     } catch (err) {
       console.error('receipt sms error', err);
     }
   }
-  return NextResponse.json({ success: true });
+  await service.from('sms_logs').insert({ merchant_id: merchant.id, phone, type: 'receipt', status, payload: { message, link_id: payment_link_id } });
+  return NextResponse.json({ success: true, queued: status !== 'sent' });
 }
-
