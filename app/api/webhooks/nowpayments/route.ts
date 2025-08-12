@@ -216,9 +216,13 @@ export async function POST(request: NextRequest) {
     console.log('  - payment_status:', payment_status)
 
     // Create Supabase client (use service role for webhooks)
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY is required')
+    }
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      serviceKey,
       {
         cookies: {
           getAll() {
@@ -500,6 +504,57 @@ export async function POST(request: NextRequest) {
       } catch (linkUpdateError) {
         console.warn('⚠️ Error updating payment link usage:', linkUpdateError)
       }
+
+      // If payment link is tied to a subscription invoice, mark it paid
+      try {
+        const { data: link } = await supabase
+          .from('payment_links')
+          .select('id, subscription_id')
+          .eq('id', payment.payment_link_id)
+          .single()
+
+        if (link && link.subscription_id) {
+          const { data: updatedInvoice } = await supabase
+            .from('subscription_invoices')
+            .update({ status: 'paid', paid_at: new Date().toISOString() })
+            .eq('payment_link_id', link.id)
+            .neq('status', 'paid')
+            .select('id')
+
+          if (updatedInvoice && updatedInvoice.length > 0) {
+            const { data: sub } = await supabase
+              .from('subscriptions')
+              .select('total_cycles')
+              .eq('id', link.subscription_id)
+              .single()
+
+            await supabase
+              .from('subscriptions')
+              .update({ total_cycles: (sub?.total_cycles || 0) + 1 })
+              .eq('id', link.subscription_id)
+          }
+        }
+      } catch (subError) {
+        console.warn('⚠️ Error updating subscription invoice:', subError)
+      }
+    }
+
+    const eventId = body?.event_id || body?.payment_id || crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex')
+    const { data: existingLog } = await supabase
+      .from('webhook_logs')
+      .select('id, attempts')
+      .eq('provider', 'nowpayments')
+      .eq('event_id', eventId)
+      .maybeSingle()
+    if (existingLog) {
+      await supabase
+        .from('webhook_logs')
+        .update({ attempts: (existingLog.attempts || 0) + 1, processed_at: new Date().toISOString() })
+        .eq('id', existingLog.id)
+    } else {
+      await supabase
+        .from('webhook_logs')
+        .insert({ provider: 'nowpayments', event_id: eventId, attempts: 1, processed_at: new Date().toISOString() })
     }
 
     return NextResponse.json({

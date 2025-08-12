@@ -44,6 +44,10 @@ export async function POST(request: NextRequest) {
       expires_at,
       max_uses,
       redirect_url,
+      source = null,
+      subscription_id = null,
+      pos_device_id = null,
+      metadata = {},
       charge_customer_fee = null, // null = inherit from merchant global setting
       auto_convert_enabled = null, // null = inherit from merchant global setting
       preferred_payout_currency = null, // null = inherit from merchant global setting
@@ -78,9 +82,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create service role client for all database operations (bypasses RLS)
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      serviceKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -188,44 +196,51 @@ export async function POST(request: NextRequest) {
     // Create payment link with new fields
     const { data: paymentLink, error: insertError } = await serviceSupabase
       .from('payment_links')
-      .insert({
-        merchant_id: merchant.id,
-        title,
-        description,
-        amount: amountNum,
-        base_amount: amountNum,
-        currency,
-        accepted_cryptos,
-        link_id: linkId,
-        qr_code_data: paymentUrl,
-        expires_at: expires_at ? new Date(expires_at).toISOString() : null,
-        max_uses: max_uses || null,
-        status: 'active',
-        charge_customer_fee: effectiveChargeCustomerFee, // Store the effective value
-        auto_convert_enabled: effectiveAutoConvertEnabled, // Store the effective value
-        preferred_payout_currency: effectivePreferredPayoutCurrency, // Store the effective value
-        fee_percentage: totalFeePercentage,
-        tax_enabled: tax_enabled,
-        tax_rates: tax_enabled ? tax_rates : [],
-        tax_amount: totalTaxAmount,
-        subtotal_with_tax: subtotalWithTax,
-        metadata: {
-          redirect_url: redirect_url || null,
-          fee_breakdown: {
-            base_fee_percentage: baseFeePercentage * 100,
-            auto_convert_fee_percentage: autoConvertFeePercentage * 100,
-            total_fee_percentage: totalFeePercentage * 100,
-            fee_amount: feeAmount,
-            merchant_receives: merchantReceives,
-            effective_charge_customer_fee: effectiveChargeCustomerFee,
-            effective_auto_convert_enabled: effectiveAutoConvertEnabled,
-            effective_preferred_payout_currency: effectivePreferredPayoutCurrency
-          },
-          tax_breakdown: taxBreakdown,
-          wallet_addresses: Object.fromEntries(
-            accepted_cryptos.map(crypto => [crypto, merchantWallets[crypto]])
-          )
-        }
+      .insert(() => {
+        const payload: Record<string, unknown> = {
+          merchant_id: merchant.id,
+          title,
+          description,
+          amount: amountNum,
+          base_amount: amountNum,
+          currency,
+          accepted_cryptos,
+          link_id: linkId,
+          qr_code_data: paymentUrl,
+          expires_at: expires_at ? new Date(expires_at).toISOString() : null,
+          max_uses: max_uses || null,
+          status: 'active',
+          charge_customer_fee: effectiveChargeCustomerFee,
+          auto_convert_enabled: effectiveAutoConvertEnabled,
+          preferred_payout_currency: effectivePreferredPayoutCurrency,
+          fee_percentage: totalFeePercentage,
+          tax_enabled: tax_enabled,
+          tax_rates: tax_enabled ? tax_rates : [],
+          tax_amount: totalTaxAmount,
+          subtotal_with_tax: subtotalWithTax,
+          metadata: {
+            ...metadata,
+            redirect_url: redirect_url || null,
+            fee_breakdown: {
+              base_fee_percentage: baseFeePercentage * 100,
+              auto_convert_fee_percentage: autoConvertFeePercentage * 100,
+              total_fee_percentage: totalFeePercentage * 100,
+              fee_amount: feeAmount,
+              merchant_receives: merchantReceives,
+              effective_charge_customer_fee: effectiveChargeCustomerFee,
+              effective_auto_convert_enabled: effectiveAutoConvertEnabled,
+              effective_preferred_payout_currency: effectivePreferredPayoutCurrency
+            },
+            tax_breakdown: taxBreakdown,
+            wallet_addresses: Object.fromEntries(
+              accepted_cryptos.map(crypto => [crypto, merchantWallets[crypto]])
+            )
+          }
+        };
+        if (source) payload.source = source;
+        if (subscription_id) payload.subscription_id = subscription_id;
+        if (pos_device_id) payload.pos_device_id = pos_device_id;
+        return payload;
       })
       .select()
       .single();

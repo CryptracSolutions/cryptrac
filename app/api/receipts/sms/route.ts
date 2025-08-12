@@ -1,137 +1,59 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+async function getServiceAndMerchant(request: NextRequest) {
+  const auth = request.headers.get('Authorization');
+  if (!auth || !auth.startsWith('Bearer ')) return { error: 'Unauthorized' };
+  const token = auth.substring(7);
+  const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+  const { data: { user } } = await anon.auth.getUser(token);
+  if (!user) return { error: 'Unauthorized' };
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+  const service = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const { data: merchant } = await service.from('merchants').select('id').eq('user_id', user.id).single();
+  if (!merchant) return { error: 'Merchant not found' };
+  return { service, merchant };
+}
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { payment_id, phone } = body
-
-    console.log('📱 SMS receipt request:', { payment_id, phone })
-
-    if (!payment_id || !phone) {
-      return NextResponse.json(
-        { success: false, message: 'Missing required parameters' },
-        { status: 400 }
-      )
-    }
-
-    // Basic phone number validation
-    const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/
-    if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid phone number format' },
-        { status: 400 }
-      )
-    }
-
-    // Create Supabase client
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-
-    // Fetch payment data
-    const { data: payment, error } = await supabase
-      .from('transactions')
-      .select(`
-        *,
-        payment_link:payment_links(
-          title,
-          description,
-          merchant:merchants(
-            business_name
-          )
-        )
-      `)
-      .eq('id', payment_id)
-      .single()
-
-    if (error || !payment) {
-      console.error('❌ Payment not found for SMS receipt:', error)
-      return NextResponse.json(
-        { success: false, message: 'Payment not found' },
-        { status: 404 }
-      )
-    }
-
-    // Generate SMS content
-    const smsContent = generateSMSContent(payment)
-
-    // Here you would integrate with your SMS service (Twilio, AWS SNS, etc.)
-    // For now, we'll simulate sending the SMS
-    console.log('📱 Sending SMS receipt to:', phone)
-    console.log('📄 SMS content:', smsContent)
-
-    // Simulate SMS sending delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // In a real implementation, you would:
-    // 1. Use an SMS service like Twilio, AWS SNS, or similar
-    // 2. Send the SMS content
-    // 3. Handle SMS delivery status
-    // 4. Store SMS sending record in database
-
-    // For now, we'll just log success
-    console.log('✅ SMS receipt sent successfully (simulated)')
-
-    return NextResponse.json({
-      success: true,
-      message: 'SMS receipt sent successfully',
-    })
-
-  } catch (error) {
-    console.error('❌ Error sending SMS receipt:', error)
-    return NextResponse.json(
-      { success: false, message: 'Failed to send SMS receipt' },
-      { status: 500 }
-    )
+  const auth = await getServiceAndMerchant(request);
+  if ('error' in auth) {
+    return NextResponse.json({ error: auth.error }, { status: 401 });
   }
-}
-
-interface SmsPayment {
-  payment_link: { title: string; merchant: { business_name: string } }
-  pay_amount: number
-  pay_currency: string
-  amount: number
-  updated_at: string
-  order_id: string
-}
-
-function generateSMSContent(payment: SmsPayment): string {
-  const formatAmount = (amount: number, decimals: number = 8) => {
-    return amount.toFixed(decimals).replace(/\.?0+$/, '')
+  const { service, merchant } = auth;
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioFrom = process.env.TWILIO_FROM_NUMBER;
+  const appOrigin = process.env.APP_ORIGIN;
+  const body = await request.json();
+  const { phone, payment_link_id } = body;
+  if (!phone || !payment_link_id) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
+  const { data: link } = await service
+    .from('payment_links')
+    .select('link_id')
+    .eq('id', payment_link_id)
+    .eq('merchant_id', merchant.id)
+    .single();
+  if (!link) {
+    return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
   }
-
-  return `
-🎉 Payment Confirmed!
-
-${payment.payment_link.title}
-To: ${payment.payment_link.merchant.business_name}
-
-Amount: ${formatAmount(payment.pay_amount)} ${payment.pay_currency}
-USD Value: $${payment.amount.toFixed(2)}
-Time: ${formatDate(payment.updated_at)}
-Order ID: ${payment.order_id}
-
-Powered by Cryptrac
-  `.trim()
+  if (twilioSid && twilioToken && twilioFrom && appOrigin) {
+    try {
+      const message = `Receipt: ${appOrigin}/pay/${link.link_id}`;
+      const creds = btoa(`${twilioSid}:${twilioToken}`);
+      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ From: twilioFrom, To: phone, Body: message })
+      });
+      await service.from('sms_logs').insert({ merchant_id: merchant.id, phone, type: 'receipt', status: 'sent', payload: { message, link_id: payment_link_id } });
+    } catch (err) {
+      console.error('receipt sms error', err);
+    }
+  }
+  return NextResponse.json({ success: true });
 }
 

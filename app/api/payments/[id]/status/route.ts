@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!serviceKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+}
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  serviceKey
 );
 
 export async function GET(
@@ -129,6 +133,36 @@ export async function GET(
               console.log('✅ Payment updated successfully');
               // Update the payment object with new data
               Object.assign(payment, updateData);
+              if (mappedStatus === 'confirmed') {
+                try {
+                  const { data: link } = await supabase
+                    .from('payment_links')
+                    .select('id, subscription_id')
+                    .eq('id', payment.payment_link_id)
+                    .single();
+                  if (link && link.subscription_id) {
+                    const { data: updatedInvoice } = await supabase
+                      .from('subscription_invoices')
+                      .update({ status: 'paid', paid_at: new Date().toISOString() })
+                      .eq('payment_link_id', link.id)
+                      .neq('status', 'paid')
+                      .select('id');
+                    if (updatedInvoice && updatedInvoice.length > 0) {
+                      const { data: sub } = await supabase
+                        .from('subscriptions')
+                        .select('total_cycles')
+                        .eq('id', link.subscription_id)
+                        .single();
+                      await supabase
+                        .from('subscriptions')
+                        .update({ total_cycles: (sub?.total_cycles || 0) + 1 })
+                        .eq('id', link.subscription_id);
+                    }
+                  }
+                } catch (err) {
+                  console.warn('⚠️ Error updating subscription invoice:', err);
+                }
+              }
             }
           }
         } else {

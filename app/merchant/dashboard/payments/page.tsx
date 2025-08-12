@@ -44,6 +44,8 @@ interface PaymentLink {
     usage_vs_max: string;
     is_expired: boolean;
   };
+  source?: string | null;
+  subscription_id?: string | null;
 }
 
 interface Statistics {
@@ -492,6 +494,11 @@ export default function PaymentsPage() {
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-gray-900">{link.title}</h3>
                         {getStatusBadge(link.status, link)}
+                        {(link.source === 'subscription' || link.subscription_id) && (
+                          <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                            Subscription
+                          </Badge>
+                        )}
                         {link.usage_count > 0 && (
                           <Badge variant="outline" className="bg-green-100 text-green-700">
                             Payment received

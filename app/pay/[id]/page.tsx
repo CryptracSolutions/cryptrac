@@ -40,6 +40,8 @@ interface PaymentLink {
   }>
   tax_amount: number
   subtotal_with_tax: number
+  source?: string | null
+  subscription_id?: string | null
   merchant: {
     business_name: string
     charge_customer_fee: boolean
@@ -1015,12 +1017,15 @@ export default function PaymentPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{paymentLink.title}</h1>
-          {paymentLink.description && (
-            <p className="text-gray-600">{paymentLink.description}</p>
-          )}
-          <p className="text-sm text-gray-500 mt-2">
-            Powered by {paymentLink.merchant.business_name}
-          </p>
+        {paymentLink.description && (
+          <p className="text-gray-600">{paymentLink.description}</p>
+        )}
+        {paymentLink.subscription_id && (
+          <p className="text-sm text-gray-500 mt-1">This is a recurring invoice. Payments are not auto-debited.</p>
+        )}
+        <p className="text-sm text-gray-500 mt-2">
+          Powered by {paymentLink.merchant.business_name}
+        </p>
         </div>
 
         {/* Payment Amount Card */}
