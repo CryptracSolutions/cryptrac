@@ -17,6 +17,14 @@ interface TerminalDevice {
 
 const defaultTips = [10, 15, 20];
 
+function buildPaymentURI(currency: string, address: string, amount: number) {
+  const upper = currency.toUpperCase();
+  if (upper === 'BTC') return `bitcoin:${address}?amount=${amount}`;
+  if (upper === 'LTC') return `litecoin:${address}?amount=${amount}`;
+  if (upper === 'BCH') return `bitcoincash:${address}?amount=${amount}`;
+  return address;
+}
+
 export default function SmartTerminalPage() {
   const [device, setDevice] = useState<TerminalDevice | null>(null);
   const [amount, setAmount] = useState('');
@@ -25,10 +33,12 @@ export default function SmartTerminalPage() {
   const [tax, setTax] = useState(false);
   const [chargeFee, setChargeFee] = useState(false);
   const [crypto, setCrypto] = useState('BTC');
-  const [taxRates, setTaxRates] = useState<Array<{ label: string; percentage: number }>>([]);
+  const [preview, setPreview] = useState({ tax_amount: 0, subtotal_with_tax: 0, gateway_fee: 0, pre_tip_total: 0 });
+  const [invoiceBreakdown, setInvoiceBreakdown] = useState<null | { tax_amount: number; subtotal_with_tax: number; gateway_fee: number; pre_tip_total: number; tip_amount: number; final_total: number }>(null);
+  const [loading, setLoading] = useState(false);
   interface PaymentLink { id: string; link_id: string; }
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null);
-  const [paymentData, setPaymentData] = useState<{ pay_address: string; pay_amount: number } | null>(null);
+  const [paymentData, setPaymentData] = useState<{ pay_address: string; pay_amount: number; pay_currency: string } | null>(null);
   const [status, setStatus] = useState('');
   const [receipt, setReceipt] = useState({ email: '', phone: '' });
 
@@ -43,9 +53,31 @@ export default function SmartTerminalPage() {
       if (json.data?.accepted_cryptos?.length) setCrypto(json.data.accepted_cryptos[0]);
       setChargeFee(json.data.charge_customer_fee ?? false);
       setTax(json.data.tax_enabled ?? false);
-      setTaxRates(json.data.tax_rates || []);
     })();
   }, []);
+
+  useEffect(() => {
+    const amt = parseFloat(amount || '0');
+    if (!device || !amt) {
+      setPreview({ tax_amount: 0, subtotal_with_tax: amt, gateway_fee: 0, pre_tip_total: amt });
+      return;
+    }
+    (async () => {
+      const body: Record<string, unknown> = { amount: amt, tax_enabled: tax, charge_customer_fee: chargeFee };
+      const res = await makeAuthenticatedRequest('/api/terminal/preview', { method: 'POST', body: JSON.stringify(body) });
+      const json = await res.json();
+      if (!json.error) {
+        setPreview({
+          tax_amount: json.tax_amount,
+          subtotal_with_tax: json.subtotal_with_tax,
+          gateway_fee: json.gateway_fee,
+          pre_tip_total: json.pre_tip_total
+        });
+        setTax(json.effective.tax_enabled);
+        setChargeFee(json.effective.charge_customer_fee);
+      }
+    })();
+  }, [amount, tax, chargeFee, device]);
 
   useEffect(() => {
     if (paymentLink) {
@@ -69,52 +101,30 @@ export default function SmartTerminalPage() {
   const clearAmount = () => setAmount('');
   const backspace = () => setAmount(prev => prev.slice(0, -1));
 
-  const totalTaxRate = taxRates.reduce((sum, r) => sum + (parseFloat(String(r.percentage)) || 0), 0);
   const baseAmount = parseFloat(amount || '0');
-  const taxAmount = tax ? (baseAmount * totalTaxRate) / 100 : 0;
-  const subtotalWithTax = baseAmount + taxAmount;
-  const gatewayFee = chargeFee ? subtotalWithTax * 0.005 : 0;
-  const preTipTotal = subtotalWithTax + gatewayFee;
+  const taxAmount = preview.tax_amount;
+  const gatewayFee = preview.gateway_fee;
+  const preTipTotal = preview.pre_tip_total;
   const tipAmount = tipPercent ? (preTipTotal * tipPercent) / 100 : 0;
   const finalTotal = preTipTotal + tipAmount;
 
   const generate = async () => {
-    if (!device || !tipSelected || !amount) return;
-    const body: Record<string, unknown> = {
-      title: 'POS Sale',
+    if (!device || !tipSelected || !amount || loading) return;
+    setLoading(true);
+    const body = {
       amount: baseAmount,
-      currency: 'USD',
-      accepted_cryptos: [crypto],
-      max_uses: 1,
-      expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      source: 'pos',
-      pos_device_id: device.id,
-      metadata: { pos: { device_id: device.id, tip_amount: tipAmount, pre_tip_total: preTipTotal } },
-      charge_customer_fee: chargeFee,
-      tax_enabled: tax,
-      tax_rates: tax ? taxRates : [],
-    };
-    const res = await makeAuthenticatedRequest('/api/payments/create', { method: 'POST', body: JSON.stringify(body) });
-    const json = await res.json();
-    setPaymentLink(json.payment_link);
-    setStatus('pending');
-    const invoiceBody = {
-      price_amount: finalTotal,
-      price_currency: 'USD',
+      tip_amount: tipAmount,
       pay_currency: crypto,
-      order_id: `pos_${json.payment_link.link_id}_${Date.now()}`,
-      order_description: 'POS Sale',
-      payment_link_id: json.payment_link.id,
-      base_amount: baseAmount,
-      tax_enabled: tax,
-      tax_rates: tax ? taxRates : [],
-      tax_amount: taxAmount,
-      subtotal_with_tax: subtotalWithTax,
+      pos_device_id: device.id
     };
-    const paymentRes = await makeAuthenticatedRequest('/api/nowpayments/create-payment', { method: 'POST', body: JSON.stringify(invoiceBody) });
-    const paymentJson = await paymentRes.json();
-    if (paymentJson?.payment?.pay_address) {
-      setPaymentData(paymentJson.payment);
+    const res = await makeAuthenticatedRequest('/api/terminal/invoice', { method: 'POST', body: JSON.stringify(body) });
+    const json = await res.json();
+    setLoading(false);
+    if (json?.payment_link && json?.now) {
+      setPaymentLink(json.payment_link);
+      setPaymentData(json.now);
+      setInvoiceBreakdown(json.breakdown);
+      setStatus('pending');
     }
   };
 
@@ -166,18 +176,31 @@ export default function SmartTerminalPage() {
             {(device?.accepted_cryptos || ['BTC']).map((c:string)=> <option key={c} value={c}>{c}</option>)}
           </select>
           {tipSelected && <div className="text-center text-xl">Final Total: {finalTotal.toFixed(2)}</div>}
-          <Button onClick={generate} className="w-full h-14" aria-label="generate QR" disabled={!tipSelected || !amount}>Generate QR</Button>
+          <Button onClick={generate} className="w-full h-14" aria-label="generate QR" disabled={!tipSelected || !amount || loading}>Generate QR</Button>
         </div>
       )}
       {paymentLink && paymentData && (
         <div className="flex flex-col items-center space-y-4" aria-live="polite">
-          <QRCode value={`${paymentData.pay_address}?amount=${paymentData.pay_amount}`} size={256} />
+          {(() => {
+            const uri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount);
+            const showAmount = uri === paymentData.pay_address;
+            return (
+              <>
+                <QRCode value={uri} size={256} />
+                {showAmount && <div>Send amount: {paymentData.pay_amount}</div>}
+                <div className="flex gap-2">
+                  <Button onClick={() => navigator.clipboard.writeText(paymentData.pay_address)}>Copy address</Button>
+                  {showAmount && <Button onClick={() => navigator.clipboard.writeText(String(paymentData.pay_amount))}>Copy amount</Button>}
+                </div>
+              </>
+            );
+          })()}
           <div className="text-sm text-center">
             <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
-            {tax && <div className="flex justify-between"><span>Tax</span><span>{taxAmount.toFixed(2)}</span></div>}
-            {chargeFee && <div className="flex justify-between"><span>Gateway fee</span><span>{gatewayFee.toFixed(2)}</span></div>}
-            {tipSelected && <div className="flex justify-between"><span>Tip</span><span>{tipAmount.toFixed(2)}</span></div>}
-            <div className="flex justify-between font-semibold"><span>Total</span><span>{finalTotal.toFixed(2)}</span></div>
+            {invoiceBreakdown?.tax_amount ? <div className="flex justify-between"><span>Tax</span><span>{invoiceBreakdown.tax_amount.toFixed(2)}</span></div> : null}
+            {invoiceBreakdown?.gateway_fee ? <div className="flex justify-between"><span>Gateway fee</span><span>{invoiceBreakdown.gateway_fee.toFixed(2)}</span></div> : null}
+            {invoiceBreakdown?.tip_amount ? <div className="flex justify-between"><span>Tip</span><span>{invoiceBreakdown.tip_amount.toFixed(2)}</span></div> : null}
+            <div className="flex justify-between font-semibold"><span>Total</span><span>{(invoiceBreakdown?.final_total || finalTotal).toFixed(2)}</span></div>
           </div>
           <div>Status: {status}</div>
           {status === 'confirmed' && (
@@ -190,7 +213,7 @@ export default function SmartTerminalPage() {
                 <Input placeholder="Phone" value={receipt.phone} onChange={e=>setReceipt({...receipt,phone:e.target.value})} aria-label="receipt phone" />
                 <Button onClick={()=>sendReceipt('sms')}>SMS</Button>
               </div>
-              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false);}}>New Sale</Button>
+              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false);}}>New Sale</Button>
             </div>
           )}
         </div>
