@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         base_fee_percentage: baseFeePercentage * 100,
         auto_convert_fee_percentage: autoConvertFeePercentage * 100,
         total_fee_percentage: totalFeePercentage * 100,
-        fee_amount,
+        fee_amount: feeAmount,
         merchant_receives: merchantReceives,
         effective_charge_customer_fee: effectiveChargeCustomerFee,
         effective_auto_convert_enabled: effectiveAutoConvertEnabled,
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
   }
   return NextResponse.json({
     success: true,
-    payment_link: { ...paymentLink, payment_url: paymentUrl, metadata: { ...paymentLink.metadata, fee_amount, customer_pays_total: customerPaysTotal } }
+    payment_link: { ...paymentLink, payment_url: paymentUrl, metadata: { ...paymentLink.metadata, fee_amount: feeAmount, customer_pays_total: customerPaysTotal } }
   });
 }
 
