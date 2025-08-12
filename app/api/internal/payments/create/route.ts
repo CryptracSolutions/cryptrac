@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     tax_enabled,
     tax_rates: tax_enabled ? tax_rates : [],
     tax_amount: totalTaxAmount,
-    subtotal_with_tax,
+    subtotal_with_tax: subtotalWithTax,
     metadata: {
       ...metadata,
       fee_breakdown: {
