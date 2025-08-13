@@ -69,14 +69,84 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
   });
   return Array.from(stable);
 }
+
+// FIXED: Updated mapping function to match the logic from /pay/[id] page
 async function mapToNowPaymentsCode(displayCode: string): Promise<string | null> {
   const currencies = await fetchAvailableCurrencies();
-  const target = displayCode.toLowerCase();
-  if (currencies.find(c => c.code === target)) return target;
-  for (const net of ["eth","bsc","sol","matic","trx","ton","arb","op","base"]) {
-    const withNet = target + net;
-    if (currencies.find(c => c.code === withNet)) return withNet;
+  
+  // Comprehensive alternative mapping for all currencies (copied from pay page)
+  const currencyAlternatives: Record<string, string[]> = {
+    // Major cryptocurrencies
+    'BTC': ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
+    'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP', 'ETHBASE', 'BASEETH', 'ETH_BASE'],
+    'BNB': ['BNB', 'BNBBSC', 'BSC', 'BNB_BSC', 'BINANCE', 'BNBCHAIN'],
+    'SOL': ['SOL', 'SOLANA', 'SOLSPL'],
+    'ADA': ['ADA', 'CARDANO'],
+    'DOT': ['DOT', 'POLKADOT'],
+    'MATIC': ['MATIC', 'POLYGON', 'MATICMATIC'],
+    'AVAX': ['AVAX', 'AVALANCHE', 'AVAXC'],
+    'TRX': ['TRX', 'TRON'],
+    'LTC': ['LTC', 'LITECOIN'],
+    'XRP': ['XRP', 'RIPPLE'],
+    'TON': ['TON', 'TONCOIN'],
+    'NEAR': ['NEAR', 'NEARPROTOCOL'],
+    'ALGO': ['ALGO', 'ALGORAND'],
+    'XLM': ['XLM', 'STELLAR'],
+    'ARB': ['ARB', 'ARBITRUM'],
+    'OP': ['OP', 'OPTIMISM'],
+    'ETHBASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
+    
+    // Stablecoins - FIXED: Proper mapping for USDT and USDC
+    'USDT': ['USDTERC20', 'USDT', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
+    'USDC': ['USDCERC20', 'USDC', 'USDCBSC', 'USDCMATIC', 'USDCSOL', 'USDCALGO', 'USDCARB', 'USDCOP', 'USDCBASE'],
+    'DAI': ['DAI', 'DAIERC20'],
+    'PYUSD': ['PYUSD', 'PYUSDERC20']
+  };
+
+  // Dynamic network patterns for comprehensive detection
+  const networkPatterns = [
+    'BSC', 'ERC20', 'TRC20', 'SOL', 'MATIC', 'ARB', 'OP', 'BASE', 'AVAX', 'TON', 'ALGO', 'NEAR'
+  ];
+
+  const displayCodeUpper = displayCode.toUpperCase();
+  
+  // Try predefined alternatives first
+  const alternatives = currencyAlternatives[displayCodeUpper] || [];
+  
+  // Check predefined alternatives - FIXED: Use 'is_available' instead of 'enabled'
+  for (const alt of alternatives) {
+    const found = currencies.find(c => 
+      c.code.toUpperCase() === alt.toUpperCase() && c.is_available
+    );
+    if (found) {
+      console.log(`✅ Currency mapping: ${displayCode} → ${found.code}`);
+      return found.code;
+    }
   }
+  
+  // If no predefined alternative found, try dynamic patterns - FIXED: Use 'is_available' instead of 'enabled'
+  const baseCode = displayCodeUpper;
+  for (const pattern of networkPatterns) {
+    const dynamicCode = `${baseCode}${pattern}`;
+    const found = currencies.find(c => 
+      c.code.toUpperCase() === dynamicCode && c.is_available
+    );
+    if (found) {
+      console.log(`✅ Currency mapping (dynamic): ${displayCode} → ${found.code}`);
+      return found.code;
+    }
+  }
+  
+  // Fallback to exact match - FIXED: Use 'is_available' instead of 'enabled'
+  const exactMatch = currencies.find(c => 
+    c.code.toUpperCase() === displayCodeUpper && c.is_available
+  );
+  if (exactMatch) {
+    console.log(`✅ Currency mapping (exact): ${displayCode} → ${exactMatch.code}`);
+    return exactMatch.code;
+  }
+  
+  console.warn(`⚠️ No currency mapping found for: ${displayCode}`);
   return null;
 }
 

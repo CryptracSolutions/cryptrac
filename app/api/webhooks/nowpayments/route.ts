@@ -94,6 +94,84 @@ interface NOWPaymentsWebhookBody extends Record<string, unknown> {
   payment_id?: string
 }
 
+// ADDED: Function to send merchant notification email
+async function sendMerchantNotification(payment: any, paymentData: any) {
+  try {
+    console.log('📧 Sending merchant notification for payment:', payment.id);
+    
+    // Get payment link details to determine payment type
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      console.error('❌ Service key not available for merchant notification');
+      return;
+    }
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceKey,
+      {
+        cookies: {
+          getAll() { return [] },
+          setAll() { /* no-op */ },
+        },
+      }
+    );
+
+    // Get payment link details
+    const { data: paymentLink } = await supabase
+      .from('payment_links')
+      .select('title, source, metadata')
+      .eq('id', payment.payment_link_id)
+      .single();
+
+    // Determine payment type
+    let paymentType = 'Payment Link';
+    if (paymentLink?.source === 'pos') {
+      paymentType = 'POS Sale';
+    } else if (paymentLink?.source === 'subscription') {
+      paymentType = 'Subscription';
+    }
+
+    // Extract customer email from metadata if available
+    const customerEmail = paymentLink?.metadata?.customer_email || 
+                         payment.metadata?.customer_email || 
+                         null;
+
+    // Prepare notification data
+    const notificationData = {
+      merchant_id: payment.merchant_id,
+      payment_id: payment.id,
+      amount: payment.amount || 0,
+      currency: payment.currency || 'USD',
+      payment_type: paymentType,
+      customer_email: customerEmail,
+      tx_hash: paymentData.tx_hash || payment.tx_hash,
+      pay_currency: paymentData.currency_received || payment.currency_received,
+      amount_received: paymentData.amount_received || payment.amount_received
+    };
+
+    // Call the merchant notification API
+    const notificationResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/merchants/notifications`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(notificationData)
+    });
+
+    if (notificationResponse.ok) {
+      const result = await notificationResponse.json();
+      console.log('✅ Merchant notification sent:', result);
+    } else {
+      const error = await notificationResponse.text();
+      console.error('❌ Failed to send merchant notification:', error);
+    }
+
+  } catch (error) {
+    console.error('❌ Error sending merchant notification:', error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
@@ -477,6 +555,9 @@ export async function POST(request: NextRequest) {
     // If payment is confirmed, trigger post-confirmation actions
     if (newStatus === 'confirmed' && payment.status !== 'confirmed') {
       console.log('🎉 Payment confirmed! Triggering post-confirmation actions...')
+      
+      // ADDED: Send merchant notification email
+      await sendMerchantNotification(payment, updateData);
       
       // Update payment link usage statistics
       try {

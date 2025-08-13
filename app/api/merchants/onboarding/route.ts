@@ -10,6 +10,7 @@ interface OnboardingData {
     description?: string;
     industry?: string;
     phoneNumber?: string;
+    email?: string; // ADDED: Email field for merchant notifications
     businessAddress?: {
       street: string;
       city: string;
@@ -88,8 +89,12 @@ export async function POST(request: NextRequest) {
                     onboardingData.businessInfo?.industry || 
                     '';
 
+    // ADDED: Extract merchant email for notifications
+    const merchantEmail = onboardingData.businessInfo?.email || user.email || null;
+
     console.log('🏢 Business industry:', industry);
     console.log('💱 Payout currency:', payoutCurrency);
+    console.log('📧 Merchant email:', merchantEmail); // ADDED: Log merchant email
     console.log('💳 Charge customer fee:', onboardingData.paymentConfig?.chargeCustomerFee);
     console.log('🔄 Auto convert:', onboardingData.paymentConfig?.autoConvert);
 
@@ -119,6 +124,7 @@ export async function POST(request: NextRequest) {
       business_description: onboardingData.businessInfo.description || null,
       business_type: onboardingData.businessInfo.businessType || null,
       phone_number: onboardingData.businessInfo.phoneNumber || null,
+      email: merchantEmail, // ADDED: Store merchant email for notifications
       business_address: onboardingData.businessInfo.businessAddress || null,
       timezone: onboardingData.businessInfo.timezone || 'America/New_York',
       wallets: walletData,
@@ -152,6 +158,7 @@ export async function POST(request: NextRequest) {
           industry: merchantData.industry,
           website: merchantData.website,
           business_description: merchantData.business_description,
+          email: merchantData.email, // ADDED: Update email field
           wallets: merchantData.wallets,
           charge_customer_fee: merchantData.charge_customer_fee,
           payment_config: merchantData.payment_config,
@@ -162,7 +169,7 @@ export async function POST(request: NextRequest) {
           updated_at: merchantData.updated_at
         })
         .eq('user_id', user.id)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email')
         .single();
 
       if (updateError) {
@@ -183,7 +190,7 @@ export async function POST(request: NextRequest) {
       const { data: newMerchant, error: insertError } = await supabase
         .from('merchants')
         .insert(merchantData)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email')
         .single();
 
       if (insertError) {
@@ -201,11 +208,12 @@ export async function POST(request: NextRequest) {
     console.log('💾 Saved merchant data:', savedMerchant);
     console.log('💰 Saved wallets in database:', JSON.stringify(savedMerchant.wallets, null, 2));
     console.log('💰 Saved wallets count:', Object.keys(savedMerchant.wallets || {}).length);
+    console.log('📧 Saved merchant email:', savedMerchant.email); // ADDED: Log saved email
 
     // Verify the data was saved correctly
     const { data: verifyMerchant, error: verifyError } = await supabase
       .from('merchants')
-      .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name')
+      .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email')
       .eq('user_id', user.id)
       .single();
 
@@ -214,6 +222,7 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('🔍 VERIFICATION - Data in database after save:');
       console.log('🔍 Business name:', verifyMerchant.business_name);
+      console.log('🔍 Email:', verifyMerchant.email); // ADDED: Verify email was saved
       console.log('🔍 Wallets:', JSON.stringify(verifyMerchant.wallets, null, 2));
       console.log('🔍 Wallets count:', Object.keys(verifyMerchant.wallets || {}).length);
       console.log('🔍 Charge customer fee:', verifyMerchant.charge_customer_fee);
@@ -229,8 +238,10 @@ export async function POST(request: NextRequest) {
         walletsReceived: Object.keys(walletData).length,
         walletsSaved: Object.keys(savedMerchant.wallets || {}).length,
         walletsVerified: Object.keys(verifyMerchant?.wallets || {}).length,
+        emailSaved: savedMerchant.email, // ADDED: Include email in debug info
         savedData: {
           business_name: savedMerchant.business_name,
+          email: savedMerchant.email, // ADDED: Include email in saved data
           wallets: savedMerchant.wallets,
           charge_customer_fee: savedMerchant.charge_customer_fee,
           auto_convert_enabled: savedMerchant.auto_convert_enabled,

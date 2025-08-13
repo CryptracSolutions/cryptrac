@@ -296,7 +296,8 @@ export default function PaymentsPage() {
       );
     }
 
-    if (link.status === 'expired') {
+    // UPDATED: Only show reactivate for expired Payment Links (not POS sales)
+    if (link.status === 'expired' && link.source !== 'pos') {
       actions.push(
         <Button
           key="reactivate"
@@ -313,6 +314,66 @@ export default function PaymentsPage() {
     }
 
     return actions;
+  };
+
+  // UPDATED: Function to determine which action buttons to show based on status and source
+  const getActionButtons = (link: PaymentLink) => {
+    const buttons = [];
+
+    // Determine if we should show the Copy button
+    const shouldShowCopy = () => {
+      // For POS sales: Don't show copy if completed or expired
+      if (link.source === 'pos') {
+        return link.status !== 'completed' && link.status !== 'expired';
+      }
+      
+      // For Payment Links: Don't show copy if completed or expired
+      return link.status !== 'completed' && link.status !== 'expired';
+    };
+
+    // Copy button (conditionally shown)
+    if (shouldShowCopy()) {
+      buttons.push(
+        <Button
+          key="copy"
+          variant="outline"
+          size="sm"
+          onClick={() => copyToClipboard(getPaymentUrl(link.link_id), link.id)}
+          className="flex items-center gap-1"
+        >
+          <Copy className="h-3 w-3" />
+          {copiedId === link.id ? 'Copied!' : 'Copy'}
+        </Button>
+      );
+    }
+
+    // Open button (only for active links)
+    if (link.status === 'active') {
+      buttons.push(
+        <Button
+          key="open"
+          variant="outline"
+          size="sm"
+          onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
+          className="flex items-center gap-1"
+        >
+          <ExternalLink className="h-3 w-3" />
+          Open
+        </Button>
+      );
+    }
+
+    // View button (always shown)
+    buttons.push(
+      <Link key="view" href={`/merchant/dashboard/payments/${link.id}`}>
+        <Button variant="outline" size="sm" className="flex items-center gap-1">
+          <Eye className="h-3 w-3" />
+          View
+        </Button>
+      </Link>
+    );
+
+    return buttons;
   };
 
   const renderLink = (link: PaymentLink) => (
@@ -359,35 +420,8 @@ export default function PaymentsPage() {
           {/* Status Action Buttons */}
           {getStatusActions(link)}
 
-          {/* Standard Action Buttons */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => copyToClipboard(getPaymentUrl(link.link_id), link.id)}
-            className="flex items-center gap-1"
-          >
-            <Copy className="h-3 w-3" />
-            {copiedId === link.id ? 'Copied!' : 'Copy'}
-          </Button>
-
-          {link.status === 'active' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
-              className="flex items-center gap-1"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Open
-            </Button>
-          )}
-
-          <Link href={`/merchant/dashboard/payments/${link.id}`}>
-            <Button variant="outline" size="sm" className="flex items-center gap-1">
-              <Eye className="h-3 w-3" />
-              View
-            </Button>
-          </Link>
+          {/* UPDATED: Use new action buttons logic */}
+          {getActionButtons(link)}
         </div>
       </div>
     </div>
@@ -513,6 +547,17 @@ export default function PaymentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expired</CardTitle>
+            <AlertCircle className="h-4 w-4 text-gray-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">{statistics.expired_links}</div>
+            <p className="text-xs text-muted-foreground">Past expiry date</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Single Use</CardTitle>
             <CreditCard className="h-4 w-4 text-purple-600" />
           </CardHeader>
@@ -524,141 +569,136 @@ export default function PaymentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statistics.total_payments}</div>
-            <p className="text-xs text-muted-foreground">Completed transactions</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(statistics.total_revenue)}</div>
-            <p className="text-xs text-muted-foreground">Total earnings</p>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(statistics.total_revenue)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {statistics.total_payments} payments
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payments</CardTitle>
-          <CardDescription>
-            View and manage all your payment links with enhanced status controls
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search payment links..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+      {/* Search and Filter */}
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search payment links..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+            <SelectItem value="paused">Paused</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Payment Links by Category */}
+      {groups.map(group => (
+        <Card key={group.key}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  {group.title}
+                  <Badge variant="outline">{group.items.length}</Badge>
+                </CardTitle>
+                <CardDescription>
+                  {group.key === 'links' && 'Standard payment links for invoices and sales'}
+                  {group.key === 'pos' && 'Point-of-sale transactions from Smart Terminal'}
+                  {group.key === 'subscriptions' && 'Recurring subscription payments'}
+                </CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleSection(group.key)}
+                className="flex items-center gap-1"
+              >
+                <ChevronDown 
+                  className={`h-4 w-4 transition-transform ${
+                    openSections[group.key] ? 'rotate-180' : ''
+                  }`} 
                 />
-              </div>
+                {openSections[group.key] ? 'Collapse' : 'Expand'}
+              </Button>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Payment Links List */}
-          {paymentLinks.length === 0 ? (
-            <div className="text-center py-12">
-              <LinkIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No payment links found</h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm || statusFilter !== 'all'
-                  ? 'Try adjusting your search or filter criteria.'
-                  : 'Create your first payment link to get started.'}
-              </p>
-              <div className="flex justify-center gap-2">
-                <Link href="/merchant/dashboard/payments/create">
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Payment Link
-                  </Button>
-                </Link>
-                <Link href="/merchant/subscriptions/create">
-                  <Button variant="outline">Create Subscription</Button>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {groups.map(group => (
-                group.items.length > 0 && (
-                  <div key={group.key} className="border rounded-lg">
-                    <button
-                      type="button"
-                      onClick={() => toggleSection(group.key)}
-                      className="w-full flex items-center justify-between px-4 py-2 bg-gray-100 hover:bg-gray-200"
-                    >
-                      <span className="font-semibold">
-                        {group.title} ({group.items.length})
-                      </span>
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          openSections[group.key] ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-                    {openSections[group.key] && (
-                      <div className="p-4 space-y-4">
-                        {group.items.map(renderLink)}
-                      </div>
-                    )}
-                  </div>
-                )
-              ))}
-            </div>
+          </CardHeader>
+          {openSections[group.key] && (
+            <CardContent>
+              {group.items.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No {group.title.toLowerCase()} found</p>
+                  {group.key === 'links' && (
+                    <Link href="/merchant/dashboard/payments/create">
+                      <Button variant="outline" className="mt-2">
+                        Create Payment Link
+                      </Button>
+                    </Link>
+                  )}
+                  {group.key === 'pos' && (
+                    <Link href="/smart-terminal">
+                      <Button variant="outline" className="mt-2">
+                        Open Smart Terminal
+                      </Button>
+                    </Link>
+                  )}
+                  {group.key === 'subscriptions' && (
+                    <Link href="/merchant/subscriptions">
+                      <Button variant="outline" className="mt-2">
+                        Manage Subscriptions
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {group.items.map(renderLink)}
+                </div>
+              )}
+            </CardContent>
           )}
+        </Card>
+      ))}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <p className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4 py-2 text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
+

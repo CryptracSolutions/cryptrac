@@ -52,8 +52,8 @@ export default function SmartTerminalPage() {
       localStorage.setItem('terminal_device_id', json.data.id);
       setDevice(json.data);
       if (json.data?.accepted_cryptos?.length) setCrypto(json.data.accepted_cryptos[0]);
-      setChargeFee(json.data.charge_customer_fee ?? undefined);
-      setTax(json.data.tax_enabled ?? undefined);
+      setChargeFee(json.data.charge_customer_fee);
+      setTax(json.data.tax_enabled);
     })();
   }, []);
 
@@ -264,7 +264,7 @@ export default function SmartTerminalPage() {
                 <Input placeholder="Phone" value={receipt.phone} onChange={e=>setReceipt({...receipt,phone:e.target.value})} aria-label="receipt phone" />
                 <Button onClick={()=>sendReceipt('sms')}>SMS</Button>
               </div>
-              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount'); setTax(device?.tax_enabled ?? tax); setChargeFee(device?.charge_customer_fee ?? chargeFee);}}>New Sale</Button>
+              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount'); setTax(device?.tax_enabled); setChargeFee(device?.charge_customer_fee);}}>New Sale</Button>
             </div>
           )}
         </div>
