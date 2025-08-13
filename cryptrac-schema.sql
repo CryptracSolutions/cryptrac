@@ -780,6 +780,7 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "tax_rates" "jsonb" DEFAULT '[]'::"jsonb",
     "tax_strategy" "text" DEFAULT 'origin'::"text",
     "sales_type" "text" DEFAULT 'local'::"text",
+    "email" "text",
     CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at")),
     CONSTRAINT "merchants_subscription_plan_check" CHECK (("subscription_plan" = ANY (ARRAY['monthly'::"text", 'yearly'::"text"]))),
     CONSTRAINT "merchants_subscription_status_check" CHECK (("subscription_status" = ANY (ARRAY['active'::"text", 'cancelled'::"text", 'past_due'::"text"])))
