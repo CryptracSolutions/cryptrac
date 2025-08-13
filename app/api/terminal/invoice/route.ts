@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { fetchAvailableCurrencies } from '@/lib/nowpayments-dynamic';
 
 const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   BTC: ['BTC', 'BITCOIN'],
@@ -67,6 +68,16 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
     (BASE_STABLE_MAP[base] || []).forEach(sc => stable.add(sc));
   });
   return Array.from(stable);
+}
+async function mapToNowPaymentsCode(displayCode: string): Promise<string | null> {
+  const currencies = await fetchAvailableCurrencies();
+  const target = displayCode.toLowerCase();
+  if (currencies.find(c => c.code === target)) return target;
+  for (const net of ["eth","bsc","sol","matic","trx","ton","arb","op","base"]) {
+    const withNet = target + net;
+    if (currencies.find(c => c.code === withNet)) return withNet;
+  }
+  return null;
 }
 
 function generateLinkId(): string {
@@ -146,6 +157,10 @@ export async function POST(request: NextRequest) {
   const allowed = new Set([...deviceCryptos, ...stableCoins]);
   if (!allowed.has(pay_currency)) {
     return NextResponse.json({ error: 'Currency not accepted by device' }, { status: 400 });
+  }
+  const nowPayCurrency = await mapToNowPaymentsCode(pay_currency);
+  if (!nowPayCurrency) {
+    return NextResponse.json({ error: 'Unsupported currency' }, { status: 400 });
   }
   const effectiveChargeCustomerFee =
     charge_customer_fee ?? device.charge_customer_fee ?? merchant.charge_customer_fee;
@@ -228,7 +243,7 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify({
       price_amount: finalTotal,
       price_currency: 'USD',
-      pay_currency,
+      pay_currency: nowPayCurrency,
       order_id: `pos_${paymentLink.link_id}_${Date.now()}`,
       order_description: 'POS Sale',
       payment_link_id: paymentLink.id,

@@ -8,9 +8,9 @@ import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { 
   Search, 
-  Plus, 
-  ExternalLink, 
-  Copy, 
+  Plus,
+  ExternalLink,
+  Copy,
   Eye,
   DollarSign,
   CreditCard,
@@ -18,7 +18,8 @@ import {
   Link as LinkIcon,
   Play,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -94,6 +95,14 @@ export default function PaymentsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
   const notifiedLinksRef = useRef<Set<string>>(new Set());
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    links: true,
+    pos: true,
+    subscriptions: true,
+  });
+
+  const toggleSection = (key: string) =>
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const router = useRouter();
 
@@ -306,6 +315,84 @@ export default function PaymentsPage() {
     return actions;
   };
 
+  const renderLink = (link: PaymentLink) => (
+    <div
+      key={link.id}
+      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="font-semibold text-gray-900">{link.title}</h3>
+            {getStatusBadge(link.status, link)}
+            {(link.source === 'subscription' || link.subscription_id) && (
+              <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                Subscription
+              </Badge>
+            )}
+            {link.usage_count > 0 && (
+              <Badge variant="outline" className="bg-green-100 text-green-700">
+                Payment received
+              </Badge>
+            )}
+          </div>
+
+          {link.description && (
+            <p className="text-gray-600 text-sm mb-2">{link.description}</p>
+          )}
+
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <span className="font-medium text-gray-900">
+              {formatCurrency(link.amount, link.currency)}
+            </span>
+            <span>Created {formatDate(link.created_at)}</span>
+            {link.expires_at && (
+              <span>Expires {formatDate(link.expires_at)}</span>
+            )}
+            {link.max_uses && (
+              <span>{link.usage_count}/{link.max_uses} uses</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          {/* Status Action Buttons */}
+          {getStatusActions(link)}
+
+          {/* Standard Action Buttons */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => copyToClipboard(getPaymentUrl(link.link_id), link.id)}
+            className="flex items-center gap-1"
+          >
+            <Copy className="h-3 w-3" />
+            {copiedId === link.id ? 'Copied!' : 'Copy'}
+          </Button>
+
+          {link.status === 'active' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
+              className="flex items-center gap-1"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Open
+            </Button>
+          )}
+
+          <Link href={`/merchant/dashboard/payments/${link.id}`}>
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              View
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -340,13 +427,35 @@ export default function PaymentsPage() {
     );
   }
 
+  const groups = [
+    {
+      key: 'links',
+      title: 'Payment Links',
+      items: paymentLinks.filter(
+        l => l.source !== 'pos' && l.source !== 'subscription'
+      ),
+    },
+    {
+      key: 'pos',
+      title: 'Smart Terminal POS',
+      items: paymentLinks.filter(l => l.source === 'pos'),
+    },
+    {
+      key: 'subscriptions',
+      title: 'Subscriptions',
+      items: paymentLinks.filter(
+        l => l.source === 'subscription' || l.subscription_id
+      ),
+    },
+  ];
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Payment Links</h1>
-          <p className="text-gray-600 mt-1">Manage your cryptocurrency payment links</p>
+          <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
+          <p className="text-gray-600 mt-1">View and manage all your payments</p>
         </div>
         <div className="flex gap-2">
           <Link href="/merchant/dashboard">
@@ -439,7 +548,7 @@ export default function PaymentsPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Links</CardTitle>
+          <CardTitle>Payments</CardTitle>
           <CardDescription>
             View and manage all your payment links with enhanced status controls
           </CardDescription>
@@ -476,10 +585,9 @@ export default function PaymentsPage() {
               <LinkIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No payment links found</h3>
               <p className="text-gray-600 mb-4">
-                {searchTerm || statusFilter !== 'all' 
+                {searchTerm || statusFilter !== 'all'
                   ? 'Try adjusting your search or filter criteria.'
-                  : 'Create your first payment link to get started.'
-                }
+                  : 'Create your first payment link to get started.'}
               </p>
               <div className="flex justify-center gap-2">
                 <Link href="/merchant/dashboard/payments/create">
@@ -492,85 +600,33 @@ export default function PaymentsPage() {
                   <Button variant="outline">Create Subscription</Button>
                 </Link>
               </div>
-              </div>
+            </div>
           ) : (
             <div className="space-y-4">
-              {paymentLinks.map((link) => (
-                <div
-                  key={link.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-gray-900">{link.title}</h3>
-                        {getStatusBadge(link.status, link)}
-                        {(link.source === 'subscription' || link.subscription_id) && (
-                          <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                            Subscription
-                          </Badge>
-                        )}
-                        {link.usage_count > 0 && (
-                          <Badge variant="outline" className="bg-green-100 text-green-700">
-                            Payment received
-                          </Badge>
-                        )}
+              {groups.map(group => (
+                group.items.length > 0 && (
+                  <div key={group.key} className="border rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(group.key)}
+                      className="w-full flex items-center justify-between px-4 py-2 bg-gray-100 hover:bg-gray-200"
+                    >
+                      <span className="font-semibold">
+                        {group.title} ({group.items.length})
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                          openSections[group.key] ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    {openSections[group.key] && (
+                      <div className="p-4 space-y-4">
+                        {group.items.map(renderLink)}
                       </div>
-                      
-                      {link.description && (
-                        <p className="text-gray-600 text-sm mb-2">{link.description}</p>
-                      )}
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="font-medium text-gray-900">
-                          {formatCurrency(link.amount, link.currency)}
-                        </span>
-                        <span>Created {formatDate(link.created_at)}</span>
-                        {link.expires_at && (
-                          <span>Expires {formatDate(link.expires_at)}</span>
-                        )}
-                        {link.max_uses && (
-                          <span>{link.usage_count}/{link.max_uses} uses</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                      {/* Status Action Buttons */}
-                      {getStatusActions(link)}
-                      
-                      {/* Standard Action Buttons */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(getPaymentUrl(link.link_id), link.id)}
-                        className="flex items-center gap-1"
-                      >
-                        <Copy className="h-3 w-3" />
-                        {copiedId === link.id ? 'Copied!' : 'Copy'}
-                      </Button>
-                      
-                      {link.status === 'active' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
-                          className="flex items-center gap-1"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Open
-                        </Button>
-                      )}
-                      
-                      <Link href={`/merchant/dashboard/payments/${link.id}`}>
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          View
-                        </Button>
-                      </Link>
-                    </div>
+                    )}
                   </div>
-                </div>
+                )
               ))}
             </div>
           )}
