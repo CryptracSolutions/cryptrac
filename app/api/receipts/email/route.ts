@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
   }
   const { service, merchant } = auth;
   const sendgridKey = process.env.SENDGRID_API_KEY;
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+  const fromEmail = process.env.CRYPTRAC_RECEIPTS_FROM || process.env.SENDGRID_FROM_EMAIL;
   const appOrigin = process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL;
   
   const requestBody = await request.json();

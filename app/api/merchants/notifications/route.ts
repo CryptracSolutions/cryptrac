@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     );
 
     const sendgridKey = process.env.SENDGRID_API_KEY;
-    const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+    const fromEmail = process.env.CRYPTRAC_NOTIFICATIONS_FROM || process.env.SENDGRID_FROM_EMAIL;
     const appOrigin = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!sendgridKey || !fromEmail || !appOrigin) {
@@ -133,6 +133,7 @@ This is an automated notification. Please do not reply to this email.
               subject: subject
             }],
             from: { email: fromEmail, name: 'Cryptrac' },
+            reply_to: { email: 'support@cryptrac.com' },
             content: [{
               type: 'text/plain',
               value: emailContent
