@@ -94,7 +94,130 @@ interface NOWPaymentsWebhookBody extends Record<string, unknown> {
   payment_id?: string
 }
 
-// ADDED: Function to send merchant notification email
+// ENHANCED: Function to send customer receipts automatically
+async function sendCustomerReceipts(payment: any, paymentData: any) {
+  try {
+    console.log('📧 Sending customer receipts for payment:', payment.id);
+    
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      console.error('❌ Service key not available for customer receipts');
+      return;
+    }
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceKey,
+      {
+        cookies: {
+          getAll() { return [] },
+          setAll() { /* no-op */ },
+        },
+      }
+    );
+
+    // Get payment link details to extract customer contact info
+    const { data: paymentLink } = await supabase
+      .from('payment_links')
+      .select('metadata, title, source')
+      .eq('id', payment.payment_link_id)
+      .single();
+
+    if (!paymentLink) {
+      console.log('ℹ️ No payment link found for customer receipt sending');
+      return;
+    }
+
+    // Extract customer contact information from metadata
+    const metadata = paymentLink.metadata || {};
+    const customerEmail = metadata.customer_email || payment.metadata?.customer_email;
+    const customerPhone = metadata.customer_phone || payment.metadata?.customer_phone;
+    const sendReceipt = metadata.send_receipt !== false; // Default to true unless explicitly disabled
+
+    if (!sendReceipt) {
+      console.log('ℹ️ Customer receipt sending disabled for this payment');
+      return;
+    }
+
+    if (!customerEmail && !customerPhone) {
+      console.log('ℹ️ No customer contact information available for receipt sending');
+      return;
+    }
+
+    // Prepare receipt data
+    const receiptData = {
+      payment_id: payment.id,
+      payment_link_id: payment.payment_link_id,
+      amount: payment.amount,
+      currency: payment.currency,
+      payment_type: paymentLink.source === 'pos' ? 'POS Sale' : 
+                   paymentLink.source === 'subscription' ? 'Subscription' : 'Payment Link',
+      tx_hash: paymentData.tx_hash || payment.tx_hash,
+      pay_currency: paymentData.currency_received || payment.currency_received,
+      amount_received: paymentData.amount_received || payment.amount_received,
+      title: paymentLink.title || 'Payment'
+    };
+
+    // Send email receipt if customer email is available
+    if (customerEmail) {
+      try {
+        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/receipts/email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` // Use service key for internal calls
+          },
+          body: JSON.stringify({
+            email: customerEmail,
+            payment_link_id: payment.payment_link_id,
+            receipt_data: receiptData
+          })
+        });
+
+        if (emailResponse.ok) {
+          console.log('✅ Customer email receipt sent successfully to:', customerEmail);
+        } else {
+          const error = await emailResponse.text();
+          console.error('❌ Failed to send customer email receipt:', error);
+        }
+      } catch (error) {
+        console.error('❌ Error sending customer email receipt:', error);
+      }
+    }
+
+    // Send SMS receipt if customer phone is available
+    if (customerPhone) {
+      try {
+        const smsResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/receipts/sms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` // Use service key for internal calls
+          },
+          body: JSON.stringify({
+            phone: customerPhone,
+            payment_link_id: payment.payment_link_id,
+            receipt_data: receiptData
+          })
+        });
+
+        if (smsResponse.ok) {
+          console.log('✅ Customer SMS receipt sent successfully to:', customerPhone);
+        } else {
+          const error = await smsResponse.text();
+          console.error('❌ Failed to send customer SMS receipt:', error);
+        }
+      } catch (error) {
+        console.error('❌ Error sending customer SMS receipt:', error);
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ Error in customer receipt sending:', error);
+  }
+}
+
+// Function to send merchant notification email
 async function sendMerchantNotification(payment: any, paymentData: any) {
   try {
     console.log('📧 Sending merchant notification for payment:', payment.id);
@@ -556,7 +679,10 @@ export async function POST(request: NextRequest) {
     if (newStatus === 'confirmed' && payment.status !== 'confirmed') {
       console.log('🎉 Payment confirmed! Triggering post-confirmation actions...')
       
-      // ADDED: Send merchant notification email
+      // ENHANCED: Send customer receipts automatically
+      await sendCustomerReceipts(payment, updateData);
+      
+      // Send merchant notification email
       await sendMerchantNotification(payment, updateData);
       
       // Update payment link usage statistics
@@ -654,59 +780,19 @@ export async function POST(request: NextRequest) {
         payin_hash: !!updateData.payin_hash,
         payout_hash: !!updateData.payout_hash,
         source: capturedHashes.source
-      },
-      debug_info: {
-        webhook_type: type,
-        payment_status: payment_status,
-        outcome_present: !!outcome,
-        outcome_hash: outcome?.hash,
-        signature_verified: !!signature,
-        raw_hashes: {
-          payin_hash,
-          payout_hash,
-          hash,
-          tx_hash,
-          transaction_hash
-        }
       }
     })
 
   } catch (error) {
-    console.error('❌ Error processing NOWPayments webhook:', error)
+    console.error('💥 Webhook processing error:', error)
     return NextResponse.json(
       { 
         success: false, 
-        message: 'Webhook processing failed',
+        message: 'Internal server error',
         processing_time_ms: Date.now() - startTime
       },
       { status: 500 }
     )
   }
-}
-
-// Handle GET requests (for webhook verification)
-export async function GET(request: NextRequest) {
-  const challenge = request.nextUrl.searchParams.get('challenge')
-  
-  if (challenge) {
-    console.log('🔍 Webhook verification challenge received')
-    return new Response(challenge, {
-      status: 200,
-      headers: { 'Content-Type': 'text/plain' },
-    })
-  }
-
-  return NextResponse.json({
-    success: true,
-    message: 'NOWPayments webhook endpoint is active',
-    timestamp: new Date().toISOString(),
-    security_features: [
-      'HMAC-SHA512 signature verification',
-      'Rate limiting (100 req/min per IP)',
-      'Payload validation',
-      'Duplicate processing prevention',
-      'Retry logic for database updates'
-    ]
-  })
 }
 
