@@ -285,6 +285,7 @@ async function sendMerchantNotification(
     const notificationData = {
       merchant_id: payment.merchant_id,
       payment_id: payment.id,
+      payment_link_id: payment.payment_link_id,
       amount: payment.total_paid || payment.amount || 0,
       currency: payment.currency || 'USD',
       payment_type: paymentType,

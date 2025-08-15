@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import PrintButton from '@/components/PrintButton';
 
 export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 function ReceiptNotAvailable() {
   return (
@@ -22,8 +23,8 @@ const explorers: Record<string, string> = {
   XRP: 'https://livenet.xrpl.org/transactions/'
 };
 
-export default async function ReceiptPage({ params }: { params: Promise<{ receiptId: string }> }) {
-  const { receiptId } = await params;
+export default async function ReceiptPage({ params }: { params: { receiptId: string } }) {
+  const { receiptId } = params;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

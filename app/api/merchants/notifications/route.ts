@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 interface PaymentNotificationData {
   merchant_id: string;
   payment_id: string;
+  payment_link_id?: string;
   amount: number;
   currency: string;
   payment_type: 'POS Sale' | 'Payment Link' | 'Subscription';
@@ -110,7 +111,9 @@ export async function POST(request: Request) {
     const receiptUrl = notificationData.public_receipt_id
       ? `${appOrigin}/r/${notificationData.public_receipt_id}`
       : `${appOrigin}`;
-    const dashboardUrl = `${appOrigin}/merchant/dashboard/payments/${notificationData.payment_id}`;
+    const dashboardUrl = notificationData.payment_link_id
+      ? `${appOrigin}/merchant/dashboard/payments/${notificationData.payment_link_id}`
+      : `${appOrigin}/merchant/dashboard/payments`;
 
     const subject = `Payment received • ${formattedAmount}`;
     const emailContent = `
