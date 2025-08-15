@@ -120,7 +120,7 @@ export default function PaymentSuccessPage() {
     try {
       setSendingEmailReceipt(true)
 
-      const response = await fetch('/api/receipts/email', {
+      const response = await fetch('/api/receipts/customer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -545,13 +545,6 @@ export default function PaymentSuccessPage() {
           <p className="text-sm text-gray-500">
             Thank you for using Cryptrac for your payment!
           </p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => window.location.href = '/'}
-          >
-            Return to Home
-          </Button>
         </div>
       </div>
     </div>
