@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DollarSign,
@@ -102,7 +102,31 @@ export default function MerchantDashboard() {
     }
   };
 
-  const fetchStats = async (merchantId: string) => {
+  const fetchNewPayments = useCallback(async (merchantId: string) => {
+    try {
+      const { data: settings } = await supabase
+        .from('merchant_settings')
+        .select('last_seen_payments_at')
+        .eq('merchant_id', merchantId)
+        .single();
+
+      const lastSeen = settings?.last_seen_payments_at || '1970-01-01';
+
+      const { data: txs } = await supabase
+        .from('transactions')
+        .select('id, amount, currency, created_at')
+        .eq('merchant_id', merchantId)
+        .eq('status', 'confirmed')
+        .gt('created_at', lastSeen)
+        .order('created_at', { ascending: false });
+
+      setNewPayments(txs || []);
+    } catch (err) {
+      console.error('Failed to fetch new payments:', err);
+    }
+  }, []);
+
+  const fetchStats = useCallback(async (merchantId: string) => {
     try {
       const { count: linksCount } = await supabase
         .from('payment_links')
@@ -138,31 +162,7 @@ export default function MerchantDashboard() {
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     }
-  };
-
-  const fetchNewPayments = async (merchantId: string) => {
-    try {
-      const { data: settings } = await supabase
-        .from('merchant_settings')
-        .select('last_seen_payments_at')
-        .eq('merchant_id', merchantId)
-        .single();
-
-      const lastSeen = settings?.last_seen_payments_at || '1970-01-01';
-
-      const { data: txs } = await supabase
-        .from('transactions')
-        .select('id, amount, currency, created_at')
-        .eq('merchant_id', merchantId)
-        .eq('status', 'confirmed')
-        .gt('created_at', lastSeen)
-        .order('created_at', { ascending: false });
-
-      setNewPayments(txs || []);
-    } catch (err) {
-      console.error('Failed to fetch new payments:', err);
-    }
-  };
+  }, [fetchNewPayments]);
 
   const markPaymentsSeen = async () => {
     try {

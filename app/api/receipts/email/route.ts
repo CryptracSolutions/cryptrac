@@ -35,8 +35,8 @@ function generateEmailTemplate(
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency
-  }).format(amount);
+    currency: currency as string
+  }).format(amount as number);
 
   let receivedAmountText = '';
   if (amount_received && pay_currency) {
