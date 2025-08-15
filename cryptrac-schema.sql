@@ -521,6 +521,19 @@ $$;
 ALTER FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."set_timestamp_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+    begin
+      new.updated_at := now();
+      return new;
+    end
+    $$;
+
+
+ALTER FUNCTION "public"."set_timestamp_updated_at"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."update_expired_payment_links"() RETURNS integer
     LANGUAGE "plpgsql"
     AS $$
@@ -731,6 +744,19 @@ CREATE TABLE IF NOT EXISTS "public"."fiat_payouts" (
 
 
 ALTER TABLE "public"."fiat_payouts" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."merchant_settings" (
+    "merchant_id" "uuid" NOT NULL,
+    "email_payment_notifications_enabled" boolean DEFAULT true NOT NULL,
+    "public_receipts_enabled" boolean DEFAULT true NOT NULL,
+    "last_seen_payments_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."merchant_settings" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."merchants" (
@@ -1238,7 +1264,15 @@ CREATE TABLE IF NOT EXISTS "public"."transactions" (
     "customer_phone" "text",
     "is_fee_paid_by_user" boolean DEFAULT false,
     "refund_amount" numeric(18,2),
-    "refunded_at" timestamp with time zone
+    "refunded_at" timestamp with time zone,
+    "public_receipt_id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "network" "text",
+    "asset" "text",
+    "settlement_currency" "text",
+    "gateway_fee_amount" numeric(18,8),
+    "conversion_fee_amount" numeric(18,8),
+    "network_fee_amount" numeric(18,8),
+    "total_paid" numeric(18,8)
 );
 
 
@@ -1475,6 +1509,11 @@ ALTER TABLE ONLY "public"."fiat_payouts"
 
 ALTER TABLE ONLY "public"."transactions"
     ADD CONSTRAINT "merchant_payments_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."merchant_settings"
+    ADD CONSTRAINT "merchant_settings_pkey" PRIMARY KEY ("merchant_id");
 
 
 
@@ -1812,6 +1851,10 @@ CREATE INDEX "idx_transactions_nowpayments_payment_id" ON "public"."transactions
 
 
 
+CREATE UNIQUE INDEX "idx_transactions_public_receipt_id" ON "public"."transactions" USING "btree" ("public_receipt_id");
+
+
+
 CREATE INDEX "idx_transactions_tax_reporting" ON "public"."transactions" USING "btree" ("merchant_id", "created_at", "tax_enabled");
 
 
@@ -1861,6 +1904,10 @@ CREATE OR REPLACE TRIGGER "after_rep_sales_update" AFTER UPDATE ON "public"."rep
 
 
 CREATE OR REPLACE TRIGGER "merchant_partner_referral_trigger" AFTER UPDATE ON "public"."merchants" FOR EACH ROW EXECUTE FUNCTION "public"."handle_partner_referral"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_merchant_settings_updated_at" BEFORE UPDATE ON "public"."merchant_settings" FOR EACH ROW EXECUTE FUNCTION "public"."set_timestamp_updated_at"();
 
 
 
@@ -1926,6 +1973,11 @@ ALTER TABLE ONLY "public"."transactions"
 
 ALTER TABLE ONLY "public"."transactions"
     ADD CONSTRAINT "merchant_payments_payment_link_id_fkey" FOREIGN KEY ("payment_link_id") REFERENCES "public"."payment_links"("id");
+
+
+
+ALTER TABLE ONLY "public"."merchant_settings"
+    ADD CONSTRAINT "merchant_settings_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
 
 
 
@@ -2587,6 +2639,12 @@ GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid"
 
 
 
+GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "anon";
+GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "service_role";
@@ -2644,6 +2702,12 @@ GRANT ALL ON TABLE "public"."email_logs" TO "service_role";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "anon";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "authenticated";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."merchant_settings" TO "anon";
+GRANT ALL ON TABLE "public"."merchant_settings" TO "authenticated";
+GRANT ALL ON TABLE "public"."merchant_settings" TO "service_role";
 
 
 
@@ -2828,6 +2892,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 RESET ALL;
+
 
 
 -- Create buckets
