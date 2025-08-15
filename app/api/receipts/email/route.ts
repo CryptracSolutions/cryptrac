@@ -39,7 +39,7 @@ function generateEmailTemplate(
   }).format(amount as number);
 
   let receivedAmountText = '';
-  if (amount_received && pay_currency) {
+  if (typeof amount_received === 'number' && typeof pay_currency === 'string') {
     const formattedReceived = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 8

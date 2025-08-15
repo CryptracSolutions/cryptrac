@@ -23,22 +23,27 @@ function generateSMSMessage(
   paymentUrl: string
 ): string {
   const {
-    amount,
-    currency = 'USD',
-    payment_type = 'Payment',
-    title = 'Payment',
+    amount: rawAmount,
+    currency: rawCurrency,
+    payment_type: rawPaymentType,
+    title: rawTitle,
     pay_currency,
     amount_received
   } = receiptData as Record<string, unknown>;
 
+  const amount = typeof rawAmount === 'number' ? rawAmount : 0;
+  const currency = typeof rawCurrency === 'string' ? rawCurrency : 'USD';
+  const payment_type = typeof rawPaymentType === 'string' ? rawPaymentType : 'Payment';
+  const title = typeof rawTitle === 'string' ? rawTitle : 'Payment';
+
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency
+    currency
   }).format(amount);
 
   let receivedAmountText = '';
-  if (amount_received && pay_currency) {
+  if (typeof amount_received === 'number' && typeof pay_currency === 'string') {
     const formattedReceived = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 8

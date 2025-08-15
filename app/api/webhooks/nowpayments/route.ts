@@ -132,10 +132,20 @@ async function sendCustomerReceipts(
     }
 
     // Extract customer contact information from metadata
-    const metadata = paymentLink.metadata || {};
-    const customerEmail = metadata.customer_email || payment.metadata?.customer_email;
-    const customerPhone = metadata.customer_phone || payment.metadata?.customer_phone;
-    const sendReceipt = metadata.send_receipt !== false; // Default to true unless explicitly disabled
+    const metadata = (paymentLink.metadata || {}) as {
+      customer_email?: string
+      customer_phone?: string
+      send_receipt?: boolean
+    }
+
+    const paymentMetadata = payment.metadata as {
+      customer_email?: string
+      customer_phone?: string
+    } | undefined
+
+    const customerEmail = metadata.customer_email || paymentMetadata?.customer_email
+    const customerPhone = metadata.customer_phone || paymentMetadata?.customer_phone
+    const sendReceipt = metadata.send_receipt !== false // Default to true unless explicitly disabled
 
     if (!sendReceipt) {
       console.log('ℹ️ Customer receipt sending disabled for this payment');
