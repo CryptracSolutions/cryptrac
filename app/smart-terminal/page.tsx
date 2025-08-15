@@ -43,7 +43,7 @@ export default function SmartTerminalPage() {
     { payment_id: string; payment_status: string; pay_address: string; pay_amount: number; pay_currency: string } | null
   >(null);
   const [status, setStatus] = useState('');
-  const [receipt, setReceipt] = useState({ email: '', phone: '' });
+  const [receipt, setReceipt] = useState({ email: '' });
 
   useEffect(() => {
     (async () => {
@@ -170,15 +170,11 @@ export default function SmartTerminalPage() {
     }
   };
 
-  const sendReceipt = async (type: 'email' | 'sms') => {
-    if (!paymentLink) return;
-    const url = type === 'email' ? '/api/receipts/email' : '/api/receipts/sms';
-    const data =
-      type === 'email'
-        ? { email: receipt.email, payment_link_id: paymentLink.id }
-        : { phone: receipt.phone, payment_link_id: paymentLink.id };
-    await makeAuthenticatedRequest(url, { method: 'POST', body: JSON.stringify(data) });
-    setReceipt({ email: '', phone: '' });
+  const sendEmailReceipt = async () => {
+    if (!paymentLink || !receipt.email.trim()) return;
+    const data = { email: receipt.email, payment_link_id: paymentLink.id };
+    await makeAuthenticatedRequest('/api/receipts/email', { method: 'POST', body: JSON.stringify(data) });
+    setReceipt({ email: '' });
   };
 
   return (
@@ -261,12 +257,8 @@ export default function SmartTerminalPage() {
           {status === 'confirmed' && (
             <div className="space-y-2 w-full max-w-sm">
               <div className="flex gap-2">
-                <Input placeholder="Email" value={receipt.email} onChange={e=>setReceipt({...receipt,email:e.target.value})} aria-label="receipt email" />
-                <Button onClick={()=>sendReceipt('email')}>Send</Button>
-              </div>
-              <div className="flex gap-2">
-                <Input placeholder="Phone" value={receipt.phone} onChange={e=>setReceipt({...receipt,phone:e.target.value})} aria-label="receipt phone" />
-                <Button onClick={()=>sendReceipt('sms')}>SMS</Button>
+                <Input placeholder="Email for receipt" value={receipt.email} onChange={e=>setReceipt({email:e.target.value})} aria-label="receipt email" />
+                <Button onClick={sendEmailReceipt} disabled={!receipt.email.trim()}>Send Receipt</Button>
               </div>
               <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount'); setTax(device?.tax_enabled); setChargeFee(device?.charge_customer_fee);}}>New Sale</Button>
             </div>
@@ -290,3 +282,4 @@ function playBeep() {
     console.warn('audio failed', e);
   }
 }
+

@@ -98,13 +98,13 @@ interface NOWPaymentsWebhookBody extends Record<string, unknown> {
   payment_id?: string
 }
 
-// ENHANCED: Function to send customer receipts automatically
+// ENHANCED: Function to send customer email receipts automatically
 async function sendCustomerReceipts(
   payment: Record<string, unknown>,
   paymentData: Record<string, unknown>
 ) {
   try {
-    console.log('📧 Sending customer receipts for payment:', payment.id);
+    console.log('📧 Sending customer email receipts for payment:', payment.id);
     
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) {
@@ -135,20 +135,17 @@ async function sendCustomerReceipts(
       return;
     }
 
-    // Extract customer contact information from metadata
+    // Extract customer email information from metadata
     const metadata = (paymentLink.metadata || {}) as {
       customer_email?: string
-      customer_phone?: string
       send_receipt?: boolean
     }
 
     const paymentMetadata = payment.metadata as {
       customer_email?: string
-      customer_phone?: string
     } | undefined
 
     const customerEmail = metadata.customer_email || paymentMetadata?.customer_email
-    const customerPhone = metadata.customer_phone || paymentMetadata?.customer_phone
     const sendReceipt = metadata.send_receipt !== false // Default to true unless explicitly disabled
 
     if (!sendReceipt) {
@@ -156,8 +153,8 @@ async function sendCustomerReceipts(
       return;
     }
 
-    if (!customerEmail && !customerPhone) {
-      console.log('ℹ️ No customer contact information available for receipt sending');
+    if (!customerEmail) {
+      console.log('ℹ️ No customer email available for receipt sending');
       return;
     }
 
@@ -176,58 +173,29 @@ async function sendCustomerReceipts(
       public_receipt_id: payment.public_receipt_id
     };
 
-    // Send email receipt if customer email is available
-    if (customerEmail) {
-      try {
-        const emailResponse = await fetch(`${env.APP_ORIGIN}/api/receipts/email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` // Use service key for internal calls
-          },
-          body: JSON.stringify({
-            email: customerEmail,
-            payment_link_id: payment.payment_link_id,
-            receipt_data: receiptData
-          })
-        });
+    // Send email receipt
+    try {
+      const emailResponse = await fetch(`${env.APP_ORIGIN}/api/receipts/email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` // Use service key for internal calls
+        },
+        body: JSON.stringify({
+          email: customerEmail,
+          payment_link_id: payment.payment_link_id,
+          receipt_data: receiptData
+        })
+      });
 
-        if (emailResponse.ok) {
-          console.log('✅ Customer email receipt sent successfully to:', customerEmail);
-        } else {
-          const error = await emailResponse.text();
-          console.error('❌ Failed to send customer email receipt:', error);
-        }
-      } catch (error) {
-        console.error('❌ Error sending customer email receipt:', error);
+      if (emailResponse.ok) {
+        console.log('✅ Customer email receipt sent successfully to:', customerEmail);
+      } else {
+        const error = await emailResponse.text();
+        console.error('❌ Failed to send customer email receipt:', error);
       }
-    }
-
-    // Send SMS receipt if customer phone is available
-    if (customerPhone) {
-      try {
-        const smsResponse = await fetch(`${env.APP_ORIGIN}/api/receipts/sms`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` // Use service key for internal calls
-          },
-          body: JSON.stringify({
-            phone: customerPhone,
-            payment_link_id: payment.payment_link_id,
-            receipt_data: receiptData
-          })
-        });
-
-        if (smsResponse.ok) {
-          console.log('✅ Customer SMS receipt sent successfully to:', customerPhone);
-        } else {
-          const error = await smsResponse.text();
-          console.error('❌ Failed to send customer SMS receipt:', error);
-        }
-      } catch (error) {
-        console.error('❌ Error sending customer SMS receipt:', error);
-      }
+    } catch (error) {
+      console.error('❌ Error sending customer email receipt:', error);
     }
 
   } catch (error) {
@@ -718,7 +686,7 @@ export async function POST(request: Request) {
     if (newStatus === 'confirmed' && payment.status !== 'confirmed') {
       console.log('🎉 Payment confirmed! Triggering post-confirmation actions...')
       
-      // ENHANCED: Send customer receipts automatically
+      // ENHANCED: Send customer email receipts automatically
       await sendCustomerReceipts(payment as unknown as Record<string, unknown>, updateData as Record<string, unknown>);
       
       // Send merchant notification email (fire and forget)

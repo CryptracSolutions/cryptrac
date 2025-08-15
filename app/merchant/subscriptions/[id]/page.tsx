@@ -35,7 +35,6 @@ export default function SubscriptionDetailPage() {
   const [override, setOverride] = useState({ effective_from: '', amount: '', note: '' });
   const [invoiceLink, setInvoiceLink] = useState<{ url: string; id: string } | null>(null);
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
 
   const fetchInvoices = useCallback(async () => {
     const { data: invs } = await supabase
@@ -89,17 +88,6 @@ export default function SubscriptionDetailPage() {
     setEmail('');
   };
 
-  const sendSms = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!invoiceLink) return;
-    await makeAuthenticatedRequest('/api/receipts/sms', {
-      method: 'POST',
-      body: JSON.stringify({ phone, payment_link_id: invoiceLink.id })
-    });
-    toast.success('SMS sent');
-    setPhone('');
-  };
-
   return (
     <div className="p-4">
       {sub && (
@@ -128,12 +116,8 @@ export default function SubscriptionDetailPage() {
             </Button>
           </div>
           <form onSubmit={sendEmail} className="flex gap-2">
-            <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+            <Input type="email" placeholder="Email for invoice" value={email} onChange={e => setEmail(e.target.value)} />
             <Button type="submit">Send Email</Button>
-          </form>
-          <form onSubmit={sendSms} className="flex gap-2">
-            <Input placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
-            <Button type="submit">Send SMS</Button>
           </form>
         </div>
       )}
@@ -160,3 +144,4 @@ export default function SubscriptionDetailPage() {
     </div>
   );
 }
+

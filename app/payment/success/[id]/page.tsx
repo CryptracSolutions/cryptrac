@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { CheckCircle, Copy, ExternalLink, Mail, MessageSquare, Loader2, AlertCircle } from 'lucide-react'
+import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface PaymentData {
@@ -32,7 +32,6 @@ interface PaymentData {
   payin_hash?: string
   payout_hash?: string
   customer_email?: string
-  customer_phone?: string
   created_at: string
   updated_at: string
   payment_link: {
@@ -63,13 +62,10 @@ export default function PaymentSuccessPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
   
-  // Receipt delivery states
+  // Receipt delivery states (email only)
   const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
   const [sendingEmailReceipt, setSendingEmailReceipt] = useState(false)
-  const [sendingSmsReceipt, setSendingSmsReceipt] = useState(false)
   const [emailReceiptSent, setEmailReceiptSent] = useState(false)
-  const [smsReceiptSent, setSmsReceiptSent] = useState(false)
 
     useEffect(() => {
       if (linkId) {
@@ -100,11 +96,6 @@ export default function PaymentSuccessPage() {
       // Pre-fill email if already provided
       if (data.payment.customer_email) {
         setEmail(data.payment.customer_email)
-      }
-
-      // Pre-fill phone if already provided
-      if (data.payment.customer_phone) {
-        setPhone(data.payment.customer_phone)
       }
 
     } catch (error) {
@@ -161,53 +152,7 @@ export default function PaymentSuccessPage() {
     }
   }
 
-  const sendSmsReceipt = async () => {
-    if (!phone.trim()) {
-      toast.error('Please enter your phone number')
-      return
-    }
-
-    if (!paymentData) {
-      toast.error('Payment data not available')
-      return
-    }
-
-    try {
-      setSendingSmsReceipt(true)
-
-      const response = await fetch('/api/receipts/sms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          payment_id: paymentData.id,
-          phone: phone.trim()
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to send SMS receipt')
-      }
-
-      console.log('✅ SMS receipt sent successfully')
-      setSmsReceiptSent(true)
-      toast.success('SMS receipt sent successfully!')
-
-      // Update payment record with customer phone
-      await updateCustomerContact('phone', phone.trim())
-
-    } catch (error) {
-      console.error('Error sending SMS receipt:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to send SMS receipt')
-    } finally {
-      setSendingSmsReceipt(false)
-    }
-  }
-
-  const updateCustomerContact = async (type: 'email' | 'phone', value: string) => {
+  const updateCustomerContact = async (type: 'email', value: string) => {
     try {
       const response = await fetch(`/api/payments/${paymentData?.id}/update-contact`, {
         method: 'PATCH',
@@ -502,35 +447,19 @@ export default function PaymentSuccessPage() {
                   </div>
                 </div>
               )}
-
-              {/* Payment Timestamps */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Created</Label>
-                  <p className="text-gray-600">
-                    {new Date(paymentData.created_at).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Confirmed</Label>
-                  <p className="text-gray-600">
-                    {new Date(paymentData.updated_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Receipt Delivery */}
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <CardTitle>Get Your Receipt</CardTitle>
             <p className="text-sm text-gray-600">
               Receive a detailed receipt for your records
             </p>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             {/* Email Receipt */}
             <div>
               <Label className="text-sm font-medium text-gray-700">Email Receipt</Label>
@@ -567,42 +496,6 @@ export default function PaymentSuccessPage() {
               )}
             </div>
 
-            {/* SMS Receipt */}
-            <div>
-              <Label className="text-sm font-medium text-gray-700">SMS Receipt</Label>
-              <div className="flex gap-2 mt-2">
-                <Input
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  disabled={smsReceiptSent}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={sendSmsReceipt}
-                  disabled={sendingSmsReceipt || smsReceiptSent || !phone.trim()}
-                  variant={smsReceiptSent ? "secondary" : "default"}
-                >
-                  {sendingSmsReceipt ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : smsReceiptSent ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    <MessageSquare className="h-4 w-4" />
-                  )}
-                  <span className="ml-2">
-                    {smsReceiptSent ? 'Sent' : 'Send SMS'}
-                  </span>
-                </Button>
-              </div>
-              {smsReceiptSent && (
-                <p className="text-sm text-green-600 mt-1">
-                  ✅ Receipt sent to {phone}
-                </p>
-              )}
-            </div>
-
             <div className="text-center">
               <p className="text-xs text-gray-500">
                 Receipts include complete transaction details for your records
@@ -612,42 +505,54 @@ export default function PaymentSuccessPage() {
         </Card>
 
         {/* Additional Information */}
-        <Card>
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Need Help?</CardTitle>
+            <CardTitle>What's Next?</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600">
-                If you have any questions about this payment, please contact{' '}
-                <span className="font-medium">{paymentData.payment_link.merchant.business_name}</span>{' '}
-                with your Order ID: <span className="font-mono">{paymentData.order_id}</span>
-              </p>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(paymentData.order_id)}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy Order ID
-                </Button>
-                
-                {paymentData.tx_hash && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(paymentData.tx_hash!)}
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Transaction Hash
-                  </Button>
-                )}
+          <CardContent className="space-y-3">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Payment Confirmed</p>
+                <p className="text-sm text-gray-600">
+                  Your payment has been confirmed on the blockchain and the merchant has been notified.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Mail className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Receipt Available</p>
+                <p className="text-sm text-gray-600">
+                  Request an email receipt above to keep detailed records of this transaction.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <ExternalLink className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Blockchain Verification</p>
+                <p className="text-sm text-gray-600">
+                  Use the transaction hashes above to verify your payment on the blockchain explorer.
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8 pb-8">
+          <p className="text-sm text-gray-500">
+            Thank you for using Cryptrac for your payment!
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => window.location.href = '/'}
+          >
+            Return to Home
+          </Button>
+        </div>
       </div>
     </div>
   )
