@@ -17,6 +17,7 @@ import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { supabase } from '@/lib/supabase-browser';
 import Link from 'next/link';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -87,6 +88,7 @@ export default function MerchantDashboard() {
   const [supportedCurrencies, setSupportedCurrencies] = useState<{ symbol: string; name: string }[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
   const [trialCountdown, setTrialCountdown] = useState('');
+  const [newPayments, setNewPayments] = useState<RecentTransaction[]>([]);
   const router = useRouter();
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -130,8 +132,48 @@ export default function MerchantDashboard() {
           created_at: t.created_at,
         }))
       );
+
+      // Fetch new payments since last seen
+      await fetchNewPayments(merchantId);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  const fetchNewPayments = async (merchantId: string) => {
+    try {
+      const { data: settings } = await supabase
+        .from('merchant_settings')
+        .select('last_seen_payments_at')
+        .eq('merchant_id', merchantId)
+        .single();
+
+      const lastSeen = settings?.last_seen_payments_at || '1970-01-01';
+
+      const { data: txs } = await supabase
+        .from('transactions')
+        .select('id, amount, currency, created_at')
+        .eq('merchant_id', merchantId)
+        .eq('status', 'confirmed')
+        .gt('created_at', lastSeen)
+        .order('created_at', { ascending: false });
+
+      setNewPayments(txs || []);
+    } catch (err) {
+      console.error('Failed to fetch new payments:', err);
+    }
+  };
+
+  const markPaymentsSeen = async () => {
+    try {
+      await fetch('/api/merchant/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ last_seen_payments_at: new Date().toISOString() })
+      });
+      setNewPayments([]);
+    } catch (err) {
+      console.error('Failed to mark payments as seen:', err);
     }
   };
 
@@ -185,7 +227,7 @@ export default function MerchantDashboard() {
     };
 
     getUser();
-  }, [router]);
+  }, [router, fetchStats]);
 
   useEffect(() => {
     if (!merchant) return;
@@ -290,6 +332,28 @@ export default function MerchantDashboard() {
             </Button>
           </div>
         </div>
+
+        {newPayments.length > 0 && (
+          <Alert>
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <span>
+                  You have {newPayments.length} new payment{newPayments.length > 1 ? 's' : ''}.
+                </span>
+                <Button size="sm" variant="outline" onClick={markPaymentsSeen}>
+                  Mark as seen
+                </Button>
+              </div>
+              <ul className="mt-2 list-disc pl-4">
+                {newPayments.map(p => (
+                  <li key={p.id}>
+                    {formatCurrency(p.amount, p.currency)} — {new Date(p.created_at).toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Trial Banner */}
         {trialEnd && (

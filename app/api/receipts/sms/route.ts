@@ -17,16 +17,19 @@ async function getServiceAndMerchant(request: NextRequest) {
 }
 
 // ENHANCED: Function to generate professional SMS message
-function generateSMSMessage(receiptData: any, merchantName: string, paymentUrl: string): string {
+function generateSMSMessage(
+  receiptData: Record<string, unknown>,
+  merchantName: string,
+  paymentUrl: string
+): string {
   const {
     amount,
     currency = 'USD',
     payment_type = 'Payment',
     title = 'Payment',
-    tx_hash,
     pay_currency,
     amount_received
-  } = receiptData;
+  } = receiptData as Record<string, unknown>;
 
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {

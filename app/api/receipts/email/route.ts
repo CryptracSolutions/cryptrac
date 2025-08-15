@@ -17,7 +17,11 @@ async function getServiceAndMerchant(request: NextRequest) {
 }
 
 // ENHANCED: Function to generate professional HTML email template
-function generateEmailTemplate(receiptData: any, merchantName: string, paymentUrl: string): { subject: string; html: string; text: string } {
+function generateEmailTemplate(
+  receiptData: Record<string, unknown>,
+  merchantName: string,
+  paymentUrl: string
+): { subject: string; html: string; text: string } {
   const {
     amount,
     currency = 'USD',
@@ -26,7 +30,7 @@ function generateEmailTemplate(receiptData: any, merchantName: string, paymentUr
     tx_hash,
     pay_currency,
     amount_received
-  } = receiptData;
+  } = receiptData as Record<string, unknown>;
 
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -262,7 +266,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
   }
 
-  const paymentUrl = `${appOrigin}/pay/${link.link_id}`;
+  const paymentUrl = receipt_data?.public_receipt_id
+    ? `${appOrigin}/r/${receipt_data.public_receipt_id}`
+    : `${appOrigin}/pay/${link.link_id}`;
   
   let status = 'queued';
   let errorMessage = null;
@@ -300,11 +306,12 @@ export async function POST(request: NextRequest) {
             to: [{ email }], 
             subject: subject 
           }],
-          from: { 
-            email: fromEmail, 
+          from: {
+            email: fromEmail,
             name: merchant.business_name || 'Cryptrac'
           },
           content: emailContent,
+          categories: ['receipt'],
           // Add tracking and branding
           tracking_settings: {
             click_tracking: { enable: true },

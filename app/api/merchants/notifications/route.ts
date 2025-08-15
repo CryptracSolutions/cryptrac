@@ -11,6 +11,7 @@ interface PaymentNotificationData {
   tx_hash?: string;
   pay_currency?: string;
   amount_received?: number;
+  public_receipt_id?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const sendgridKey = process.env.SENDGRID_API_KEY;
     const fromEmail = process.env.CRYPTRAC_NOTIFICATIONS_FROM || process.env.SENDGRID_FROM_EMAIL;
-    const appOrigin = process.env.NEXT_PUBLIC_APP_URL;
+    const appOrigin = process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL;
 
     if (!sendgridKey || !fromEmail || !appOrigin) {
       console.warn('⚠️ Email service not configured - notification will be logged but not sent');
@@ -51,6 +52,17 @@ export async function POST(request: NextRequest) {
         { error: 'Merchant not found' },
         { status: 404 }
       );
+    }
+
+    // Check merchant notification preferences
+    const { data: settings } = await supabase
+      .from('merchant_settings')
+      .select('email_payment_notifications_enabled')
+      .eq('merchant_id', merchant.id)
+      .single();
+
+    if (settings?.email_payment_notifications_enabled === false) {
+      return NextResponse.json({ success: false, message: 'Notifications disabled' });
     }
 
     if (!merchant.email) {
@@ -91,69 +103,73 @@ export async function POST(request: NextRequest) {
       receivedAmountText = ` (${formattedReceived} ${notificationData.pay_currency.toUpperCase()})`;
     }
 
-    // Create email content
-    const subject = `Payment Received - ${formattedAmount}`;
+    const receiptUrl = notificationData.public_receipt_id
+      ? `${appOrigin}/r/${notificationData.public_receipt_id}`
+      : `${appOrigin}`;
+    const dashboardUrl = `${appOrigin}/merchant/dashboard/payments/${notificationData.payment_id}`;
+
+    const subject = `Payment received • ${formattedAmount}`;
     const emailContent = `
 Hello ${merchant.business_name},
 
-Great news! You've received a new payment.
+You've received a new payment.
 
-Payment Details:
-• Amount: ${formattedAmount}${receivedAmountText}
-• Type: ${notificationData.payment_type}
-• Payment ID: ${notificationData.payment_id}
-${notificationData.tx_hash ? `• Transaction Hash: ${notificationData.tx_hash}` : ''}
-${notificationData.customer_email ? `• Customer Email: ${notificationData.customer_email}` : ''}
+Amount: ${formattedAmount}${receivedAmountText}
+Type: ${notificationData.payment_type}
+${notificationData.customer_email ? `Customer: ${notificationData.customer_email}\n` : ''}Paid at: ${new Date().toLocaleString()}
 
-You can view this payment and all your transactions in your merchant dashboard:
-${appOrigin}/merchant/dashboard/payments
+View receipt: ${receiptUrl}
+View in dashboard: ${dashboardUrl}
 
 Best regards,
 The Cryptrac Team
 
 ---
-This is an automated notification. Please do not reply to this email.
+This is an automated notification.
     `.trim();
 
     let emailStatus = 'queued';
     let errorMessage = null;
 
-    // Send email if service is configured
     if (sendgridKey && fromEmail && appOrigin) {
-      try {
-        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${sendgridKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            personalizations: [{
-              to: [{ email: merchant.email }],
-              subject: subject
-            }],
-            from: { email: fromEmail, name: 'Cryptrac' },
-            reply_to: { email: 'support@cryptrac.com' },
-            content: [{
-              type: 'text/plain',
-              value: emailContent
-            }]
-          })
-        });
+      for (let attempt = 0; attempt < 3 && emailStatus !== 'sent'; attempt++) {
+        try {
+          const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${sendgridKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              personalizations: [{
+                to: [{ email: merchant.email }],
+                subject
+              }],
+              from: { email: fromEmail, name: 'Cryptrac' },
+              reply_to: { email: 'support@cryptrac.com' },
+              content: [{ type: 'text/plain', value: emailContent }],
+              categories: ['merchant-payment']
+            })
+          });
 
-        if (response.ok) {
-          emailStatus = 'sent';
-          console.log('✅ Merchant notification email sent successfully to:', merchant.email);
-        } else {
-          const errorText = await response.text();
+          if (response.ok) {
+            emailStatus = 'sent';
+            console.log('✅ Merchant notification email sent successfully to:', merchant.email);
+          } else {
+            const errorText = await response.text();
+            emailStatus = 'failed';
+            errorMessage = `SendGrid error: ${response.status} ${errorText}`;
+            console.error('❌ SendGrid error:', errorMessage);
+          }
+        } catch (error) {
           emailStatus = 'failed';
-          errorMessage = `SendGrid error: ${response.status} ${errorText}`;
-          console.error('❌ SendGrid error:', errorMessage);
+          errorMessage = error instanceof Error ? error.message : 'Unknown email error';
+          console.error('❌ Email sending error:', error);
         }
-      } catch (error) {
-        emailStatus = 'failed';
-        errorMessage = error instanceof Error ? error.message : 'Unknown email error';
-        console.error('❌ Email sending error:', error);
+
+        if (emailStatus !== 'sent') {
+          await new Promise(res => setTimeout(res, (attempt + 1) * 1000));
+        }
       }
     }
 

@@ -95,7 +95,10 @@ interface NOWPaymentsWebhookBody extends Record<string, unknown> {
 }
 
 // ENHANCED: Function to send customer receipts automatically
-async function sendCustomerReceipts(payment: any, paymentData: any) {
+async function sendCustomerReceipts(
+  payment: Record<string, unknown>,
+  paymentData: Record<string, unknown>
+) {
   try {
     console.log('📧 Sending customer receipts for payment:', payment.id);
     
@@ -150,18 +153,19 @@ async function sendCustomerReceipts(payment: any, paymentData: any) {
       payment_link_id: payment.payment_link_id,
       amount: payment.amount,
       currency: payment.currency,
-      payment_type: paymentLink.source === 'pos' ? 'POS Sale' : 
+      payment_type: paymentLink.source === 'pos' ? 'POS Sale' :
                    paymentLink.source === 'subscription' ? 'Subscription' : 'Payment Link',
       tx_hash: paymentData.tx_hash || payment.tx_hash,
       pay_currency: paymentData.currency_received || payment.currency_received,
       amount_received: paymentData.amount_received || payment.amount_received,
-      title: paymentLink.title || 'Payment'
+      title: paymentLink.title || 'Payment',
+      public_receipt_id: payment.public_receipt_id
     };
 
     // Send email receipt if customer email is available
     if (customerEmail) {
       try {
-        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/receipts/email`, {
+        const emailResponse = await fetch(`${process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL}/api/receipts/email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -188,7 +192,7 @@ async function sendCustomerReceipts(payment: any, paymentData: any) {
     // Send SMS receipt if customer phone is available
     if (customerPhone) {
       try {
-        const smsResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/receipts/sms`, {
+        const smsResponse = await fetch(`${process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL}/api/receipts/sms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -218,7 +222,10 @@ async function sendCustomerReceipts(payment: any, paymentData: any) {
 }
 
 // Function to send merchant notification email
-async function sendMerchantNotification(payment: any, paymentData: any) {
+async function sendMerchantNotification(
+  payment: Record<string, unknown>,
+  paymentData: Record<string, unknown>
+) {
   try {
     console.log('📧 Sending merchant notification for payment:', payment.id);
     
@@ -264,31 +271,34 @@ async function sendMerchantNotification(payment: any, paymentData: any) {
     const notificationData = {
       merchant_id: payment.merchant_id,
       payment_id: payment.id,
-      amount: payment.amount || 0,
+      amount: payment.total_paid || payment.amount || 0,
       currency: payment.currency || 'USD',
       payment_type: paymentType,
       customer_email: customerEmail,
       tx_hash: paymentData.tx_hash || payment.tx_hash,
       pay_currency: paymentData.currency_received || payment.currency_received,
-      amount_received: paymentData.amount_received || payment.amount_received
+      amount_received: paymentData.amount_received || payment.amount_received,
+      public_receipt_id: payment.public_receipt_id
     };
 
     // Call the merchant notification API
-    const notificationResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/merchants/notifications`, {
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/merchants/notifications`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(notificationData)
-    });
-
-    if (notificationResponse.ok) {
-      const result = await notificationResponse.json();
-      console.log('✅ Merchant notification sent:', result);
-    } else {
-      const error = await notificationResponse.text();
-      console.error('❌ Failed to send merchant notification:', error);
-    }
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const result = await res.json();
+          console.log('✅ Merchant notification sent:', result);
+        } else {
+          const error = await res.text();
+          console.error('❌ Failed to send merchant notification:', error);
+        }
+      })
+      .catch(err => console.error('❌ Error sending merchant notification:', err));
 
   } catch (error) {
     console.error('❌ Error sending merchant notification:', error);
@@ -682,8 +692,8 @@ export async function POST(request: NextRequest) {
       // ENHANCED: Send customer receipts automatically
       await sendCustomerReceipts(payment, updateData);
       
-      // Send merchant notification email
-      await sendMerchantNotification(payment, updateData);
+      // Send merchant notification email (fire and forget)
+      sendMerchantNotification(payment, updateData);
       
       // Update payment link usage statistics
       try {

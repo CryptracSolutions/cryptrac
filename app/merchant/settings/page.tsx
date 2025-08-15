@@ -19,7 +19,8 @@ import {
   Building,
   User,
   Phone,
-  Globe
+  Globe,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -409,6 +410,46 @@ export default function MerchantSettingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState({
+    email_payment_notifications_enabled: true,
+    public_receipts_enabled: true,
+  });
+
+  useEffect(() => {
+    const fetchNotificationSettings = async () => {
+      try {
+        const res = await fetch('/api/merchant/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setNotificationSettings({
+            email_payment_notifications_enabled: data.email_payment_notifications_enabled !== false,
+            public_receipts_enabled: data.public_receipts_enabled !== false,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load notification settings:', err);
+      }
+    };
+    fetchNotificationSettings();
+  }, []);
+
+  const updateNotificationSetting = async (
+    field: 'email_payment_notifications_enabled' | 'public_receipts_enabled',
+    value: boolean
+  ) => {
+    setNotificationSettings(prev => ({ ...prev, [field]: value }));
+    try {
+      await fetch('/api/merchant/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value })
+      });
+      toast.success('Settings updated');
+    } catch (err) {
+      console.error('Failed to update notification setting:', err);
+      toast.error('Failed to update settings');
+    }
+  };
 
   const configuredCurrencies = React.useMemo(
     () => Object.keys(settings.wallets || {}),
@@ -857,7 +898,7 @@ export default function MerchantSettingsPage() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Profile
@@ -877,6 +918,10 @@ export default function MerchantSettingsPage() {
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Security
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
             </TabsTrigger>
           </TabsList>
 
@@ -1605,6 +1650,37 @@ export default function MerchantSettingsPage() {
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     <span className="text-sm">Multi-network cryptocurrency support</span>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                </CardTitle>
+                <CardDescription>Manage email alerts and public receipts</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Email me when I receive a payment</span>
+                  <Checkbox
+                    checked={notificationSettings.email_payment_notifications_enabled}
+                    onCheckedChange={(checked) =>
+                      updateNotificationSetting('email_payment_notifications_enabled', !!checked)
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Make public receipts available</span>
+                  <Checkbox
+                    checked={notificationSettings.public_receipts_enabled}
+                    onCheckedChange={(checked) =>
+                      updateNotificationSetting('public_receipts_enabled', !!checked)
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>
