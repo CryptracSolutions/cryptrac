@@ -1038,21 +1038,6 @@ CREATE TABLE IF NOT EXISTS "public"."reps" (
 ALTER TABLE "public"."reps" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."sms_logs" (
-    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "merchant_id" "uuid" NOT NULL,
-    "phone" "text" NOT NULL,
-    "type" "text" NOT NULL,
-    "status" "text" DEFAULT 'sent'::"text",
-    "payload" "jsonb",
-    "error" "text",
-    "timestamp" timestamp with time zone DEFAULT "now"()
-);
-
-
-ALTER TABLE "public"."sms_logs" OWNER TO "postgres";
-
-
 CREATE TABLE IF NOT EXISTS "public"."subscription_amount_overrides" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "merchant_id" "uuid" NOT NULL,
@@ -1597,11 +1582,6 @@ ALTER TABLE ONLY "public"."reps"
 
 
 
-ALTER TABLE ONLY "public"."sms_logs"
-    ADD CONSTRAINT "sms_logs_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."subscription_amount_overrides"
     ADD CONSTRAINT "subscription_amount_overrides_pkey" PRIMARY KEY ("id");
 
@@ -2071,11 +2051,6 @@ ALTER TABLE ONLY "public"."reps"
 
 
 
-ALTER TABLE ONLY "public"."sms_logs"
-    ADD CONSTRAINT "sms_logs_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
-
-
-
 ALTER TABLE ONLY "public"."subscription_amount_overrides"
     ADD CONSTRAINT "subscription_amount_overrides_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
 
@@ -2358,12 +2333,6 @@ CREATE POLICY "Merchants view own" ON "public"."merchants" FOR SELECT USING ((("
 
 
 
-CREATE POLICY "Merchants view own sms logs" ON "public"."sms_logs" FOR SELECT USING (("merchant_id" IN ( SELECT "m"."id"
-   FROM "public"."merchants" "m"
-  WHERE ("m"."user_id" = "auth"."uid"()))));
-
-
-
 CREATE POLICY "Monthly bonus log view" ON "public"."monthly_bonus_log" FOR SELECT USING ((("rep_id" = ( SELECT "reps"."id"
    FROM "public"."reps"
   WHERE ("reps"."user_id" = "auth"."uid"()))) OR ("auth"."email"() = 'admin@cryptrac.com'::"text")));
@@ -2440,10 +2409,6 @@ CREATE POLICY "System can insert payment data" ON "public"."transactions" FOR IN
 
 
 
-CREATE POLICY "System can insert sms logs" ON "public"."sms_logs" FOR INSERT WITH CHECK (true);
-
-
-
 CREATE POLICY "System can insert subscription history" ON "public"."subscription_history" FOR INSERT WITH CHECK (true);
 
 
@@ -2504,9 +2469,6 @@ ALTER TABLE "public"."rep_sales" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."reps" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."sms_logs" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."subscription_amount_overrides" ENABLE ROW LEVEL SECURITY;
@@ -2768,12 +2730,6 @@ GRANT ALL ON TABLE "public"."rep_sales" TO "service_role";
 GRANT ALL ON TABLE "public"."reps" TO "anon";
 GRANT ALL ON TABLE "public"."reps" TO "authenticated";
 GRANT ALL ON TABLE "public"."reps" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."sms_logs" TO "anon";
-GRANT ALL ON TABLE "public"."sms_logs" TO "authenticated";
-GRANT ALL ON TABLE "public"."sms_logs" TO "service_role";
 
 
 
