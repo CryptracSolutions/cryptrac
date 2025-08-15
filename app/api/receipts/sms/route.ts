@@ -89,28 +89,77 @@ export async function POST(request: Request) {
   const twilioFrom = process.env.TWILIO_FROM_NUMBER;
   const appOrigin = env.APP_ORIGIN;
   
-  const { phone, payment_link_id, receipt_data } = await request.json() as {
+  const { phone, payment_link_id, receipt_data, transaction_id } = await request.json() as {
     phone?: string;
     payment_link_id?: string;
     receipt_data?: Record<string, unknown>;
+    transaction_id?: string;
   };
   
-  if (!phone || !payment_link_id) {
-    return NextResponse.json({ error: 'Missing required fields: phone and payment_link_id' }, { status: 400 });
+  if (!phone) {
+    return NextResponse.json({ error: 'Missing required field: phone' }, { status: 400 });
   }
 
-  const { data: link } = await service
-    .from('payment_links')
-    .select('link_id, title')
-    .eq('id', payment_link_id)
-    .eq('merchant_id', merchant.id)
-    .single();
+  // FIXED: Enhanced logic to always use receipt URL when possible (same as email API)
+  let paymentUrl = '';
+  let linkTitle = 'Payment';
+
+  // First priority: Use public_receipt_id from receipt_data if available
+  if (receipt_data?.public_receipt_id) {
+    paymentUrl = `${appOrigin}/r/${receipt_data.public_receipt_id}`;
+    linkTitle = (receipt_data.title as string) || 'Payment';
+  }
+  // Second priority: Look up public_receipt_id from transaction_id
+  else if (transaction_id) {
+    const { data: transaction } = await service
+      .from('transactions')
+      .select('public_receipt_id')
+      .eq('id', transaction_id)
+      .single();
     
-  if (!link) {
-    return NextResponse.json({ error: 'Payment link not found' }, { status: 404 });
+    if (transaction?.public_receipt_id) {
+      paymentUrl = `${appOrigin}/r/${transaction.public_receipt_id}`;
+    }
+  }
+  // Third priority: Look up public_receipt_id from payment_link_id
+  else if (payment_link_id) {
+    // Get the most recent transaction for this payment link to get the receipt ID
+    const { data: transaction } = await service
+      .from('transactions')
+      .select('public_receipt_id')
+      .eq('payment_link_id', payment_link_id)
+      .eq('merchant_id', merchant.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (transaction?.public_receipt_id) {
+      paymentUrl = `${appOrigin}/r/${transaction.public_receipt_id}`;
+    }
   }
 
-  const paymentUrl = `${appOrigin}/pay/${link.link_id}`;
+  // Fallback: If no receipt URL could be generated and we have a payment_link_id, use payment link
+  if (!paymentUrl && payment_link_id) {
+    const { data: link } = await service
+      .from('payment_links')
+      .select('link_id, title')
+      .eq('id', payment_link_id)
+      .eq('merchant_id', merchant.id)
+      .single();
+      
+    if (link) {
+      paymentUrl = `${appOrigin}/pay/${link.link_id}`;
+      linkTitle = link.title || 'Payment';
+      console.warn('⚠️ Using payment link URL as fallback - receipt URL not available');
+    }
+  }
+
+  // Final fallback: If still no URL, return error
+  if (!paymentUrl) {
+    return NextResponse.json({ 
+      error: 'Unable to generate receipt URL - no payment link or transaction found' 
+    }, { status: 404 });
+  }
   
   let message: string;
   let status = 'queued';
@@ -170,9 +219,12 @@ export async function POST(request: Request) {
     payload: { 
       message, 
       link_id: payment_link_id,
+      transaction_id,
       message_length: message.length,
       has_receipt_data: !!receipt_data,
-      template_used: receipt_data ? 'enhanced' : 'basic'
+      template_used: receipt_data ? 'enhanced' : 'basic',
+      url_used: paymentUrl,
+      url_type: paymentUrl.includes('/r/') ? 'receipt' : 'payment_link'
     }
   });
 
@@ -186,7 +238,9 @@ export async function POST(request: Request) {
       ? 'SMS receipt queued (service not configured)'
       : 'Failed to send SMS receipt',
     error: errorMessage,
-    sms_length: message.length
+    sms_length: message.length,
+    url_used: paymentUrl,
+    url_type: paymentUrl.includes('/r/') ? 'receipt' : 'payment_link'
   });
 }
 

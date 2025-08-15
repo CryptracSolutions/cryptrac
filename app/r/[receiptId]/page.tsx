@@ -32,11 +32,14 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const { data: tx } = await supabase
+  // FIXED: Modified query to handle cases where payment_link_id might be null
+  // This fixes the issue where smart terminal/POS payments don't have associated payment links
+  const { data: tx, error: txError } = await supabase
     .from('transactions')
     .select(`
       public_receipt_id,
       merchant_id,
+      payment_link_id,
       created_at,
       currency,
       settlement_currency,
@@ -51,14 +54,34 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       total_paid,
       tx_hash,
       nowpayments_payment_id,
-      payment_links(title),
-      merchants(business_name, logo_url)
+      amount,
+      base_amount,
+      total_amount_paid
     `)
     .eq('public_receipt_id', receiptId)
     .single();
 
-  if (!tx) {
+  if (txError || !tx) {
+    console.error('Receipt lookup error:', txError);
     return <ReceiptNotAvailable />;
+  }
+
+  // FIXED: Separate queries for merchant and payment link data to avoid JOIN failures
+  const { data: merchant } = await supabase
+    .from('merchants')
+    .select('business_name, logo_url')
+    .eq('id', tx.merchant_id)
+    .single();
+
+  // Only query payment link if payment_link_id exists
+  let paymentLink = null;
+  if (tx.payment_link_id) {
+    const { data: linkData } = await supabase
+      .from('payment_links')
+      .select('title')
+      .eq('id', tx.payment_link_id)
+      .single();
+    paymentLink = linkData;
   }
 
   const { data: settings } = await supabase
@@ -74,23 +97,23 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   const format = (amount: number | null | undefined, currency: string) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(amount || 0));
 
-  const baseAmount = Number(tx.subtotal_with_tax || 0) - Number(tx.tax_amount || 0);
+  // FIXED: Better amount calculation logic
+  const baseAmount = Number(tx.base_amount || tx.subtotal_with_tax || tx.amount || 0) - Number(tx.tax_amount || 0);
+  const totalPaid = Number(tx.total_paid || tx.total_amount_paid || tx.amount || 0);
+  
   const explorerBase = tx.network ? explorers[tx.network.toUpperCase()] : undefined;
   const txLink = explorerBase && tx.tx_hash ? `${explorerBase}${tx.tx_hash}` : null;
-
-  const merchantInfo = Array.isArray(tx.merchants) ? tx.merchants[0] : tx.merchants;
-  const paymentLinkInfo = Array.isArray(tx.payment_links) ? tx.payment_links[0] : tx.payment_links;
 
   return (
     <div className="max-w-2xl mx-auto p-8 space-y-4 print:bg-white">
       <div className="text-center space-y-2">
-        {merchantInfo?.logo_url && (
+        {merchant?.logo_url && (
           <div className="flex justify-center">
-            <Image src={merchantInfo.logo_url} alt={merchantInfo.business_name || 'Merchant'} width={80} height={80} />
+            <Image src={merchant.logo_url} alt={merchant.business_name || 'Merchant'} width={80} height={80} />
           </div>
         )}
-        <h1 className="text-2xl font-bold">{merchantInfo?.business_name}</h1>
-        {paymentLinkInfo?.title && <p className="text-gray-600">{paymentLinkInfo.title}</p>}
+        <h1 className="text-2xl font-bold">{merchant?.business_name || 'Cryptrac Merchant'}</h1>
+        {paymentLink?.title && <p className="text-gray-600">{paymentLink.title}</p>}
       </div>
 
       <div className="border-t pt-4 space-y-2">
@@ -98,7 +121,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
         {Number(tx.tax_amount || 0) > 0 && (
           <div className="flex justify-between"><span>{tx.tax_label || 'Tax'}</span><span>{format(tx.tax_amount, tx.currency)}</span></div>
         )}
-        <div className="flex justify-between font-medium"><span>Subtotal</span><span>{format(tx.subtotal_with_tax, tx.currency)}</span></div>
+        <div className="flex justify-between font-medium"><span>Subtotal</span><span>{format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}</span></div>
         {Number(tx.gateway_fee_amount || 0) > 0 && (
           <div className="flex justify-between"><span>Gateway fee</span><span>{format(tx.gateway_fee_amount, tx.currency)}</span></div>
         )}
@@ -108,7 +131,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
         {Number(tx.network_fee_amount || 0) > 0 && (
           <div className="flex justify-between"><span>Network fee</span><span>{format(tx.network_fee_amount, tx.currency)}</span></div>
         )}
-        <div className="flex justify-between font-bold border-t pt-2"><span>Total paid</span><span>{format(tx.total_paid, tx.currency)}</span></div>
+        <div className="flex justify-between font-bold border-t pt-2"><span>Total paid</span><span>{format(totalPaid, tx.currency)}</span></div>
       </div>
 
       <div className="text-sm space-y-1">
