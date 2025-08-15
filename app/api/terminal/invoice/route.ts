@@ -331,6 +331,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     payment_link: paymentLink,
     now: {
+      payment_id: paymentJson.payment.payment_id,
+      payment_status: paymentJson.payment.payment_status,
       pay_address: paymentJson.payment.pay_address,
       pay_amount: paymentJson.payment.pay_amount,
       pay_currency: paymentJson.payment.pay_currency

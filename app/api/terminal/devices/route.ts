@@ -70,16 +70,15 @@ export async function POST(request: NextRequest) {
   if (charge_customer_fee !== undefined) payload.charge_customer_fee = charge_customer_fee;
   if (tax_enabled !== undefined) payload.tax_enabled = tax_enabled;
   if (accepted_cryptos !== undefined) payload.accepted_cryptos = accepted_cryptos;
-  if (!id) {
-    if (payload.accepted_cryptos === undefined) {
-      payload.accepted_cryptos = [...Object.keys(merchantWallets), ...stableCoins];
-    }
-    if (payload.charge_customer_fee === undefined) {
-      payload.charge_customer_fee = merchant.charge_customer_fee;
-    }
-    if (payload.tax_enabled === undefined) {
-      payload.tax_enabled = merchant.tax_enabled;
-    }
+
+  if (payload.charge_customer_fee === undefined) {
+    payload.charge_customer_fee = merchant.charge_customer_fee;
+  }
+  if (payload.tax_enabled === undefined) {
+    payload.tax_enabled = merchant.tax_enabled;
+  }
+  if (!id && payload.accepted_cryptos === undefined) {
+    payload.accepted_cryptos = [...Object.keys(merchantWallets), ...stableCoins];
   }
   let result;
   if (id) {
@@ -106,10 +105,8 @@ export async function POST(request: NextRequest) {
       (result.data.accepted_cryptos && result.data.accepted_cryptos.length)
         ? Array.from(new Set([...result.data.accepted_cryptos, ...stableCoins]))
         : [...Object.keys(merchantWallets), ...stableCoins],
-    charge_customer_fee:
-      result.data.charge_customer_fee ?? merchant.charge_customer_fee,
-    tax_enabled:
-      result.data.tax_enabled ?? merchant.tax_enabled,
+    charge_customer_fee: result.data.charge_customer_fee,
+    tax_enabled: result.data.tax_enabled,
     tax_rates: merchant.tax_rates || []
   };
   return NextResponse.json({ success: true, data });

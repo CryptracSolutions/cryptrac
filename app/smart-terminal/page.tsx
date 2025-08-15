@@ -39,7 +39,9 @@ export default function SmartTerminalPage() {
   const [loading, setLoading] = useState(false);
   interface PaymentLink { id: string; link_id: string; }
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null);
-  const [paymentData, setPaymentData] = useState<{ pay_address: string; pay_amount: number; pay_currency: string } | null>(null);
+  const [paymentData, setPaymentData] = useState<
+    { payment_id: string; payment_status: string; pay_address: string; pay_amount: number; pay_currency: string } | null
+  >(null);
   const [status, setStatus] = useState('');
   const [receipt, setReceipt] = useState({ email: '', phone: '' });
 
@@ -81,7 +83,7 @@ export default function SmartTerminalPage() {
   }, [amount, tax, chargeFee, device]);
 
   useEffect(() => {
-    if (paymentLink) {
+    if (paymentLink && paymentData) {
       const channel = supabase
         .channel('pos-' + paymentLink.id)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'transactions', filter: `payment_link_id=eq.${paymentLink.id}` }, payload => {
@@ -100,29 +102,31 @@ export default function SmartTerminalPage() {
         })
         .subscribe();
       const interval = setInterval(async () => {
-        const { data } = await supabase
-          .from('transactions')
-          .select('status')
-          .eq('payment_link_id', paymentLink.id)
-          .maybeSingle();
-        if (data?.status) {
-          setStatus(prev => {
-            if (data.status !== prev) {
-              if (data.status === 'confirmed') {
-                playBeep();
-                if (navigator.vibrate) navigator.vibrate(200);
-                supabase.removeChannel(channel);
-                clearInterval(interval);
+        try {
+          const res = await fetch(`/api/payments/${paymentData.payment_id}/status`);
+          const json = await res.json();
+          const newStatus = json.payment?.payment_status;
+          if (newStatus) {
+            setStatus(prev => {
+              if (newStatus !== prev) {
+                if (newStatus === 'confirmed') {
+                  playBeep();
+                  if (navigator.vibrate) navigator.vibrate(200);
+                  supabase.removeChannel(channel);
+                  clearInterval(interval);
+                }
+                return newStatus;
               }
-              return data.status;
-            }
-            return prev;
-          });
+              return prev;
+            });
+          }
+        } catch (e) {
+          console.error('status check failed', e);
         }
       }, 3000);
       return () => { supabase.removeChannel(channel); clearInterval(interval); };
     }
-  }, [paymentLink]);
+  }, [paymentLink, paymentData]);
 
   const appendDigit = (d: string) => {
     setAmount(prev => (prev + d).replace(/^0+(\d)/, '$1'));
@@ -162,7 +166,7 @@ export default function SmartTerminalPage() {
       setPaymentLink(json.payment_link);
       setPaymentData(json.now);
       setInvoiceBreakdown(json.breakdown);
-      setStatus('pending');
+      setStatus(json.now.payment_status || 'pending');
     }
   };
 
