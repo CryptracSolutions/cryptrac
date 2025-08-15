@@ -23,8 +23,8 @@ const explorers: Record<string, string> = {
   XRP: 'https://livenet.xrpl.org/transactions/'
 };
 
-export default async function ReceiptPage({ params }: { params: { receiptId: string } }) {
-  const { receiptId } = params;
+export default async function ReceiptPage({ params }: { params: Promise<{ receiptId: string }> }) {
+  const { receiptId } = await params;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
