@@ -1,5 +1,5 @@
 {
   "redirects": [
-    { "source": "https://cryptrac.com/(.*)", "destination": "https://www.cryptrac.com/$1", "permanent": false }
+    { "source": "/(.*)", "destination": "https://cryptrac.com/$1", "permanent": true }
   ]
 }
