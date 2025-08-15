@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY!
-const NOWPAYMENTS_BASE_URL = 'https://api.nowpayments.io/v1'
+const NOWPAYMENTS_BASE_URL = 'https://api.nowpayments.io/v1';
 
 // Enhanced network-to-wallet mapping with proper validation
 const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
@@ -157,8 +154,14 @@ function handleNOWPaymentsError(error: unknown, context: string): NextResponse {
   return NextResponse.json(response, { status: statusCode, headers })
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY!;
+
     const body = await request.json()
     const {
       price_amount,

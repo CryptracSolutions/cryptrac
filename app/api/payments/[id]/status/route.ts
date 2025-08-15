@@ -1,20 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!serviceKey) {
-  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
-}
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  serviceKey
-);
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
     const { id } = await params;
     console.log('🔍 Checking payment status for payment ID:', id);
 

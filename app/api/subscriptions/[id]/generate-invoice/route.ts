@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { env } from '@/lib/env';
 
-async function getServiceAndMerchant(request: NextRequest) {
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+async function getServiceAndMerchant(request: Request) {
   const auth = request.headers.get('Authorization');
   if (!auth || !auth.startsWith('Bearer ')) return { error: 'Unauthorized' };
   const token = auth.substring(7);
@@ -18,7 +22,7 @@ async function getServiceAndMerchant(request: NextRequest) {
   return { service, merchant };
 }
 
-export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const auth = await getServiceAndMerchant(request);
   if ('error' in auth) {
@@ -49,7 +53,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const amount = override?.amount ?? sub.amount;
 
   const internalKey = process.env.INTERNAL_API_KEY;
-  const appOrigin = process.env.APP_ORIGIN;
+  const appOrigin = env.APP_ORIGIN;
   if (!internalKey || !appOrigin) {
     return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
   }

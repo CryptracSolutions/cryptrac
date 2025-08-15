@@ -1,18 +1,8 @@
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
-import React from 'react';
+import PrintButton from '@/components/PrintButton';
 
-function PrintButton() {
-  'use client';
-  return (
-    <button
-      onClick={() => window.print()}
-      className="mt-6 px-4 py-2 bg-blue-600 text-white rounded"
-    >
-      Print / Save PDF
-    </button>
-  );
-}
+export const revalidate = 0;
 
 function ReceiptNotAvailable() {
   return (
@@ -87,16 +77,19 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   const explorerBase = tx.network ? explorers[tx.network.toUpperCase()] : undefined;
   const txLink = explorerBase && tx.tx_hash ? `${explorerBase}${tx.tx_hash}` : null;
 
+  const merchantInfo = Array.isArray(tx.merchants) ? tx.merchants[0] : tx.merchants;
+  const paymentLinkInfo = Array.isArray(tx.payment_links) ? tx.payment_links[0] : tx.payment_links;
+
   return (
     <div className="max-w-2xl mx-auto p-8 space-y-4 print:bg-white">
       <div className="text-center space-y-2">
-        {tx.merchants?.logo_url && (
+        {merchantInfo?.logo_url && (
           <div className="flex justify-center">
-            <Image src={tx.merchants.logo_url} alt={tx.merchants.business_name || 'Merchant'} width={80} height={80} />
+            <Image src={merchantInfo.logo_url} alt={merchantInfo.business_name || 'Merchant'} width={80} height={80} />
           </div>
         )}
-        <h1 className="text-2xl font-bold">{tx.merchants?.business_name}</h1>
-        {tx.payment_links?.title && <p className="text-gray-600">{tx.payment_links.title}</p>}
+        <h1 className="text-2xl font-bold">{merchantInfo?.business_name}</h1>
+        {paymentLinkInfo?.title && <p className="text-gray-600">{paymentLinkInfo.title}</p>}
       </div>
 
       <div className="border-t pt-4 space-y-2">

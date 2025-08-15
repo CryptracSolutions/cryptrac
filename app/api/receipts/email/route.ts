@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { env } from '@/lib/env';
 
-async function getServiceAndMerchant(request: NextRequest) {
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+async function getServiceAndMerchant(request: Request) {
   const auth = request.headers.get('Authorization');
   if (!auth || !auth.startsWith('Bearer ')) return { error: 'Unauthorized' };
   const token = auth.substring(7);
@@ -238,18 +242,21 @@ If you have any questions, please contact ${merchantName}.
   return { subject, html, text };
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const auth = await getServiceAndMerchant(request);
   if ('error' in auth) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
   const { service, merchant } = auth;
-  const sendgridKey = process.env.SENDGRID_API_KEY;
-  const fromEmail = process.env.CRYPTRAC_RECEIPTS_FROM || process.env.SENDGRID_FROM_EMAIL;
-  const appOrigin = process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL;
+  const sendgridKey = env.SENDGRID_API_KEY;
+  const fromEmail = env.CRYPTRAC_RECEIPTS_FROM;
+  const appOrigin = env.APP_ORIGIN;
   
-  const requestBody = await request.json();
-  const { email, payment_link_id, receipt_data } = requestBody;
+  const { email, payment_link_id, receipt_data } = await request.json() as {
+    email?: string;
+    payment_link_id?: string;
+    receipt_data?: Record<string, unknown>;
+  };
   
   if (!email || !payment_link_id) {
     return NextResponse.json({ error: 'Missing required fields: email and payment_link_id' }, { status: 400 });

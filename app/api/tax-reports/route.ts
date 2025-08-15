@@ -1,15 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Rate limiting for API endpoints
-const apiAttempts = new Map<string, { count: number; lastAttempt: number }>()
-const API_RATE_LIMIT = 60 // Max 60 requests per minute per IP
-const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
+const apiAttempts = new Map<string, { count: number; lastAttempt: number }>();
+const API_RATE_LIMIT = 60; // Max 60 requests per minute per IP
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 
 function checkAPIRateLimit(ip: string): boolean {
   const now = Date.now()
@@ -91,10 +89,14 @@ interface ReportTransaction {
   refund_date: string | null
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   const startTime = Date.now()
-  
+
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     if (!checkAPIRateLimit(ip)) {

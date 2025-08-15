@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import crypto from 'crypto'
+import { env } from '@/lib/env'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // Rate limiting for webhook endpoints
 const webhookAttempts = new Map<string, { count: number; lastAttempt: number }>()
@@ -175,7 +179,7 @@ async function sendCustomerReceipts(
     // Send email receipt if customer email is available
     if (customerEmail) {
       try {
-        const emailResponse = await fetch(`${process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL}/api/receipts/email`, {
+        const emailResponse = await fetch(`${env.APP_ORIGIN}/api/receipts/email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -202,7 +206,7 @@ async function sendCustomerReceipts(
     // Send SMS receipt if customer phone is available
     if (customerPhone) {
       try {
-        const smsResponse = await fetch(`${process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL}/api/receipts/sms`, {
+        const smsResponse = await fetch(`${env.APP_ORIGIN}/api/receipts/sms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -273,9 +277,9 @@ async function sendMerchantNotification(
     }
 
     // Extract customer email from metadata if available
-    const customerEmail = paymentLink?.metadata?.customer_email || 
-                         payment.metadata?.customer_email || 
-                         null;
+    const customerEmail = paymentLink?.metadata?.customer_email ||
+      (payment.metadata as { customer_email?: string } | null | undefined)?.customer_email ||
+      null;
 
     // Prepare notification data
     const notificationData = {
@@ -292,7 +296,7 @@ async function sendMerchantNotification(
     };
 
     // Call the merchant notification API
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/merchants/notifications`, {
+    fetch(`${env.APP_ORIGIN}/api/merchants/notifications`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -315,7 +319,7 @@ async function sendMerchantNotification(
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const startTime = Date.now()
   
   try {
@@ -462,11 +466,25 @@ export async function POST(request: NextRequest) {
     )
 
     // Find the payment record using the updated column name
+    interface PaymentRecord {
+      id: string
+      merchant_id: string
+      total_paid?: number
+      amount?: number
+      currency?: string
+      currency_received?: string
+      amount_received?: number
+      tx_hash?: string
+      metadata?: { customer_email?: string } | null
+      payment_link_id: string
+      public_receipt_id?: string
+      status?: string
+    }
     const { data: payment, error: findError } = await supabase
       .from('transactions')
       .select('*')
-      .eq('nowpayments_payment_id', payment_id) // UPDATED: Use correct column name
-      .single()
+      .eq('nowpayments_payment_id', payment_id)
+      .single<PaymentRecord>()
 
     if (findError || !payment) {
       console.error('❌ Payment not found for webhook:', payment_id, findError)
@@ -700,10 +718,10 @@ export async function POST(request: NextRequest) {
       console.log('🎉 Payment confirmed! Triggering post-confirmation actions...')
       
       // ENHANCED: Send customer receipts automatically
-      await sendCustomerReceipts(payment, updateData);
+      await sendCustomerReceipts(payment as unknown as Record<string, unknown>, updateData as Record<string, unknown>);
       
       // Send merchant notification email (fire and forget)
-      sendMerchantNotification(payment, updateData);
+      sendMerchantNotification(payment as unknown as Record<string, unknown>, updateData as Record<string, unknown>);
       
       // Update payment link usage statistics
       try {

@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Helper to get authenticated merchant and service client
 async function getMerchantAndService() {
@@ -80,12 +83,16 @@ export async function GET() {
   return NextResponse.json(settings);
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(req: Request) {
   const result = await getMerchantAndService();
   if ('error' in result) return result.error;
   const { service, merchant } = result;
 
-  const body = await req.json();
+  const body = await req.json() as {
+    email_payment_notifications_enabled?: boolean;
+    public_receipts_enabled?: boolean;
+    last_seen_payments_at?: string;
+  };
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (typeof body.email_payment_notifications_enabled === 'boolean') {

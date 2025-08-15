@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { env } from '@/lib/env';
 
-async function getServiceAndMerchant(request: NextRequest) {
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+async function getServiceAndMerchant(request: Request) {
   const auth = request.headers.get('Authorization');
   if (!auth || !auth.startsWith('Bearer ')) return { error: 'Unauthorized' };
   const token = auth.substring(7);
@@ -74,7 +78,7 @@ Thank you for your payment!`;
   return detailedMessage;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const auth = await getServiceAndMerchant(request);
   if ('error' in auth) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
@@ -83,10 +87,13 @@ export async function POST(request: NextRequest) {
   const twilioSid = process.env.TWILIO_ACCOUNT_SID;
   const twilioToken = process.env.TWILIO_AUTH_TOKEN;
   const twilioFrom = process.env.TWILIO_FROM_NUMBER;
-  const appOrigin = process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL;
+  const appOrigin = env.APP_ORIGIN;
   
-  const requestBody = await request.json();
-  const { phone, payment_link_id, receipt_data } = requestBody;
+  const { phone, payment_link_id, receipt_data } = await request.json() as {
+    phone?: string;
+    payment_link_id?: string;
+    receipt_data?: Record<string, unknown>;
+  };
   
   if (!phone || !payment_link_id) {
     return NextResponse.json({ error: 'Missing required fields: phone and payment_link_id' }, { status: 400 });

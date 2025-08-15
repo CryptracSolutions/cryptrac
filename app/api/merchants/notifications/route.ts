@@ -1,5 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { env } from '@/lib/env';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 interface PaymentNotificationData {
   merchant_id: string;
@@ -14,7 +18,7 @@ interface PaymentNotificationData {
   public_receipt_id?: string;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     // Use service role key for internal API calls
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -28,9 +32,9 @@ export async function POST(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const sendgridKey = process.env.SENDGRID_API_KEY;
-    const fromEmail = process.env.CRYPTRAC_NOTIFICATIONS_FROM || process.env.SENDGRID_FROM_EMAIL;
-    const appOrigin = process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL;
+    const sendgridKey = env.SENDGRID_API_KEY;
+    const fromEmail = env.CRYPTRAC_NOTIFICATIONS_FROM;
+    const appOrigin = env.APP_ORIGIN;
 
     if (!sendgridKey || !fromEmail || !appOrigin) {
       console.warn('⚠️ Email service not configured - notification will be logged but not sent');
