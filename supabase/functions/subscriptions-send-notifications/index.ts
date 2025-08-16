@@ -343,13 +343,7 @@ async function sendEmail(
     const { data: logResult, error: logError } = await supabase.from('email_logs').insert({
       email: toEmail,
       type: emailType,
-      status: success ? 'sent' : 'failed',
-      metadata: {
-        merchant_id: merchantId,
-        template_type: emailType,
-        subject: template.subject,
-        error_message: errorMessage // Move error message to metadata
-      }
+      status: success ? 'sent' : 'failed'
     });
 
     if (logError) {
@@ -374,12 +368,7 @@ async function sendEmail(
     const { data: logResult, error: logError } = await supabase.from('email_logs').insert({
       email: toEmail,
       type: emailType,
-      status: 'failed',
-      metadata: {
-        merchant_id: merchantId,
-        template_type: emailType,
-        error_message: error instanceof Error ? error.message : 'Unknown error'
-      }
+      status: 'failed'
     });
 
     if (logError) {
