@@ -222,10 +222,17 @@ serve(async () => {
       }
       
       // Send invoice notification email
+      console.log(`📧 Email notification check for subscription ${sub.id}`);
+      console.log(`Customer email: ${customer?.email || 'NOT FOUND'}`);
+      
       if (customer?.email) {
         try {
           const appOrigin = Deno.env.get('APP_ORIGIN') || 'https://cryptrac.com';
           const paymentUrl = `${appOrigin}/pay/${payment_link.link_id}`;
+          
+          console.log(`📧 Preparing email notification:`);
+          console.log(`- Payment URL: ${paymentUrl}`);
+          console.log(`- Customer email: ${customer.email}`);
           
           // Count existing invoices to determine cycle number
           const { count: invoiceCount } = await supabase
@@ -233,28 +240,48 @@ serve(async () => {
             .select('*', { count: 'exact', head: true })
             .eq('subscription_id', sub.id);
           
-          await fetch(`${url}/functions/v1/subscriptions-send-notifications`, {
+          console.log(`📧 Invoice count: ${invoiceCount}`);
+          
+          const emailPayload = {
+            type: 'invoice',
+            subscription_id: sub.id,
+            customer_email: customer.email,
+            payment_url: paymentUrl,
+            invoice_data: {
+              amount,
+              cycle_count: invoiceCount || 1,
+              invoice_number: invoiceNumber
+            }
+          };
+          
+          console.log(`📧 Email payload:`, JSON.stringify(emailPayload, null, 2));
+          console.log(`📧 Calling email function at: ${url}/functions/v1/subscriptions-send-notifications`);
+          
+          const emailResponse = await fetch(`${url}/functions/v1/subscriptions-send-notifications`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${key}`
             },
-            body: JSON.stringify({
-              type: 'invoice',
-              subscription_id: sub.id,
-              customer_email: customer.email,
-              payment_url: paymentUrl,
-              invoice_data: {
-                amount,
-                cycle_count: invoiceCount || 1,
-                invoice_number: invoiceNumber
-              }
-            })
+            body: JSON.stringify(emailPayload)
           });
+          
+          console.log(`📧 Email response status: ${emailResponse.status}`);
+          console.log(`📧 Email response ok: ${emailResponse.ok}`);
+          
+          if (!emailResponse.ok) {
+            const errorText = await emailResponse.text();
+            console.error(`📧 Email response error: ${errorText}`);
+          } else {
+            console.log(`📧 Email notification sent successfully!`);
+          }
+          
         } catch (error) {
-          console.error('Failed to send invoice notification email:', error);
+          console.error('📧 Failed to send invoice notification email:', error);
           // Don't fail invoice generation if email fails
         }
+      } else {
+        console.log(`📧 No customer email found, skipping email notification`);
       }
       
       // Task 3: Advance next_billing_at by the interval (preserves "generate early for the next cycle")
