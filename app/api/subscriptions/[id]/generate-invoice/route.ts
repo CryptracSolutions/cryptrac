@@ -158,15 +158,31 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     // Task 4: Get amount override for this cycle (same logic as scheduler)
     const today = cycleStart.setZone(zone).toISODate();
-    console.log('Checking overrides for date:', today);
+    console.log('=== Amount Override Debug ===');
+    console.log('Cycle start (UTC):', cycleStart.toISO());
+    console.log('Cycle start (local zone):', cycleStart.setZone(zone).toISO());
+    console.log('Today (ISO date for comparison):', today);
+    console.log('Timezone:', zone);
+    
     const { data: override, error: overrideError } = await service
       .from('subscription_amount_overrides')
-      .select('amount')
+      .select('id, amount, effective_from, note, created_at')
       .eq('subscription_id', id)
       .lte('effective_from', today)
       .order('effective_from', { ascending: false })
       .limit(1)
       .maybeSingle();
+      
+    console.log('Override query result:', { override, overrideError });
+    
+    // Also fetch all overrides for debugging
+    const { data: allOverrides } = await service
+      .from('subscription_amount_overrides')
+      .select('id, amount, effective_from, note, created_at')
+      .eq('subscription_id', id)
+      .order('effective_from', { ascending: false });
+    
+    console.log('All overrides for subscription:', allOverrides);
       
     if (overrideError) {
       console.error('Error fetching amount override:', overrideError);
@@ -174,7 +190,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
     
     const amount = override?.amount ?? sub.amount;
-    console.log('Invoice amount:', amount, override ? '(overridden)' : '(base)');
+    console.log('Final invoice amount:', amount, override ? '(overridden)' : '(base)');
+    console.log('Override details:', override);
+    console.log('=== End Amount Override Debug ===');
 
     // Task 4: Calculate due date and expiration (unified with scheduler)
     const invoiceDueDays = sub.invoice_due_days || 0;
