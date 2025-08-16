@@ -52,12 +52,21 @@ interface Subscription {
   resumed_at?: string;
   completed_at?: string;
   canceled_at?: string;
+  customer_id?: string;
+}
+
+interface Customer {
+  id: string;
+  email?: string;
+  name?: string;
+  phone?: string;
 }
 
 export default function SubscriptionDetailPage() {
   const params = useParams();
   const id = String(params?.id);
   const [sub, setSub] = useState<Subscription | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [amountOverrides, setAmountOverrides] = useState<AmountOverride[]>([]);
   const [override, setOverride] = useState({ effective_from: '', amount: '', note: '' });
@@ -87,7 +96,26 @@ export default function SubscriptionDetailPage() {
     (async () => {
       const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}`);
       const json = await res.json();
-      setSub(json.data);
+      const subscriptionData = json.data;
+      setSub(subscriptionData);
+      
+      // Fetch customer data if customer_id exists
+      if (subscriptionData?.customer_id) {
+        const { data: customerData } = await supabase
+          .from('customers')
+          .select('id, email, name, phone')
+          .eq('id', subscriptionData.customer_id)
+          .single();
+        
+        if (customerData) {
+          setCustomer(customerData);
+          // Pre-populate email field with customer's email
+          if (customerData.email) {
+            setEmail(customerData.email);
+          }
+        }
+      }
+      
       await fetchInvoices();
       await fetchAmountOverrides(); // Task 6: Fetch amount overrides
     })();
@@ -123,13 +151,29 @@ export default function SubscriptionDetailPage() {
 
   const sendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!invoiceLink) return;
-    await makeAuthenticatedRequest('/api/receipts/email', {
-      method: 'POST',
-      body: JSON.stringify({ email, payment_link_id: invoiceLink.id })
-    });
-    toast.success('Email sent');
-    setEmail('');
+    if (!invoiceLink || !email) return;
+    
+    try {
+      const response = await makeAuthenticatedRequest(`/api/subscriptions/${id}/send-invoice-notification`, {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email,
+          payment_url: invoiceLink.url
+        })
+      });
+      
+      if (response.ok) {
+        toast.success('Invoice notification sent');
+        setEmail(''); // Clear email field after successful send
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to send invoice notification:', errorData);
+        toast.error(errorData.error || 'Failed to send invoice notification');
+      }
+    } catch (error) {
+      console.error('Error sending invoice notification:', error);
+      toast.error('Failed to send invoice notification');
+    }
   };
 
   return (
