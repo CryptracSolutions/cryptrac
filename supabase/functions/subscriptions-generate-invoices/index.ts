@@ -255,26 +255,16 @@ serve(async () => {
           };
           
           console.log(`📧 Email payload:`, JSON.stringify(emailPayload, null, 2));
-          console.log(`📧 Calling email function at: ${url}/functions/v1/subscriptions-send-notifications`);
+          console.log(`📧 Calling email function via Supabase client`);
           
-          const emailResponse = await fetch(`${url}/functions/v1/subscriptions-send-notifications`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'apikey': key,
-              'Authorization': `Bearer ${key}`
-            },
-            body: JSON.stringify(emailPayload)
+          const { data: emailResult, error: emailError } = await supabase.functions.invoke('subscriptions-send-notifications', {
+            body: emailPayload
           });
           
-          console.log(`📧 Email response status: ${emailResponse.status}`);
-          console.log(`📧 Email response ok: ${emailResponse.ok}`);
-          
-          if (!emailResponse.ok) {
-            const errorText = await emailResponse.text();
-            console.error(`📧 Email response error: ${errorText}`);
+          if (emailError) {
+            console.error(`📧 Email function error:`, emailError);
           } else {
-            console.log(`📧 Email notification sent successfully!`);
+            console.log(`📧 Email notification sent successfully!`, emailResult);
           }
           
         } catch (error) {
