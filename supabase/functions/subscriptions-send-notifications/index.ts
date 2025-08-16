@@ -344,11 +344,11 @@ async function sendEmail(
       email: toEmail,
       type: emailType,
       status: success ? 'sent' : 'failed',
-      error_message: errorMessage,
       metadata: {
         merchant_id: merchantId,
         template_type: emailType,
-        subject: template.subject
+        subject: template.subject,
+        error_message: errorMessage // Move error message to metadata
       }
     });
 
@@ -375,10 +375,10 @@ async function sendEmail(
       email: toEmail,
       type: emailType,
       status: 'failed',
-      error_message: error instanceof Error ? error.message : 'Unknown error',
       metadata: {
         merchant_id: merchantId,
-        template_type: emailType
+        template_type: emailType,
+        error_message: error instanceof Error ? error.message : 'Unknown error'
       }
     });
 
