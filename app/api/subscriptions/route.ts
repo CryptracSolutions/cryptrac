@@ -58,12 +58,21 @@ export async function POST(request: NextRequest) {
       tax_rates = [],
       // Task 6: Add amount override support
       amount_overrides = [],
-      // Task 3: Add timing configuration support
+      // Task 3: Add timing configuration
       invoice_due_days = 0,
-      generate_days_in_advance = 0,
+      generate_days_in_advance = 1,
       past_due_after_days = 2,
-      auto_resume_on_payment = true
+      auto_resume_on_payment = false
     } = body;
+
+    // Debug logging for auto_convert_enabled
+    console.log('Subscription creation debug:', {
+      charge_customer_fee,
+      auto_convert_enabled,
+      preferred_payout_currency,
+      merchant_auto_convert: merchant.auto_convert_enabled,
+      merchant_preferred_payout: merchant.preferred_payout_currency
+    });
     
     if (!title || !amount || !interval || !anchor || !customer) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

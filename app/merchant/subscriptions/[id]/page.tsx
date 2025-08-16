@@ -195,18 +195,24 @@ export default function SubscriptionDetailPage() {
                   <span className="text-gray-600">Base Amount:</span>
                   <span className="font-medium">{sub.amount} {sub.currency}</span>
                 </div>
-                {sub.tax_enabled && sub.tax_rates && sub.tax_rates.length > 0 && (
+                {sub.tax_enabled && sub.tax_rates && Array.isArray(sub.tax_rates) && sub.tax_rates.length > 0 && (
                   <>
-                    {sub.tax_rates.map((rate: any, index: number) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-gray-600">{rate.name || 'Tax'}:</span>
-                        <span className="font-medium">{(sub.amount * rate.rate / 100).toFixed(2)} {sub.currency} ({rate.rate}%)</span>
-                      </div>
-                    ))}
+                    {sub.tax_rates.map((rate: any, index: number) => {
+                      const taxAmount = (sub.amount * (rate.rate || 0) / 100);
+                      return (
+                        <div key={index} className="flex justify-between">
+                          <span className="text-gray-600">{rate.name || 'Tax'}:</span>
+                          <span className="font-medium">{taxAmount.toFixed(2)} {sub.currency} ({rate.rate || 0}%)</span>
+                        </div>
+                      );
+                    })}
                     <div className="flex justify-between border-t pt-2">
                       <span className="text-gray-600">Subtotal with Tax:</span>
                       <span className="font-medium">
-                        {(sub.amount + sub.tax_rates.reduce((sum: number, rate: any) => sum + (sub.amount * rate.rate / 100), 0)).toFixed(2)} {sub.currency}
+                        {(() => {
+                          const totalTax = sub.tax_rates.reduce((sum: number, rate: any) => sum + (sub.amount * (rate.rate || 0) / 100), 0);
+                          return (sub.amount + totalTax).toFixed(2);
+                        })()} {sub.currency}
                       </span>
                     </div>
                   </>
@@ -223,7 +229,10 @@ export default function SubscriptionDetailPage() {
                       <span className="text-gray-800">Customer Pays:</span>
                       <span>
                         {(() => {
-                          const baseWithTax = sub.amount + (sub.tax_rates?.reduce((sum: number, rate: any) => sum + (sub.amount * rate.rate / 100), 0) || 0);
+                          const totalTax = (sub.tax_rates && Array.isArray(sub.tax_rates)) 
+                            ? sub.tax_rates.reduce((sum: number, rate: any) => sum + (sub.amount * (rate.rate || 0) / 100), 0) 
+                            : 0;
+                          const baseWithTax = sub.amount + totalTax;
                           const feeRate = sub.auto_convert_enabled ? 0.01 : 0.005;
                           const fee = baseWithTax * feeRate;
                           return (baseWithTax + fee).toFixed(2);

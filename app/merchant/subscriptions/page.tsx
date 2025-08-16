@@ -287,9 +287,9 @@ export default function MerchantSubscriptionsPage() {
                         <div className="font-medium text-lg">
                           {s.amount} {s.currency}
                         </div>
-                        {s.tax_enabled && s.tax_rates && s.tax_rates.length > 0 && (
+                        {s.tax_enabled && s.tax_rates && Array.isArray(s.tax_rates) && s.tax_rates.length > 0 && (
                           <div className="text-xs text-gray-500">
-                            +{s.tax_rates.reduce((sum: number, rate: any) => sum + rate.rate, 0)}% tax
+                            +{s.tax_rates.reduce((sum: number, rate: any) => sum + (rate.rate || 0), 0)}% tax
                           </div>
                         )}
                       </div>
