@@ -1,6 +1,169 @@
-import { serve } from 'https://deno.land/std/http/server.ts';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { DateTime } from 'https://esm.sh/luxon@3.4.4';
+import { DateTime } from 'https://esm.sh/luxon@3';
+
+interface EmailTemplate {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+// Professional email template generator for invoice notifications
+function generateInvoiceEmailTemplate(data: {
+  subscriptionTitle: string;
+  merchantName: string;
+  customerName?: string;
+  amount: number;
+  currency: string;
+  paymentUrl: string;
+  cycleCount?: number;
+  maxCycles?: number;
+}): EmailTemplate {
+  const { subscriptionTitle, merchantName, customerName, amount, currency, paymentUrl, cycleCount, maxCycles } = data;
+  
+  const customerGreeting = customerName ? `Hi ${customerName}` : 'Hi there';
+  const formattedAmount = new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+
+  const subject = `New Invoice: ${subscriptionTitle}`;
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Invoice</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+        .container { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #e9ecef; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .invoice-icon { color: #007bff; font-size: 48px; margin-bottom: 10px; }
+        .details { background: #f8f9fa; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+        .detail-row:last-child { border-bottom: none; font-weight: bold; font-size: 18px; color: #007bff; }
+        .pay-button { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="invoice-icon">📄</div>
+            <h1>New Invoice Ready</h1>
+            <div style="color: #6c757d; font-size: 16px;">From ${merchantName}</div>
+        </div>
+        
+        <p>${customerGreeting},</p>
+        <p>Your new invoice for <strong>${subscriptionTitle}</strong> is ready for payment.</p>
+        
+        <div class="details">
+            <div class="detail-row">
+                <span>Subscription:</span>
+                <span>${subscriptionTitle}</span>
+            </div>
+            ${cycleCount && maxCycles ? `
+            <div class="detail-row">
+                <span>Billing Cycle:</span>
+                <span>${cycleCount} of ${maxCycles}</span>
+            </div>
+            ` : ''}
+            <div class="detail-row">
+                <span>Amount Due:</span>
+                <span>${formattedAmount}</span>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="${paymentUrl}" class="pay-button">Pay Invoice</a>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for your continued subscription!</p>
+            <p>If you have any questions about this invoice, please contact ${merchantName}.</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+  const text = `
+New Invoice Ready
+
+${customerGreeting},
+
+Your new invoice for ${subscriptionTitle} is ready for payment.
+
+Invoice Details:
+• Subscription: ${subscriptionTitle}
+${cycleCount && maxCycles ? `• Billing Cycle: ${cycleCount} of ${maxCycles}\n` : ''}• Amount Due: ${formattedAmount}
+
+Pay your invoice: ${paymentUrl}
+
+Thank you for your continued subscription!
+If you have any questions about this invoice, please contact ${merchantName}.
+`;
+
+  return { subject, html, text };
+}
+
+// SendGrid email sending function
+async function sendInvoiceEmail(
+  sendgridKey: string,
+  fromEmail: string,
+  toEmail: string,
+  template: EmailTemplate
+): Promise<boolean> {
+  try {
+    const emailPayload = {
+      personalizations: [{ 
+        to: [{ email: toEmail }], 
+        subject: template.subject 
+      }],
+      from: { email: fromEmail },
+      content: [
+        { type: 'text/plain', value: template.text },
+        { type: 'text/html', value: template.html }
+      ],
+      categories: ['subscription', 'subscription_invoice'],
+      tracking_settings: {
+        click_tracking: { enable: true },
+        open_tracking: { enable: true }
+      }
+    };
+
+    console.log('📤 SendGrid payload prepared for:', toEmail);
+
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${sendgridKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(emailPayload)
+    });
+
+    console.log('📬 SendGrid response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('📧 SendGrid error details:', errorBody);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('📧 SendGrid request failed:', error);
+    return false;
+  }
+}
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 function addInterval(dt: DateTime, interval: string, count: number) {
   switch (interval) {
@@ -221,50 +384,79 @@ serve(async () => {
         continue;
       }
       
-      // Send invoice notification email
+      // Send invoice notification email directly
       console.log(`📧 Email notification check for subscription ${sub.id}`);
       console.log(`Customer email: ${customer?.email || 'NOT FOUND'}`);
       
       if (customer?.email) {
         try {
-          const appOrigin = Deno.env.get('APP_ORIGIN') || 'https://cryptrac.com';
-          const paymentUrl = `${appOrigin}/pay/${payment_link.link_id}`;
+          const sendgridKey = Deno.env.get('SENDGRID_API_KEY');
+          const fromEmail = Deno.env.get('CRYPTRAC_NOTIFICATIONS_FROM');
           
-          console.log(`📧 Preparing email notification:`);
-          console.log(`- Payment URL: ${paymentUrl}`);
-          console.log(`- Customer email: ${customer.email}`);
-          
-          // Count existing invoices to determine cycle number
-          const { count: invoiceCount } = await supabase
-            .from('subscription_invoices')
-            .select('*', { count: 'exact', head: true })
-            .eq('subscription_id', sub.id);
-          
-          console.log(`📧 Invoice count: ${invoiceCount}`);
-          
-          const emailPayload = {
-            type: 'invoice',
-            subscription_id: sub.id,
-            customer_email: customer.email,
-            payment_url: paymentUrl,
-            invoice_data: {
-              amount,
-              cycle_count: invoiceCount || 1,
-              invoice_number: invoiceNumber
-            }
-          };
-          
-          console.log(`📧 Email payload:`, JSON.stringify(emailPayload, null, 2));
-          console.log(`📧 Calling email function via Supabase client`);
-          
-          const { data: emailResult, error: emailError } = await supabase.functions.invoke('subscriptions-send-notifications', {
-            body: emailPayload
+          console.log('📧 Email service check:', {
+            hasSendgridKey: !!sendgridKey,
+            hasFromEmail: !!fromEmail,
+            fromEmail: fromEmail
           });
           
-          if (emailError) {
-            console.error(`📧 Email function error:`, emailError);
+          if (sendgridKey && fromEmail) {
+            const appOrigin = Deno.env.get('APP_ORIGIN') || 'https://cryptrac.com';
+            const paymentUrl = `${appOrigin}/pay/${payment_link.link_id}`;
+            
+            console.log(`📧 Preparing direct email notification:`);
+            console.log(`- Payment URL: ${paymentUrl}`);
+            console.log(`- Customer email: ${customer.email}`);
+            
+            // Count existing invoices to determine cycle number
+            const { count: invoiceCount } = await supabase
+              .from('subscription_invoices')
+              .select('*', { count: 'exact', head: true })
+              .eq('subscription_id', sub.id);
+            
+            console.log(`📧 Invoice count: ${invoiceCount}`);
+            
+            // Get merchant name for email
+            const { data: merchant } = await supabase
+              .from('merchants')
+              .select('business_name')
+              .eq('id', sub.merchant_id)
+              .single();
+            
+            const merchantName = merchant?.business_name || 'Cryptrac';
+            
+            // Generate email template
+            const emailTemplate = generateInvoiceEmailTemplate({
+              subscriptionTitle: sub.title,
+              merchantName,
+              customerName: customer.name,
+              amount,
+              currency: sub.currency,
+              paymentUrl,
+              cycleCount: invoiceCount || 1,
+              maxCycles: sub.max_cycles
+            });
+            
+            console.log(`📧 Email template generated:`, {
+              subject: emailTemplate.subject,
+              toEmail: customer.email,
+              fromEmail: fromEmail
+            });
+            
+            // Send email directly via SendGrid
+            const emailSuccess = await sendInvoiceEmail(
+              sendgridKey,
+              fromEmail,
+              customer.email,
+              emailTemplate
+            );
+            
+            if (emailSuccess) {
+              console.log(`📧 Invoice notification sent successfully!`);
+            } else {
+              console.error(`📧 Failed to send invoice notification`);
+            }
           } else {
-            console.log(`📧 Email notification sent successfully!`, emailResult);
+            console.warn('⚠️ Email service not configured - skipping notification');
           }
           
         } catch (error) {
