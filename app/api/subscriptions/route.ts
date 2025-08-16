@@ -156,24 +156,56 @@ export async function POST(request: NextRequest) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         
+        console.log('Welcome email debug:', {
+          hasCustomerEmail: !!customer.email,
+          customerEmail: customer.email,
+          hasSupabaseUrl: !!supabaseUrl,
+          hasServiceKey: !!supabaseServiceKey,
+          subscriptionId: subscription.id
+        });
+        
         if (supabaseUrl && supabaseServiceKey) {
-          await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
+          const emailPayload = {
+            type: 'welcome',
+            subscription_id: subscription.id,
+            customer_email: customer.email
+          };
+          
+          console.log('Calling welcome email function with payload:', emailPayload);
+          
+          const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${supabaseServiceKey}`
             },
-            body: JSON.stringify({
-              type: 'welcome',
-              subscription_id: subscription.id,
-              customer_email: customer.email
-            })
+            body: JSON.stringify(emailPayload)
+          });
+          
+          console.log('Welcome email function response:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Welcome email function error response:', errorText);
+          } else {
+            console.log('Welcome email function called successfully');
+          }
+        } else {
+          console.error('Missing environment variables for welcome email:', {
+            hasSupabaseUrl: !!supabaseUrl,
+            hasServiceKey: !!supabaseServiceKey
           });
         }
       } catch (error) {
         console.error('Failed to send welcome email:', error);
         // Don't fail subscription creation if email fails
       }
+    } else {
+      console.log('No customer email provided, skipping welcome email');
     }
     
     return NextResponse.json({ success: true, data: subscription });
