@@ -59,25 +59,100 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   }
   const { service, merchant } = auth;
   const body = await request.json();
-  const allowed = ['status','pause_after_missed_payments','accepted_cryptos','tax_enabled','tax_rates'];
+  
+  // Task 9: Comprehensive list of allowed fields for PATCH updates
+  const allowed = [
+    'status',
+    'title',
+    'description',
+    'pause_after_missed_payments',
+    'accepted_cryptos',
+    'charge_customer_fee',
+    'auto_convert_enabled',
+    'preferred_payout_currency',
+    'tax_enabled',
+    'tax_rates',
+    // Task 3: Timing configuration fields
+    'invoice_due_days',
+    'generate_days_in_advance',
+    'past_due_after_days',
+    'auto_resume_on_payment'
+  ];
+  
   const updates: Record<string, unknown> = {};
+  
+  // Task 9: Validate and process each field
   for (const key of allowed) {
-    if (key in body) updates[key] = body[key];
+    if (key in body) {
+      const value = body[key];
+      
+      // Task 9: Field-specific validation
+      switch (key) {
+        case 'invoice_due_days':
+        case 'generate_days_in_advance':
+        case 'past_due_after_days':
+        case 'pause_after_missed_payments':
+          if (typeof value !== 'number' || value < 0) {
+            return NextResponse.json({ error: `${key} must be a non-negative number` }, { status: 400 });
+          }
+          break;
+        case 'auto_resume_on_payment':
+          if (typeof value !== 'boolean') {
+            return NextResponse.json({ error: `${key} must be a boolean` }, { status: 400 });
+          }
+          break;
+        case 'status':
+          if (!['active', 'paused', 'canceled', 'completed'].includes(value)) {
+            return NextResponse.json({ error: 'status must be active, paused, canceled, or completed' }, { status: 400 });
+          }
+          break;
+        case 'accepted_cryptos':
+          if (!Array.isArray(value)) {
+            return NextResponse.json({ error: 'accepted_cryptos must be an array' }, { status: 400 });
+          }
+          break;
+        case 'tax_rates':
+          if (!Array.isArray(value)) {
+            return NextResponse.json({ error: 'tax_rates must be an array' }, { status: 400 });
+          }
+          break;
+      }
+      
+      updates[key] = value;
+    }
   }
+  
+  // Task 9: Handle status changes with proper timestamp updates
   if (body.status) {
+    const currentTime = new Date().toISOString();
+    
     if (body.status === 'paused') {
       updates.status = 'paused';
+      updates.paused_at = currentTime;
+      // Clear resumed_at when pausing
+      updates.resumed_at = null;
     } else if (body.status === 'canceled') {
       updates.status = 'canceled';
-      updates.next_billing_at = null;
+      updates.next_billing_at = null; // Cancel sets next_billing_at = NULL
+      updates.canceled_at = currentTime;
+    } else if (body.status === 'completed') {
+      updates.status = 'completed';
+      updates.next_billing_at = null; // Completed sets next_billing_at = NULL
+      updates.completed_at = currentTime;
     } else if (body.status === 'active') {
       updates.status = 'active';
+      updates.resumed_at = currentTime;
+      // Clear paused_at when resuming
+      updates.paused_at = null;
+      
+      // Task 9: Roll next_billing_at into the future if needed
       const { data: sub } = await service
         .from('subscriptions')
         .select('next_billing_at, billing_anchor, interval, interval_count')
         .eq('id', id)
         .eq('merchant_id', merchant.id)
         .single();
+        
       if (sub && sub.next_billing_at && new Date(sub.next_billing_at) < new Date()) {
         const zone = merchant.timezone || 'UTC';
         let next = DateTime.fromISO(sub.billing_anchor as string, { zone });
@@ -88,9 +163,12 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       }
     }
   }
+  
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
   }
+  
+  // Task 9: Update subscription with comprehensive error handling
   const { data, error } = await service
     .from('subscriptions')
     .update(updates)
@@ -98,9 +176,16 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     .eq('merchant_id', merchant.id)
     .select('*')
     .single();
-  if (error || !data) {
+    
+  if (error) {
+    console.error('Subscription update error:', error);
     return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
   }
+  
+  if (!data) {
+    return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+  }
+  
   return NextResponse.json({ success: true, data });
 }
 

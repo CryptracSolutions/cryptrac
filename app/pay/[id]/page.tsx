@@ -260,8 +260,13 @@ export default function PaymentPage() {
       false
     const feeAmount = subtotalWithTax * link.fee_percentage
     const platformFee = chargeCustomerFee ? feeAmount : 0
+    
+    // Customer total: if charge_customer_fee is true, customer pays extra to offset NOWPayments fee deduction
     const customerTotal = chargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax
-    const merchantReceives = chargeCustomerFee ? subtotalWithTax : subtotalWithTax - feeAmount
+    
+    // Merchant receives: NOWPayments always deducts fee from payout, regardless of charge_customer_fee
+    // When charge_customer_fee is true, the extra customer payment offsets this deduction
+    const merchantReceives = subtotalWithTax - feeAmount
 
     return {
       baseAmount,

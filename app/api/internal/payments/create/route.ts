@@ -66,12 +66,20 @@ export async function POST(request: NextRequest) {
     });
   }
   const subtotalWithTax = amountNum + totalTaxAmount;
-  const baseFeePercentage = 0.005;
-  const autoConvertFeePercentage = effectiveAutoConvertEnabled ? 0.005 : 0;
-  const totalFeePercentage = baseFeePercentage + autoConvertFeePercentage;
-  const feeAmount = subtotalWithTax * totalFeePercentage;
+  
+  // Task 1: Enforce fee math to exactly 0.5% or 1.0%
+  const baseFeePct = 0.005; // 0.5%
+  const autoConvertFeePct = effectiveAutoConvertEnabled ? 0.005 : 0; // +0.5% if auto-convert
+  const totalFeePct = baseFeePct + autoConvertFeePct; // => 0.5% or 1.0%
+  
+  const feeAmount = subtotalWithTax * totalFeePct;
+  
+  // Customer total: if charge_customer_fee is true, customer pays extra to offset NOWPayments fee deduction
   const customerPaysTotal = effectiveChargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax;
-  const merchantReceives = effectiveChargeCustomerFee ? subtotalWithTax : subtotalWithTax - feeAmount;
+  
+  // Merchant receives: NOWPayments always deducts fee from payout, regardless of charge_customer_fee
+  // When charge_customer_fee is true, the extra customer payment offsets this deduction
+  const merchantReceives = subtotalWithTax - feeAmount;
   const linkId = generateLinkId();
   const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/${linkId}`;
   const insert: Record<string, unknown> = {
@@ -90,7 +98,7 @@ export async function POST(request: NextRequest) {
     charge_customer_fee: effectiveChargeCustomerFee,
     auto_convert_enabled: effectiveAutoConvertEnabled,
     preferred_payout_currency: effectivePreferredPayoutCurrency,
-    fee_percentage: totalFeePercentage,
+    fee_percentage: totalFeePct,
     tax_enabled,
     tax_rates: tax_enabled ? tax_rates : [],
     tax_amount: totalTaxAmount,
@@ -98,9 +106,9 @@ export async function POST(request: NextRequest) {
     metadata: {
       ...metadata,
       fee_breakdown: {
-        base_fee_percentage: baseFeePercentage * 100,
-        auto_convert_fee_percentage: autoConvertFeePercentage * 100,
-        total_fee_percentage: totalFeePercentage * 100,
+        base_fee_percentage: baseFeePct * 100,
+        auto_convert_fee_percentage: autoConvertFeePct * 100,
+        total_fee_percentage: totalFeePct * 100,
         fee_amount: feeAmount,
         merchant_receives: merchantReceives,
         effective_charge_customer_fee: effectiveChargeCustomerFee,

@@ -733,24 +733,43 @@ export async function POST(request: Request) {
           .single()
 
         if (link && link.subscription_id) {
+          // Task 2: Update subscription invoice with cycle_start_at for better tracking
           const { data: updatedInvoice } = await supabase
             .from('subscription_invoices')
             .update({ status: 'paid', paid_at: new Date().toISOString() })
             .eq('payment_link_id', link.id)
             .neq('status', 'paid')
-            .select('id')
+            .select('id, cycle_start_at')
 
           if (updatedInvoice && updatedInvoice.length > 0) {
+            const invoice = updatedInvoice[0];
+            console.log(`✅ Subscription invoice paid: ${invoice.id}, cycle: ${invoice.cycle_start_at}`);
+            
+            // Task 5: Get subscription details for auto-resume logic
             const { data: sub } = await supabase
               .from('subscriptions')
-              .select('total_cycles')
+              .select('total_cycles, status, auto_resume_on_payment, missed_payments_count')
               .eq('id', link.subscription_id)
               .single()
 
-            await supabase
-              .from('subscriptions')
-              .update({ total_cycles: (sub?.total_cycles || 0) + 1 })
-              .eq('id', link.subscription_id)
+            if (sub) {
+              let subscriptionUpdates: any = { 
+                total_cycles: (sub.total_cycles || 0) + 1,
+                missed_payments_count: 0 // Task 5: Reset missed payments counter on successful payment
+              };
+
+              // Task 5: Auto-resume logic - if subscription is paused and auto_resume_on_payment is enabled
+              if (sub.status === 'paused' && sub.auto_resume_on_payment) {
+                subscriptionUpdates.status = 'active';
+                subscriptionUpdates.resumed_at = new Date().toISOString();
+                console.log(`🔄 Auto-resuming subscription ${link.subscription_id} after payment`);
+              }
+
+              await supabase
+                .from('subscriptions')
+                .update(subscriptionUpdates)
+                .eq('id', link.subscription_id)
+            }
           }
         }
       } catch (subError) {

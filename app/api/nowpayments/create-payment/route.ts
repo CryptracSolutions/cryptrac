@@ -247,6 +247,14 @@ export async function POST(request: Request) {
       ? preferredPayoutCurrency
       : pay_currency.toUpperCase()
 
+    // Calculate fee breakdown using the exact same logic as internal payments create
+    const baseFeePct = 0.005; // 0.5%
+    const autoConvertFeePct = autoConvertEnabled ? 0.005 : 0; // +0.5% if auto-convert
+    const totalFeePct = baseFeePct + autoConvertFeePct; // => 0.5% or 1.0%
+
+    // Determine if customer pays fee
+    const chargeCustomerFee = paymentLinkData.charge_customer_fee ?? merchant.charge_customer_fee ?? false;
+
     // Prepare payment request for NOWPayments
     interface PaymentRequest {
       price_amount: number
@@ -259,6 +267,7 @@ export async function POST(request: Request) {
       cancel_url: string
       payout_address?: string
       payout_currency?: string
+      is_fee_paid_by_user?: boolean
     }
 
     const paymentRequest: PaymentRequest = {
@@ -269,7 +278,8 @@ export async function POST(request: Request) {
       order_description: order_description || `Payment for ${merchant.business_name}`,
       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success/${payment_link_id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`,
+      is_fee_paid_by_user: chargeCustomerFee === true
     }
 
     // Enhanced auto-forwarding logic
@@ -316,6 +326,7 @@ export async function POST(request: Request) {
     console.log('- price_currency:', paymentRequest.price_currency)
     console.log('- pay_currency:', paymentRequest.pay_currency)
     console.log('- order_id:', paymentRequest.order_id)
+    console.log('- is_fee_paid_by_user:', paymentRequest.is_fee_paid_by_user)
     console.log('- auto_forwarding_enabled:', autoForwardingConfigured)
     if (autoForwardingConfigured) {
       console.log('- payout_address:', paymentRequest.payout_address?.substring(0, 10) + '...')
@@ -449,14 +460,20 @@ export async function POST(request: Request) {
       auto_forwarding: autoForwardingConfigured
     })
 
-    // Calculate fee and tax details for reporting
-    const feePercentage = Number(paymentLinkData.fee_percentage || 0)
+    // Calculate fee and tax details for reporting using exact same logic as internal payments create
+    const feePercentage = totalFeePct; // Use calculated fee percentage
     const feeBaseAmount = Number(paymentLinkData.subtotal_with_tax || paymentLinkData.amount || 0)
     const feeAmount = feeBaseAmount * feePercentage
-    const chargeCustomerFee = paymentLinkData.charge_customer_fee
+    
+    // Customer total: if charge_customer_fee is true, customer pays extra to offset NOWPayments fee deduction
     const customerTotal = chargeCustomerFee ? feeBaseAmount + feeAmount : feeBaseAmount
-    const merchantReceives = chargeCustomerFee ? feeBaseAmount : feeBaseAmount - feeAmount
-    const cryptracFee = chargeCustomerFee ? 0 : feeAmount
+    
+    // Merchant receives: NOWPayments always deducts fee from payout, regardless of charge_customer_fee
+    // When charge_customer_fee is true, the extra customer payment offsets this deduction
+    const merchantReceives = feeBaseAmount - feeAmount
+    
+    // Cryptrac fee represents the fee amount deducted from merchant payout
+    const cryptracFee = feeAmount
 
     const taxLabel = tax_enabled && Array.isArray(tax_rates) && tax_rates.length > 0
       ? tax_rates.map((r: { label: string }) => r.label).join(', ')
@@ -493,53 +510,73 @@ export async function POST(request: Request) {
       payment_data: {
         auto_forwarding_enabled: autoForwardingConfigured,
         payout_address: autoForwardingConfigured ? paymentRequest.payout_address : null,
-        payout_currency: autoForwardingConfigured ? paymentRequest.payout_currency : null
+        payout_currency: autoForwardingConfigured ? paymentRequest.payout_currency : null,
+        fee_breakdown: {
+          base_fee_percentage: baseFeePct * 100,
+          auto_convert_fee_percentage: autoConvertFeePct * 100,
+          total_fee_percentage: totalFeePct * 100,
+          fee_amount: feeAmount,
+          merchant_receives: merchantReceives,
+          effective_charge_customer_fee: chargeCustomerFee,
+          effective_auto_convert_enabled: autoConvertEnabled
+        }
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
 
-    console.log('💾 Saving transaction to database:', {
-      nowpayments_payment_id: transactionData.nowpayments_payment_id,
-      merchant_id: transactionData.merchant_id,
-      amount: transactionData.amount,
-      currency: transactionData.currency
-    })
+    console.log('💾 Saving transaction to database...')
 
     const { data: transaction, error: transactionError } = await supabase
-      .from('transactions')
+      .from('merchant_payments')
       .insert(transactionData)
       .select()
       .single()
 
     if (transactionError) {
-      console.error('❌ Error saving transaction:', transactionError)
-      // Don't fail the payment creation, just log the error
-      console.error('Transaction data that failed:', transactionData)
-    } else {
-      console.log('✅ Transaction saved to database:', transaction.id)
+      console.error('❌ Failed to save transaction:', transactionError)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to save transaction' 
+        },
+        { status: 500 }
+      )
     }
 
+    console.log('✅ Transaction saved successfully:', transaction.id)
+
+    // Update payment link usage count
+    const { error: updateError } = await supabase
+      .from('payment_links')
+      .update({ 
+        usage_count: paymentLinkData.usage_count + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', payment_link_id)
+
+    if (updateError) {
+      console.warn('⚠️ Failed to update payment link usage count:', updateError)
+    }
+
+    // Return success response
     return NextResponse.json({
       success: true,
-      payment: {
-        payment_id: paymentResponse.payment_id,
-        payment_status: paymentResponse.payment_status,
-        pay_address: paymentResponse.pay_address,
-        price_amount: paymentResponse.price_amount,
-        price_currency: paymentResponse.price_currency,
-        pay_amount: paymentResponse.pay_amount,
-        pay_currency: paymentResponse.pay_currency,
-        order_id: paymentResponse.order_id,
-        order_description: paymentResponse.order_description,
-        created_at: paymentResponse.created_at,
-        updated_at: paymentResponse.updated_at,
-        auto_forwarding_enabled: autoForwardingConfigured
+      payment: paymentResponse,
+      transaction_id: transaction.id,
+      fee_breakdown: {
+        base_fee_percentage: baseFeePct * 100,
+        auto_convert_fee_percentage: autoConvertFeePct * 100,
+        total_fee_percentage: totalFeePct * 100,
+        fee_amount: feeAmount,
+        customer_total: customerTotal,
+        merchant_receives: merchantReceives,
+        charge_customer_fee: chargeCustomerFee
       }
     })
 
-  } catch (error: unknown) {
-    return handleNOWPaymentsError(error, 'Payment creation error')
+  } catch (error) {
+    return handleNOWPaymentsError(error, 'Payment creation failed')
   }
 }
 

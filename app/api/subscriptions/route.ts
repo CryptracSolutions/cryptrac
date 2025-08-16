@@ -54,16 +54,26 @@ export async function POST(request: NextRequest) {
       auto_convert_enabled = null,
       preferred_payout_currency = null,
       tax_enabled = false,
-      tax_rates = []
+      tax_rates = [],
+      // Task 6: Add amount override support
+      amount_overrides = [],
+      // Task 3: Add timing configuration support
+      invoice_due_days = 0,
+      generate_days_in_advance = 0,
+      past_due_after_days = 2,
+      auto_resume_on_payment = true
     } = body;
+    
     if (!title || !amount || !interval || !anchor || !customer) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    
     const merchantWallets = merchant.wallets || {};
     const missingWallets = (accepted_cryptos || []).filter((c: string) => !merchantWallets[c]);
     if (missingWallets.length > 0) {
       return NextResponse.json({ error: `Missing wallet addresses for: ${missingWallets.join(', ')}` }, { status: 400 });
     }
+    
     let customerId: string | null = null;
     if (customer.email || customer.phone) {
       const { data: existing } = await service
@@ -85,6 +95,7 @@ export async function POST(request: NextRequest) {
         customerId = inserted?.id || null;
       }
     }
+    
     const anchorDate = new Date(anchor).toISOString();
     const { data: subscription, error: subError } = await service
       .from('subscriptions')
@@ -105,13 +116,59 @@ export async function POST(request: NextRequest) {
         auto_convert_enabled,
         preferred_payout_currency,
         tax_enabled,
-        tax_rates
+        tax_rates,
+        // Task 3: Include timing configuration
+        invoice_due_days,
+        generate_days_in_advance,
+        past_due_after_days,
+        auto_resume_on_payment
       })
       .select('*')
       .single();
+      
     if (subError) {
       return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 });
     }
+    
+    // Task 6: Insert amount overrides if provided
+    if (amount_overrides && amount_overrides.length > 0) {
+      const overridesToInsert = amount_overrides.map((override: any) => ({
+        subscription_id: subscription.id,
+        merchant_id: merchant.id,
+        effective_from: override.effective_from,
+        amount: override.amount,
+        note: override.note || null
+      }));
+      
+      const { error: overrideError } = await service
+        .from('subscription_amount_overrides')
+        .insert(overridesToInsert);
+        
+      if (overrideError) {
+        console.warn('Failed to insert amount overrides:', overrideError);
+        // Don't fail the entire request, just log the warning
+      }
+    }
+    
+    // Send welcome email if customer email is provided
+    if (customer.email) {
+      try {
+        const appOrigin = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN;
+        await fetch(`${appOrigin}/api/supabase/functions/subscriptions-send-notifications`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'welcome',
+            subscription_id: subscription.id,
+            customer_email: customer.email
+          })
+        });
+      } catch (error) {
+        console.error('Failed to send welcome email:', error);
+        // Don't fail subscription creation if email fails
+      }
+    }
+    
     return NextResponse.json({ success: true, data: subscription });
   } catch (error) {
     console.error('create subscription error', error);
