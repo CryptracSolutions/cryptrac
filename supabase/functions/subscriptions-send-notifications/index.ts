@@ -292,8 +292,8 @@ async function sendEmail(
       }],
       from: { email: fromEmail },
       content: [
-        { type: 'text/html', value: template.html },
-        { type: 'text/plain', value: template.text }
+        { type: 'text/plain', value: template.text },
+        { type: 'text/html', value: template.html }
       ],
       categories: ['subscription', emailType],
       tracking_settings: {
