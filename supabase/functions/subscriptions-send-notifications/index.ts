@@ -333,7 +333,14 @@ async function sendEmail(
     }
 
     // Log email
-    await supabase.from('email_logs').insert({
+    console.log('📝 Attempting to log email to database:', {
+      email: toEmail,
+      type: emailType,
+      status: success ? 'sent' : 'failed',
+      merchant_id: merchantId
+    });
+
+    const { data: logResult, error: logError } = await supabase.from('email_logs').insert({
       email: toEmail,
       type: emailType,
       status: success ? 'sent' : 'failed',
@@ -344,6 +351,12 @@ async function sendEmail(
         subject: template.subject
       }
     });
+
+    if (logError) {
+      console.error('❌ Failed to log email to database:', logError);
+    } else {
+      console.log('✅ Email logged to database successfully:', logResult);
+    }
 
     if (success) {
       console.log(`✅ ${emailType} email sent successfully to:`, toEmail);
@@ -356,7 +369,9 @@ async function sendEmail(
     console.error(`❌ Error sending ${emailType} email:`, error);
     
     // Log failed email
-    await supabase.from('email_logs').insert({
+    console.log('📝 Attempting to log failed email to database');
+    
+    const { data: logResult, error: logError } = await supabase.from('email_logs').insert({
       email: toEmail,
       type: emailType,
       status: 'failed',
@@ -366,6 +381,12 @@ async function sendEmail(
         template_type: emailType
       }
     });
+
+    if (logError) {
+      console.error('❌ Failed to log failed email to database:', logError);
+    } else {
+      console.log('✅ Failed email logged to database successfully:', logResult);
+    }
 
     return false;
   }

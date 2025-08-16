@@ -293,6 +293,33 @@ $$;
 ALTER FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_next_invoice_number"("merchant_uuid" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+    next_number INTEGER;
+    invoice_number TEXT;
+BEGIN
+    -- Insert or update the counter atomically
+    INSERT INTO invoice_counters (merchant_id, last_value)
+    VALUES (merchant_uuid, 1)
+    ON CONFLICT (merchant_id)
+    DO UPDATE SET 
+        last_value = invoice_counters.last_value + 1,
+        updated_at = NOW()
+    RETURNING last_value INTO next_number;
+    
+    -- Format as INV-YYYY-NNNNNN
+    invoice_number := 'INV-' || EXTRACT(YEAR FROM NOW()) || '-' || LPAD(next_number::TEXT, 6, '0');
+    
+    RETURN invoice_number;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_next_invoice_number"("merchant_uuid" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") RETURNS TABLE("total_links" integer, "active_links" integer, "completed_links" integer, "expired_links" integer, "paused_links" integer, "single_use_links" integer, "total_payments" integer, "total_revenue" numeric)
     LANGUAGE "plpgsql"
     AS $$
@@ -2605,6 +2632,12 @@ GRANT ALL ON FUNCTION "public"."get_current_merchant_id"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_merchant_supported_currencies"("merchant_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_next_invoice_number"("merchant_uuid" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_next_invoice_number"("merchant_uuid" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_next_invoice_number"("merchant_uuid" "uuid") TO "service_role";
 
 
 
