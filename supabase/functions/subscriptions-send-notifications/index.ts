@@ -285,39 +285,58 @@ async function sendEmail(
   emailType: string
 ) {
   try {
+    const emailPayload = {
+      personalizations: [{ 
+        to: [{ email: toEmail }], 
+        subject: template.subject 
+      }],
+      from: { email: fromEmail },
+      content: [
+        { type: 'text/html', value: template.html },
+        { type: 'text/plain', value: template.text }
+      ],
+      categories: ['subscription', emailType],
+      tracking_settings: {
+        click_tracking: { enable: true },
+        open_tracking: { enable: true }
+      }
+    };
+
+    console.log('📤 SendGrid payload:', JSON.stringify(emailPayload, null, 2));
+
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${sendgridKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        personalizations: [{ 
-          to: [{ email: toEmail }], 
-          subject: template.subject 
-        }],
-        from: { email: fromEmail },
-        content: [
-          { type: 'text/html', value: template.html },
-          { type: 'text/plain', value: template.text }
-        ],
-        categories: ['subscription', emailType],
-        tracking_settings: {
-          click_tracking: { enable: true },
-          open_tracking: { enable: true }
-        }
-      })
+      body: JSON.stringify(emailPayload)
+    });
+
+    console.log('📬 SendGrid response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
     });
 
     const success = response.ok;
-    const status = success ? 'sent' : 'failed';
-    const errorMessage = success ? null : `SendGrid error: ${response.status}`;
+    let errorMessage: string | null = null;
+
+    if (!success) {
+      try {
+        const errorBody = await response.text();
+        console.error('📧 SendGrid error details:', errorBody);
+        errorMessage = `SendGrid error: ${response.status} - ${errorBody}`;
+      } catch (e) {
+        errorMessage = `SendGrid error: ${response.status}`;
+      }
+    }
 
     // Log email
     await supabase.from('email_logs').insert({
       email: toEmail,
       type: emailType,
-      status,
+      status: success ? 'sent' : 'failed',
       error_message: errorMessage,
       metadata: {
         merchant_id: merchantId,
