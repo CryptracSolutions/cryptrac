@@ -153,16 +153,23 @@ export async function POST(request: NextRequest) {
     // Send welcome email if customer email is provided
     if (customer.email) {
       try {
-        const appOrigin = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN;
-        await fetch(`${appOrigin}/api/supabase/functions/subscriptions-send-notifications`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'welcome',
-            subscription_id: subscription.id,
-            customer_email: customer.email
-          })
-        });
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        
+        if (supabaseUrl && supabaseServiceKey) {
+          await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`
+            },
+            body: JSON.stringify({
+              type: 'welcome',
+              subscription_id: subscription.id,
+              customer_email: customer.email
+            })
+          });
+        }
       } catch (error) {
         console.error('Failed to send welcome email:', error);
         // Don't fail subscription creation if email fails

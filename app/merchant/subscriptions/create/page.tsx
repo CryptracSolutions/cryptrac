@@ -1,24 +1,54 @@
-'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { makeAuthenticatedRequest } from '@/lib/supabase-browser';
+import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Separator } from '@/app/components/ui/separator';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
+import { ChevronDown, Info, ArrowLeft, AlertCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+interface TaxRate {
+  id: string;
+  label: string;
+  percentage: string;
+}
+
+interface MerchantSettings {
+  wallets: Record<string, string>;
+  auto_convert_enabled: boolean;
+  charge_customer_fee: boolean;
+  preferred_payout_currency: string;
+  tax_enabled: boolean;
+  tax_rates: TaxRate[];
+  tax_strategy: string;
+}
+
+const FIAT_CURRENCIES = [
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+];
 
 export default function CreateSubscriptionPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
+  const [availableCryptos, setAvailableCryptos] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const [form, setForm] = useState({
     title: '',
     description: '',
     amount: '',
     currency: 'USD',
-    accepted_cryptos: '',
+    accepted_cryptos: [] as string[],
     interval: 'month',
     interval_count: 1,
     max_cycles: '',
@@ -27,11 +57,10 @@ export default function CreateSubscriptionPage() {
     customer_phone: '',
     customer_name: '',
     tax_enabled: false,
-    tax_label: '',
-    tax_percentage: '',
+    tax_rates: [] as TaxRate[],
     pause_after_missed_payments: 3,
-    charge_customer_fee: false,
-    auto_convert_enabled: false,
+    charge_customer_fee: null as boolean | null, // null = inherit from merchant settings
+    auto_convert_enabled: null as boolean | null, // null = inherit from merchant settings
     preferred_payout_currency: 'USD',
     // Timing configuration fields
     invoice_due_days: 0,
@@ -41,9 +70,125 @@ export default function CreateSubscriptionPage() {
     showAdvanced: false,
   });
 
+  useEffect(() => {
+    loadMerchantSettings();
+  }, []);
+
+  const loadMerchantSettings = async () => {
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        router.push('/login');
+        return;
+      }
+
+      // Load merchant settings
+      const { data: merchant, error: merchantError } = await supabase
+        .from('merchants')
+        .select('wallets, auto_convert_enabled, charge_customer_fee, preferred_payout_currency, tax_enabled, tax_rates, tax_strategy')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (merchantError) {
+        console.error('Error loading merchant settings:', merchantError);
+        toast.error('Failed to load merchant settings');
+        return;
+      }
+
+      const wallets = { ...(merchant.wallets || {}) };
+      if (wallets.ETH && !wallets.ETHBASE) {
+        wallets.ETHBASE = wallets.ETH;
+
+        // Persist the ETHBASE wallet for future requests
+        await supabase
+          .from('merchants')
+          .update({ wallets, updated_at: new Date().toISOString() })
+          .eq('user_id', session.user.id);
+      }
+
+      const updatedMerchant = { ...merchant, wallets };
+      setMerchantSettings(updatedMerchant);
+      const cryptos = Object.keys(wallets);
+      setAvailableCryptos(cryptos);
+
+      // Set default form values based on merchant settings
+      setForm(prev => ({
+        ...prev,
+        accepted_cryptos: cryptos, // Select all available cryptos by default
+        charge_customer_fee: null, // null = inherit from merchant settings
+        auto_convert_enabled: null, // null = inherit from merchant settings
+        preferred_payout_currency: merchant.preferred_payout_currency || 'USD',
+        tax_enabled: merchant.tax_enabled || false,
+        tax_rates: merchant.tax_rates || []
+      }));
+
+    } catch (error) {
+      console.error('Error loading merchant settings:', error);
+      toast.error('Failed to load merchant settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
     setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleCryptoChange = (crypto: string, checked: boolean) => {
+    setForm(prev => ({
+      ...prev,
+      accepted_cryptos: checked 
+        ? [...prev.accepted_cryptos, crypto]
+        : prev.accepted_cryptos.filter(c => c !== crypto)
+    }));
+  };
+
+  const formatInterval = () => {
+    const count = form.interval_count;
+    const interval = form.interval;
+    if (count === 1) {
+      return interval === 'day' ? 'day' : interval === 'week' ? 'week' : interval === 'month' ? 'month' : 'year';
+    }
+    return `${count} ${interval}s`;
+  };
+
+  const calculateFeePercentage = () => {
+    const chargeCustomerFee = form.charge_customer_fee ?? merchantSettings?.charge_customer_fee ?? false;
+    const autoConvertEnabled = form.auto_convert_enabled ?? merchantSettings?.auto_convert_enabled ?? false;
+    
+    if (!chargeCustomerFee) return 0;
+    
+    // Base fee: 0.5%
+    let fee = 0.5;
+    
+    // Auto-convert adds additional 0.5% (only for crypto-to-crypto)
+    if (autoConvertEnabled) {
+      fee += 0.5;
+    }
+    
+    return fee;
+  };
+
+  const calculatePreviewTotal = () => {
+    const amount = parseFloat(form.amount) || 0;
+    const feePercentage = calculateFeePercentage();
+    const feeAmount = amount * (feePercentage / 100);
+    
+    // Calculate tax
+    let taxAmount = 0;
+    if (form.tax_enabled && form.tax_rates.length > 0) {
+      const totalTaxPercentage = form.tax_rates.reduce((sum, rate) => sum + parseFloat(rate.percentage || '0'), 0);
+      taxAmount = amount * (totalTaxPercentage / 100);
+    }
+    
+    return {
+      subtotal: amount,
+      fee: feeAmount,
+      tax: taxAmount,
+      total: amount + feeAmount + taxAmount
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +201,7 @@ export default function CreateSubscriptionPage() {
         description: form.description,
         amount: parseFloat(form.amount),
         currency: form.currency,
-        accepted_cryptos: form.accepted_cryptos.split(',').map(s => s.trim()).filter(Boolean),
+        accepted_cryptos: form.accepted_cryptos,
         interval: form.interval,
         interval_count: Number(form.interval_count),
         max_cycles: form.max_cycles ? Number(form.max_cycles) : null,
@@ -71,10 +216,7 @@ export default function CreateSubscriptionPage() {
         auto_convert_enabled: form.auto_convert_enabled,
         preferred_payout_currency: form.preferred_payout_currency,
         tax_enabled: form.tax_enabled,
-        tax_rates: form.tax_enabled && form.tax_label ? [{ 
-          label: form.tax_label, 
-          percentage: parseFloat(form.tax_percentage) 
-        }] : [],
+        tax_rates: form.tax_rates,
         // Timing configuration
         invoice_due_days: Number(form.invoice_due_days),
         generate_days_in_advance: Number(form.generate_days_in_advance),
@@ -88,53 +230,66 @@ export default function CreateSubscriptionPage() {
       });
       
       if (res.ok) {
-        router.push('/merchant/subscriptions');
+        const result = await res.json();
+        // Fix: Redirect to subscription detail page instead of list
+        router.push(`/merchant/subscriptions/${result.data.id}`);
       } else {
         const error = await res.text();
         console.error('Failed to create subscription:', error);
-        alert('Failed to create subscription. Please check the form and try again.');
+        toast.error('Failed to create subscription. Please check the form and try again.');
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
-      alert('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const formatInterval = () => {
-    const count = form.interval_count;
-    const interval = form.interval;
-    if (count === 1) {
-      return interval;
-    }
-    return `${count} ${interval}s`;
-  };
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading merchant settings...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const calculateTotal = () => {
-    const amount = parseFloat(form.amount) || 0;
-    const taxAmount = form.tax_enabled && form.tax_percentage ? 
-      amount * (parseFloat(form.tax_percentage) / 100) : 0;
-    return amount + taxAmount;
-  };
+  const preview = calculatePreviewTotal();
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Create New Subscription</h1>
-        <p className="text-gray-600">Set up a recurring payment subscription for your customer</p>
+    <div className="container mx-auto p-6 max-w-7xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => router.push('/merchant/subscriptions')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Subscriptions
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Create Subscription</h1>
+          <p className="text-gray-600 mt-1">Set up a recurring payment subscription</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
                 <CardDescription>
-                  Define the subscription details and billing cycle
+                  Core details about your subscription
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -142,7 +297,7 @@ export default function CreateSubscriptionPage() {
                   <label className="block text-sm font-medium mb-1">Subscription Title *</label>
                   <Input 
                     name="title" 
-                    placeholder="e.g., Premium Monthly Plan" 
+                    placeholder="Monthly Premium Plan" 
                     value={form.title} 
                     onChange={handleChange} 
                     required 
@@ -153,7 +308,7 @@ export default function CreateSubscriptionPage() {
                   <label className="block text-sm font-medium mb-1">Description</label>
                   <Input 
                     name="description" 
-                    placeholder="Brief description of the subscription" 
+                    placeholder="Access to premium features and support" 
                     value={form.description} 
                     onChange={handleChange} 
                   />
@@ -162,42 +317,47 @@ export default function CreateSubscriptionPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Amount *</label>
-                    <Input 
-                      name="amount" 
-                      type="number" 
-                      step="0.01" 
-                      placeholder="0.00" 
-                      value={form.amount} 
-                      onChange={handleChange} 
-                      required 
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                      <Input 
+                        name="amount" 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="29.99" 
+                        value={form.amount} 
+                        onChange={handleChange} 
+                        className="pl-8"
+                        required 
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Currency</label>
                     <select 
                       name="currency" 
                       value={form.currency} 
-                      onChange={handleChange} 
+                      onChange={handleChange}
                       className="w-full border border-gray-300 rounded-md px-3 py-2"
                     >
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="GBP">GBP</option>
-                      <option value="CAD">CAD</option>
+                      {FIAT_CURRENCIES.map(curr => (
+                        <option key={curr.code} value={curr.code}>
+                          {curr.code} - {curr.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Billing Frequency</label>
+                  <label className="block text-sm font-medium mb-1">Billing Frequency *</label>
                   <div className="flex gap-2">
                     <Input 
                       name="interval_count" 
                       type="number" 
-                      min="1"
+                      min="1" 
                       value={form.interval_count} 
                       onChange={handleChange} 
-                      className="w-20" 
+                      className="w-20"
                     />
                     <select 
                       name="interval" 
@@ -265,6 +425,9 @@ export default function CreateSubscriptionPage() {
                     value={form.customer_email} 
                     onChange={handleChange} 
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Required for email notifications (invoices, receipts, etc.)
+                  </p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -300,52 +463,60 @@ export default function CreateSubscriptionPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Accepted Cryptocurrencies</label>
-                  <Input 
-                    name="accepted_cryptos" 
-                    placeholder="BTC, ETH, USDT (comma separated)" 
-                    value={form.accepted_cryptos} 
-                    onChange={handleChange} 
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Leave empty to accept all supported cryptocurrencies
+                  <label className="block text-sm font-medium mb-2">Accepted Cryptocurrencies</label>
+                  {availableCryptos.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {availableCryptos.map(crypto => (
+                        <label key={crypto} className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={form.accepted_cryptos.includes(crypto)}
+                            onCheckedChange={(checked) => handleCryptoChange(crypto, checked as boolean)}
+                          />
+                          <span className="text-sm">{crypto}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No cryptocurrency wallets configured. Please set up wallet addresses in your merchant settings.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="charge_customer_fee"
+                      checked={form.charge_customer_fee ?? merchantSettings?.charge_customer_fee ?? false}
+                      onCheckedChange={(checked) => setForm(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
+                    />
+                    <label htmlFor="charge_customer_fee" className="text-sm font-medium">
+                      Charge customer gateway fee ({calculateFeePercentage()}%)
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 ml-6">
+                    When enabled, the gateway fee is added to the customer's total. When disabled, you absorb the fee.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="charge_customer_fee" 
-                      checked={form.charge_customer_fee} 
-                      onCheckedChange={v => setForm(prev => ({ ...prev, charge_customer_fee: !!v }))} 
-                    />
-                    <label htmlFor="charge_customer_fee" className="text-sm">Charge customer processing fee</label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="auto_convert_enabled" 
-                      checked={form.auto_convert_enabled} 
-                      onCheckedChange={v => setForm(prev => ({ ...prev, auto_convert_enabled: !!v }))} 
-                    />
-                    <label htmlFor="auto_convert_enabled" className="text-sm">Enable auto-convert</label>
-                  </div>
-                </div>
-
-                {form.auto_convert_enabled && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Preferred Payout Currency</label>
-                    <select 
-                      name="preferred_payout_currency" 
-                      value={form.preferred_payout_currency} 
-                      onChange={handleChange} 
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="GBP">GBP</option>
-                      <option value="CAD">CAD</option>
-                    </select>
+                {merchantSettings?.preferred_payout_currency && merchantSettings.preferred_payout_currency !== 'USD' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="auto_convert_enabled"
+                        checked={form.auto_convert_enabled ?? merchantSettings?.auto_convert_enabled ?? false}
+                        onCheckedChange={(checked) => setForm(prev => ({ ...prev, auto_convert_enabled: checked as boolean }))}
+                      />
+                      <label htmlFor="auto_convert_enabled" className="text-sm font-medium">
+                        Auto-convert to {merchantSettings.preferred_payout_currency}
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 ml-6">
+                      Automatically convert received cryptocurrency to {merchantSettings.preferred_payout_currency}. Adds 0.5% fee.
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -356,148 +527,182 @@ export default function CreateSubscriptionPage() {
               <CardHeader>
                 <CardTitle>Tax Configuration</CardTitle>
                 <CardDescription>
-                  Set up tax rates for this subscription
+                  Configure tax collection for this subscription
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="tax_enabled" 
-                    checked={form.tax_enabled} 
-                    onCheckedChange={v => setForm(prev => ({ ...prev, tax_enabled: !!v }))} 
+                  <Checkbox
+                    id="tax_enabled"
+                    checked={form.tax_enabled}
+                    onCheckedChange={(checked) => setForm(prev => ({ ...prev, tax_enabled: checked as boolean }))}
                   />
-                  <label htmlFor="tax_enabled" className="text-sm font-medium">Enable tax calculation</label>
+                  <label htmlFor="tax_enabled" className="text-sm font-medium">
+                    Enable tax collection
+                  </label>
                 </div>
-                
+
                 {form.tax_enabled && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Tax Label</label>
-                      <Input 
-                        name="tax_label" 
-                        placeholder="e.g., Sales Tax, VAT" 
-                        value={form.tax_label} 
-                        onChange={handleChange} 
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Tax Percentage</label>
-                      <Input 
-                        name="tax_percentage" 
-                        type="number" 
-                        step="0.01" 
-                        placeholder="8.25" 
-                        value={form.tax_percentage} 
-                        onChange={handleChange} 
-                      />
-                    </div>
+                  <div className="space-y-3 ml-6">
+                    {form.tax_rates.map((rate, index) => (
+                      <div key={rate.id} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="Tax label (e.g., Sales Tax)"
+                          value={rate.label}
+                          onChange={(e) => {
+                            const newRates = [...form.tax_rates];
+                            newRates[index].label = e.target.value;
+                            setForm(prev => ({ ...prev, tax_rates: newRates }));
+                          }}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="8.25"
+                          value={rate.percentage}
+                          onChange={(e) => {
+                            const newRates = [...form.tax_rates];
+                            newRates[index].percentage = e.target.value;
+                            setForm(prev => ({ ...prev, tax_rates: newRates }));
+                          }}
+                          className="w-24"
+                        />
+                        <span className="text-sm text-gray-500">%</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newRates = form.tax_rates.filter((_, i) => i !== index);
+                            setForm(prev => ({ ...prev, tax_rates: newRates }));
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newRate = { id: Date.now().toString(), label: '', percentage: '' };
+                        setForm(prev => ({ ...prev, tax_rates: [...prev.tax_rates, newRate] }));
+                      }}
+                    >
+                      Add Tax Rate
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Advanced Settings */}
+            {/* Advanced Timing Settings */}
             <Card>
               <CardHeader>
-                <CardTitle>Advanced Settings</CardTitle>
-                <CardDescription>
-                  Configure dunning, timing, and automation settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Pause after missed payments</label>
-                  <Input 
-                    name="pause_after_missed_payments" 
-                    type="number" 
-                    min="0"
-                    placeholder="3" 
-                    value={form.pause_after_missed_payments} 
-                    onChange={handleChange} 
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Subscription will be paused after this many consecutive missed payments (0 = never pause)
-                  </p>
-                </div>
-
-                <div className="border-t pt-4">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Checkbox 
-                      id="showAdvanced" 
-                      checked={form.showAdvanced} 
-                      onCheckedChange={v => setForm(prev => ({ ...prev, showAdvanced: !!v }))} 
-                    />
-                    <label htmlFor="showAdvanced" className="text-sm font-medium">Show Timing Configuration</label>
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <CardTitle>Advanced Timing Settings</CardTitle>
+                    <CardDescription>
+                      Configure invoice generation and dunning behavior
+                    </CardDescription>
                   </div>
-                  
-                  {form.showAdvanced && (
-                    <div className="space-y-4 pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Generate invoice days in advance</label>
-                        <Input 
-                          name="generate_days_in_advance" 
-                          type="number" 
-                          min="0" 
-                          placeholder="0" 
-                          value={form.generate_days_in_advance} 
-                          onChange={handleChange} 
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Generate invoices X days before the billing date</p>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Invoice due days after generation</label>
-                        <Input 
-                          name="invoice_due_days" 
-                          type="number" 
-                          min="0" 
-                          placeholder="0" 
-                          value={form.invoice_due_days} 
-                          onChange={handleChange} 
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Invoice is due X days after generation (0 = due immediately)</p>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Grace period before past-due</label>
-                        <Input 
-                          name="past_due_after_days" 
-                          type="number" 
-                          min="0" 
-                          placeholder="2" 
-                          value={form.past_due_after_days} 
-                          onChange={handleChange} 
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Mark invoice as past-due X days after due date</p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="auto_resume_on_payment" 
-                          checked={form.auto_resume_on_payment} 
-                          onCheckedChange={v => setForm(prev => ({ ...prev, auto_resume_on_payment: !!v }))} 
-                        />
-                        <label htmlFor="auto_resume_on_payment" className="text-sm">Auto-resume paused subscriptions on payment</label>
-                      </div>
-                    </div>
-                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setForm(prev => ({ ...prev, showAdvanced: !prev.showAdvanced }))}
+                    className="flex items-center gap-2"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${form.showAdvanced ? 'rotate-180' : ''}`} />
+                    {form.showAdvanced ? 'Hide' : 'Show'}
+                  </Button>
                 </div>
-              </CardContent>
+              </CardHeader>
+              {form.showAdvanced && (
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Invoice Due Days</label>
+                      <Input 
+                        name="invoice_due_days" 
+                        type="number" 
+                        min="0"
+                        value={form.invoice_due_days} 
+                        onChange={handleChange} 
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Days after cycle start when invoice is due (0 = due immediately)
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Generate Days in Advance</label>
+                      <Input 
+                        name="generate_days_in_advance" 
+                        type="number" 
+                        min="0"
+                        value={form.generate_days_in_advance} 
+                        onChange={handleChange} 
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Generate invoices this many days before due date
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Past Due After Days</label>
+                      <Input 
+                        name="past_due_after_days" 
+                        type="number" 
+                        min="1"
+                        value={form.past_due_after_days} 
+                        onChange={handleChange} 
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Mark invoices past due after this many days
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Pause After Missed Payments</label>
+                      <Input 
+                        name="pause_after_missed_payments" 
+                        type="number" 
+                        min="0"
+                        value={form.pause_after_missed_payments} 
+                        onChange={handleChange} 
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Pause subscription after this many missed payments (0 = never pause)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="auto_resume_on_payment"
+                      checked={form.auto_resume_on_payment}
+                      onCheckedChange={(checked: boolean) => setForm(prev => ({ ...prev, auto_resume_on_payment: checked }))}
+                    />
+                    <label htmlFor="auto_resume_on_payment" className="text-sm font-medium">
+                      Auto-resume subscription on payment
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 ml-6">
+                    Automatically reactivate paused subscriptions when payment is received
+                  </p>
+                </CardContent>
+              )}
             </Card>
 
-            <div className="flex gap-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => router.back()}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
+            {/* Submit Button */}
+            <div className="flex justify-end">
               <Button 
                 type="submit" 
-                disabled={isSubmitting}
-                className="flex-1"
+                disabled={isSubmitting || !form.title || !form.amount || !form.anchor || form.accepted_cryptos.length === 0}
+                className="px-8"
               >
                 {isSubmitting ? 'Creating...' : 'Create Subscription'}
               </Button>
@@ -511,14 +716,14 @@ export default function CreateSubscriptionPage() {
             <CardHeader>
               <CardTitle>Subscription Preview</CardTitle>
               <CardDescription>
-                Review your subscription settings
+                How this subscription will appear
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-medium">{form.title || 'Untitled Subscription'}</h3>
+                <h3 className="font-semibold text-lg">{form.title || 'Subscription Title'}</h3>
                 {form.description && (
-                  <p className="text-sm text-gray-600 mt-1">{form.description}</p>
+                  <p className="text-gray-600 text-sm mt-1">{form.description}</p>
                 )}
               </div>
 
@@ -526,29 +731,29 @@ export default function CreateSubscriptionPage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">Amount:</span>
-                  <span className="font-medium">
-                    {form.amount ? `${form.amount} ${form.currency}` : '—'}
-                  </span>
+                  <span>Amount:</span>
+                  <span className="font-medium">${preview.subtotal.toFixed(2)}</span>
                 </div>
                 
-                {form.tax_enabled && form.tax_percentage && (
-                  <div className="flex justify-between text-sm">
-                    <span>{form.tax_label || 'Tax'}:</span>
-                    <span>
-                      {form.amount ? 
-                        `${(parseFloat(form.amount) * parseFloat(form.tax_percentage) / 100).toFixed(2)} ${form.currency}` : 
-                        '—'
-                      }
-                    </span>
+                {preview.fee > 0 && (
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Gateway Fee ({calculateFeePercentage()}%):</span>
+                    <span>+${preview.fee.toFixed(2)}</span>
                   </div>
                 )}
                 
-                <div className="flex justify-between font-medium border-t pt-2">
-                  <span>Total:</span>
-                  <span>
-                    {form.amount ? `${calculateTotal().toFixed(2)} ${form.currency}` : '—'}
-                  </span>
+                {preview.tax > 0 && (
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Tax:</span>
+                    <span>+${preview.tax.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                <Separator />
+                
+                <div className="flex justify-between font-semibold">
+                  <span>Total per {formatInterval()}:</span>
+                  <span>${preview.total.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -562,36 +767,40 @@ export default function CreateSubscriptionPage() {
                 
                 {form.max_cycles && (
                   <div className="flex justify-between">
-                    <span>Max Cycles:</span>
-                    <Badge variant="outline">{form.max_cycles}</Badge>
+                    <span>Duration:</span>
+                    <span>{form.max_cycles} cycles</span>
                   </div>
                 )}
                 
-                {form.charge_customer_fee && (
-                  <div className="flex justify-between">
-                    <span>Processing Fee:</span>
-                    <Badge variant="secondary">Customer pays</Badge>
-                  </div>
-                )}
-                
-                {form.auto_convert_enabled && (
-                  <div className="flex justify-between">
-                    <span>Auto-convert:</span>
-                    <Badge variant="secondary">{form.preferred_payout_currency}</Badge>
+                {form.accepted_cryptos.length > 0 && (
+                  <div>
+                    <span className="block mb-1">Accepted Cryptos:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {form.accepted_cryptos.map(crypto => (
+                        <Badge key={crypto} variant="outline" className="text-xs">
+                          {crypto}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {form.customer_email && (
+              {form.anchor && (
                 <>
                   <Separator />
-                  <div>
-                    <h4 className="font-medium text-sm mb-2">Customer</h4>
-                    <div className="text-sm space-y-1">
-                      {form.customer_name && <div>{form.customer_name}</div>}
-                      <div className="text-gray-600">{form.customer_email}</div>
-                      {form.customer_phone && <div className="text-gray-600">{form.customer_phone}</div>}
-                    </div>
+                  <div className="text-sm">
+                    <span className="block mb-1">First billing:</span>
+                    <span className="text-gray-600">
+                      {new Date(form.anchor).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
                   </div>
                 </>
               )}
