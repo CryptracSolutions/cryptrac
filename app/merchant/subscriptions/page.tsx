@@ -23,6 +23,11 @@ interface Subscription {
   email?: string;
   phone?: string;
   name?: string;
+  missed_payments_count?: number;
+  tax_enabled?: boolean;
+  tax_rates?: Array<{ name: string; rate: number }>;
+  charge_customer_fee?: boolean;
+  auto_convert_enabled?: boolean;
 }
 
 export default function MerchantSubscriptionsPage() {
@@ -249,6 +254,21 @@ export default function MerchantSubscriptionsPage() {
                       <Badge variant={getStatusVariant(s.status)}>
                         {getStatusIcon(s.status)} {s.status}
                       </Badge>
+                      {(s.missed_payments_count ?? 0) > 0 && (
+                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                          {s.missed_payments_count} missed
+                        </span>
+                      )}
+                      {s.max_cycles && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          {s.max_cycles} cycles max
+                        </span>
+                      )}
+                      {s.charge_customer_fee && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          Fee: {s.auto_convert_enabled ? '1.0%' : '0.5%'}
+                        </span>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
@@ -267,6 +287,11 @@ export default function MerchantSubscriptionsPage() {
                         <div className="font-medium text-lg">
                           {s.amount} {s.currency}
                         </div>
+                        {s.tax_enabled && s.tax_rates && s.tax_rates.length > 0 && (
+                          <div className="text-xs text-gray-500">
+                            +{s.tax_rates.reduce((sum: number, rate: any) => sum + rate.rate, 0)}% tax
+                          </div>
+                        )}
                       </div>
                       
                       <div>
@@ -275,8 +300,8 @@ export default function MerchantSubscriptionsPage() {
                           Every {formatInterval(s.interval_count, s.interval)}
                         </div>
                         {s.max_cycles && (
-                          <div className="text-gray-500">
-                            Max: {s.max_cycles} cycles
+                          <div className="text-xs text-gray-500">
+                            Limit: {s.max_cycles} cycles
                           </div>
                         )}
                       </div>
