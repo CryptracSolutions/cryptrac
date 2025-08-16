@@ -358,6 +358,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 Subscription notification function called');
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -366,10 +368,21 @@ serve(async (req) => {
     const sendgridKey = Deno.env.get('SENDGRID_API_KEY');
     const fromEmail = Deno.env.get('CRYPTRAC_NOTIFICATIONS_FROM');
 
+    console.log('📧 Environment check:', {
+      hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
+      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      hasSendgridKey: !!sendgridKey,
+      hasFromEmail: !!fromEmail,
+      fromEmail: fromEmail
+    });
+
     if (!sendgridKey || !fromEmail) {
       console.warn('⚠️ Email service not configured - notifications will be skipped');
       return new Response('Email service not configured', { status: 200 });
     }
+
+    const requestBody = await req.json();
+    console.log('📥 Request payload:', requestBody);
 
     const { 
       type, 
@@ -377,14 +390,17 @@ serve(async (req) => {
       customer_email, 
       payment_url,
       invoice_data 
-    } = await req.json();
+    } = requestBody;
 
     if (!type || !subscription_id || !customer_email) {
+      console.error('❌ Missing required fields:', { type, subscription_id, customer_email });
       return new Response('Missing required fields', { status: 400 });
     }
 
+    console.log('🔍 Fetching subscription details for ID:', subscription_id);
+
     // Get subscription details
-    const { data: subscription } = await supabase
+    const { data: subscription, error: subscriptionError } = await supabase
       .from('subscriptions')
       .select(`
         id, title, amount, currency, max_cycles, next_billing_at, merchant_id,
@@ -394,15 +410,30 @@ serve(async (req) => {
       .eq('id', subscription_id)
       .single();
 
+    if (subscriptionError) {
+      console.error('❌ Error fetching subscription:', subscriptionError);
+      return new Response('Error fetching subscription', { status: 500 });
+    }
+
     if (!subscription) {
+      console.error('❌ Subscription not found for ID:', subscription_id);
       return new Response('Subscription not found', { status: 404 });
     }
+
+    console.log('✅ Subscription found:', {
+      id: subscription.id,
+      title: subscription.title,
+      merchantName: subscription.merchants.business_name,
+      customerName: subscription.customers.name
+    });
 
     const merchantName = subscription.merchants.business_name || 'Cryptrac';
     const customerName = subscription.customers.name;
 
     let template: EmailTemplate;
     let emailType: string;
+
+    console.log('📝 Generating email template for type:', type);
 
     switch (type) {
       case 'welcome':
@@ -443,8 +474,18 @@ serve(async (req) => {
         break;
 
       default:
+        console.error('❌ Invalid email type:', type);
         return new Response('Invalid email type', { status: 400 });
     }
+
+    console.log('📧 Email template generated:', {
+      type: emailType,
+      subject: template.subject,
+      toEmail: customer_email,
+      fromEmail: fromEmail
+    });
+
+    console.log('🚀 Calling sendEmail function...');
 
     const success = await sendEmail(
       supabase,
@@ -456,6 +497,8 @@ serve(async (req) => {
       emailType
     );
 
+    console.log('📬 Email sending result:', { success, emailType });
+
     return new Response(JSON.stringify({ 
       success, 
       type: emailType,
@@ -465,7 +508,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Subscription notification error:', error);
+    console.error('❌ Subscription notification error:', error);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
