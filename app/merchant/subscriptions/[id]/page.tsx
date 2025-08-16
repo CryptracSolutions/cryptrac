@@ -502,7 +502,14 @@ export default function SubscriptionDetailPage() {
                       day: 'numeric',
                       year: 'numeric'
                     })}
-                    {new Date(i.due_date) < new Date() && i.status !== 'paid' && (
+                    {(() => {
+                      const dueDate = new Date(i.due_date);
+                      const pastDueAfterDays = sub?.past_due_after_days || 2;
+                      const overdueDate = new Date(dueDate.getTime() + (pastDueAfterDays * 24 * 60 * 60 * 1000));
+                      const now = new Date();
+                      
+                      return now > overdueDate && i.status !== 'paid';
+                    })() && (
                       <span className="ml-2 text-red-600 font-medium">• Overdue</span>
                     )}
                   </div>

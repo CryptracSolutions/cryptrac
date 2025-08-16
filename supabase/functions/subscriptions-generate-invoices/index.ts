@@ -233,9 +233,12 @@ serve(async () => {
             .select('*', { count: 'exact', head: true })
             .eq('subscription_id', sub.id);
           
-          await fetch(`${appOrigin}/api/supabase/functions/subscriptions-send-notifications`, {
+          await fetch(`${url}/functions/v1/subscriptions-send-notifications`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${key}`
+            },
             body: JSON.stringify({
               type: 'invoice',
               subscription_id: sub.id,
