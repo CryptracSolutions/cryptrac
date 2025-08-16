@@ -746,6 +746,16 @@ CREATE TABLE IF NOT EXISTS "public"."fiat_payouts" (
 ALTER TABLE "public"."fiat_payouts" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."invoice_counters" (
+    "merchant_id" "uuid" NOT NULL,
+    "last_value" integer DEFAULT 0 NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."invoice_counters" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."merchant_settings" (
     "merchant_id" "uuid" NOT NULL,
     "email_payment_notifications_enabled" boolean DEFAULT true NOT NULL,
@@ -1092,6 +1102,7 @@ CREATE TABLE IF NOT EXISTS "public"."subscription_invoices" (
     "metadata" "jsonb" DEFAULT '{}'::"jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"(),
+    "cycle_start_at" timestamp with time zone NOT NULL,
     CONSTRAINT "subscription_invoices_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'sent'::"text", 'paid'::"text", 'past_due'::"text", 'canceled'::"text"])))
 );
 
@@ -1125,6 +1136,12 @@ CREATE TABLE IF NOT EXISTS "public"."subscriptions" (
     "metadata" "jsonb" DEFAULT '{}'::"jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"(),
+    "invoice_due_days" integer DEFAULT 0 NOT NULL,
+    "generate_days_in_advance" integer DEFAULT 0 NOT NULL,
+    "past_due_after_days" integer DEFAULT 2 NOT NULL,
+    "auto_resume_on_payment" boolean DEFAULT true NOT NULL,
+    "paused_at" timestamp with time zone,
+    "resumed_at" timestamp with time zone,
     CONSTRAINT "subscriptions_interval_check" CHECK (("interval" = ANY (ARRAY['day'::"text", 'week'::"text", 'month'::"text", 'year'::"text"]))),
     CONSTRAINT "subscriptions_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'paused'::"text", 'canceled'::"text", 'completed'::"text", 'past_due'::"text"])))
 );
@@ -1492,6 +1509,11 @@ ALTER TABLE ONLY "public"."fiat_payouts"
 
 
 
+ALTER TABLE ONLY "public"."invoice_counters"
+    ADD CONSTRAINT "invoice_counters_pkey" PRIMARY KEY ("merchant_id");
+
+
+
 ALTER TABLE ONLY "public"."transactions"
     ADD CONSTRAINT "merchant_payments_pkey" PRIMARY KEY ("id");
 
@@ -1787,7 +1809,15 @@ CREATE INDEX "idx_subscription_history_merchant_id" ON "public"."subscription_hi
 
 
 
+CREATE INDEX "idx_subscription_invoices_link" ON "public"."subscription_invoices" USING "btree" ("payment_link_id");
+
+
+
 CREATE INDEX "idx_subscription_invoices_payment_link" ON "public"."subscription_invoices" USING "btree" ("payment_link_id");
+
+
+
+CREATE INDEX "idx_subscription_invoices_status_due" ON "public"."subscription_invoices" USING "btree" ("status", "due_date");
 
 
 
@@ -1800,6 +1830,10 @@ CREATE INDEX "idx_subscriptions_customer" ON "public"."subscriptions" USING "btr
 
 
 CREATE INDEX "idx_subscriptions_merchant_next" ON "public"."subscriptions" USING "btree" ("merchant_id", "next_billing_at");
+
+
+
+CREATE INDEX "idx_subscriptions_status_next" ON "public"."subscriptions" USING "btree" ("status", "next_billing_at");
 
 
 
@@ -1879,6 +1913,10 @@ CREATE UNIQUE INDEX "idx_webhook_logs_unique_event" ON "public"."webhook_logs" U
 
 
 
+CREATE UNIQUE INDEX "uniq_subscription_cycle" ON "public"."subscription_invoices" USING "btree" ("subscription_id", "cycle_start_at");
+
+
+
 CREATE OR REPLACE TRIGGER "after_rep_sales_update" AFTER UPDATE ON "public"."rep_sales" FOR EACH ROW WHEN ((("old"."validated" IS DISTINCT FROM "new"."validated") AND ("new"."validated" = true))) EXECUTE FUNCTION "public"."handle_monthly_bonus"();
 
 
@@ -1943,6 +1981,11 @@ ALTER TABLE ONLY "public"."customers"
 
 ALTER TABLE ONLY "public"."fiat_payouts"
     ADD CONSTRAINT "fiat_payouts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."invoice_counters"
+    ADD CONSTRAINT "invoice_counters_merchant_id_fkey" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE CASCADE;
 
 
 
@@ -2664,6 +2707,12 @@ GRANT ALL ON TABLE "public"."email_logs" TO "service_role";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "anon";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "authenticated";
 GRANT ALL ON TABLE "public"."fiat_payouts" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."invoice_counters" TO "anon";
+GRANT ALL ON TABLE "public"."invoice_counters" TO "authenticated";
+GRANT ALL ON TABLE "public"."invoice_counters" TO "service_role";
 
 
 
