@@ -105,8 +105,9 @@ If you have any questions about this invoice, please contact ${merchantName}.
   return { subject, html, text };
 }
 
-// SendGrid email sending function
+// SendGrid email sending function with logging
 async function sendInvoiceEmail(
+  supabase: any,
   sendgridKey: string,
   fromEmail: string,
   toEmail: string,
@@ -147,15 +148,51 @@ async function sendInvoiceEmail(
       ok: response.ok
     });
 
-    if (!response.ok) {
+    const success = response.ok;
+
+    if (!success) {
       const errorBody = await response.text();
       console.error('📧 SendGrid error details:', errorBody);
-      return false;
     }
 
-    return true;
+    // Log email to database
+    console.log('📝 Logging email to database:', {
+      email: toEmail,
+      type: 'subscription_invoice',
+      status: success ? 'sent' : 'failed'
+    });
+
+    const { data: logResult, error: logError } = await supabase.from('email_logs').insert({
+      email: toEmail,
+      type: 'subscription_invoice',
+      status: success ? 'sent' : 'failed'
+    });
+
+    if (logError) {
+      console.error('❌ Failed to log email to database:', logError);
+    } else {
+      console.log('✅ Email logged to database successfully:', logResult);
+    }
+
+    return success;
   } catch (error) {
     console.error('📧 SendGrid request failed:', error);
+    
+    // Log failed email to database
+    console.log('📝 Logging failed email to database');
+    
+    const { data: logResult, error: logError } = await supabase.from('email_logs').insert({
+      email: toEmail,
+      type: 'subscription_invoice',
+      status: 'failed'
+    });
+
+    if (logError) {
+      console.error('❌ Failed to log failed email to database:', logError);
+    } else {
+      console.log('✅ Failed email logged to database successfully:', logResult);
+    }
+    
     return false;
   }
 }
@@ -444,6 +481,7 @@ serve(async () => {
             
             // Send email directly via SendGrid
             const emailSuccess = await sendInvoiceEmail(
+              supabase,
               sendgridKey,
               fromEmail,
               customer.email,

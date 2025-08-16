@@ -561,6 +561,54 @@ CREATE OR REPLACE FUNCTION "public"."set_timestamp_updated_at"() RETURNS "trigge
 ALTER FUNCTION "public"."set_timestamp_updated_at"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."trigger_invoice_generation"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+    supabase_url text;
+    service_key text;
+    response_status int;
+BEGIN
+    -- Get configuration from table
+    SELECT value INTO supabase_url FROM cron_config WHERE key = 'supabase_url';
+    SELECT value INTO service_key FROM cron_config WHERE key = 'service_role_key';
+    
+    -- Validate configuration
+    IF supabase_url IS NULL OR service_key IS NULL THEN
+        RAISE WARNING 'Missing configuration: supabase_url or service_role_key';
+        RETURN;
+    END IF;
+    
+    -- Call the Edge Function
+    SELECT status INTO response_status
+    FROM http((
+        'POST',
+        supabase_url || '/functions/v1/subscriptions-generate-invoices',
+        ARRAY[
+            http_header('Authorization', 'Bearer ' || service_key ),
+            http_header('Content-Type', 'application/json' )
+        ],
+        'application/json',
+        '{}'
+    ));
+    
+    -- Log the result
+    IF response_status = 200 THEN
+        RAISE NOTICE 'Invoice generation triggered successfully';
+    ELSE
+        RAISE WARNING 'Invoice generation failed with status: %', response_status;
+    END IF;
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE WARNING 'Error triggering invoice generation: %', SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."trigger_invoice_generation"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."update_expired_payment_links"() RETURNS integer
     LANGUAGE "plpgsql"
     AS $$
@@ -735,6 +783,16 @@ CREATE TABLE IF NOT EXISTS "public"."automation_logs" (
 ALTER TABLE "public"."automation_logs" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."cron_config" (
+    "key" "text" NOT NULL,
+    "value" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."cron_config" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."customers" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "merchant_id" "uuid" NOT NULL,
@@ -747,6 +805,32 @@ CREATE TABLE IF NOT EXISTS "public"."customers" (
 
 
 ALTER TABLE "public"."customers" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."debug_log" (
+    "id" integer NOT NULL,
+    "message" "text",
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."debug_log" OWNER TO "postgres";
+
+
+CREATE SEQUENCE IF NOT EXISTS "public"."debug_log_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE "public"."debug_log_id_seq" OWNER TO "postgres";
+
+
+ALTER SEQUENCE "public"."debug_log_id_seq" OWNED BY "public"."debug_log"."id";
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."email_logs" (
@@ -1501,6 +1585,10 @@ COMMENT ON TABLE "public"."webhook_logs" IS 'Updated for Phase 5 NOWPayments web
 
 
 
+ALTER TABLE ONLY "public"."debug_log" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."debug_log_id_seq"'::"regclass");
+
+
+
 ALTER TABLE ONLY "public"."audit_logs"
     ADD CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id");
 
@@ -1508,6 +1596,11 @@ ALTER TABLE ONLY "public"."audit_logs"
 
 ALTER TABLE ONLY "public"."automation_logs"
     ADD CONSTRAINT "automation_logs_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."cron_config"
+    ADD CONSTRAINT "cron_config_pkey" PRIMARY KEY ("key");
 
 
 
@@ -1523,6 +1616,11 @@ ALTER TABLE ONLY "public"."customers"
 
 ALTER TABLE ONLY "public"."customers"
     ADD CONSTRAINT "customers_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."debug_log"
+    ADD CONSTRAINT "debug_log_pkey" PRIMARY KEY ("id");
 
 
 
@@ -2683,6 +2781,12 @@ GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."trigger_invoice_generation"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trigger_invoice_generation"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trigger_invoice_generation"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_expired_payment_links"() TO "service_role";
@@ -2725,9 +2829,27 @@ GRANT ALL ON TABLE "public"."automation_logs" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."cron_config" TO "anon";
+GRANT ALL ON TABLE "public"."cron_config" TO "authenticated";
+GRANT ALL ON TABLE "public"."cron_config" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."customers" TO "anon";
 GRANT ALL ON TABLE "public"."customers" TO "authenticated";
 GRANT ALL ON TABLE "public"."customers" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."debug_log" TO "anon";
+GRANT ALL ON TABLE "public"."debug_log" TO "authenticated";
+GRANT ALL ON TABLE "public"."debug_log" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."debug_log_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."debug_log_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."debug_log_id_seq" TO "service_role";
 
 
 
