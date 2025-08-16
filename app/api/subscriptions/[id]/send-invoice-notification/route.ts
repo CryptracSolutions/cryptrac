@@ -49,7 +49,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Verify subscription belongs to merchant
     const { data: subscription, error: subError } = await service
       .from('subscriptions')
-      .select('id, title')
+      .select('id, title, currency')
       .eq('id', id)
       .eq('merchant_id', merchant.id)
       .single();
@@ -58,7 +58,21 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
 
-    // Call the subscription notifications function
+    // Get the most recent invoice for this subscription to get the actual amount
+    const { data: latestInvoice, error: invoiceError } = await service
+      .from('subscription_invoices')
+      .select('amount, currency, invoice_number, cycle_start_at')
+      .eq('subscription_id', id)
+      .eq('merchant_id', merchant.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (invoiceError || !latestInvoice) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    }
+
+    // Call the subscription notifications function with the actual invoice amount
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
@@ -76,7 +90,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         type: 'invoice',
         subscription_id: id,
         customer_email: email,
-        payment_url: payment_url
+        payment_url: payment_url,
+        // Pass the actual invoice data to override the subscription base amount
+        invoice_data: {
+          amount: latestInvoice.amount,
+          currency: latestInvoice.currency,
+          invoice_number: latestInvoice.invoice_number,
+          cycle_start_at: latestInvoice.cycle_start_at
+        }
       })
     });
     
