@@ -56,7 +56,10 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       nowpayments_payment_id,
       amount,
       base_amount,
-      total_amount_paid
+      total_amount_paid,
+      pay_currency,
+      amount_received,
+      status
     `)
     .eq('public_receipt_id', receiptId)
     .single();
@@ -97,12 +100,25 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   const format = (amount: number | null | undefined, currency: string) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(amount || 0));
 
-  // FIXED: Better amount calculation logic
-  const baseAmount = Number(tx.base_amount || tx.subtotal_with_tax || tx.amount || 0) - Number(tx.tax_amount || 0);
+  // FIXED: Correct amount calculation - use base_amount directly, not subtract tax
+  const baseAmount = Number(tx.base_amount || tx.amount || 0);
   const totalPaid = Number(tx.total_paid || tx.total_amount_paid || tx.amount || 0);
   
   const explorerBase = tx.network ? explorers[tx.network.toUpperCase()] : undefined;
   const txLink = explorerBase && tx.tx_hash ? `${explorerBase}${tx.tx_hash}` : null;
+
+  // ENHANCED: Format cryptocurrency payment information
+  const formatCryptoAmount = (amount: number | null | undefined, currency: string) => {
+    if (!amount || !currency) return null;
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 8
+    }).format(amount) + ' ' + currency.toUpperCase();
+  };
+
+  const cryptoPaymentInfo = tx.amount_received && tx.pay_currency 
+    ? formatCryptoAmount(tx.amount_received, tx.pay_currency)
+    : null;
 
   return (
     <div className="max-w-2xl mx-auto p-8 space-y-4 print:bg-white">
@@ -137,8 +153,16 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       <div className="text-sm space-y-1">
         <div>Paid at: {new Date(tx.created_at).toLocaleString()}</div>
         {tx.nowpayments_payment_id && <div>Payment ID: {tx.nowpayments_payment_id}</div>}
+        {/* ENHANCED: Show cryptocurrency payment method */}
+        {cryptoPaymentInfo && (
+          <div>Paid with: {cryptoPaymentInfo}</div>
+        )}
         {tx.asset && tx.network && (
-          <div>Method: {tx.asset} on {tx.network}</div>
+          <div>Network: {tx.asset} on {tx.network}</div>
+        )}
+        {/* ENHANCED: Show payment status */}
+        {tx.status && (
+          <div>Status: <span className="capitalize">{tx.status === 'confirmed' ? 'Confirmed' : tx.status}</span></div>
         )}
         {tx.tx_hash && (
           <div>

@@ -33,7 +33,9 @@ function generateEmailTemplate(
     title = 'Payment',
     tx_hash,
     pay_currency,
-    amount_received
+    amount_received,
+    // FIXED: Use proper status mapping
+    status = 'confirmed'
   } = receiptData as Record<string, unknown>;
 
   // Format amounts
@@ -50,6 +52,11 @@ function generateEmailTemplate(
     }).format(amount_received);
     receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
   }
+
+  // FIXED: Proper status display
+  const displayStatus = status === 'confirmed' ? 'Confirmed' : 
+                       status === 'confirming' ? 'Confirming' :
+                       typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : 'Confirmed';
 
   const subject = `Receipt for ${title} - ${formattedAmount}`;
 
@@ -180,6 +187,10 @@ function generateEmailTemplate(
                   minute: '2-digit'
                 })}</span>
             </div>
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">${displayStatus}</span>
+            </div>
             ${receivedAmountText ? `
             <div class="detail-row">
                 <span class="detail-label">Amount Paid:</span>
@@ -229,6 +240,7 @@ Payment Details:
     hour: '2-digit',
     minute: '2-digit'
   })}
+• Status: ${displayStatus}
 ${receivedAmountText ? `• Amount Paid: ${receivedAmountText.trim()}\n` : ''}• Total Amount: ${formattedAmount}${receivedAmountText}
 
 ${tx_hash ? `Transaction Hash: ${tx_hash}\n` : ''}
@@ -334,8 +346,14 @@ export async function POST(request: Request) {
       let subject;
 
       if (receipt_data) {
+        // FIXED: Ensure status is properly set to 'confirmed' for completed payments
+        const enhancedReceiptData = {
+          ...receipt_data,
+          status: 'confirmed' // Always show as confirmed in receipt emails
+        };
+        
         // Use enhanced template with receipt data
-        const template = generateEmailTemplate(receipt_data, merchant.business_name || 'Cryptrac', paymentUrl);
+        const template = generateEmailTemplate(enhancedReceiptData, merchant.business_name || 'Cryptrac', paymentUrl);
         subject = template.subject;
         emailContent = [
           { type: 'text/html', value: template.html },
@@ -362,7 +380,8 @@ export async function POST(request: Request) {
           }],
           from: {
             email: fromEmail,
-            name: merchant.business_name || 'Cryptrac'
+            // FIXED: Use business name in sender name
+            name: `${merchant.business_name || 'Cryptrac'} Receipts`
           },
           content: emailContent,
           categories: ['receipt'],
