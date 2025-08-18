@@ -1253,6 +1253,7 @@ CREATE TABLE IF NOT EXISTS "public"."subscriptions" (
     "auto_resume_on_payment" boolean DEFAULT true NOT NULL,
     "paused_at" timestamp with time zone,
     "resumed_at" timestamp with time zone,
+    "completed_at" timestamp with time zone,
     CONSTRAINT "subscriptions_interval_check" CHECK (("interval" = ANY (ARRAY['day'::"text", 'week'::"text", 'month'::"text", 'year'::"text"]))),
     CONSTRAINT "subscriptions_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'paused'::"text", 'canceled'::"text", 'completed'::"text", 'past_due'::"text"])))
 );

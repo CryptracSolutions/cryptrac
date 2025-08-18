@@ -253,10 +253,10 @@ serve(async () => {
         .single();
       const zone = merchantInfo?.timezone || 'UTC';
       
-      // Get customer information for email notifications
+      // FIXED: Get customer information including name for email notifications
       const { data: customer } = await supabase
         .from('customers')
-        .select('email')
+        .select('email, name')
         .eq('id', sub.customer_id)
         .single();
       
@@ -274,21 +274,36 @@ serve(async () => {
       const cycleStart = nextBilling.toUTC();
       const cycleStartISO = cycleStart.toISO();
       
-      // Max cycles completion logic - check if subscription has reached its limit
+      // Check if invoice already exists for this cycle (idempotency)
+      const { data: existingInvoice } = await supabase
+        .from('subscription_invoices')
+        .select('id, payment_link_id')
+        .eq('subscription_id', sub.id)
+        .eq('cycle_start_at', cycleStartISO)
+        .maybeSingle();
+        
+      if (existingInvoice) {
+        console.log(`Invoice already exists for subscription ${sub.id}, cycle ${cycleStartISO}`);
+        // FIXED: Don't advance next_billing_at if invoice already exists for this cycle
+        // The billing date should only advance after successful invoice creation
+        continue;
+      }
+      
+      // FIXED: Max cycles completion logic - check BEFORE creating new invoice
       if (sub.max_cycles && sub.max_cycles > 0) {
-        // Count existing invoices to determine current cycle
+        // Count existing invoices to determine if we've reached the limit
         const { count: currentCycle } = await supabase
           .from('subscription_invoices')
           .select('*', { count: 'exact', head: true })
           .eq('subscription_id', sub.id);
         
+        // FIXED: Check if we've already reached max cycles (currentCycle is 0-based count)
         if (currentCycle && currentCycle >= sub.max_cycles) {
           // Complete the subscription
           await supabase
             .from('subscriptions')
             .update({ 
               status: 'completed',
-              completed_at: new Date().toISOString(),
               next_billing_at: null
             })
             .eq('id', sub.id);
@@ -316,31 +331,7 @@ serve(async () => {
           continue; // Skip to next subscription
         }
         
-        console.log(`Subscription ${sub.id} cycle ${currentCycle}/${sub.max_cycles}`);
-      }
-      
-      // Check if invoice already exists for this cycle (idempotency)
-      const { data: existingInvoice } = await supabase
-        .from('subscription_invoices')
-        .select('id, payment_link_id')
-        .eq('subscription_id', sub.id)
-        .eq('cycle_start_at', cycleStartISO)
-        .maybeSingle();
-        
-      if (existingInvoice) {
-        console.log(`Invoice already exists for subscription ${sub.id}, cycle ${cycleStartISO}`);
-        
-        // Still advance next_billing_at to prevent re-processing
-        let next = DateTime.fromISO(sub.billing_anchor, { zone });
-        while (next <= now.setZone(zone)) {
-          next = addInterval(next, sub.interval, sub.interval_count);
-        }
-        await supabase
-          .from('subscriptions')
-          .update({ next_billing_at: next.toUTC().toISO() })
-          .eq('id', sub.id);
-          
-        continue;
+        console.log(`Subscription ${sub.id} cycle ${(currentCycle || 0) + 1}/${sub.max_cycles}`);
       }
       
       // Get amount override for this cycle
@@ -421,6 +412,16 @@ serve(async () => {
         continue;
       }
       
+      // FIXED: Only advance next_billing_at AFTER successful invoice creation
+      let next = DateTime.fromISO(sub.billing_anchor, { zone });
+      while (next <= nextBilling.setZone(zone)) {
+        next = addInterval(next, sub.interval, sub.interval_count);
+      }
+      await supabase
+        .from('subscriptions')
+        .update({ next_billing_at: next.toUTC().toISO() })
+        .eq('id', sub.id);
+      
       // Send invoice notification email directly
       console.log(`📧 Email notification check for subscription ${sub.id}`);
       console.log(`Customer email: ${customer?.email || 'NOT FOUND'}`);
@@ -465,7 +466,7 @@ serve(async () => {
             const emailTemplate = generateInvoiceEmailTemplate({
               subscriptionTitle: sub.title,
               merchantName,
-              customerName: customer.name,
+              customerName: customer.name, // FIXED: Now properly available
               amount,
               currency: sub.currency,
               paymentUrl,
@@ -505,17 +506,7 @@ serve(async () => {
         console.log(`📧 No customer email found, skipping email notification`);
       }
       
-      // Task 3: Advance next_billing_at by the interval (preserves "generate early for the next cycle")
-      let next = DateTime.fromISO(sub.billing_anchor, { zone });
-      while (next <= now.setZone(zone)) {
-        next = addInterval(next, sub.interval, sub.interval_count);
-      }
-      await supabase
-        .from('subscriptions')
-        .update({ next_billing_at: next.toUTC().toISO() })
-        .eq('id', sub.id);
-        
-        console.log(`Generated invoice for subscription ${sub.id}, cycle ${cycleStartISO}, due ${dueDate.toISO()}, number ${invoiceNumber}`);
+      console.log(`Generated invoice for subscription ${sub.id}, cycle ${cycleStartISO}, due ${dueDate.toISO()}, number ${invoiceNumber}`);
       
     } catch (err) {
       console.error('error processing subscription', sub.id, err);
