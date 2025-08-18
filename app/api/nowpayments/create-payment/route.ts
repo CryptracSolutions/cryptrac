@@ -482,7 +482,7 @@ export async function POST(request: Request) {
       ? tax_rates.reduce((sum: number, r: { percentage: number | string }) => sum + (parseFloat(r.percentage as string) || 0), 0)
       : 0
 
-    // Save transaction to database
+    // FIXED: Save transaction to correct table name "transactions" instead of "merchant_payments"
     const transactionData = {
       nowpayments_payment_id: paymentResponse.payment_id,
       order_id: paymentResponse.order_id,
@@ -527,8 +527,9 @@ export async function POST(request: Request) {
 
     console.log('💾 Saving transaction to database...')
 
+    // FIXED: Use correct table name "transactions"
     const { data: transaction, error: transactionError } = await supabase
-      .from('merchant_payments')
+      .from('transactions')
       .insert(transactionData)
       .select()
       .single()
@@ -538,7 +539,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Failed to save transaction' 
+          error: 'Failed to save transaction',
+          details: transactionError.message
         },
         { status: 500 }
       )
