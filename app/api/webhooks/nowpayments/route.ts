@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { env } from '@/lib/env'
 
@@ -98,7 +98,7 @@ interface NOWPaymentsWebhookBody extends Record<string, unknown> {
   payment_id?: string
 }
 
-// ENHANCED: Function to send customer email receipts automatically
+// FIXED: Enhanced function to send customer email receipts with proper logging
 async function sendCustomerReceipts(
   payment: Record<string, unknown>,
   paymentData: Record<string, unknown>
@@ -132,6 +132,18 @@ async function sendCustomerReceipts(
 
     if (!paymentLink) {
       console.log('ℹ️ No payment link found for customer receipt sending');
+      return;
+    }
+
+    // Get merchant details for email branding
+    const { data: merchant } = await supabase
+      .from('merchants')
+      .select('id, business_name')
+      .eq('id', payment.merchant_id)
+      .single();
+
+    if (!merchant) {
+      console.error('❌ Merchant not found for receipt email');
       return;
     }
 
@@ -170,37 +182,312 @@ async function sendCustomerReceipts(
       pay_currency: paymentData.currency_received || payment.currency_received,
       amount_received: paymentData.amount_received || payment.amount_received,
       title: paymentLink.title || 'Payment',
-      public_receipt_id: payment.public_receipt_id
+      public_receipt_id: payment.public_receipt_id,
+      status: 'confirmed' // Always show as confirmed in receipt emails
     };
 
-    // Send email receipt
+    // FIXED: Send receipt email directly instead of calling API to avoid auth issues
+    const sendgridKey = process.env.SENDGRID_API_KEY;
+    const fromEmail = process.env.CRYPTRAC_RECEIPTS_FROM;
+    const appOrigin = process.env.NEXT_PUBLIC_APP_URL || env.APP_ORIGIN;
+
+    if (!sendgridKey || !fromEmail || !appOrigin) {
+      console.warn('⚠️ Email service not fully configured - skipping receipt email');
+      return;
+    }
+
+    // Generate receipt URL
+    const paymentUrl = `${appOrigin}/r/${payment.public_receipt_id}`;
+
+    // Generate email template
+    const emailTemplate = generateReceiptEmailTemplate(receiptData, merchant.business_name || 'Cryptrac', paymentUrl);
+
+    // Send email via SendGrid
+    let emailStatus = 'queued';
+    let errorMessage: string | null = null;
+
     try {
-      const emailResponse = await fetch(`${env.APP_ORIGIN}/api/receipts/email`, {
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` // Use service key for internal calls
+          'Authorization': `Bearer ${sendgridKey}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: customerEmail,
-          payment_link_id: payment.payment_link_id,
-          receipt_data: receiptData
+          personalizations: [{ 
+            to: [{ email: customerEmail }], 
+            subject: emailTemplate.subject 
+          }],
+          from: {
+            email: fromEmail,
+            name: `${merchant.business_name || 'Cryptrac'} Receipts`
+          },
+          content: [
+            { type: 'text/html', value: emailTemplate.html },
+            { type: 'text/plain', value: emailTemplate.text }
+          ],
+          categories: ['receipt'],
+          tracking_settings: {
+            click_tracking: { enable: true },
+            open_tracking: { enable: true }
+          }
         })
       });
 
-      if (emailResponse.ok) {
+      if (response.ok) {
+        emailStatus = 'sent';
         console.log('✅ Customer email receipt sent successfully to:', customerEmail);
       } else {
-        const error = await emailResponse.text();
-        console.error('❌ Failed to send customer email receipt:', error);
+        const errorText = await response.text();
+        emailStatus = 'failed';
+        errorMessage = `SendGrid error: ${response.status} ${errorText}`;
+        console.error('❌ SendGrid error:', errorMessage);
       }
-    } catch (error) {
-      console.error('❌ Error sending customer email receipt:', error);
+    } catch (err) {
+      console.error('❌ Email receipt error:', err);
+      emailStatus = 'failed';
+      errorMessage = err instanceof Error ? err.message : 'Unknown email error';
+    }
+
+    // FIXED: Log email to database with proper error handling
+    try {
+      const { error: logError } = await supabase.from('email_logs').insert({ 
+        email: customerEmail, 
+        type: 'receipt', 
+        status: emailStatus,
+        error_message: errorMessage,
+        metadata: {
+          merchant_id: merchant.id,
+          payment_link_id: payment.payment_link_id,
+          transaction_id: payment.id,
+          has_receipt_data: true,
+          template_used: 'enhanced',
+          url_used: paymentUrl,
+          url_type: 'receipt'
+        }
+      });
+
+      if (logError) {
+        console.error('❌ Failed to log email to database:', logError);
+      } else {
+        console.log('✅ Email receipt logged to database successfully');
+      }
+    } catch (logErr) {
+      console.error('❌ Error logging email to database:', logErr);
     }
 
   } catch (error) {
     console.error('❌ Error in customer receipt sending:', error);
   }
+}
+
+// Email template generation function
+function generateReceiptEmailTemplate(
+  receiptData: Record<string, unknown>,
+  merchantName: string,
+  paymentUrl: string
+): { subject: string; html: string; text: string } {
+  const {
+    amount,
+    currency = 'USD',
+    payment_type = 'Payment',
+    title = 'Payment',
+    tx_hash,
+    pay_currency,
+    amount_received
+  } = receiptData as Record<string, unknown>;
+
+  // Format amounts
+  const formattedAmount = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency as string
+  }).format(amount as number);
+
+  let receivedAmountText = '';
+  if (typeof amount_received === 'number' && typeof pay_currency === 'string') {
+    const formattedReceived = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 8
+    }).format(amount_received);
+    receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
+  }
+
+  const subject = `Receipt for ${title} - ${formattedAmount}`;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 28px;
+        }
+        .merchant-name {
+            color: #6c757d;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .receipt-details {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #28a745;
+        }
+        .view-button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .success-icon {
+            color: #28a745;
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✓</div>
+            <h1>Payment Received</h1>
+            <div class="merchant-name">From ${merchantName}</div>
+        </div>
+        
+        <div class="receipt-details">
+            <div class="detail-row">
+                <span>Payment Type:</span>
+                <span>${payment_type}</span>
+            </div>
+            <div class="detail-row">
+                <span>Description:</span>
+                <span>${title}</span>
+            </div>
+            <div class="detail-row">
+                <span>Date:</span>
+                <span>${new Date().toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</span>
+            </div>
+            <div class="detail-row">
+                <span>Status:</span>
+                <span>Confirmed</span>
+            </div>
+            ${receivedAmountText ? `
+            <div class="detail-row">
+                <span>Amount Paid:</span>
+                <span>${receivedAmountText.trim()}</span>
+            </div>
+            ` : ''}
+            <div class="detail-row">
+                <span>Total Amount:</span>
+                <span>${formattedAmount}${receivedAmountText}</span>
+            </div>
+        </div>
+
+        ${tx_hash ? `
+        <div>
+            <strong>Transaction Hash:</strong>
+            <div style="background: #e9ecef; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; word-break: break-all; margin: 15px 0;">${tx_hash}</div>
+        </div>
+        ` : ''}
+
+        <div style="text-align: center;">
+            <a href="${paymentUrl}" class="view-button">View Your Receipt</a>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for your payment!</p>
+            <p>This is an automated receipt. Please keep this for your records.</p>
+            <p>If you have any questions, please contact ${merchantName}.</p>
+        </div>
+    </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Payment Receipt
+
+✓ Payment Received from ${merchantName}
+
+Payment Details:
+• Type: ${payment_type}
+• Description: ${title}
+• Date: ${new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })}
+• Status: Confirmed
+${receivedAmountText ? `• Amount Paid: ${receivedAmountText.trim()}\n` : ''}• Total Amount: ${formattedAmount}${receivedAmountText}
+
+${tx_hash ? `Transaction Hash: ${tx_hash}\n` : ''}
+View your receipt: ${paymentUrl}
+
+Thank you for your payment!
+This is an automated receipt. Please keep this for your records.
+If you have any questions, please contact ${merchantName}.
+  `.trim();
+
+  return { subject, html, text };
 }
 
 // Function to send merchant notification email
@@ -390,7 +677,7 @@ export async function POST(request: Request) {
       price_currency?: string
       payout_currency?: string
       payout_amount?: number
-        outcome?: { hash?: string }
+      outcome?: { hash?: string }
       payin_hash?: string
       payout_hash?: string
       type?: string
@@ -401,106 +688,63 @@ export async function POST(request: Request) {
       payout_extra_id?: string
     }
 
-    // Log all hash-related fields we found
-    console.log('🔗 Hash fields analysis:')
-    console.log('  - outcome:', outcome)
-    console.log('  - payin_hash:', payin_hash)
-    console.log('  - payout_hash:', payout_hash)
-    console.log('  - hash:', hash)
-    console.log('  - tx_hash:', tx_hash)
-    console.log('  - transaction_hash:', transaction_hash)
-    console.log('  - payin_extra_id:', payin_extra_id)
-    console.log('  - payout_extra_id:', payout_extra_id)
-    console.log('  - type:', type)
-    console.log('  - payment_status:', payment_status)
+    console.log('🔍 Processing webhook for payment ID:', payment_id)
 
-    // Create Supabase client (use service role for webhooks)
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceKey) {
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY is required')
-    }
+    // Create Supabase client
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceKey,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         cookies: {
-          getAll() {
-            return []
-          },
-          setAll() {
-            // No-op for webhooks
-          },
+          getAll() { return [] },
+          setAll() { /* no-op */ },
         },
       }
     )
 
-    // Find the payment record using the updated column name
-    interface PaymentRecord {
-      id: string
-      merchant_id: string
-      total_paid?: number
-      amount?: number
-      currency?: string
-      currency_received?: string
-      amount_received?: number
-      tx_hash?: string
-      metadata?: { customer_email?: string } | null
-      payment_link_id: string
-      public_receipt_id?: string
-      status?: string
-    }
-    const { data: payment, error: findError } = await supabase
+    // Find the payment record
+    const { data: payment, error: paymentError } = await supabase
       .from('transactions')
       .select('*')
       .eq('nowpayments_payment_id', payment_id)
-      .single<PaymentRecord>()
+      .single()
 
-    if (findError || !payment) {
-      console.error('❌ Payment not found for webhook:', payment_id, findError)
+    if (paymentError || !payment) {
+      console.error('❌ Payment not found for payment_id:', payment_id, paymentError)
       return NextResponse.json(
         { success: false, message: 'Payment not found' },
         { status: 404 }
       )
     }
 
-    console.log('✅ Payment found for webhook:', {
+    console.log('✅ Payment found:', {
       id: payment.id,
       current_status: payment.status,
-      new_status: payment_status,
+      webhook_status: payment_status
     })
 
-    // Prevent duplicate processing
-    if (payment.status === 'confirmed' && payment_status === 'confirmed') {
-      console.log('ℹ️ Payment already confirmed, skipping duplicate webhook')
-      return NextResponse.json({
-        success: true,
-        message: 'Payment already processed',
-        payment_id: payment.id
-      })
-    }
-
-    // Map NOWPayments status to our status
-    let newStatus = payment.status
+    // Map NOWPayments status to our internal status
+    let newStatus: string
     switch (payment_status) {
-      case 'waiting':
-        newStatus = 'waiting'
-        break
-      case 'confirming':
-        newStatus = 'confirming'
-        break
-      case 'confirmed':
       case 'finished':
+      case 'confirmed':
         newStatus = 'confirmed'
         break
+      case 'confirming':
+      case 'sending':
+        newStatus = 'confirming'
+        break
+      case 'waiting':
+        newStatus = 'pending'
+        break
       case 'failed':
-      case 'refunded':
         newStatus = 'failed'
+        break
+      case 'refunded':
+        newStatus = 'refunded'
         break
       case 'expired':
         newStatus = 'expired'
-        break
-      case 'sending':
-        newStatus = 'confirming' // Map 'sending' to 'confirming' for our UI
         break
       default:
         console.warn('⚠️ Unknown payment status:', payment_status)
@@ -686,7 +930,7 @@ export async function POST(request: Request) {
     if (newStatus === 'confirmed' && payment.status !== 'confirmed') {
       console.log('🎉 Payment confirmed! Triggering post-confirmation actions...')
       
-      // ENHANCED: Send customer email receipts automatically
+      // FIXED: Send customer email receipts with proper logging
       await sendCustomerReceipts(payment as unknown as Record<string, unknown>, updateData as Record<string, unknown>);
       
       // Send merchant notification email (fire and forget)
@@ -697,125 +941,74 @@ export async function POST(request: Request) {
         const { error: incrementError } = await supabase.rpc('increment_payment_link_usage', {
           p_link_id: payment.payment_link_id
         })
-
+        
         if (incrementError) {
-          console.warn('⚠️ Failed to update payment link usage via function:', incrementError)
-          // Try alternative approach
-          const { data: currentLink } = await supabase
+          console.warn('⚠️ Failed to increment payment link usage:', incrementError)
+        } else {
+          console.log('✅ Payment link usage incremented')
+        }
+      } catch (incrementErr) {
+        console.warn('⚠️ Error incrementing payment link usage:', incrementErr)
+      }
+
+      // Handle subscription auto-resume if applicable
+      if (payment.payment_link_id) {
+        try {
+          const { data: paymentLink } = await supabase
             .from('payment_links')
-            .select('current_uses')
+            .select('source, subscription_id')
             .eq('id', payment.payment_link_id)
             .single()
 
-          if (currentLink) {
-            await supabase
-              .from('payment_links')
-              .update({
-                current_uses: (currentLink.current_uses || 0) + 1,
-                last_payment_at: new Date().toISOString(),
-              })
-              .eq('id', payment.payment_link_id)
-            console.log('✅ Payment link usage updated via direct query')
-          }
-        } else {
-          console.log('✅ Payment link usage updated via function')
-        }
-      } catch (linkUpdateError) {
-        console.warn('⚠️ Error updating payment link usage:', linkUpdateError)
-      }
-
-      // If payment link is tied to a subscription invoice, mark it paid
-      try {
-        const { data: link } = await supabase
-          .from('payment_links')
-          .select('id, subscription_id')
-          .eq('id', payment.payment_link_id)
-          .single()
-
-        if (link && link.subscription_id) {
-          // Task 2: Update subscription invoice with cycle_start_at for better tracking
-          const { data: updatedInvoice } = await supabase
-            .from('subscription_invoices')
-            .update({ status: 'paid', paid_at: new Date().toISOString() })
-            .eq('payment_link_id', link.id)
-            .neq('status', 'paid')
-            .select('id, cycle_start_at')
-
-          if (updatedInvoice && updatedInvoice.length > 0) {
-            const invoice = updatedInvoice[0];
-            console.log(`✅ Subscription invoice paid: ${invoice.id}, cycle: ${invoice.cycle_start_at}`);
+          if (paymentLink?.source === 'subscription' && paymentLink.subscription_id) {
+            console.log('🔄 Checking subscription auto-resume for:', paymentLink.subscription_id)
             
-            // Task 5: Get subscription details for auto-resume logic
-            const { data: sub } = await supabase
+            const { data: subscription } = await supabase
               .from('subscriptions')
-              .select('total_cycles, status, auto_resume_on_payment, missed_payments_count')
-              .eq('id', link.subscription_id)
+              .select('status, auto_resume_on_payment')
+              .eq('id', paymentLink.subscription_id)
               .single()
 
-            if (sub) {
-              let subscriptionUpdates: any = { 
-                total_cycles: (sub.total_cycles || 0) + 1,
-                missed_payments_count: 0 // Task 5: Reset missed payments counter on successful payment
-              };
-
-              // Task 5: Auto-resume logic - if subscription is paused and auto_resume_on_payment is enabled
-              if (sub.status === 'paused' && sub.auto_resume_on_payment) {
-                subscriptionUpdates.status = 'active';
-                subscriptionUpdates.resumed_at = new Date().toISOString();
-                console.log(`🔄 Auto-resuming subscription ${link.subscription_id} after payment`);
-              }
-
-              await supabase
+            if (subscription?.status === 'paused' && subscription.auto_resume_on_payment) {
+              console.log('🔄 Auto-resuming paused subscription:', paymentLink.subscription_id)
+              
+              const { error: resumeError } = await supabase
                 .from('subscriptions')
-                .update(subscriptionUpdates)
-                .eq('id', link.subscription_id)
+                .update({ 
+                  status: 'active',
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', paymentLink.subscription_id)
+
+              if (resumeError) {
+                console.error('❌ Failed to auto-resume subscription:', resumeError)
+              } else {
+                console.log('✅ Subscription auto-resumed successfully')
+              }
             }
           }
+        } catch (resumeErr) {
+          console.warn('⚠️ Error handling subscription auto-resume:', resumeErr)
         }
-      } catch (subError) {
-        console.warn('⚠️ Error updating subscription invoice:', subError)
       }
     }
 
-    const eventId = body?.event_id || body?.payment_id || crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex')
-    const { data: existingLog } = await supabase
-      .from('webhook_logs')
-      .select('id, attempts')
-      .eq('provider', 'nowpayments')
-      .eq('event_id', eventId)
-      .maybeSingle()
-    if (existingLog) {
-      await supabase
-        .from('webhook_logs')
-        .update({ attempts: (existingLog.attempts || 0) + 1, processed_at: new Date().toISOString() })
-        .eq('id', existingLog.id)
-    } else {
-      await supabase
-        .from('webhook_logs')
-        .insert({ provider: 'nowpayments', event_id: eventId, attempts: 1, processed_at: new Date().toISOString() })
-    }
-
+    // Return success response
     return NextResponse.json({
       success: true,
       message: 'Webhook processed successfully',
       payment_id: payment.id,
       status: newStatus,
-      processing_time_ms: Date.now() - startTime,
-      hashes_captured: {
-        tx_hash: !!updateData.tx_hash,
-        payin_hash: !!updateData.payin_hash,
-        payout_hash: !!updateData.payout_hash,
-        source: capturedHashes.source
-      }
+      processing_time_ms: Date.now() - startTime
     })
 
   } catch (error) {
-    console.error('💥 Webhook processing error:', error)
+    console.error('❌ Webhook processing error:', error)
     return NextResponse.json(
       { 
         success: false, 
         message: 'Internal server error',
-        processing_time_ms: Date.now() - startTime
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

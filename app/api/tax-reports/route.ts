@@ -87,6 +87,8 @@ interface ReportTransaction {
   status: string
   refund_amount: number
   refund_date: string | null
+  // ENHANCED: Added public_receipt_id for receipt links
+  public_receipt_id: string | null
 }
 
 export async function GET(request: Request) {
@@ -151,7 +153,7 @@ export async function GET(request: Request) {
       console.log('📄 Large dataset detected, forcing pagination')
     }
     
-    // Build optimized query with pagination
+    // ENHANCED: Build optimized query with pagination and public_receipt_id
     let baseQuery = supabase
       .from('transactions')
       .select(`
@@ -174,6 +176,7 @@ export async function GET(request: Request) {
         refund_amount,
         refunded_at,
         created_at,
+        public_receipt_id,
         payment_links!inner(
           link_id,
           description,
@@ -253,7 +256,9 @@ export async function GET(request: Request) {
         net_amount: net,
         status: t.status,
         refund_amount: Number(t.refund_amount || 0),
-        refund_date: t.refunded_at
+        refund_date: t.refunded_at,
+        // ENHANCED: Include public_receipt_id for receipt links
+        public_receipt_id: t.public_receipt_id
       } as ReportTransaction
     })
 
@@ -297,6 +302,7 @@ export async function GET(request: Request) {
             refund_amount,
             refunded_at,
             created_at,
+            public_receipt_id,
             payment_links!inner(
               link_id,
               description,
@@ -348,7 +354,8 @@ export async function GET(request: Request) {
             net_amount: net,
             status: t.status,
             refund_amount: Number(t.refund_amount || 0),
-            refund_date: t.refunded_at
+            refund_date: t.refunded_at,
+            public_receipt_id: t.public_receipt_id
           }
         })
       }
@@ -493,53 +500,43 @@ function generateAuditCSV(transactions: ReportTransaction[], summary: Transactio
     'Net Amount Received',
     'Payment Status',
     'Refund Amount',
-    'Refund Date'
+    'Refund Date',
+    'Receipt URL'
   ]
 
   const rows = transactions.map(tx => [
     tx.payment_id,
     tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
     tx.created_at ? new Date(tx.created_at).toISOString().split('T')[1].split('.')[0] : '',
-    tx.product_description,
+    tx.product_description || '',
     tx.gross_amount.toFixed(2),
-    tx.tax_label,
+    tx.tax_label || '',
     tx.tax_percentage.toFixed(2),
     tx.tax_amount.toFixed(2),
     tx.total_paid.toFixed(2),
     tx.fees.toFixed(2),
     tx.net_amount.toFixed(2),
-    tx.status === 'refunded' ? 'Refunded' : 'Confirmed',
-    tx.refund_amount.toFixed(2),
-    tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : ''
+    tx.status,
+    tx.refund_amount ? tx.refund_amount.toFixed(2) : '',
+    tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : '',
+    // ENHANCED: Include receipt URL in CSV export
+    tx.public_receipt_id ? `${process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN}/r/${tx.public_receipt_id}` : ''
   ])
 
-  const totalsRow = [
-    'TOTALS',
-    '',
-    '',
-    '',
-    summary.total_gross_sales.toFixed(2),
-    '',
-    '',
-    summary.total_tax_collected.toFixed(2),
-    '',
-    summary.total_fees.toFixed(2),
-    summary.total_net_revenue.toFixed(2),
-    '',
-    '',
-    ''
-  ]
-
   const csvContent = [
+    `# Cryptrac Tax Report`,
+    `# Generated: ${summary.generated_at}`,
+    `# Date Range: ${summary.date_range.start_date.split('T')[0]} to ${summary.date_range.end_date.split('T')[0]}`,
+    `# Total Transactions: ${summary.total_transactions}`,
+    `# Total Gross Sales: $${summary.total_gross_sales.toFixed(2)}`,
+    `# Total Tax Collected: $${summary.total_tax_collected.toFixed(2)}`,
+    `# Total Fees: $${summary.total_fees.toFixed(2)}`,
+    `# Total Net Revenue: $${summary.total_net_revenue.toFixed(2)}`,
+    ``,
     headers.join(','),
-    ...rows.map(row => row.map(field => {
-      const stringField = String(field)
-      if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
-        return `"${stringField.replace(/"/g, '""')}"`
-      }
-      return stringField
-    }).join(',')),
-    totalsRow.join(',')
+    ...rows.map(row => row.map(cell => 
+      typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell
+    ).join(','))
   ].join('\n')
 
   return csvContent

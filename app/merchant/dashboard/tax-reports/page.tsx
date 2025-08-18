@@ -11,7 +11,8 @@ import {
   Receipt,
   AlertCircle,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card'
@@ -60,6 +61,8 @@ interface Transaction {
   status: string
   refund_amount: number
   refund_date: string | null
+  // ENHANCED: Added public_receipt_id for receipt links
+  public_receipt_id: string | null
 }
 
 interface TaxReportData {
@@ -238,6 +241,12 @@ export default function TaxReportsPage() {
       console.error('Refund error:', error)
       toast.error('Failed to mark as refunded')
     }
+  }
+
+  // ENHANCED: Function to open receipt in new tab
+  const viewReceipt = (publicReceiptId: string) => {
+    const receiptUrl = `${window.location.origin}/r/${publicReceiptId}`
+    window.open(receiptUrl, '_blank', 'noopener,noreferrer')
   }
 
   const updateFilters = (updates: Partial<TaxReportFilters>) => {
@@ -567,6 +576,8 @@ export default function TaxReportsPage() {
                             <th className="text-center p-2">Status</th>
                             <th className="text-right p-2">Refund Amount</th>
                             <th className="text-left p-2">Refund Date</th>
+                            {/* ENHANCED: Added Receipt column */}
+                            <th className="text-center p-2">Receipt</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -602,6 +613,23 @@ export default function TaxReportsPage() {
                                 </td>
                                 <td className="p-2 text-right">{tx.refund_amount ? formatCurrency(tx.refund_amount) : '-'}</td>
                                 <td className="p-2">{tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : '-'}</td>
+                                {/* ENHANCED: Added View Receipt button */}
+                                <td className="p-2 text-center">
+                                  {tx.public_receipt_id ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={() => viewReceipt(tx.public_receipt_id!)}
+                                      title="View customer receipt"
+                                    >
+                                      <ExternalLink className="h-3 w-3 mr-1" />
+                                      View Receipt
+                                    </Button>
+                                  ) : (
+                                    <span className="text-gray-400 text-xs">No receipt</span>
+                                  )}
+                                </td>
                               </tr>
                             )
                           })}
@@ -616,6 +644,7 @@ export default function TaxReportsPage() {
                             <td className="p-2 text-right">{formatCurrency(totals.paid)}</td>
                             <td className="p-2 text-right">{formatCurrency(totals.fees)}</td>
                             <td className="p-2 text-right">{formatCurrency(totals.net)}</td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
