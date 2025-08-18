@@ -58,7 +58,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     // Task 4: Get subscription with all timing fields (unified with scheduler)
     const { data: sub, error: subError } = await service
       .from('subscriptions')
-      .select('id, title, amount, currency, accepted_cryptos, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, tax_enabled, tax_rates, next_billing_at, interval, interval_count, billing_anchor, invoice_due_days, generate_days_in_advance, past_due_after_days, max_cycles')
+      .select('id, title, amount, currency, accepted_cryptos, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, tax_enabled, tax_rates, next_billing_at, interval, interval_count, billing_anchor, invoice_due_days, generate_days_in_advance, past_due_after_days, max_cycles, customer_id')
       .eq('id', id)
       .eq('merchant_id', merchant.id)
       .eq('status', 'active')
@@ -113,6 +113,57 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           
         if (updateError) {
           console.error('Error updating subscription to completed:', updateError);
+        }
+
+        // FIXED: Send completion email when subscription is completed via manual generation
+        try {
+          // Get customer email for completion notification
+          const { data: customer } = await service
+            .from('customers')
+            .select('email')
+            .eq('id', sub.customer_id)
+            .single();
+
+          if (customer?.email) {
+            console.log('📧 Sending completion email to:', customer.email);
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            
+            if (supabaseUrl && serviceKey) {
+              const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${serviceKey}`
+                },
+                body: JSON.stringify({
+                  type: 'completion',
+                  subscription_id: id,
+                  customer_email: customer.email
+                })
+              });
+              
+              console.log('📧 Completion email response:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok
+              });
+              
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.error('📧 Completion email error:', errorText);
+              } else {
+                console.log('✅ Completion email sent successfully');
+              }
+            } else {
+              console.error('❌ Missing environment variables for completion email');
+            }
+          } else {
+            console.log('ℹ️ No customer email found for completion notification');
+          }
+        } catch (emailError) {
+          console.error('❌ Failed to send completion email:', emailError);
+          // Don't fail the completion process if email fails
         }
           
         return NextResponse.json({ 
