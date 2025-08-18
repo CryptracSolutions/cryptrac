@@ -310,21 +310,37 @@ serve(async () => {
           
           console.log(`✅ Subscription ${sub.id} completed after ${currentCycle} cycles`);
           
-          // Send completion email
+          // FIXED: Send completion email using correct Supabase Edge Function URL
           if (customer?.email) {
             try {
-              const appOrigin = Deno.env.get('APP_ORIGIN') || 'https://cryptrac.com';
-              await fetch(`${appOrigin}/api/supabase/functions/subscriptions-send-notifications`, {
+              console.log('📧 Sending completion email to:', customer.email);
+              const response = await fetch(`${url}/functions/v1/subscriptions-send-notifications`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${key}`
+                },
                 body: JSON.stringify({
                   type: 'completion',
                   subscription_id: sub.id,
                   customer_email: customer.email
                 })
               });
+              
+              console.log('📧 Completion email response:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok
+              });
+              
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.error('📧 Completion email error:', errorText);
+              } else {
+                console.log('✅ Completion email sent successfully');
+              }
             } catch (error) {
-              console.error('Failed to send completion email:', error);
+              console.error('❌ Failed to send completion email:', error);
             }
           }
           
