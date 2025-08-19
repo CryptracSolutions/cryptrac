@@ -202,6 +202,12 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             console.error('Welcome email function error response:', errorText);
+            // Add warning to response but don't fail subscription creation
+            return NextResponse.json({ 
+              success: true, 
+              data: subscription,
+              warnings: [`Welcome email could not be sent: ${errorText}`]
+            });
           } else {
             console.log('Welcome email function called successfully');
           }
@@ -210,10 +216,20 @@ export async function POST(request: NextRequest) {
             hasSupabaseUrl: !!supabaseUrl,
             hasServiceKey: !!supabaseServiceKey
           });
+          return NextResponse.json({ 
+            success: true, 
+            data: subscription,
+            warnings: ['Welcome email could not be sent: Missing email configuration']
+          });
         }
       } catch (error) {
         console.error('Failed to send welcome email:', error);
-        // Don't fail subscription creation if email fails
+        // Don't fail subscription creation if email fails, but warn the user
+        return NextResponse.json({ 
+          success: true, 
+          data: subscription,
+          warnings: [`Welcome email could not be sent: ${error instanceof Error ? error.message : 'Unknown error'}`]
+        });
       }
     } else {
       console.log('No customer email provided, skipping welcome email');
@@ -247,3 +263,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
   }
 }
+

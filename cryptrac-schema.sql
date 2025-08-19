@@ -863,7 +863,8 @@ ALTER TABLE "public"."fiat_payouts" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."invoice_counters" (
     "merchant_id" "uuid" NOT NULL,
     "last_value" integer DEFAULT 0 NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"()
 );
 
 
@@ -1814,6 +1815,10 @@ CREATE INDEX "idx_email_logs_created_at" ON "public"."email_logs" USING "btree" 
 
 
 
+CREATE INDEX "idx_email_logs_monitoring" ON "public"."email_logs" USING "btree" ("created_at" DESC, "status", "type");
+
+
+
 CREATE INDEX "idx_email_logs_status" ON "public"."email_logs" USING "btree" ("status");
 
 
@@ -1946,7 +1951,15 @@ CREATE INDEX "idx_reps_user_id" ON "public"."reps" USING "btree" ("user_id");
 
 
 
+CREATE INDEX "idx_subscription_amount_overrides_lookup" ON "public"."subscription_amount_overrides" USING "btree" ("subscription_id", "effective_from" DESC);
+
+
+
 CREATE INDEX "idx_subscription_history_merchant_id" ON "public"."subscription_history" USING "btree" ("merchant_id");
+
+
+
+CREATE INDEX "idx_subscription_invoices_cycle_lookup" ON "public"."subscription_invoices" USING "btree" ("subscription_id", "cycle_start_at");
 
 
 
@@ -1971,6 +1984,14 @@ CREATE INDEX "idx_subscriptions_customer" ON "public"."subscriptions" USING "btr
 
 
 CREATE INDEX "idx_subscriptions_merchant_next" ON "public"."subscriptions" USING "btree" ("merchant_id", "next_billing_at");
+
+
+
+CREATE INDEX "idx_subscriptions_merchant_status" ON "public"."subscriptions" USING "btree" ("merchant_id", "status", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_subscriptions_status_billing" ON "public"."subscriptions" USING "btree" ("status", "next_billing_at") WHERE ("status" = 'active'::"text");
 
 
 
@@ -3065,6 +3086,12 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+
+
+RESET ALL;
+
+
+
 -- Create buckets
 select storage.create_bucket('w9-uploads', public := false);
 select storage.create_bucket('promo-kits', public := true);
@@ -3089,8 +3116,3 @@ to public
 with check (
   bucket_id = 'w9-uploads' AND auth.uid() = owner
 );
-
-
-
-
-RESET ALL;

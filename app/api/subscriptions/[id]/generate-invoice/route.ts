@@ -55,6 +55,33 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const { service, merchant } = auth;
     console.log('Merchant ID:', merchant.id);
 
+    // Enhanced environment variable validation
+    const internalKey = process.env.INTERNAL_API_KEY;
+    const appOrigin = env.APP_ORIGIN;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    console.log('Environment validation:', { 
+      hasInternalKey: !!internalKey, 
+      hasAppOrigin: !!appOrigin,
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!serviceKey,
+      appOriginValue: appOrigin
+    });
+
+    const missingVars = [];
+    if (!internalKey) missingVars.push('INTERNAL_API_KEY');
+    if (!appOrigin) missingVars.push('APP_ORIGIN');
+    if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!serviceKey) missingVars.push('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (missingVars.length > 0) {
+      console.error('Missing required environment variables:', missingVars);
+      return NextResponse.json({ 
+        error: `Server misconfigured - missing environment variables: ${missingVars.join(', ')}` 
+      }, { status: 500 });
+    }
+
     // Task 4: Get subscription with all timing fields (unified with scheduler)
     const { data: sub, error: subError } = await service
       .from('subscriptions')
@@ -126,8 +153,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
           if (customer?.email) {
             console.log('📧 Sending completion email to:', customer.email);
-            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-            const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
             
             if (supabaseUrl && serviceKey) {
               const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
@@ -199,7 +224,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         return NextResponse.json({ error: 'Database error fetching payment link' }, { status: 500 });
       }
         
-      const paymentUrl = paymentLink?.link_id ? `${env.APP_ORIGIN}/pay/${paymentLink.link_id}` : null;
+      const paymentUrl = paymentLink?.link_id ? `${appOrigin}/pay/${paymentLink.link_id}` : null;
       return NextResponse.json({ 
         payment_url: paymentUrl, 
         payment_link_id: existingInvoice.payment_link_id,
@@ -255,19 +280,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     // Expires at: cycle_start_at + (past_due_after_days + 14) days
     const expiresAt = cycleStart.plus({ days: pastDueAfterDays + 14 });
     console.log('Due date:', dueDate.toISO(), 'Expires at:', expiresAt.toISO());
-
-    const internalKey = process.env.INTERNAL_API_KEY;
-    const appOrigin = env.APP_ORIGIN;
-    console.log('Environment check - Internal key exists:', !!internalKey, 'App origin:', appOrigin);
-    
-    if (!internalKey || !appOrigin) {
-      console.error('Missing environment variables:', { 
-        hasInternalKey: !!internalKey, 
-        hasAppOrigin: !!appOrigin,
-        appOriginValue: appOrigin
-      });
-      return NextResponse.json({ error: 'Server misconfigured - missing environment variables' }, { status: 500 });
-    }
     
     // Task 4: Create payment link with exact same rules as scheduler
     const title = `${sub.title} — Invoice ${cycleStart.setZone(zone).toISODate()}`;
@@ -291,9 +303,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     };
     console.log('Payment payload:', JSON.stringify(paymentPayload, null, 2));
     
+    // Fixed: Ensure internalKey is not undefined before using it in headers
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (internalKey) {
+      headers['X-Internal-Key'] = internalKey;
+    }
+    
     const res = await fetch(`${appOrigin}/api/internal/payments/create`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Internal-Key': internalKey },
+      headers,
       body: JSON.stringify(paymentPayload)
     });
     

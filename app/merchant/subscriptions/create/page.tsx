@@ -195,6 +195,19 @@ export default function CreateSubscriptionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate accepted cryptos
+    if (form.accepted_cryptos.length === 0) {
+      toast.error('Please select at least one accepted cryptocurrency');
+      return;
+    }
+    
+    // Validate amount
+    if (parseFloat(form.amount) <= 0) {
+      toast.error('Amount must be greater than zero');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -233,7 +246,15 @@ export default function CreateSubscriptionPage() {
       
       if (res.ok) {
         const result = await res.json();
-        // Fix: Redirect to subscription detail page instead of list
+        
+        // Show warnings if any
+        if (result.warnings && result.warnings.length > 0) {
+          result.warnings.forEach((warning: string) => {
+            toast.error(warning);
+          });
+        }
+        
+        // Still redirect on success even with warnings
         router.push(`/merchant/subscriptions/${result.data.id}`);
       } else {
         const error = await res.text();
@@ -443,7 +464,7 @@ export default function CreateSubscriptionPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Phone Number</label>
+                    <label className="block text-sm font-medium mb-1">Customer Phone</label>
                     <Input 
                       name="customer_phone" 
                       placeholder="+1 (555) 123-4567" 
@@ -455,39 +476,58 @@ export default function CreateSubscriptionPage() {
               </CardContent>
             </Card>
 
+            {/* Accepted Cryptocurrencies */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Accepted Cryptocurrencies *</CardTitle>
+                <CardDescription>
+                  Select which cryptocurrencies customers can use to pay
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {availableCryptos.length === 0 ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      No wallet addresses configured. Please set up your wallet addresses in merchant settings first.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {availableCryptos.map(crypto => (
+                      <div key={crypto} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={crypto}
+                          checked={form.accepted_cryptos.includes(crypto)}
+                          onCheckedChange={(checked) => handleCryptoChange(crypto, checked as boolean)}
+                        />
+                        <label htmlFor={crypto} className="text-sm font-medium">
+                          {crypto}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {form.accepted_cryptos.length === 0 && availableCryptos.length > 0 && (
+                  <Alert className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Please select at least one cryptocurrency to accept payments.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Payment Settings */}
             <Card>
               <CardHeader>
                 <CardTitle>Payment Settings</CardTitle>
                 <CardDescription>
-                  Configure payment processing and cryptocurrency options
+                  Configure fees and conversion options
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Accepted Cryptocurrencies</label>
-                  {availableCryptos.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-2">
-                      {availableCryptos.map(crypto => (
-                        <label key={crypto} className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={form.accepted_cryptos.includes(crypto)}
-                            onCheckedChange={(checked) => handleCryptoChange(crypto, checked as boolean)}
-                          />
-                          <span className="text-sm">{crypto}</span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        No cryptocurrency wallets configured. Please set up wallet addresses in your merchant settings.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -496,7 +536,7 @@ export default function CreateSubscriptionPage() {
                       onCheckedChange={(checked) => setForm(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
                     />
                     <label htmlFor="charge_customer_fee" className="text-sm font-medium">
-                      Charge customer gateway fee ({calculateFeePercentage()}%)
+                      Charge gateway fee to customer ({calculateFeePercentage()}%)
                     </label>
                   </div>
                   <p className="text-xs text-gray-500 ml-6">
@@ -703,7 +743,14 @@ export default function CreateSubscriptionPage() {
             <div className="flex justify-end">
               <Button 
                 type="submit" 
-                disabled={isSubmitting || !form.title || !form.amount || !form.anchor || form.accepted_cryptos.length === 0}
+                disabled={
+                  isSubmitting || 
+                  !form.title || 
+                  !form.amount || 
+                  !form.anchor || 
+                  form.accepted_cryptos.length === 0 ||
+                  parseFloat(form.amount) <= 0
+                }
                 className="px-8"
               >
                 {isSubmitting ? 'Creating...' : 'Create Subscription'}

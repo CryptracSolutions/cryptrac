@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -72,8 +72,9 @@ export default function SubscriptionDetailPage() {
   const [override, setOverride] = useState({ effective_from: '', amount: '', note: '' });
   const [invoiceLink, setInvoiceLink] = useState<{ url: string; id: string } | null>(null);
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const fetchInvoices = useCallback(async () => {
+  const fetchInvoices = useCallback(async (): Promise<void> => {
     const { data: invs } = await supabase
       .from('subscription_invoices')
       .select('id, amount, currency, status, created_at, cycle_start_at, due_date, invoice_number')
@@ -83,7 +84,7 @@ export default function SubscriptionDetailPage() {
   }, [id]);
 
   // Task 6: Fetch amount overrides
-  const fetchAmountOverrides = useCallback(async () => {
+  const fetchAmountOverrides = useCallback(async (): Promise<void> => {
     const { data: overrides } = await supabase
       .from('subscription_amount_overrides')
       .select('id, effective_from, amount, note, created_at')
@@ -92,34 +93,53 @@ export default function SubscriptionDetailPage() {
     setAmountOverrides(overrides || []);
   }, [id]);
 
-  useEffect(() => {
-    (async () => {
-      const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}`);
-      const json = await res.json();
-      const subscriptionData = json.data;
-      setSub(subscriptionData);
+  const fetchCustomerData = useCallback(async (customerId: string): Promise<void> => {
+    const { data: customerData } = await supabase
+      .from('customers')
+      .select('id, email, name, phone')
+      .eq('id', customerId)
+      .single();
       
-      // Fetch customer data if customer_id exists
-      if (subscriptionData?.customer_id) {
-        const { data: customerData } = await supabase
-          .from('customers')
-          .select('id, email, name, phone')
-          .eq('id', subscriptionData.customer_id)
-          .single();
-        
-        if (customerData) {
-          setCustomer(customerData);
-          // Pre-populate email field with customer's email
-          if (customerData.email) {
-            setEmail(customerData.email);
-          }
-        }
+    if (customerData) {
+      setCustomer(customerData);
+      if (customerData.email) {
+        setEmail(customerData.email);
       }
-      
-      await fetchInvoices();
-      await fetchAmountOverrides(); // Task 6: Fetch amount overrides
-    })();
-  }, [id, fetchInvoices, fetchAmountOverrides]);
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadSubscriptionData = async (): Promise<void> => {
+      try {
+        setLoading(true);
+        
+        // Load subscription data
+        const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}`);
+        const json = await res.json();
+        const subscriptionData = json.data;
+        setSub(subscriptionData);
+        
+        // Load related data in parallel
+        const promises: Promise<void>[] = [
+          fetchInvoices(),
+          fetchAmountOverrides()
+        ];
+        
+        if (subscriptionData?.customer_id) {
+          promises.push(fetchCustomerData(subscriptionData.customer_id));
+        }
+        
+        await Promise.all(promises);
+      } catch (error) {
+        console.error('Error loading subscription data:', error);
+        toast.error('Failed to load subscription data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSubscriptionData();
+  }, [id, fetchInvoices, fetchAmountOverrides, fetchCustomerData]);
 
   const scheduleOverride = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,6 +196,19 @@ export default function SubscriptionDetailPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading subscription details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4">
       {sub && (
@@ -200,442 +233,193 @@ export default function SubscriptionDetailPage() {
               }) : 'Not scheduled'}
             </p>
           )}
-          <div className="flex items-center gap-2 mb-4">
-            <Badge variant={
-              sub.status === 'active' ? 'default' : 
-              sub.status === 'paused' ? 'secondary' : 
-              sub.status === 'completed' ? 'outline' :
-              'destructive'
-            }>
-              {sub.status === 'active' ? '✓ Active' : 
-               sub.status === 'paused' ? '⏸ Paused' : 
-               sub.status === 'completed' ? '🏁 Completed' :
-               '✕ Canceled'}
-            </Badge>
-            {sub.status === 'paused' && (
-              <span className="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded">
-                Payment required to reactivate
-              </span>
-            )}
-            {sub.status === 'completed' && (
-              <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
-                All cycles completed
-              </span>
-            )}
-            {(sub.missed_payments_count ?? 0) > 0 && (
-              <span className="text-sm text-red-600 bg-red-50 px-2 py-1 rounded">
-                {sub.missed_payments_count} missed payment{(sub.missed_payments_count ?? 0) > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-
-          {/* Comprehensive Configuration Display */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Billing Configuration */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold mb-3 text-gray-800">Billing Configuration</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Base Amount:</span>
-                  <span className="font-medium">{sub.amount} {sub.currency}</span>
-                </div>
-                {sub.tax_enabled && sub.tax_rates && Array.isArray(sub.tax_rates) && sub.tax_rates.length > 0 && (
-                  <>
-                    {sub.tax_rates.map((rate: any, index: number) => {
-                      const taxAmount = (sub.amount * (rate.percentage || 0) / 100);
-                      return (
-                        <div key={index} className="flex justify-between">
-                          <span className="text-gray-600">{rate.label || 'Tax'}:</span>
-                          <span className="font-medium">{taxAmount.toFixed(2)} {sub.currency} ({rate.percentage || 0}%)</span>
-                        </div>
-                      );
-                    })}
-                    <div className="flex justify-between border-t pt-2">
-                      <span className="text-gray-600">Subtotal with Tax:</span>
-                      <span className="font-medium">
-                        {(() => {
-                          const totalTax = sub.tax_rates.reduce((sum: number, rate: any) => sum + (sub.amount * (rate.percentage || 0) / 100), 0);
-                          return (sub.amount + totalTax).toFixed(2);
-                        })()} {sub.currency}
-                      </span>
-                    </div>
-                  </>
+          <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
+            {sub.status}
+          </Badge>
+          
+          {/* Customer Information */}
+          {customer && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold mb-2">Customer Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                {customer.name && (
+                  <div>
+                    <span className="font-medium">Name:</span> {customer.name}
+                  </div>
                 )}
-                {sub.charge_customer_fee && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Gateway Fee:</span>
-                      <span className="font-medium">
-                        {sub.auto_convert_enabled ? '1.0%' : '0.5%'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-t pt-2 font-semibold">
-                      <span className="text-gray-800">Customer Pays:</span>
-                      <span>
-                        {(() => {
-                          const totalTax = (sub.tax_rates && Array.isArray(sub.tax_rates)) 
-                            ? sub.tax_rates.reduce((sum: number, rate: any) => sum + (sub.amount * (rate.percentage || 0) / 100), 0) 
-                            : 0;
-                          const baseWithTax = sub.amount + totalTax;
-                          const feeRate = sub.auto_convert_enabled ? 0.01 : 0.005;
-                          const fee = baseWithTax * feeRate;
-                          return (baseWithTax + fee).toFixed(2);
-                        })()} {sub.currency}
-                      </span>
-                    </div>
-                  </>
+                {customer.email && (
+                  <div>
+                    <span className="font-medium">Email:</span> {customer.email}
+                  </div>
                 )}
-              </div>
-            </div>
-
-            {/* Cycle Information */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold mb-3 text-gray-800">Cycle Information</h3>
-              <div className="space-y-2 text-sm">
-                {sub.max_cycles && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Max Cycles:</span>
-                      <span className="font-medium">{sub.max_cycles}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Completed Cycles:</span>
-                      <span className="font-medium">{invoices.filter(i => i.status === 'paid').length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Remaining Cycles:</span>
-                      <span className="font-medium">{sub.max_cycles - invoices.filter(i => i.status === 'paid').length}</span>
-                    </div>
-                  </>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Missed Payments:</span>
-                  <span className={`font-medium ${(sub.missed_payments_count ?? 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {sub.missed_payments_count ?? 0}
-                  </span>
-                </div>
-                {(sub.pause_after_missed_payments ?? 0) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Pause After:</span>
-                    <span className="font-medium">{sub.pause_after_missed_payments ?? 0} missed payments</span>
+                {customer.phone && (
+                  <div>
+                    <span className="font-medium">Phone:</span> {customer.phone}
                   </div>
                 )}
               </div>
             </div>
+          )}
 
-            {/* Timing Configuration */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold mb-3 text-gray-800">Timing Configuration</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Invoice Due Days:</span>
-                  <span className="font-medium">{sub.invoice_due_days || 0} days after cycle start</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Generate in Advance:</span>
-                  <span className="font-medium">{sub.generate_days_in_advance || 0} days early</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Past Due After:</span>
-                  <span className="font-medium">{sub.past_due_after_days || 2} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Auto Resume:</span>
-                  <span className={`font-medium ${sub.auto_resume_on_payment ? 'text-green-600' : 'text-gray-500'}`}>
-                    {sub.auto_resume_on_payment ? 'Enabled' : 'Disabled'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Status History */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold mb-3 text-gray-800">Status History</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="font-medium">
-                    {sub.created_at ? new Date(sub.created_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    }) : 'N/A'}
-                  </span>
-                </div>
-                {sub.paused_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Paused:</span>
-                    <span className="font-medium">
-                      {sub.paused_at ? new Date(sub.paused_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      }) : 'N/A'}
-                    </span>
-                  </div>
-                )}
-                {sub.resumed_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Resumed:</span>
-                    <span className="font-medium">
-                      {sub.resumed_at ? new Date(sub.resumed_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      }) : 'N/A'}
-                    </span>
-                  </div>
-                )}
-                {sub.completed_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Completed:</span>
-                    <span className="font-medium">
-                      {sub.completed_at ? new Date(sub.completed_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      }) : 'N/A'}
-                    </span>
-                  </div>
-                )}
-                {sub.canceled_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Canceled:</span>
-                    <span className="font-medium">
-                      {sub.canceled_at ? new Date(sub.canceled_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      }) : 'N/A'}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Only show generate invoice button for active subscriptions */}
-      {sub?.status === 'active' && (
-        <div className="mb-6">
-          <Button className="mb-2" onClick={generateInvoice}>
-            Generate Invoice Now
-          </Button>
-          <p className="text-sm text-gray-500">
-            Create an invoice for the next billing cycle
-          </p>
-        </div>
-      )}
-      
-      {sub?.status === 'completed' && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-2 text-green-800">
-            <span className="text-lg">🏁</span>
-            <span className="font-medium">Subscription Completed</span>
-          </div>
-          <p className="text-sm text-green-700 mt-1">
-            This subscription has reached its maximum number of cycles and is now complete.
-          </p>
-        </div>
-      )}
-      
-      {invoiceLink && (
-        <div className="border border-green-200 bg-green-50 p-4 rounded mb-6 space-y-3 max-w-md">
-          <div className="flex items-center gap-2 text-green-800">
-            <span className="text-lg">✓</span>
-            <span className="font-medium">Invoice Generated Successfully</span>
-          </div>
-          <div className="flex gap-2">
-            <Input value={invoiceLink.url} readOnly className="flex-1 bg-white" />
-            <Button
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(invoiceLink.url);
-                toast.success('Payment link copied to clipboard');
-              }}
-            >
-              Copy Link
-            </Button>
-          </div>
-          <form onSubmit={sendEmail} className="flex gap-2">
-            <Input 
-              type="email" 
-              placeholder="Customer email address" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)}
-              className="bg-white"
-            />
-            <Button type="submit">Send Invoice</Button>
-          </form>
-          <p className="text-sm text-gray-600">
-            Send the payment link directly to your customer's email
-          </p>
-        </div>
-      )}
-      
-      <h2 className="font-semibold mb-3 text-lg">Invoice History</h2>
-      <ul className="space-y-3 mb-6">
-        {invoices.map(i => (
-          <li key={i.id} className="border p-3 rounded-lg">
-            <div className="flex justify-between items-start">
+          {/* Timing Configuration */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <h3 className="font-semibold mb-2">Timing Configuration</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium">{i.amount} {i.currency}</span>
-                  {i.invoice_number && (
-                    <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded font-mono">
-                      {i.invoice_number}
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <div>
-                    <span className="font-medium">Billing Period:</span> {new Date(i.cycle_start_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </div>
-                  <div>
-                    <span className="font-medium">Due Date:</span> {new Date(i.due_date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                    {(() => {
-                      const dueDate = new Date(i.due_date);
-                      const pastDueAfterDays = sub?.past_due_after_days || 2;
-                      const overdueDate = new Date(dueDate.getTime() + (pastDueAfterDays * 24 * 60 * 60 * 1000));
-                      const now = new Date();
-                      
-                      return now > overdueDate && i.status !== 'paid';
-                    })() && (
-                      <span className="ml-2 text-red-600 font-medium">• Overdue</span>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Created: {new Date(i.created_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                </div>
+                <span className="font-medium">Invoice Due Days:</span> {sub.invoice_due_days || 0}
               </div>
-              <Badge variant={
-                i.status === 'paid' ? 'default' : 
-                i.status === 'past_due' ? 'destructive' : 
-                'secondary'
-              }>
-                {i.status === 'paid' ? '✓ Paid' : 
-                 i.status === 'past_due' ? '⚠ Past Due' : 
-                 i.status === 'sent' ? '📧 Sent' : 
-                 '⏳ Pending'}
-              </Badge>
+              <div>
+                <span className="font-medium">Generate in Advance:</span> {sub.generate_days_in_advance || 0} days
+              </div>
+              <div>
+                <span className="font-medium">Past Due After:</span> {sub.past_due_after_days || 2} days
+              </div>
+              <div>
+                <span className="font-medium">Auto Resume:</span> {sub.auto_resume_on_payment ? 'Yes' : 'No'}
+              </div>
             </div>
-          </li>
-        ))}
-        {invoices.length === 0 && (
-          <li className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-2">📄</div>
-            <p>No invoices generated yet</p>
-            <p className="text-sm">Use the button above to create your first invoice</p>
-          </li>
-        )}
-      </ul>
-
-      {/* Task 10: Enhanced Amount Overrides Section */}
-      <h2 className="font-semibold mb-3 text-lg">Amount Overrides</h2>
-      {amountOverrides.length > 0 && (
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-3">
-            Scheduled amount changes for future billing cycles
-          </p>
-          <ul className="space-y-2 mb-4">
-            {amountOverrides.map(override => (
-              <li key={override.id} className="border border-blue-200 p-3 rounded-lg bg-blue-50">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-medium text-blue-900">
-                      {override.amount} {sub?.currency}
-                    </div>
-                    <div className="text-sm text-blue-700">
-                      Effective from: {new Date(override.effective_from).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </div>
-                    {override.note && (
-                      <div className="text-sm text-blue-600 mt-1 italic">"{override.note}"</div>
-                    )}
-                  </div>
-                  <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                    Scheduled
-                  </span>
-                </div>
-                <div className="text-xs text-blue-500 mt-2">
-                  Created: {new Date(override.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
-              </li>
-            ))}
-          </ul>
+          </div>
         </div>
       )}
 
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="font-medium mb-3">Schedule New Amount Override</h3>
-        <form onSubmit={scheduleOverride} className="space-y-3 max-w-sm">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Effective Date
-            </label>
-            <Input 
-              type="date" 
-              value={override.effective_from} 
-              onChange={e => setOverride({ ...override, effective_from: e.target.value })} 
-              required 
-            />
+      {/* Generate Invoice Section */}
+      <div className="mb-6 p-4 border rounded-lg">
+        <h2 className="text-lg font-semibold mb-4">Generate Invoice</h2>
+        <Button onClick={generateInvoice} className="mb-4">
+          Generate Invoice
+        </Button>
+        
+        {invoiceLink && (
+          <div className="space-y-4">
+            <div className="p-3 bg-green-50 border border-green-200 rounded">
+              <p className="text-green-800 font-medium">Invoice Generated!</p>
+              <p className="text-sm text-green-600 mt-1">
+                Payment URL: <a href={invoiceLink.url} target="_blank" rel="noopener noreferrer" className="underline">
+                  {invoiceLink.url}
+                </a>
+              </p>
+            </div>
+            
+            <form onSubmit={sendEmail} className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Send invoice notification to:</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="customer@example.com"
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={!email}>
+                Send Invoice Notification
+              </Button>
+            </form>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              New Amount ({sub?.currency})
-            </label>
-            <Input 
-              type="number" 
-              step="0.01" 
-              placeholder="0.00" 
-              value={override.amount} 
-              onChange={e => setOverride({ ...override, amount: e.target.value })} 
-              required 
-            />
+        )}
+      </div>
+
+      {/* Amount Overrides Section */}
+      <div className="mb-6 p-4 border rounded-lg">
+        <h2 className="text-lg font-semibold mb-4">Amount Overrides</h2>
+        
+        {/* Schedule New Override */}
+        <form onSubmit={scheduleOverride} className="space-y-3 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Effective Date</label>
+              <Input
+                type="date"
+                value={override.effective_from}
+                onChange={(e) => setOverride(prev => ({ ...prev, effective_from: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">New Amount</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={override.amount}
+                onChange={(e) => setOverride(prev => ({ ...prev, amount: e.target.value }))}
+                placeholder="29.99"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Note (Optional)</label>
+              <Input
+                value={override.note}
+                onChange={(e) => setOverride(prev => ({ ...prev, note: e.target.value }))}
+                placeholder="Price increase"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Note (optional)
-            </label>
-            <Input 
-              placeholder="Reason for amount change" 
-              value={override.note} 
-              onChange={e => setOverride({ ...override, note: e.target.value })} 
-            />
-          </div>
-          <Button type="submit" className="w-full">
-            Schedule Amount Override
-          </Button>
-          <p className="text-xs text-gray-500">
-            The new amount will apply to all invoices generated on or after the effective date.
-          </p>
+          <Button type="submit">Schedule Override</Button>
         </form>
+
+        {/* Existing Overrides */}
+        {amountOverrides.length > 0 && (
+          <div>
+            <h3 className="font-medium mb-3">Scheduled Overrides</h3>
+            <div className="space-y-2">
+              {amountOverrides.map(override => (
+                <div key={override.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <span className="font-medium">${override.amount}</span>
+                    <span className="text-gray-600 ml-2">effective {new Date(override.effective_from).toLocaleDateString()}</span>
+                    {override.note && (
+                      <span className="text-sm text-gray-500 ml-2">({override.note})</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    Created {new Date(override.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Invoices Section */}
+      <div className="p-4 border rounded-lg">
+        <h2 className="text-lg font-semibold mb-4">Invoice History</h2>
+        
+        {invoices.length === 0 ? (
+          <p className="text-gray-600">No invoices generated yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {invoices.map(invoice => (
+              <div key={invoice.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div>
+                  <div className="font-medium">
+                    {invoice.invoice_number && (
+                      <span className="text-sm text-gray-500 mr-2">{invoice.invoice_number}</span>
+                    )}
+                    ${invoice.amount} {invoice.currency}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Cycle: {new Date(invoice.cycle_start_at).toLocaleDateString()} | 
+                    Due: {new Date(invoice.due_date).toLocaleDateString()}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <Badge variant={
+                    invoice.status === 'paid' ? 'default' : 
+                    invoice.status === 'pending' ? 'secondary' : 
+                    invoice.status === 'past_due' ? 'destructive' : 'secondary'
+                  }>
+                    {invoice.status}
+                  </Badge>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {new Date(invoice.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
