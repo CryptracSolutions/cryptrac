@@ -1,4 +1,3 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -6,224 +5,155 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Unified Email Template Types
-type EmailTemplate = {
+interface EmailTemplate {
   subject: string;
   html: string;
   text: string;
-};
+}
 
-interface BaseEmailData {
+// Simple email logging function
+async function logEmail(supabase: any, email: string, type: string, status: string, error?: string, metadata?: any) {
+  try {
+    await supabase.from('email_logs').insert({
+      email,
+      type,
+      status,
+      error_message: error || null,
+      metadata: metadata || null,
+      created_at: new Date().toISOString()
+    });
+    console.log('✅ Email logged to database');
+  } catch (err) {
+    console.error('❌ Failed to log email:', err);
+  }
+}
+
+// Simple email sending function with retry
+async function sendEmail(supabase: any, to: string, template: EmailTemplate, emailType: string): Promise<boolean> {
+  const sendgridKey = Deno.env.get('SENDGRID_API_KEY');
+  const fromEmail = Deno.env.get('CRYPTRAC_RECEIPTS_FROM') || 'receipts@cryptrac.com';
+
+  if (!sendgridKey) {
+    console.error('❌ SENDGRID_API_KEY not configured');
+    await logEmail(supabase, to, emailType, 'failed', 'SENDGRID_API_KEY not configured');
+    return false;
+  }
+
+  const emailPayload = {
+    personalizations: [{ to: [{ email: to }], subject: template.subject }],
+    from: { email: fromEmail, name: 'Cryptrac' },
+    content: [
+      { type: 'text/plain', value: template.text },
+      { type: 'text/html', value: template.html }
+    ],
+    categories: ['subscription', emailType]
+  };
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sendgridKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailPayload)
+      });
+
+      if (response.ok) {
+        await logEmail(supabase, to, emailType, 'sent', undefined, { subject: template.subject });
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error(`❌ SendGrid error (attempt ${attempt + 1}):`, response.status, errorText);
+        if (attempt === 2) {
+          await logEmail(supabase, to, emailType, 'failed', `SendGrid error: ${response.status} - ${errorText}`);
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Email sending error (attempt ${attempt + 1}):`, error);
+      if (attempt === 2) {
+        await logEmail(supabase, to, emailType, 'failed', error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    if (attempt < 2) {
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+    }
+  }
+
+  return false;
+}
+
+// Generate welcome email template
+function generateWelcomeTemplate(data: {
   merchantName: string;
   customerName?: string;
-  customerEmail?: string;
-  appOrigin?: string;
-}
-
-interface ReceiptEmailData extends BaseEmailData {
-  amount: number;
-  currency: string;
-  payment_method: string;
-  title: string;
-  tx_hash?: string;
-  payin_hash?: string;
-  payout_hash?: string;
-  pay_currency?: string;
-  amount_received?: number;
-  status: string;
-  created_at?: string;
-  order_id?: string;
-  transaction_id?: string;
-  receiptUrl: string;
-}
-
-interface SubscriptionEmailData extends BaseEmailData {
   subscriptionTitle: string;
   amount?: number;
   currency?: string;
-  paymentUrl?: string;
   nextBillingDate?: string;
-  cycleCount?: number;
-  maxCycles?: number;
-  // For receipt-style subscription emails
-  tx_hash?: string;
-  payin_hash?: string;
-  payout_hash?: string;
-  pay_currency?: string;
-  amount_received?: number;
-  order_id?: string;
-  transaction_id?: string;
-  created_at?: string;
-}
+}): EmailTemplate {
+  const { merchantName, customerName, subscriptionTitle, amount, currency, nextBillingDate } = data;
+  
+  const formattedAmount = amount && currency ? 
+    new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount) : '';
 
-interface InvoiceEmailData extends BaseEmailData {
-  subscriptionTitle: string;
-  amount: number;
-  currency: string;
-  paymentUrl: string;
-  dueDate?: string;
-  isPastDue?: boolean;
-  daysPastDue?: number;
-}
+  const subject = `Welcome to ${subscriptionTitle}`;
 
-// Base HTML template structure
-function getBaseTemplate(
-  title: string,
-  icon: string,
-  iconColor: string,
-  merchantName: string,
-  content: string
-): string {
-  return `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title}</title>
+    <title>Welcome to Your Subscription</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #2c3e50;
-            margin: 0;
-            font-size: 28px;
-        }
-        .merchant-name {
-            color: #6c757d;
-            font-size: 16px;
-            margin-top: 5px;
-        }
-        .icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-            color: ${iconColor};
-        }
-        .details {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        .detail-label {
-            font-weight: 600;
-            color: #495057;
-        }
-        .detail-value {
-            color: #212529;
-        }
-        .amount-highlight {
-            font-weight: bold;
-            font-size: 18px;
-            color: #28a745;
-        }
-        .transaction-hash {
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
-            word-break: break-all;
-            margin: 15px 0;
-        }
-        .hash-section {
-            margin: 15px 0;
-        }
-        .hash-label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 5px;
-        }
-        .button {
-            display: inline-block;
-            background: #007bff;
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 600;
-            margin: 20px 0;
-        }
-        .button.success {
-            background: #28a745;
-        }
-        .button.warning {
-            background: #ffc107;
-            color: #212529;
-        }
-        .button.danger {
-            background: #dc3545;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-            color: #6c757d;
-            font-size: 14px;
-        }
-        .alert {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
-        }
-        .alert.danger {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-        @media (max-width: 600px) {
-            .detail-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .detail-value {
-                margin-top: 4px;
-            }
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+        .container { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #e9ecef; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .welcome-icon { color: #28a745; font-size: 48px; margin-bottom: 10px; }
+        .details { background: #f8f9fa; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+        .detail-row:last-child { border-bottom: none; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="icon">${icon}</div>
-            <h1>${title}</h1>
-            <div class="merchant-name">From ${merchantName}</div>
+            <div class="welcome-icon">🎉</div>
+            <h1>Welcome to Your Subscription</h1>
+            <div style="color: #6c757d; font-size: 16px; margin-top: 5px;">From ${merchantName}</div>
         </div>
         
-        ${content}
+        <p>Hello${customerName ? ` ${customerName}` : ''},</p>
+        <p>Welcome to your new subscription!</p>
+        
+        <div class="details">
+            <div class="detail-row">
+                <span>Subscription:</span>
+                <span>${subscriptionTitle}</span>
+            </div>
+            ${formattedAmount ? `
+            <div class="detail-row">
+                <span>Amount:</span>
+                <span style="font-weight: bold; color: #28a745;">${formattedAmount}</span>
+            </div>
+            ` : ''}
+            ${nextBillingDate ? `
+            <div class="detail-row">
+                <span>Next Billing:</span>
+                <span>${new Date(nextBillingDate).toLocaleDateString('en-US', { 
+                  year: 'numeric', month: 'long', day: 'numeric' 
+                })}</span>
+            </div>
+            ` : ''}
+        </div>
+        
+        <p>Thank you for subscribing! You'll receive invoices before each billing cycle.</p>
+        <p>Best regards,<br>The ${merchantName} Team</p>
         
         <div class="footer">
             <p>This is an automated email from Cryptrac.</p>
@@ -232,589 +162,183 @@ function getBaseTemplate(
     </div>
 </body>
 </html>
-  `.trim();
-}
-
-// Receipt Email Template (for all payment confirmations)
-function generateReceiptEmail(data: ReceiptEmailData): EmailTemplate {
-  const {
-    amount,
-    currency = 'USD',
-    payment_method,
-    title,
-    tx_hash,
-    payin_hash,
-    payout_hash,
-    pay_currency,
-    amount_received,
-    status = 'confirmed',
-    created_at,
-    order_id,
-    transaction_id,
-    receiptUrl,
-    merchantName
-  } = data;
-
-  // Format amounts
-  const formattedAmount = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency
-  }).format(amount);
-
-  let receivedAmountText = '';
-  if (typeof amount_received === 'number' && typeof pay_currency === 'string') {
-    const formattedReceived = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 8
-    }).format(amount_received);
-    receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
-  }
-
-  // Format date
-  const formattedDate = created_at ? 
-    new Date(created_at).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }) : 
-    new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-  const displayStatus = status === 'confirmed' ? 'Confirmed' : 
-                       status === 'confirming' ? 'Confirming' :
-                       typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : 'Confirmed';
-
-  const subject = `Receipt for ${title} - ${formattedAmount}`;
-
-  const content = `
-        <div class="details">
-            <div class="detail-row">
-                <span class="detail-label">Payment Method:</span>
-                <span class="detail-value">${payment_method}</span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Description:</span>
-                <span class="detail-value">${title}</span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Date:</span>
-                <span class="detail-value">${formattedDate}</span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Status:</span>
-                <span class="detail-value">${displayStatus}</span>
-            </div>
-            ${order_id ? `
-            <div class="detail-row">
-                <span class="detail-label">Order ID:</span>
-                <span class="detail-value">${order_id}</span>
-            </div>
-            ` : ''}
-            ${transaction_id ? `
-            <div class="detail-row">
-                <span class="detail-label">Transaction ID:</span>
-                <span class="detail-value">${transaction_id}</span>
-            </div>
-            ` : ''}
-            ${receivedAmountText ? `
-            <div class="detail-row">
-                <span class="detail-label">Amount Paid:</span>
-                <span class="detail-value">${receivedAmountText.trim()}</span>
-            </div>
-            ` : ''}
-            <div class="detail-row">
-                <span class="detail-label">Total Amount:</span>
-                <span class="detail-value amount-highlight">${formattedAmount}${receivedAmountText}</span>
-            </div>
-        </div>
-
-        ${tx_hash ? `
-        <div class="hash-section">
-            <div class="hash-label">Transaction Hash:</div>
-            <div class="transaction-hash">${tx_hash}</div>
-        </div>
-        ` : ''}
-
-        ${payin_hash ? `
-        <div class="hash-section">
-            <div class="hash-label">Payin Hash (Customer Transaction):</div>
-            <div class="transaction-hash">${payin_hash}</div>
-        </div>
-        ` : ''}
-
-        ${payout_hash ? `
-        <div class="hash-section">
-            <div class="hash-label">Payout Hash (Merchant Transaction):</div>
-            <div class="transaction-hash">${payout_hash}</div>
-        </div>
-        ` : ''}
-
-        <div style="text-align: center;">
-            <a href="${receiptUrl}" class="button success">View Your Receipt</a>
-        </div>
-
-        <p>Thank you for your payment!</p>
-        <p>This is an automated receipt. Please keep this for your records.</p>
   `;
 
-  const html = getBaseTemplate('Payment Received', '✓', '#28a745', merchantName, content);
-
   const text = `
-Payment Receipt
+Subscription Welcome
 
-✓ Payment Received from ${merchantName}
+Hello${customerName ? ` ${customerName}` : ''},
 
-Payment Details:
-• Method: ${payment_method}
-• Description: ${title}
-• Date: ${formattedDate}
-• Status: ${displayStatus}
-${order_id ? `• Order ID: ${order_id}\n` : ''}${transaction_id ? `• Transaction ID: ${transaction_id}\n` : ''}${receivedAmountText ? `• Amount Paid: ${receivedAmountText.trim()}\n` : ''}• Total Amount: ${formattedAmount}${receivedAmountText}
+Welcome to your new subscription!
 
-${tx_hash ? `Transaction Hash: ${tx_hash}\n` : ''}${payin_hash ? `Payin Hash (Customer Transaction): ${payin_hash}\n` : ''}${payout_hash ? `Payout Hash (Merchant Transaction): ${payout_hash}\n` : ''}
-View your receipt: ${receiptUrl}
+Subscription: ${subscriptionTitle}
+${formattedAmount ? `Amount: ${formattedAmount}\n` : ''}${nextBillingDate ? `Next Billing: ${new Date(nextBillingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}
 
-Thank you for your payment!
-This is an automated receipt. Please keep this for your records.
-If you have any questions, please contact ${merchantName}.
+Thank you for subscribing! You'll receive invoices before each billing cycle.
+
+Best regards,
+The ${merchantName} Team
   `.trim();
 
   return { subject, html, text };
 }
 
-// Subscription Welcome Email
-function generateSubscriptionWelcomeEmail(data: SubscriptionEmailData): EmailTemplate {
-  const { subscriptionTitle, merchantName, customerName, amount, currency, nextBillingDate, maxCycles } = data;
+// Generate completion email template
+function generateCompletionTemplate(data: {
+  merchantName: string;
+  customerName?: string;
+  subscriptionTitle: string;
+  maxCycles?: number;
+}): EmailTemplate {
+  const { merchantName, customerName, subscriptionTitle, maxCycles } = data;
   
-  const customerGreeting = customerName ? `Hi ${customerName}` : 'Hi there';
-  const formattedAmount = amount && currency ? 
-    new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount) : '';
+  const subject = `Subscription Complete - ${subscriptionTitle}`;
 
-  const subject = `Welcome to ${subscriptionTitle}`;
-
-  const content = `
-        <p>${customerGreeting},</p>
-        <p>Welcome to <strong>${subscriptionTitle}</strong>! Your subscription has been successfully set up.</p>
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Complete</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+        .container { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #e9ecef; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .complete-icon { color: #28a745; font-size: 48px; margin-bottom: 10px; }
+        .details { background: #f8f9fa; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+        .detail-row:last-child { border-bottom: none; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="complete-icon">✅</div>
+            <h1>Subscription Complete</h1>
+            <div style="color: #6c757d; font-size: 16px; margin-top: 5px;">From ${merchantName}</div>
+        </div>
+        
+        <p>Hello${customerName ? ` ${customerName}` : ''},</p>
+        <p>Your subscription has been completed successfully!</p>
         
         <div class="details">
             <div class="detail-row">
-                <span class="detail-label">Subscription:</span>
-                <span class="detail-value">${subscriptionTitle}</span>
+                <span>Subscription:</span>
+                <span>${subscriptionTitle}</span>
             </div>
-            ${formattedAmount ? `
             <div class="detail-row">
-                <span class="detail-label">Amount:</span>
-                <span class="detail-value">${formattedAmount}</span>
+                <span>Status:</span>
+                <span>Completed</span>
             </div>
-            ` : ''}
-            ${nextBillingDate ? `
-            <div class="detail-row">
-                <span class="detail-label">First Billing:</span>
-                <span class="detail-value">${new Date(nextBillingDate).toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}</span>
-            </div>
-            ` : ''}
             ${maxCycles ? `
             <div class="detail-row">
-                <span class="detail-label">Duration:</span>
-                <span class="detail-value">${maxCycles} billing cycles</span>
+                <span>Total Cycles:</span>
+                <span>${maxCycles}</span>
             </div>
             ` : ''}
         </div>
-
-        <p>You'll receive an email notification before each billing cycle with a secure payment link.</p>
-        <p>Thank you for choosing ${merchantName}!</p>
+        
+        <p>Thank you for your subscription! We hope you enjoyed our service.</p>
+        <p>Best regards,<br>The ${merchantName} Team</p>
+        
+        <div class="footer">
+            <p>This is an automated email from Cryptrac.</p>
+            <p>If you have any questions, please contact ${merchantName}.</p>
+        </div>
+    </div>
+</body>
+</html>
   `;
 
-  const html = getBaseTemplate('Welcome to Your Subscription!', '🎉', '#28a745', merchantName, content);
-
   const text = `
-Welcome to Your Subscription!
+Subscription Complete
 
-${customerGreeting},
+Hello${customerName ? ` ${customerName}` : ''},
 
-Welcome to ${subscriptionTitle}! Your subscription has been successfully set up.
+Your subscription has been completed successfully!
 
-Subscription Details:
-• Subscription: ${subscriptionTitle}
-${formattedAmount ? `• Amount: ${formattedAmount}\n` : ''}${nextBillingDate ? `• First Billing: ${new Date(nextBillingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}${maxCycles ? `• Duration: ${maxCycles} billing cycles\n` : ''}
+Subscription: ${subscriptionTitle}
+Status: Completed
+${maxCycles ? `Total Cycles: ${maxCycles}\n` : ''}
 
-You'll receive an email notification before each billing cycle with a secure payment link.
+Thank you for your subscription! We hope you enjoyed our service.
 
-Thank you for choosing ${merchantName}!
-If you have any questions, please don't hesitate to contact us.
-`;
+Best regards,
+The ${merchantName} Team
+  `.trim();
 
   return { subject, html, text };
 }
 
-// Subscription Invoice Email (for payment requests)
-function generateSubscriptionInvoiceEmail(data: InvoiceEmailData): EmailTemplate {
-  const { subscriptionTitle, merchantName, customerName, amount, currency, paymentUrl, dueDate, isPastDue, daysPastDue } = data;
-  
-  const customerGreeting = customerName ? `Hi ${customerName}` : 'Hi there';
-  const formattedAmount = new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
-
-  const subject = isPastDue 
-    ? `PAST DUE: Invoice for ${subscriptionTitle} - ${formattedAmount}`
-    : `New Invoice: ${subscriptionTitle} - ${formattedAmount}`;
-
-  const alertSection = isPastDue ? `
-        <div class="alert danger">
-            <strong>Payment Past Due</strong><br>
-            This invoice is ${daysPastDue} day${daysPastDue !== 1 ? 's' : ''} past due. Please pay immediately to avoid service interruption.
-        </div>
-  ` : '';
-
-  const content = `
-        ${alertSection}
-        
-        <p>${customerGreeting},</p>
-        <p>Your ${isPastDue ? 'past due ' : ''}invoice for <strong>${subscriptionTitle}</strong> is ready for payment.</p>
-        
-        <div class="details">
-            <div class="detail-row">
-                <span class="detail-label">Subscription:</span>
-                <span class="detail-value">${subscriptionTitle}</span>
-            </div>
-            ${dueDate ? `
-            <div class="detail-row">
-                <span class="detail-label">Due Date:</span>
-                <span class="detail-value">${new Date(dueDate).toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}</span>
-            </div>
-            ` : ''}
-            <div class="detail-row">
-                <span class="detail-label">Amount Due:</span>
-                <span class="detail-value amount-highlight">${formattedAmount}</span>
-            </div>
-        </div>
-
-        <div style="text-align: center;">
-            <a href="${paymentUrl}" class="button ${isPastDue ? 'danger' : ''}">${isPastDue ? 'Pay Now (Past Due)' : 'Pay Invoice'}</a>
-        </div>
-        
-        <p>Thank you for your continued subscription!</p>
-  `;
-
-  const html = getBaseTemplate(
-    isPastDue ? 'Past Due Invoice' : 'New Invoice Ready', 
-    isPastDue ? '⚠️' : '📄', 
-    isPastDue ? '#dc3545' : '#007bff', 
-    merchantName, 
-    content
-  );
-
-  const text = `
-${isPastDue ? 'PAST DUE INVOICE' : 'New Invoice Ready'}
-
-${customerGreeting},
-
-Your ${isPastDue ? 'past due ' : ''}invoice for ${subscriptionTitle} is ready for payment.
-
-${isPastDue ? `⚠️ This invoice is ${daysPastDue} day${daysPastDue !== 1 ? 's' : ''} past due. Please pay immediately to avoid service interruption.\n` : ''}
-Invoice Details:
-• Subscription: ${subscriptionTitle}
-${dueDate ? `• Due Date: ${new Date(dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}• Amount Due: ${formattedAmount}
-
-Pay your invoice: ${paymentUrl}
-
-Thank you for your continued subscription!
-If you have any questions about this invoice, please contact ${merchantName}.
-`;
-
-  return { subject, html, text };
-}
-
-// Subscription Completion Email
-function generateSubscriptionCompletionEmail(data: SubscriptionEmailData): EmailTemplate {
-  const { subscriptionTitle, merchantName, customerName, maxCycles } = data;
-  
-  const customerGreeting = customerName ? `Hi ${customerName}` : 'Hi there';
-  const subject = `Subscription Complete: ${subscriptionTitle}`;
-
-  const content = `
-        <p>${customerGreeting},</p>
-        <p>Your subscription for <strong>${subscriptionTitle}</strong> has been successfully completed!</p>
-        
-        <div class="details">
-            <p>You have completed all ${maxCycles} billing cycles. Thank you for being a valued subscriber.</p>
-            <p>All payments have been processed and your subscription is now complete.</p>
-        </div>
-        
-        <p>Thank you for choosing ${merchantName}!</p>
-        <p>We hope you enjoyed your subscription experience.</p>
-        <p>If you'd like to start a new subscription, please contact us.</p>
-  `;
-
-  const html = getBaseTemplate('Subscription Complete!', '🏁', '#28a745', merchantName, content);
-
-  const text = `
-Subscription Complete!
-
-${customerGreeting},
-
-Your subscription for ${subscriptionTitle} has been successfully completed!
-
-You have completed all ${maxCycles} billing cycles. Thank you for being a valued subscriber.
-
-All payments have been processed and your subscription is now complete.
-
-Thank you for choosing ${merchantName}!
-We hope you enjoyed your subscription experience.
-If you'd like to start a new subscription, please contact us.
-`;
-
-  return { subject, html, text };
-}
-
-// Helper function to determine payment method label based on source
-function getPaymentMethodLabel(source: string, created_at?: string): string {
-  const currentDate = created_at ? new Date(created_at) : new Date();
-  const dateString = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-  
-  switch (source?.toLowerCase()) {
-    case 'subscription':
-    case 'subscriptions':
-      return `Invoice ${dateString}`;
-    case 'pos':
-    case 'terminal':
-    case 'smart-terminal':
-      return 'POS Sale';
-    case 'payment-link':
-    case 'payment_link':
-    case 'link':
-    default:
-      return 'Payment Link';
-  }
-}
-
-// Helper function to log email to database
-async function logEmailToDatabase(
-  supabase: any,
-  emailData: {
-    email: string;
-    type: string;
-    status: 'sent' | 'failed' | 'queued';
-    error_message?: string;
-    metadata?: Record<string, any>;
-  }
-) {
-  try {
-    const { data, error } = await supabase.from('email_logs').insert({
-      email: emailData.email,
-      type: emailData.type,
-      status: emailData.status,
-      error_message: emailData.error_message || undefined,
-      metadata: emailData.metadata || undefined
-    });
-
-    if (error) {
-      console.error('❌ Failed to log email to database:', error);
-      return false;
-    }
-
-    console.log('✅ Email logged to database successfully');
-    return true;
-  } catch (error) {
-    console.error('❌ Error logging email to database:', error);
-    return false;
-  }
-}
-
-async function sendEmail(
-  supabase: any,
-  sendgridKey: string,
-  fromEmail: string,
-  toEmail: string,
-  template: EmailTemplate,
-  merchantId: string,
-  emailType: string
-) {
-  try {
-    const emailPayload = {
-      personalizations: [{ 
-        to: [{ email: toEmail }], 
-        subject: template.subject 
-      }],
-      from: { email: fromEmail },
-      content: [
-        { type: 'text/plain', value: template.text },
-        { type: 'text/html', value: template.html }
-      ],
-      categories: ['subscription', emailType],
-      tracking_settings: {
-        click_tracking: { enable: true },
-        open_tracking: { enable: true }
-      }
-    };
-
-    console.log('📤 SendGrid payload:', JSON.stringify(emailPayload, null, 2));
-
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${sendgridKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(emailPayload)
-    });
-
-    console.log('📬 SendGrid response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-
-    const success = response.ok;
-    let errorMessage: string | undefined = undefined;
-
-    if (!success) {
-      try {
-        const errorBody = await response.text();
-        console.error('📧 SendGrid error details:', errorBody);
-        errorMessage = `SendGrid error: ${response.status} - ${errorBody}`;
-      } catch (e) {
-        errorMessage = `SendGrid error: ${response.status}`;
-      }
-    }
-
-    // Log email - ALWAYS log to email_logs table
-    console.log('📝 Attempting to log email to database:', {
-      email: toEmail,
-      type: emailType,
-      status: success ? 'sent' : 'failed',
-      merchant_id: merchantId
-    });
-
-    await logEmailToDatabase(supabase, {
-      email: toEmail,
-      type: emailType,
-      status: success ? 'sent' : 'failed',
-      error_message: errorMessage,
-      metadata: {
-        merchant_id: merchantId,
-        template_used: 'unified'
-      }
-    });
-
-    if (success) {
-      console.log(`✅ ${emailType} email sent successfully to:`, toEmail);
-    } else {
-      console.error(`❌ Failed to send ${emailType} email:`, errorMessage);
-    }
-
-    return success;
-  } catch (error) {
-    console.error(`❌ Error sending ${emailType} email:`, error);
-    
-    // Log failed email - ALWAYS log to email_logs table
-    console.log('📝 Attempting to log failed email to database');
-    
-    await logEmailToDatabase(supabase, {
-      email: toEmail,
-      type: emailType,
-      status: 'failed',
-      error_message: error instanceof Error ? error.message : 'Unknown error',
-      metadata: {
-        merchant_id: merchantId,
-        template_used: 'unified'
-      }
-    });
-
-    return false;
-  }
-}
-
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    console.log('🚀 Subscription notification function called');
-    
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    console.log('🚀 Subscription notification function started');
 
-    const sendgridKey = Deno.env.get('SENDGRID_API_KEY');
-    const fromEmail = Deno.env.get('CRYPTRAC_NOTIFICATIONS_FROM');
+    const { subscription_id, type, customer_email, payment_url, transaction_data, invoice_data } = await req.json();
 
-    console.log('📧 Environment check:', {
-      hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
-      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-      hasSendgridKey: !!sendgridKey,
-      hasFromEmail: !!fromEmail,
-      fromEmail: fromEmail
+    if (!subscription_id || !type || !customer_email) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Missing required parameters: subscription_id, type, and customer_email' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!['welcome', 'invoice', 'completion'].includes(type)) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid email type. Must be welcome, invoice, or completion' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+    if (!supabaseUrl || !supabaseKey) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Server configuration error' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    if (!sendgridKey || !fromEmail) {
-      console.warn('⚠️ Email service not configured - notifications will be skipped');
-      return new Response('Email service not configured', { status: 200 });
-    }
-
-    const requestBody = await req.json();
-    console.log('📥 Request payload:', requestBody);
-
-    const { 
-      type, 
-      subscription_id, 
-      customer_email, 
-      payment_url,
-      invoice_data,
-      // NEW: Transaction data for receipt emails
-      transaction_data
-    } = requestBody;
-
-    if (!type || !subscription_id || !customer_email) {
-      console.error('❌ Missing required fields:', { type, subscription_id, customer_email });
-      return new Response('Missing required fields', { status: 400 });
-    }
-
-    console.log('🔍 Fetching subscription details for ID:', subscription_id);
-
-    // Get subscription details
     const { data: subscription, error: subscriptionError } = await supabase
       .from('subscriptions')
       .select(`
-        id, title, amount, currency, max_cycles, next_billing_at, merchant_id,
-        merchants!inner(business_name),
-        customers!inner(name)
+        id, title, amount, currency, max_cycles, next_billing_at, merchant_id, customer_id,
+        merchants!inner(id, business_name),
+        customers!inner(id, name, email)
       `)
       .eq('id', subscription_id)
       .single();
 
-    if (subscriptionError) {
-      console.error('❌ Error fetching subscription:', subscriptionError);
-      return new Response('Error fetching subscription', { status: 500 });
+    if (subscriptionError || !subscription) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Subscription not found' 
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-
-    if (!subscription) {
-      console.error('❌ Subscription not found for ID:', subscription_id);
-      return new Response('Subscription not found', { status: 404 });
-    }
-
-    console.log('✅ Subscription found:', {
-      id: subscription.id,
-      title: subscription.title,
-      merchantName: subscription.merchants.business_name,
-      customerName: subscription.customers.name
-    });
 
     let emailType: string;
     let template: EmailTemplate;
@@ -822,14 +346,13 @@ serve(async (req) => {
     switch (type) {
       case 'welcome':
         emailType = 'subscription_welcome';
-        template = generateSubscriptionWelcomeEmail({
-          subscriptionTitle: subscription.title,
+        template = generateWelcomeTemplate({
           merchantName: subscription.merchants.business_name,
           customerName: subscription.customers.name,
+          subscriptionTitle: subscription.title,
           amount: subscription.amount,
           currency: subscription.currency,
-          nextBillingDate: subscription.next_billing_at,
-          maxCycles: subscription.max_cycles
+          nextBillingDate: subscription.next_billing_at
         });
         break;
 
@@ -839,78 +362,157 @@ serve(async (req) => {
         // Check if this is a receipt email (has transaction data) or invoice email (payment request)
         if (transaction_data?.tx_hash || transaction_data?.payin_hash || transaction_data?.payout_hash) {
           // This is a receipt email for a completed subscription payment
-          const currentDate = transaction_data?.created_at ? new Date(transaction_data.created_at) : new Date();
-          const dateString = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-          
-          template = generateReceiptEmail({
-            amount: subscription.amount || 0,
-            currency: subscription.currency || 'USD',
-            payment_method: `Invoice ${dateString}`,
-            title: subscription.title,
-            tx_hash: transaction_data?.tx_hash,
-            payin_hash: transaction_data?.payin_hash,
-            payout_hash: transaction_data?.payout_hash,
-            pay_currency: transaction_data?.pay_currency,
-            amount_received: transaction_data?.amount_received,
-            status: 'confirmed',
-            created_at: transaction_data?.created_at,
-            order_id: transaction_data?.order_id,
-            transaction_id: transaction_data?.transaction_id,
-            receiptUrl: payment_url || '',
-            merchantName: subscription.merchants.business_name
-          });
           emailType = 'subscription_receipt';
+          const currentDate = transaction_data?.created_at ? new Date(transaction_data.created_at) : new Date();
+          const dateString = currentDate.toISOString().split('T')[0];
+          
+          const formattedAmount = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: subscription.currency || 'USD'
+          }).format(subscription.amount || 0);
+
+          const formattedDate = currentDate.toLocaleDateString('en-US', { 
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+          });
+
+          let displayHash = transaction_data?.tx_hash || transaction_data?.payin_hash || '';
+          let hashLabel = 'Transaction Hash';
+
+          template = {
+            subject: `Receipt for ${subscription.title} - ${formattedAmount}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa; padding: 20px;">
+                <div style="background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                  <div style="text-align: center; border-bottom: 2px solid #e9ecef; padding-bottom: 20px; margin-bottom: 30px;">
+                    <div style="color: #28a745; font-size: 48px; margin-bottom: 10px;">✓</div>
+                    <h1 style="color: #2c3e50; margin: 0; font-size: 28px;">Payment Received</h1>
+                    <div style="color: #6c757d; font-size: 16px; margin-top: 5px;">From ${subscription.merchants.business_name}</div>
+                  </div>
+                  
+                  <div style="background: #f8f9fa; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                      <span style="font-weight: 600; color: #495057;">Payment Method:</span>
+                      <span style="color: #212529;">Invoice ${dateString}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                      <span style="font-weight: 600; color: #495057;">Description:</span>
+                      <span style="color: #212529;">${subscription.title}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                      <span style="font-weight: 600; color: #495057;">Date:</span>
+                      <span style="color: #212529;">${formattedDate}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                      <span style="font-weight: 600; color: #495057;">Status:</span>
+                      <span style="color: #212529;">Confirmed</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                      <span style="font-weight: 600; color: #495057;">Total Amount:</span>
+                      <span style="color: #28a745; font-weight: bold; font-size: 18px;">${formattedAmount}</span>
+                    </div>
+                  </div>
+
+                  ${displayHash ? `
+                  <div style="margin: 15px 0;">
+                    <div style="font-weight: 600; color: #495057; margin-bottom: 5px;">${hashLabel}:</div>
+                    <div style="background: #e9ecef; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; word-break: break-all;">${displayHash}</div>
+                  </div>
+                  ` : ''}
+
+                  <div style="text-align: center;">
+                    <a href="${payment_url || ''}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0;">View Your Receipt</a>
+                  </div>
+
+                  <p>Thank you for your payment!</p>
+                  <p>This is an automated receipt. Please keep this for your records.</p>
+                </div>
+              </div>
+            `,
+            text: `
+Payment Receipt
+
+✓ Payment Received from ${subscription.merchants.business_name}
+
+Payment Details:
+• Method: Invoice ${dateString}
+• Description: ${subscription.title}
+• Date: ${formattedDate}
+• Status: Confirmed
+• Total Amount: ${formattedAmount}
+
+${displayHash ? `${hashLabel}: ${displayHash}\n` : ''}
+View your receipt: ${payment_url || ''}
+
+Thank you for your payment!
+This is an automated receipt. Please keep this for your records.
+            `.trim()
+          };
         } else {
           // This is a regular invoice email (payment request)
-          template = generateSubscriptionInvoiceEmail({
-            subscriptionTitle: subscription.title,
-            merchantName: subscription.merchants.business_name,
-            customerName: subscription.customers.name,
-            amount: subscription.amount,
-            currency: subscription.currency,
-            paymentUrl: payment_url,
-            dueDate: invoice_data?.due_date,
-            isPastDue: invoice_data?.is_past_due || false,
-            daysPastDue: invoice_data?.days_past_due
-          });
+          const formattedAmount = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: subscription.currency || 'USD'
+          }).format(subscription.amount || 0);
+
+          template = {
+            subject: `Invoice for ${subscription.title} - ${formattedAmount}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1>Subscription Invoice</h1>
+                <p>Hello ${subscription.customers.name},</p>
+                <p>Your subscription invoice is ready.</p>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
+                  <p><strong>Subscription:</strong> ${subscription.title}</p>
+                  <p><strong>Amount Due:</strong> ${formattedAmount}</p>
+                </div>
+                ${payment_url ? `<p><a href="${payment_url}" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Pay Now</a></p>` : ''}
+                <p>Please complete your payment to continue your subscription.</p>
+                <p>Best regards,<br>The ${subscription.merchants.business_name} Team</p>
+              </div>
+            `,
+            text: `
+Subscription Invoice
+
+Hello ${subscription.customers.name},
+
+Your subscription invoice is ready.
+
+Subscription: ${subscription.title}
+Amount Due: ${formattedAmount}
+
+${payment_url ? `Pay now: ${payment_url}\n` : ''}
+
+Please complete your payment to continue your subscription.
+
+Best regards,
+The ${subscription.merchants.business_name} Team
+            `.trim()
+          };
         }
         break;
 
       case 'completion':
         emailType = 'subscription_completion';
-        template = generateSubscriptionCompletionEmail({
-          subscriptionTitle: subscription.title,
+        template = generateCompletionTemplate({
           merchantName: subscription.merchants.business_name,
           customerName: subscription.customers.name,
+          subscriptionTitle: subscription.title,
           maxCycles: subscription.max_cycles
         });
         break;
 
       default:
-        console.error('❌ Invalid email type:', type);
-        return new Response('Invalid email type', { status: 400 });
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Invalid email type' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
     }
 
-    console.log('📧 Email template generated:', {
-      type: emailType,
-      subject: template.subject,
-      toEmail: customer_email,
-      fromEmail: fromEmail
-    });
-
-    console.log('🚀 Calling sendEmail function...');
-
-    const success = await sendEmail(
-      supabase,
-      sendgridKey,
-      fromEmail,
-      customer_email,
-      template,
-      subscription.merchant_id,
-      emailType
-    );
-
-    console.log('📬 Email sending result:', { success, emailType });
+    const success = await sendEmail(supabase, customer_email, template, emailType);
 
     return new Response(JSON.stringify({ 
       success, 

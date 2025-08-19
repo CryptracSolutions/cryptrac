@@ -838,7 +838,10 @@ CREATE TABLE IF NOT EXISTS "public"."email_logs" (
     "email" "text" NOT NULL,
     "type" "text" NOT NULL,
     "status" "text" DEFAULT 'sent'::"text",
-    "timestamp" timestamp with time zone DEFAULT "now"()
+    "timestamp" timestamp with time zone DEFAULT "now"(),
+    "metadata" "jsonb",
+    "error_message" "text",
+    "created_at" timestamp with time zone DEFAULT "now"()
 );
 
 
@@ -1804,6 +1807,18 @@ CREATE INDEX "idx_audit_logs_user_id" ON "public"."audit_logs" USING "btree" ("u
 
 
 CREATE INDEX "idx_customers_merchant" ON "public"."customers" USING "btree" ("merchant_id");
+
+
+
+CREATE INDEX "idx_email_logs_created_at" ON "public"."email_logs" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "idx_email_logs_status" ON "public"."email_logs" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_email_logs_type" ON "public"."email_logs" USING "btree" ("type");
 
 
 
@@ -3050,12 +3065,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-
-
-RESET ALL;
-
-
-
 -- Create buckets
 select storage.create_bucket('w9-uploads', public := false);
 select storage.create_bucket('promo-kits', public := true);
@@ -3080,3 +3089,8 @@ to public
 with check (
   bucket_id = 'w9-uploads' AND auth.uid() = owner
 );
+
+
+
+
+RESET ALL;
