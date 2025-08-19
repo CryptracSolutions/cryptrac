@@ -64,21 +64,23 @@ function generateUnifiedReceiptTemplate(
     receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
   }
 
-  // Format date
+  // Format date with proper timezone handling
   const formattedDate = created_at ? 
     new Date(created_at).toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZoneName: 'short'
     }) : 
     new Date().toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZoneName: 'short'
     });
 
   // Status display
@@ -87,6 +89,18 @@ function generateUnifiedReceiptTemplate(
                        typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : 'Confirmed';
 
   const subject = `Receipt for ${title} - ${formattedAmount}`;
+
+  // Determine which hash to show - prioritize tx_hash, then payin_hash for customer receipts
+  let displayHash = '';
+  let hashLabel = '';
+  
+  if (tx_hash) {
+    displayHash = tx_hash;
+    hashLabel = 'Transaction Hash';
+  } else if (payin_hash) {
+    displayHash = payin_hash;
+    hashLabel = 'Transaction Hash';
+  }
 
   // Unified HTML template
   const html = `
@@ -254,24 +268,10 @@ function generateUnifiedReceiptTemplate(
             </div>
         </div>
 
-        ${tx_hash ? `
+        ${displayHash ? `
         <div class="hash-section">
-            <div class="hash-label">Transaction Hash:</div>
-            <div class="transaction-hash">${tx_hash}</div>
-        </div>
-        ` : ''}
-
-        ${payin_hash ? `
-        <div class="hash-section">
-            <div class="hash-label">Payin Hash (Customer Transaction):</div>
-            <div class="transaction-hash">${payin_hash}</div>
-        </div>
-        ` : ''}
-
-        ${payout_hash ? `
-        <div class="hash-section">
-            <div class="hash-label">Payout Hash (Merchant Transaction):</div>
-            <div class="transaction-hash">${payout_hash}</div>
+            <div class="hash-label">${hashLabel}:</div>
+            <div class="transaction-hash">${displayHash}</div>
         </div>
         ` : ''}
 
@@ -302,7 +302,7 @@ Payment Details:
 • Status: ${displayStatus}
 ${order_id ? `• Order ID: ${order_id}\n` : ''}${transaction_id ? `• Transaction ID: ${transaction_id}\n` : ''}${receivedAmountText ? `• Amount Paid: ${receivedAmountText.trim()}\n` : ''}• Total Amount: ${formattedAmount}${receivedAmountText}
 
-${tx_hash ? `Transaction Hash: ${tx_hash}\n` : ''}${payin_hash ? `Payin Hash (Customer Transaction): ${payin_hash}\n` : ''}${payout_hash ? `Payout Hash (Merchant Transaction): ${payout_hash}\n` : ''}
+${displayHash ? `${hashLabel}: ${displayHash}\n` : ''}
 View your receipt: ${receiptUrl}
 
 Thank you for your payment!
@@ -557,6 +557,7 @@ export async function POST(request: Request) {
       return Response.json({ success: false, error: 'Email service not configured' }, { status: 500 });
     }
 
+    // FIXED: Correct SendGrid content order - text/plain MUST come first
     const emailPayload = {
       personalizations: [
         {
@@ -569,8 +570,8 @@ export async function POST(request: Request) {
         name: 'Cryptrac Receipts'
       },
       content: [
-        { type: 'text/plain', value: emailTemplate.text },
-        { type: 'text/html', value: emailTemplate.html }
+        { type: 'text/plain', value: emailTemplate.text },  // MUST be first
+        { type: 'text/html', value: emailTemplate.html }    // MUST be second
       ],
       categories: ['receipt'],
       tracking_settings: {
@@ -590,7 +591,7 @@ export async function POST(request: Request) {
     });
 
     let emailStatus: 'sent' | 'failed' = 'sent';
-    let errorMessage: string | null = null;
+    let errorMessage: string | undefined = undefined;
 
     if (!emailResponse.ok) {
       const errorText = await emailResponse.text();
@@ -610,7 +611,7 @@ export async function POST(request: Request) {
       email: email,
       type: 'customer_receipt',
       status: emailStatus,
-      error_message: errorMessage || undefined,
+      error_message: errorMessage,
       metadata: {
         url_type: urlType,
         payment_url: paymentUrl,

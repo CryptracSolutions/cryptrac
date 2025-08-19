@@ -217,6 +217,16 @@ function generateMerchantNotificationEmail(data: MerchantNotificationData): Emai
     receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
   }
 
+  // Format current time with proper timezone handling
+  const currentTime = new Date().toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
+
   const subject = `Payment received • ${formattedAmount}`;
 
   const content = `
@@ -240,7 +250,7 @@ function generateMerchantNotificationEmail(data: MerchantNotificationData): Emai
             ` : ''}
             <div class="detail-row">
                 <span class="detail-label">Paid at:</span>
-                <span class="detail-value">${new Date().toLocaleString()}</span>
+                <span class="detail-value">${currentTime}</span>
             </div>
         </div>
 
@@ -270,7 +280,7 @@ You've received a new payment.
 
 Amount: ${formattedAmount}${receivedAmountText}
 Type: ${payment_type}
-${customer_email ? `Customer: ${customer_email}\n` : ''}Paid at: ${new Date().toLocaleString()}
+${customer_email ? `Customer: ${customer_email}\n` : ''}Paid at: ${currentTime}
 
 ${tx_hash ? `Transaction Hash: ${tx_hash}\n` : ''}${receiptUrl ? `View receipt: ${receiptUrl}\n` : ''}${dashboardUrl ? `View in dashboard: ${dashboardUrl}\n` : ''}
 
@@ -417,6 +427,7 @@ export async function POST(request: Request) {
     if (sendgridKey && fromEmail && appOrigin) {
       for (let attempt = 0; attempt < 3 && emailStatus !== 'sent'; attempt++) {
         try {
+          // FIXED: Correct SendGrid content order - text/plain MUST come first
           const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
             method: 'POST',
             headers: {
@@ -431,8 +442,8 @@ export async function POST(request: Request) {
               from: { email: fromEmail, name: 'Cryptrac' },
               reply_to: { email: 'support@cryptrac.com' },
               content: [
-                { type: 'text/plain', value: template.text },
-                { type: 'text/html', value: template.html }
+                { type: 'text/plain', value: template.text },  // MUST be first
+                { type: 'text/html', value: template.html }    // MUST be second
               ],
               categories: ['merchant-payment'],
               tracking_settings: {

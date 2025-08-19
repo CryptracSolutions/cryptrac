@@ -1,24 +1,8 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-async function getServiceAndMerchant(request: Request) {
-  const auth = request.headers.get('Authorization');
-  if (!auth || !auth.startsWith('Bearer ')) return { error: 'Unauthorized' };
-  const token = auth.substring(7);
-  const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-  const { data: { user } } = await anon.auth.getUser(token);
-  if (!user) return { error: 'Unauthorized' };
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
-  const service = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-  const { data: merchant } = await service.from('merchants').select('id, business_name').eq('user_id', user.id).single();
-  if (!merchant) return { error: 'Merchant not found' };
-  return { service, merchant };
-}
 
 // Unified Receipt Email Template for Cryptrac
 interface ReceiptData {
@@ -80,21 +64,23 @@ function generateUnifiedReceiptTemplate(
     receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
   }
 
-  // Format date
+  // Format date with proper timezone handling
   const formattedDate = created_at ? 
     new Date(created_at).toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZoneName: 'short'
     }) : 
     new Date().toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZoneName: 'short'
     });
 
   // Status display
@@ -103,6 +89,18 @@ function generateUnifiedReceiptTemplate(
                        typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : 'Confirmed';
 
   const subject = `Receipt for ${title} - ${formattedAmount}`;
+
+  // Determine which hash to show - prioritize tx_hash, then payin_hash for customer receipts
+  let displayHash = '';
+  let hashLabel = '';
+  
+  if (tx_hash) {
+    displayHash = tx_hash;
+    hashLabel = 'Transaction Hash';
+  } else if (payin_hash) {
+    displayHash = payin_hash;
+    hashLabel = 'Transaction Hash';
+  }
 
   // Unified HTML template
   const html = `
@@ -270,24 +268,10 @@ function generateUnifiedReceiptTemplate(
             </div>
         </div>
 
-        ${tx_hash ? `
+        ${displayHash ? `
         <div class="hash-section">
-            <div class="hash-label">Transaction Hash:</div>
-            <div class="transaction-hash">${tx_hash}</div>
-        </div>
-        ` : ''}
-
-        ${payin_hash ? `
-        <div class="hash-section">
-            <div class="hash-label">Payin Hash (Customer Transaction):</div>
-            <div class="transaction-hash">${payin_hash}</div>
-        </div>
-        ` : ''}
-
-        ${payout_hash ? `
-        <div class="hash-section">
-            <div class="hash-label">Payout Hash (Merchant Transaction):</div>
-            <div class="transaction-hash">${payout_hash}</div>
+            <div class="hash-label">${hashLabel}:</div>
+            <div class="transaction-hash">${displayHash}</div>
         </div>
         ` : ''}
 
@@ -318,7 +302,7 @@ Payment Details:
 • Status: ${displayStatus}
 ${order_id ? `• Order ID: ${order_id}\n` : ''}${transaction_id ? `• Transaction ID: ${transaction_id}\n` : ''}${receivedAmountText ? `• Amount Paid: ${receivedAmountText.trim()}\n` : ''}• Total Amount: ${formattedAmount}${receivedAmountText}
 
-${tx_hash ? `Transaction Hash: ${tx_hash}\n` : ''}${payin_hash ? `Payin Hash (Customer Transaction): ${payin_hash}\n` : ''}${payout_hash ? `Payout Hash (Merchant Transaction): ${payout_hash}\n` : ''}
+${displayHash ? `${hashLabel}: ${displayHash}\n` : ''}
 View your receipt: ${receiptUrl}
 
 Thank you for your payment!
@@ -384,215 +368,233 @@ async function logEmailToDatabase(
 }
 
 export async function POST(request: Request) {
-  const auth = await getServiceAndMerchant(request);
-  if ('error' in auth) {
-    return NextResponse.json({ error: auth.error }, { status: 401 });
-  }
-  const { service, merchant } = auth;
-  const sendgridKey = env.SENDGRID_API_KEY;
-  const fromEmail = env.CRYPTRAC_RECEIPTS_FROM;
-  const appOrigin = env.APP_ORIGIN;
-  
-  const { email, payment_link_id, receipt_data, transaction_id } = await request.json() as {
-    email?: string;
-    payment_link_id?: string;
-    receipt_data?: Record<string, unknown>;
-    transaction_id?: string;
-  };
-  
-  if (!email) {
-    return NextResponse.json({ error: 'Missing required field: email' }, { status: 400 });
-  }
+  try {
+    const body = await request.json();
+    const { email, payment_link_id, transaction_id } = body;
 
-  // Enhanced logic to get transaction data and receipt URL
-  let paymentUrl = '';
-  let linkTitle = 'Payment';
-  let transactionData: any = null;
-  let paymentLinkData: any = null;
+    console.log('📧 Receipt email request:', { email, payment_link_id, transaction_id });
 
-  // First priority: Use public_receipt_id from receipt_data if available
-  if (receipt_data?.public_receipt_id) {
-    paymentUrl = `${appOrigin}/r/${receipt_data.public_receipt_id}`;
-    linkTitle = (receipt_data.title as string) || 'Payment';
-    transactionData = receipt_data;
-  }
-  // Second priority: Look up public_receipt_id from transaction_id
-  else if (transaction_id) {
-    const { data: transaction } = await service
-      .from('transactions')
-      .select('public_receipt_id, payment_link_id, amount, currency, status, created_at, order_id, tx_hash, payin_hash, payout_hash, pay_currency, amount_received')
-      .eq('id', transaction_id)
-      .single();
-    
-    if (transaction?.public_receipt_id) {
-      paymentUrl = `${appOrigin}/r/${transaction.public_receipt_id}`;
-      transactionData = transaction;
-    }
-  }
-  // Third priority: Look up public_receipt_id from payment_link_id
-  else if (payment_link_id) {
-    // Get payment link data first
-    const { data: link } = await service
-      .from('payment_links')
-      .select('link_id, title, source')
-      .eq('id', payment_link_id)
-      .eq('merchant_id', merchant.id)
-      .single();
-    
-    if (link) {
-      paymentLinkData = link;
-      linkTitle = link.title || 'Payment';
+    if (!email) {
+      return Response.json({ success: false, error: 'Email is required' }, { status: 400 });
     }
 
-    // Get the most recent transaction for this payment link to get the receipt ID
-    const { data: transaction } = await service
-      .from('transactions')
-      .select('public_receipt_id, amount, currency, status, created_at, order_id, tx_hash, payin_hash, payout_hash, pay_currency, amount_received')
-      .eq('payment_link_id', payment_link_id)
-      .eq('merchant_id', merchant.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-    
-    if (transaction?.public_receipt_id) {
-      paymentUrl = `${appOrigin}/r/${transaction.public_receipt_id}`;
-      transactionData = transaction;
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return Response.json({ success: false, error: 'Invalid email format' }, { status: 400 });
     }
-  }
 
-  // Fallback: If no receipt URL could be generated and we have a payment_link_id, use payment link
-  if (!paymentUrl && payment_link_id && paymentLinkData) {
-    paymentUrl = `${appOrigin}/pay/${paymentLinkData.link_id}`;
-    console.warn('⚠️ Using payment link URL as fallback - receipt URL not available');
-  }
+    // Use service role key for database access
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      console.error('❌ SUPABASE_SERVICE_ROLE_KEY is required');
+      return Response.json({ success: false, error: 'Server configuration error' }, { status: 500 });
+    }
 
-  // Final fallback: If still no URL, return error
-  if (!paymentUrl) {
-    return NextResponse.json({ 
-      error: 'Unable to generate receipt URL - no payment link or transaction found' 
-    }, { status: 404 });
-  }
-  
-  let status = 'queued';
-  let errorMessage = null;
+    const service = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceKey,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
 
-  if (sendgridKey && fromEmail && appOrigin) {
-    try {
-      // Prepare receipt data for unified template
-      const receiptDataForTemplate: ReceiptData = {
-        amount: transactionData?.amount || receipt_data?.amount || 0,
-        currency: transactionData?.currency || receipt_data?.currency || 'USD',
-        payment_method: getPaymentMethodLabel(
-          paymentLinkData?.source || receipt_data?.source || 'payment_link',
-          transactionData?.created_at || receipt_data?.created_at
-        ),
-        title: linkTitle,
-        tx_hash: transactionData?.tx_hash || receipt_data?.tx_hash,
-        payin_hash: transactionData?.payin_hash || receipt_data?.payin_hash,
-        payout_hash: transactionData?.payout_hash || receipt_data?.payout_hash,
-        pay_currency: transactionData?.pay_currency || receipt_data?.pay_currency,
-        amount_received: transactionData?.amount_received || receipt_data?.amount_received,
-        status: 'confirmed', // Always show as confirmed in receipt emails
-        created_at: transactionData?.created_at || receipt_data?.created_at,
-        order_id: transactionData?.order_id || receipt_data?.order_id,
-        transaction_id: transaction_id
-      };
+    let receipt_data: any = null;
+    let merchant: any = null;
+    let paymentUrl = '';
 
-      const merchantDataForTemplate: MerchantData = {
-        business_name: merchant.business_name || 'Cryptrac'
-      };
+    // Strategy 1: Get data from payment_link_id
+    if (payment_link_id) {
+      console.log('🔍 Looking up data from payment_link_id:', payment_link_id);
+      
+      // Get payment link data
+      const { data: paymentLink } = await service
+        .from('payment_links')
+        .select('link_id, title, source, merchant_id, merchants!inner(business_name)')
+        .eq('id', payment_link_id)
+        .single();
 
-      // Use unified template
-      const template = generateUnifiedReceiptTemplate(
-        receiptDataForTemplate,
-        merchantDataForTemplate,
-        paymentUrl
-      );
+      if (paymentLink) {
+        merchant = paymentLink.merchants;
+        
+        // Get most recent transaction for this payment link
+        const { data: transaction } = await service
+          .from('transactions')
+          .select('public_receipt_id, amount, currency, status, created_at, order_id, tx_hash, payin_hash, payout_hash, pay_currency, amount_received, id')
+          .eq('payment_link_id', payment_link_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sendgridKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          personalizations: [{ 
-            to: [{ email }], 
-            subject: template.subject 
-          }],
-          from: {
-            email: fromEmail,
-            name: `${merchant.business_name || 'Cryptrac'} Receipts`
-          },
-          content: [
-            { type: 'text/html', value: template.html },
-            { type: 'text/plain', value: template.text }
-          ],
-          categories: ['receipt'],
-          tracking_settings: {
-            click_tracking: { enable: true },
-            open_tracking: { enable: true }
-          },
-          mail_settings: {
-            footer: {
-              enable: true,
-              text: `\n\nSent by ${merchant.business_name || 'Cryptrac'}`
-            }
-          }
-        })
-      });
-
-      if (response.ok) {
-        status = 'sent';
-        console.log('✅ Email receipt sent successfully to:', email);
-      } else {
-        const errorText = await response.text();
-        status = 'failed';
-        errorMessage = `SendGrid error: ${response.status} ${errorText}`;
-        console.error('❌ SendGrid error:', errorMessage);
+        if (transaction?.public_receipt_id) {
+          const appOrigin = env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL || 'https://www.cryptrac.com';
+          paymentUrl = `${appOrigin}/r/${transaction.public_receipt_id}`;
+          receipt_data = {
+            ...transaction,
+            title: paymentLink.title,
+            payment_method: getPaymentMethodLabel(paymentLink.source, transaction.created_at)
+          };
+          console.log('✅ Found transaction data from payment_link_id');
+        }
       }
-    } catch (err) {
-      console.error('❌ Email receipt error:', err);
+    }
+
+    // Strategy 2: Get data from transaction_id
+    if (!receipt_data && transaction_id) {
+      console.log('🔍 Looking up data from transaction_id:', transaction_id);
+      
+      const { data: transaction } = await service
+        .from('transactions')
+        .select(`
+          public_receipt_id, amount, currency, status, created_at, order_id, 
+          tx_hash, payin_hash, payout_hash, pay_currency, amount_received, id,
+          payment_link_id
+        `)
+        .eq('id', transaction_id)
+        .single();
+
+      if (transaction?.public_receipt_id && transaction.payment_link_id) {
+        // Get payment link and merchant data separately
+        const { data: paymentLink } = await service
+          .from('payment_links')
+          .select('title, source, merchant_id, merchants!inner(business_name)')
+          .eq('id', transaction.payment_link_id)
+          .single();
+
+        if (paymentLink?.merchants) {
+          const appOrigin = env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL || 'https://www.cryptrac.com';
+          paymentUrl = `${appOrigin}/r/${transaction.public_receipt_id}`;
+          merchant = paymentLink.merchants;
+          receipt_data = {
+            ...transaction,
+            title: paymentLink.title,
+            payment_method: getPaymentMethodLabel(paymentLink.source, transaction.created_at)
+          };
+          console.log('✅ Found transaction data from transaction_id');
+        }
+      }
+    }
+
+    if (!receipt_data || !merchant || !paymentUrl) {
+      console.error('❌ Could not find transaction data or merchant information');
+      return Response.json({ 
+        success: false, 
+        error: 'Could not generate receipt. Please contact support.' 
+      }, { status: 400 });
+    }
+
+    // Prepare receipt data for unified template
+    const receiptDataForTemplate: ReceiptData = {
+      amount: receipt_data.amount || 0,
+      currency: receipt_data.currency || 'USD',
+      payment_method: receipt_data.payment_method,
+      title: receipt_data.title || 'Payment',
+      tx_hash: receipt_data.tx_hash,
+      payin_hash: receipt_data.payin_hash,
+      payout_hash: receipt_data.payout_hash,
+      pay_currency: receipt_data.pay_currency,
+      amount_received: receipt_data.amount_received,
+      status: 'confirmed',
+      created_at: receipt_data.created_at,
+      order_id: receipt_data.order_id,
+      transaction_id: receipt_data.id || transaction_id
+    };
+
+    const merchantDataForTemplate: MerchantData = {
+      business_name: merchant.business_name || 'Cryptrac Merchant'
+    };
+
+    // Generate email template using unified template
+    const emailTemplate = generateUnifiedReceiptTemplate(
+      receiptDataForTemplate,
+      merchantDataForTemplate,
+      paymentUrl
+    );
+
+    // Send email via SendGrid
+    const sendgridKey = process.env.SENDGRID_API_KEY;
+    if (!sendgridKey) {
+      console.error('❌ SENDGRID_API_KEY is required');
+      return Response.json({ success: false, error: 'Email service not configured' }, { status: 500 });
+    }
+
+    // FIXED: Correct SendGrid content order - text/plain MUST come first
+    const emailPayload = {
+      personalizations: [
+        {
+          to: [{ email: email }],
+          subject: emailTemplate.subject
+        }
+      ],
+      from: { 
+        email: 'receipts@cryptrac.com',
+        name: 'Cryptrac Receipts'
+      },
+      content: [
+        { type: 'text/plain', value: emailTemplate.text },  // MUST be first
+        { type: 'text/html', value: emailTemplate.html }    // MUST be second
+      ],
+      categories: ['receipt'],
+      tracking_settings: {
+        click_tracking: { enable: true },
+        open_tracking: { enable: true }
+      }
+    };
+
+    console.log('📤 Sending email via SendGrid to:', email);
+    const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${sendgridKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(emailPayload)
+    });
+
+    let status: 'sent' | 'failed' | 'queued' = 'queued';
+    let errorMessage: string | undefined = undefined;
+
+    if (emailResponse.ok) {
+      status = 'sent';
+      console.log('✅ Email sent successfully to:', email);
+    } else {
+      const errorText = await emailResponse.text();
+      console.error('❌ SendGrid error:', emailResponse.status, errorText);
       status = 'failed';
-      errorMessage = err instanceof Error ? err.message : 'Unknown email error';
+      errorMessage = `SendGrid error: ${emailResponse.status} - ${errorText}`;
+      return Response.json({ 
+        success: false, 
+        error: 'Failed to send email. Please try again.' 
+      }, { status: 500 });
     }
-  } else {
-    console.warn('⚠️ Email service not fully configured - receipt will be queued');
+
+    // Enhanced logging with more details - ALWAYS log to email_logs table
+    await logEmailToDatabase(service, {
+      email,
+      type: 'receipt',
+      status: status,
+      error_message: errorMessage,
+      metadata: {
+        merchant_id: merchant.id || null,
+        payment_link_id,
+        transaction_id: receipt_data.id || transaction_id || null,
+        has_receipt_data: !!receipt_data,
+        template_used: 'unified',
+        url_used: paymentUrl,
+        payment_method: receipt_data.payment_method
+      }
+    });
+
+    return Response.json({ 
+      success: true, 
+      message: 'Receipt sent successfully',
+      payment_url: paymentUrl
+    });
+
+  } catch (error) {
+    console.error('❌ Receipt email error:', error);
+    return Response.json({ 
+      success: false, 
+      error: 'Internal server error' 
+    }, { status: 500 });
   }
-
-  // Enhanced logging with more details - ALWAYS log to email_logs table
-  await logEmailToDatabase(service, {
-    email,
-    type: 'receipt',
-    status: status as 'sent' | 'failed' | 'queued',
-    error_message: errorMessage || undefined,
-    metadata: {
-      merchant_id: merchant.id,
-      payment_link_id,
-      transaction_id,
-      has_receipt_data: !!receipt_data,
-      template_used: 'unified',
-      url_used: paymentUrl,
-      url_type: paymentUrl.includes('/r/') ? 'receipt' : 'payment_link',
-      payment_method: getPaymentMethodLabel(
-        paymentLinkData?.source || receipt_data?.source || 'payment_link',
-        transactionData?.created_at || receipt_data?.created_at
-      )
-    }
-  });
-
-  return NextResponse.json({ 
-    success: status === 'sent', 
-    status,
-    queued: status !== 'sent',
-    message: status === 'sent' 
-      ? 'Email receipt sent successfully'
-      : status === 'queued'
-      ? 'Email receipt queued (service not configured)'
-      : 'Failed to send email receipt',
-    error: errorMessage,
-    url_used: paymentUrl,
-    url_type: paymentUrl.includes('/r/') ? 'receipt' : 'payment_link'
-  });
 }
 
