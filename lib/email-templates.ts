@@ -518,7 +518,7 @@ This is an automated notification.
 
 // Subscription Welcome Email
 export function generateSubscriptionWelcomeEmail(data: SubscriptionEmailData): EmailTemplate {
-  const { merchantName, customerName, subscriptionTitle, amount, currency, nextBillingDate } = data;
+  const { merchantName, customerName, subscriptionTitle, amount, currency, nextBillingDate, maxCycles } = data;
 
   const formattedAmount = amount && currency ? 
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount) : '';
@@ -538,6 +538,12 @@ export function generateSubscriptionWelcomeEmail(data: SubscriptionEmailData): E
             <div class="detail-row">
                 <span class="detail-label">Amount:</span>
                 <span class="detail-value amount-highlight">${formattedAmount}</span>
+            </div>
+            ` : ''}
+            ${maxCycles ? `
+            <div class="detail-row">
+                <span class="detail-label">Duration:</span>
+                <span class="detail-value">${maxCycles} billing cycle${maxCycles !== 1 ? 's' : ''}</span>
             </div>
             ` : ''}
             ${nextBillingDate ? `
@@ -564,7 +570,7 @@ Hello${customerName ? ` ${customerName}` : ''},
 Welcome to your new subscription!
 
 Subscription: ${subscriptionTitle}
-${formattedAmount ? `Amount: ${formattedAmount}\n` : ''}${nextBillingDate ? `Next Billing: ${new Date(nextBillingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}
+${formattedAmount ? `Amount: ${formattedAmount}\n` : ''}${maxCycles ? `Duration: ${maxCycles} billing cycle${maxCycles !== 1 ? 's' : ''}\n` : ''}${nextBillingDate ? `Next Billing: ${new Date(nextBillingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}
 
 Thank you for subscribing! You'll receive invoices before each billing cycle.
 

@@ -93,8 +93,9 @@ function generateWelcomeTemplate(data: {
   amount?: number;
   currency?: string;
   nextBillingDate?: string;
+  maxCycles?: number;
 }): EmailTemplate {
-  const { merchantName, customerName, subscriptionTitle, amount, currency, nextBillingDate } = data;
+  const { merchantName, customerName, subscriptionTitle, amount, currency, nextBillingDate, maxCycles } = data;
   
   const formattedAmount = amount && currency ? 
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount) : '';
@@ -142,6 +143,12 @@ function generateWelcomeTemplate(data: {
                 <span style="font-weight: bold; color: #28a745;">${formattedAmount}</span>
             </div>
             ` : ''}
+            ${maxCycles ? `
+            <div class="detail-row">
+                <span>Duration:</span>
+                <span>${maxCycles} billing cycle${maxCycles !== 1 ? 's' : ''}</span>
+            </div>
+            ` : ''}
             ${nextBillingDate ? `
             <div class="detail-row">
                 <span>Next Billing:</span>
@@ -172,7 +179,7 @@ Hello${customerName ? ` ${customerName}` : ''},
 Welcome to your new subscription!
 
 Subscription: ${subscriptionTitle}
-${formattedAmount ? `Amount: ${formattedAmount}\n` : ''}${nextBillingDate ? `Next Billing: ${new Date(nextBillingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}
+${formattedAmount ? `Amount: ${formattedAmount}\n` : ''}${maxCycles ? `Duration: ${maxCycles} billing cycle${maxCycles !== 1 ? 's' : ''}\n` : ''}${nextBillingDate ? `Next Billing: ${new Date(nextBillingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}
 
 Thank you for subscribing! You'll receive invoices before each billing cycle.
 
@@ -352,7 +359,8 @@ Deno.serve(async (req) => {
           subscriptionTitle: subscription.title,
           amount: subscription.amount,
           currency: subscription.currency,
-          nextBillingDate: subscription.next_billing_at
+          nextBillingDate: subscription.next_billing_at,
+          maxCycles: subscription.max_cycles
         });
         break;
 
