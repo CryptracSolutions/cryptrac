@@ -19,7 +19,6 @@ interface SubscriptionRecord {
   total_cycles: number;
   merchant_id: string;
   customer_id: string;
-  timezone?: string;
   invoice_due_days: number;
   generate_days_in_advance: number;
   merchants: {
@@ -40,6 +39,16 @@ interface AmountOverride {
   effective_from: string;
   effective_until?: string;
   note?: string;
+}
+
+// Generate unique link ID for payment links
+function generateLinkId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = 'pl_';
+  for (let i = 0; i < 9; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 // Calculate next billing date based on interval
@@ -80,7 +89,7 @@ async function generateInvoiceForSubscription(
   try {
     console.log(`🔄 Processing subscription: ${subscription.id} (${subscription.title})`);
     
-    const timezone = subscription.merchants.timezone || subscription.timezone || 'UTC';
+    const timezone = subscription.merchants.timezone || 'UTC';
     const now = DateTime.now().setZone(timezone);
     const nextBilling = DateTime.fromISO(subscription.next_billing_at).setZone(timezone);
     const cycleStart = nextBilling;
@@ -132,6 +141,9 @@ async function generateInvoiceForSubscription(
     // Calculate due date
     const dueDate = cycleStart.plus({ days: subscription.invoice_due_days });
     
+    // Generate unique link ID
+    const linkId = generateLinkId();
+    
     // Create payment link first
     const { data: paymentLink, error: linkError } = await supabase
       .from('payment_links')
@@ -140,7 +152,7 @@ async function generateInvoiceForSubscription(
         title: `${subscription.title} - Invoice`,
         amount: invoiceAmount,
         currency: subscription.currency,
-        type: 'subscription',
+        link_id: linkId,
         metadata: {
           subscription_id: subscription.id,
           cycle_start_at: cycleStartISO,
@@ -160,6 +172,7 @@ async function generateInvoiceForSubscription(
       .from('subscription_invoices')
       .insert({
         subscription_id: subscription.id,
+        merchant_id: subscription.merchant_id,
         payment_link_id: paymentLink.id,
         amount: invoiceAmount,
         currency: subscription.currency,
@@ -285,7 +298,7 @@ Deno.serve(async (req) => {
       .select(`
         id, title, amount, currency, interval, interval_count, 
         next_billing_at, status, max_cycles, total_cycles,
-        merchant_id, customer_id, timezone,
+        merchant_id, customer_id,
         invoice_due_days, generate_days_in_advance,
         merchants!inner(id, business_name, timezone),
         customers!inner(id, name, email)
