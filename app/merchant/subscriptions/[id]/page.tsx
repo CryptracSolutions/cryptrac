@@ -38,6 +38,7 @@ interface Subscription {
   status: string;
   next_billing_at?: string;
   max_cycles?: number;
+  total_cycles?: number;
   missed_payments_count?: number;
   tax_enabled?: boolean;
   tax_rates?: Array<{ name: string; rate: number }>;
@@ -75,19 +76,34 @@ function formatDateOnly(dateString: string): string {
   });
 }
 
-// Helper function to calculate upcoming cycles
-function calculateUpcomingCycles(subscription: Subscription, count: number = 5): Array<{date: string, amount: number, hasOverride: boolean, overrideNote?: string}> {
+// Helper function to calculate upcoming cycles dynamically
+function calculateUpcomingCycles(subscription: Subscription, requestedCount?: number): Array<{date: string, amount: number, hasOverride: boolean, overrideNote?: string, cycleNumber: number}> {
   if (!subscription.next_billing_at) return [];
+  
+  // Determine how many cycles to show
+  let maxCyclesToShow: number;
+  if (requestedCount) {
+    maxCyclesToShow = requestedCount;
+  } else if (subscription.max_cycles) {
+    // If max_cycles is set, show remaining cycles (up to 12)
+    const remainingCycles = subscription.max_cycles - (subscription.total_cycles || 0);
+    maxCyclesToShow = Math.min(remainingCycles, 12);
+  } else {
+    // If no max_cycles, show default 12
+    maxCyclesToShow = 12;
+  }
   
   const cycles = [];
   let currentDate = new Date(subscription.next_billing_at);
+  const startingCycleNumber = (subscription.total_cycles || 0) + 1;
   
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < maxCyclesToShow; i++) {
     const cycleDate = new Date(currentDate);
     cycles.push({
       date: cycleDate.toISOString().split('T')[0],
       amount: subscription.amount,
-      hasOverride: false
+      hasOverride: false,
+      cycleNumber: startingCycleNumber + i
     });
     
     // Calculate next cycle based on interval
@@ -125,6 +141,10 @@ export default function SubscriptionDetailPage() {
   // ENHANCED: Add state for future cycle targeting
   const [targetCycleDate, setTargetCycleDate] = useState('');
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  
+  // ENHANCED: Add state for upcoming cycles display
+  const [showAllCycles, setShowAllCycles] = useState(false);
+  const [cyclesToShow, setCyclesToShow] = useState(5);
 
   const fetchInvoices = useCallback(async (): Promise<void> => {
     const { data: invs } = await supabase
@@ -277,8 +297,8 @@ export default function SubscriptionDetailPage() {
     }
   };
 
-  // ENHANCED: Calculate upcoming cycles with override information
-  const upcomingCycles = sub ? calculateUpcomingCycles(sub, 5) : [];
+  // ENHANCED: Calculate upcoming cycles with override information (dynamic count)
+  const upcomingCycles = sub ? calculateUpcomingCycles(sub, showAllCycles ? undefined : cyclesToShow) : [];
   
   // Apply overrides to upcoming cycles
   const cyclesWithOverrides = upcomingCycles.map(cycle => {
@@ -393,30 +413,70 @@ export default function SubscriptionDetailPage() {
         </div>
       )}
 
-      {/* ENHANCED: Upcoming Billing Cycles Preview */}
+      {/* ENHANCED: Upcoming Billing Cycles Preview with Dynamic Display */}
       {cyclesWithOverrides.length > 0 && (
         <div className="mb-6 p-4 border rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">📅 Upcoming Billing Cycles</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            This shows your next 5 scheduled billing cycles and how amount overrides will affect them.
-            <strong> Automatic billing will use these amounts when each cycle date arrives.</strong>
-          </p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">📅 Upcoming Billing Cycles</h2>
+            <div className="flex items-center gap-2">
+              {!showAllCycles && cyclesWithOverrides.length >= cyclesToShow && (
+                <button
+                  onClick={() => setShowAllCycles(true)}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  Show All {sub?.max_cycles ? `(${Math.min((sub.max_cycles - (sub.total_cycles || 0)), 12)})` : '(12)'}
+                </button>
+              )}
+              {showAllCycles && (
+                <button
+                  onClick={() => setShowAllCycles(false)}
+                  className="text-sm text-gray-600 hover:text-gray-800 underline"
+                >
+                  Show Less
+                </button>
+              )}
+            </div>
+          </div>
           
-          <div className="space-y-2">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+            <p className="text-sm text-blue-800">
+              {sub?.max_cycles ? (
+                <>
+                  <strong>📊 Subscription Progress:</strong> Showing {cyclesWithOverrides.length} upcoming cycles 
+                  (cycles {((sub.total_cycles || 0) + 1)} to {((sub.total_cycles || 0) + cyclesWithOverrides.length)} of {sub.max_cycles} total).
+                </>
+              ) : (
+                <>
+                  <strong>🔄 Ongoing Subscription:</strong> Showing next {cyclesWithOverrides.length} billing cycles. 
+                  This subscription will continue indefinitely until canceled.
+                </>
+              )}
+              <br />
+              <strong>💡 Automatic billing</strong> will use these amounts when each cycle date arrives.
+            </p>
+          </div>
+          
+          <div className="space-y-2 max-h-96 overflow-y-auto">
             {cyclesWithOverrides.map((cycle, index) => (
               <div key={cycle.date} className={`flex justify-between items-center p-3 rounded ${
                 index === 0 ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
               }`}>
                 <div>
-                  <span className="font-medium">
-                    {formatDateOnly(cycle.date)}
-                    {index === 0 && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Next</span>}
-                  </span>
-                  {cycle.hasOverride && (
-                    <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                      Override Active
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {formatDateOnly(cycle.date)}
                     </span>
-                  )}
+                    {index === 0 && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Next</span>}
+                    {cycle.hasOverride && (
+                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                        Override Active
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Cycle #{cycle.cycleNumber}
+                    {sub?.max_cycles && ` of ${sub.max_cycles}`}
+                  </div>
                 </div>
                 <div className="text-right">
                   <span className={`font-medium ${cycle.hasOverride ? 'text-orange-600' : 'text-gray-900'}`}>
@@ -430,9 +490,11 @@ export default function SubscriptionDetailPage() {
             ))}
           </div>
           
-          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
             <p className="text-sm text-yellow-800">
-              <strong>💡 How it works:</strong> When each cycle date arrives, the system will automatically generate an invoice using the amount shown above (including any active overrides). You don't need to manually generate invoices unless you want to create them early for testing or special circumstances.
+              <strong>⚠️ Note:</strong> Automatic invoice generation is currently not working. 
+              The scheduler needs to be set up to automatically process these cycles. 
+              For now, you'll need to manually generate invoices using the section below.
             </p>
           </div>
         </div>
