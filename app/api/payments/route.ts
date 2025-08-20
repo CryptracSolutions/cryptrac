@@ -7,6 +7,7 @@ interface PaymentLink {
   usage_count: number;
   max_uses: number | null;
   expires_at: string | null;
+  current_uses: number;
   confirmed_payment_count?: number; // Added dynamically in API
 }
 
@@ -26,14 +27,8 @@ function calculatePaymentLinkStatus(link: PaymentLink): string {
     return 'expired';
   }
 
-  // For single-use links, only mark as completed if payment is confirmed
-  // NOT just when visited (usage_count tracks visits, not payments)
-  if (link.max_uses === 1 && (link.confirmed_payment_count || 0) >= 1) {
-    return 'completed';
-  }
-
-  // For multi-use links, check if confirmed payments reached max uses
-  if (link.max_uses && link.max_uses > 1 && (link.confirmed_payment_count || 0) >= link.max_uses) {
+  // Only mark as completed when confirmed uses reach max uses
+  if (link.max_uses && link.current_uses >= link.max_uses) {
     return 'completed';
   }
 
@@ -151,29 +146,13 @@ export async function GET(request: NextRequest) {
 
     console.log('Found payment links:', rawPaymentLinks?.length || 0);
 
-    // Get confirmed payment counts for all payment links
-    const paymentLinkIds = (rawPaymentLinks || []).map(link => link.id);
-    const { data: confirmedCounts } = await serviceSupabase
-      .from('transactions')
-      .select('payment_link_id')
-      .eq('status', 'confirmed')
-      .in('payment_link_id', paymentLinkIds);
-
-    // Create a map of payment link ID to confirmed count
-    const confirmedCountMap = new Map();
-    (confirmedCounts || []).forEach(transaction => {
-      const linkId = transaction.payment_link_id;
-      confirmedCountMap.set(linkId, (confirmedCountMap.get(linkId) || 0) + 1);
-    });
-
     // Calculate real-time status for each payment link and apply status filter
     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
-      // Add confirmed_payment_count BEFORE calculating status
       const linkWithCount = {
         ...link,
-        confirmed_payment_count: confirmedCountMap.get(link.id) || 0
+        confirmed_payment_count: link.current_uses
       };
-      
+
       const calculatedStatus = calculatePaymentLinkStatus(linkWithCount);
       return {
         ...linkWithCount,

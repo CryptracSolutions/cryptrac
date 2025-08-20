@@ -93,41 +93,28 @@ $$;
 ALTER FUNCTION "public"."calculate_monthly_leaderboard_secure"("target_month" "date") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) RETURNS "text"
+CREATE OR REPLACE FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_confirmed_uses" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) RETURNS "text"
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
-    -- If manually completed, keep it completed
     IF p_current_status = 'completed' THEN
         RETURN 'completed';
     END IF;
-
-    -- If manually paused, keep it paused
     IF p_current_status = 'paused' THEN
         RETURN 'paused';
     END IF;
-
-    -- Check if expired
     IF p_expires_at IS NOT NULL AND p_expires_at < NOW() THEN
         RETURN 'expired';
     END IF;
-
-    -- Check if max uses reached (including single-use links with max_uses=1)
-    IF p_max_uses IS NOT NULL AND p_usage_count >= p_max_uses THEN
+    IF p_max_uses IS NOT NULL AND p_confirmed_uses >= p_max_uses THEN
         RETURN 'completed';
     END IF;
-
-    -- Otherwise, it's active
     RETURN 'active';
 END;
 $$;
 
 
-ALTER FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) OWNER TO "postgres";
-
-
-COMMENT ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) IS 'Calculates the correct status for a payment link based on business rules';
-
+ALTER FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_confirmed_uses" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."calculate_rep_tier"("rep_id" "uuid", "target_month" "date" DEFAULT "date_trunc"('month'::"text", ("now"() - '1 mon'::interval))) RETURNS integer
@@ -326,25 +313,25 @@ CREATE OR REPLACE FUNCTION "public"."get_payment_link_statistics"("p_merchant_id
 BEGIN
     RETURN QUERY
     WITH link_stats AS (
-        SELECT 
+        SELECT
             COUNT(*) as total,
-            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'active') as active,
-            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'completed') as completed,
-            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'expired') as expired,
-            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, usage_count, max_uses, expires_at) = 'paused') as paused,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, current_uses, max_uses, expires_at) = 'active') as active,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, current_uses, max_uses, expires_at) = 'completed') as completed,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, current_uses, max_uses, expires_at) = 'expired') as expired,
+            COUNT(*) FILTER (WHERE calculate_payment_link_status(status, current_uses, max_uses, expires_at) = 'paused') as paused,
             COUNT(*) FILTER (WHERE max_uses = 1) as single_use
         FROM payment_links
         WHERE merchant_id = p_merchant_id
     ),
     payment_stats AS (
-        SELECT 
+        SELECT
             COUNT(*) as payments,
             COALESCE(SUM(amount), 0) as revenue
         FROM merchant_payments
         WHERE merchant_id = p_merchant_id
-        AND status IN ('confirmed', 'finished')
+          AND status IN ('confirmed', 'finished')
     )
-    SELECT 
+    SELECT
         link_stats.total::INTEGER,
         link_stats.active::INTEGER,
         link_stats.completed::INTEGER,
@@ -359,10 +346,6 @@ $$;
 
 
 ALTER FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") OWNER TO "postgres";
-
-
-COMMENT ON FUNCTION "public"."get_payment_link_statistics"("p_merchant_id" "uuid") IS 'Returns comprehensive statistics for merchant payment links with real-time status calculation';
-
 
 
 CREATE OR REPLACE FUNCTION "public"."get_trust_wallet_currencies"() RETURNS TABLE("code" character varying, "name" character varying, "symbol" character varying, "network" character varying, "is_token" boolean, "parent_currency" character varying, "trust_wallet_compatible" boolean, "address_type" "text", "derivation_path" "text", "enabled" boolean, "min_amount" numeric, "decimals" integer, "display_name" "text")
@@ -657,20 +640,17 @@ CREATE OR REPLACE FUNCTION "public"."update_payment_link_status"() RETURNS "trig
 DECLARE
     new_status TEXT;
 BEGIN
-    -- Calculate the new status
     new_status := calculate_payment_link_status(
         NEW.status,
-        NEW.usage_count,
+        NEW.current_uses,
         NEW.max_uses,
         NEW.expires_at
     );
 
-    -- Update the status if it has changed
     IF new_status != NEW.status THEN
         NEW.status := new_status;
         NEW.updated_at := NOW();
-        
-        -- Log the automatic status change
+
         INSERT INTO audit_logs (action, affected_id, details)
         VALUES (
             'payment_link_auto_status_update',
@@ -679,7 +659,7 @@ BEGIN
                 'old_status', OLD.status,
                 'new_status', new_status,
                 'reason', 'automatic_calculation',
-                'usage_count', NEW.usage_count,
+                'current_uses', NEW.current_uses,
                 'max_uses', NEW.max_uses,
                 'expires_at', NEW.expires_at
             )
@@ -694,34 +674,33 @@ $$;
 ALTER FUNCTION "public"."update_payment_link_status"() OWNER TO "postgres";
 
 
-COMMENT ON FUNCTION "public"."update_payment_link_status"() IS 'Trigger function to automatically update payment link status';
-
-
-
 CREATE OR REPLACE FUNCTION "public"."update_payment_link_usage"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
-    -- Increment usage count for any transaction creation (tracks visits/opens)
-    -- This is the correct behavior - usage_count tracks how many times link was opened
     IF TG_OP = 'INSERT' THEN
-        UPDATE payment_links 
-        SET 
+        UPDATE payment_links
+        SET
             usage_count = COALESCE(usage_count, 0) + 1,
-            last_payment_at = CASE 
-                WHEN NEW.status = 'confirmed' THEN NOW() 
-                ELSE last_payment_at 
+            current_uses = CASE
+                WHEN NEW.status = 'confirmed' THEN COALESCE(current_uses, 0) + 1
+                ELSE current_uses
+            END,
+            last_payment_at = CASE
+                WHEN NEW.status = 'confirmed' THEN NOW()
+                ELSE last_payment_at
             END
         WHERE id = NEW.payment_link_id;
     END IF;
-    
-    -- Update last_payment_at when payment is confirmed
+
     IF TG_OP = 'UPDATE' AND NEW.status = 'confirmed' AND OLD.status != 'confirmed' THEN
-        UPDATE payment_links 
-        SET last_payment_at = NOW()
+        UPDATE payment_links
+        SET
+            current_uses = COALESCE(current_uses, 0) + 1,
+            last_payment_at = NOW()
         WHERE id = NEW.payment_link_id;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$;
@@ -2739,9 +2718,9 @@ GRANT ALL ON FUNCTION "public"."calculate_monthly_leaderboard_secure"("target_mo
 
 
 
-GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "anon";
-GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_usage_count" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "service_role";
+GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_confirmed_uses" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "anon";
+GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_confirmed_uses" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."calculate_payment_link_status"("p_current_status" "text", "p_confirmed_uses" integer, "p_max_uses" integer, "p_expires_at" timestamp with time zone) TO "service_role";
 
 
 
@@ -3097,12 +3076,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-
-
-RESET ALL;
-
-
-
 -- Create buckets
 select storage.create_bucket('w9-uploads', public := false);
 select storage.create_bucket('promo-kits', public := true);
@@ -3127,3 +3100,9 @@ to public
 with check (
   bucket_id = 'w9-uploads' AND auth.uid() = owner
 );
+
+
+
+
+
+RESET ALL;
