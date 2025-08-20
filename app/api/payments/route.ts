@@ -168,17 +168,23 @@ export async function GET(request: NextRequest) {
 
     // Calculate real-time status for each payment link and apply status filter
     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
-      const calculatedStatus = calculatePaymentLinkStatus(link as PaymentLink);
-      return {
+      // Add confirmed_payment_count BEFORE calculating status
+      const linkWithCount = {
         ...link,
+        confirmed_payment_count: confirmedCountMap.get(link.id) || 0
+      };
+      
+      const calculatedStatus = calculatePaymentLinkStatus(linkWithCount);
+      return {
+        ...linkWithCount,
         status: calculatedStatus,
-        confirmed_payment_count: confirmedCountMap.get(link.id) || 0,
         // Add helpful metadata for debugging
         _status_info: {
           stored_status: link.status,
           calculated_status: calculatedStatus,
           is_single_use: link.max_uses === 1,
           usage_vs_max: `${link.usage_count}/${link.max_uses || 'unlimited'}`,
+          confirmed_vs_max: `${linkWithCount.confirmed_payment_count}/${link.max_uses || 'unlimited'}`,
           is_expired: link.expires_at && new Date(link.expires_at) < new Date()
         }
       };
