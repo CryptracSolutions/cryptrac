@@ -9,6 +9,7 @@ interface PaymentLink {
   expires_at: string | null;
   current_uses: number;
   confirmed_payment_count?: number; // Added dynamically in API
+  invoice_number?: string | null;
 }
 
 function calculatePaymentLinkStatus(link: PaymentLink): string {
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
     // Build query using service role (bypasses RLS)
     let query = serviceSupabase
       .from('payment_links')
-      .select('*')
+      .select('*, subscription_invoices!left(invoice_number)')
       .eq('merchant_id', merchant.id)
       .order('created_at', { ascending: false });
 
@@ -148,9 +149,13 @@ export async function GET(request: NextRequest) {
 
     // Calculate real-time status for each payment link and apply status filter
     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
+      const { subscription_invoices, ...rest } = link as any;
+      const invoice_number = subscription_invoices?.invoice_number || null;
+
       const linkWithCount = {
-        ...link,
-        confirmed_payment_count: link.current_uses
+        ...rest,
+        invoice_number,
+        confirmed_payment_count: rest.current_uses
       };
 
       const calculatedStatus = calculatePaymentLinkStatus(linkWithCount);

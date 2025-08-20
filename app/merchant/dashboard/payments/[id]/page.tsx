@@ -58,6 +58,7 @@ interface PaymentLink {
       effective_auto_convert_enabled?: boolean;
     };
   };
+  invoice_number?: string | null;
 }
 
 interface PaymentDetailsPageProps {
@@ -273,7 +274,14 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
           Back
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">{paymentLink.title}</h1>
+          <div className="flex items-center space-x-2">
+            <h1 className="text-3xl font-bold text-gray-900">{paymentLink.title}</h1>
+            {paymentLink.invoice_number && (
+              <Badge variant="outline" className="font-mono">
+                {paymentLink.invoice_number}
+              </Badge>
+            )}
+          </div>
           <p className="text-gray-600 mt-1">Payment link details and management</p>
         </div>
         <div className="flex items-center space-x-2">

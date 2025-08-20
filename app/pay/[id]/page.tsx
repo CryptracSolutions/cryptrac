@@ -249,21 +249,24 @@ export default function PaymentPage() {
   const feeBreakdown = paymentLink ? calculateFeeBreakdown(paymentLink) : null
 
   function calculateFeeBreakdown(link: PaymentLink): FeeBreakdown {
-    const baseAmount = link.base_amount
-    const taxAmount = link.tax_amount
-    const subtotalWithTax = link.subtotal_with_tax
+    // Ensure all numeric values are present to avoid runtime errors
+    const baseAmount = link.base_amount ?? link.amount ?? 0
+    const taxAmount = link.tax_amount ?? 0
+    const subtotalWithTax = link.subtotal_with_tax ?? baseAmount + taxAmount
 
     // Platform fee calculation using effective link setting
     const chargeCustomerFee =
       link.charge_customer_fee ??
       link.metadata?.fee_breakdown?.effective_charge_customer_fee ??
       false
-    const feeAmount = subtotalWithTax * link.fee_percentage
+
+    const feePercentage = link.fee_percentage ?? 0
+    const feeAmount = subtotalWithTax * feePercentage
     const platformFee = chargeCustomerFee ? feeAmount : 0
-    
+
     // Customer total: if charge_customer_fee is true, customer pays extra to offset NOWPayments fee deduction
     const customerTotal = chargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax
-    
+
     // Merchant receives: NOWPayments always deducts fee from payout, regardless of charge_customer_fee
     // When charge_customer_fee is true, the extra customer payment offsets this deduction
     const merchantReceives = subtotalWithTax - feeAmount
