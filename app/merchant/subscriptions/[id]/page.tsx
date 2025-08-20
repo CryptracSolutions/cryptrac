@@ -85,6 +85,10 @@ export default function SubscriptionDetailPage() {
   const [invoiceLink, setInvoiceLink] = useState<{ url: string; id: string } | null>(null);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // ENHANCED: Add state for future cycle targeting
+  const [targetCycleDate, setTargetCycleDate] = useState('');
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const fetchInvoices = useCallback(async (): Promise<void> => {
     const { data: invs } = await supabase
@@ -169,17 +173,31 @@ export default function SubscriptionDetailPage() {
     }
   };
 
+  // ENHANCED: Updated generateInvoice function with future cycle targeting
   const generateInvoice = async () => {
-    const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}/generate-invoice`, { method: 'POST' });
+    const requestBody = targetCycleDate ? { target_cycle_date: targetCycleDate } : {};
+    
+    const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}/generate-invoice`, { 
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
     const json = await res.json();
     if (res.ok) {
       setInvoiceLink({ url: json.payment_url, id: json.payment_link_id });
-      if (json.email_notification_sent) {
-        toast.success('Invoice generated and notification email sent to customer');
-      } else {
-        toast.success('Invoice generated');
+      
+      let successMessage = 'Invoice generated';
+      if (json.target_cycle_used) {
+        successMessage += ` for cycle ${targetCycleDate}`;
       }
+      if (json.email_notification_sent) {
+        successMessage += ' and notification email sent to customer';
+      }
+      
+      toast.success(successMessage);
       await fetchInvoices();
+      
+      // Clear target cycle date after successful generation
+      setTargetCycleDate('');
     } else {
       toast.error(json.error || 'Failed to generate invoice');
     }
@@ -298,11 +316,45 @@ export default function SubscriptionDetailPage() {
         </div>
       )}
 
-      {/* Generate Invoice Section */}
+      {/* ENHANCED: Generate Invoice Section with Future Cycle Targeting */}
       <div className="mb-6 p-4 border rounded-lg">
         <h2 className="text-lg font-semibold mb-4">Generate Invoice</h2>
+        
+        {/* Advanced Options Toggle */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options
+          </button>
+        </div>
+
+        {/* Advanced Options */}
+        {showAdvancedOptions && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+            <h4 className="font-medium mb-2 text-blue-800">Future Cycle Targeting</h4>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-sm font-medium mb-1">Target Cycle Date (Optional)</label>
+                <Input
+                  type="date"
+                  value={targetCycleDate}
+                  onChange={(e) => setTargetCycleDate(e.target.value)}
+                  placeholder="Leave empty for next billing cycle"
+                />
+                <p className="text-xs text-gray-600 mt-1">
+                  Leave empty to generate for the next scheduled billing cycle. 
+                  Set a date to generate an invoice for a specific future cycle (useful for testing amount overrides).
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <Button onClick={generateInvoice} className="mb-4">
-          Generate Invoice
+          Generate Invoice{targetCycleDate ? ` for ${targetCycleDate}` : ''}
         </Button>
         
         {invoiceLink && (

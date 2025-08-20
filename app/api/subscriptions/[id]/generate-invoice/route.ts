@@ -55,6 +55,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const { service, merchant } = auth;
     console.log('Merchant ID:', merchant.id);
 
+    // ENHANCED: Parse request body for optional target cycle date
+    let requestBody: { target_cycle_date?: string } = {};
+    try {
+      const bodyText = await request.text();
+      if (bodyText) {
+        requestBody = JSON.parse(bodyText);
+      }
+    } catch (e) {
+      // Ignore parsing errors for backward compatibility
+    }
+
     // Enhanced environment variable validation
     const internalKey = process.env.INTERNAL_API_KEY;
     const appOrigin = env.APP_ORIGIN;
@@ -102,15 +113,27 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
     console.log('Subscription found:', sub.title);
 
-    // Task 4: Target the upcoming occurrence (same as scheduler)
+    // ENHANCED: Determine target cycle date
     const zone = merchant.timezone || 'UTC';
     console.log('Timezone:', zone);
-    const nextBilling = DateTime.fromISO(sub.next_billing_at, { zone });
-    const cycleStart = nextBilling.toUTC();
+    
+    let cycleStart: DateTime;
+    
+    if (requestBody.target_cycle_date) {
+      // Manual targeting of specific cycle date
+      console.log('Target cycle date provided:', requestBody.target_cycle_date);
+      cycleStart = DateTime.fromISO(requestBody.target_cycle_date, { zone }).toUTC();
+      console.log('Using target cycle start:', cycleStart.toISO());
+    } else {
+      // Default behavior: use next billing date
+      const nextBilling = DateTime.fromISO(sub.next_billing_at, { zone });
+      cycleStart = nextBilling.toUTC();
+      console.log('Using next billing cycle start:', cycleStart.toISO());
+    }
+    
     const cycleStartISO = cycleStart.toISO();
-    console.log('Cycle start:', cycleStartISO);
 
-    // Max cycles completion logic - check if subscription has reached its limit
+    // ENHANCED: Max cycles completion logic - check if this specific cycle exceeds limit
     if (sub.max_cycles && sub.max_cycles > 0) {
       // Count existing invoices to determine current cycle number
       const { count: invoiceCount, error: countError } = await service
@@ -127,72 +150,74 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       console.log('Current cycle:', currentCycle, 'Max cycles:', sub.max_cycles);
       
       if (currentCycle > sub.max_cycles) {
-        // Mark subscription as completed
-        const { error: updateError } = await service
-          .from('subscriptions')
-          .update({ 
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            next_billing_at: null 
-          })
-          .eq('id', id)
-          .eq('merchant_id', merchant.id);
-          
-        if (updateError) {
-          console.error('Error updating subscription to completed:', updateError);
-        }
-
-        // FIXED: Send completion email when subscription is completed via manual generation
-        try {
-          // Get customer email for completion notification
-          const { data: customer } = await service
-            .from('customers')
-            .select('email')
-            .eq('id', sub.customer_id)
-            .single();
-
-          if (customer?.email) {
-            console.log('📧 Sending completion email to:', customer.email);
+        // Mark subscription as completed if this is the natural next cycle
+        if (!requestBody.target_cycle_date) {
+          const { error: updateError } = await service
+            .from('subscriptions')
+            .update({ 
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              next_billing_at: null 
+            })
+            .eq('id', id)
+            .eq('merchant_id', merchant.id);
             
-            if (supabaseUrl && serviceKey) {
-              const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
-                method: 'POST',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${serviceKey}`
-                },
-                body: JSON.stringify({
-                  type: 'completion',
-                  subscription_id: id,
-                  customer_email: customer.email
-                })
-              });
+          if (updateError) {
+            console.error('Error updating subscription to completed:', updateError);
+          }
+
+          // Send completion email when subscription is completed via manual generation
+          try {
+            // Get customer email for completion notification
+            const { data: customer } = await service
+              .from('customers')
+              .select('email')
+              .eq('id', sub.customer_id)
+              .single();
+
+            if (customer?.email) {
+              console.log('📧 Sending completion email to:', customer.email);
               
-              console.log('📧 Completion email response:', {
-                status: response.status,
-                statusText: response.statusText,
-                ok: response.ok
-              });
-              
-              if (!response.ok) {
-                const errorText = await response.text();
-                console.error('📧 Completion email error:', errorText);
+              if (supabaseUrl && serviceKey) {
+                const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${serviceKey}`
+                  },
+                  body: JSON.stringify({
+                    type: 'completion',
+                    subscription_id: id,
+                    customer_email: customer.email
+                  })
+                });
+                
+                console.log('📧 Completion email response:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  ok: response.ok
+                });
+                
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error('📧 Completion email error:', errorText);
+                } else {
+                  console.log('✅ Completion email sent successfully');
+                }
               } else {
-                console.log('✅ Completion email sent successfully');
+                console.error('❌ Missing environment variables for completion email');
               }
             } else {
-              console.error('❌ Missing environment variables for completion email');
+              console.log('ℹ️ No customer email found for completion notification');
             }
-          } else {
-            console.log('ℹ️ No customer email found for completion notification');
+          } catch (emailError) {
+            console.error('❌ Failed to send completion email:', emailError);
+            // Don't fail the completion process if email fails
           }
-        } catch (emailError) {
-          console.error('❌ Failed to send completion email:', emailError);
-          // Don't fail the completion process if email fails
         }
           
         return NextResponse.json({ 
-          error: `Subscription has reached maximum cycles (${sub.max_cycles}) and has been completed` 
+          error: `Subscription has reached maximum cycles (${sub.max_cycles})${requestBody.target_cycle_date ? ' - cannot generate invoice for cycle beyond limit' : ' and has been completed'}` 
         }, { status: 400 });
       }
     }
@@ -232,13 +257,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       });
     }
 
-    // Task 4: Get amount override for this cycle (same logic as scheduler)
+    // ENHANCED: Get amount override for this specific cycle date
     const today = cycleStart.setZone(zone).toISODate();
     console.log('=== Amount Override Debug ===');
     console.log('Cycle start (UTC):', cycleStart.toISO());
     console.log('Cycle start (local zone):', cycleStart.setZone(zone).toISO());
     console.log('Today (ISO date for comparison):', today);
     console.log('Timezone:', zone);
+    console.log('Target cycle date provided:', !!requestBody.target_cycle_date);
     
     const { data: override, error: overrideError } = await service
       .from('subscription_amount_overrides')
@@ -426,20 +452,25 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       // Don't fail the invoice generation if email fails
     }
 
-    // Task 4: Advance next_billing_at using exact same logic as scheduler
-    let next = DateTime.fromISO(sub.billing_anchor, { zone });
-    while (next <= DateTime.now().setZone(zone)) {
-      next = addInterval(next, sub.interval, sub.interval_count);
-    }
-    console.log('Advancing next billing to:', next.toUTC().toISO());
-    
-    const { error: updateError } = await service
-      .from('subscriptions')
-      .update({ next_billing_at: next.toUTC().toISO() })
-      .eq('id', id);
+    // ENHANCED: Only advance next_billing_at if this is the natural next cycle (not a future target)
+    if (!requestBody.target_cycle_date) {
+      // Task 4: Advance next_billing_at using exact same logic as scheduler
+      let next = DateTime.fromISO(sub.billing_anchor, { zone });
+      while (next <= DateTime.now().setZone(zone)) {
+        next = addInterval(next, sub.interval, sub.interval_count);
+      }
+      console.log('Advancing next billing to:', next.toUTC().toISO());
       
-    if (updateError) {
-      console.warn('Failed to advance next_billing_at:', updateError);
+      const { error: updateError } = await service
+        .from('subscriptions')
+        .update({ next_billing_at: next.toUTC().toISO() })
+        .eq('id', id);
+        
+      if (updateError) {
+        console.warn('Failed to advance next_billing_at:', updateError);
+      }
+    } else {
+      console.log('Skipping next_billing_at advancement for targeted future cycle');
     }
 
     const result = { 
@@ -449,7 +480,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       due_date: dueDate.toISO(),
       expires_at: expiresAt.toISO(),
       invoice_number: invoiceNumber, // Task 7: Include invoice number in response
-      email_notification_sent: true // Indicate that email was automatically sent
+      email_notification_sent: true, // Indicate that email was automatically sent
+      target_cycle_used: !!requestBody.target_cycle_date // Indicate if future targeting was used
     };
     console.log('=== Generate Invoice Success ===', result);
     return NextResponse.json(result);
