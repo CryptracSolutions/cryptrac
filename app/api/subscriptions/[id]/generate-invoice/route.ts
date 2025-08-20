@@ -448,7 +448,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       cycle_start_at: cycleStartISO,
       due_date: dueDate.toISO(),
       expires_at: expiresAt.toISO(),
-      invoice_number: invoiceNumber // Task 7: Include invoice number in response
+      invoice_number: invoiceNumber, // Task 7: Include invoice number in response
+      email_notification_sent: true // Indicate that email was automatically sent
     };
     console.log('=== Generate Invoice Success ===', result);
     return NextResponse.json(result);

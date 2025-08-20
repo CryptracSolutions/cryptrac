@@ -7,6 +7,7 @@ interface PaymentLink {
   usage_count: number;
   max_uses: number | null;
   expires_at: string | null;
+  confirmed_payment_count?: number; // Added dynamically in API
 }
 
 function calculatePaymentLinkStatus(link: PaymentLink): string {
@@ -25,8 +26,14 @@ function calculatePaymentLinkStatus(link: PaymentLink): string {
     return 'expired';
   }
 
-  // Check if max uses reached (including single-use links with max_uses=1)
-  if (link.max_uses && link.usage_count >= link.max_uses) {
+  // For single-use links, only mark as completed if payment is confirmed
+  // NOT just when visited (usage_count tracks visits, not payments)
+  if (link.max_uses === 1 && (link.confirmed_payment_count || 0) >= 1) {
+    return 'completed';
+  }
+
+  // For multi-use links, check if confirmed payments reached max uses
+  if (link.max_uses && link.max_uses > 1 && (link.confirmed_payment_count || 0) >= link.max_uses) {
     return 'completed';
   }
 

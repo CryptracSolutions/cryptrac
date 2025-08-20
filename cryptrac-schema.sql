@@ -702,12 +702,23 @@ CREATE OR REPLACE FUNCTION "public"."update_payment_link_usage"() RETURNS "trigg
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
-    -- Update usage count when a payment is confirmed
-    IF NEW.status = 'confirmed' AND (OLD.status IS NULL OR OLD.status != 'confirmed') THEN
+    -- Increment usage count for any transaction creation (tracks visits/opens)
+    -- This is the correct behavior - usage_count tracks how many times link was opened
+    IF TG_OP = 'INSERT' THEN
         UPDATE payment_links 
         SET 
             usage_count = COALESCE(usage_count, 0) + 1,
-            last_payment_at = NOW()
+            last_payment_at = CASE 
+                WHEN NEW.status = 'confirmed' THEN NOW() 
+                ELSE last_payment_at 
+            END
+        WHERE id = NEW.payment_link_id;
+    END IF;
+    
+    -- Update last_payment_at when payment is confirmed
+    IF TG_OP = 'UPDATE' AND NEW.status = 'confirmed' AND OLD.status != 'confirmed' THEN
+        UPDATE payment_links 
+        SET last_payment_at = NOW()
         WHERE id = NEW.payment_link_id;
     END IF;
     

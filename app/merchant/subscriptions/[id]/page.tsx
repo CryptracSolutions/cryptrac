@@ -162,7 +162,11 @@ export default function SubscriptionDetailPage() {
     const json = await res.json();
     if (res.ok) {
       setInvoiceLink({ url: json.payment_url, id: json.payment_link_id });
-      toast.success('Invoice generated');
+      if (json.email_notification_sent) {
+        toast.success('Invoice generated and notification email sent to customer');
+      } else {
+        toast.success('Invoice generated');
+      }
       await fetchInvoices();
     } else {
       toast.error(json.error || 'Failed to generate invoice');
