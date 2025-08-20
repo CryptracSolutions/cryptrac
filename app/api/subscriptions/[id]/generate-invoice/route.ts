@@ -266,11 +266,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     console.log('Timezone:', zone);
     console.log('Target cycle date provided:', !!requestBody.target_cycle_date);
     
+    // ENHANCED: Query for active overrides considering both effective_from and effective_until
     const { data: override, error: overrideError } = await service
       .from('subscription_amount_overrides')
-      .select('id, amount, effective_from, note, created_at')
+      .select('id, amount, effective_from, effective_until, note, created_at')
       .eq('subscription_id', id)
       .lte('effective_from', today)
+      .or(`effective_until.is.null,effective_until.gte.${today}`)
       .order('effective_from', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -280,7 +282,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     // Also fetch all overrides for debugging
     const { data: allOverrides } = await service
       .from('subscription_amount_overrides')
-      .select('id, amount, effective_from, note, created_at')
+      .select('id, amount, effective_from, effective_until, note, created_at')
       .eq('subscription_id', id)
       .order('effective_from', { ascending: false });
     

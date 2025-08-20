@@ -22,6 +22,7 @@ interface Invoice {
 interface AmountOverride {
   id: string;
   effective_from: string;
+  effective_until?: string;
   amount: number;
   note?: string;
   created_at: string;
@@ -116,7 +117,7 @@ export default function SubscriptionDetailPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [amountOverrides, setAmountOverrides] = useState<AmountOverride[]>([]);
-  const [override, setOverride] = useState({ effective_from: '', amount: '', note: '' });
+  const [override, setOverride] = useState({ effective_from: '', effective_until: '', amount: '', note: '' });
   const [invoiceLink, setInvoiceLink] = useState<{ url: string; id: string } | null>(null);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(true);
@@ -138,7 +139,7 @@ export default function SubscriptionDetailPage() {
   const fetchAmountOverrides = useCallback(async (): Promise<void> => {
     const { data: overrides } = await supabase
       .from('subscription_amount_overrides')
-      .select('id, effective_from, amount, note, created_at')
+      .select('id, effective_from, effective_until, amount, note, created_at')
       .eq('subscription_id', id)
       .order('effective_from', { ascending: false });
     setAmountOverrides(overrides || []);
@@ -194,14 +195,25 @@ export default function SubscriptionDetailPage() {
 
   const scheduleOverride = async (e: React.FormEvent) => {
     e.preventDefault();
+    const requestBody: any = { 
+      effective_from: override.effective_from, 
+      amount: parseFloat(override.amount), 
+      note: override.note 
+    };
+    
+    // Only include effective_until if it's provided
+    if (override.effective_until) {
+      requestBody.effective_until = override.effective_until;
+    }
+    
     const res = await makeAuthenticatedRequest(`/api/subscriptions/${id}/amount-overrides`, {
       method: 'POST',
-      body: JSON.stringify({ effective_from: override.effective_from, amount: parseFloat(override.amount), note: override.note })
+      body: JSON.stringify(requestBody)
     });
     if (res.ok) {
       toast.success('Override scheduled');
       await fetchAmountOverrides(); // Task 6: Refresh overrides list
-      setOverride({ effective_from: '', amount: '', note: '' });
+      setOverride({ effective_from: '', effective_until: '', amount: '', note: '' });
     } else {
       const json = await res.json();
       toast.error(json.error || 'Failed to schedule override');
@@ -271,7 +283,8 @@ export default function SubscriptionDetailPage() {
   // Apply overrides to upcoming cycles
   const cyclesWithOverrides = upcomingCycles.map(cycle => {
     const applicableOverride = amountOverrides.find(override => 
-      override.effective_from <= cycle.date
+      override.effective_from <= cycle.date && 
+      (!override.effective_until || override.effective_until >= cycle.date)
     );
     
     return {
@@ -287,7 +300,8 @@ export default function SubscriptionDetailPage() {
     if (!targetCycleDate || !sub) return sub?.amount || 0;
     
     const applicableOverride = amountOverrides.find(override => 
-      override.effective_from <= targetCycleDate
+      override.effective_from <= targetCycleDate &&
+      (!override.effective_until || override.effective_until >= targetCycleDate)
     );
     
     return applicableOverride?.amount || sub?.amount || 0;
@@ -564,11 +578,13 @@ export default function SubscriptionDetailPage() {
         </div>
         
         {/* Schedule New Override */}
-        <form onSubmit={scheduleOverride} className="space-y-3 mb-6">
+        <form onSubmit={scheduleOverride} className="space-y-4 mb-6">
           <h3 className="font-medium">Schedule New Override</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          
+          {/* Date Range Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Effective Date</label>
+              <label className="block text-sm font-medium mb-1">Start Date (Effective From)</label>
               <Input
                 type="date"
                 value={override.effective_from}
@@ -576,8 +592,22 @@ export default function SubscriptionDetailPage() {
                 min={new Date().toISOString().split('T')[0]}
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">Override will apply to this date and all future cycles</p>
+              <p className="text-xs text-gray-500 mt-1">When the override begins</p>
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">End Date (Optional)</label>
+              <Input
+                type="date"
+                value={override.effective_until}
+                onChange={(e) => setOverride(prev => ({ ...prev, effective_until: e.target.value }))}
+                min={override.effective_from || new Date().toISOString().split('T')[0]}
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave empty for permanent override</p>
+            </div>
+          </div>
+          
+          {/* Amount and Note Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">New Amount</label>
               <Input
@@ -594,10 +624,60 @@ export default function SubscriptionDetailPage() {
               <Input
                 value={override.note}
                 onChange={(e) => setOverride(prev => ({ ...prev, note: e.target.value }))}
-                placeholder="Price increase"
+                placeholder="Annual maintenance fee"
               />
             </div>
           </div>
+          
+          {/* Quick Preset Options */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+            <p className="text-sm font-medium text-blue-800 mb-2">💡 Quick Presets:</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const today = new Date();
+                  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+                  setOverride(prev => ({
+                    ...prev,
+                    effective_from: today.toISOString().split('T')[0],
+                    effective_until: nextMonth.toISOString().split('T')[0]
+                  }));
+                }}
+                className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
+              >
+                1 Month Override
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const today = new Date();
+                  const nextYear = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+                  setOverride(prev => ({
+                    ...prev,
+                    effective_from: today.toISOString().split('T')[0],
+                    effective_until: nextYear.toISOString().split('T')[0]
+                  }));
+                }}
+                className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
+              >
+                1 Year Override
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOverride(prev => ({
+                    ...prev,
+                    effective_until: ''
+                  }));
+                }}
+                className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded hover:bg-gray-200"
+              >
+                Permanent Override
+              </button>
+            </div>
+          </div>
+          
           <Button type="submit">Schedule Override</Button>
         </form>
 
@@ -609,11 +689,27 @@ export default function SubscriptionDetailPage() {
               {amountOverrides.map(override => (
                 <div key={override.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                   <div>
-                    <span className="font-medium">${override.amount}</span>
-                    {/* FIXED: Use proper date formatting without timezone conversion */}
-                    <span className="text-gray-600 ml-2">effective {formatDateOnly(override.effective_from)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">${override.amount}</span>
+                      {override.effective_until ? (
+                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                          Time-Limited
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          Permanent
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {/* FIXED: Use proper date formatting without timezone conversion */}
+                      <span>From {formatDateOnly(override.effective_from)}</span>
+                      {override.effective_until && (
+                        <span> to {formatDateOnly(override.effective_until)}</span>
+                      )}
+                    </div>
                     {override.note && (
-                      <span className="text-sm text-gray-500 ml-2">({override.note})</span>
+                      <div className="text-sm text-gray-500 mt-1">📝 {override.note}</div>
                     )}
                   </div>
                   <span className="text-xs text-gray-400">

@@ -39,22 +39,36 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   }
   const { service, merchant } = auth;
   const body = await request.json();
-  const { effective_from, amount, note, notice_sent_at } = body;
+  const { effective_from, effective_until, amount, note, notice_sent_at } = body;
+  
   if (!effective_from || !amount) {
     return NextResponse.json({ error: 'effective_from and amount required' }, { status: 400 });
   }
+  
+  // Validate date range if effective_until is provided
+  if (effective_until && effective_until <= effective_from) {
+    return NextResponse.json({ 
+      error: 'effective_until must be after effective_from' 
+    }, { status: 400 });
+  }
+  
   const { error } = await service
     .from('subscription_amount_overrides')
     .insert({
       subscription_id: id,
       merchant_id: merchant.id,
       effective_from,
+      effective_until: effective_until || null,
       amount,
       note,
       notice_sent_at: notice_sent_at || null
     });
+    
   if (error) {
+    console.error('Failed to schedule amount override:', error);
     return NextResponse.json({ error: 'Failed to schedule amount change' }, { status: 500 });
   }
+  
   return NextResponse.json({ success: true });
 }
+
