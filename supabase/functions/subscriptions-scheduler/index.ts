@@ -154,6 +154,7 @@ async function generateInvoiceForSubscription(
         currency: subscription.currency,
         link_id: linkId,
         subscription_id: subscription.id,
+        source: 'subscription',
         metadata: {
           subscription_id: subscription.id,
           cycle_start_at: cycleStartISO,
@@ -169,6 +170,17 @@ async function generateInvoiceForSubscription(
       return { success: false, error: 'Failed to create payment link' };
     }
     
+    // Generate proper invoice number using atomic counter
+    const { data: invoiceNumber, error: numberError } = await supabase
+      .rpc('get_next_invoice_number', { merchant_uuid: subscription.merchant_id });
+    
+    if (numberError) {
+      console.error(`❌ Failed to generate invoice number for ${subscription.id}:`, numberError);
+      return { success: false, error: 'Failed to generate invoice number' };
+    }
+    
+    console.log(`📄 Generated invoice number: ${invoiceNumber}`);
+    
     // Create subscription invoice record
     const { data: invoice, error: invoiceError } = await supabase
       .from('subscription_invoices')
@@ -181,7 +193,7 @@ async function generateInvoiceForSubscription(
         cycle_start_at: cycleStartISO,
         due_date: dueDate.toISODate(),
         status: 'pending',
-        invoice_number: `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`
+        invoice_number: invoiceNumber
       })
       .select('id')
       .single();
@@ -237,27 +249,40 @@ async function sendInvoiceNotification(
   try {
     console.log(`📧 Sending invoice notification for ${subscription.id} to ${subscription.customers.email}`);
     
-    // Call the notification function with proper authorization
-    const { data, error } = await supabase.functions.invoke('subscriptions-send-notifications', {
-      body: {
+    // Get environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    
+    // Make direct HTTP request to notification function
+    const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+        'apikey': serviceRoleKey
+      },
+      body: JSON.stringify({
         type: 'invoice',
         subscription_id: subscription.id,
         invoice_data: {
           amount: invoiceAmount,
           payment_url: paymentUrl
         }
-      },
-      headers: {
-        Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-      }
+      })
     });
     
-    if (error) {
-      console.error(`❌ Failed to send notification for ${subscription.id}:`, error);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Failed to send notification for ${subscription.id}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
       return false;
     }
     
-    console.log(`✅ Notification sent for ${subscription.id}`);
+    const result = await response.json();
+    console.log(`✅ Notification sent successfully for ${subscription.id}:`, result);
     return true;
     
   } catch (error) {
