@@ -59,6 +59,7 @@ export async function GET(
         metadata,
         created_at,
         updated_at,
+        subscription_invoices!left(invoice_number),
         merchant:merchants(
           id,
           business_name,
@@ -96,10 +97,13 @@ export async function GET(
     const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${paymentLink.link_id}`;
 
     // Return with consistent structure (using 'data' field to match frontend expectations)
+    const { subscription_invoices, ...rest } = paymentLink as any
+
     return NextResponse.json({
       success: true,
       data: {
-        ...paymentLink,
+        ...rest,
+        invoice_number: subscription_invoices?.invoice_number || null,
         payment_url: paymentUrl,
         qr_code_data: paymentUrl
       }
