@@ -371,6 +371,61 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
     console.log('Invoice created successfully');
 
+    // FIXED: Automatically send invoice notification email for manual generation
+    try {
+      // Get customer email for invoice notification
+      const { data: customer } = await service
+        .from('customers')
+        .select('email')
+        .eq('id', sub.customer_id)
+        .single();
+
+      if (customer?.email) {
+        console.log('📧 Sending invoice notification email to:', customer.email);
+        
+        if (supabaseUrl && serviceKey) {
+          const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${serviceKey}`
+            },
+            body: JSON.stringify({
+              type: 'invoice',
+              subscription_id: id,
+              customer_email: customer.email,
+              payment_url: payment_link.payment_url,
+              invoice_data: {
+                amount,
+                currency: sub.currency,
+                due_date: dueDate.toISO()
+              }
+            })
+          });
+          
+          console.log('📧 Invoice notification response:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('📧 Invoice notification error:', errorText);
+          } else {
+            console.log('✅ Invoice notification sent successfully');
+          }
+        } else {
+          console.error('❌ Missing environment variables for invoice notification');
+        }
+      } else {
+        console.log('ℹ️ No customer email found for invoice notification');
+      }
+    } catch (emailError) {
+      console.error('❌ Failed to send invoice notification:', emailError);
+      // Don't fail the invoice generation if email fails
+    }
+
     // Task 4: Advance next_billing_at using exact same logic as scheduler
     let next = DateTime.fromISO(sub.billing_anchor, { zone });
     while (next <= DateTime.now().setZone(zone)) {

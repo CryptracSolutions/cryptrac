@@ -937,6 +937,9 @@ export async function POST(request: Request) {
       sendMerchantNotification(payment as unknown as Record<string, unknown>, updateData as Record<string, unknown>);
       
       // Update payment link usage statistics
+      // DISABLED: This is now handled by the database trigger on transactions table
+      // to prevent double-incrementing usage_count
+      /*
       try {
         const { error: incrementError } = await supabase.rpc('increment_payment_link_usage', {
           p_link_id: payment.payment_link_id
@@ -948,8 +951,10 @@ export async function POST(request: Request) {
           console.log('✅ Payment link usage incremented')
         }
       } catch (incrementErr) {
-        console.warn('⚠️ Error incrementing payment link usage:', incrementErr)
+        console.warn('⚠️ Exception incrementing payment link usage:', incrementErr)
       }
+      */
+      console.log('✅ Payment link usage will be incremented by database trigger')
 
       // Handle subscription auto-resume if applicable
       if (payment.payment_link_id) {

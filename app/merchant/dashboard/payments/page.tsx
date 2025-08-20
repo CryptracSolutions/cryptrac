@@ -37,6 +37,7 @@ interface PaymentLink {
   expires_at?: string;
   max_uses?: number;
   usage_count: number;
+  confirmed_payment_count: number;
   qr_code_data?: string;
   _status_info?: {
     stored_status: string;
@@ -391,7 +392,7 @@ export default function PaymentsPage() {
                 Subscription
               </Badge>
             )}
-            {link.usage_count > 0 && (
+            {link.confirmed_payment_count > 0 && (
               <Badge variant="outline" className="bg-green-100 text-green-700">
                 Payment received
               </Badge>

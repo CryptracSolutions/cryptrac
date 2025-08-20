@@ -144,12 +144,28 @@ export async function GET(request: NextRequest) {
 
     console.log('Found payment links:', rawPaymentLinks?.length || 0);
 
+    // Get confirmed payment counts for all payment links
+    const paymentLinkIds = (rawPaymentLinks || []).map(link => link.id);
+    const { data: confirmedCounts } = await serviceSupabase
+      .from('transactions')
+      .select('payment_link_id')
+      .eq('status', 'confirmed')
+      .in('payment_link_id', paymentLinkIds);
+
+    // Create a map of payment link ID to confirmed count
+    const confirmedCountMap = new Map();
+    (confirmedCounts || []).forEach(transaction => {
+      const linkId = transaction.payment_link_id;
+      confirmedCountMap.set(linkId, (confirmedCountMap.get(linkId) || 0) + 1);
+    });
+
     // Calculate real-time status for each payment link and apply status filter
     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
       const calculatedStatus = calculatePaymentLinkStatus(link as PaymentLink);
       return {
         ...link,
         status: calculatedStatus,
+        confirmed_payment_count: confirmedCountMap.get(link.id) || 0,
         // Add helpful metadata for debugging
         _status_info: {
           stored_status: link.status,

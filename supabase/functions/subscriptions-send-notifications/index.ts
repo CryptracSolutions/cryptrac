@@ -463,31 +463,89 @@ This is an automated receipt. Please keep this for your records.
             currency: subscription.currency || 'USD'
           }).format(subscription.amount || 0);
 
+          const formattedDueDate = invoice_data?.due_date ? 
+            new Date(invoice_data.due_date).toLocaleDateString('en-US', { 
+              year: 'numeric', month: 'long', day: 'numeric' 
+            }) : '';
+
           template = {
             subject: `Invoice for ${subscription.title} - ${formattedAmount}`,
             html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1>Subscription Invoice</h1>
-                <p>Hello ${subscription.customers.name},</p>
-                <p>Your subscription invoice is ready.</p>
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
-                  <p><strong>Subscription:</strong> ${subscription.title}</p>
-                  <p><strong>Amount Due:</strong> ${formattedAmount}</p>
-                </div>
-                ${payment_url ? `<p><a href="${payment_url}" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Pay Now</a></p>` : ''}
-                <p>Please complete your payment to continue your subscription.</p>
-                <p>Best regards,<br>The ${subscription.merchants.business_name} Team</p>
-              </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Invoice</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+        .container { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #e9ecef; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .invoice-icon { color: #007bff; font-size: 48px; margin-bottom: 10px; }
+        .details { background: #f8f9fa; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #495057; }
+        .detail-value { color: #212529; }
+        .amount-highlight { font-weight: bold; font-size: 18px; color: #28a745; }
+        .button { display: inline-block; background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="invoice-icon">📄</div>
+            <h1>Subscription Invoice</h1>
+            <div style="color: #6c757d; font-size: 16px; margin-top: 5px;">From ${subscription.merchants.business_name}</div>
+        </div>
+        
+        <p>Hello${subscription.customers.name ? ` ${subscription.customers.name}` : ''},</p>
+        <p>Your subscription invoice is ready.</p>
+        
+        <div class="details">
+            <div class="detail-row">
+                <span class="detail-label">Subscription:</span>
+                <span class="detail-value">${subscription.title}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount Due:</span>
+                <span class="detail-value amount-highlight">${formattedAmount}</span>
+            </div>
+            ${formattedDueDate ? `
+            <div class="detail-row">
+                <span class="detail-label">Due Date:</span>
+                <span class="detail-value">${formattedDueDate}</span>
+            </div>
+            ` : ''}
+        </div>
+
+        <div style="text-align: center;">
+            ${payment_url ? `<a href="${payment_url}" class="button">Pay Now</a>` : ''}
+        </div>
+        
+        <p>Please complete your payment to continue your subscription.</p>
+        <p>Best regards,<br>The ${subscription.merchants.business_name} Team</p>
+        
+        <div class="footer">
+            <p>This is an automated email from Cryptrac.</p>
+            <p>If you have any questions, please contact ${subscription.merchants.business_name}.</p>
+        </div>
+    </div>
+</body>
+</html>
             `,
             text: `
 Subscription Invoice
 
-Hello ${subscription.customers.name},
+Hello${subscription.customers.name ? ` ${subscription.customers.name}` : ''},
 
 Your subscription invoice is ready.
 
 Subscription: ${subscription.title}
 Amount Due: ${formattedAmount}
+${formattedDueDate ? `Due Date: ${formattedDueDate}\n` : ''}
 
 ${payment_url ? `Pay now: ${payment_url}\n` : ''}
 
