@@ -490,11 +490,12 @@ export default function SubscriptionDetailPage() {
             ))}
           </div>
           
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-            <p className="text-sm text-yellow-800">
-              <strong>⚠️ Note:</strong> Automatic invoice generation is currently not working. 
-              The scheduler needs to be set up to automatically process these cycles. 
-              For now, you'll need to manually generate invoices using the section below.
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+            <p className="text-sm text-green-800">
+              <strong>✅ Automatic Billing Active:</strong> The subscription scheduler runs every minute for immediate responsiveness. 
+              Invoices will be generated automatically within 1 minute when each cycle date arrives based on the amounts shown above.
+              <br />
+              <strong>💡 Manual Generation:</strong> You can also generate invoices manually below for testing or early billing.
             </p>
           </div>
         </div>

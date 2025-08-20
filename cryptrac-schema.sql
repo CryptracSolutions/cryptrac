@@ -173,6 +173,45 @@ COMMENT ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" "u
 
 
 
+CREATE OR REPLACE FUNCTION "public"."check_scheduler_cron_status"() RETURNS TABLE("job_name" "text", "schedule" "text", "active" boolean, "last_run" timestamp with time zone, "last_status" "text", "next_run" timestamp with time zone)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        j.jobname::text,
+        j.schedule::text,
+        j.active,
+        jr.start_time as last_run,
+        jr.status::text as last_status,
+        -- Calculate next run time (approximate)
+        CASE 
+            WHEN j.schedule = '0 * * * *' THEN 
+                date_trunc('hour', NOW()) + INTERVAL '1 hour'
+            ELSE 
+                NULL
+        END as next_run
+    FROM cron.job j
+    LEFT JOIN LATERAL (
+        SELECT start_time, status
+        FROM cron.job_run_details jr2
+        WHERE jr2.jobid = j.jobid
+        ORDER BY start_time DESC
+        LIMIT 1
+    ) jr ON true
+    WHERE j.jobname LIKE '%subscription%'
+    ORDER BY j.jobid;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."check_scheduler_cron_status"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."check_scheduler_cron_status"() IS 'Check the status of subscription scheduler cron jobs';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."clean_expired_cache"() RETURNS "void"
     LANGUAGE "plpgsql"
     AS $$
@@ -531,6 +570,93 @@ $$;
 ALTER FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."manual_scheduler_trigger"() RETURNS TABLE("success" boolean, "message" "text", "executed_at" timestamp with time zone)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+    -- Call the scheduler
+    PERFORM run_subscription_scheduler();
+    
+    -- Return result
+    RETURN QUERY SELECT 
+        true as success,
+        'Scheduler triggered manually' as message,
+        NOW() as executed_at;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."manual_scheduler_trigger"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."run_subscription_scheduler"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+    supabase_url text;
+    service_key text;
+    response_status int;
+    response_body text;
+BEGIN
+    -- Get configuration from cron_config table
+    SELECT value INTO supabase_url FROM cron_config WHERE key = 'supabase_url';
+    SELECT value INTO service_key FROM cron_config WHERE key = 'service_role_key';
+    
+    -- Validate configuration
+    IF supabase_url IS NULL OR service_key IS NULL THEN
+        RAISE WARNING 'Missing configuration: supabase_url or service_role_key in cron_config table';
+        RETURN;
+    END IF;
+    
+    -- Call the scheduler Edge Function
+    SELECT status, content INTO response_status, response_body
+    FROM http((
+        'POST',
+        supabase_url || '/functions/v1/subscriptions-scheduler',
+        ARRAY[
+            http_header('Authorization', 'Bearer ' || service_key),
+            http_header('Content-Type', 'application/json')
+        ],
+        'application/json',
+        '{}'
+    ));
+    
+    -- Log the result with all required columns
+    INSERT INTO automation_logs (
+        task,
+        success,
+        function_name,
+        status,
+        response_status,
+        response_body,
+        created_at
+    ) VALUES (
+        'subscription_scheduler',
+        CASE WHEN response_status = 200 THEN true ELSE false END,
+        'run_subscription_scheduler',
+        CASE WHEN response_status = 200 THEN 'success' ELSE 'error' END,
+        response_status,
+        response_body,
+        NOW()
+    );
+    
+    -- Log to console
+    IF response_status = 200 THEN
+        RAISE NOTICE 'Subscription scheduler completed successfully: %', response_body;
+    ELSE
+        RAISE WARNING 'Subscription scheduler failed with status %: %', response_status, response_body;
+    END IF;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."run_subscription_scheduler"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."run_subscription_scheduler"() IS 'Calls the subscription scheduler edge function to process due subscriptions';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."set_timestamp_updated_at"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
@@ -590,6 +716,34 @@ $$;
 
 
 ALTER FUNCTION "public"."trigger_invoice_generation"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."trigger_subscription_scheduler"() RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+    result json;
+BEGIN
+    -- Call the scheduler function
+    PERFORM run_subscription_scheduler();
+    
+    -- Return success
+    SELECT json_build_object(
+        'success', true,
+        'message', 'Subscription scheduler triggered successfully',
+        'timestamp', NOW()
+    ) INTO result;
+    
+    RETURN result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."trigger_subscription_scheduler"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."trigger_subscription_scheduler"() IS 'Manual trigger for subscription scheduler - useful for testing';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."update_expired_payment_links"() RETURNS integer
@@ -766,11 +920,36 @@ CREATE TABLE IF NOT EXISTS "public"."automation_logs" (
     "task" "text" NOT NULL,
     "success" boolean NOT NULL,
     "error" "text",
-    "timestamp" timestamp with time zone DEFAULT "now"()
+    "timestamp" timestamp with time zone DEFAULT "now"(),
+    "function_name" "text",
+    "status" "text",
+    "response_status" integer,
+    "response_body" "text",
+    "created_at" timestamp with time zone DEFAULT "now"()
 );
 
 
 ALTER TABLE "public"."automation_logs" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."automation_logs"."function_name" IS 'Name of the function or task that was executed';
+
+
+
+COMMENT ON COLUMN "public"."automation_logs"."status" IS 'Status of the execution: success, error, etc.';
+
+
+
+COMMENT ON COLUMN "public"."automation_logs"."response_status" IS 'HTTP response status code if applicable';
+
+
+
+COMMENT ON COLUMN "public"."automation_logs"."response_body" IS 'Response body or detailed result information';
+
+
+
+COMMENT ON COLUMN "public"."automation_logs"."created_at" IS 'When the log entry was created';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."cron_config" (
@@ -1161,11 +1340,16 @@ CREATE TABLE IF NOT EXISTS "public"."subscription_amount_overrides" (
     "amount" numeric(18,2) NOT NULL,
     "note" "text",
     "notice_sent_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "effective_until" "date"
 );
 
 
 ALTER TABLE "public"."subscription_amount_overrides" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."subscription_amount_overrides"."effective_until" IS 'Optional end date for the override. If null, override applies indefinitely. If set, override only applies from effective_from to effective_until (inclusive).';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."subscription_history" (
@@ -1797,6 +1981,14 @@ CREATE INDEX "idx_audit_logs_user_id" ON "public"."audit_logs" USING "btree" ("u
 
 
 
+CREATE INDEX "idx_automation_logs_created_at" ON "public"."automation_logs" USING "btree" ("created_at" DESC);
+
+
+
+CREATE INDEX "idx_automation_logs_function_status" ON "public"."automation_logs" USING "btree" ("function_name", "status", "created_at");
+
+
+
 CREATE INDEX "idx_customers_merchant" ON "public"."customers" USING "btree" ("merchant_id");
 
 
@@ -1938,6 +2130,10 @@ CREATE INDEX "idx_rep_sales_rep_id" ON "public"."rep_sales" USING "btree" ("rep_
 
 
 CREATE INDEX "idx_reps_user_id" ON "public"."reps" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_subscription_amount_overrides_date_range" ON "public"."subscription_amount_overrides" USING "btree" ("subscription_id", "effective_from", "effective_until");
 
 
 
@@ -2736,6 +2932,12 @@ GRANT ALL ON FUNCTION "public"."calculate_subscription_proration"("merchant_id" 
 
 
 
+GRANT ALL ON FUNCTION "public"."check_scheduler_cron_status"() TO "anon";
+GRANT ALL ON FUNCTION "public"."check_scheduler_cron_status"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."check_scheduler_cron_status"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "anon";
 GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "service_role";
@@ -2802,6 +3004,18 @@ GRANT ALL ON FUNCTION "public"."increment_payment_link_usage"("p_link_id" "uuid"
 
 
 
+GRANT ALL ON FUNCTION "public"."manual_scheduler_trigger"() TO "anon";
+GRANT ALL ON FUNCTION "public"."manual_scheduler_trigger"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."manual_scheduler_trigger"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."run_subscription_scheduler"() TO "anon";
+GRANT ALL ON FUNCTION "public"."run_subscription_scheduler"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."run_subscription_scheduler"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "service_role";
@@ -2811,6 +3025,12 @@ GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."trigger_invoice_generation"() TO "anon";
 GRANT ALL ON FUNCTION "public"."trigger_invoice_generation"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trigger_invoice_generation"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trigger_subscription_scheduler"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trigger_subscription_scheduler"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trigger_subscription_scheduler"() TO "service_role";
 
 
 
@@ -3076,6 +3296,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+
 -- Create buckets
 select storage.create_bucket('w9-uploads', public := false);
 select storage.create_bucket('promo-kits', public := true);
@@ -3100,6 +3321,7 @@ to public
 with check (
   bucket_id = 'w9-uploads' AND auth.uid() = owner
 );
+
 
 
 

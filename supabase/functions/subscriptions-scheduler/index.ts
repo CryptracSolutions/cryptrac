@@ -153,10 +153,12 @@ async function generateInvoiceForSubscription(
         amount: invoiceAmount,
         currency: subscription.currency,
         link_id: linkId,
+        subscription_id: subscription.id,
         metadata: {
           subscription_id: subscription.id,
           cycle_start_at: cycleStartISO,
-          cycle_number: subscription.total_cycles + 1
+          cycle_number: subscription.total_cycles + 1,
+          type: 'subscription_invoice'
         }
       })
       .select('id, link_id')
@@ -235,7 +237,7 @@ async function sendInvoiceNotification(
   try {
     console.log(`📧 Sending invoice notification for ${subscription.id} to ${subscription.customers.email}`);
     
-    // Call the notification function
+    // Call the notification function with proper authorization
     const { data, error } = await supabase.functions.invoke('subscriptions-send-notifications', {
       body: {
         type: 'invoice',
@@ -244,6 +246,9 @@ async function sendInvoiceNotification(
           amount: invoiceAmount,
           payment_url: paymentUrl
         }
+      },
+      headers: {
+        Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
       }
     });
     
