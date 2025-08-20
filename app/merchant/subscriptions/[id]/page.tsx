@@ -62,6 +62,18 @@ interface Customer {
   phone?: string;
 }
 
+// FIXED: Helper function to format date without timezone conversion issues
+function formatDateOnly(dateString: string): string {
+  // Parse as local date to avoid timezone conversion
+  const [year, month, day] = dateString.split('-');
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long', 
+    day: 'numeric'
+  });
+}
+
 export default function SubscriptionDetailPage() {
   const params = useParams();
   const id = String(params?.id);
@@ -371,7 +383,8 @@ export default function SubscriptionDetailPage() {
                 <div key={override.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                   <div>
                     <span className="font-medium">${override.amount}</span>
-                    <span className="text-gray-600 ml-2">effective {new Date(override.effective_from).toLocaleDateString()}</span>
+                    {/* FIXED: Use proper date formatting without timezone conversion */}
+                    <span className="text-gray-600 ml-2">effective {formatDateOnly(override.effective_from)}</span>
                     {override.note && (
                       <span className="text-sm text-gray-500 ml-2">({override.note})</span>
                     )}

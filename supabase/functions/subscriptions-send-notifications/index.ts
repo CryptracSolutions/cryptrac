@@ -449,8 +449,7 @@ Payment Details:
 • Status: Confirmed
 • Total Amount: ${formattedAmount}
 
-${displayHash ? `${hashLabel}: ${displayHash}\n` : ''}
-View your receipt: ${payment_url || ''}
+${displayHash ? `${hashLabel}: ${displayHash}\n` : ''}View your receipt: ${payment_url || ''}
 
 Thank you for your payment!
 This is an automated receipt. Please keep this for your records.
@@ -458,10 +457,12 @@ This is an automated receipt. Please keep this for your records.
           };
         } else {
           // This is a regular invoice email (payment request)
+          // FIXED: Use invoice_data.amount instead of subscription.amount for override support
+          const invoiceAmount = invoice_data?.amount || subscription.amount;
           const formattedAmount = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: subscription.currency || 'USD'
-          }).format(subscription.amount || 0);
+          }).format(invoiceAmount || 0);
 
           const formattedDueDate = invoice_data?.due_date ? 
             new Date(invoice_data.due_date).toLocaleDateString('en-US', { 
