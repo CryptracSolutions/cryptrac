@@ -248,24 +248,41 @@ async function sendInvoiceNotification(
 ): Promise<boolean> {
   try {
     console.log(`📧 Sending invoice notification for ${subscription.id} to ${subscription.customers.email}`);
-    // Invoke the notification edge function using the service client
-    const { error } = await supabase.functions.invoke('subscriptions-send-notifications', {
-      body: {
+    
+    // Get environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    
+    // Make direct HTTP request to notification function
+    const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+        'apikey': serviceRoleKey
+      },
+      body: JSON.stringify({
         type: 'invoice',
         subscription_id: subscription.id,
         invoice_data: {
           amount: invoiceAmount,
           payment_url: paymentUrl
         }
-      }
+      })
     });
-
-    if (error) {
-      console.error(`❌ Failed to send notification for ${subscription.id}:`, error);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Failed to send notification for ${subscription.id}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
       return false;
     }
-
-    console.log(`✅ Notification sent successfully for ${subscription.id}`);
+    
+    const result = await response.json();
+    console.log(`✅ Notification sent successfully for ${subscription.id}:`, result);
     return true;
     
   } catch (error) {

@@ -38,8 +38,6 @@ interface PaymentLink {
   max_uses?: number;
   usage_count: number;
   confirmed_payment_count: number;
-  current_uses?: number;
-  invoice_number?: string | null;
   qr_code_data?: string;
   _status_info?: {
     stored_status: string;
@@ -394,11 +392,6 @@ export default function PaymentsPage() {
                 Subscription
               </Badge>
             )}
-            {link.invoice_number && (
-              <Badge variant="outline" className="font-mono">
-                {link.invoice_number}
-              </Badge>
-            )}
             {link.confirmed_payment_count > 0 && (
               <Badge variant="outline" className="bg-green-100 text-green-700">
                 Payment received
@@ -418,8 +411,8 @@ export default function PaymentsPage() {
             {link.expires_at && (
               <span>Expires {formatDate(link.expires_at)}</span>
             )}
-            {typeof link.max_uses === 'number' && (
-              <span>{(link.usage_count ?? link.current_uses ?? 0)}/{link.max_uses} uses</span>
+            {link.max_uses && (
+              <span>{link.usage_count}/{link.max_uses} uses</span>
             )}
           </div>
         </div>
