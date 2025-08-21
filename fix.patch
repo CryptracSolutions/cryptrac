@@ -1,0 +1,1107 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/app/api/payments/[id]/route.ts b/app/api/payments/[id]/route.ts
+index 0b06ad679fc0fc11edd6407e83299c880dadd907..6ed69eddfee1d8bec479639caad1287df46a6b3e 100644
+--- a/app/api/payments/[id]/route.ts
++++ b/app/api/payments/[id]/route.ts
+@@ -42,86 +42,93 @@ export async function GET(
+         title,
+         description,
+         amount,
+         base_amount,
+         currency,
+         status,
+         accepted_cryptos,
+         expires_at,
+         max_uses,
+         current_uses,
+         charge_customer_fee,
+         auto_convert_enabled,
+         fee_percentage,
+         tax_enabled,
+         tax_rates,
+         tax_amount,
+         subtotal_with_tax,
+         metadata,
+         created_at,
+         updated_at,
+         merchant:merchants(
+           id,
+           business_name,
+           charge_customer_fee,
+           auto_convert_enabled
+-        )
++        ),
++        invoice:subscription_invoices(invoice_number, cycle_start_at)
+       `)
+       .eq(isUUID ? 'id' : 'link_id', id)
+       .single()
+ 
+     if (error) {
+       console.error('Error fetching payment link:', error)
+       if (error.code === 'PGRST116') {
+         return NextResponse.json(
+           { success: false, message: 'Payment link not found' },
+           { status: 404 }
+         )
+       }
+       return NextResponse.json(
+         { success: false, message: 'Failed to fetch payment link' },
+         { status: 500 }
+       )
+     }
+ 
+     if (!paymentLink) {
+       return NextResponse.json(
+         { success: false, message: 'Payment link not found' },
+         { status: 404 }
+       )
+     }
+ 
+     console.log('✅ Payment link found:', paymentLink.id)
+ 
++    // Extract invoice info
++    const { invoice, ...rest } = paymentLink as { invoice?: unknown; [key: string]: unknown }
++    const invoiceInfo = Array.isArray(invoice) ? invoice[0] : invoice
++
+     // Construct the payment URL
+-    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${paymentLink.link_id}`;
++    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${paymentLink.link_id}`
+ 
+     // Return with consistent structure (using 'data' field to match frontend expectations)
+     return NextResponse.json({
+       success: true,
+       data: {
+-        ...paymentLink,
++        ...rest,
++        invoice_number: invoiceInfo?.invoice_number ?? null,
++        invoice_cycle_start_at: invoiceInfo?.cycle_start_at ?? null,
+         payment_url: paymentUrl,
+         qr_code_data: paymentUrl
+       }
+     })
+ 
+   } catch (error) {
+     console.error('Error in payment link API:', error)
+     return NextResponse.json(
+       { success: false, message: 'Internal server error' },
+       { status: 500 }
+     )
+   }
+ }
+ 
+ export async function PATCH(
+   request: NextRequest,
+   { params }: { params: Promise<{ id: string }> }
+ ) {
+   const { id } = await params;
+   try {
+     const authHeader = request.headers.get('Authorization');
+     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+       console.error(`PATCH /api/payments/${id} - missing or invalid Authorization header`);
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
+diff --git a/app/api/payments/route.ts b/app/api/payments/route.ts
+index 8744bf89520159642393ebec3f540ff0e0d9ae5b..937565b699976c0882c75b980ec6efbd380fb71f 100644
+--- a/app/api/payments/route.ts
++++ b/app/api/payments/route.ts
+@@ -95,84 +95,88 @@ export async function GET(request: NextRequest) {
+       );
+     }
+ 
+     if (!merchant) {
+       console.log('No merchant found for user:', user.id);
+       return NextResponse.json(
+         { error: 'Merchant not found' },
+         { status: 404 }
+       );
+     }
+ 
+     console.log('Found merchant:', merchant.id);
+ 
+     // Parse query parameters
+     const { searchParams } = new URL(request.url);
+     const page = parseInt(searchParams.get('page') || '1');
+     const limit = parseInt(searchParams.get('limit') || '50');
+     const search = searchParams.get('search') || '';
+     const status = searchParams.get('status') || '';
+ 
+     console.log('Query params:', { search, status, page, limit });
+ 
+     // Build query using service role (bypasses RLS)
+     let query = serviceSupabase
+       .from('payment_links')
+-      .select('*')
++      .select('*, invoice:subscription_invoices(invoice_number, cycle_start_at)')
+       .eq('merchant_id', merchant.id)
+       .order('created_at', { ascending: false });
+ 
+     // Apply search filter
+     if (search) {
+       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+     }
+ 
+     // Apply pagination
+     const from = (page - 1) * limit;
+     const to = from + limit - 1;
+     query = query.range(from, to);
+ 
+     console.log('Executing query...');
+ 
+     // Execute query
+     const { data: rawPaymentLinks, error: queryError } = await query;
+ 
+     if (queryError) {
+       console.error('Query error:', queryError);
+       return NextResponse.json(
+         { error: 'Failed to fetch payment links' },
+         { status: 500 }
+       );
+     }
+ 
+     console.log('Found payment links:', rawPaymentLinks?.length || 0);
+ 
+     // Calculate real-time status for each payment link and apply status filter
+     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
++      const { invoice, ...rest } = link as { invoice?: unknown; [key: string]: unknown };
++      const invoiceInfo = Array.isArray(invoice) ? invoice[0] : invoice;
+       const linkWithCount = {
+-        ...link,
+-        confirmed_payment_count: link.current_uses
++        ...rest,
++        confirmed_payment_count: link.current_uses,
++        invoice_number: invoiceInfo?.invoice_number ?? null,
++        invoice_cycle_start_at: invoiceInfo?.cycle_start_at ?? null
+       };
+ 
+       const calculatedStatus = calculatePaymentLinkStatus(linkWithCount);
+       return {
+         ...linkWithCount,
+         status: calculatedStatus,
+         // Add helpful metadata for debugging
+         _status_info: {
+           stored_status: link.status,
+           calculated_status: calculatedStatus,
+           is_single_use: link.max_uses === 1,
+           usage_vs_max: `${link.usage_count}/${link.max_uses || 'unlimited'}`,
+           confirmed_vs_max: `${linkWithCount.confirmed_payment_count}/${link.max_uses || 'unlimited'}`,
+           is_expired: link.expires_at && new Date(link.expires_at) < new Date()
+         }
+       };
+     });
+ 
+     // Apply status filter after calculating real-time status
+     const paymentLinks = status 
+       ? paymentLinksWithStatus.filter(link => link.status === status)
+       : paymentLinksWithStatus;
+ 
+     // Get total count for pagination using service role
+     const { data: allLinks, error: countError } = await serviceSupabase
+diff --git a/app/merchant/dashboard/payments/[id]/page.tsx b/app/merchant/dashboard/payments/[id]/page.tsx
+index 23ad0169e673acfc341e3699eabd9871d6f5a957..bf7738f28ce77b5383b19836cb46dd2b2ab32adf 100644
+--- a/app/merchant/dashboard/payments/[id]/page.tsx
++++ b/app/merchant/dashboard/payments/[id]/page.tsx
+@@ -25,50 +25,52 @@ interface PaymentLink {
+   id: string;
+   link_id: string;
+   title: string;
+   description: string;
+   amount: number;
+   base_amount?: number;
+   currency: string;
+   status: string;
+   accepted_cryptos: string[];
+   expires_at: string | null;
+   max_uses: number | null;
+   redirect_url: string | null;
+   created_at: string;
+   updated_at: string;
+   payment_url: string;
+   auto_convert_enabled?: boolean;
+   charge_customer_fee?: boolean;
+   fee_percentage?: number;
+   tax_enabled?: boolean;
+   tax_amount?: number;
+   tax_rates?: Array<{
+     label: string;
+     percentage: number;
+   }>;
+   subtotal_with_tax?: number;
++  invoice_number?: string | null;
++  invoice_cycle_start_at?: string | null;
+   metadata?: {
+     fee_percentage?: number;
+     fee_amount?: number;
+     total_amount?: number;
+     fee_breakdown?: {
+       fee_amount?: number;
+       merchant_receives?: number;
+       effective_charge_customer_fee?: boolean;
+       effective_auto_convert_enabled?: boolean;
+     };
+   };
+ }
+ 
+ interface PaymentDetailsPageProps {
+   params: Promise<{ id: string }>;
+ }
+ 
+ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) {
+   const { id } = use(params);
+   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState<string | null>(null);
+   const [copied, setCopied] = useState(false);
+   const router = useRouter();
+ 
+@@ -86,51 +88,53 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps)
+           return;
+         }
+ 
+         // Fetch payment link details
+         const response = await fetch(`/api/payments/${id}`, {
+           headers: {
+             'Authorization': `Bearer ${session.access_token}`,
+             'Content-Type': 'application/json',
+           },
+         });
+ 
+         if (!response.ok) {
+           if (response.status === 404) {
+             setError('Payment link not found');
+           } else {
+             setError('Failed to load payment link details');
+           }
+           return;
+         }
+ 
+         const result = await response.json();
+         
+         if (result.success) {
+           // Construct the proper payment URL
+           const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${result.data.link_id}`;
+-          
++
++          console.log('🔍 Loaded payment link:', result.data.id, 'Invoice:', result.data.invoice_number);
++
+           setPaymentLink({
+             ...result.data,
+             payment_url: paymentUrl
+           });
+         } else {
+           setError(result.error || 'Failed to load payment link details');
+         }
+       } catch (error) {
+         console.error('Failed to fetch payment link:', error);
+         setError('Failed to load payment link details');
+       } finally {
+         setLoading(false);
+       }
+     };
+ 
+     if (id) {
+       fetchPaymentLink();
+     }
+   }, [id, router]);
+ 
+   const copyToClipboard = (text: string) => {
+     navigator.clipboard.writeText(text);
+     setCopied(true);
+     setTimeout(() => setCopied(false), 2000);
+   };
+@@ -252,50 +256,53 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps)
+   const chargeCustomerFee =
+     paymentLink.charge_customer_fee ??
+     paymentLink.metadata?.fee_breakdown?.effective_charge_customer_fee ??
+     false;
+   const autoConvertEnabled = paymentLink.auto_convert_enabled || false;
+   
+   // Calculate correct amounts based on who pays the fee
+   const customerPaysTotal = chargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax;
+   const merchantReceives = chargeCustomerFee ? subtotalWithTax : subtotalWithTax - feeAmount;
+   
+   const feeLabel = autoConvertEnabled ? `${feePercentage.toFixed(1)}% (Auto-convert)` : `${feePercentage.toFixed(1)}% (Direct crypto)`;
+ 
+   return (
+     <div className="max-w-4xl mx-auto space-y-6">
+       {/* Header */}
+       <div className="flex items-center space-x-4">
+         <Button 
+           variant="outline" 
+           onClick={() => router.push('/merchant/dashboard/payments')}
+         >
+           <ArrowLeft className="mr-2 h-4 w-4" />
+           Back
+         </Button>
+         <div className="flex-1">
+           <h1 className="text-3xl font-bold text-gray-900">{paymentLink.title}</h1>
++          {paymentLink.invoice_number && (
++            <p className="text-sm text-gray-500">{paymentLink.invoice_number}</p>
++          )}
+           <p className="text-gray-600 mt-1">Payment link details and management</p>
+         </div>
+         <div className="flex items-center space-x-2">
+           {getStatusIcon(paymentLink.status)}
+           <Badge className={getStatusColor(paymentLink.status)}>
+             {paymentLink.status.charAt(0).toUpperCase() + paymentLink.status.slice(1)}
+           </Badge>
+         </div>
+       </div>
+ 
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+         {/* Payment Link Information */}
+         <div className="space-y-6">
+           <Card>
+             <CardHeader>
+               <CardTitle className="flex items-center space-x-2">
+                 <DollarSign className="h-5 w-5" />
+                 <span>Payment Information</span>
+               </CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-4">
+               <div>
+                 <label className="text-sm font-medium text-gray-500">Amount</label>
+                 <div className="text-2xl font-bold text-gray-900">
+                   {formatCurrency(paymentLink.amount, paymentLink.currency)}
+diff --git a/app/merchant/dashboard/payments/page.tsx b/app/merchant/dashboard/payments/page.tsx
+index 9cc266b4d535baaa2ff91ff2a01c0fb23bf90647..c845a2ae8670a81abbac123a957bb86352c7c422 100644
+--- a/app/merchant/dashboard/payments/page.tsx
++++ b/app/merchant/dashboard/payments/page.tsx
+@@ -17,50 +17,52 @@ import {
+   TrendingUp,
+   Link as LinkIcon,
+   Play,
+   CheckCircle,
+   AlertCircle,
+   ChevronDown
+ } from 'lucide-react';
+ import Link from 'next/link';
+ import { useRouter } from 'next/navigation';
+ import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
+ 
+ interface PaymentLink {
+   id: string;
+   link_id: string;
+   title: string;
+   description?: string;
+   amount: number;
+   currency: string;
+   status: 'active' | 'expired' | 'completed' | 'paused';
+   created_at: string;
+   expires_at?: string;
+   max_uses?: number;
+   usage_count: number;
+   confirmed_payment_count: number;
+   qr_code_data?: string;
++  invoice_number?: string | null;
++  invoice_cycle_start_at?: string | null;
+   _status_info?: {
+     stored_status: string;
+     calculated_status: string;
+     is_single_use: boolean;
+     usage_vs_max: string;
+     is_expired: boolean;
+   };
+   source?: string | null;
+   subscription_id?: string | null;
+ }
+ 
+ interface Statistics {
+   total_links: number;
+   active_links: number;
+   completed_links: number;
+   expired_links: number;
+   paused_links: number;
+   single_use_links: number;
+   total_payments: number;
+   total_revenue: number;
+ }
+ 
+ interface ApiResponse {
+   success: boolean;
+   data: {
+@@ -133,50 +135,51 @@ export default function PaymentsPage() {
+         ...(statusFilter !== 'all' && { status: statusFilter })
+       });
+ 
+       console.log('Making authenticated API request...');
+ 
+       // Make authenticated API call using helper function
+       const response = await makeAuthenticatedRequest(`/api/payments?${params}`);
+ 
+       console.log('Response status:', response.status);
+ 
+       if (!response.ok) {
+         if (response.status === 401) {
+           setError('Session expired. Please log in again.');
+           router.push('/login');
+           return;
+         }
+         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+       }
+ 
+       const data: ApiResponse = await response.json();
+       console.log('API response received:', data.success);
+ 
+       if (data.success) {
+         setPaymentLinks(data.data.payment_links || []);
+         (data.data.payment_links || []).forEach(link => {
++          console.log('🔍 Loaded payment link:', link.id, 'Invoice:', link.invoice_number);
+           if (link.usage_count > 0 && !notifiedLinksRef.current.has(link.id)) {
+             console.log(`📧 [Simulation] Payment received for "${link.title}"`);
+             notifiedLinksRef.current.add(link.id);
+           }
+         });
+         setStatistics(data.data.statistics || {
+           total_links: 0,
+           active_links: 0,
+           completed_links: 0,
+           expired_links: 0,
+           paused_links: 0,
+           single_use_links: 0,
+           total_payments: 0,
+           total_revenue: 0
+         });
+         setTotalPages(data.data.pagination?.pages || 1);
+         console.log('Successfully loaded', data.data.payment_links?.length || 0, 'payment links');
+       } else {
+         throw new Error('Failed to fetch payment links');
+       }
+ 
+     } catch (error) {
+       console.error('Error fetching payment links:', error);
+       setError('Failed to load payment links');
+     } finally {
+@@ -364,50 +367,53 @@ export default function PaymentsPage() {
+       );
+     }
+ 
+     // View button (always shown)
+     buttons.push(
+       <Link key="view" href={`/merchant/dashboard/payments/${link.id}`}>
+         <Button variant="outline" size="sm" className="flex items-center gap-1">
+           <Eye className="h-3 w-3" />
+           View
+         </Button>
+       </Link>
+     );
+ 
+     return buttons;
+   };
+ 
+   const renderLink = (link: PaymentLink) => (
+     <div
+       key={link.id}
+       className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+     >
+       <div className="flex items-center justify-between">
+         <div className="flex-1">
+           <div className="flex items-center gap-3 mb-2">
+             <h3 className="font-semibold text-gray-900">{link.title}</h3>
++            {link.invoice_number && (
++              <span className="text-sm text-gray-500">{link.invoice_number}</span>
++            )}
+             {getStatusBadge(link.status, link)}
+             {(link.source === 'subscription' || link.subscription_id) && (
+               <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                 Subscription
+               </Badge>
+             )}
+             {link.confirmed_payment_count > 0 && (
+               <Badge variant="outline" className="bg-green-100 text-green-700">
+                 Payment received
+               </Badge>
+             )}
+           </div>
+ 
+           {link.description && (
+             <p className="text-gray-600 text-sm mb-2">{link.description}</p>
+           )}
+ 
+           <div className="flex items-center gap-4 text-sm text-gray-500">
+             <span className="font-medium text-gray-900">
+               {formatCurrency(link.amount, link.currency)}
+             </span>
+             <span>Created {formatDate(link.created_at)}</span>
+             {link.expires_at && (
+               <span>Expires {formatDate(link.expires_at)}</span>
+             )}
+diff --git a/app/pay/[id]/page.tsx b/app/pay/[id]/page.tsx
+index ae940acd510adb9c375458ecdc4016ed5b12e8ea..d010132441d383a22cfcc07d0b92aebcaa906c3b 100644
+--- a/app/pay/[id]/page.tsx
++++ b/app/pay/[id]/page.tsx
+@@ -25,50 +25,54 @@ interface PaymentLink {
+   description: string | null
+   amount: number
+   base_amount: number
+   currency: string
+   accepted_cryptos: string[]
+   expires_at: string | null
+   max_uses: number | null
+   charge_customer_fee: boolean | null
+   auto_convert_enabled: boolean | null
+   fee_percentage: number
+   // Tax fields
+   tax_enabled: boolean
+   tax_rates: Array<{
+     label: string
+     percentage: number
+   }>
+   tax_amount: number
+   subtotal_with_tax: number
+   source?: string | null
+   subscription_id?: string | null
+   merchant: {
+     business_name: string
+     charge_customer_fee: boolean
+     auto_convert_enabled: boolean
+   }
++  invoice?: {
++    invoice_number?: string
++    cycle_start_at?: string
++  }
+   metadata?: {
+     fee_breakdown?: {
+       effective_charge_customer_fee?: boolean
+     }
+   }
+ }
+ 
+ interface CurrencyInfo {
+   code: string
+   name: string
+   enabled: boolean
+   min_amount?: number
+   max_amount?: number
+ }
+ 
+ interface PaymentData {
+   payment_id: string
+   payment_status: string
+   pay_address: string
+   pay_amount: number
+   pay_currency: string
+   price_amount: number
+   price_currency: string
+   order_id: string
+   order_description: string
+@@ -462,77 +466,82 @@ export default function PaymentPage() {
+     }
+     }, [isMonitoring, paymentData?.payment_id, monitoringInterval]); // eslint-disable-line react-hooks/exhaustive-deps
+ 
+   // Cleanup on unmount
+     useEffect(() => {
+       return () => {
+         stopStatusMonitoring()
+       }
+     }, []);
+ 
+   // Start monitoring when payment is created
+     useEffect(() => {
+       if (paymentData && !isMonitoring) {
+         startStatusMonitoring()
+       }
+     }, [paymentData]); // eslint-disable-line react-hooks/exhaustive-deps
+ 
+   const loadPaymentLink = async () => {
+     try {
+       console.log('🔍 Loading payment link:', id)
+       
+       const { data, error } = await supabase
+         .from('payment_links')
+         .select(`
+           *,
+-          merchant:merchants(business_name, charge_customer_fee, auto_convert_enabled)
++          merchant:merchants(business_name, charge_customer_fee, auto_convert_enabled),
++          invoice:subscription_invoices(invoice_number, cycle_start_at)
+         `)
+         .eq('link_id', id)
+         .single()
+ 
+       if (error) {
+         console.error('Supabase error:', error)
+         throw new Error('Payment link not found')
+       }
+ 
+       if (!data) {
+         throw new Error('Payment link not found')
+       }
+ 
+       // Check if payment link has expired
+       if (data.expires_at && new Date(data.expires_at) < new Date()) {
+         throw new Error('This payment link has expired')
+       }
+ 
+       console.log('✅ Payment link loaded:', data)
+ 
+       // Transform the data to match our interface
++      const { invoice, ...rest } = data as { invoice?: unknown; [key: string]: unknown }
+       const transformedData: PaymentLink = {
+-        ...data,
+-        merchant: Array.isArray(data.merchant) ? data.merchant[0] : data.merchant
++        ...rest,
++        merchant: Array.isArray(data.merchant) ? data.merchant[0] : data.merchant,
++        invoice: Array.isArray(invoice) ? invoice[0] : invoice
+       }
+ 
++      console.log('🧾 Invoice info:', transformedData.invoice)
++
+       setPaymentLink(transformedData)
+       
+       // Load available currencies after payment link is loaded
+       if (transformedData.accepted_cryptos && transformedData.accepted_cryptos.length > 0) {
+         await loadCurrencies(transformedData.accepted_cryptos)
+       }
+ 
+     } catch (error) {
+       console.error('Error loading payment link:', error)
+       setError(error instanceof Error ? error.message : 'Failed to load payment link')
+     } finally {
+       setLoading(false)
+     }
+   }
+ 
+   const loadCurrencies = async (acceptedCryptos: string[]) => {
+     try {
+       console.log('💱 Loading available currencies...')
+ 
+       const response = await fetch('/api/nowpayments/currencies')
+       const data = await response.json()
+ 
+       if (!data.success || !data.currencies) {
+         throw new Error('Failed to load currencies')
+       }
+@@ -1001,50 +1010,53 @@ export default function PaymentPage() {
+         </div>
+       </div>
+     )
+   }
+ 
+   if (!paymentLink) {
+     return (
+       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+         <div className="text-center">
+           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+           <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Link Not Found</h1>
+           <p className="text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
+         </div>
+       </div>
+     )
+   }
+ 
+   const currentStatus = paymentStatus || paymentData
+ 
+   return (
+     <div className="min-h-screen bg-gray-50 py-8">
+       <div className="max-w-2xl mx-auto px-4">
+         {/* Header */}
+         <div className="text-center mb-8">
+           <h1 className="text-3xl font-bold text-gray-900 mb-2">{paymentLink.title}</h1>
++          {paymentLink.invoice?.invoice_number && (
++            <p className="text-sm text-gray-500 mb-2">{paymentLink.invoice.invoice_number}</p>
++          )}
+         {paymentLink.description && (
+           <p className="text-gray-600">{paymentLink.description}</p>
+         )}
+         {paymentLink.subscription_id && (
+           <p className="text-sm text-gray-500 mt-1">This is a recurring invoice. Payments are not auto-debited.</p>
+         )}
+         <p className="text-sm text-gray-500 mt-2">
+           Powered by {paymentLink.merchant.business_name}
+         </p>
+         </div>
+ 
+         {/* Payment Amount Card */}
+         <Card className="mb-6">
+           <CardHeader>
+             <CardTitle className="text-center">Payment Details</CardTitle>
+           </CardHeader>
+           <CardContent className="space-y-4">
+             {feeBreakdown && (
+               <div className="space-y-3">
+                 <div className="flex justify-between">
+                   <span className="text-gray-600">Base Amount:</span>
+                   <span className="font-medium">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                 </div>
+                 
+                 {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
+diff --git a/supabase/functions/subscriptions-scheduler/index.ts b/supabase/functions/subscriptions-scheduler/index.ts
+index 2ba7918dd0c652653ae9b2899d951d91180939ee..c869b920113d7fb86ebb4904cac7d53d0a2a83fb 100644
+--- a/supabase/functions/subscriptions-scheduler/index.ts
++++ b/supabase/functions/subscriptions-scheduler/index.ts
+@@ -1,53 +1,64 @@
+-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
++import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+ import { DateTime } from 'https://esm.sh/luxon@3';
+ 
+ const corsHeaders = {
+   'Access-Control-Allow-Origin': '*',
+   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+ };
+ 
+ interface SubscriptionRecord {
+   id: string;
+   title: string;
+   amount: number;
+   currency: string;
++  accepted_cryptos: string[];
+   interval: string;
+   interval_count: number;
+   next_billing_at: string;
+   status: string;
+   max_cycles?: number;
+   total_cycles: number;
+   merchant_id: string;
+   customer_id: string;
+   invoice_due_days: number;
+   generate_days_in_advance: number;
++  past_due_after_days: number;
+   merchants: {
+     id: string;
+     business_name: string;
+     timezone?: string;
++    wallets: Record<string, string> | null;
++    charge_customer_fee?: boolean | null;
++    auto_convert_enabled?: boolean | null;
++    preferred_payout_currency?: string | null;
+   };
++  charge_customer_fee?: boolean | null;
++  auto_convert_enabled?: boolean | null;
++  preferred_payout_currency?: string | null;
++  tax_enabled?: boolean | null;
++    tax_rates?: Array<{ percentage: number; label: string }> | null;
+   customers: {
+     id: string;
+     name?: string;
+     email: string;
+   };
+ }
+ 
+ interface AmountOverride {
+   id: string;
+   amount: number;
+   effective_from: string;
+   effective_until?: string;
+   note?: string;
+ }
+ 
+ // Generate unique link ID for payment links
+ function generateLinkId(): string {
+   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+   let result = 'pl_';
+   for (let i = 0; i < 9; i++) {
+     result += chars.charAt(Math.floor(Math.random() * chars.length));
+   }
+   return result;
+ }
+ 
+@@ -60,51 +71,51 @@ function calculateNextBillingDate(currentDate: DateTime, interval: string, inter
+       return currentDate.plus({ weeks: intervalCount });
+     case 'month':
+       return currentDate.plus({ months: intervalCount });
+     case 'year':
+       return currentDate.plus({ years: intervalCount });
+     default:
+       throw new Error(`Unsupported interval: ${interval}`);
+   }
+ }
+ 
+ // Get applicable amount override for a specific date
+ function getApplicableOverride(overrides: AmountOverride[], cycleDate: string): AmountOverride | null {
+   const applicableOverrides = overrides.filter(override => 
+     override.effective_from <= cycleDate && 
+     (!override.effective_until || override.effective_until >= cycleDate)
+   );
+   
+   // Return the most recent applicable override
+   return applicableOverrides.sort((a, b) => 
+     b.effective_from.localeCompare(a.effective_from)
+   )[0] || null;
+ }
+ 
+ // Generate invoice for a subscription
+ async function generateInvoiceForSubscription(
+-  supabase: any, 
++  supabase: SupabaseClient,
+   subscription: SubscriptionRecord,
+   overrides: AmountOverride[]
+ ): Promise<{ success: boolean; error?: string; invoiceId?: string; paymentUrl?: string }> {
+   try {
+     console.log(`🔄 Processing subscription: ${subscription.id} (${subscription.title})`);
+     
+     const timezone = subscription.merchants.timezone || 'UTC';
+     const now = DateTime.now().setZone(timezone);
+     const nextBilling = DateTime.fromISO(subscription.next_billing_at).setZone(timezone);
+     const cycleStart = nextBilling;
+     const cycleStartISO = cycleStart.toISODate();
+     
+     // Check if we should generate the invoice (considering generate_days_in_advance)
+     const generateDate = nextBilling.minus({ days: subscription.generate_days_in_advance });
+     
+     if (now < generateDate) {
+       console.log(`⏳ Too early to generate invoice for ${subscription.id}. Generate date: ${generateDate.toISO()}`);
+       return { success: false, error: 'Too early to generate' };
+     }
+     
+     // Check if invoice already exists for this cycle (idempotency)
+     const { data: existingInvoice } = await supabase
+       .from('subscription_invoices')
+       .select('id, payment_link_id')
+       .eq('subscription_id', subscription.id)
+@@ -118,70 +129,136 @@ async function generateInvoiceForSubscription(
+     
+     // Check max cycles limit
+     if (subscription.max_cycles && subscription.total_cycles >= subscription.max_cycles) {
+       console.log(`🏁 Subscription ${subscription.id} has reached max cycles (${subscription.max_cycles})`);
+       
+       // Mark subscription as completed
+       await supabase
+         .from('subscriptions')
+         .update({ 
+           status: 'completed',
+           completed_at: now.toISO()
+         })
+         .eq('id', subscription.id);
+         
+       return { success: false, error: 'Max cycles reached' };
+     }
+     
+     // Get applicable amount override
+     const applicableOverride = getApplicableOverride(overrides, cycleStartISO);
+     const invoiceAmount = applicableOverride?.amount || subscription.amount;
+     
+     console.log(`💰 Invoice amount: $${invoiceAmount} ${subscription.currency} ${applicableOverride ? '(override applied)' : '(base amount)'}`);
+     
+     // Calculate due date
+     const dueDate = cycleStart.plus({ days: subscription.invoice_due_days });
+-    
++    const pastDueDays = subscription.past_due_after_days ?? 2;
++    const expiresAt = cycleStart.plus({ days: pastDueDays + 14 });
++
+     // Generate unique link ID
+     const linkId = generateLinkId();
+-    
+-    // Create payment link first
++
++    const walletAddresses = (subscription.accepted_cryptos || []).reduce(
++      (acc: Record<string, string>, crypto) => {
++        const addr = subscription.merchants.wallets?.[crypto];
++        if (addr) acc[crypto] = addr;
++        return acc;
++      },
++      {} as Record<string, string>
++    );
++
++    // Calculate tax and fee information just like manual payment links
++    const effectiveChargeCustomerFee =
++      subscription.charge_customer_fee ?? subscription.merchants.charge_customer_fee ?? false;
++    const effectiveAutoConvertEnabled =
++      subscription.auto_convert_enabled ?? subscription.merchants.auto_convert_enabled ?? false;
++    const effectivePreferredPayoutCurrency =
++      subscription.preferred_payout_currency ?? subscription.merchants.preferred_payout_currency ?? null;
++
++    let totalTaxAmount = 0;
++    const taxBreakdown: Record<string, number> = {};
++    if (subscription.tax_enabled && Array.isArray(subscription.tax_rates)) {
++      for (const rate of subscription.tax_rates) {
++        const pct = Number(rate.percentage) || 0;
++        const amt = (invoiceAmount * pct) / 100;
++        totalTaxAmount += amt;
++        taxBreakdown[rate.label.toLowerCase().replace(/\s+/g, '_')] = amt;
++      }
++    }
++
++    const subtotalWithTax = invoiceAmount + totalTaxAmount;
++    const baseFeePct = 0.005; // 0.5%
++    const autoConvertFeePct = effectiveAutoConvertEnabled ? 0.005 : 0;
++    const totalFeePct = baseFeePct + autoConvertFeePct;
++    const feeAmount = subtotalWithTax * totalFeePct;
++    const customerPaysTotal =
++      effectiveChargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax;
++    const merchantReceives = subtotalWithTax - feeAmount;
++
++    // Create payment link with full metadata
+     const { data: paymentLink, error: linkError } = await supabase
+       .from('payment_links')
+       .insert({
+         merchant_id: subscription.merchant_id,
+         title: `${subscription.title} - Invoice`,
+         amount: invoiceAmount,
++        base_amount: invoiceAmount,
+         currency: subscription.currency,
+         link_id: linkId,
+         subscription_id: subscription.id,
+         source: 'subscription',
++        accepted_cryptos: subscription.accepted_cryptos,
++        charge_customer_fee: effectiveChargeCustomerFee,
++        auto_convert_enabled: effectiveAutoConvertEnabled,
++        preferred_payout_currency: effectivePreferredPayoutCurrency,
++        fee_percentage: totalFeePct,
++        tax_enabled: subscription.tax_enabled,
++        tax_rates: subscription.tax_rates,
++        tax_amount: totalTaxAmount,
++        subtotal_with_tax: subtotalWithTax,
++        expires_at: expiresAt.toISO(),
++        max_uses: 1,
+         metadata: {
+           subscription_id: subscription.id,
+           cycle_start_at: cycleStartISO,
+           cycle_number: subscription.total_cycles + 1,
+-          type: 'subscription_invoice'
++          type: 'subscription_invoice',
++          wallet_addresses: walletAddresses,
++          fee_breakdown: {
++            base_fee_percentage: baseFeePct * 100,
++            auto_convert_fee_percentage: autoConvertFeePct * 100,
++            total_fee_percentage: totalFeePct * 100,
++            fee_amount: feeAmount,
++            merchant_receives: merchantReceives,
++            effective_charge_customer_fee: effectiveChargeCustomerFee,
++            effective_auto_convert_enabled: effectiveAutoConvertEnabled,
++            effective_preferred_payout_currency: effectivePreferredPayoutCurrency
++          },
++          tax_breakdown: taxBreakdown,
++          base_amount: invoiceAmount,
++          total_amount: customerPaysTotal,
++          fee_amount: feeAmount
+         }
+       })
+       .select('id, link_id')
+       .single();
+       
+     if (linkError) {
+       console.error(`❌ Failed to create payment link for ${subscription.id}:`, linkError);
+       return { success: false, error: 'Failed to create payment link' };
+     }
+     
+     // Generate proper invoice number using atomic counter
+     const { data: invoiceNumber, error: numberError } = await supabase
+       .rpc('get_next_invoice_number', { merchant_uuid: subscription.merchant_id });
+     
+     if (numberError) {
+       console.error(`❌ Failed to generate invoice number for ${subscription.id}:`, numberError);
+       return { success: false, error: 'Failed to generate invoice number' };
+     }
+     
+     console.log(`📄 Generated invoice number: ${invoiceNumber}`);
+     
+     // Create subscription invoice record
+     const { data: invoice, error: invoiceError } = await supabase
+       .from('subscription_invoices')
+       .insert({
+@@ -219,51 +296,51 @@ async function generateInvoiceForSubscription(
+     if (updateError) {
+       console.error(`❌ Failed to update subscription ${subscription.id}:`, updateError);
+       return { success: false, error: 'Failed to update subscription' };
+     }
+     
+     // Generate payment URL
+     const appOrigin = Deno.env.get('APP_ORIGIN') || 'https://cryptrac.com';
+     const paymentUrl = `${appOrigin}/pay/${paymentLink.link_id}`;
+     
+     console.log(`✅ Invoice created for ${subscription.id}: ${invoice.id}`);
+     
+     return { 
+       success: true, 
+       invoiceId: invoice.id,
+       paymentUrl: paymentUrl
+     };
+     
+   } catch (error) {
+     console.error(`❌ Error generating invoice for ${subscription.id}:`, error);
+     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+   }
+ }
+ 
+ // Send invoice notification email
+ async function sendInvoiceNotification(
+-  supabase: any,
++  supabase: SupabaseClient,
+   subscription: SubscriptionRecord,
+   paymentUrl: string,
+   invoiceAmount: number
+ ): Promise<boolean> {
+   try {
+     console.log(`📧 Sending invoice notification for ${subscription.id} to ${subscription.customers.email}`);
+     
+     // Get environment variables - use the correct SERVICE_ROLE_KEY
+     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+     const serviceRoleKey = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
+     
+     console.log(`🔧 Environment check: URL=${!!supabaseUrl}, Key=${!!serviceRoleKey}`);
+     console.log(`🔧 Service key preview: ${serviceRoleKey.substring(0, 20)}...`);
+     console.log(`🔧 Supabase URL: ${supabaseUrl}`);
+     
+     const requestPayload = {
+       type: 'invoice',
+       subscription_id: subscription.id,
+       customer_email: subscription.customers.email,
+       payment_url: paymentUrl,
+       invoice_data: {
+         amount: invoiceAmount
+       }
+     };
+     
+@@ -313,55 +390,57 @@ Deno.serve(async (req) => {
+ 
+     if (!supabaseUrl || !supabaseKey) {
+       return new Response(JSON.stringify({ 
+         success: false, 
+         error: 'Server configuration error' 
+       }), {
+         status: 500,
+         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+       });
+     }
+ 
+     const supabase = createClient(supabaseUrl, supabaseKey, {
+       auth: { autoRefreshToken: false, persistSession: false }
+     });
+ 
+     // Get current time in UTC for comparison
+     const now = DateTime.now();
+     const checkTime = now.plus({ days: 1 }); // Look ahead 1 day to catch early generation
+     
+     console.log(`🔍 Checking for subscriptions due before: ${checkTime.toISO()}`);
+ 
+     // Find subscriptions that need invoice generation
+     const { data: subscriptions, error: subscriptionsError } = await supabase
+       .from('subscriptions')
+       .select(`
+-        id, title, amount, currency, interval, interval_count, 
++        id, title, amount, currency, accepted_cryptos, charge_customer_fee,
++        auto_convert_enabled, preferred_payout_currency, tax_enabled, tax_rates,
++        interval, interval_count,
+         next_billing_at, status, max_cycles, total_cycles,
+         merchant_id, customer_id,
+-        invoice_due_days, generate_days_in_advance,
+-        merchants!inner(id, business_name, timezone),
++        invoice_due_days, generate_days_in_advance, past_due_after_days,
++        merchants!inner(id, business_name, timezone, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency),
+         customers!inner(id, name, email)
+       `)
+       .eq('status', 'active')
+       .not('next_billing_at', 'is', null)
+       .lte('next_billing_at', checkTime.toISO());
+ 
+     if (subscriptionsError) {
+       console.error('❌ Error fetching subscriptions:', subscriptionsError);
+       return new Response(JSON.stringify({ 
+         success: false, 
+         error: 'Failed to fetch subscriptions' 
+       }), {
+         status: 500,
+         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+       });
+     }
+ 
+     console.log(`📋 Found ${subscriptions?.length || 0} subscriptions to process`);
+ 
+     if (!subscriptions || subscriptions.length === 0) {
+       return new Response(JSON.stringify({ 
+         success: true, 
+         message: 'No subscriptions due for processing',
+         processed: 0
+       }), {
+ 
+EOF
+)

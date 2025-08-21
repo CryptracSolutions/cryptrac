@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { DateTime } from 'https://esm.sh/luxon@3';
 
 const corsHeaders = {
@@ -11,6 +11,7 @@ interface SubscriptionRecord {
   title: string;
   amount: number;
   currency: string;
+  accepted_cryptos: string[];
   interval: string;
   interval_count: number;
   next_billing_at: string;
@@ -21,11 +22,21 @@ interface SubscriptionRecord {
   customer_id: string;
   invoice_due_days: number;
   generate_days_in_advance: number;
+  past_due_after_days: number;
   merchants: {
     id: string;
     business_name: string;
     timezone?: string;
+    wallets: Record<string, string> | null;
+    charge_customer_fee?: boolean | null;
+    auto_convert_enabled?: boolean | null;
+    preferred_payout_currency?: string | null;
   };
+  charge_customer_fee?: boolean | null;
+  auto_convert_enabled?: boolean | null;
+  preferred_payout_currency?: string | null;
+  tax_enabled?: boolean | null;
+    tax_rates?: Array<{ percentage: number; label: string }> | null;
   customers: {
     id: string;
     name?: string;
@@ -82,7 +93,7 @@ function getApplicableOverride(overrides: AmountOverride[], cycleDate: string): 
 
 // Generate invoice for a subscription
 async function generateInvoiceForSubscription(
-  supabase: any, 
+  supabase: SupabaseClient,
   subscription: SubscriptionRecord,
   overrides: AmountOverride[]
 ): Promise<{ success: boolean; error?: string; invoiceId?: string; paymentUrl?: string }> {
@@ -140,26 +151,92 @@ async function generateInvoiceForSubscription(
     
     // Calculate due date
     const dueDate = cycleStart.plus({ days: subscription.invoice_due_days });
-    
+    const pastDueDays = subscription.past_due_after_days ?? 2;
+    const expiresAt = cycleStart.plus({ days: pastDueDays + 14 });
+
     // Generate unique link ID
     const linkId = generateLinkId();
-    
-    // Create payment link first
+
+    const walletAddresses = (subscription.accepted_cryptos || []).reduce(
+      (acc: Record<string, string>, crypto) => {
+        const addr = subscription.merchants.wallets?.[crypto];
+        if (addr) acc[crypto] = addr;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+
+    // Calculate tax and fee information just like manual payment links
+    const effectiveChargeCustomerFee =
+      subscription.charge_customer_fee ?? subscription.merchants.charge_customer_fee ?? false;
+    const effectiveAutoConvertEnabled =
+      subscription.auto_convert_enabled ?? subscription.merchants.auto_convert_enabled ?? false;
+    const effectivePreferredPayoutCurrency =
+      subscription.preferred_payout_currency ?? subscription.merchants.preferred_payout_currency ?? null;
+
+    let totalTaxAmount = 0;
+    const taxBreakdown: Record<string, number> = {};
+    if (subscription.tax_enabled && Array.isArray(subscription.tax_rates)) {
+      for (const rate of subscription.tax_rates) {
+        const pct = Number(rate.percentage) || 0;
+        const amt = (invoiceAmount * pct) / 100;
+        totalTaxAmount += amt;
+        taxBreakdown[rate.label.toLowerCase().replace(/\s+/g, '_')] = amt;
+      }
+    }
+
+    const subtotalWithTax = invoiceAmount + totalTaxAmount;
+    const baseFeePct = 0.005; // 0.5%
+    const autoConvertFeePct = effectiveAutoConvertEnabled ? 0.005 : 0;
+    const totalFeePct = baseFeePct + autoConvertFeePct;
+    const feeAmount = subtotalWithTax * totalFeePct;
+    const customerPaysTotal =
+      effectiveChargeCustomerFee ? subtotalWithTax + feeAmount : subtotalWithTax;
+    const merchantReceives = subtotalWithTax - feeAmount;
+
+    // Create payment link with full metadata
     const { data: paymentLink, error: linkError } = await supabase
       .from('payment_links')
       .insert({
         merchant_id: subscription.merchant_id,
         title: `${subscription.title} - Invoice`,
         amount: invoiceAmount,
+        base_amount: invoiceAmount,
         currency: subscription.currency,
         link_id: linkId,
         subscription_id: subscription.id,
         source: 'subscription',
+        accepted_cryptos: subscription.accepted_cryptos,
+        charge_customer_fee: effectiveChargeCustomerFee,
+        auto_convert_enabled: effectiveAutoConvertEnabled,
+        preferred_payout_currency: effectivePreferredPayoutCurrency,
+        fee_percentage: totalFeePct,
+        tax_enabled: subscription.tax_enabled,
+        tax_rates: subscription.tax_rates,
+        tax_amount: totalTaxAmount,
+        subtotal_with_tax: subtotalWithTax,
+        expires_at: expiresAt.toISO(),
+        max_uses: 1,
         metadata: {
           subscription_id: subscription.id,
           cycle_start_at: cycleStartISO,
           cycle_number: subscription.total_cycles + 1,
-          type: 'subscription_invoice'
+          type: 'subscription_invoice',
+          wallet_addresses: walletAddresses,
+          fee_breakdown: {
+            base_fee_percentage: baseFeePct * 100,
+            auto_convert_fee_percentage: autoConvertFeePct * 100,
+            total_fee_percentage: totalFeePct * 100,
+            fee_amount: feeAmount,
+            merchant_receives: merchantReceives,
+            effective_charge_customer_fee: effectiveChargeCustomerFee,
+            effective_auto_convert_enabled: effectiveAutoConvertEnabled,
+            effective_preferred_payout_currency: effectivePreferredPayoutCurrency
+          },
+          tax_breakdown: taxBreakdown,
+          base_amount: invoiceAmount,
+          total_amount: customerPaysTotal,
+          fee_amount: feeAmount
         }
       })
       .select('id, link_id')
@@ -241,7 +318,7 @@ async function generateInvoiceForSubscription(
 
 // Send invoice notification email
 async function sendInvoiceNotification(
-  supabase: any,
+  supabase: SupabaseClient,
   subscription: SubscriptionRecord,
   paymentUrl: string,
   invoiceAmount: number
@@ -335,11 +412,13 @@ Deno.serve(async (req) => {
     const { data: subscriptions, error: subscriptionsError } = await supabase
       .from('subscriptions')
       .select(`
-        id, title, amount, currency, interval, interval_count, 
+        id, title, amount, currency, accepted_cryptos, charge_customer_fee,
+        auto_convert_enabled, preferred_payout_currency, tax_enabled, tax_rates,
+        interval, interval_count,
         next_billing_at, status, max_cycles, total_cycles,
         merchant_id, customer_id,
-        invoice_due_days, generate_days_in_advance,
-        merchants!inner(id, business_name, timezone),
+        invoice_due_days, generate_days_in_advance, past_due_after_days,
+        merchants!inner(id, business_name, timezone, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency),
         customers!inner(id, name, email)
       `)
       .eq('status', 'active')

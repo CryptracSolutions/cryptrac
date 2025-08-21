@@ -64,7 +64,8 @@ export async function GET(
           business_name,
           charge_customer_fee,
           auto_convert_enabled
-        )
+        ),
+        invoice:subscription_invoices(invoice_number, cycle_start_at)
       `)
       .eq(isUUID ? 'id' : 'link_id', id)
       .single()
@@ -92,14 +93,20 @@ export async function GET(
 
     console.log('✅ Payment link found:', paymentLink.id)
 
+    // Extract invoice info
+    const { invoice, ...rest } = paymentLink as { invoice?: unknown; [key: string]: unknown }
+    const invoiceInfo = Array.isArray(invoice) ? invoice[0] : invoice
+
     // Construct the payment URL
-    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${paymentLink.link_id}`;
+    const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${paymentLink.link_id}`
 
     // Return with consistent structure (using 'data' field to match frontend expectations)
     return NextResponse.json({
       success: true,
       data: {
-        ...paymentLink,
+        ...rest,
+        invoice_number: invoiceInfo?.invoice_number ?? null,
+        invoice_cycle_start_at: invoiceInfo?.cycle_start_at ?? null,
         payment_url: paymentUrl,
         qr_code_data: paymentUrl
       }

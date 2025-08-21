@@ -39,6 +39,8 @@ interface PaymentLink {
   usage_count: number;
   confirmed_payment_count: number;
   qr_code_data?: string;
+  invoice_number?: string | null;
+  invoice_cycle_start_at?: string | null;
   _status_info?: {
     stored_status: string;
     calculated_status: string;
@@ -155,6 +157,7 @@ export default function PaymentsPage() {
       if (data.success) {
         setPaymentLinks(data.data.payment_links || []);
         (data.data.payment_links || []).forEach(link => {
+          console.log('🔍 Loaded payment link:', link.id, 'Invoice:', link.invoice_number);
           if (link.usage_count > 0 && !notifiedLinksRef.current.has(link.id)) {
             console.log(`📧 [Simulation] Payment received for "${link.title}"`);
             notifiedLinksRef.current.add(link.id);
@@ -386,6 +389,9 @@ export default function PaymentsPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="font-semibold text-gray-900">{link.title}</h3>
+            {link.invoice_number && (
+              <span className="text-sm text-gray-500">{link.invoice_number}</span>
+            )}
             {getStatusBadge(link.status, link)}
             {(link.source === 'subscription' || link.subscription_id) && (
               <Badge variant="outline" className="bg-blue-100 text-blue-700">
