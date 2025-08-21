@@ -249,26 +249,35 @@ async function sendInvoiceNotification(
   try {
     console.log(`📧 Sending invoice notification for ${subscription.id} to ${subscription.customers.email}`);
     
-    // Get environment variables
+    // Get environment variables - use the correct SERVICE_ROLE_KEY
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const serviceRoleKey = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
     
-    // Make direct HTTP request to notification function
+    console.log(`🔧 Environment check: URL=${!!supabaseUrl}, Key=${!!serviceRoleKey}`);
+    console.log(`🔧 Service key preview: ${serviceRoleKey.substring(0, 20)}...`);
+    console.log(`🔧 Supabase URL: ${supabaseUrl}`);
+    
+    const requestPayload = {
+      type: 'invoice',
+      subscription_id: subscription.id,
+      customer_email: subscription.customers.email,
+      payment_url: paymentUrl,
+      invoice_data: {
+        amount: invoiceAmount
+      }
+    };
+    
+    console.log(`🔧 Request payload:`, JSON.stringify(requestPayload, null, 2));
+    
+    // Make direct HTTP request to notification function with both headers
     const response = await fetch(`${supabaseUrl}/functions/v1/subscriptions-send-notifications`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        type: 'invoice',
-        subscription_id: subscription.id,
-        customer_email: subscription.customers.email,
-        payment_url: paymentUrl,
-        invoice_data: {
-          amount: invoiceAmount
-        }
-      })
+      body: JSON.stringify(requestPayload)
     });
     
     if (!response.ok) {
@@ -300,7 +309,7 @@ Deno.serve(async (req) => {
     console.log('🚀 Subscription scheduler started');
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const supabaseKey = Deno.env.get('SERVICE_ROLE_KEY') ?? '';
 
     if (!supabaseUrl || !supabaseKey) {
       return new Response(JSON.stringify({ 

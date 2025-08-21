@@ -249,16 +249,17 @@ export default function PaymentPage() {
   const feeBreakdown = paymentLink ? calculateFeeBreakdown(paymentLink) : null
 
   function calculateFeeBreakdown(link: PaymentLink): FeeBreakdown {
-    const baseAmount = link.base_amount
-    const taxAmount = link.tax_amount
-    const subtotalWithTax = link.subtotal_with_tax
+    const baseAmount = Number(link.base_amount) || 0
+    const taxAmount = Number(link.tax_amount) || 0
+    const subtotalWithTax = Number(link.subtotal_with_tax) || 0
 
     // Platform fee calculation using effective link setting
     const chargeCustomerFee =
       link.charge_customer_fee ??
       link.metadata?.fee_breakdown?.effective_charge_customer_fee ??
       false
-    const feeAmount = subtotalWithTax * link.fee_percentage
+    const feePercentage = Number(link.fee_percentage) || 0
+    const feeAmount = subtotalWithTax * feePercentage
     const platformFee = chargeCustomerFee ? feeAmount : 0
     
     // Customer total: if charge_customer_fee is true, customer pays extra to offset NOWPayments fee deduction
@@ -1068,7 +1069,7 @@ export default function PaymentPage() {
                 
                 {feeBreakdown.platformFee > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Gateway Fee ({(paymentLink.fee_percentage * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%):</span>
+                    <span className="text-gray-600">Gateway Fee ({((paymentLink.fee_percentage || 0) * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%):</span>
                     <span>${feeBreakdown.platformFee.toFixed(2)}</span>
                   </div>
                 )}
@@ -1128,7 +1129,7 @@ export default function PaymentPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            {estimate && estimate.estimated_amount && typeof estimate.estimated_amount === 'number' ? (
+                            {estimate && estimate.estimated_amount && typeof estimate.estimated_amount === 'number' && estimate.estimated_amount !== null ? (
                               <div className="font-medium">
                                 {estimate.estimated_amount.toFixed(6)}
                               </div>
