@@ -258,8 +258,7 @@ async function sendInvoiceNotification(
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${serviceRoleKey}`,
-        'Content-Type': 'application/json',
-        'apikey': serviceRoleKey
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         type: 'invoice',
