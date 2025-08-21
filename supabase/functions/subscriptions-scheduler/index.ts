@@ -157,7 +157,12 @@ async function generateInvoiceForSubscription(
     // Generate unique link ID
     const linkId = generateLinkId();
 
-    const walletAddresses = (subscription.accepted_cryptos || []).reduce(
+    const acceptedCryptos =
+      subscription.accepted_cryptos && subscription.accepted_cryptos.length > 0
+        ? subscription.accepted_cryptos
+        : Object.keys(subscription.merchants.wallets || {});
+
+    const walletAddresses = acceptedCryptos.reduce(
       (acc: Record<string, string>, crypto) => {
         const addr = subscription.merchants.wallets?.[crypto];
         if (addr) acc[crypto] = addr;
@@ -206,7 +211,7 @@ async function generateInvoiceForSubscription(
         link_id: linkId,
         subscription_id: subscription.id,
         source: 'subscription',
-        accepted_cryptos: subscription.accepted_cryptos,
+        accepted_cryptos: acceptedCryptos,
         charge_customer_fee: effectiveChargeCustomerFee,
         auto_convert_enabled: effectiveAutoConvertEnabled,
         preferred_payout_currency: effectivePreferredPayoutCurrency,

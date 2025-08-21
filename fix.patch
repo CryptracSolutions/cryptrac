@@ -101,10 +101,10 @@ index 0b06ad679fc0fc11edd6407e83299c880dadd907..6ed69eddfee1d8bec479639caad1287d
        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
      }
 diff --git a/app/api/payments/route.ts b/app/api/payments/route.ts
-index 8744bf89520159642393ebec3f540ff0e0d9ae5b..937565b699976c0882c75b980ec6efbd380fb71f 100644
+index 8744bf89520159642393ebec3f540ff0e0d9ae5b..3a1712b57ebf3f9175221272a5bce98753eded4e 100644
 --- a/app/api/payments/route.ts
 +++ b/app/api/payments/route.ts
-@@ -95,84 +95,88 @@ export async function GET(request: NextRequest) {
+@@ -95,84 +95,96 @@ export async function GET(request: NextRequest) {
        );
      }
  
@@ -162,11 +162,20 @@ index 8744bf89520159642393ebec3f540ff0e0d9ae5b..937565b699976c0882c75b980ec6efbd
  
      // Calculate real-time status for each payment link and apply status filter
      const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
-+      const { invoice, ...rest } = link as { invoice?: unknown; [key: string]: unknown };
-+      const invoiceInfo = Array.isArray(invoice) ? invoice[0] : invoice;
-       const linkWithCount = {
+-      const linkWithCount = {
 -        ...link,
 -        confirmed_payment_count: link.current_uses
++      const { invoice, ...rest } = link as PaymentLink & {
++        invoice?: unknown;
++        [key: string]: unknown;
++      };
++      const invoiceInfo = Array.isArray(invoice)
++        ? (invoice[0] as { invoice_number?: string; cycle_start_at?: string })
++        : (invoice as { invoice_number?: string; cycle_start_at?: string } | undefined);
++      const linkWithCount: PaymentLink & {
++        invoice_number: string | null;
++        invoice_cycle_start_at: string | null;
++      } = {
 +        ...rest,
 +        confirmed_payment_count: link.current_uses,
 +        invoice_number: invoiceInfo?.invoice_number ?? null,
@@ -725,7 +734,7 @@ index ae940acd510adb9c375458ecdc4016ed5b12e8ea..d010132441d383a22cfcc07d0b92aebc
                  
                  {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
 diff --git a/supabase/functions/subscriptions-scheduler/index.ts b/supabase/functions/subscriptions-scheduler/index.ts
-index 2ba7918dd0c652653ae9b2899d951d91180939ee..c869b920113d7fb86ebb4904cac7d53d0a2a83fb 100644
+index 2ba7918dd0c652653ae9b2899d951d91180939ee..c0610b99e8f68c2dd98331b764f9bb0d93918412 100644
 --- a/supabase/functions/subscriptions-scheduler/index.ts
 +++ b/supabase/functions/subscriptions-scheduler/index.ts
 @@ -1,53 +1,64 @@
@@ -847,7 +856,7 @@ index 2ba7918dd0c652653ae9b2899d951d91180939ee..c869b920113d7fb86ebb4904cac7d53d
        .from('subscription_invoices')
        .select('id, payment_link_id')
        .eq('subscription_id', subscription.id)
-@@ -118,70 +129,136 @@ async function generateInvoiceForSubscription(
+@@ -118,70 +129,141 @@ async function generateInvoiceForSubscription(
      
      // Check max cycles limit
      if (subscription.max_cycles && subscription.total_cycles >= subscription.max_cycles) {
@@ -882,7 +891,12 @@ index 2ba7918dd0c652653ae9b2899d951d91180939ee..c869b920113d7fb86ebb4904cac7d53d
 -    
 -    // Create payment link first
 +
-+    const walletAddresses = (subscription.accepted_cryptos || []).reduce(
++    const acceptedCryptos =
++      subscription.accepted_cryptos && subscription.accepted_cryptos.length > 0
++        ? subscription.accepted_cryptos
++        : Object.keys(subscription.merchants.wallets || {});
++
++    const walletAddresses = acceptedCryptos.reduce(
 +      (acc: Record<string, string>, crypto) => {
 +        const addr = subscription.merchants.wallets?.[crypto];
 +        if (addr) acc[crypto] = addr;
@@ -931,7 +945,7 @@ index 2ba7918dd0c652653ae9b2899d951d91180939ee..c869b920113d7fb86ebb4904cac7d53d
          link_id: linkId,
          subscription_id: subscription.id,
          source: 'subscription',
-+        accepted_cryptos: subscription.accepted_cryptos,
++        accepted_cryptos: acceptedCryptos,
 +        charge_customer_fee: effectiveChargeCustomerFee,
 +        auto_convert_enabled: effectiveAutoConvertEnabled,
 +        preferred_payout_currency: effectivePreferredPayoutCurrency,
@@ -988,7 +1002,7 @@ index 2ba7918dd0c652653ae9b2899d951d91180939ee..c869b920113d7fb86ebb4904cac7d53d
      const { data: invoice, error: invoiceError } = await supabase
        .from('subscription_invoices')
        .insert({
-@@ -219,51 +296,51 @@ async function generateInvoiceForSubscription(
+@@ -219,51 +301,51 @@ async function generateInvoiceForSubscription(
      if (updateError) {
        console.error(`❌ Failed to update subscription ${subscription.id}:`, updateError);
        return { success: false, error: 'Failed to update subscription' };
@@ -1041,7 +1055,7 @@ index 2ba7918dd0c652653ae9b2899d951d91180939ee..c869b920113d7fb86ebb4904cac7d53d
        }
      };
      
-@@ -313,55 +390,57 @@ Deno.serve(async (req) => {
+@@ -313,55 +395,57 @@ Deno.serve(async (req) => {
  
      if (!supabaseUrl || !supabaseKey) {
        return new Response(JSON.stringify({ 

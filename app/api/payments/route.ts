@@ -148,9 +148,17 @@ export async function GET(request: NextRequest) {
 
     // Calculate real-time status for each payment link and apply status filter
     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
-      const { invoice, ...rest } = link as { invoice?: unknown; [key: string]: unknown };
-      const invoiceInfo = Array.isArray(invoice) ? invoice[0] : invoice;
-      const linkWithCount = {
+      const { invoice, ...rest } = link as PaymentLink & {
+        invoice?: unknown;
+        [key: string]: unknown;
+      };
+      const invoiceInfo = Array.isArray(invoice)
+        ? (invoice[0] as { invoice_number?: string; cycle_start_at?: string })
+        : (invoice as { invoice_number?: string; cycle_start_at?: string } | undefined);
+      const linkWithCount: PaymentLink & {
+        invoice_number: string | null;
+        invoice_cycle_start_at: string | null;
+      } = {
         ...rest,
         confirmed_payment_count: link.current_uses,
         invoice_number: invoiceInfo?.invoice_number ?? null,
