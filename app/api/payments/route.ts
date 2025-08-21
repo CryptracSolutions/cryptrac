@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     // Build query using service role (bypasses RLS)
     let query = serviceSupabase
       .from('payment_links')
-      .select('*, invoice:subscription_invoices(invoice_number, cycle_start_at)')
+      .select('*')
       .eq('merchant_id', merchant.id)
       .order('created_at', { ascending: false });
 
@@ -148,21 +148,9 @@ export async function GET(request: NextRequest) {
 
     // Calculate real-time status for each payment link and apply status filter
     const paymentLinksWithStatus = (rawPaymentLinks || []).map(link => {
-      const { invoice, ...rest } = link as PaymentLink & {
-        invoice?: unknown;
-        [key: string]: unknown;
-      };
-      const invoiceInfo = Array.isArray(invoice)
-        ? (invoice[0] as { invoice_number?: string; cycle_start_at?: string })
-        : (invoice as { invoice_number?: string; cycle_start_at?: string } | undefined);
-      const linkWithCount: PaymentLink & {
-        invoice_number: string | null;
-        invoice_cycle_start_at: string | null;
-      } = {
-        ...rest,
-        confirmed_payment_count: link.current_uses,
-        invoice_number: invoiceInfo?.invoice_number ?? null,
-        invoice_cycle_start_at: invoiceInfo?.cycle_start_at ?? null
+      const linkWithCount = {
+        ...link,
+        confirmed_payment_count: link.current_uses
       };
 
       const calculatedStatus = calculatePaymentLinkStatus(linkWithCount);

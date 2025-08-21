@@ -47,8 +47,6 @@ interface PaymentLink {
     percentage: number;
   }>;
   subtotal_with_tax?: number;
-  invoice_number?: string | null;
-  invoice_cycle_start_at?: string | null;
   metadata?: {
     fee_percentage?: number;
     fee_amount?: number;
@@ -110,9 +108,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
         if (result.success) {
           // Construct the proper payment URL
           const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${result.data.link_id}`;
-
-          console.log('🔍 Loaded payment link:', result.data.id, 'Invoice:', result.data.invoice_number);
-
+          
           setPaymentLink({
             ...result.data,
             payment_url: paymentUrl
@@ -278,9 +274,6 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-gray-900">{paymentLink.title}</h1>
-          {paymentLink.invoice_number && (
-            <p className="text-sm text-gray-500">{paymentLink.invoice_number}</p>
-          )}
           <p className="text-gray-600 mt-1">Payment link details and management</p>
         </div>
         <div className="flex items-center space-x-2">

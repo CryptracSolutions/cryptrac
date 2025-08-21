@@ -157,10 +157,18 @@ async function generateInvoiceForSubscription(
     // Generate unique link ID
     const linkId = generateLinkId();
 
-    const acceptedCryptos =
-      subscription.accepted_cryptos && subscription.accepted_cryptos.length > 0
-        ? subscription.accepted_cryptos
-        : Object.keys(subscription.merchants.wallets || {});
+    const defaultCryptos = ['BTC', 'ETH', 'LTC']
+    const hasCustomCryptos =
+      Array.isArray(subscription.accepted_cryptos) &&
+      subscription.accepted_cryptos.length > 0 &&
+      !(
+        subscription.accepted_cryptos.length === defaultCryptos.length &&
+        defaultCryptos.every(c => subscription.accepted_cryptos.includes(c))
+      )
+
+    const acceptedCryptos = hasCustomCryptos
+      ? subscription.accepted_cryptos
+      : Object.keys(subscription.merchants.wallets || {})
 
     const walletAddresses = acceptedCryptos.reduce(
       (acc: Record<string, string>, crypto) => {

@@ -47,10 +47,6 @@ interface PaymentLink {
     charge_customer_fee: boolean
     auto_convert_enabled: boolean
   }
-  invoice?: {
-    invoice_number?: string
-    cycle_start_at?: string
-  }
   metadata?: {
     fee_breakdown?: {
       effective_charge_customer_fee?: boolean
@@ -488,8 +484,7 @@ export default function PaymentPage() {
         .from('payment_links')
         .select(`
           *,
-          merchant:merchants(business_name, charge_customer_fee, auto_convert_enabled),
-          invoice:subscription_invoices(invoice_number, cycle_start_at)
+          merchant:merchants(business_name, charge_customer_fee, auto_convert_enabled)
         `)
         .eq('link_id', id)
         .single()
@@ -511,14 +506,10 @@ export default function PaymentPage() {
       console.log('✅ Payment link loaded:', data)
 
       // Transform the data to match our interface
-      const { invoice, ...rest } = data as { invoice?: unknown; [key: string]: unknown }
       const transformedData: PaymentLink = {
-        ...rest,
-        merchant: Array.isArray(data.merchant) ? data.merchant[0] : data.merchant,
-        invoice: Array.isArray(invoice) ? invoice[0] : invoice
+        ...data,
+        merchant: Array.isArray(data.merchant) ? data.merchant[0] : data.merchant
       }
-
-      console.log('🧾 Invoice info:', transformedData.invoice)
 
       setPaymentLink(transformedData)
       
@@ -1032,9 +1023,6 @@ export default function PaymentPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{paymentLink.title}</h1>
-          {paymentLink.invoice?.invoice_number && (
-            <p className="text-sm text-gray-500 mb-2">{paymentLink.invoice.invoice_number}</p>
-          )}
         {paymentLink.description && (
           <p className="text-gray-600">{paymentLink.description}</p>
         )}
