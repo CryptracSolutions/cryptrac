@@ -264,9 +264,10 @@ async function sendInvoiceNotification(
       body: JSON.stringify({
         type: 'invoice',
         subscription_id: subscription.id,
+        customer_email: subscription.customers.email,
+        payment_url: paymentUrl,
         invoice_data: {
-          amount: invoiceAmount,
-          payment_url: paymentUrl
+          amount: invoiceAmount
         }
       })
     });
