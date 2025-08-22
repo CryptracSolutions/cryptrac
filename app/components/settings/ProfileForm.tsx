@@ -36,6 +36,7 @@ const INDUSTRIES = [
   'Transportation',
   'Finance',
   'Agriculture',
+  'Corporation',
   'Other'
 ];
 

@@ -139,7 +139,9 @@ export default function CreatePaymentLinkPage() {
         ...prev,
         accepted_cryptos: cryptos, // Select all available cryptos by default
         auto_convert_enabled: null, // null = inherit from merchant settings
-        charge_customer_fee: null // null = inherit from merchant settings
+        charge_customer_fee: null, // null = inherit from merchant settings
+        tax_enabled: updatedMerchant.tax_enabled || false, // Pre-check tax if enabled in merchant settings
+        tax_rates: updatedMerchant.tax_enabled && updatedMerchant.tax_rates ? updatedMerchant.tax_rates : [] // Pre-populate tax rates if tax is enabled
       }));
 
     } catch (error) {
