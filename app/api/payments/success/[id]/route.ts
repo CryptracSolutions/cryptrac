@@ -38,7 +38,9 @@ export async function GET(
     if (isUUID) {
       // Payment link ID lookup - find the most recent confirmed payment for this link
       console.log('🔍 Looking up by payment link ID (UUID):', id)
-      const result = await supabase
+      
+      // First try to find confirmed transactions
+      let result = await supabase
         .from('transactions')
         .select(`
           *,
@@ -57,8 +59,92 @@ export async function GET(
         .limit(1)
         .single()
       
+      // If no confirmed transaction found, try 'finished' status
+      if (result.error && result.error.code === 'PGRST116') {
+        console.log('🔍 No confirmed transaction found, trying finished status')
+        result = await supabase
+          .from('transactions')
+          .select(`
+            *,
+            payment_link:payment_links!inner(
+              title,
+              description,
+              link_id,
+              merchant:merchants(
+                business_name
+              )
+            )
+          `)
+          .eq('payment_link_id', id)
+          .eq('status', 'finished')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+      }
+      
+      // If still no transaction found, try any transaction for this payment link
+      if (result.error && result.error.code === 'PGRST116') {
+        console.log('🔍 No finished transaction found, trying any transaction for this payment link')
+        result = await supabase
+          .from('transactions')
+          .select(`
+            *,
+            payment_link:payment_links!inner(
+              title,
+              description,
+              link_id,
+              merchant:merchants(
+                business_name
+              )
+            )
+          `)
+          .eq('payment_link_id', id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+      }
+      
       payment = result.data
       error = result.error
+      
+      if (payment) {
+        console.log('✅ Transaction found:', {
+          id: payment.id,
+          status: payment.status,
+          payment_link_id: payment.payment_link_id,
+          nowpayments_payment_id: payment.nowpayments_payment_id
+        })
+      } else {
+        // If no transaction found by payment link ID, try NOWPayments payment ID as fallback
+        console.log('🔍 No transaction found by payment link ID, trying NOWPayments payment ID as fallback:', id)
+        const fallbackResult = await supabase
+          .from('transactions')
+          .select(`
+            *,
+            payment_link:payment_links(
+              title,
+              description,
+              merchant:merchants(
+                business_name
+              )
+            )
+          `)
+          .eq('nowpayments_payment_id', id)
+          .single()
+        
+        if (fallbackResult.data) {
+          payment = fallbackResult.data
+          error = null
+          console.log('✅ Transaction found by NOWPayments payment ID fallback:', {
+            id: payment.id,
+            status: payment.status,
+            payment_link_id: payment.payment_link_id,
+            nowpayments_payment_id: payment.nowpayments_payment_id
+          })
+        } else {
+          error = fallbackResult.error
+        }
+      }
     } else {
       // Try to find payment link by link_id first, then look for transactions
       console.log('🔍 Looking up by link_id first:', id)
@@ -90,10 +176,21 @@ export async function GET(
         
         payment = result.data
         error = result.error
+        
+        if (payment) {
+          console.log('✅ Transaction found by NOWPayments payment ID:', {
+            id: payment.id,
+            status: payment.status,
+            payment_link_id: payment.payment_link_id,
+            nowpayments_payment_id: payment.nowpayments_payment_id
+          })
+        }
       } else {
         // Found payment link by link_id, now look for transactions
         console.log('🔍 Found payment link by link_id, looking for transactions with payment_link_id:', paymentLink.id)
-        const result = await supabase
+        
+        // First try to find confirmed transactions
+        let result = await supabase
           .from('transactions')
           .select(`
             *,
@@ -112,8 +209,62 @@ export async function GET(
           .limit(1)
           .single()
         
+        // If no confirmed transaction found, try 'finished' status
+        if (result.error && result.error.code === 'PGRST116') {
+          console.log('🔍 No confirmed transaction found, trying finished status')
+          result = await supabase
+            .from('transactions')
+            .select(`
+              *,
+              payment_link:payment_links!inner(
+                title,
+                description,
+                link_id,
+                merchant:merchants(
+                  business_name
+                )
+              )
+            `)
+            .eq('payment_link_id', paymentLink.id)
+            .eq('status', 'finished')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+        }
+        
+        // If still no transaction found, try any transaction for this payment link
+        if (result.error && result.error.code === 'PGRST116') {
+          console.log('🔍 No finished transaction found, trying any transaction for this payment link')
+          result = await supabase
+            .from('transactions')
+            .select(`
+              *,
+              payment_link:payment_links!inner(
+                title,
+                description,
+                link_id,
+                merchant:merchants(
+                  business_name
+                )
+              )
+            `)
+            .eq('payment_link_id', paymentLink.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+        }
+        
         payment = result.data
         error = result.error
+        
+        if (payment) {
+          console.log('✅ Transaction found by payment link ID:', {
+            id: payment.id,
+            status: payment.status,
+            payment_link_id: payment.payment_link_id,
+            nowpayments_payment_id: payment.nowpayments_payment_id
+          })
+        }
       }
     }
 
@@ -138,8 +289,9 @@ export async function GET(
       )
     }
 
-    // Only return confirmed payments on success page
-    if (payment.status !== 'confirmed') {
+    // Only return confirmed or finished payments on success page
+    if (payment.status !== 'confirmed' && payment.status !== 'finished') {
+      console.log('❌ Payment status not suitable for success page:', payment.status)
       return NextResponse.json(
         { success: false, message: 'Payment not confirmed' },
         { status: 400 }
