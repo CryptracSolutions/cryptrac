@@ -93,9 +93,13 @@ export async function POST(request: NextRequest) {
     const { id, label, tip_presets, charge_customer_fee, tax_enabled, accepted_cryptos } = body;
     
     const payload: Record<string, unknown> = { 
-      merchant_id: merchant.id,
-      registered_by: user.id // Add the registered_by field
+      merchant_id: merchant.id
     };
+    
+    // Temporarily skip registered_by to avoid foreign key issues
+    // if (!id && user?.id) {
+    //   payload.registered_by = user.id;
+    // }
     
     if (label !== undefined) payload.label = label;
     if (tip_presets !== undefined) payload.tip_presets = tip_presets;
@@ -130,6 +134,8 @@ export async function POST(request: NextRequest) {
       // Generate a unique public_id for new devices
       payload.public_id = generatePublicId();
       
+      console.log('Creating terminal device with payload:', JSON.stringify(payload, null, 2));
+      
       result = await service
         .from('terminal_devices')
         .insert(payload)
@@ -141,6 +147,8 @@ export async function POST(request: NextRequest) {
       console.error('Database error:', result.error);
       return NextResponse.json({ error: 'Failed to save device', details: result.error.message }, { status: 500 });
     }
+    
+    console.log('Terminal device created/updated successfully:', result.data);
     
     const data = {
       ...result.data,

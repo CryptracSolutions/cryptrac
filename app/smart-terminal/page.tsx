@@ -161,18 +161,35 @@ export default function SmartTerminalPage() {
           }
         } catch (deviceError) {
           console.error('Error loading terminal device:', deviceError);
-          // If device loading fails, still set up with basic defaults
-          setDevice({ id: 'temp', tip_presets: defaultTips });
-          setChargeFee(merchant.charge_customer_fee);
-          setTax(merchant.tax_enabled);
-          
-          const stableCoins = expandStableCoins(merchant.wallets || {});
-          const allCurrencies = Array.from(new Set([...Object.keys(merchant.wallets || {}), ...stableCoins]));
-          setAvailableCurrencies(allCurrencies);
-          
-          if (allCurrencies.length > 0) {
-            setCrypto(allCurrencies[0]);
+          // If device loading fails, try to create a new device
+          try {
+            const createBody = { label: 'Device', tip_presets: defaultTips };
+            const createRes = await makeAuthenticatedRequest('/api/terminal/devices', { method: 'POST', body: JSON.stringify(createBody) });
+            
+            if (createRes.ok) {
+              const createJson = await createRes.json();
+              if (createJson.success && createJson.data) {
+                localStorage.setItem('terminal_device_id', createJson.data.id);
+                setDevice(createJson.data);
+                setChargeFee(merchant.charge_customer_fee);
+                setTax(merchant.tax_enabled);
+                
+                const stableCoins = expandStableCoins(merchant.wallets || {});
+                const allCurrencies = Array.from(new Set([...Object.keys(merchant.wallets || {}), ...stableCoins]));
+                setAvailableCurrencies(allCurrencies);
+                
+                if (allCurrencies.length > 0) {
+                  setCrypto(allCurrencies[0]);
+                }
+                return; // Successfully created device
+              }
+            }
+          } catch (createError) {
+            console.error('Error creating terminal device:', createError);
           }
+          
+          // If all else fails, show error
+          setError('Failed to initialize terminal device. Please refresh the page and try again.');
         }
       } catch (error) {
         console.error('Error loading settings:', error);
@@ -272,6 +289,13 @@ export default function SmartTerminalPage() {
 
   const generate = async () => {
     if (!device || !tipSelected || !amount || loading) return;
+    
+    // Ensure we have a valid device ID
+    if (!device.id || device.id === 'temp') {
+      setError('Invalid terminal device. Please refresh the page and try again.');
+      return;
+    }
+    
     setLoading(true);
     setError(''); // Clear any previous errors
     
