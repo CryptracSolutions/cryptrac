@@ -47,6 +47,14 @@ interface PaymentLink {
     percentage: number;
   }>;
   subtotal_with_tax?: number;
+  source?: string;
+  subscription_id?: string;
+  subscription_invoice?: {
+    invoice_number: string;
+    status: string;
+    due_date: string;
+    cycle_start_at: string;
+  } | null;
   metadata?: {
     fee_percentage?: number;
     fee_amount?: number;
@@ -301,6 +309,19 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                   {formatCurrency(paymentLink.amount, paymentLink.currency)}
                 </div>
               </div>
+
+              {/* Subscription Invoice Number */}
+              {paymentLink.subscription_invoice && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Invoice Number</label>
+                  <div className="text-lg font-semibold text-blue-600">
+                    {paymentLink.subscription_invoice.invoice_number}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Due: {formatDate(paymentLink.subscription_invoice.due_date)}
+                  </div>
+                </div>
+              )}
 
               {paymentLink.description && (
                 <div>

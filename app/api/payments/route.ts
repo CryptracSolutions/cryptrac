@@ -117,7 +117,15 @@ export async function GET(request: NextRequest) {
     // Build query using service role (bypasses RLS)
     let query = serviceSupabase
       .from('payment_links')
-      .select('*')
+      .select(`
+        *,
+        subscription_invoices!left(
+          invoice_number,
+          status,
+          due_date,
+          cycle_start_at
+        )
+      `)
       .eq('merchant_id', merchant.id)
       .order('created_at', { ascending: false });
 
@@ -177,7 +185,15 @@ export async function GET(request: NextRequest) {
     // Get total count for pagination using service role
     const { data: allLinks, error: countError } = await serviceSupabase
       .from('payment_links')
-      .select('*')
+      .select(`
+        *,
+        subscription_invoices!left(
+          invoice_number,
+          status,
+          due_date,
+          cycle_start_at
+        )
+      `)
       .eq('merchant_id', merchant.id);
 
     if (countError) {

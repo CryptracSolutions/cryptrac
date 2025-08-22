@@ -59,6 +59,8 @@ export async function GET(
         metadata,
         created_at,
         updated_at,
+        source,
+        subscription_id,
         merchant:merchants(
           id,
           business_name,
@@ -92,6 +94,18 @@ export async function GET(
 
     console.log('✅ Payment link found:', paymentLink.id)
 
+    // If this is a subscription payment, fetch the invoice information
+    let subscriptionInvoice = null
+    if (paymentLink.source === 'subscription' || paymentLink.subscription_id) {
+      const { data: invoice } = await supabase
+        .from('subscription_invoices')
+        .select('invoice_number, status, due_date, cycle_start_at')
+        .eq('payment_link_id', paymentLink.id)
+        .single()
+      
+      subscriptionInvoice = invoice
+    }
+
     // Construct the payment URL
     const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${paymentLink.link_id}`;
 
@@ -101,7 +115,8 @@ export async function GET(
       data: {
         ...paymentLink,
         payment_url: paymentUrl,
-        qr_code_data: paymentUrl
+        qr_code_data: paymentUrl,
+        subscription_invoice: subscriptionInvoice
       }
     })
 

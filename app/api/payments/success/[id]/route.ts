@@ -60,25 +60,61 @@ export async function GET(
       payment = result.data
       error = result.error
     } else {
-      // NOWPayments payment ID lookup
-      console.log('🔍 Looking up by NOWPayments payment ID:', id)
-      const result = await supabase
-        .from('transactions')
-        .select(`
-          *,
-          payment_link:payment_links(
-            title,
-            description,
-            merchant:merchants(
-              business_name
-            )
-          )
-        `)
-        .eq('nowpayments_payment_id', id)
+      // Try to find payment link by link_id first, then look for transactions
+      console.log('🔍 Looking up by link_id first:', id)
+      
+      // First, try to find the payment link by link_id
+      const { data: paymentLink, error: linkError } = await supabase
+        .from('payment_links')
+        .select('id')
+        .eq('link_id', id)
         .single()
       
-      payment = result.data
-      error = result.error
+      if (linkError || !paymentLink) {
+        // If no payment link found by link_id, try NOWPayments payment ID lookup
+        console.log('🔍 No payment link found by link_id, trying NOWPayments payment ID:', id)
+        const result = await supabase
+          .from('transactions')
+          .select(`
+            *,
+            payment_link:payment_links(
+              title,
+              description,
+              merchant:merchants(
+                business_name
+              )
+            )
+          `)
+          .eq('nowpayments_payment_id', id)
+          .single()
+        
+        payment = result.data
+        error = result.error
+      } else {
+        // Found payment link by link_id, now look for transactions
+        console.log('🔍 Found payment link by link_id, looking for transactions with payment_link_id:', paymentLink.id)
+        const result = await supabase
+          .from('transactions')
+          .select(`
+            *,
+            payment_link:payment_links!inner(
+              title,
+              description,
+              link_id,
+              merchant:merchants(
+                business_name
+              )
+            )
+          `)
+          .eq('payment_link_id', paymentLink.id)
+          .eq('status', 'confirmed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+        
+        payment = result.data
+        error = result.error
+      }
     }
 
     if (error) {

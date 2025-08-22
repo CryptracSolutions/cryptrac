@@ -51,6 +51,12 @@ interface PaymentLink {
   };
   source?: string | null;
   subscription_id?: string | null;
+  subscription_invoices?: Array<{
+    invoice_number: string;
+    status: string;
+    due_date: string;
+    cycle_start_at: string;
+  }> | null;
 }
 
 interface Statistics {
@@ -416,6 +422,12 @@ export default function PaymentsPage() {
             )}
             {link.max_uses && (
               <span>{link.usage_count}/{link.max_uses} uses</span>
+            )}
+            {/* Subscription Invoice Number */}
+            {link.subscription_invoices && link.subscription_invoices.length > 0 && (
+              <span className="font-medium text-blue-600">
+                {link.subscription_invoices[0].invoice_number}
+              </span>
             )}
           </div>
         </div>
