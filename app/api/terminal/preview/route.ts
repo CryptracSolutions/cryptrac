@@ -40,22 +40,32 @@ export async function POST(request: NextRequest) {
   const amountNum = parseFloat(amount);
   if (isNaN(amountNum) || amountNum <= 0) {
     return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
-    }
+  }
   const effectiveTaxEnabled = typeof tax_enabled === 'boolean' ? tax_enabled : merchant.tax_enabled;
   const effectiveChargeCustomerFee = typeof charge_customer_fee === 'boolean' ? charge_customer_fee : merchant.charge_customer_fee;
+  
   let taxAmount = 0;
-  if (effectiveTaxEnabled) {
-    (merchant.tax_rates || []).forEach((t: { percentage: number | string }) => {
+  let taxBreakdown: Record<string, number> = {};
+  
+  if (effectiveTaxEnabled && merchant.tax_rates && merchant.tax_rates.length > 0) {
+    merchant.tax_rates.forEach((t: { label: string; percentage: number | string }) => {
       const pct = parseFloat(String(t.percentage)) || 0;
-      taxAmount += (amountNum * pct) / 100;
+      const individualTaxAmount = (amountNum * pct) / 100;
+      taxAmount += individualTaxAmount;
+      
+      // Create breakdown key from label (lowercase, replace spaces with underscores)
+      const breakdownKey = t.label.toLowerCase().replace(/\s+/g, '_');
+      taxBreakdown[breakdownKey] = individualTaxAmount;
     });
   }
+  
   const subtotalWithTax = amountNum + taxAmount;
   const baseFeePercentage = 0.005;
   const autoConvertFeePercentage = merchant.auto_convert_enabled ? 0.005 : 0;
   const feeAmount = subtotalWithTax * (baseFeePercentage + autoConvertFeePercentage);
   const gatewayFee = effectiveChargeCustomerFee ? feeAmount : 0;
   const preTipTotal = subtotalWithTax + gatewayFee;
+  
   return NextResponse.json({
     tax_amount: taxAmount,
     subtotal_with_tax: subtotalWithTax,
@@ -63,7 +73,15 @@ export async function POST(request: NextRequest) {
     pre_tip_total: preTipTotal,
     effective: {
       tax_enabled: effectiveTaxEnabled,
-      charge_customer_fee: effectiveChargeCustomerFee
+      charge_customer_fee: effectiveChargeCustomerFee,
+      auto_convert_enabled: merchant.auto_convert_enabled
+    },
+    tax_breakdown: taxBreakdown,
+    fee_breakdown: {
+      base_fee_percentage: baseFeePercentage * 100,
+      auto_convert_fee_percentage: autoConvertFeePercentage * 100,
+      total_fee_percentage: (baseFeePercentage + autoConvertFeePercentage) * 100,
+      fee_amount: feeAmount
     }
   });
 }

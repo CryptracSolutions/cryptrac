@@ -220,11 +220,17 @@ export async function POST(request: NextRequest) {
   if (!walletKey) {
     return NextResponse.json({ error: 'Unsupported currency' }, { status: 400 });
   }
+  
+  // Expand stablecoins like payment links do
   const stableCoins = expandStableCoins(wallets);
   const deviceCryptos = device.accepted_cryptos && device.accepted_cryptos.length
     ? device.accepted_cryptos
     : Object.keys(wallets);
-  const allowed = new Set([...deviceCryptos, ...stableCoins]);
+  
+  // Create comprehensive accepted currencies list including stablecoins
+  const acceptedCryptos = Array.from(new Set([...deviceCryptos, ...stableCoins]));
+  
+  const allowed = new Set(acceptedCryptos);
   if (!allowed.has(pay_currency)) {
     return NextResponse.json({ error: 'Currency not accepted by device' }, { status: 400 });
   }
@@ -253,7 +259,8 @@ export async function POST(request: NextRequest) {
   const merchantReceives = effectiveChargeCustomerFee
     ? subtotalWithTax
     : subtotalWithTax - feeAmount;
-  const acceptedCryptos = Array.from(new Set([pay_currency, ...stableCoins]));
+  
+  // Create wallet addresses mapping for all accepted currencies
   const walletAddresses = Object.fromEntries(
     acceptedCryptos.map(c => {
       const key = getWalletKeyForCurrency(c, wallets);
