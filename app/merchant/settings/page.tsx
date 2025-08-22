@@ -456,7 +456,7 @@ export default function MerchantSettingsPage() {
 
       const result = await response.json();
 
-      if (result.valid) {
+      if (result.validation && result.validation.valid) {
         setValidationStatus(prev => ({
           ...prev,
           [currency]: 'valid',
@@ -784,11 +784,37 @@ export default function MerchantSettingsPage() {
                     <SelectValue placeholder="Select preferred payout currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(settings.wallets || {}).map((currency) => (
-                      <SelectItem key={currency} value={currency}>
-                        {currency} - {getCurrencyDisplayName(currency)}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      // Get base currencies from wallets
+                      const baseCurrencies = Object.keys(settings.wallets || {});
+                      
+                      // Stable coin associations for automatic inclusion
+                      const stableCoinAssociations: Record<string, string[]> = {
+                        'SOL': ['USDCSOL', 'USDTSOL'],
+                        'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+                        'BNB': ['USDTBSC', 'USDCBSC'],
+                        'MATIC': ['USDTMATIC', 'USDCMATIC'],
+                        'TRX': ['USDTTRC20'],
+                        'TON': ['USDTTON'],
+                        'ARB': ['USDTARB', 'USDCARB'],
+                        'OP': ['USDTOP', 'USDCOP'],
+                        'ETHBASE': ['USDCBASE'],
+                        'ALGO': ['USDCALGO']
+                      };
+                      
+                      // Expand to include stable coins
+                      const expandedCurrencies = [...baseCurrencies];
+                      baseCurrencies.forEach(currency => {
+                        const associatedStableCoins = stableCoinAssociations[currency] || [];
+                        expandedCurrencies.push(...associatedStableCoins);
+                      });
+                      
+                      return expandedCurrencies.map((currency) => (
+                        <SelectItem key={currency} value={currency}>
+                          {currency} - {getCurrencyDisplayName(currency)}
+                        </SelectItem>
+                      ));
+                    })()}
                   </SelectContent>
                 </Select>
                 {!settings.auto_convert_enabled && (

@@ -8,28 +8,32 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // Ethereum and ERC-20 tokens - standard 40-character hex
   ETH: /^0x[a-fA-F0-9]{40}$/,
+  ETHBASE: /^0x[a-fA-F0-9]{40}$/, // ETH on Base network
   USDT_ERC20: /^0x[a-fA-F0-9]{40}$/,
   USDC_ERC20: /^0x[a-fA-F0-9]{40}$/,
   USDT: /^0x[a-fA-F0-9]{40}$/, // Default USDT to ERC-20
   USDC: /^0x[a-fA-F0-9]{40}$/, // Default USDC to ERC-20
+  DAI: /^0x[a-fA-F0-9]{40}$/, // Dai (Ethereum)
+  PYUSD: /^0x[a-fA-F0-9]{40}$/, // PayPal USD (Ethereum)
+  USDCBASE: /^0x[a-fA-F0-9]{40}$/, // USDC on Base network
   
   // BSC (BEP-20) tokens - same as Ethereum format
   BNB: /^0x[a-fA-F0-9]{40}$/,
-  USDT_BEP20: /^0x[a-fA-F0-9]{40}$/,
-  USDC_BEP20: /^0x[a-fA-F0-9]{40}$/,
+  USDTBSC: /^0x[a-fA-F0-9]{40}$/,
+  USDCBSC: /^0x[a-fA-F0-9]{40}$/,
   
   // Solana and SPL tokens - Base58 encoded, 32-44 characters
   SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
-  USDT_SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
-  USDC_SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+  USDTSOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+  USDCSOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
   
   // TRON and TRC-20 tokens - starts with T, 34 characters
   TRX: /^T[A-Za-z1-9]{33}$/,
-  USDT_TRC20: /^T[A-Za-z1-9]{33}$/,
+  USDTTRC20: /^T[A-Za-z1-9]{33}$/,
   
   // TON ecosystem - supports multiple formats
   TON: /^(0:[a-fA-F0-9]{64}|[A-Za-z0-9\-_]{48}|UQ[A-Za-z0-9\-_]{46})$/,
-  USDT_TON: /^(0:[a-fA-F0-9]{64}|[A-Za-z0-9\-_]{48}|UQ[A-Za-z0-9\-_]{46})$/,
+  USDTTON: /^(0:[a-fA-F0-9]{64}|[A-Za-z0-9\-_]{48}|UQ[A-Za-z0-9\-_]{46})$/,
   
   // Avalanche ecosystem - same as Ethereum format
   AVAX: /^0x[a-fA-F0-9]{40}$/,
@@ -50,8 +54,8 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // Polygon - same as Ethereum format
   MATIC: /^0x[a-fA-F0-9]{40}$/,
-  USDC_POLYGON: /^0x[a-fA-F0-9]{40}$/,
-  USDT_POLYGON: /^0x[a-fA-F0-9]{40}$/,
+  USDCMATIC: /^0x[a-fA-F0-9]{40}$/,
+  USDTMATIC: /^0x[a-fA-F0-9]{40}$/,
   
   // Ethereum ecosystem tokens
   LINK: /^0x[a-fA-F0-9]{40}$/,
@@ -60,6 +64,7 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // Algorand - supports multiple formats
   ALGO: /^[A-Z2-7]{58}$/,
+  USDCALGO: /^[A-Z2-7]{58}$/,
   
   // Cosmos ecosystem
   ATOM: /^cosmos[0-9a-z]{39}$/,
@@ -199,9 +204,13 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // Arbitrum (same as Ethereum)
   ARB: /^0x[a-fA-F0-9]{40}$/,
+  USDTARB: /^0x[a-fA-F0-9]{40}$/,
+  USDCARB: /^0x[a-fA-F0-9]{40}$/,
   
   // Optimism (same as Ethereum)
   OP: /^0x[a-fA-F0-9]{40}$/,
+  USDTOP: /^0x[a-fA-F0-9]{40}$/,
+  USDCOP: /^0x[a-fA-F0-9]{40}$/,
   
   // Network-based fallback patterns
   ethereum: /^0x[a-fA-F0-9]{40}$/,
@@ -258,18 +267,24 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
 const CURRENCY_INFO: Record<string, { name: string; network: string; addressType: string }> = {
   BTC: { name: 'Bitcoin', network: 'Bitcoin', addressType: 'Legacy, SegWit, or Bech32 address' },
   ETH: { name: 'Ethereum', network: 'Ethereum', addressType: 'Ethereum address' },
+  USDT: { name: 'Tether (Ethereum)', network: 'Ethereum', addressType: 'Ethereum address' },
+  USDC: { name: 'USD Coin (Ethereum)', network: 'Ethereum', addressType: 'Ethereum address' },
   USDT_ERC20: { name: 'Tether (ERC-20)', network: 'Ethereum', addressType: 'Ethereum address' },
   USDC_ERC20: { name: 'USD Coin (ERC-20)', network: 'Ethereum', addressType: 'Ethereum address' },
+  DAI: { name: 'Dai', network: 'Ethereum', addressType: 'Ethereum address' },
+  PYUSD: { name: 'PayPal USD', network: 'Ethereum', addressType: 'Ethereum address' },
+  ETHBASE: { name: 'Ethereum (Base)', network: 'Base', addressType: 'Base address' },
+  USDCBASE: { name: 'USD Coin (Base)', network: 'Base', addressType: 'Base address' },
   BNB: { name: 'BNB', network: 'BSC', addressType: 'BSC address' },
-  USDT_BEP20: { name: 'Tether (BEP-20)', network: 'BSC', addressType: 'BSC address' },
-  USDC_BEP20: { name: 'USD Coin (BEP-20)', network: 'BSC', addressType: 'BSC address' },
+  USDTBSC: { name: 'Tether (BSC)', network: 'BSC', addressType: 'BSC address' },
+  USDCBSC: { name: 'USD Coin (BSC)', network: 'BSC', addressType: 'BSC address' },
   SOL: { name: 'Solana', network: 'Solana', addressType: 'Solana address' },
-  USDT_SOL: { name: 'Tether (Solana)', network: 'Solana', addressType: 'Solana address' },
-  USDC_SOL: { name: 'USD Coin (Solana)', network: 'Solana', addressType: 'Solana address' },
+  USDTSOL: { name: 'Tether (Solana)', network: 'Solana', addressType: 'Solana address' },
+  USDCSOL: { name: 'USD Coin (Solana)', network: 'Solana', addressType: 'Solana address' },
   TRX: { name: 'TRON', network: 'TRON', addressType: 'TRON address' },
-  USDT_TRC20: { name: 'Tether (TRC-20)', network: 'TRON', addressType: 'TRON address' },
+  USDTTRC20: { name: 'Tether (TRC-20)', network: 'TRON', addressType: 'TRON address' },
   TON: { name: 'Toncoin', network: 'TON', addressType: 'TON address (multiple formats)' },
-  USDT_TON: { name: 'Tether (TON)', network: 'TON', addressType: 'TON address' },
+  USDTTON: { name: 'Tether (TON)', network: 'TON', addressType: 'TON address' },
   AVAX: { name: 'Avalanche', network: 'Avalanche', addressType: 'Avalanche address' },
   DOGE: { name: 'Dogecoin', network: 'Dogecoin', addressType: 'Dogecoin address' },
   XRP: { name: 'XRP', network: 'XRP Ledger', addressType: 'XRP address' },
@@ -278,10 +293,19 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   ADA: { name: 'Cardano', network: 'Cardano', addressType: 'Cardano address (multiple formats)' },
   DOT: { name: 'Polkadot', network: 'Polkadot', addressType: 'Polkadot SS58 address' },
   MATIC: { name: 'Polygon', network: 'Polygon', addressType: 'Polygon address' },
+  USDCMATIC: { name: 'USD Coin (Polygon)', network: 'Polygon', addressType: 'Polygon address' },
+  USDTMATIC: { name: 'Tether (Polygon)', network: 'Polygon', addressType: 'Polygon address' },
   LINK: { name: 'Chainlink', network: 'Ethereum', addressType: 'Ethereum address' },
   UNI: { name: 'Uniswap', network: 'Ethereum', addressType: 'Ethereum address' },
   AAVE: { name: 'Aave', network: 'Ethereum', addressType: 'Ethereum address' },
   ALGO: { name: 'Algorand', network: 'Algorand', addressType: 'Algorand address' },
+  USDCALGO: { name: 'USD Coin (Algorand)', network: 'Algorand', addressType: 'Algorand address' },
+  ARB: { name: 'Arbitrum', network: 'Arbitrum', addressType: 'Arbitrum address' },
+  USDTARB: { name: 'Tether (Arbitrum)', network: 'Arbitrum', addressType: 'Arbitrum address' },
+  USDCARB: { name: 'USD Coin (Arbitrum)', network: 'Arbitrum', addressType: 'Arbitrum address' },
+  OP: { name: 'Optimism', network: 'Optimism', addressType: 'Optimism address' },
+  USDTOP: { name: 'Tether (Optimism)', network: 'Optimism', addressType: 'Optimism address' },
+  USDCOP: { name: 'USD Coin (Optimism)', network: 'Optimism', addressType: 'Optimism address' },
   ATOM: { name: 'Cosmos', network: 'Cosmos', addressType: 'Cosmos address' },
   FIL: { name: 'Filecoin', network: 'Filecoin', addressType: 'Filecoin address' },
   ICP: { name: 'Internet Computer', network: 'Internet Computer', addressType: 'ICP principal address' },

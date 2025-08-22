@@ -429,7 +429,7 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
 
       const result = await response.json();
 
-      if (result.valid) {
+      if (result.validation && result.validation.valid) {
         setValidationStatus(prev => ({
           ...prev,
           [currency]: 'valid',
