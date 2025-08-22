@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       const { data: newMerchant, error: insertError } = await supabase
         .from('merchants')
         .insert(merchantData)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone')
         .single();
 
       if (insertError) {
@@ -213,6 +213,29 @@ export async function POST(request: NextRequest) {
     console.log('💰 Saved wallets in database:', JSON.stringify(savedMerchant.wallets, null, 2));
     console.log('💰 Saved wallets count:', Object.keys(savedMerchant.wallets || {}).length);
     console.log('📧 Saved merchant email:', savedMerchant.email); // ADDED: Log saved email
+
+    // Create merchant_settings record with default values
+    console.log('⚙️ Creating merchant settings record...');
+    const { data: merchantSettings, error: settingsError } = await supabase
+      .from('merchant_settings')
+      .upsert({
+        merchant_id: savedMerchant.id,
+        email_payment_notifications_enabled: true,
+        public_receipts_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'merchant_id'
+      })
+      .select('*')
+      .single();
+
+    if (settingsError) {
+      console.error('❌ Error creating merchant settings:', settingsError);
+      // Don't fail the onboarding for this, just log the error
+    } else {
+      console.log('✅ Merchant settings created successfully:', merchantSettings);
+    }
 
     // Verify the data was saved correctly
     const { data: verifyMerchant, error: verifyError } = await supabase

@@ -342,11 +342,25 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
   // Initialize validation status for all currencies
   useEffect(() => {
     const initialValidation: Record<string, ValidationStatus> = {};
+    
+    // Initialize for top 10 currencies
     TOP_10_CURRENCIES.forEach(currency => {
       initialValidation[currency.code] = 'idle';
     });
+    
+    // Initialize for existing wallets (assume they are valid)
+    if (settings.wallets) {
+      Object.keys(settings.wallets).forEach(currency => {
+        if (settings.wallets[currency] && settings.wallets[currency].trim()) {
+          initialValidation[currency] = 'valid';
+        } else {
+          initialValidation[currency] = 'idle';
+        }
+      });
+    }
+    
     setValidationStatus(initialValidation);
-  }, []);
+  }, [settings.wallets]);
 
   // Load additional currencies
   useEffect(() => {
@@ -360,6 +374,22 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
           const topCurrencyCodes = TOP_10_CURRENCIES.map(c => c.code);
           const filtered = data.filter((currency: CurrencyInfo) => !topCurrencyCodes.includes(currency.code));
           setAdditionalCurrencies(filtered);
+          
+          // Initialize validation status for additional currencies
+          setValidationStatus(prev => {
+            const newStatus = { ...prev };
+            filtered.forEach((currency: CurrencyInfo) => {
+              if (!newStatus[currency.code]) {
+                // Check if this currency has an existing wallet
+                if (settings.wallets && settings.wallets[currency.code] && settings.wallets[currency.code].trim()) {
+                  newStatus[currency.code] = 'valid';
+                } else {
+                  newStatus[currency.code] = 'idle';
+                }
+              }
+            });
+            return newStatus;
+          });
         }
       } catch (error) {
         console.error('Failed to load additional currencies:', error);
@@ -369,7 +399,7 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
     };
 
     loadAdditionalCurrencies();
-  }, []);
+  }, [settings.wallets]);
 
   const getCurrencyDisplayName = (code: string) => {
     return CURRENCY_NAMES[code] || code;
