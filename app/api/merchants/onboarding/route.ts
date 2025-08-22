@@ -155,10 +155,14 @@ export async function POST(request: NextRequest) {
         .from('merchants')
         .update({
           business_name: merchantData.business_name,
+          business_type: merchantData.business_type,
           industry: merchantData.industry,
           website: merchantData.website,
           business_description: merchantData.business_description,
-          email: merchantData.email, // ADDED: Update email field
+          phone_number: merchantData.phone_number,
+          email: merchantData.email,
+          business_address: merchantData.business_address,
+          timezone: merchantData.timezone,
           wallets: merchantData.wallets,
           charge_customer_fee: merchantData.charge_customer_fee,
           payment_config: merchantData.payment_config,
@@ -169,7 +173,7 @@ export async function POST(request: NextRequest) {
           updated_at: merchantData.updated_at
         })
         .eq('user_id', user.id)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone')
         .single();
 
       if (updateError) {
@@ -213,7 +217,7 @@ export async function POST(request: NextRequest) {
     // Verify the data was saved correctly
     const { data: verifyMerchant, error: verifyError } = await supabase
       .from('merchants')
-      .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email')
+      .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone')
       .eq('user_id', user.id)
       .single();
 
@@ -222,7 +226,12 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('🔍 VERIFICATION - Data in database after save:');
       console.log('🔍 Business name:', verifyMerchant.business_name);
-      console.log('🔍 Email:', verifyMerchant.email); // ADDED: Verify email was saved
+      console.log('🔍 Business type:', verifyMerchant.business_type);
+      console.log('🔍 Industry:', verifyMerchant.industry);
+      console.log('🔍 Phone number:', verifyMerchant.phone_number);
+      console.log('🔍 Email:', verifyMerchant.email);
+      console.log('🔍 Business address:', JSON.stringify(verifyMerchant.business_address, null, 2));
+      console.log('🔍 Timezone:', verifyMerchant.timezone);
       console.log('🔍 Wallets:', JSON.stringify(verifyMerchant.wallets, null, 2));
       console.log('🔍 Wallets count:', Object.keys(verifyMerchant.wallets || {}).length);
       console.log('🔍 Charge customer fee:', verifyMerchant.charge_customer_fee);

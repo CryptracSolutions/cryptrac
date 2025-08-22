@@ -44,11 +44,19 @@ export async function GET() {
       .select(`
         id,
         business_name,
+        business_type,
+        industry,
+        business_description,
+        website,
+        phone_number,
+        timezone,
+        business_address,
         auto_convert_enabled,
         preferred_payout_currency,
         wallets,
         payment_config,
-        charge_customer_fee
+        charge_customer_fee,
+        email
       `)
       .eq('user_id', user.id)
       .single();
@@ -63,6 +71,20 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       settings: {
+        business_name: merchant.business_name || '',
+        business_type: merchant.business_type || '',
+        industry: merchant.industry || '',
+        business_description: merchant.business_description || '',
+        website: merchant.website || '',
+        phone_number: merchant.phone_number || '',
+        timezone: merchant.timezone || 'America/New_York',
+        business_address: merchant.business_address || {
+          street: '',
+          city: '',
+          state: '',
+          zip_code: '',
+          country: 'US'
+        },
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency || null,
         wallets: merchant.wallets || {},
@@ -94,13 +116,40 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const requestData: {
-      auto_convert_enabled: boolean;
-      preferred_payout_currency: string | null;
-      wallets: Record<string, string>;
-      charge_customer_fee: boolean;
+      business_name?: string;
+      business_type?: string;
+      industry?: string;
+      business_description?: string;
+      website?: string;
+      phone_number?: string;
+      timezone?: string;
+      business_address?: {
+        street: string;
+        city: string;
+        state: string;
+        zip_code: string;
+        country: string;
+      };
+      auto_convert_enabled?: boolean;
+      preferred_payout_currency?: string | null;
+      wallets?: Record<string, string>;
+      charge_customer_fee?: boolean;
     } = await request.json();
     
-    const { auto_convert_enabled, preferred_payout_currency, wallets: rawWallets, charge_customer_fee } = requestData;
+    const { 
+      business_name,
+      business_type,
+      industry,
+      business_description,
+      website,
+      phone_number,
+      timezone,
+      business_address,
+      auto_convert_enabled, 
+      preferred_payout_currency, 
+      wallets: rawWallets, 
+      charge_customer_fee 
+    } = requestData;
     const wallets = { ...(rawWallets || {}) };
     if (wallets.ETH && !wallets.ETHBASE) {
       wallets.ETHBASE = wallets.ETH;
@@ -166,6 +215,20 @@ export async function PUT(request: NextRequest) {
 
     const updateData: {
       updated_at: string;
+      business_name?: string;
+      business_type?: string;
+      industry?: string;
+      business_description?: string;
+      website?: string;
+      phone_number?: string;
+      timezone?: string;
+      business_address?: {
+        street: string;
+        city: string;
+        state: string;
+        zip_code: string;
+        country: string;
+      };
       auto_convert_enabled?: boolean;
       preferred_payout_currency?: string | null;
       wallets?: Record<string, string>;
@@ -174,6 +237,38 @@ export async function PUT(request: NextRequest) {
     } = {
       updated_at: new Date().toISOString()
     };
+
+    if (business_name !== undefined) {
+      updateData.business_name = business_name;
+    }
+
+    if (business_type !== undefined) {
+      updateData.business_type = business_type;
+    }
+
+    if (industry !== undefined) {
+      updateData.industry = industry;
+    }
+
+    if (business_description !== undefined) {
+      updateData.business_description = business_description;
+    }
+
+    if (website !== undefined) {
+      updateData.website = website;
+    }
+
+    if (phone_number !== undefined) {
+      updateData.phone_number = phone_number;
+    }
+
+    if (timezone !== undefined) {
+      updateData.timezone = timezone;
+    }
+
+    if (business_address !== undefined) {
+      updateData.business_address = business_address;
+    }
 
     if (typeof auto_convert_enabled === 'boolean') {
       updateData.auto_convert_enabled = auto_convert_enabled;
@@ -205,11 +300,19 @@ export async function PUT(request: NextRequest) {
       .select(`
         id,
         business_name,
+        business_type,
+        industry,
+        business_description,
+        website,
+        phone_number,
+        timezone,
+        business_address,
         auto_convert_enabled,
         preferred_payout_currency,
         wallets,
         payment_config,
-        charge_customer_fee
+        charge_customer_fee,
+        email
       `)
       .single();
 
@@ -225,6 +328,20 @@ export async function PUT(request: NextRequest) {
       success: true,
       message: 'Settings updated successfully',
       settings: {
+        business_name: merchant.business_name || '',
+        business_type: merchant.business_type || '',
+        industry: merchant.industry || '',
+        business_description: merchant.business_description || '',
+        website: merchant.website || '',
+        phone_number: merchant.phone_number || '',
+        timezone: merchant.timezone || 'America/New_York',
+        business_address: merchant.business_address || {
+          street: '',
+          city: '',
+          state: '',
+          zip_code: '',
+          country: 'US'
+        },
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency || null,
         wallets: merchant.wallets || {},

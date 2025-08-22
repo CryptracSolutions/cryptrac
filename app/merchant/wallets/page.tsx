@@ -105,8 +105,8 @@ export default function WalletsPage() {
         const response = await fetch('/api/merchants/settings');
         if (response.ok) {
           const data = await response.json();
-          if (data) {
-            setSettings(prev => ({ ...prev, ...data }));
+          if (data && data.settings) {
+            setSettings(prev => ({ ...prev, ...data.settings }));
           }
         }
       } catch (error) {
