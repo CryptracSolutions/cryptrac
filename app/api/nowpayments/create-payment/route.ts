@@ -125,10 +125,10 @@ function handleNOWPaymentsError(error: unknown, context: string): NextResponse {
   } else if (message.includes('400')) {
     errorMessage = 'Invalid payment request. Please check your payment details.'
     statusCode = 400
-  } else if (message.includes('HTML error page')) {
-    errorMessage = 'Payment service temporarily unavailable. Please try again.'
+  } else if (message.includes('service temporarily unavailable')) {
+    errorMessage = 'Payment service temporarily unavailable. Please try again in a few minutes.'
     statusCode = 503
-    retryAfter = 60 // Suggest 1 minute retry for service issues
+    retryAfter = 120 // Suggest 2 minute retry for service issues
   }
 
   const response: {
@@ -363,7 +363,9 @@ export async function POST(request: Request) {
       
       // Check if response is HTML (error page)
       if (responseText.trim().startsWith('<')) {
-        throw new Error(`NOWPayments returned HTML error page: ${responseText.substring(0, 100)}...`)
+        console.error('❌ NOWPayments service issue - returned HTML instead of API response')
+        console.error('Response preview:', responseText.substring(0, 200))
+        throw new Error(`NOWPayments service temporarily unavailable - please try again later`)
       }
 
       let responseData: unknown
