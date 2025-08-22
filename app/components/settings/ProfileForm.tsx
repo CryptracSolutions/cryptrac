@@ -95,12 +95,12 @@ const US_STATES = [
 
 // US Timezones
 const US_TIMEZONES = [
-  { code: 'US/Eastern', name: 'Eastern Time' },
-  { code: 'US/Central', name: 'Central Time' },
-  { code: 'US/Mountain', name: 'Mountain Time' },
-  { code: 'US/Pacific', name: 'Pacific Time' },
-  { code: 'US/Alaska', name: 'Alaska Time' },
-  { code: 'US/Hawaii', name: 'Hawaii Time' }
+  { code: 'America/New_York', name: 'Eastern Time (ET)' },
+  { code: 'America/Chicago', name: 'Central Time (CT)' },
+  { code: 'America/Denver', name: 'Mountain Time (MT)' },
+  { code: 'America/Los_Angeles', name: 'Pacific Time (PT)' },
+  { code: 'America/Anchorage', name: 'Alaska Time (AKT)' },
+  { code: 'Pacific/Honolulu', name: 'Hawaii Time (HT)' }
 ];
 
 interface ProfileFormProps {

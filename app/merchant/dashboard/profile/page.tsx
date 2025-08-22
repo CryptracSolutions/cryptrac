@@ -63,7 +63,7 @@ export default function ProfilePage() {
     business_description: '',
     website: '',
     phone_number: '',
-    timezone: 'US/Eastern',
+    timezone: 'America/New_York',
     business_address: {
       street: '',
       city: '',

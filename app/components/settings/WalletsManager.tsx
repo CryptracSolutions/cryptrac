@@ -370,26 +370,28 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
         const response = await fetch('/api/currencies');
         if (response.ok) {
           const data = await response.json();
-          // Filter out currencies that are already in TOP_10_CURRENCIES
-          const topCurrencyCodes = TOP_10_CURRENCIES.map(c => c.code);
-          const filtered = data.filter((currency: CurrencyInfo) => !topCurrencyCodes.includes(currency.code));
-          setAdditionalCurrencies(filtered);
+          if (data.success && data.currencies) {
+            // Filter out currencies that are already in TOP_10_CURRENCIES
+            const topCurrencyCodes = TOP_10_CURRENCIES.map(c => c.code);
+            const filtered = data.currencies.filter((currency: CurrencyInfo) => !topCurrencyCodes.includes(currency.code));
+            setAdditionalCurrencies(filtered);
           
-          // Initialize validation status for additional currencies
-          setValidationStatus(prev => {
-            const newStatus = { ...prev };
-            filtered.forEach((currency: CurrencyInfo) => {
-              if (!newStatus[currency.code]) {
-                // Check if this currency has an existing wallet
-                if (settings.wallets && settings.wallets[currency.code] && settings.wallets[currency.code].trim()) {
-                  newStatus[currency.code] = 'valid';
-                } else {
-                  newStatus[currency.code] = 'idle';
+            // Initialize validation status for additional currencies
+            setValidationStatus(prev => {
+              const newStatus = { ...prev };
+              filtered.forEach((currency: CurrencyInfo) => {
+                if (!newStatus[currency.code]) {
+                  // Check if this currency has an existing wallet
+                  if (settings.wallets && settings.wallets[currency.code] && settings.wallets[currency.code].trim()) {
+                    newStatus[currency.code] = 'valid';
+                  } else {
+                    newStatus[currency.code] = 'idle';
+                  }
                 }
-              }
+              });
+              return newStatus;
             });
-            return newStatus;
-          });
+          }
         }
       } catch (error) {
         console.error('Failed to load additional currencies:', error);

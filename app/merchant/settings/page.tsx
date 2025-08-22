@@ -177,6 +177,51 @@ const INDUSTRIES = [
   'Other'
 ];
 
+// Currency display names mapping
+const CURRENCY_NAMES: Record<string, string> = {
+  BTC: 'Bitcoin',
+  ETH: 'Ethereum',
+  BNB: 'BNB',
+  SOL: 'Solana',
+  TRX: 'TRON',
+  TON: 'Toncoin',
+  AVAX: 'Avalanche',
+  DOGE: 'Dogecoin',
+  XRP: 'XRP',
+  SUI: 'Sui',
+  MATIC: 'Polygon',
+  ADA: 'Cardano',
+  DOT: 'Polkadot',
+  LTC: 'Litecoin',
+  XLM: 'Stellar',
+  ARB: 'Arbitrum',
+  OP: 'Optimism',
+  ETHBASE: 'ETH (Base)',
+  ALGO: 'Algorand',
+  USDT: 'Tether (Ethereum)',
+  USDC: 'USD Coin (Ethereum)',
+  DAI: 'Dai (Ethereum)',
+  PYUSD: 'PayPal USD (Ethereum)',
+  USDCSOL: 'USD Coin (Solana)',
+  USDTSOL: 'Tether (Solana)',
+  USDTBSC: 'Tether (BSC)',
+  USDCBSC: 'USD Coin (BSC)',
+  USDTMATIC: 'Tether (Polygon)',
+  USDCMATIC: 'USD Coin (Polygon)',
+  USDTTRC20: 'Tether (Tron)',
+  USDTTON: 'Tether (TON)',
+  USDTARB: 'Tether (Arbitrum)',
+  USDCARB: 'USD Coin (Arbitrum)',
+  USDTOP: 'Tether (Optimism)',
+  USDCOP: 'USD Coin (Optimism)',
+  USDCBASE: 'USD Coin (Base)',
+  USDCALGO: 'USD Coin (Algorand)',
+};
+
+const getCurrencyDisplayName = (code: string) => {
+  return CURRENCY_NAMES[code] || code;
+};
+
 
 
 export default function MerchantSettingsPage() {
@@ -739,10 +784,11 @@ export default function MerchantSettingsPage() {
                     <SelectValue placeholder="Select preferred payout currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
-                    <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
-                    <SelectItem value="USDT">Tether (USDT)</SelectItem>
-                    <SelectItem value="USDC">USD Coin (USDC)</SelectItem>
+                    {Object.keys(settings.wallets || {}).map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        {currency} - {getCurrencyDisplayName(currency)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {!settings.auto_convert_enabled && (
