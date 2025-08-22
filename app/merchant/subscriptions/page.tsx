@@ -30,6 +30,13 @@ interface Subscription {
   tax_rates?: Array<{ name: string; rate: number }>;
   charge_customer_fee?: boolean;
   auto_convert_enabled?: boolean;
+  subscription_invoices?: Array<{
+    invoice_number: string;
+    status: string;
+    due_date: string;
+    cycle_start_at: string;
+    created_at: string;
+  }>;
 }
 
 export default function MerchantSubscriptionsPage() {
@@ -298,6 +305,12 @@ export default function MerchantSubscriptionsPage() {
                         {s.tax_enabled && s.tax_rates && Array.isArray(s.tax_rates) && s.tax_rates.length > 0 && (
                           <div className="text-xs text-gray-500">
                             +{s.tax_rates.reduce((sum: number, rate: any) => sum + (rate.percentage || 0), 0)}% tax
+                          </div>
+                        )}
+                        {/* Invoice Number */}
+                        {s.subscription_invoices && s.subscription_invoices.length > 0 && (
+                          <div className="text-xs text-blue-600 font-medium mt-1">
+                            {s.subscription_invoices[0].invoice_number}
                           </div>
                         )}
                       </div>

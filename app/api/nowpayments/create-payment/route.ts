@@ -348,7 +348,6 @@ export async function POST(request: Request) {
     }
 
     let paymentResponse: PaymentResponse | undefined
-    let retryWithoutForwarding = false
 
     try {
       const response = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
@@ -375,79 +374,63 @@ export async function POST(request: Request) {
       }
 
       if (!response.ok) {
-        console.error('NOWPayments API error:', response.status, responseData)
-
-        const errorData = responseData as { code?: string; message?: string }
-
-        // If auto-forwarding failed, try without it
+        const errorText = responseText
+        console.error('❌ NOWPayments API error:', response.status, errorText)
+        
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { message: errorText }
+        }
+        
+        // Handle specific NOWPayments errors
+        if (errorData.code === 'BAD_REQUEST' && errorData.message?.includes('amountTo is too small')) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Payment amount too small for processing after fees. Please try a larger amount.',
+              details: 'The payout amount after fees is below the minimum threshold for auto-forwarding to your wallet',
+              code: 'AMOUNT_TOO_SMALL'
+            },
+            { status: 400 }
+          )
+        }
+        
+        // If auto-forwarding failed, don't retry without it - fail the payment
         if (autoForwardingConfigured && (
           errorData.code === 'BAD_CREATE_PAYMENT_REQUEST' ||
-          errorData.message?.includes('payout_extra_id')
+          errorData.message?.includes('payout_extra_id') ||
+          errorData.message?.includes('payout_address')
         )) {
-          console.log('🔄 Auto-forwarding failed, retrying without auto-forwarding...')
-          retryWithoutForwarding = true
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Auto-forwarding configuration failed. Please check your wallet address.',
+              details: errorData.message || 'Auto-forwarding is required but failed to configure'
+            },
+            { status: 400 }
+          )
         } else {
-          throw new Error(`NOWPayments API error: ${response.status} ${JSON.stringify(errorData, null, 2)}`)
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Payment creation failed',
+              details: errorData.message || 'Unknown error from payment provider'
+            },
+            { status: response.status }
+          )
         }
       } else {
         paymentResponse = responseData as PaymentResponse
       }
 
     } catch (error: unknown) {
-      if (autoForwardingConfigured && !retryWithoutForwarding) {
-        console.log('🔄 Auto-forwarding failed, retrying without auto-forwarding...')
-        retryWithoutForwarding = true
-      } else {
-        throw error
-      }
+      console.error('❌ Payment creation failed:', error)
+      return handleNOWPaymentsError(error, 'Payment creation failed')
     }
 
-    // Retry without auto-forwarding if needed
-    if (retryWithoutForwarding) {
-      const retryRequest = { ...paymentRequest }
-      delete retryRequest.payout_address
-      delete retryRequest.payout_currency
-      // FIXED: Don't add payout_extra_id at all
-      
-      console.log('🔄 Retrying payment creation without auto-forwarding...')
-      
-      try {
-        const retryResponse = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
-          method: 'POST',
-          headers: {
-            'x-api-key': NOWPAYMENTS_API_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(retryRequest),
-        })
 
-        const retryResponseText = await retryResponse.text()
-        
-        // Check if response is HTML (error page)
-        if (retryResponseText.trim().startsWith('<')) {
-          throw new Error(`NOWPayments returned HTML error page: ${retryResponseText.substring(0, 100)}...`)
-        }
-
-        let retryResponseData: unknown
-        try {
-          retryResponseData = JSON.parse(retryResponseText) as Record<string, unknown>
-        } catch {
-          throw new Error(`Invalid JSON response from NOWPayments: ${retryResponseText.substring(0, 100)}...`)
-        }
-
-        if (!retryResponse.ok) {
-          throw new Error(`NOWPayments API error: ${retryResponse.status} ${JSON.stringify(retryResponseData, null, 2)}`)
-        }
-
-        paymentResponse = retryResponseData as PaymentResponse
-        autoForwardingConfigured = false
-        console.log('✅ Payment created successfully without auto-forwarding')
-        
-      } catch (retryError) {
-        console.error('❌ Retry also failed:', retryError)
-        return handleNOWPaymentsError(retryError, 'Payment creation retry failed')
-      }
-    }
 
     if (!paymentResponse) {
       throw new Error('No payment response received')

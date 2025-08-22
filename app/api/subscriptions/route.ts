@@ -251,7 +251,16 @@ export async function GET(request: NextRequest) {
     const { service, merchant } = auth;
     const { data, error } = await service
       .from('subscriptions')
-      .select('*')
+      .select(`
+        *,
+        subscription_invoices!left(
+          invoice_number,
+          status,
+          due_date,
+          cycle_start_at,
+          created_at
+        )
+      `)
       .eq('merchant_id', merchant.id)
       .order('created_at', { ascending: false });
     if (error) {
