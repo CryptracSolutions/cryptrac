@@ -24,24 +24,36 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
   return Array.from(stable);
 }
 
+function generatePublicId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'TD';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 async function getMerchant(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { error: 'Missing or invalid Authorization header' };
   }
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey || !serviceKey) {
+    return { error: 'Supabase environment variables not configured. Please set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY.' };
+  }
+  
   const token = authHeader.substring(7);
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) return { error: 'Unauthorized' };
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
-  }
+  
   const service = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl,
     serviceKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
@@ -51,63 +63,88 @@ async function getMerchant(request: NextRequest) {
     .eq('user_id', user.id)
     .single();
   if (merchantError || !merchant) return { error: 'Merchant account not found' };
-  return { service, merchant };
+  return { service, merchant, user };
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await getMerchant(request);
-  if ('error' in auth) {
-    return NextResponse.json({ error: auth.error }, { status: 401 });
-  }
-  const { service, merchant } = auth;
-  const merchantWallets = merchant.wallets || {};
-  const stableCoins = expandStableCoins(merchantWallets);
-  const body = await request.json();
-  const { id, label, tip_presets, charge_customer_fee, tax_enabled, accepted_cryptos } = body;
-  const payload: Record<string, unknown> = { merchant_id: merchant.id };
-  if (label !== undefined) payload.label = label;
-  if (tip_presets !== undefined) payload.tip_presets = tip_presets;
-  if (charge_customer_fee !== undefined) payload.charge_customer_fee = charge_customer_fee;
-  if (tax_enabled !== undefined) payload.tax_enabled = tax_enabled;
-  if (accepted_cryptos !== undefined) payload.accepted_cryptos = accepted_cryptos;
+  try {
+    const auth = await getMerchant(request);
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: 401 });
+    }
+    const { service, merchant, user } = auth;
+    const merchantWallets = merchant.wallets || {};
+    const stableCoins = expandStableCoins(merchantWallets);
+    const body = await request.json();
+    const { id, label, tip_presets, charge_customer_fee, tax_enabled, accepted_cryptos } = body;
+    
+    const payload: Record<string, unknown> = { 
+      merchant_id: merchant.id,
+      registered_by: user.id // Add the registered_by field
+    };
+    
+    if (label !== undefined) payload.label = label;
+    if (tip_presets !== undefined) payload.tip_presets = tip_presets;
+    if (charge_customer_fee !== undefined) payload.charge_customer_fee = charge_customer_fee;
+    if (tax_enabled !== undefined) payload.tax_enabled = tax_enabled;
+    if (accepted_cryptos !== undefined) payload.accepted_cryptos = accepted_cryptos;
 
-  if (payload.charge_customer_fee === undefined) {
-    payload.charge_customer_fee = merchant.charge_customer_fee;
+    if (payload.charge_customer_fee === undefined) {
+      payload.charge_customer_fee = merchant.charge_customer_fee;
+    }
+    if (payload.tax_enabled === undefined) {
+      payload.tax_enabled = merchant.tax_enabled;
+    }
+    if (!id && payload.accepted_cryptos === undefined) {
+      payload.accepted_cryptos = [...Object.keys(merchantWallets), ...stableCoins];
+    }
+    
+    let result;
+    if (id) {
+      // Remove registered_by from update payload since it shouldn't change
+      const updatePayload = { ...payload };
+      delete updatePayload.registered_by;
+      
+      result = await service
+        .from('terminal_devices')
+        .update(updatePayload)
+        .eq('id', id)
+        .eq('merchant_id', merchant.id)
+        .select('*')
+        .single();
+    } else {
+      // Generate a unique public_id for new devices
+      payload.public_id = generatePublicId();
+      
+      result = await service
+        .from('terminal_devices')
+        .insert(payload)
+        .select('*')
+        .single();
+    }
+    
+    if (result.error) {
+      console.error('Database error:', result.error);
+      return NextResponse.json({ error: 'Failed to save device', details: result.error.message }, { status: 500 });
+    }
+    
+    const data = {
+      ...result.data,
+      accepted_cryptos:
+        (result.data.accepted_cryptos && result.data.accepted_cryptos.length)
+          ? Array.from(new Set([...result.data.accepted_cryptos, ...stableCoins]))
+          : [...Object.keys(merchantWallets), ...stableCoins],
+      charge_customer_fee: result.data.charge_customer_fee,
+      tax_enabled: result.data.tax_enabled,
+      tax_rates: merchant.tax_rates || []
+    };
+    
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error('Terminal devices API error:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
-  if (payload.tax_enabled === undefined) {
-    payload.tax_enabled = merchant.tax_enabled;
-  }
-  if (!id && payload.accepted_cryptos === undefined) {
-    payload.accepted_cryptos = [...Object.keys(merchantWallets), ...stableCoins];
-  }
-  let result;
-  if (id) {
-    result = await service
-      .from('terminal_devices')
-      .update(payload)
-      .eq('id', id)
-      .eq('merchant_id', merchant.id)
-      .select('*')
-      .single();
-  } else {
-    result = await service
-      .from('terminal_devices')
-      .insert(payload)
-      .select('*')
-      .single();
-  }
-  if (result.error) {
-    return NextResponse.json({ error: 'Failed to save device' }, { status: 500 });
-  }
-  const data = {
-    ...result.data,
-    accepted_cryptos:
-      (result.data.accepted_cryptos && result.data.accepted_cryptos.length)
-        ? Array.from(new Set([...result.data.accepted_cryptos, ...stableCoins]))
-        : [...Object.keys(merchantWallets), ...stableCoins],
-    charge_customer_fee: result.data.charge_customer_fee,
-    tax_enabled: result.data.tax_enabled,
-    tax_rates: merchant.tax_rates || []
-  };
-  return NextResponse.json({ success: true, data });
 }

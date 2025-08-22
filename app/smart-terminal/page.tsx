@@ -107,28 +107,57 @@ export default function SmartTerminalPage() {
         // Load or create terminal device
         const id = localStorage.getItem('terminal_device_id');
         const body: Record<string, unknown> = id ? { id } : { label: 'Device', tip_presets: defaultTips };
-        const res = await makeAuthenticatedRequest('/api/terminal/devices', { method: 'POST', body: JSON.stringify(body) });
-        const json = await res.json();
-        localStorage.setItem('terminal_device_id', json.data.id);
-        setDevice(json.data);
-
-        // Set default values based on merchant settings
-        if (json.data?.accepted_cryptos?.length) setCrypto(json.data.accepted_cryptos[0]);
-        setChargeFee(merchant.charge_customer_fee);
-        setTax(merchant.tax_enabled);
-
-        // Expand accepted cryptocurrencies to include stablecoins
-        const deviceCryptos = json.data?.accepted_cryptos && json.data.accepted_cryptos.length
-          ? json.data.accepted_cryptos
-          : Object.keys(merchant.wallets || {});
         
-        const stableCoins = expandStableCoins(merchant.wallets || {});
-        const allCurrencies = Array.from(new Set([...deviceCryptos, ...stableCoins]));
-        setAvailableCurrencies(allCurrencies);
-        
-        // Set default crypto to first available
-        if (allCurrencies.length > 0) {
-          setCrypto(allCurrencies[0]);
+        try {
+          const res = await makeAuthenticatedRequest('/api/terminal/devices', { method: 'POST', body: JSON.stringify(body) });
+          
+          if (!res.ok) {
+            const errorData = await res.json();
+            console.error('Terminal devices API error:', errorData);
+            throw new Error(errorData.error || 'Failed to load terminal device');
+          }
+          
+          const json = await res.json();
+          
+          if (!json.success || !json.data) {
+            throw new Error('Invalid response from terminal devices API');
+          }
+          
+          localStorage.setItem('terminal_device_id', json.data.id);
+          setDevice(json.data);
+
+          // Set default values based on merchant settings
+          if (json.data?.accepted_cryptos?.length) setCrypto(json.data.accepted_cryptos[0]);
+          setChargeFee(merchant.charge_customer_fee);
+          setTax(merchant.tax_enabled);
+
+          // Expand accepted cryptocurrencies to include stablecoins
+          const deviceCryptos = json.data?.accepted_cryptos && json.data.accepted_cryptos.length
+            ? json.data.accepted_cryptos
+            : Object.keys(merchant.wallets || {});
+          
+          const stableCoins = expandStableCoins(merchant.wallets || {});
+          const allCurrencies = Array.from(new Set([...deviceCryptos, ...stableCoins]));
+          setAvailableCurrencies(allCurrencies);
+          
+          // Set default crypto to first available
+          if (allCurrencies.length > 0) {
+            setCrypto(allCurrencies[0]);
+          }
+        } catch (deviceError) {
+          console.error('Error loading terminal device:', deviceError);
+          // If device loading fails, still set up with basic defaults
+          setDevice({ id: 'temp', tip_presets: defaultTips });
+          setChargeFee(merchant.charge_customer_fee);
+          setTax(merchant.tax_enabled);
+          
+          const stableCoins = expandStableCoins(merchant.wallets || {});
+          const allCurrencies = Array.from(new Set([...Object.keys(merchant.wallets || {}), ...stableCoins]));
+          setAvailableCurrencies(allCurrencies);
+          
+          if (allCurrencies.length > 0) {
+            setCrypto(allCurrencies[0]);
+          }
         }
       } catch (error) {
         console.error('Error loading settings:', error);

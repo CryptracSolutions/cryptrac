@@ -164,17 +164,22 @@ async function getMerchant(request: NextRequest) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { error: 'Missing or invalid Authorization header' };
   }
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey || !serviceKey) {
+    return { error: 'Supabase environment variables not configured. Please set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY.' };
+  }
+  
   const token = authHeader.substring(7);
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) return { error: 'Unauthorized' };
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return { error: 'Server misconfigured' };
+  
   const service = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl,
     serviceKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
