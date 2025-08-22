@@ -57,12 +57,26 @@ async function getMerchant(request: NextRequest) {
     serviceKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
+  
+  // First check if merchant exists
   const { data: merchant, error: merchantError } = await service
     .from('merchants')
     .select('id, wallets, charge_customer_fee, tax_enabled, tax_rates')
     .eq('user_id', user.id)
     .single();
-  if (merchantError || !merchant) return { error: 'Merchant account not found' };
+    
+  if (merchantError) {
+    console.error('Merchant lookup error:', merchantError);
+    if (merchantError.code === 'PGRST116') {
+      return { error: 'Merchant account not found. Please complete your merchant setup first.' };
+    }
+    return { error: 'Failed to load merchant account' };
+  }
+  
+  if (!merchant) {
+    return { error: 'Merchant account not found. Please complete your merchant setup first.' };
+  }
+  
   return { service, merchant, user };
 }
 

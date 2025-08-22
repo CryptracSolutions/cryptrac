@@ -78,15 +78,18 @@ export default function SmartTerminalPage() {
   const [status, setStatus] = useState('');
   const [receipt, setReceipt] = useState({ email: '' });
   const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
+  const [error, setError] = useState<string>('');
 
   // Load merchant settings and device
   useEffect(() => {
     (async () => {
       try {
+        setError(''); // Clear any previous errors
+        
         // Load merchant settings first
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session) {
-          console.error('No session found');
+          setError('Please log in to use the Smart Terminal');
           return;
         }
 
@@ -99,6 +102,12 @@ export default function SmartTerminalPage() {
 
         if (merchantError) {
           console.error('Error loading merchant settings:', merchantError);
+          setError('Merchant account not found. Please complete your merchant setup first.');
+          return;
+        }
+
+        if (!merchant) {
+          setError('Merchant account not found. Please complete your merchant setup first.');
           return;
         }
 
@@ -114,6 +123,12 @@ export default function SmartTerminalPage() {
           if (!res.ok) {
             const errorData = await res.json();
             console.error('Terminal devices API error:', errorData);
+            
+            if (errorData.error && errorData.error.includes('Merchant account not found')) {
+              setError('Merchant account not found. Please complete your merchant setup first.');
+              return;
+            }
+            
             throw new Error(errorData.error || 'Failed to load terminal device');
           }
           
@@ -161,6 +176,7 @@ export default function SmartTerminalPage() {
         }
       } catch (error) {
         console.error('Error loading settings:', error);
+        setError('Failed to load Smart Terminal settings. Please try again.');
       }
     })();
   }, []);
@@ -257,22 +273,52 @@ export default function SmartTerminalPage() {
   const generate = async () => {
     if (!device || !tipSelected || !amount || loading) return;
     setLoading(true);
-    const body = {
-      amount: baseAmount,
-      tip_amount: tipAmount,
-      pay_currency: crypto,
-      pos_device_id: device.id,
-      tax_enabled: tax,
-      charge_customer_fee: chargeFee
-    };
-    const res = await makeAuthenticatedRequest('/api/terminal/invoice', { method: 'POST', body: JSON.stringify(body) });
-    const json = await res.json();
-    setLoading(false);
-    if (json?.payment_link && json?.now) {
-      setPaymentLink(json.payment_link);
-      setPaymentData(json.now);
-      setInvoiceBreakdown(json.breakdown);
-      setStatus(json.now.payment_status || 'pending');
+    setError(''); // Clear any previous errors
+    
+    try {
+      const body = {
+        amount: baseAmount,
+        tip_amount: tipAmount,
+        pay_currency: crypto,
+        pos_device_id: device.id,
+        tax_enabled: tax,
+        charge_customer_fee: chargeFee
+      };
+      
+      const res = await makeAuthenticatedRequest('/api/terminal/invoice', { method: 'POST', body: JSON.stringify(body) });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Terminal invoice API error:', errorData);
+        
+        if (errorData.error && errorData.error.includes('Merchant account not found')) {
+          setError('Merchant account not found. Please complete your merchant setup first.');
+          return;
+        }
+        
+        if (errorData.error && errorData.error.includes('Terminal device not found')) {
+          setError('Terminal device not found. Please refresh the page and try again.');
+          return;
+        }
+        
+        throw new Error(errorData.error || 'Failed to create payment');
+      }
+      
+      const json = await res.json();
+      
+      if (json?.payment_link && json?.now) {
+        setPaymentLink(json.payment_link);
+        setPaymentData(json.now);
+        setInvoiceBreakdown(json.breakdown);
+        setStatus(json.now.payment_status || 'pending');
+      } else {
+        throw new Error('Invalid response from payment creation API');
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create payment. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -286,6 +332,11 @@ export default function SmartTerminalPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <h1 className="text-2xl font-bold mb-4">Smart Terminal</h1>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 max-w-sm">
+          {error}
+        </div>
+      )}
       {step === 'amount' && !paymentLink && (
         <div className="w-full max-w-sm space-y-4">
           <div className="text-center text-3xl" aria-live="polite">{amount || '0.00'}</div>
