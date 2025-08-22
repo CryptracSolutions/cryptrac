@@ -7,6 +7,8 @@ import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
+import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
+import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 
 interface Subscription {
   id: string;
@@ -128,31 +130,37 @@ export default function MerchantSubscriptionsPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading subscriptions...</p>
+      <DashboardLayout>
+        <div className="p-6">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading subscriptions...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Subscriptions</h1>
-          <p className="text-gray-600">Manage your recurring payment subscriptions</p>
+    <DashboardLayout>
+      <div className="p-6 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <div className="flex items-center gap-4 mb-2">
+              <BackToDashboard />
+            </div>
+            <h1 className="text-3xl font-bold mb-2">Subscriptions</h1>
+            <p className="text-gray-600">Manage your recurring payment subscriptions</p>
+          </div>
+          <Link href="/merchant/subscriptions/create">
+            <Button size="lg">
+              + Create Subscription
+            </Button>
+          </Link>
         </div>
-        <Link href="/merchant/subscriptions/create">
-          <Button size="lg">
-            + Create Subscription
-          </Button>
-        </Link>
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
@@ -345,7 +353,8 @@ export default function MerchantSubscriptionsPage() {
           Showing {filteredSubs.length} of {subs.length} subscriptions
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 

@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
     // Completely ignore ESLint during builds
     ignoreDuringBuilds: true,
   },
+  async redirects() {
+    return [
+      // Old settings Wallets tab → new dedicated page
+      { source: '/merchant/settings/wallets', destination: '/merchant/wallets', permanent: true },
+      { source: '/merchant/settings/wallet-addresses', destination: '/merchant/wallets', permanent: true },
+      // If your app used tab query (keep if applicable)
+      { source: '/merchant/settings', has: [{ type: 'query', key: 'tab', value: 'wallets' }], destination: '/merchant/wallets', permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -32,79 +32,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
-import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
+import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 
-// Stable coin associations for automatic inclusion
-const stableCoinAssociations: Record<string, string[]> = {
-  SOL: ['USDCSOL', 'USDTSOL'],
-  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
-  BNB: ['USDTBSC', 'USDCBSC'],
-  MATIC: ['USDTMATIC', 'USDCMATIC'],
-  TRX: ['USDTTRC20'],
-  TON: ['USDTTON'],
-  ARB: ['USDTARB', 'USDCARB'],
-  OP: ['USDTOP', 'USDCOP'],
-  ETHBASE: ['USDCBASE'],
-  ALGO: ['USDCALGO'],
-};
 
-const CURRENCY_NAMES: Record<string, string> = {
-  BTC: 'Bitcoin',
-  ETH: 'Ethereum',
-  BNB: 'BNB',
-  SOL: 'Solana',
-  TRX: 'TRON',
-  TON: 'Toncoin',
-  AVAX: 'Avalanche',
-  DOGE: 'Dogecoin',
-  XRP: 'XRP',
-  SUI: 'Sui',
-  MATIC: 'Polygon',
-  ADA: 'Cardano',
-  DOT: 'Polkadot',
-  LTC: 'Litecoin',
-  XLM: 'Stellar',
-  ARB: 'Arbitrum',
-  OP: 'Optimism',
-  ETHBASE: 'ETH (Base)',
-  ALGO: 'Algorand',
-  USDT: 'Tether (Ethereum)',
-  USDC: 'USD Coin (Ethereum)',
-  DAI: 'Dai (Ethereum)',
-  PYUSD: 'PayPal USD (Ethereum)',
-  USDCSOL: 'USD Coin (Solana)',
-  USDTSOL: 'Tether (Solana)',
-  USDTBSC: 'Tether (BSC)',
-  USDCBSC: 'USD Coin (BSC)',
-  USDTMATIC: 'Tether (Polygon)',
-  USDCMATIC: 'USD Coin (Polygon)',
-  USDTTRC20: 'Tether (Tron)',
-  USDTTON: 'Tether (TON)',
-  USDTARB: 'Tether (Arbitrum)',
-  USDCARB: 'USD Coin (Arbitrum)',
-  USDTOP: 'Tether (Optimism)',
-  USDCOP: 'USD Coin (Optimism)',
-  USDCBASE: 'USD Coin (Base)',
-  USDCALGO: 'USD Coin (Algorand)',
-};
-
-interface CurrencyInfo {
-  code: string;
-  name: string;
-  symbol: string;
-  network?: string;
-  is_token?: boolean;
-  parent_currency?: string;
-  trust_wallet_compatible?: boolean;
-  address_format?: string;
-  enabled: boolean;
-  min_amount: number;
-  max_amount?: number;
-  decimals: number;
-  icon_url?: string;
-  rate_usd?: number;
-  display_name?: string;
-}
 
 interface TaxRate {
   id: string;
@@ -154,129 +84,7 @@ interface UserType {
   };
 }
 
-// Top 10 + Major Stablecoins (Required for onboarding)
-const TOP_10_CURRENCIES = [
-  {
-    code: 'BTC',
-    name: 'Bitcoin',
-    symbol: '₿',
-    network: 'Bitcoin',
-    trust_wallet_compatible: true,
-    decimals: 8,
-    min_amount: 0.00000001,
-    display_name: 'Bitcoin',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'ETH',
-    name: 'Ethereum',
-    symbol: 'Ξ',
-    network: 'Ethereum',
-    trust_wallet_compatible: true,
-    decimals: 18,
-    min_amount: 0.000000001,
-    display_name: 'Ethereum',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'BNB',
-    name: 'BNB',
-    symbol: 'BNB',
-    network: 'BSC',
-    trust_wallet_compatible: true,
-    decimals: 18,
-    min_amount: 0.000000001,
-    display_name: 'BNB',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'SOL',
-    name: 'Solana',
-    symbol: 'SOL',
-    network: 'Solana',
-    trust_wallet_compatible: true,
-    decimals: 9,
-    min_amount: 0.000000001,
-    display_name: 'Solana',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'TRX',
-    name: 'TRON',
-    symbol: 'TRX',
-    network: 'TRON',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'TRON',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'TON',
-    name: 'TON',
-    symbol: 'TON',
-    network: 'TON',
-    trust_wallet_compatible: true,
-    decimals: 9,
-    min_amount: 0.000000001,
-    display_name: 'TON',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'AVAX',
-    name: 'Avalanche',
-    symbol: 'AVAX',
-    network: 'Avalanche',
-    trust_wallet_compatible: true,
-    decimals: 18,
-    min_amount: 0.000000001,
-    display_name: 'Avalanche',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'DOGE',
-    name: 'Dogecoin',
-    symbol: 'DOGE',
-    network: 'Dogecoin',
-    trust_wallet_compatible: true,
-    decimals: 8,
-    min_amount: 0.00000001,
-    display_name: 'Dogecoin',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'XRP',
-    name: 'XRP',
-    symbol: 'XRP',
-    network: 'XRP Ledger',
-    trust_wallet_compatible: true,
-    decimals: 6,
-    min_amount: 0.000001,
-    display_name: 'XRP',
-    enabled: true,
-    is_required: true
-  },
-  {
-    code: 'SUI',
-    name: 'Sui',
-    symbol: 'SUI',
-    network: 'Sui',
-    trust_wallet_compatible: true,
-    decimals: 9,
-    min_amount: 0.000000001,
-    display_name: 'Sui',
-    enabled: true,
-    is_required: true
-  }
-];
+
 
 const US_STATES = [
   { code: 'AL', name: 'Alabama' },
@@ -365,7 +173,7 @@ const INDUSTRIES = [
   'Other'
 ];
 
-type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
+
 
 export default function MerchantSettingsPage() {
   const router = useRouter();
@@ -403,13 +211,8 @@ export default function MerchantSettingsPage() {
     tax_strategy: 'origin',
     sales_type: 'local'
   });
-  const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);
-  const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false);
-  const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     email_payment_notifications_enabled: true,
     public_receipts_enabled: true,
@@ -451,27 +254,10 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const configuredCurrencies = React.useMemo(
-    () => Object.keys(settings.wallets || {}),
-    [settings.wallets]
-  );
 
-  const expandedPayoutCurrencies = React.useMemo(() => {
-    const expanded = new Set<string>();
-    configuredCurrencies.forEach((currency) => {
-      expanded.add(currency);
-      const stableCoins = stableCoinAssociations[currency] || [];
-      stableCoins.forEach((sc) => expanded.add(sc));
-    });
-    return Array.from(expanded);
-  }, [configuredCurrencies]);
-
-  const getCurrencyDisplayName = (code: string) =>
-    CURRENCY_NAMES[code] || code;
 
     useEffect(() => {
       loadMerchantData();
-      loadAdditionalCurrencies();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMerchantData = async () => {
@@ -566,83 +352,7 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const loadAdditionalCurrencies = async () => {
-    try {
-      setLoadingCurrencies(true);
-      console.log('📡 Loading additional currencies from dynamic API...');
-      
-      // Use the new dynamic currency API with popular=false to get all currencies
-      const response = await fetch('/api/currencies?popular=false');
-      const data = await response.json();
 
-      if (data.success) {
-        // Filter out currencies that are already in TOP_10_CURRENCIES
-        const topCurrencyCodes = TOP_10_CURRENCIES.map(c => c.code);
-        const additional = data.currencies.filter((currency: CurrencyInfo) => 
-          !topCurrencyCodes.includes(currency.code) && currency.enabled
-        );
-        
-        console.log(`📊 Loaded ${additional.length} additional currencies from NOWPayments:`, additional.map((c: CurrencyInfo) => c.code));
-        setAdditionalCurrencies(additional);
-      } else {
-        console.error('Failed to load currencies:', data.error);
-        toast.error('Failed to load additional currencies');
-      }
-    } catch (error) {
-      console.error('Error loading additional currencies:', error);
-      toast.error('Failed to load additional currencies');
-    } finally {
-      setLoadingCurrencies(false);
-    }
-  };
-
-  const validateAddress = async (currency: string, address: string) => {
-    if (!address.trim()) {
-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
-      return false;
-    }
-
-    try {
-      setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
-
-      const response = await fetch('/api/wallets/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currency: currency.toUpperCase(),
-          address: address.trim()
-        })
-      });
-
-      const result = await response.json();
-      const isValid = result.success && result.validation?.valid;
-      
-      setValidationStatus(prev => ({
-        ...prev,
-        [currency]: isValid ? 'valid' : 'invalid',
-        ...(currency === 'ETH' ? { ETHBASE: isValid ? 'valid' : 'invalid' } : {})
-      }));
-      
-      return isValid;
-
-    } catch (error) {
-      console.error(`Validation error for ${currency}:`, error);
-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
-      return false;
-    }
-  };
-
-  const handleWalletChange = (currency: string, address: string) => {
-    setSettings(prev => {
-      const newWallets = { ...prev.wallets, [currency]: address };
-      if (currency === 'ETH') {
-        newWallets['ETHBASE'] = address;
-      }
-      return { ...prev, wallets: newWallets };
-    });
-  };
 
   // Tax rate management functions
   const addTaxRate = () => {
@@ -789,15 +499,7 @@ export default function MerchantSettingsPage() {
         return;
       }
 
-      // Validate all wallet addresses before saving
-      const invalidWallets = Object.entries(settings.wallets).filter(([currency, address]) => {
-        return address && validationStatus[currency] !== 'valid';
-      });
 
-      if (invalidWallets.length > 0) {
-        toast.error(`Please fix invalid wallet addresses: ${invalidWallets.map(([currency]) => currency).join(', ')}`);
-        return;
-      }
 
       // Update merchant settings
       const { error: updateError } = await supabase
@@ -843,17 +545,7 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const filteredAdditionalCurrencies = additionalCurrencies.filter(currency => {
-    // Filter out stable coins
-    const isStableCoin = ['USDT', 'USDC', 'DAI', 'PYUSD'].some(sc => currency.code.includes(sc));
-    
-    // Include if not a stable coin and matches search term
-    return !isStableCoin && (
-      currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      currency.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+
 
   if (loading) {
     return (
@@ -873,6 +565,9 @@ export default function MerchantSettingsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
+            <div className="flex items-center gap-4 mb-2">
+              <BackToDashboard />
+            </div>
             <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
             <p className="text-muted-foreground">
               Manage your merchant account settings and preferences
@@ -897,16 +592,8 @@ export default function MerchantSettingsPage() {
           </Button>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="wallets" className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              Wallet Addresses
-            </TabsTrigger>
+        <Tabs defaultValue="payments" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
               Payment Settings
@@ -925,409 +612,8 @@ export default function MerchantSettingsPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  Business Information
-                </CardTitle>
-                <CardDescription>
-                  Basic information about your business
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Business Name *</label>
-                    <Input
-                      value={settings.business_name}
-                      onChange={(e) => setSettings(prev => ({ ...prev, business_name: e.target.value }))}
-                      placeholder="Enter your business name"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Business Type</label>
-                    <Select 
-                      value={settings.business_type} 
-                      onValueChange={(value) => setSettings(prev => ({ ...prev, business_type: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select business type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {BUSINESS_TYPES.map(type => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Industry *</label>
-                    <Select 
-                      value={settings.industry} 
-                      onValueChange={(value) => setSettings(prev => ({ ...prev, industry: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your industry" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {INDUSTRIES.map(industry => (
-                          <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Website</label>
-                    <Input
-                      value={settings.website}
-                      onChange={(e) => setSettings(prev => ({ ...prev, website: e.target.value }))}
-                      placeholder="https://your-website.com"
-                      type="url"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Business Description</label>
-                  <Input
-                    value={settings.business_description}
-                    onChange={(e) => setSettings(prev => ({ ...prev, business_description: e.target.value }))}
-                    placeholder="Brief description of your business"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
-                  Contact Information
-                </CardTitle>
-                <CardDescription>
-                  Contact details for your business
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Phone Number *</label>
-                    <Input
-                      value={settings.phone_number}
-                      onChange={(e) => handlePhoneChange(e.target.value)}
-                      placeholder="(555) 123-4567"
-                      maxLength={14}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Timezone</label>
-                    <Select 
-                      value={settings.timezone} 
-                      onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_TIMEZONES.map(timezone => (
-                          <SelectItem key={timezone.code} value={timezone.code}>
-                            {timezone.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Business Address
-                </CardTitle>
-                <CardDescription>
-                  Your business address for tax and compliance purposes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Street Address *</label>
-                    <Input
-                      value={settings.business_address.street || ''}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        business_address: { ...prev.business_address, street: e.target.value }
-                      }))}
-                      placeholder="123 Main Street"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">City *</label>
-                      <Input
-                        value={settings.business_address.city || ''}
-                        onChange={(e) => setSettings(prev => ({
-                          ...prev,
-                          business_address: { ...prev.business_address, city: e.target.value }
-                        }))}
-                        placeholder="San Francisco"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">State *</label>
-                      <Select 
-                        value={settings.business_address.state || ''} 
-                        onValueChange={(value) => setSettings(prev => ({
-                          ...prev,
-                          business_address: { ...prev.business_address, state: value }
-                        }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {US_STATES.map(state => (
-                            <SelectItem key={state.code} value={state.code}>
-                              {state.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">ZIP Code *</label>
-                      <Input
-                        value={settings.business_address.zip_code || ''}
-                        onChange={(e) => handleZipChange(e.target.value)}
-                        placeholder="94105"
-                        maxLength={10}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Wallet Addresses Tab */}
-          <TabsContent value="wallets" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5" />
-                  Configured Wallet Addresses
-                </CardTitle>
-                <CardDescription>
-                  Manage your cryptocurrency wallet addresses for receiving payments
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Stable Coin Information */}
-                <Alert className="bg-green-50 border-green-200">
-                  <Info className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    <strong>Smart Wallet Setup:</strong> Configure base cryptocurrency wallets below and automatically support their stable coins.
-                    <div className="mt-2 text-sm font-medium">
-                      No need to add separate wallet addresses for stable coins - they use the same address as their base currency!
-                    </div>
-                  </AlertDescription>
-                </Alert>
-
-                {/* Trust Wallet Guide Button */}
-                <div className="flex justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTrustWalletGuide(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Trust Wallet Guide
-                  </Button>
-                </div>
-
-                {/* Top 10 + Major Stablecoins */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Accepted Currencies</h3>
-                  <div className="grid gap-4">
-                    {TOP_10_CURRENCIES.map((currency) => (
-                      <div key={currency.code} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-bold text-blue-600">
-                                {currency.symbol}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="font-medium">{currency.display_name}</div>
-                              <div className="text-sm text-gray-500">{currency.network}</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getValidationIcon(currency.code)}
-                            {settings.wallets[currency.code] && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeWallet(currency.code)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Input
-                            placeholder={`Enter your ${currency.display_name} wallet address`}
-                            value={settings.wallets[currency.code] || ''}
-                            onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
-                            className={`${
-                              validationStatus[currency.code] === 'valid' ? 'border-green-500' :
-                              validationStatus[currency.code] === 'invalid' ? 'border-red-500' :
-                              validationStatus[currency.code] === 'checking' ? 'border-blue-500' : ''
-                            }`}
-                          />
-                          {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-                            <p className={`text-xs ${
-                              validationStatus[currency.code] === 'valid' ? 'text-green-600' :
-                              validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-                              'text-blue-600'
-                            }`}>
-                              {getValidationMessage(currency.code)}
-                            </p>
-                          )}
-                          
-                          {/* Show included stable coins for validated base currencies */}
-                          {validationStatus[currency.code] === 'valid' && settings.wallets[currency.code] && (
-                            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <div className="text-xs font-medium text-green-800 mb-2">
-                                ✅ Automatically includes these stable coins:
-                              </div>
-                              <div className="flex flex-wrap gap-1">
-                                {(() => {
-                                  const stableCoinCodes = stableCoinAssociations[currency.code] || [];
-                                  return stableCoinCodes.map((code, index) => (
-                                    <span
-                                      key={index}
-                                      className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
-                                    >
-                                      {getCurrencyDisplayName(code)}
-                                    </span>
-                                  ));
-                                })()}
-                              </div>
-                              {(() => {
-                                const stableCoinCodes = stableCoinAssociations[currency.code] || [];
-                                return stableCoinCodes.length === 0 ? null : (
-                                  <div className="mt-2 text-xs text-green-700">
-                                    Customers can pay with {currency.code} or any of these {stableCoinCodes.length} stable coins using the same address.
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Additional Currencies */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Additional Currencies</h3>
-                  
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="Search currencies..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="max-w-md"
-                    />
-                    
-                    {loadingCurrencies ? (
-                      <div className="text-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">Loading currencies...</p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 max-h-96 overflow-y-auto">
-                        {filteredAdditionalCurrencies.map((currency) => (
-                          <div key={currency.code} className="p-3 border rounded-lg space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-bold text-gray-600">
-                                    {currency.symbol || currency.code.charAt(0)}
-                                  </span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-sm">{currency.display_name || currency.name}</div>
-                                  <div className="text-xs text-gray-500">{currency.network}</div>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {getValidationIcon(currency.code)}
-                                {settings.wallets[currency.code] && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeWallet(currency.code)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <Input
-                                placeholder={`Enter your ${currency.display_name || currency.name} wallet address`}
-                                value={settings.wallets[currency.code] || ''}
-                                onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
-                                className={`text-sm ${
-                                  validationStatus[currency.code] === 'valid' ? 'border-green-500' :
-                                  validationStatus[currency.code] === 'invalid' ? 'border-red-500' :
-                                  validationStatus[currency.code] === 'checking' ? 'border-blue-500' : ''
-                                }`}
-                              />
-                              {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-                                <p className={`text-xs ${
-                                  validationStatus[currency.code] === 'valid' ? 'text-green-600' :
-                                  validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-                                  'text-blue-600'
-                                }`}>
-                                  {getValidationMessage(currency.code)}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Profile Tab removed - moved to /merchant/dashboard/profile */}
+          {/* Wallet Addresses Tab removed - moved to /merchant/wallets */}
 
           {/* Payment Settings Tab */}
           <TabsContent value="payments" className="space-y-6">
@@ -1411,19 +697,10 @@ export default function MerchantSettingsPage() {
                     <SelectValue placeholder="Select preferred payout currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Show all configured currencies including stable coins */}
-                    {expandedPayoutCurrencies.map(currencyCode => {
-                      const currency = [...TOP_10_CURRENCIES, ...additionalCurrencies].find(c => c.code === currencyCode);
-                      return currency ? (
-                        <SelectItem key={currency.code} value={currency.code}>
-                          {currency.display_name || currency.name} ({currency.symbol || currency.code})
-                        </SelectItem>
-                      ) : (
-                        <SelectItem key={currencyCode} value={currencyCode}>
-                          {getCurrencyDisplayName(currencyCode)}
-                        </SelectItem>
-                      );
-                    })}
+                    <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
+                    <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
+                    <SelectItem value="USDT">Tether (USDT)</SelectItem>
+                    <SelectItem value="USDC">USD Coin (USDC)</SelectItem>
                   </SelectContent>
                 </Select>
                 {!settings.auto_convert_enabled && (
@@ -1687,17 +964,7 @@ export default function MerchantSettingsPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Trust Wallet Guide Modal */}
-        {showTrustWalletGuide && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <TrustWalletGuide 
-                onComplete={() => setShowTrustWalletGuide(false)} 
-                onSkip={() => setShowTrustWalletGuide(false)} 
-              />
-            </div>
-          </div>
-        )}
+
       </div>
     </DashboardLayout>
   );

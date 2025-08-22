@@ -27,8 +27,36 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
   ({ user, className, onMobileMenuToggle }, ref) => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
     const [isProfileOpen, setIsProfileOpen] = React.useState(false)
+    const [localUser, setLocalUser] = React.useState(user)
     const router = useRouter()
     const supabase = createClient()
+    
+    // Make header resilient to missing user prop
+    React.useEffect(() => {
+      // If no user prop provided, try to get from auth
+      if (!user) {
+        supabase.auth.getUser().then(({ data }) => {
+          if (data.user) {
+            setLocalUser(data.user as any)
+          }
+        })
+      } else {
+        setLocalUser(user)
+      }
+      
+      // Subscribe to auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user) {
+          setLocalUser(session.user as any)
+        } else if (event === 'SIGNED_OUT') {
+          setLocalUser(null)
+        }
+      })
+      
+      return () => {
+        subscription.unsubscribe()
+      }
+    }, [user, supabase.auth])
     
     // Close profile dropdown when clicking outside
     React.useEffect(() => {
@@ -74,10 +102,11 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       }
     }
     
-    const navigation = user ? [
-      { name: 'Dashboard', href: getDashboardLink(user.user_metadata?.role) },
+    const navigation = localUser ? [
+      { name: 'Dashboard', href: getDashboardLink(localUser.user_metadata?.role) },
       { name: 'Payments', href: '/merchant/dashboard/payments' },
-      { name: 'Settings', href: '/merchant/dashboard/settings' },
+      { name: 'Profile', href: '/merchant/dashboard/profile' },
+      { name: 'Settings', href: '/merchant/settings' },
     ] : [
       { name: 'Features', href: '/#features' },
       { name: 'Pricing', href: '/#pricing' },
@@ -113,7 +142,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {user ? (
+            {localUser ? (
               /* User Menu */
               <div className="relative" data-profile-dropdown>
                 <Button
@@ -125,15 +154,15 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                   <div className="flex items-center space-x-2">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-                        {getInitials(user.email || '', user.user_metadata?.business_name)}
+                        {getInitials(localUser.email || '', localUser.user_metadata?.business_name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden sm:block text-left">
                       <div className="text-sm font-medium leading-none">
-                        {user.user_metadata?.business_name || 'Account'}
+                        {localUser.user_metadata?.business_name || 'Account'}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {user.email}
+                        {localUser.email}
                       </div>
                     </div>
                     <ChevronDown className={cn(
@@ -149,18 +178,18 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                            {getInitials(user.email || '', user.user_metadata?.business_name)}
+                            {getInitials(localUser.email || '', localUser.user_metadata?.business_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">
-                            {user.user_metadata?.business_name || 'Account'}
+                            {localUser.user_metadata?.business_name || 'Account'}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
-                            {user.email}
+                            {localUser.email}
                           </div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            {user.user_metadata?.role === 'admin' ? 'Administrator' : 'Merchant'}
+                            {localUser.user_metadata?.role === 'admin' ? 'Administrator' : 'Merchant'}
                           </div>
                         </div>
                       </div>
@@ -184,7 +213,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                         size="sm"
                         className="w-full justify-start px-4 py-2 text-sm"
                         onClick={() => {
-                          router.push('/merchant/dashboard/settings')
+                          router.push('/merchant/settings')
                           setIsProfileOpen(false)
                         }}
                       >
@@ -252,7 +281,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                 </Link>
               ))}
               
-              {!user && (
+              {!localUser && (
                 <div className="pt-4 space-y-2">
                   <Button variant="ghost" size="sm" className="w-full" asChild>
                     <Link href="/login">Log in</Link>

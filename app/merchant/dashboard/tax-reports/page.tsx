@@ -26,6 +26,7 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
 import type { User } from '@supabase/supabase-js'
+import { BackToDashboard } from '@/app/components/ui/back-to-dashboard'
 
 interface TaxReportFilters {
   start_date: string
@@ -279,6 +280,9 @@ export default function TaxReportsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
+            <div className="flex items-center gap-4 mb-2">
+              <BackToDashboard />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <Calculator className="h-8 w-8" />
               Tax Reports

@@ -415,7 +415,7 @@ export default function MerchantDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Quick Actions */}
           <Card>
-            <CardHeader>
+            <CardHeader id="quick-actions">
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
                 Get started with accepting cryptocurrency payments
@@ -466,6 +466,38 @@ export default function MerchantDashboard() {
                   <div className="text-left">
                     <div className="font-medium">Smart Terminal</div>
                     <div className="text-sm text-gray-500">Accept in-person crypto payments</div>
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => router.push('/merchant/subscriptions/create')}
+                className="w-full justify-start h-auto p-4"
+                variant="outline"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Plus className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">Create Subscription</div>
+                    <div className="text-sm text-gray-500">Set up a recurring payment plan</div>
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => router.push('/merchant/subscriptions')}
+                className="w-full justify-start h-auto p-4"
+                variant="outline"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-teal-100 rounded-lg">
+                    <Calendar className="h-5 w-5 text-teal-600" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">Manage Subscriptions</div>
+                    <div className="text-sm text-gray-500">View and manage recurring payments</div>
                   </div>
                 </div>
               </Button>

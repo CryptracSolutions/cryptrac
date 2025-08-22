@@ -24,6 +24,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
+import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 
 interface PaymentLink {
   id: string;
@@ -489,13 +490,13 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
+          <div className="flex items-center gap-4 mb-2">
+            <BackToDashboard />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
           <p className="text-gray-600 mt-1">View and manage all your payments</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/merchant/dashboard">
-            <Button variant="outline">Dashboard</Button>
-          </Link>
           <Link href="/smart-terminal">
             <Button variant="outline">Smart Terminal</Button>
           </Link>
