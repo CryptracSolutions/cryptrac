@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+export const dynamic = 'force-dynamic';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';

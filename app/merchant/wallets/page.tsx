@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+
+export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import {
   Save,
@@ -209,7 +211,10 @@ export default function WalletsPage() {
 
         {/* Trust Wallet Guide Modal */}
         {showTrustWalletGuide && (
-          <TrustWalletGuide onClose={() => setShowTrustWalletGuide(false)} />
+          <TrustWalletGuide 
+            onComplete={() => setShowTrustWalletGuide(false)} 
+            onSkip={() => setShowTrustWalletGuide(false)} 
+          />
         )}
       </div>
     </DashboardLayout>

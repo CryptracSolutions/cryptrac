@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 import {
   Save,
   CheckCircle,

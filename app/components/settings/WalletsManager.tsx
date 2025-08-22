@@ -323,13 +323,17 @@ interface CurrencyInfo {
 
 type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
-interface WalletsManagerProps {
-  settings: any;
-  setSettings: React.Dispatch<React.SetStateAction<any>>;
+interface WalletsManagerProps<T = any> {
+  settings: T & {
+    wallets: Record<string, string>;
+  };
+  setSettings: React.Dispatch<React.SetStateAction<T & {
+    wallets: Record<string, string>;
+  }>>;
   setShowTrustWalletGuide: (show: boolean) => void;
 }
 
-export default function WalletsManager({ settings, setSettings, setShowTrustWalletGuide }: WalletsManagerProps) {
+export default function WalletsManager<T = any>({ settings, setSettings, setShowTrustWalletGuide }: WalletsManagerProps<T>) {
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);

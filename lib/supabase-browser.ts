@@ -13,11 +13,25 @@ export function createClient(): SupabaseClient {
     return supabaseClient;
   }
 
+  // Check if environment variables are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Return a mock client during build time
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+      },
+      from: () => ({
+        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+      }),
+    } as any;
+  }
+
   // Create new browser client using @supabase/ssr
-  supabaseClient = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
   return supabaseClient;
 }

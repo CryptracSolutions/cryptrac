@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+
+export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import {
   Wallet,
@@ -83,6 +85,8 @@ interface UserType {
     business_name?: string;
   };
 }
+
+type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
 
 
@@ -217,6 +221,7 @@ export default function MerchantSettingsPage() {
     email_payment_notifications_enabled: true,
     public_receipts_enabled: true,
   });
+  const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
 
   useEffect(() => {
     const fetchNotificationSettings = async () => {
@@ -384,8 +389,45 @@ export default function MerchantSettingsPage() {
     }));
   };
 
+  const validateAddress = async (currency: string, address: string) => {
+    if (!address.trim()) {
+      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
+      return;
+    }
+
+    setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
+
+    try {
+      const response = await fetch('/api/wallets/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currency,
+          address: address.trim()
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.valid) {
+        setValidationStatus(prev => ({
+          ...prev,
+          [currency]: 'valid',
+          ...(currency === 'ETH' ? { ETHBASE: 'valid' } : {})
+        }));
+      } else {
+        setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
+      }
+    } catch (error) {
+      console.error('Validation error:', error);
+      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid', ...(currency === 'ETH' ? { ETHBASE: 'invalid' } : {}) }));
+    }
+  };
+
   const handleWalletInputChange = async (currency: string, address: string) => {
-    handleWalletChange(currency, address);
+    setSettings(prev => ({ ...prev, wallets: { ...prev.wallets, [currency]: address } }));
 
     if (address.trim()) {
       await validateAddress(currency, address);
