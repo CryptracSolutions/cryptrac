@@ -22,8 +22,6 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronDown,
-  ArrowRight,
-  Sparkles,
   BarChart3,
   Calendar,
   Users,
@@ -401,7 +399,7 @@ export default function PaymentsPage() {
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#a78bfa] rounded-xl">
+            <div className="p-3 bg-[#7f5efd] rounded-xl">
               <LinkIcon className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
@@ -542,7 +540,7 @@ export default function PaymentsPage() {
             <BackToDashboard />
           </div>
           <h1 className="heading-xl text-gray-900">
-            Payment Management <Sparkles className="inline-block h-8 w-8 text-[#7f5efd] ml-2" />
+            Payment Management
           </h1>
           <p className="text-body-lg text-gray-600 font-medium">View and manage all your payments</p>
         </div>
@@ -560,7 +558,7 @@ export default function PaymentsPage() {
             </Button>
           </Link>
           <Link href="/merchant/dashboard/payments/create">
-            <Button size="lg" variant="premium" className="flex items-center gap-3">
+            <Button size="lg" className="flex items-center gap-3">
               <Plus className="h-5 w-5" />
               Create Payment Link
             </Button>
@@ -570,98 +568,98 @@ export default function PaymentsPage() {
 
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-[#7f5efd] to-[#a78bfa] text-white">
+        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-white">Total Links</CardTitle>
-            <div className="p-3 bg-white/20 rounded-full">
+            <CardTitle className="text-lg font-bold text-gray-900">Total Links</CardTitle>
+            <div className="p-3 bg-[#7f5efd] rounded-full">
               <LinkIcon className="h-6 w-6 text-white" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">{statistics.total_links}</div>
-            <div className="flex items-center gap-2 text-white/80">
+            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.total_links}</div>
+            <div className="flex items-center gap-2 text-gray-600">
               <BarChart3 className="h-4 w-4" />
               <span className="text-sm">All payment links</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-white">Active</CardTitle>
-            <div className="p-3 bg-white/20 rounded-full">
+            <CardTitle className="text-lg font-bold text-gray-900">Active</CardTitle>
+            <div className="p-3 bg-[#7f5efd] rounded-full">
               <TrendingUp className="h-6 w-6 text-white" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">{statistics.active_links}</div>
-            <div className="flex items-center gap-2 text-white/80">
+            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.active_links}</div>
+            <div className="flex items-center gap-2 text-gray-600">
               <Zap className="h-4 w-4" />
               <span className="text-sm">Accepting payments</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-white">Completed</CardTitle>
-            <div className="p-3 bg-white/20 rounded-full">
+            <CardTitle className="text-lg font-bold text-gray-900">Completed</CardTitle>
+            <div className="p-3 bg-[#7f5efd] rounded-full">
               <CheckCircle className="h-6 w-6 text-white" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">{statistics.completed_links}</div>
-            <div className="flex items-center gap-2 text-white/80">
+            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.completed_links}</div>
+            <div className="flex items-center gap-2 text-gray-600">
               <CheckCircle className="h-4 w-4" />
               <span className="text-sm">Finished or max uses</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-gray-500 to-gray-600 text-white">
+        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-white">Expired</CardTitle>
-            <div className="p-3 bg-white/20 rounded-full">
+            <CardTitle className="text-lg font-bold text-gray-900">Expired</CardTitle>
+            <div className="p-3 bg-[#7f5efd] rounded-full">
               <AlertCircle className="h-6 w-6 text-white" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">{statistics.expired_links}</div>
-            <div className="flex items-center gap-2 text-white/80">
+            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.expired_links}</div>
+            <div className="flex items-center gap-2 text-gray-600">
               <Clock className="h-4 w-4" />
               <span className="text-sm">Past expiry date</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-white">Single Use</CardTitle>
-            <div className="p-3 bg-white/20 rounded-full">
+            <CardTitle className="text-lg font-bold text-gray-900">Single Use</CardTitle>
+            <div className="p-3 bg-[#7f5efd] rounded-full">
               <CreditCard className="h-6 w-6 text-white" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">{statistics.single_use_links}</div>
-            <div className="flex items-center gap-2 text-white/80">
+            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.single_use_links}</div>
+            <div className="flex items-center gap-2 text-gray-600">
               <Users className="h-4 w-4" />
               <span className="text-sm">One-time payments</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-white">Total Revenue</CardTitle>
-            <div className="p-3 bg-white/20 rounded-full">
+            <CardTitle className="text-lg font-bold text-gray-900">Total Revenue</CardTitle>
+            <div className="p-3 bg-[#7f5efd] rounded-full">
               <DollarSign className="h-6 w-6 text-white" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">
+            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">
               {formatCurrency(statistics.total_revenue)}
             </div>
-            <div className="flex items-center gap-2 text-white/80">
+            <div className="flex items-center gap-2 text-gray-600">
               <TrendingUp className="h-4 w-4" />
               <span className="text-sm">{statistics.total_payments} payments</span>
             </div>
@@ -742,7 +740,7 @@ export default function PaymentsPage() {
                   <p className="text-body text-gray-500 mb-6">Get started by creating your first payment link</p>
                   {group.key === 'links' && (
                     <Link href="/merchant/dashboard/payments/create">
-                      <Button size="lg" variant="premium" className="flex items-center gap-3">
+                      <Button size="lg" className="flex items-center gap-3">
                         <Plus className="h-5 w-5" />
                         Create Payment Link
                       </Button>
@@ -750,7 +748,7 @@ export default function PaymentsPage() {
                   )}
                   {group.key === 'pos' && (
                     <Link href="/smart-terminal">
-                      <Button size="lg" variant="premium" className="flex items-center gap-3">
+                      <Button size="lg" className="flex items-center gap-3">
                         <CreditCard className="h-5 w-5" />
                         Open Smart Terminal
                       </Button>
@@ -758,7 +756,7 @@ export default function PaymentsPage() {
                   )}
                   {group.key === 'subscriptions' && (
                     <Link href="/merchant/subscriptions">
-                      <Button size="lg" variant="premium" className="flex items-center gap-3">
+                      <Button size="lg" className="flex items-center gap-3">
                         <Calendar className="h-5 w-5" />
                         Manage Subscriptions
                       </Button>

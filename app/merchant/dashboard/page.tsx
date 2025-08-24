@@ -14,9 +14,7 @@ import {
   CheckCircle,
   TrendingUp,
   Users,
-  Zap,
-  ArrowRight,
-  Sparkles
+  Zap
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -315,7 +313,7 @@ export default function MerchantDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="space-y-2">
             <h1 className="heading-xl text-gray-900">
-              Welcome back, {businessName}! <Sparkles className="inline-block h-8 w-8 text-[#7f5efd] ml-2" />
+              Welcome back, {businessName}!
             </h1>
             <p className="text-body-lg text-gray-600 font-medium">
               Here's what's happening with your cryptocurrency payments today.
@@ -330,13 +328,11 @@ export default function MerchantDashboard() {
             >
               <LinkIcon className="h-5 w-5" />
               View All Links
-              <ArrowRight className="h-4 w-4" />
             </Button>
             <Button 
               onClick={() => router.push('/merchant/dashboard/payments/create')}
               className="flex items-center gap-3"
               size="lg"
-              variant="premium"
             >
               <Plus className="h-5 w-5" />
               Create Payment Link
@@ -408,48 +404,48 @@ export default function MerchantDashboard() {
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-[#7f5efd] to-[#a78bfa] text-white">
+          <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="text-lg font-bold text-white">Total Revenue</CardTitle>
-              <div className="p-3 bg-white/20 rounded-full">
+              <CardTitle className="text-lg font-bold text-gray-900">Total Revenue</CardTitle>
+              <div className="p-3 bg-[#7f5efd] rounded-full">
                 <DollarSign className="h-6 w-6 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">${stats.totalRevenue.toFixed(2)}</div>
-              <div className="flex items-center gap-2 text-white/80">
+              <div className="text-3xl font-bold mb-2 text-[#7f5efd]">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="flex items-center gap-2 text-gray-600">
                 <TrendingUp className="h-4 w-4" />
                 <span className="text-sm">Growing steadily</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="text-lg font-bold text-white">Payment Links</CardTitle>
-              <div className="p-3 bg-white/20 rounded-full">
+              <CardTitle className="text-lg font-bold text-gray-900">Payment Links</CardTitle>
+              <div className="p-3 bg-[#7f5efd] rounded-full">
                 <LinkIcon className="h-6 w-6 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">{stats.paymentLinks}</div>
-              <div className="flex items-center gap-2 text-white/80">
+              <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{stats.paymentLinks}</div>
+              <div className="flex items-center gap-2 text-gray-600">
                 <Users className="h-4 w-4" />
                 <span className="text-sm">Active links</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="text-lg font-bold text-white">Successful Payments</CardTitle>
-              <div className="p-3 bg-white/20 rounded-full">
+              <CardTitle className="text-lg font-bold text-gray-900">Successful Payments</CardTitle>
+              <div className="p-3 bg-[#7f5efd] rounded-full">
                 <CheckCircle className="h-6 w-6 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">{stats.successfulPayments}</div>
-              <div className="flex items-center gap-2 text-white/80">
+              <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{stats.successfulPayments}</div>
+              <div className="flex items-center gap-2 text-gray-600">
                 <Zap className="h-4 w-4" />
                 <span className="text-sm">Completed transactions</span>
               </div>
@@ -474,14 +470,13 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-                    <Plus className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-blue-100 rounded-xl">
+                    <Plus className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="text-left">
                     <div className="font-bold text-lg">Create Payment Link</div>
                     <div className="text-sm text-gray-500">Generate a link to accept crypto payments</div>
                   </div>
-                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
 
@@ -491,14 +486,13 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl">
-                    <LinkIcon className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-green-100 rounded-xl">
+                    <LinkIcon className="h-6 w-6 text-green-600" />
                   </div>
                   <div className="text-left">
                     <div className="font-bold text-lg">Manage Payment Links</div>
                     <div className="text-sm text-gray-500">View and manage your existing links</div>
                   </div>
-                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
 
@@ -508,48 +502,13 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
-                    <CreditCard className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-purple-100 rounded-xl">
+                    <CreditCard className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="text-left">
                     <div className="font-bold text-lg">Smart Terminal</div>
                     <div className="text-sm text-gray-500">Accept in-person crypto payments</div>
                   </div>
-                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
-                </div>
-              </Button>
-
-              <Button
-                onClick={() => router.push('/merchant/subscriptions/create')}
-                className="w-full justify-start h-auto p-6"
-                variant="outline"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl">
-                    <Plus className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-lg">Create Subscription</div>
-                    <div className="text-sm text-gray-500">Set up a recurring payment plan</div>
-                  </div>
-                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
-                </div>
-              </Button>
-
-              <Button
-                onClick={() => router.push('/merchant/subscriptions')}
-                className="w-full justify-start h-auto p-6"
-                variant="outline"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
-                    <Calendar className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-lg">Manage Subscriptions</div>
-                    <div className="text-sm text-gray-500">View and manage recurring payments</div>
-                  </div>
-                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
             </CardContent>
@@ -576,7 +535,6 @@ export default function MerchantDashboard() {
                   <Button
                     onClick={() => router.push('/merchant/dashboard/payments/create')}
                     size="lg"
-                    variant="premium"
                   >
                     Create Payment Link
                   </Button>
@@ -603,10 +561,53 @@ export default function MerchantDashboard() {
           </Card>
         </div>
 
+        {/* Subscription Management Section */}
+        <Card className="card-hover shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">Subscription Management</CardTitle>
+            <CardDescription className="text-body">
+              Manage your recurring payment plans
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => router.push('/merchant/subscriptions/create')}
+              className="w-full justify-start h-auto p-6"
+              variant="outline"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-100 rounded-xl">
+                  <Plus className="h-6 w-6 text-indigo-600" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-lg">Create Subscription</div>
+                  <div className="text-sm text-gray-500">Set up a recurring payment plan</div>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              onClick={() => router.push('/merchant/subscriptions')}
+              className="w-full justify-start h-auto p-6"
+              variant="outline"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-teal-100 rounded-xl">
+                  <Calendar className="h-6 w-6 text-teal-600" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-lg">Manage Subscriptions</div>
+                  <div className="text-sm text-gray-500">View and manage recurring payments</div>
+                </div>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Enhanced Supported Cryptocurrencies */}
         <Card className="card-hover shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-bold">Supported Cryptocurrencies</CardTitle>
+            <CardTitle className="text-xl font-bold">Cryptocurrencies you currently accept</CardTitle>
             <CardDescription className="text-body">
               Accept payments in these popular cryptocurrencies
             </CardDescription>
