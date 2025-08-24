@@ -11,7 +11,12 @@ import {
   Plus,
   Calendar,
   Clock,
-  CheckCircle
+  CheckCircle,
+  TrendingUp,
+  Users,
+  Zap,
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -292,7 +297,7 @@ export default function MerchantDashboard() {
     return (
       <DashboardLayout user={user}>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
         </div>
       </DashboardLayout>
     );
@@ -305,51 +310,67 @@ export default function MerchantDashboard() {
   const businessName = user.user_metadata?.business_name || user.email?.split('@')[0] || 'Your Business';
   return (
     <DashboardLayout user={user}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {businessName}!
+      <div className="space-y-8">
+        {/* Enhanced Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="heading-xl text-gray-900">
+              Welcome back, {businessName}! <Sparkles className="inline-block h-8 w-8 text-[#7f5efd] ml-2" />
             </h1>
-            <p className="text-gray-600">
-              Here&apos;s what&apos;s happening with your cryptocurrency payments today.
+            <p className="text-body-lg text-gray-600 font-medium">
+              Here's what's happening with your cryptocurrency payments today.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <Button 
               variant="outline" 
               onClick={() => router.push('/merchant/dashboard/payments')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-3"
+              size="lg"
             >
-              <LinkIcon className="h-4 w-4" />
+              <LinkIcon className="h-5 w-5" />
               View All Links
+              <ArrowRight className="h-4 w-4" />
             </Button>
             <Button 
               onClick={() => router.push('/merchant/dashboard/payments/create')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-3"
+              size="lg"
+              variant="premium"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-5 w-5" />
               Create Payment Link
             </Button>
           </div>
         </div>
 
+        {/* Enhanced New Payments Alert */}
         {newPayments.length > 0 && (
-          <Alert>
+          <Alert className="border-green-200 bg-green-50 shadow-lg">
             <AlertDescription>
               <div className="flex items-center justify-between">
-                <span>
-                  You have {newPayments.length} new payment{newPayments.length > 1 ? 's' : ''}.
-                </span>
-                <Button size="sm" variant="outline" onClick={markPaymentsSeen}>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  <span className="text-body-lg font-semibold text-green-900">
+                    You have {newPayments.length} new payment{newPayments.length > 1 ? 's' : ''}!
+                  </span>
+                </div>
+                <Button size="sm" variant="success" onClick={markPaymentsSeen}>
                   Mark as seen
                 </Button>
               </div>
-              <ul className="mt-2 list-disc pl-4">
+              <ul className="mt-4 space-y-2">
                 {newPayments.map(p => (
-                  <li key={p.id}>
-                    {formatCurrency(p.amount, p.currency)} — {new Date(p.created_at).toLocaleString()}
+                  <li key={p.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                      <span className="font-semibold text-green-900">
+                        {formatCurrency(p.amount, p.currency)}
+                      </span>
+                    </div>
+                    <span className="text-sm text-green-700">
+                      {new Date(p.created_at).toLocaleString()}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -357,21 +378,26 @@ export default function MerchantDashboard() {
           </Alert>
         )}
 
-        {/* Trial Banner */}
+        {/* Enhanced Trial Banner */}
         {trialEnd && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-orange-600" />
-                <div>
-                  <p className="font-medium text-orange-900">Free Trial Active</p>
-                  <p className="text-sm text-orange-700">
+          <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 shadow-lg">
+            <CardContent className="pt-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <Clock className="h-6 w-6 text-orange-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-orange-900 mb-1">Free Trial Active</h3>
+                  <p className="text-body text-orange-700">
                     Your trial ends on {new Date(trialEnd).toLocaleDateString()}. $99 One-time setup fee + $19/mo subscription will be charged to continue accepting crypto payments.
                   </p>
                 </div>
-                <div className="ml-auto flex items-center gap-4">
-                  <span className="text-sm text-orange-700">Ends in {trialCountdown}</span>
-                  <Link href="/merchant/settings" className="text-sm text-orange-700 underline">
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-900">Ends in</div>
+                    <div className="text-lg font-semibold text-orange-700">{trialCountdown}</div>
+                  </div>
+                  <Link href="/merchant/settings" className="text-sm text-orange-700 underline font-medium">
                     Cancel Subscription
                   </Link>
                 </div>
@@ -380,153 +406,177 @@ export default function MerchantDashboard() {
           </Card>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-[#7f5efd] to-[#a78bfa] text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-lg font-bold text-white">Total Revenue</CardTitle>
+              <div className="p-3 bg-white/20 rounded-full">
+                <DollarSign className="h-6 w-6 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="text-3xl font-bold mb-2">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="flex items-center gap-2 text-white/80">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-sm">Growing steadily</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Payment Links</CardTitle>
-              <LinkIcon className="h-4 w-4 text-muted-foreground" />
+          <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-lg font-bold text-white">Payment Links</CardTitle>
+              <div className="p-3 bg-white/20 rounded-full">
+                <LinkIcon className="h-6 w-6 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.paymentLinks}</div>
+              <div className="text-3xl font-bold mb-2">{stats.paymentLinks}</div>
+              <div className="flex items-center gap-2 text-white/80">
+                <Users className="h-4 w-4" />
+                <span className="text-sm">Active links</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Successful Payments</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-lg font-bold text-white">Successful Payments</CardTitle>
+              <div className="p-3 bg-white/20 rounded-full">
+                <CheckCircle className="h-6 w-6 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.successfulPayments}</div>
+              <div className="text-3xl font-bold mb-2">{stats.successfulPayments}</div>
+              <div className="flex items-center gap-2 text-white/80">
+                <Zap className="h-4 w-4" />
+                <span className="text-sm">Completed transactions</span>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Quick Actions */}
-          <Card>
+        {/* Enhanced Quick Actions & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Enhanced Quick Actions */}
+          <Card className="card-hover shadow-lg">
             <CardHeader id="quick-actions">
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl font-bold">Quick Actions</CardTitle>
+              <CardDescription className="text-body">
                 Get started with accepting cryptocurrency payments
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button 
                 onClick={() => router.push('/merchant/dashboard/payments/create')}
-                className="w-full justify-start h-auto p-4"
+                className="w-full justify-start h-auto p-6"
                 variant="outline"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Plus className="h-5 w-5 text-blue-600" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+                    <Plus className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">Create Payment Link</div>
+                    <div className="font-bold text-lg">Create Payment Link</div>
                     <div className="text-sm text-gray-500">Generate a link to accept crypto payments</div>
                   </div>
+                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
 
               <Button 
                 onClick={() => router.push('/merchant/dashboard/payments')}
-                className="w-full justify-start h-auto p-4"
+                className="w-full justify-start h-auto p-6"
                 variant="outline"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <LinkIcon className="h-5 w-5 text-green-600" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl">
+                    <LinkIcon className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">Manage Payment Links</div>
+                    <div className="font-bold text-lg">Manage Payment Links</div>
                     <div className="text-sm text-gray-500">View and manage your existing links</div>
                   </div>
+                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
 
               <Button
                 onClick={() => router.push('/smart-terminal')}
-                className="w-full justify-start h-auto p-4"
+                className="w-full justify-start h-auto p-6"
                 variant="outline"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <CreditCard className="h-5 w-5 text-purple-600" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
+                    <CreditCard className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">Smart Terminal</div>
+                    <div className="font-bold text-lg">Smart Terminal</div>
                     <div className="text-sm text-gray-500">Accept in-person crypto payments</div>
                   </div>
+                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
 
               <Button
                 onClick={() => router.push('/merchant/subscriptions/create')}
-                className="w-full justify-start h-auto p-4"
+                className="w-full justify-start h-auto p-6"
                 variant="outline"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
-                    <Plus className="h-5 w-5 text-indigo-600" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl">
+                    <Plus className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">Create Subscription</div>
+                    <div className="font-bold text-lg">Create Subscription</div>
                     <div className="text-sm text-gray-500">Set up a recurring payment plan</div>
                   </div>
+                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
 
               <Button
                 onClick={() => router.push('/merchant/subscriptions')}
-                className="w-full justify-start h-auto p-4"
+                className="w-full justify-start h-auto p-6"
                 variant="outline"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-teal-100 rounded-lg">
-                    <Calendar className="h-5 w-5 text-teal-600" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
+                    <Calendar className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">Manage Subscriptions</div>
+                    <div className="font-bold text-lg">Manage Subscriptions</div>
                     <div className="text-sm text-gray-500">View and manage recurring payments</div>
                   </div>
+                  <ArrowRight className="h-5 w-5 ml-auto text-gray-400" />
                 </div>
               </Button>
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
-          <Card>
+          {/* Enhanced Recent Activity */}
+          <Card className="card-hover shadow-lg">
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl font-bold">Recent Activity</CardTitle>
+              <CardDescription className="text-body">
                 Your latest payment link activity
               </CardDescription>
             </CardHeader>
             <CardContent>
               {recentTransactions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="p-3 bg-gray-100 rounded-full mb-4">
-                    <Calendar className="h-6 w-6 text-gray-400" />
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="p-4 bg-gray-100 rounded-full mb-6">
+                    <Calendar className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="font-medium text-gray-900 mb-2">No activity yet</h3>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">No activity yet</h3>
+                  <p className="text-body text-gray-500 mb-6 max-w-sm">
                     Create your first payment link to start seeing activity here.
                   </p>
                   <Button
                     onClick={() => router.push('/merchant/dashboard/payments/create')}
-                    size="sm"
+                    size="lg"
+                    variant="premium"
                   >
                     Create Payment Link
                   </Button>
@@ -534,12 +584,17 @@ export default function MerchantDashboard() {
               ) : (
                 <div className="space-y-4">
                   {recentTransactions.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between border-b last:border-0 pb-2">
-                      <div>
-                        <p className="text-sm font-medium">{formatCurrency(tx.amount, tx.currency)}</p>
-                        <p className="text-xs text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
+                    <div key={tx.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <DollarSign className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg">{formatCurrency(tx.amount, tx.currency)}</p>
+                          <p className="text-sm text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
+                        </div>
                       </div>
-                      <span className="text-xs text-gray-500">{tx.currency}</span>
+                      <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{tx.currency}</span>
                     </div>
                   ))}
                 </div>
@@ -548,21 +603,21 @@ export default function MerchantDashboard() {
           </Card>
         </div>
 
-        {/* Supported Cryptocurrencies */}
-        <Card>
+        {/* Enhanced Supported Cryptocurrencies */}
+        <Card className="card-hover shadow-lg">
           <CardHeader>
-            <CardTitle>Supported Cryptocurrencies</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl font-bold">Supported Cryptocurrencies</CardTitle>
+            <CardDescription className="text-body">
               Accept payments in these popular cryptocurrencies
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               {supportedCurrencies.map((crypto) => (
-                <div key={crypto.symbol} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <CryptoIcon currency={crypto.symbol} className="h-8 w-8" />
+                <div key={crypto.symbol} className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:border-[#7f5efd] hover:shadow-md transition-all duration-300">
+                  <CryptoIcon currency={crypto.symbol} className="h-10 w-10" />
                   <div>
-                    <div className="font-medium text-sm">{crypto.symbol}</div>
+                    <div className="font-bold text-sm">{crypto.symbol}</div>
                     <div className="text-xs text-gray-500">{crypto.name}</div>
                   </div>
                 </div>
@@ -571,24 +626,32 @@ export default function MerchantDashboard() {
           </CardContent>
         </Card>
 
-        {/* Getting Started Guide */}
-        <Card>
+        {/* Enhanced Getting Started Guide */}
+        <Card className="card-hover shadow-lg">
           <CardHeader>
-            <CardTitle>Getting Started</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl font-bold">Getting Started</CardTitle>
+            <CardDescription className="text-body">
               Follow these steps to start accepting cryptocurrency payments
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {steps.map(step => (
-                <div key={step.id} className="flex items-start gap-4">
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                    {step.id}
+                <div key={step.id} className="flex items-start gap-6">
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                    step.completed 
+                      ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg' 
+                      : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    {step.completed ? <CheckCircle className="h-6 w-6" /> : step.id}
                   </div>
-                  <div>
-                    <h4 className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>{step.title}</h4>
-                    <p className={`text-sm ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>{step.description}</p>
+                  <div className="flex-1">
+                    <h4 className={`text-lg font-bold mb-2 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {step.title}
+                    </h4>
+                    <p className={`text-body ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {step.description}
+                    </p>
                   </div>
                 </div>
               ))}

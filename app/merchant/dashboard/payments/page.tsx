@@ -21,7 +21,14 @@ import {
   Play,
   CheckCircle,
   AlertCircle,
-  ChevronDown
+  ChevronDown,
+  ArrowRight,
+  Sparkles,
+  BarChart3,
+  Calendar,
+  Users,
+  Zap,
+  Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -389,55 +396,82 @@ export default function PaymentsPage() {
   const renderLink = (link: PaymentLink) => (
     <div
       key={link.id}
-      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+      className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 bg-white"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h3 className="font-semibold text-gray-900">{link.title}</h3>
-            {getStatusBadge(link.status, link)}
-            {(link.source === 'subscription' || link.subscription_id) && (
-              <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                Subscription
-              </Badge>
-            )}
-            {link.confirmed_payment_count > 0 && (
-              <Badge variant="outline" className="bg-green-100 text-green-700">
-                Payment received
-              </Badge>
-            )}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#a78bfa] rounded-xl">
+              <LinkIcon className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-gray-900 mb-1">{link.title}</h3>
+              <div className="flex items-center gap-3">
+                {getStatusBadge(link.status, link)}
+                {(link.source === 'subscription' || link.subscription_id) && (
+                  <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+                    Subscription
+                  </Badge>
+                )}
+                {link.confirmed_payment_count > 0 && (
+                  <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                    Payment received
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
 
           {link.description && (
-            <p className="text-gray-600 text-sm mb-2">{link.description}</p>
+            <p className="text-body text-gray-600 mb-4">{link.description}</p>
           )}
 
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span className="font-medium text-gray-900">
-              {formatCurrency(link.amount, link.currency)}
-            </span>
-            <span>Created {formatDate(link.created_at)}</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-green-600" />
+              <span className="font-bold text-lg text-gray-900">
+                {formatCurrency(link.amount, link.currency)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-gray-500" />
+              <span className="text-sm text-gray-600">Created {formatDate(link.created_at)}</span>
+            </div>
             {link.expires_at && (
-              <span>Expires {formatDate(link.expires_at)}</span>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Expires {formatDate(link.expires_at)}</span>
+              </div>
             )}
             {link.max_uses && (
-              <span>{link.usage_count}/{link.max_uses} uses</span>
-            )}
-            {/* Subscription Invoice Number */}
-            {link.subscription_invoices && link.subscription_invoices.length > 0 && (
-              <span className="font-medium text-blue-600">
-                {link.subscription_invoices[0].invoice_number}
-              </span>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">{link.usage_count}/{link.max_uses} uses</span>
+              </div>
             )}
           </div>
+
+          {/* Subscription Invoice Number */}
+          {link.subscription_invoices && link.subscription_invoices.length > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <BarChart3 className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-blue-700">
+                Invoice: {link.subscription_invoices[0].invoice_number}
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex flex-col items-end gap-3 ml-6">
           {/* Status Action Buttons */}
-          {getStatusActions(link)}
+          <div className="flex items-center gap-2">
+            {getStatusActions(link)}
+          </div>
 
-          {/* UPDATED: Use new action buttons logic */}
-          {getActionButtons(link)}
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {getActionButtons(link)}
+          </div>
         </div>
       </div>
     </div>
@@ -445,11 +479,11 @@ export default function PaymentsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading payment links...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7f5efd] mx-auto mb-4"></div>
+            <p className="text-body text-gray-600">Loading payment links...</p>
           </div>
         </div>
       </div>
@@ -458,16 +492,16 @@ export default function PaymentsPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="text-red-600 mb-4">Error: {error}</p>
-            <div className="space-x-2">
-              <Button onClick={fetchPaymentLinks} variant="outline">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <p className="text-body text-red-600 mb-6">Error: {error}</p>
+            <div className="flex gap-4 justify-center">
+              <Button onClick={fetchPaymentLinks} variant="outline" size="lg">
                 Try Again
               </Button>
-              <Button onClick={() => router.push('/login')} variant="default">
+              <Button onClick={() => router.push('/login')} size="lg">
                 Go to Login
               </Button>
             </div>
@@ -500,26 +534,34 @@ export default function PaymentsPage() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
+    <div className="container mx-auto p-8 space-y-8">
+      {/* Enhanced Header */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+        <div className="space-y-2">
           <div className="flex items-center gap-4 mb-2">
             <BackToDashboard />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
-          <p className="text-gray-600 mt-1">View and manage all your payments</p>
+          <h1 className="heading-xl text-gray-900">
+            Payment Management <Sparkles className="inline-block h-8 w-8 text-[#7f5efd] ml-2" />
+          </h1>
+          <p className="text-body-lg text-gray-600 font-medium">View and manage all your payments</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           <Link href="/smart-terminal">
-            <Button variant="outline">Smart Terminal</Button>
+            <Button variant="outline" size="lg" className="flex items-center gap-3">
+              <CreditCard className="h-5 w-5" />
+              Smart Terminal
+            </Button>
           </Link>
           <Link href="/merchant/subscriptions">
-            <Button variant="outline">Subscriptions</Button>
+            <Button variant="outline" size="lg" className="flex items-center gap-3">
+              <Calendar className="h-5 w-5" />
+              Subscriptions
+            </Button>
           </Link>
           <Link href="/merchant/dashboard/payments/create">
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
+            <Button size="lg" variant="premium" className="flex items-center gap-3">
+              <Plus className="h-5 w-5" />
               Create Payment Link
             </Button>
           </Link>
@@ -527,114 +569,148 @@ export default function PaymentsPage() {
       </div>
 
       {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Links</CardTitle>
-            <LinkIcon className="h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-[#7f5efd] to-[#a78bfa] text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-bold text-white">Total Links</CardTitle>
+            <div className="p-3 bg-white/20 rounded-full">
+              <LinkIcon className="h-6 w-6 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{statistics.total_links}</div>
-            <p className="text-xs text-muted-foreground">All payment links</p>
+            <div className="text-3xl font-bold mb-2">{statistics.total_links}</div>
+            <div className="flex items-center gap-2 text-white/80">
+              <BarChart3 className="h-4 w-4" />
+              <span className="text-sm">All payment links</span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-bold text-white">Active</CardTitle>
+            <div className="p-3 bg-white/20 rounded-full">
+              <TrendingUp className="h-6 w-6 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{statistics.active_links}</div>
-            <p className="text-xs text-muted-foreground">Accepting payments</p>
+            <div className="text-3xl font-bold mb-2">{statistics.active_links}</div>
+            <div className="flex items-center gap-2 text-white/80">
+              <Zap className="h-4 w-4" />
+              <span className="text-sm">Accepting payments</span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <CheckCircle className="h-4 w-4 text-blue-600" />
+        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-bold text-white">Completed</CardTitle>
+            <div className="p-3 bg-white/20 rounded-full">
+              <CheckCircle className="h-6 w-6 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{statistics.completed_links}</div>
-            <p className="text-xs text-muted-foreground">Finished or max uses</p>
+            <div className="text-3xl font-bold mb-2">{statistics.completed_links}</div>
+            <div className="flex items-center gap-2 text-white/80">
+              <CheckCircle className="h-4 w-4" />
+              <span className="text-sm">Finished or max uses</span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expired</CardTitle>
-            <AlertCircle className="h-4 w-4 text-gray-600" />
+        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-gray-500 to-gray-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-bold text-white">Expired</CardTitle>
+            <div className="p-3 bg-white/20 rounded-full">
+              <AlertCircle className="h-6 w-6 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{statistics.expired_links}</div>
-            <p className="text-xs text-muted-foreground">Past expiry date</p>
+            <div className="text-3xl font-bold mb-2">{statistics.expired_links}</div>
+            <div className="flex items-center gap-2 text-white/80">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm">Past expiry date</span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Single Use</CardTitle>
-            <CreditCard className="h-4 w-4 text-purple-600" />
+        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-bold text-white">Single Use</CardTitle>
+            <div className="p-3 bg-white/20 rounded-full">
+              <CreditCard className="h-6 w-6 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{statistics.single_use_links}</div>
-            <p className="text-xs text-muted-foreground">One-time payments</p>
+            <div className="text-3xl font-bold mb-2">{statistics.single_use_links}</div>
+            <div className="flex items-center gap-2 text-white/80">
+              <Users className="h-4 w-4" />
+              <span className="text-sm">One-time payments</span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+        <Card className="card-hover border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-bold text-white">Total Revenue</CardTitle>
+            <div className="p-3 bg-white/20 rounded-full">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-3xl font-bold mb-2">
               {formatCurrency(statistics.total_revenue)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {statistics.total_payments} payments
-            </p>
+            <div className="flex items-center gap-2 text-white/80">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-sm">{statistics.total_payments} payments</span>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search payment links..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Enhanced Search and Filter */}
+      <Card className="shadow-lg">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                placeholder="Search payment links..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-12 text-body"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48 h-12">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Payment Links by Category */}
+      {/* Enhanced Payment Links by Category */}
       {groups.map(group => (
-        <Card key={group.key}>
+        <Card key={group.key} className="card-hover shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
+              <div className="space-y-2">
+                <CardTitle className="text-xl font-bold flex items-center gap-3">
                   {group.title}
-                  <Badge variant="outline">{group.items.length}</Badge>
+                  <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                    {group.items.length}
+                  </Badge>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-body">
                   {group.key === 'links' && 'Standard payment links for invoices and sales'}
                   {group.key === 'pos' && 'Point-of-sale transactions from Smart Terminal'}
                   {group.key === 'subscriptions' && 'Recurring subscription payments'}
@@ -642,12 +718,12 @@ export default function PaymentsPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="lg"
                 onClick={() => toggleSection(group.key)}
-                className="flex items-center gap-1"
+                className="flex items-center gap-2 hover:bg-gray-100"
               >
                 <ChevronDown 
-                  className={`h-4 w-4 transition-transform ${
+                  className={`h-5 w-5 transition-transform duration-300 ${
                     openSections[group.key] ? 'rotate-180' : ''
                   }`} 
                 />
@@ -656,34 +732,41 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           {openSections[group.key] && (
-            <CardContent>
+            <CardContent className="p-8">
               {group.items.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No {group.title.toLowerCase()} found</p>
+                <div className="text-center py-12 text-gray-500">
+                  <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <LinkIcon className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
+                  <p className="text-body text-gray-500 mb-6">Get started by creating your first payment link</p>
                   {group.key === 'links' && (
                     <Link href="/merchant/dashboard/payments/create">
-                      <Button variant="outline" className="mt-2">
+                      <Button size="lg" variant="premium" className="flex items-center gap-3">
+                        <Plus className="h-5 w-5" />
                         Create Payment Link
                       </Button>
                     </Link>
                   )}
                   {group.key === 'pos' && (
                     <Link href="/smart-terminal">
-                      <Button variant="outline" className="mt-2">
+                      <Button size="lg" variant="premium" className="flex items-center gap-3">
+                        <CreditCard className="h-5 w-5" />
                         Open Smart Terminal
                       </Button>
                     </Link>
                   )}
                   {group.key === 'subscriptions' && (
                     <Link href="/merchant/subscriptions">
-                      <Button variant="outline" className="mt-2">
+                      <Button size="lg" variant="premium" className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5" />
                         Manage Subscriptions
                       </Button>
                     </Link>
                   )}
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {group.items.map(renderLink)}
                 </div>
               )}
@@ -692,27 +775,35 @@ export default function PaymentsPage() {
         </Card>
       ))}
 
-      {/* Pagination */}
+      {/* Enhanced Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </Button>
-          <span className="flex items-center px-4 py-2 text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </Button>
-        </div>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-2"
+              >
+                Previous
+              </Button>
+              <div className="flex items-center px-6 py-3 text-body font-medium text-gray-600 bg-gray-50 rounded-lg">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-2"
+              >
+                Next
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
