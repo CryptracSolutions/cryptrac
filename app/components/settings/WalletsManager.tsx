@@ -638,7 +638,7 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
               placeholder="Search cryptocurrencies (e.g., Bitcoin, Ethereum, Solana...)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-14 text-base border-2 border-gray-200 focus:border-purple-500 focus:ring-0 focus:ring-offset-0 rounded-xl"
+              className="pl-12 h-14 text-base border-gray-200 focus:border-purple-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-purple-500 rounded-xl"
             />
           </div>
           
