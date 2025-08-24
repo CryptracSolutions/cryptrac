@@ -122,16 +122,19 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
   const [hiddenAddresses, setHiddenAddresses] = useState<Record<string, boolean>>({});
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [walletsExpanded, setWalletsExpanded] = useState(false);
+  const [newlyAddedWallet, setNewlyAddedWallet] = useState<string | null>(null);
 
   // Initialize validation status for all currencies
   useEffect(() => {
     const initialValidation: Record<string, ValidationStatus> = {};
+    const initialHidden: Record<string, boolean> = {};
     
     // Initialize for existing wallets (assume they are valid)
     if (settings.wallets) {
       Object.keys(settings.wallets).forEach(currency => {
         if (settings.wallets[currency] && settings.wallets[currency].trim()) {
           initialValidation[currency] = 'valid';
+          initialHidden[currency] = true; // Start with addresses hidden
         } else {
           initialValidation[currency] = 'idle';
         }
@@ -139,6 +142,7 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
     }
     
     setValidationStatus(initialValidation);
+    setHiddenAddresses(initialHidden);
   }, [settings.wallets]);
 
   // Load additional currencies
@@ -179,6 +183,21 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
     loadAdditionalCurrencies();
   }, [settings.wallets]);
 
+  // Handle newly added wallet animation
+  useEffect(() => {
+    if (newlyAddedWallet) {
+      // Auto-expand wallets section when a new wallet is added
+      setWalletsExpanded(true);
+      
+      // Clear the animation after 3 seconds
+      const timer = setTimeout(() => {
+        setNewlyAddedWallet(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [newlyAddedWallet]);
+
   const getCurrencyDisplayName = (code: string) => {
     return CURRENCY_NAMES[code] || code;
   };
@@ -210,6 +229,18 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
           ...prev,
           [currency]: 'valid'
         }));
+        
+        // Check if this is a new wallet being added
+        const existingWallets = Object.keys(settings.wallets || {}).filter(curr => 
+          settings.wallets[curr] && settings.wallets[curr].trim() && curr !== currency
+        );
+        
+        // If this wallet wasn't in the existing wallets, mark it as newly added
+        if (!existingWallets.includes(currency)) {
+          setNewlyAddedWallet(currency);
+          // Start with address hidden for new wallets
+          setHiddenAddresses(prev => ({ ...prev, [currency]: true }));
+        }
       } else {
         setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
       }
@@ -246,6 +277,12 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
       const newStatus = { ...prev };
       delete newStatus[currency];
       return newStatus;
+    });
+
+    setHiddenAddresses(prev => {
+      const newHidden = { ...prev };
+      delete newHidden[currency];
+      return newHidden;
     });
   };
 
@@ -386,13 +423,13 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-soft">
-                  <Wallet className="h-6 w-6 text-gray-600" />
+                <div className="p-3 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl shadow-soft">
+                  <Wallet className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     Your Wallets
-                    <div className="px-3 py-1 bg-gray-200 text-gray-800 text-sm font-semibold rounded-full">
+                    <div className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">
                       {existingWallets.length}
                     </div>
                   </CardTitle>
@@ -417,7 +454,9 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
                 {existingWallets.map((currency) => (
                   <Card 
                     key={currency} 
-                    className={`bg-white border-gray-200 shadow-soft hover:shadow-medium transition-all duration-300 ${hasStableCoins(currency) ? 'cursor-pointer' : ''}`}
+                    className={`bg-white border-gray-200 shadow-soft hover:shadow-medium hover:border-purple-300 transition-all duration-300 ${hasStableCoins(currency) ? 'cursor-pointer' : ''} ${
+                      newlyAddedWallet === currency ? 'ring-2 ring-purple-500 ring-opacity-50 animate-pulse' : ''
+                    }`}
                     onClick={(e) => handleWalletCardClick(currency, e)}
                   >
                     <CardContent className="p-6">
@@ -428,9 +467,21 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
                             <div className="absolute -bottom-1 -right-1 p-1 bg-green-500 rounded-full">
                               <CheckCircle className="h-3 w-3 text-white" />
                             </div>
+                            {newlyAddedWallet === currency && (
+                              <div className="absolute -top-1 -right-1 p-1 bg-purple-500 rounded-full animate-bounce">
+                                <Star className="h-3 w-3 text-white" />
+                              </div>
+                            )}
                           </div>
                           <div>
-                            <div className="font-bold text-gray-900 text-lg">{getCurrencyDisplayName(currency)}</div>
+                            <div className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                              {getCurrencyDisplayName(currency)}
+                              {newlyAddedWallet === currency && (
+                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium animate-pulse">
+                                  Added!
+                                </span>
+                              )}
+                            </div>
                             <div className="text-sm text-gray-500 font-medium">{currency}</div>
                             {hasStableCoins(currency) && (
                               <div className="flex items-center gap-1 mt-1">
@@ -587,7 +638,7 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
               placeholder="Search cryptocurrencies (e.g., Bitcoin, Ethereum, Solana...)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-14 text-base border-2 border-gray-200 focus:border-purple-500 rounded-xl"
+              className="pl-12 h-14 text-base border-2 border-gray-200 focus:border-purple-500 focus:ring-0 focus:ring-offset-0 rounded-xl"
             />
           </div>
           
