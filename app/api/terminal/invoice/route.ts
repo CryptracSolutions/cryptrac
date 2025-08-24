@@ -351,9 +351,24 @@ export async function POST(request: NextRequest) {
         subtotal_with_tax: subtotalWithTax
       })
     });
+    
     const paymentJson = await paymentRes.json();
+    
     if (!paymentRes.ok || !paymentJson?.payment?.pay_address) {
-      return NextResponse.json({ error: 'Failed to create payment' }, { status: 500 });
+      // Return detailed error information
+      if (paymentJson?.code === 'AMOUNT_TOO_SMALL_FOR_AUTO_FORWARDING') {
+        return NextResponse.json({ 
+          error: 'Payment amount too small for auto-forwarding',
+          details: paymentJson.details,
+          suggestedAmount: paymentJson.suggestedAmount,
+          code: paymentJson.code
+        }, { status: 400 });
+      }
+      
+      return NextResponse.json({ 
+        error: 'Failed to create payment',
+        details: paymentJson?.error || paymentJson?.details || 'Unknown error'
+      }, { status: 500 });
     }
     return NextResponse.json({
       payment_link: paymentLink,

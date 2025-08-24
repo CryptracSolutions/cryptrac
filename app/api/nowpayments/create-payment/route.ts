@@ -154,6 +154,85 @@ function handleNOWPaymentsError(error: unknown, context: string): NextResponse {
   return NextResponse.json(response, { status: statusCode, headers })
 }
 
+// Function to get minimum amount for a currency pair
+async function getMinimumAmount(currencyFrom: string, currencyTo: string): Promise<number> {
+  const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY!
+  const NOWPAYMENTS_BASE_URL = 'https://api.nowpayments.io/v1'
+  
+  try {
+    const from = currencyFrom.toLowerCase()
+    const to = currencyTo.toLowerCase()
+    
+    const response = await fetch(`${NOWPAYMENTS_BASE_URL}/min-amount?currency_from=${from}&currency_to=${to}`, {
+      method: 'GET',
+      headers: {
+        'x-api-key': NOWPAYMENTS_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      signal: AbortSignal.timeout(10000)
+    })
+
+    if (!response.ok) {
+      console.warn(`⚠️ Could not fetch minimum amount for ${from}→${to}: ${response.status}`)
+      // Return reasonable defaults based on currency type
+      if (to === 'btc') return 0.000001 // 1 satoshi
+      if (to === 'eth' || to === 'ethbase') return 0.0001
+      if (to.includes('usdt') || to.includes('usdc') || to === 'dai' || to === 'pyusd') return 1.0
+      return 0.01 // Default minimum
+    }
+
+    const data = await response.json()
+    return parseFloat(data.min_amount) || 0.01
+
+  } catch (error) {
+    console.warn(`⚠️ Error fetching minimum amount for ${currencyFrom}→${currencyTo}:`, error)
+    // Return reasonable defaults
+    if (currencyTo.toLowerCase() === 'btc') return 0.000001
+    if (currencyTo.toLowerCase() === 'eth' || currencyTo.toLowerCase() === 'ethbase') return 0.0001
+    if (currencyTo.toLowerCase().includes('usdt') || currencyTo.toLowerCase().includes('usdc') || currencyTo.toLowerCase() === 'dai' || currencyTo.toLowerCase() === 'pyusd') return 1.0
+    return 0.01
+  }
+}
+
+// Function to validate if amount is sufficient for auto-forwarding
+async function validateAmountForAutoForwarding(
+  priceAmount: number, 
+  priceCurrency: string, 
+  payoutCurrency: string,
+  feePercentage: number
+): Promise<{ isValid: boolean; minAmount?: number; suggestedAmount?: number }> {
+  try {
+    console.log(`🔍 Validating amount for auto-forwarding: ${priceAmount} ${priceCurrency} → ${payoutCurrency} (fee: ${feePercentage * 100}%)`)
+    
+    const minPayoutAmount = await getMinimumAmount(priceCurrency, payoutCurrency)
+    console.log(`📊 Minimum payout amount for ${payoutCurrency}: ${minPayoutAmount}`)
+    
+    // Calculate what the merchant would receive after fees
+    const merchantReceives = priceAmount * (1 - feePercentage)
+    console.log(`💰 Merchant would receive: ${merchantReceives} ${payoutCurrency}`)
+    
+    if (merchantReceives < minPayoutAmount) {
+      // Calculate how much the customer needs to pay to meet minimum
+      const suggestedPriceAmount = minPayoutAmount / (1 - feePercentage)
+      
+      console.log(`⚠️ Amount too small! Need at least: $${suggestedPriceAmount}`)
+      
+      return {
+        isValid: false,
+        minAmount: minPayoutAmount,
+        suggestedAmount: Math.ceil(suggestedPriceAmount * 100) / 100 // Round up to nearest cent
+      }
+    }
+    
+    console.log(`✅ Amount validation passed`)
+    return { isValid: true }
+  } catch (error) {
+    console.warn('⚠️ Could not validate amount for auto-forwarding:', error)
+    // If we can't validate, assume it's valid to avoid blocking payments
+    return { isValid: true }
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createClient(
@@ -282,7 +361,7 @@ export async function POST(request: Request) {
       is_fee_paid_by_user: chargeCustomerFee === true
     }
 
-    // Enhanced auto-forwarding logic
+    // Enhanced auto-forwarding logic with amount validation
     let autoForwardingConfigured = false
     const wallets = merchant.wallets || {}
 
@@ -300,6 +379,34 @@ export async function POST(request: Request) {
 
         // Validate wallet address format
         if (isValidWalletAddress(walletAddress, targetPayoutCurrency)) {
+          // Validate amount for auto-forwarding before configuring it
+          const validation = await validateAmountForAutoForwarding(
+            paymentRequest.price_amount,
+            paymentRequest.price_currency,
+            targetPayoutCurrency.toLowerCase(),
+            totalFeePct
+          )
+
+          if (!validation.isValid) {
+            console.warn(`⚠️ Amount too small for auto-forwarding to ${targetPayoutCurrency}`)
+            console.warn(`   Required minimum: ${validation.minAmount} ${targetPayoutCurrency}`)
+            console.warn(`   Suggested amount: $${validation.suggestedAmount}`)
+            
+            // Return detailed error with suggestions
+            return NextResponse.json(
+              { 
+                success: false, 
+                error: 'Payment amount too small for auto-forwarding',
+                details: `The minimum payout amount for ${targetPayoutCurrency} is ${validation.minAmount}. Please increase the payment amount to at least $${validation.suggestedAmount}.`,
+                code: 'AMOUNT_TOO_SMALL_FOR_AUTO_FORWARDING',
+                minAmount: validation.minAmount,
+                suggestedAmount: validation.suggestedAmount,
+                currency: targetPayoutCurrency
+              },
+              { status: 400 }
+            )
+          }
+
           paymentRequest.payout_address = walletAddress
           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
           autoForwardingConfigured = true
@@ -388,11 +495,26 @@ export async function POST(request: Request) {
         
         // Handle specific NOWPayments errors
         if (errorData.code === 'BAD_REQUEST' && errorData.message?.includes('amountTo is too small')) {
+          // Try to get minimum amount information for better error message
+          let minAmountInfo = ''
+          if (autoForwardingConfigured && paymentRequest.payout_currency) {
+            try {
+              const minAmount = await getMinimumAmount(
+                paymentRequest.price_currency,
+                paymentRequest.payout_currency
+              )
+              const suggestedAmount = minAmount / (1 - totalFeePct)
+              minAmountInfo = ` The minimum payout amount for ${paymentRequest.payout_currency.toUpperCase()} is ${minAmount}. Please increase the payment amount to at least $${Math.ceil(suggestedAmount * 100) / 100}.`
+            } catch (error) {
+              console.warn('Could not fetch minimum amount for error message:', error)
+            }
+          }
+          
           return NextResponse.json(
             { 
               success: false, 
               error: 'Payment amount too small for processing after fees. Please try a larger amount.',
-              details: 'The payout amount after fees is below the minimum threshold for auto-forwarding to your wallet',
+              details: `The payout amount after fees is below the minimum threshold for auto-forwarding to your wallet.${minAmountInfo}`,
               code: 'AMOUNT_TOO_SMALL'
             },
             { status: 400 }

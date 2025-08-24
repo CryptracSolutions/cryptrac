@@ -325,7 +325,19 @@ export default function SmartTerminalPage() {
           return;
         }
         
-        throw new Error(errorData.error || 'Failed to create payment');
+        // Handle amount too small for auto-forwarding error
+        if (errorData.code === 'AMOUNT_TOO_SMALL_FOR_AUTO_FORWARDING') {
+          setError(`Amount too small for auto-forwarding. ${errorData.details || ''} Please try a larger amount.`);
+          return;
+        }
+        
+        // Handle general amount too small error
+        if (errorData.code === 'AMOUNT_TOO_SMALL') {
+          setError(`Payment amount too small. ${errorData.details || ''} Please try a larger amount.`);
+          return;
+        }
+        
+        throw new Error(errorData.error || errorData.details || 'Failed to create payment');
       }
       
       const json = await res.json();
