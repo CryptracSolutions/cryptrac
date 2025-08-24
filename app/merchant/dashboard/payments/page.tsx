@@ -545,22 +545,10 @@ export default function PaymentsPage() {
           <p className="text-body-lg text-gray-600 font-medium">View and manage all your payments</p>
         </div>
         <div className="flex gap-4">
-          <Link href="/smart-terminal">
-            <Button variant="outline" size="lg" className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5" />
-              Smart Terminal
-            </Button>
-          </Link>
           <Link href="/merchant/subscriptions">
             <Button variant="outline" size="lg" className="flex items-center gap-3">
               <Calendar className="h-5 w-5" />
-              Subscriptions
-            </Button>
-          </Link>
-          <Link href="/merchant/dashboard/payments/create">
-            <Button size="lg" className="flex items-center gap-3">
-              <Plus className="h-5 w-5" />
-              Create Payment Link
+              Manage Subscriptions
             </Button>
           </Link>
         </div>

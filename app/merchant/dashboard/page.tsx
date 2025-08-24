@@ -327,15 +327,7 @@ export default function MerchantDashboard() {
               size="lg"
             >
               <LinkIcon className="h-5 w-5" />
-              View All Links
-            </Button>
-            <Button 
-              onClick={() => router.push('/merchant/dashboard/payments/create')}
-              className="flex items-center gap-3"
-              size="lg"
-            >
-              <Plus className="h-5 w-5" />
-              Create Payment Link
+              Manage Payments
             </Button>
           </div>
         </div>
@@ -480,22 +472,6 @@ export default function MerchantDashboard() {
                 </div>
               </Button>
 
-              <Button 
-                onClick={() => router.push('/merchant/dashboard/payments')}
-                className="w-full justify-start h-auto p-6"
-                variant="outline"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-green-100 rounded-xl">
-                    <LinkIcon className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-lg">Manage Payment Links</div>
-                    <div className="text-sm text-gray-500">View and manage your existing links</div>
-                  </div>
-                </div>
-              </Button>
-
               <Button
                 onClick={() => router.push('/smart-terminal')}
                 className="w-full justify-start h-auto p-6"
@@ -508,6 +484,22 @@ export default function MerchantDashboard() {
                   <div className="text-left">
                     <div className="font-bold text-lg">Smart Terminal</div>
                     <div className="text-sm text-gray-500">Accept in-person crypto payments</div>
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => router.push('/merchant/subscriptions/create')}
+                className="w-full justify-start h-auto p-6"
+                variant="outline"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-indigo-100 rounded-xl">
+                    <Calendar className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-lg">Create Subscription</div>
+                    <div className="text-sm text-gray-500">Set up a recurring payment plan</div>
                   </div>
                 </div>
               </Button>
@@ -536,7 +528,7 @@ export default function MerchantDashboard() {
                     onClick={() => router.push('/merchant/dashboard/payments/create')}
                     size="lg"
                   >
-                    Create Payment Link
+                    Get Started
                   </Button>
                 </div>
               ) : (
@@ -560,49 +552,6 @@ export default function MerchantDashboard() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Subscription Management Section */}
-        <Card className="card-hover shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">Subscription Management</CardTitle>
-            <CardDescription className="text-body">
-              Manage your recurring payment plans
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={() => router.push('/merchant/subscriptions/create')}
-              className="w-full justify-start h-auto p-6"
-              variant="outline"
-            >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-indigo-100 rounded-xl">
-                  <Plus className="h-6 w-6 text-indigo-600" />
-                </div>
-                <div className="text-left">
-                  <div className="font-bold text-lg">Create Subscription</div>
-                  <div className="text-sm text-gray-500">Set up a recurring payment plan</div>
-                </div>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => router.push('/merchant/subscriptions')}
-              className="w-full justify-start h-auto p-6"
-              variant="outline"
-            >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-teal-100 rounded-xl">
-                  <Calendar className="h-6 w-6 text-teal-600" />
-                </div>
-                <div className="text-left">
-                  <div className="font-bold text-lg">Manage Subscriptions</div>
-                  <div className="text-sm text-gray-500">View and manage recurring payments</div>
-                </div>
-              </div>
-            </Button>
-          </CardContent>
-        </Card>
 
         {/* Enhanced Supported Cryptocurrencies */}
         <Card className="card-hover shadow-lg">
