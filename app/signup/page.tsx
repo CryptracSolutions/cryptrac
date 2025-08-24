@@ -92,8 +92,8 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
         <div className="relative flex items-center justify-center p-12">
           <div className="text-center text-white max-w-lg">
             <div className="mb-8">
@@ -101,46 +101,31 @@ export default function Signup() {
                 <Zap className="h-12 w-12 text-white" />
               </div>
               <h2 className="text-3xl font-bold mb-4">Start Accepting Crypto Today</h2>
-              <p className="text-xl text-primary-100 leading-relaxed">
+              <p className="text-xl text-white/90 leading-relaxed">
                 Join the cryptocurrency revolution. Set up your payment gateway in minutes and start accepting digital payments from customers worldwide.
               </p>
             </div>
 
             {/* Trust Indicators */}
             <div className="space-y-6">
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
+              <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-5 w-5" />
                   <span className="font-medium">Secure & Non-Custodial</span>
                 </div>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
+              <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Zap className="h-5 w-5" />
                   <span className="font-medium">Instant Setup</span>
                 </div>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
+              <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <CreditCard className="h-5 w-5" />
                   <span className="font-medium">Global Support</span>
                 </div>
               </div>
-            </div>
-
-            {/* CTA */}
-            <div className="mt-12">
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-white text-white hover:bg-white hover:text-[#7f5efd] transition-all"
-                asChild
-              >
-                <Link href="/signup">
-                  Get Started Now
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
             </div>
           </div>
         </div>

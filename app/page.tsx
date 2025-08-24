@@ -127,16 +127,16 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-primary-50 py-20 sm:py-32">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-100/20 to-purple-100/20"></div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#f5f3ff] via-white to-[#f5f3ff] py-20 sm:py-32">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#ede9fe]/20 to-[#ddd6fe]/20"></div>
         <div className="container-wide relative">
           <div className="mx-auto max-w-4xl text-center">
 
-            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
+            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-8 leading-tight">
               Get Paid in{" "}
               <span className="text-gradient-primary">Crypto</span>
             </h1>
-            <p className="mt-6 text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-8">
+            <p className="text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
             </p>
             
@@ -158,16 +158,16 @@ export default function Home() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="mt-12 flex items-center justify-center space-x-8 text-sm text-gray-600">
-              <div className="flex items-center space-x-2 bg-[#f5f3ff] px-4 py-2 rounded-full">
+            <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Shield className="h-4 w-4 text-[#7f5efd]" />
                 <span className="font-medium">Secure & Non-Custodial</span>
               </div>
-              <div className="flex items-center space-x-2 bg-[#f5f3ff] px-4 py-2 rounded-full">
+              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Zap className="h-4 w-4 text-[#7f5efd]" />
                 <span className="font-medium">Instant Setup</span>
               </div>
-              <div className="flex items-center space-x-2 bg-[#f5f3ff] px-4 py-2 rounded-full">
+              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Globe className="h-4 w-4 text-[#7f5efd]" />
                 <span className="font-medium">Global Support</span>
               </div>
@@ -187,14 +187,14 @@ export default function Home() {
               Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies
             </p>
           </div>
-          <div className="flex flex-wrap justify-center items-center gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-6xl mx-auto">
             {supportedCryptos.map((crypto) => (
-              <div key={crypto.symbol} className="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f5f3ff] transition-colors group">
-                <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors">
+              <div key={crypto.symbol} className="flex flex-col items-center p-6 rounded-2xl hover:bg-[#f5f3ff] transition-all duration-300 group hover:shadow-lg">
+                <div className="p-3 bg-[#ede9fe] rounded-xl group-hover:bg-[#ddd6fe] transition-colors mb-4">
                   <CryptoIcon currency={crypto.symbol} size="lg" />
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900 text-lg">{crypto.name}</div>
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900 text-base mb-1">{crypto.name}</div>
                   <div className="text-sm text-[#7f5efd] font-medium">{crypto.symbol}</div>
                 </div>
               </div>
@@ -204,13 +204,13 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-gray-50">
+      <section id="features" className="py-24 bg-gray-50">
         <div className="container-wide">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
               Everything you need to accept crypto payments
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Built for businesses of all sizes. From freelancers to enterprises, Cryptrac makes crypto payments simple.
             </p>
           </div>
@@ -235,13 +235,13 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-white">
+      <section id="pricing" className="py-24 bg-white">
         <div className="container-wide">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
               Simple, transparent pricing
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               No hidden fees, no transaction fees to Cryptrac. Just a simple monthly subscription and transparent gateway fees.
             </p>
           </div>
@@ -304,13 +304,13 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-gray-50">
+      <section id="faq" className="py-24 bg-gray-50">
         <div className="container-wide">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 leading-relaxed">
               Everything you need to know about Cryptrac pricing and fees
             </p>
           </div>
@@ -470,27 +470,24 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#7c3aed]/90 to-[#6d28d9]/90"></div>
+      <section className="py-24 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
         <div className="container-wide text-center relative">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to start accepting crypto payments?
           </h2>
-          <p className="text-xl text-primary-100 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-white/90 mb-10 max-w-3xl mx-auto leading-relaxed">
             Join thousands of businesses already using Cryptrac to accept cryptocurrency payments securely and efficiently.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-white text-[#7f5efd] hover:bg-gray-50" asChild>
+          <div className="flex justify-center">
+            <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-white text-[#7f5efd] hover:bg-gray-50 transition-all duration-200" asChild>
               <Link href="/signup">
                 Start Free 30-Day Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="xl" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-[#7f5efd]" asChild>
-              <Link href="/login">Sign In</Link>
-            </Button>
           </div>
-          <div className="mt-8 text-primary-100 text-sm">
+          <div className="mt-8 text-white/80 text-sm">
             No credit card required • Full access during trial • $19/month after trial
           </div>
         </div>

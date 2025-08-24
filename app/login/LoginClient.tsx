@@ -68,8 +68,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
         <div className="relative flex items-center justify-center p-12">
           <div className="text-center text-white max-w-lg">
             <div className="mb-8">
@@ -77,26 +77,26 @@ export default function Login() {
                 <Shield className="h-12 w-12 text-white" />
               </div>
               <h2 className="text-3xl font-bold mb-4">Secure Crypto Payments</h2>
-              <p className="text-xl text-primary-100 leading-relaxed">
+              <p className="text-xl text-white/90 leading-relaxed">
                 Welcome to the future of payments. Manage your cryptocurrency transactions with confidence and security.
               </p>
             </div>
 
             {/* Trust Indicators */}
             <div className="space-y-6">
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
+              <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-5 w-5" />
                   <span className="font-medium">Non-Custodial Security</span>
                 </div>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
+              <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Zap className="h-5 w-5" />
                   <span className="font-medium">Instant Processing</span>
                 </div>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
+              <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <CreditCard className="h-5 w-5" />
                   <span className="font-medium">Global Support</span>
