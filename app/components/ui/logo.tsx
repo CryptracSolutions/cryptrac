@@ -1,4 +1,5 @@
 import * as React from "react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -23,54 +24,22 @@ const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
       xl: "text-3xl"
     }
     
-    const iconColor = variant === "white" ? "#ffffff" : variant === "dark" ? "#1f2937" : "#7f5efd"
-    
     return (
       <div
         ref={ref}
-        className={cn("flex items-center gap-2", className)}
+        className={cn("flex items-center gap-3", className)}
         {...props}
       >
-        {/* Cryptrac Icon - Simplified version of the logo */}
+        {/* Cryptrac Logo */}
         <div className={cn("flex items-center justify-center", sizeClasses[size])}>
-          <svg
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-full w-full"
-          >
-            {/* Simplified geometric representation of the Cryptrac logo */}
-            <rect
-              x="10"
-              y="20"
-              width="80"
-              height="15"
-              rx="7.5"
-              fill={iconColor}
-            />
-            <rect
-              x="10"
-              y="42.5"
-              width="60"
-              height="15"
-              rx="7.5"
-              fill={iconColor}
-            />
-            <rect
-              x="10"
-              y="65"
-              width="80"
-              height="15"
-              rx="7.5"
-              fill={iconColor}
-            />
-            <circle
-              cx="75"
-              cy="50"
-              r="8"
-              fill={variant === "white" ? "#ffffff" : "#ffffff"}
-            />
-          </svg>
+          <Image
+            src="/logo.png"
+            alt="Cryptrac Logo"
+            width={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
+            height={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
+            className="h-full w-full object-contain"
+            priority
+          />
         </div>
         
         {showText && (

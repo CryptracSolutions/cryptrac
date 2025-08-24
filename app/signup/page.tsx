@@ -133,7 +133,7 @@ export default function Signup() {
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-white text-white hover:bg-white hover:text-primary-600 transition-all"
+                className="border-white text-white hover:bg-white hover:text-[#7f5efd] transition-all"
                 asChild
               >
                 <Link href="/signup">
@@ -159,7 +159,7 @@ export default function Signup() {
               Join thousands of businesses already using Cryptrac to accept cryptocurrency payments from customers
             </p>
             <div className="flex justify-center">
-              <Badge className="bg-primary-100 text-primary-700 border-primary-200 px-4 py-2 text-sm font-semibold">
+              <Badge className="bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe] px-4 py-2 text-sm font-semibold">
                 30-day free trial
               </Badge>
             </div>
@@ -214,7 +214,7 @@ export default function Signup() {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-14 text-lg font-semibold shadow-lg"
+                  className="w-full h-14 text-lg font-semibold shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                   size="lg"
                   disabled={loading}
                 >
@@ -227,7 +227,7 @@ export default function Signup() {
                   Already have an account?{' '}
                   <Link 
                     href="/login" 
-                    className="text-primary-600 hover:text-primary-700 font-semibold transition-colors"
+                    className="text-[#7f5efd] hover:text-[#7c3aed] font-semibold transition-colors"
                   >
                     Sign in
                   </Link>
@@ -240,15 +240,15 @@ export default function Signup() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3 text-sm text-gray-600">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-primary-600 flex-shrink-0" />
+                <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />
                 <span>Accept Bitcoin, Ethereum, and more</span>
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-primary-600 flex-shrink-0" />
+                <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />
                 <span>Non-custodial - you control your funds</span>
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-primary-600 flex-shrink-0" />
+                <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />
                 <span>Gateway Fee: 0.5% (direct), 1% (auto-convert)</span>
               </div>
             </div>
@@ -258,11 +258,11 @@ export default function Signup() {
           <div className="text-center text-sm text-gray-500">
             <p>
               By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-primary-600 hover:text-primary-700 transition-colors">
+              <Link href="/terms" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-primary-600 hover:text-primary-700 transition-colors">
+              <Link href="/privacy" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
                 Privacy Policy
               </Link>
             </p>

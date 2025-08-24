@@ -8,14 +8,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary-500 text-white shadow-lg hover:bg-primary-600 hover:shadow-xl active:scale-[0.98]",
-        destructive: "bg-error-500 text-white shadow-lg hover:bg-error-600 hover:shadow-xl active:scale-[0.98]",
-        outline: "border-2 border-primary-500 bg-white text-primary-500 hover:bg-primary-50 hover:border-primary-600 active:scale-[0.98]",
+        default: "bg-[#7f5efd] text-white shadow-lg hover:bg-[#7c3aed] hover:shadow-xl active:scale-[0.98]",
+        destructive: "bg-red-500 text-white shadow-lg hover:bg-red-600 hover:shadow-xl active:scale-[0.98]",
+        outline: "border-2 border-[#7f5efd] bg-white text-[#7f5efd] hover:bg-[#f5f3ff] hover:border-[#7c3aed] active:scale-[0.98]",
         secondary: "bg-gray-100 text-gray-900 border border-gray-200 hover:bg-gray-200 hover:border-gray-300 active:scale-[0.98]",
         ghost: "text-gray-700 hover:bg-gray-100 hover:text-gray-900 active:scale-[0.98]",
-        link: "text-primary-500 underline-offset-4 hover:underline hover:text-primary-600",
-        gradient: "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg hover:from-primary-600 hover:to-primary-700 hover:shadow-xl active:scale-[0.98]",
-        success: "bg-success-500 text-white shadow-lg hover:bg-success-600 hover:shadow-xl active:scale-[0.98]",
+        link: "text-[#7f5efd] underline-offset-4 hover:underline hover:text-[#7c3aed]",
+        gradient: "bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] text-white shadow-lg hover:from-[#7c3aed] hover:to-[#8b5cf6] hover:shadow-xl active:scale-[0.98]",
+        success: "bg-green-500 text-white shadow-lg hover:bg-green-600 hover:shadow-xl active:scale-[0.98]",
       },
       size: {
         default: "h-11 px-6 py-3 text-base",

@@ -47,13 +47,22 @@ export default function Home() {
     { symbol: "ETH", name: "Ethereum" },
     { symbol: "SOL", name: "Solana" },
     { symbol: "XRP", name: "Ripple" },
-    { symbol: "BNB", name: "BNB" },
-    { symbol: "TRX", name: "TRON" },
+    { symbol: "BNB", name: "Binance Smart Chain" },
+    { symbol: "TRX", name: "Tron" },
     { symbol: "AVAX", name: "Avalanche" },
     { symbol: "XLM", name: "Stellar" },
     { symbol: "TON", name: "Toncoin" },
     { symbol: "SUI", name: "Sui" },
-    { symbol: "USDC", name: "USD Coin" }
+    { symbol: "USDC", name: "USD Coin" },
+    { symbol: "USDT", name: "USD Tether" },
+    { symbol: "LTC", name: "Litecoin" },
+    { symbol: "ADA", name: "Cardano" },
+    { symbol: "DOGE", name: "Dogecoin" },
+    { symbol: "ALGO", name: "Algorand" },
+    { symbol: "DOT", name: "Polkadot" },
+    { symbol: "BASE", name: "Base" },
+    { symbol: "MATIC", name: "Polygon" },
+    { symbol: "PYUSD", name: "PayPal USD" }
   ];
 
   const benefits = [
@@ -107,10 +116,10 @@ export default function Home() {
             </Link>
           </nav>
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100" asChild>
               <Link href="/login">Log in</Link>
             </Button>
-            <Button size="sm" asChild>
+            <Button size="sm" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
               <Link href="/signup">Get Started</Link>
             </Button>
           </div>
@@ -131,25 +140,16 @@ export default function Home() {
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
             </p>
             
-            {/* Hero Transparency Callout */}
-            <div className="mt-8 mx-auto max-w-2xl mb-10">
-              <Alert className="border-green-200 bg-green-50 shadow-sm">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                <AlertDescription className="text-green-800 font-medium">
-                  <strong>Transparent Pricing:</strong> $19/month subscription - no transaction fees to Cryptrac. 
-                  Gateway fees (0.5-1%) go to payment processor, not us.
-                </AlertDescription>
-              </Alert>
-            </div>
+
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="xl" className="text-lg px-8 py-4 shadow-lg" asChild>
+              <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
                 <Link href="/signup">
                   Start Free 30-Day Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="outline" size="xl" className="text-lg px-8 py-4" asChild>
+              <Button variant="outline" size="xl" className="text-lg px-8 py-4 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
                 <Link href="#pricing">View Pricing</Link>
               </Button>
             </div>
@@ -158,18 +158,18 @@ export default function Home() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="mt-12 flex items-center justify-center space-x-8 text-sm text-gray-500">
-              <div className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-primary-500" />
-                <span>Secure & Non-Custodial</span>
+            <div className="mt-12 flex items-center justify-center space-x-8 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 bg-[#f5f3ff] px-4 py-2 rounded-full">
+                <Shield className="h-4 w-4 text-[#7f5efd]" />
+                <span className="font-medium">Secure & Non-Custodial</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Zap className="h-4 w-4 text-primary-500" />
-                <span>Instant Setup</span>
+              <div className="flex items-center space-x-2 bg-[#f5f3ff] px-4 py-2 rounded-full">
+                <Zap className="h-4 w-4 text-[#7f5efd]" />
+                <span className="font-medium">Instant Setup</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Globe className="h-4 w-4 text-primary-500" />
-                <span>Global Support</span>
+              <div className="flex items-center space-x-2 bg-[#f5f3ff] px-4 py-2 rounded-full">
+                <Globe className="h-4 w-4 text-[#7f5efd]" />
+                <span className="font-medium">Global Support</span>
               </div>
             </div>
           </div>
@@ -187,13 +187,15 @@ export default function Home() {
               Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies
             </p>
           </div>
-          <div className="flex flex-wrap justify-center items-center gap-12">
+          <div className="flex flex-wrap justify-center items-center gap-8">
             {supportedCryptos.map((crypto) => (
-              <div key={crypto.symbol} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors">
-                <CryptoIcon currency={crypto.symbol} size="lg" />
+              <div key={crypto.symbol} className="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f5f3ff] transition-colors group">
+                <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors">
+                  <CryptoIcon currency={crypto.symbol} size="lg" />
+                </div>
                 <div>
                   <div className="font-semibold text-gray-900 text-lg">{crypto.name}</div>
-                  <div className="text-sm text-gray-500">{crypto.symbol}</div>
+                  <div className="text-sm text-[#7f5efd] font-medium">{crypto.symbol}</div>
                 </div>
               </div>
             ))}
@@ -214,15 +216,15 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+                              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white group">
                 <CardHeader className="text-center pb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                    <feature.icon className="h-8 w-8 text-primary-600" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <feature.icon className="h-8 w-8 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold text-gray-900">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center">
-                  <CardDescription className="text-base leading-relaxed">
+                  <CardDescription className="text-base leading-relaxed text-gray-600">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
@@ -246,11 +248,11 @@ export default function Home() {
 
           {/* Main Pricing Card */}
           <div className="max-w-lg mx-auto">
-            <Card className="border-2 border-primary-500 shadow-2xl bg-white relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-purple-500"></div>
+            <Card className="border-2 border-[#7f5efd] shadow-2xl bg-white relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa]"></div>
               <CardHeader className="text-center pb-8 pt-8">
                 <div className="flex justify-center mb-6">
-                  <Badge className="text-sm font-semibold bg-primary-500 text-white px-4 py-2">
+                  <Badge className="text-sm font-semibold bg-[#7f5efd] text-white px-4 py-2">
                     Most Popular
                   </Badge>
                 </div>
@@ -270,14 +272,14 @@ export default function Home() {
                 <div className="space-y-4">
                   {benefits.map((benefit, index) => (
                     <div key={index} className="flex items-center gap-4">
-                      <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="h-4 w-4 text-primary-600" />
+                      <div className="w-6 h-6 bg-[#f5f3ff] rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="h-4 w-4 text-[#7f5efd]" />
                       </div>
                       <span className="text-gray-700">{benefit}</span>
                     </div>
                   ))}
                 </div>
-                <Button size="lg" className="w-full h-14 text-lg font-semibold shadow-lg" asChild>
+                <Button size="lg" className="w-full h-14 text-lg font-semibold shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
                   <Link href="/signup">Start Free Trial</Link>
                 </Button>
                 <p className="text-xs text-center text-gray-500">
@@ -289,9 +291,9 @@ export default function Home() {
 
           {/* Fee Transparency Notice */}
           <div className="mt-16 max-w-4xl mx-auto">
-            <Alert className="border-primary-200 bg-primary-50 shadow-sm">
-              <Info className="h-5 w-5 text-primary-600" />
-              <AlertDescription className="text-primary-800 font-medium">
+            <Alert className="border-[#ede9fe] bg-[#f5f3ff] shadow-sm">
+              <Info className="h-5 w-5 text-[#7f5efd]" />
+              <AlertDescription className="text-[#6d28d9] font-medium">
                   <strong>Complete Transparency:</strong> Cryptrac&apos;s only revenue is the $19/month subscription.
                 Gateway fees (0.5% or 1%) are charged by the payment processor for handling transactions and go directly to them, not to Cryptrac. 
                 Network fees may vary by cryptocurrency and blockchain congestion.
@@ -317,8 +319,8 @@ export default function Home() {
               <Card key={index} className="border-0 shadow-lg bg-white">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <HelpCircle className="h-4 w-4 text-primary-600" />
+                    <div className="w-8 h-8 bg-[#f5f3ff] rounded-full flex items-center justify-center flex-shrink-0">
+                      <HelpCircle className="h-4 w-4 text-[#7f5efd]" />
                     </div>
                     {item.question}
                   </CardTitle>
@@ -373,27 +375,27 @@ export default function Home() {
                 </Card>
 
                 {/* Crypto Payments */}
-                <Card className="border-2 border-primary-500 shadow-lg bg-white">
+                <Card className="border-2 border-[#7f5efd] shadow-lg bg-white">
                   <CardHeader className="text-center pb-6">
                     <CardTitle className="text-2xl font-bold text-gray-900">Crypto Payments</CardTitle>
                     <p className="text-gray-600">Bitcoin, Ethereum, Solana, etc.</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="text-center">
-                      <div className="text-4xl font-bold text-primary-600 mb-2">0.5% - 1%</div>
+                      <div className="text-4xl font-bold text-[#7f5efd] mb-2">0.5% - 1%</div>
                       <p className="text-gray-600">gateway fee only</p>
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
                         <span className="text-gray-700">No fixed fees</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
                         <span className="text-gray-700">Lower cost for all transaction sizes</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
                         <span className="text-gray-700">Direct to your crypto wallet</span>
                       </div>
                     </div>
@@ -405,13 +407,13 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 <Card className="border-0 shadow-lg bg-white">
                   <CardHeader className="text-center">
-                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <DollarSign className="h-6 w-6 text-primary-600" />
+                    <div className="w-12 h-12 bg-[#f5f3ff] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <DollarSign className="h-6 w-6 text-[#7f5efd]" />
                     </div>
                     <CardTitle className="text-lg font-bold text-gray-900">Gateway Fee</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <div className="text-2xl font-bold text-primary-600 mb-2">0.5% - 1%</div>
+                    <div className="text-2xl font-bold text-[#7f5efd] mb-2">0.5% - 1%</div>
                     <p className="text-sm text-gray-600 mb-4">
                       Charged by payment processor for handling transactions
                     </p>
@@ -443,13 +445,13 @@ export default function Home() {
 
                 <Card className="border-0 shadow-lg bg-white">
                   <CardHeader className="text-center">
-                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="h-6 w-6 text-primary-600" />
+                    <div className="w-12 h-12 bg-[#f5f3ff] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="h-6 w-6 text-[#7f5efd]" />
                     </div>
                     <CardTitle className="text-lg font-bold text-gray-900">Cryptrac Fee</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <div className="text-2xl font-bold text-primary-600 mb-2">$19/month</div>
+                    <div className="text-2xl font-bold text-[#7f5efd] mb-2">$19/month</div>
                     <p className="text-sm text-gray-600 mb-4">
                       Subscription only - no transaction fees
                     </p>
@@ -461,35 +463,15 @@ export default function Home() {
                 </Card>
               </div>
 
-              {/* Bottom Line */}
-              <Card className="border-2 border-primary-500 shadow-lg bg-gradient-to-r from-primary-50 to-purple-50">
-                <CardContent className="p-8 text-center">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">The Bottom Line</h3>
-                  <p className="text-lg text-gray-700 mb-6">
-                    <strong>99% of the time, crypto payments are cheaper than traditional card payments.</strong>
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900 mb-2">Traditional (Stripe):</div>
-                      <div className="text-gray-600">$10 sale = $0.59 fee (5.9%)</div>
-                      <div className="text-gray-600">$100 sale = $3.20 fee (3.2%)</div>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900 mb-2">Crypto (Cryptrac):</div>
-                      <div className="text-gray-600">$10 sale = $0.05 fee (0.5%)</div>
-                      <div className="text-gray-600">$100 sale = $0.50 fee (0.5%)</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
+      <section className="py-20 bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#7c3aed]/90 to-[#6d28d9]/90"></div>
         <div className="container-wide text-center relative">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to start accepting crypto payments?
@@ -498,13 +480,13 @@ export default function Home() {
             Join thousands of businesses already using Cryptrac to accept cryptocurrency payments securely and efficiently.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-white text-primary-600 hover:bg-gray-50" asChild>
+            <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-white text-[#7f5efd] hover:bg-gray-50" asChild>
               <Link href="/signup">
                 Start Free 30-Day Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="xl" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-primary-600" asChild>
+            <Button size="xl" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-[#7f5efd]" asChild>
               <Link href="/login">Sign In</Link>
             </Button>
           </div>

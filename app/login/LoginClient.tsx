@@ -168,7 +168,7 @@ export default function Login() {
                   <div className="text-sm">
                     <Link 
                       href="/forgot-password" 
-                      className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                      className="text-[#7f5efd] hover:text-[#7c3aed] font-medium transition-colors"
                     >
                       Forgot password?
                     </Link>
@@ -177,7 +177,7 @@ export default function Login() {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-14 text-lg font-semibold shadow-lg"
+                  className="w-full h-14 text-lg font-semibold shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                   size="lg"
                   disabled={loading}
                 >
@@ -190,7 +190,7 @@ export default function Login() {
                   Don&apos;t have an account?{' '}
                   <Link 
                     href="/signup" 
-                    className="text-primary-600 hover:text-primary-700 font-semibold transition-colors"
+                    className="text-[#7f5efd] hover:text-[#7c3aed] font-semibold transition-colors"
                   >
                     Sign up for free
                   </Link>
@@ -203,11 +203,11 @@ export default function Login() {
           <div className="text-center text-sm text-gray-500">
             <p>
               By signing in, you agree to our{' '}
-              <Link href="/terms" className="text-primary-600 hover:text-primary-700 transition-colors">
+              <Link href="/terms" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-primary-600 hover:text-primary-700 transition-colors">
+              <Link href="/privacy" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
                 Privacy Policy
               </Link>
             </p>
