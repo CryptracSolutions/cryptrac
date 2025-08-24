@@ -3,8 +3,9 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info, Wallet, Shield, Coins, Star, ChevronDown, ChevronRight, Copy } from 'lucide-react'
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
+import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 
 interface CurrencyInfo {
   code: string
@@ -315,24 +316,36 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   }, [wallets, validationStatus])
 
   const renderCurrencyInput = (currency: CompatibleCurrency, isAutoIncluded: boolean = false) => (
-    <div key={currency.code} className={`relative border rounded-xl p-4 transition-all ${
-      validationStatus[currency.code] === 'valid' ? 'border-green-300 bg-green-50/50' :
-      validationStatus[currency.code] === 'invalid' ? 'border-red-300 bg-red-50/50' :
-      isAutoIncluded ? 'border-blue-200 bg-blue-50/30' :
-      'border-gray-200 hover:border-gray-300'
+    <div key={currency.code} className={`relative border-2 rounded-xl p-6 transition-all duration-200 ${
+      validationStatus[currency.code] === 'valid' ? 'border-green-300 bg-green-50/50 shadow-green-100' :
+      validationStatus[currency.code] === 'invalid' ? 'border-red-300 bg-red-50/50 shadow-red-100' :
+      isAutoIncluded ? 'border-blue-200 bg-blue-50/30 shadow-blue-100' :
+      'border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
     }`}>
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-gray-900">{currency.code}</span>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2">
+              <CryptoIcon currency={currency.code} className="h-6 w-6" />
+              <span className="font-bold text-lg text-gray-900">{currency.code}</span>
+            </div>
             {isAutoIncluded && (
-              <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+              <Badge variant="outline" className="text-xs font-medium text-blue-600 border-blue-200 bg-blue-50">
                 Auto-included
               </Badge>
             )}
+            {currency.trust_wallet_compatible && (
+              <Badge variant="outline" className="text-xs font-medium text-green-600 border-green-200 bg-green-50">
+                <Shield className="h-3 w-3 mr-1" />
+                Trust Wallet
+              </Badge>
+            )}
           </div>
-          <p className="text-sm text-gray-600 mb-1">{currency.name}</p>
-          <p className="text-xs text-gray-500">Network: {currency.network}</p>
+          <p className="text-sm font-medium text-gray-700 mb-1">{currency.name}</p>
+          <p className="text-xs text-gray-500 flex items-center gap-1">
+            <Coins className="h-3 w-3" />
+            Network: {currency.network}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {wallets[currency.code] && !isAutoIncluded && (
@@ -340,9 +353,9 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               variant="ghost"
               size="sm"
               onClick={() => handleRemoveWallet(currency.code)}
-              className="text-red-500 hover:text-red-700 h-7 w-7 p-0"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0 rounded-lg"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
           {getValidationIcon(currency.code)}
@@ -350,19 +363,31 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       </div>
 
       {!isAutoIncluded ? (
-        <div className="space-y-2">
-          <Input
-            placeholder={`Enter your ${currency.code} wallet address`}
-            value={wallets[currency.code] || ''}
-            onChange={(e) => handleAddressChange(currency.code, e.target.value)}
-            className={`transition-colors ${
-              validationStatus[currency.code] === 'valid' ? 'border-green-300 focus:border-green-400' :
-              validationStatus[currency.code] === 'invalid' ? 'border-red-300 focus:border-red-400' :
-              'focus:border-blue-400'
-            }`}
-          />
+        <div className="space-y-3">
+          <div className="relative">
+            <Input
+              placeholder={`Enter your ${currency.code} wallet address`}
+              value={wallets[currency.code] || ''}
+              onChange={(e) => handleAddressChange(currency.code, e.target.value)}
+              className={`h-12 text-sm transition-all duration-200 ${
+                validationStatus[currency.code] === 'valid' ? 'border-green-300 focus:border-green-400 focus:ring-green-100' :
+                validationStatus[currency.code] === 'invalid' ? 'border-red-300 focus:border-red-400 focus:ring-red-100' :
+                'focus:border-[#7f5efd] focus:ring-[#7f5efd]/20'
+              }`}
+            />
+            {wallets[currency.code] && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigator.clipboard.writeText(wallets[currency.code])}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 h-8 w-8 p-0"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-            <p className={`text-xs ${
+            <p className={`text-sm font-medium ${
               validationStatus[currency.code] === 'valid' ? 'text-green-600' :
               validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
               'text-blue-600'
@@ -373,11 +398,12 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
 
           {/* Show included stable coins for validated base currencies */}
           {validationStatus[currency.code] === 'valid' && wallets[currency.code] && (
-            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <div className="text-xs font-medium text-green-800 mb-2">
-                ✅ Automatically includes these stable coins:
+            <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+              <div className="flex items-center gap-2 text-green-800 mb-3">
+                <CheckCircle className="h-4 w-4" />
+                <span className="font-semibold text-sm">Automatically includes these stable coins:</span>
               </div>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-2">
                 {(() => {
                   const stableCoins = {
                     'SOL': ['USDC (Solana)', 'USDT (Solana)'],
@@ -391,7 +417,8 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                   }[currency.code] || [];
 
                   return stableCoins.map((coin, index) => (
-                    <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                    <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                      <Coins className="h-3 w-3" />
                       {coin}
                     </span>
                   ));
@@ -410,7 +437,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                   }[currency.code] || [];
 
                 return stableCoins.length === 0 ? null : (
-                  <div className="mt-2 text-xs text-green-700">
+                  <div className="mt-3 text-xs text-green-700 font-medium">
                     Customers can pay with {currency.code} or any of these {stableCoins.length} stable coins using the same address.
                   </div>
                 );
@@ -419,13 +446,13 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           )}
         </div>
       ) : (
-        <div className="space-y-2">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-blue-700">
-              <Info className="h-4 w-4" />
-              <span className="text-sm font-medium">Uses same address as primary currency</span>
+        <div className="space-y-3">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-center gap-3 text-blue-700">
+              <Info className="h-5 w-5" />
+              <span className="text-sm font-semibold">Uses same address as primary currency</span>
             </div>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-sm text-blue-600 mt-2 font-medium">
               This stablecoin will automatically use your {currency.network} address
             </p>
           </div>
@@ -437,20 +464,25 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold text-gray-900">Set Up Your Crypto Wallets</h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+      <div className="text-center space-y-6">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="p-3 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-xl">
+            <Wallet className="h-8 w-8 text-white" />
+          </div>
+        </div>
+        <h2 className="text-4xl font-bold text-gray-900">Set Up Your Crypto Wallets</h2>
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
           Configure wallet addresses for the cryptocurrencies you want to accept. Major stablecoins will be automatically included for each ecosystem.
         </p>
         <div className="flex items-center justify-center gap-4">
-          <Badge variant={configuredCurrencies.length > 0 ? "default" : "outline"} className="text-sm">
+          <Badge variant={configuredCurrencies.length > 0 ? "default" : "outline"} className="text-sm font-medium px-4 py-2">
             {configuredCurrencies.length} configured
           </Badge>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowTrustWalletGuide(true)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 font-medium"
           >
             <ExternalLink className="h-4 w-4" />
             Trust Wallet Guide
@@ -467,23 +499,43 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )}
 
       {/* Stable Coin Information */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Info className="h-6 w-6 text-blue-600" />
+          </div>
           <div className="text-blue-800">
-            <h3 className="font-semibold mb-2">Smart Wallet Setup - Automatic Stable Coin Support</h3>
-            <p className="text-sm mb-2">
+            <h3 className="font-bold text-lg mb-3">Smart Wallet Setup - Automatic Stable Coin Support</h3>
+            <p className="text-base mb-4 leading-relaxed">
               Configure one wallet address per ecosystem and automatically support multiple payment options:
             </p>
-            <div className="text-sm space-y-1">
-              • <strong>SOL wallet</strong> → enables SOL + USDC & USDT on Solana
-              • <strong>ETH wallet</strong> → enables ETH + USDT, USDC, DAI & PYUSD on Ethereum
-              • <strong>BNB wallet</strong> → enables BNB + USDT & USDC on BSC
-              • <strong>MATIC wallet</strong> → enables MATIC + USDT & USDC on Polygon
-              • <strong>TRX wallet</strong> → enables TRX + USDT on Tron
-              • <strong>TON wallet</strong> → enables TON + USDT on TON
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                <span><strong>SOL wallet</strong> → enables SOL + USDC & USDT on Solana</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                <span><strong>ETH wallet</strong> → enables ETH + USDT, USDC, DAI & PYUSD on Ethereum</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                <span><strong>BNB wallet</strong> → enables BNB + USDT & USDC on BSC</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                <span><strong>MATIC wallet</strong> → enables MATIC + USDT & USDC on Polygon</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                <span><strong>TRX wallet</strong> → enables TRX + USDT on Tron</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                <span><strong>TON wallet</strong> → enables TON + USDT on TON</span>
+              </div>
             </div>
-            <p className="text-sm mt-2 font-medium">
+            <p className="text-base mt-4 font-semibold">
               No need for separate addresses - stable coins use the same wallet as their base currency!
             </p>
           </div>
@@ -491,36 +543,40 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       </div>
 
       {/* Recommended Cryptocurrency Groups */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="text-center">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">
             Recommended Cryptocurrencies
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-base text-gray-600">
             Configure at least one cryptocurrency to start accepting payments.
           </p>
         </div>
 
         {CURRENCY_GROUPS.map((group) => (
-          <Card key={group.id} className="border-2 shadow-sm">
-            <CardHeader className="pb-4">
+          <Card key={group.id} className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <CardHeader className="pb-6">
               <div>
-                <CardTitle className="text-lg text-gray-900">{group.name}</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                  <CryptoIcon currency={group.primary.code} className="h-6 w-6" />
+                  {group.name}
+                </CardTitle>
+                <p className="text-base text-gray-600 mt-2">{group.description}</p>
                 {group.autoIncludedStablecoins.length > 0 && (
-                  <p className="text-xs text-blue-600 mt-2">
+                  <p className="text-sm text-blue-600 mt-3 font-medium flex items-center gap-2">
+                    <Coins className="h-4 w-4" />
                     ✨ Automatically includes stable coins for customer payments
                   </p>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {/* Primary Currency */}
               {renderCurrencyInput(group.primary)}
 
               {/* Other currencies */}
               {group.others.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {group.others.map(currency => renderCurrencyInput(currency))}
                 </div>
               )}
@@ -529,14 +585,14 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         ))}
 
         {/* Other Popular Cryptocurrencies */}
-        <Card className="border-2 shadow-sm">
-          <CardHeader className="pb-4">
+        <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+          <CardHeader className="pb-6">
             <div>
-              <CardTitle className="text-lg text-gray-900">Other Popular Cryptocurrencies</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">Additional widely used cryptocurrencies</p>
+              <CardTitle className="text-xl font-bold text-gray-900">Other Popular Cryptocurrencies</CardTitle>
+              <p className="text-base text-gray-600 mt-2">Additional widely used cryptocurrencies</p>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {OTHER_POPULAR_CURRENCIES.map(currency => renderCurrencyInput(currency))}
           </CardContent>
         </Card>
@@ -544,31 +600,31 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
 
       {/* Additional Currencies Section */}
       {additionalCurrencies.length > 0 && (
-        <Card className="border-2 shadow-sm">
+        <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900">Additional Cryptocurrencies</CardTitle>
-            <p className="text-sm text-gray-600">
+            <CardTitle className="text-xl font-bold text-gray-900">Additional Cryptocurrencies</CardTitle>
+            <p className="text-base text-gray-600">
               Optional: Add support for more cryptocurrencies ({additionalCurrencies.length} available from NOWPayments)
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
                 placeholder="Search for cryptocurrencies..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 text-base"
               />
             </div>
 
             {loadingCurrencies ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2">Loading additional currencies...</span>
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-[#7f5efd]" />
+                <span className="ml-3 text-lg">Loading additional currencies...</span>
               </div>
             ) : (
-              <div className="grid gap-3 max-h-96 overflow-y-auto">
+              <div className="grid gap-4 max-h-96 overflow-y-auto">
                 {filteredAdditionalCurrencies.map((currency) =>
                   renderCurrencyInput({
                     code: currency.code,
@@ -579,8 +635,9 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
                 )}
 
                   {searchTerm && filteredAdditionalCurrencies.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No cryptocurrencies found matching &quot;{searchTerm}&quot;
+                    <div className="text-center py-12 text-gray-500">
+                      <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg">No cryptocurrencies found matching &quot;{searchTerm}&quot;</p>
                     </div>
                   )}
               </div>
@@ -590,22 +647,28 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )}
 
       {/* Progress Summary */}
-      <Card className={`border-2 ${canProceed ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
+      <Card className={`border-2 shadow-lg transition-all duration-200 ${
+        canProceed ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+      }`}>
+        <CardContent className="pt-8">
+          <div className="flex items-center gap-4">
             {canProceed ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <div className="p-3 bg-green-100 rounded-xl">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
             ) : (
-              <AlertCircle className="h-5 w-5 text-blue-500" />
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <AlertCircle className="h-6 w-6 text-blue-600" />
+              </div>
             )}
             <div>
-              <p className="font-medium">
+              <p className="text-lg font-bold">
                 {canProceed
                   ? `✅ Ready to continue with ${configuredCurrencies.length} configured ${configuredCurrencies.length === 1 ? 'cryptocurrency' : 'cryptocurrencies'}`
                   : '⚠️ Configure at least 1 cryptocurrency to continue'
                 }
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-base text-gray-600 mt-1">
                 You can always add more cryptocurrencies later in your settings
               </p>
             </div>
@@ -614,14 +677,14 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       </Card>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onBack} className="px-8">
+      <div className="flex justify-between pt-6">
+        <Button variant="outline" onClick={onBack} className="px-8 h-12 text-base font-medium">
           Back
         </Button>
         <Button
           onClick={handleNext}
           disabled={!canProceed}
-          className="min-w-[120px] px-8"
+          className="min-w-[140px] px-8 h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white"
         >
           {canProceed ? 'Continue' : 'Configure Wallets'}
         </Button>
