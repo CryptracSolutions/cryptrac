@@ -9,7 +9,11 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Plus,
+  Search,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -336,9 +340,13 @@ interface WalletsManagerProps<T = any> {
 export default function WalletsManager<T = any>({ settings, setSettings, setShowTrustWalletGuide }: WalletsManagerProps<T>) {
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [walletSearchTerm, setWalletSearchTerm] = useState('');
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    configured: true,
+    popular: false,
+    additional: false
+  });
 
   // Initialize validation status for all currencies
   useEffect(() => {
@@ -487,11 +495,11 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
     
     switch (status) {
       case 'valid':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'invalid':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-red-500" />;
       case 'checking':
-        return <Clock className="h-5 w-5 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-blue-500" />;
       default:
         return null;
     }
@@ -502,11 +510,11 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
     
     switch (status) {
       case 'valid':
-        return '✓ Valid wallet address';
+        return 'Valid address';
       case 'invalid':
-        return '✗ Invalid wallet address';
+        return 'Invalid address';
       case 'checking':
-        return 'Checking wallet address...';
+        return 'Checking...';
       default:
         return '';
     }
@@ -534,78 +542,74 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
   const filteredExistingWallets = existingWallets.filter(currency => {
     const currencyName = getCurrencyDisplayName(currency);
     return (
-      currency.toLowerCase().includes(walletSearchTerm.toLowerCase()) ||
-      currencyName.toLowerCase().includes(walletSearchTerm.toLowerCase())
+      currency.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      currencyName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
   const hasExistingWallets = existingWallets.length > 0;
 
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="h-5 w-5" />
-            Configured Wallet Addresses
-          </CardTitle>
-          <CardDescription>
-            Manage your cryptocurrency wallet addresses for receiving payments
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Stable Coin Information */}
-          <Alert className="bg-green-50 border-green-200">
-            <Info className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
-              <strong>Smart Wallet Setup:</strong> Configure base cryptocurrency wallets below and automatically support their stable coins.
-              <div className="mt-2 text-sm font-medium">
-                No need to add separate wallet addresses for stable coins - they use the same address as their base currency!
-              </div>
-            </AlertDescription>
-          </Alert>
+      {/* Smart Setup Info */}
+      <Alert className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <Info className="h-5 w-5 text-blue-600" />
+        <AlertDescription className="text-blue-800">
+          <strong>Smart Setup:</strong> Add a base cryptocurrency wallet and automatically support its stable coins. 
+          <span className="block mt-1 text-sm">No need for separate addresses - one wallet supports multiple tokens!</span>
+        </AlertDescription>
+      </Alert>
 
-          {/* Trust Wallet Guide Button */}
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTrustWalletGuide(true)}
-              className="flex items-center gap-2"
-            >
-              <HelpCircle className="h-4 w-4" />
-              Trust Wallet Guide
-            </Button>
-          </div>
-
-          {/* Existing Wallets Section */}
-          {hasExistingWallets && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Your Current Wallets</h3>
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Search your wallets..."
-                    value={walletSearchTerm}
-                    onChange={(e) => setWalletSearchTerm(e.target.value)}
-                    className="w-64"
-                  />
+      {/* Configured Wallets Section */}
+      {hasExistingWallets && (
+        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold text-green-900">
+                    Configured Wallets ({filteredExistingWallets.length})
+                  </CardTitle>
+                  <CardDescription className="text-green-700">
+                    Your active cryptocurrency wallets
+                  </CardDescription>
                 </div>
               </div>
-              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleSection('configured')}
+                className="text-green-700 hover:text-green-800 hover:bg-green-100"
+              >
+                {expandedSections.configured ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </Button>
+            </div>
+          </CardHeader>
+          {expandedSections.configured && (
+            <CardContent className="space-y-4">
               <div className="grid gap-4">
                 {filteredExistingWallets.map((currency) => (
-                  <div key={currency} className="p-4 border border-green-200 rounded-lg bg-green-50 space-y-3">
-                    <div className="flex items-center justify-between">
+                  <div key={currency} className="p-4 bg-white rounded-lg border border-green-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-green-600">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-green-600">
                             {currency}
                           </span>
                         </div>
                         <div>
-                          <div className="font-medium">{getCurrencyDisplayName(currency)}</div>
-                          <div className="text-sm text-gray-500">Configured</div>
+                          <div className="font-semibold text-gray-900">{getCurrencyDisplayName(currency)}</div>
+                          <div className="text-sm text-gray-500">Active wallet</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -620,141 +624,83 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
                         </Button>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Input
-                        placeholder={`Enter your ${getCurrencyDisplayName(currency)} wallet address`}
-                        value={settings.wallets[currency] || ''}
-                        onChange={(e) => handleWalletInputChange(currency, e.target.value)}
-                        className="border-green-500 bg-white"
-                      />
-                      <p className="text-xs text-green-600">✓ Valid wallet address</p>
-                      
-                      {/* Show included stable coins for validated base currencies */}
-                      {validationStatus[currency] === 'valid' && settings.wallets[currency] && (
-                        <div className="mt-3 p-3 bg-white border border-green-200 rounded-lg">
-                          <div className="text-xs font-medium text-green-800 mb-2">
-                            ✅ Automatically includes these stable coins:
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {(() => {
-                              const stableCoinCodes = stableCoinAssociations[currency] || [];
-                              return stableCoinCodes.map((code, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
-                                >
-                                  {getCurrencyDisplayName(code)}
-                                </span>
-                              ));
-                            })()}
-                          </div>
+                    <Input
+                      placeholder={`${getCurrencyDisplayName(currency)} wallet address`}
+                      value={settings.wallets[currency] || ''}
+                      onChange={(e) => handleWalletInputChange(currency, e.target.value)}
+                      className="border-green-300 bg-white"
+                    />
+                    
+                    {/* Show included stable coins */}
+                    {validationStatus[currency] === 'valid' && settings.wallets[currency] && (
+                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="text-xs font-medium text-green-800 mb-2">
+                          ✅ Includes stable coins:
+                        </div>
+                        <div className="flex flex-wrap gap-1">
                           {(() => {
                             const stableCoinCodes = stableCoinAssociations[currency] || [];
-                            return stableCoinCodes.length === 0 ? null : (
-                              <div className="mt-2 text-xs text-green-700">
-                                Customers can pay with {currency} or any of these {stableCoinCodes.length} stable coins using the same address.
-                              </div>
-                            );
+                            return stableCoinCodes.map((code, index) => (
+                              <span
+                                key={index}
+                                className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
+                              >
+                                {getCurrencyDisplayName(code)}
+                              </span>
+                            ));
                           })()}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-            </div>
+            </CardContent>
           )}
+        </Card>
+      )}
 
-          {/* Add New Wallet Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Add New Wallet</h3>
-            
-            <div className="space-y-4">
-              <Input
-                placeholder="Search currencies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-md"
-              />
-              
-              {loadingCurrencies ? (
-                <div className="text-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Loading currencies...</p>
-                </div>
-              ) : (
-                <div className="grid gap-3 max-h-96 overflow-y-auto">
-                  {filteredAdditionalCurrencies.map((currency) => (
-                    <div key={currency.code} className="p-3 border rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-gray-600">
-                              {currency.symbol || currency.code.charAt(0)}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">{currency.display_name || currency.name}</div>
-                            <div className="text-xs text-gray-500">{currency.network}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getValidationIcon(currency.code)}
-                          {settings.wallets[currency.code] && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeWallet(currency.code)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <Input
-                          placeholder={`Enter your ${currency.display_name || currency.name} wallet address`}
-                          value={settings.wallets[currency.code] || ''}
-                          onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
-                          className={`text-sm ${
-                            validationStatus[currency.code] === 'valid' ? 'border-green-500' :
-                            validationStatus[currency.code] === 'invalid' ? 'border-red-500' :
-                            validationStatus[currency.code] === 'checking' ? 'border-blue-500' : ''
-                          }`}
-                        />
-                        {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-                          <p className={`text-xs ${
-                            validationStatus[currency.code] === 'valid' ? 'text-green-600' :
-                            validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-                            'text-blue-600'
-                          }`}>
-                            {getValidationMessage(currency.code)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+      {/* Popular Currencies Section */}
+      <Card className="border-gray-200">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Wallet className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  Popular Currencies
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  Add wallets for the most popular cryptocurrencies
+                </CardDescription>
+              </div>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toggleSection('popular')}
+              className="text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+            >
+              {expandedSections.popular ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
           </div>
-
-          {/* Top 10 + Major Stablecoins */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Popular Currencies</h3>
+        </CardHeader>
+        {expandedSections.popular && (
+          <CardContent className="space-y-4">
             <div className="grid gap-4">
               {TOP_10_CURRENCIES.map((currency) => (
-                <div key={currency.code} className="p-4 border rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
+                <div key={currency.code} className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-bold text-blue-600">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-blue-600">
                           {currency.symbol}
                         </span>
                       </div>
                       <div>
-                        <div className="font-medium">{currency.display_name}</div>
+                        <div className="font-semibold text-gray-900">{currency.display_name}</div>
                         <div className="text-sm text-gray-500">{currency.network}</div>
                       </div>
                     </div>
@@ -792,43 +738,127 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
                         {getValidationMessage(currency.code)}
                       </p>
                     )}
-                    
-                    {/* Show included stable coins for validated base currencies */}
-                    {validationStatus[currency.code] === 'valid' && settings.wallets[currency.code] && (
-                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="text-xs font-medium text-green-800 mb-2">
-                          ✅ Automatically includes these stable coins:
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {(() => {
-                            const stableCoinCodes = stableCoinAssociations[currency.code] || [];
-                            return stableCoinCodes.map((code, index) => (
-                              <span
-                                key={index}
-                                className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
-                              >
-                                {getCurrencyDisplayName(code)}
-                              </span>
-                            ));
-                          })()}
-                        </div>
-                        {(() => {
-                          const stableCoinCodes = stableCoinAssociations[currency.code] || [];
-                          return stableCoinCodes.length === 0 ? null : (
-                            <div className="mt-2 text-xs text-green-700">
-                              Customers can pay with {currency.code} or any of these {stableCoinCodes.length} stable coins using the same address.
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
+
+      {/* Additional Currencies Section */}
+      <Card className="border-gray-200">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Plus className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  Additional Currencies
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  Browse and add more cryptocurrency wallets
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toggleSection('additional')}
+              className="text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+            >
+              {expandedSections.additional ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+          </div>
+        </CardHeader>
+        {expandedSections.additional && (
+          <CardContent className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search currencies..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {loadingCurrencies ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-gray-400" />
+                <p className="text-sm text-gray-600">Loading currencies...</p>
+              </div>
+            ) : (
+              <div className="grid gap-3 max-h-64 overflow-y-auto">
+                {filteredAdditionalCurrencies.map((currency) => (
+                  <div key={currency.code} className="p-3 border border-gray-200 rounded-lg hover:border-purple-300 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-purple-600">
+                            {currency.symbol || currency.code.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{currency.display_name || currency.name}</div>
+                          <div className="text-xs text-gray-500">{currency.network}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getValidationIcon(currency.code)}
+                        {settings.wallets[currency.code] && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeWallet(currency.code)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <Input
+                      placeholder={`Enter ${currency.display_name || currency.name} wallet address`}
+                      value={settings.wallets[currency.code] || ''}
+                      onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
+                      className={`text-sm ${
+                        validationStatus[currency.code] === 'valid' ? 'border-green-500' :
+                        validationStatus[currency.code] === 'invalid' ? 'border-red-500' :
+                        validationStatus[currency.code] === 'checking' ? 'border-blue-500' : ''
+                      }`}
+                    />
+                    {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
+                      <p className={`text-xs mt-1 ${
+                        validationStatus[currency.code] === 'valid' ? 'text-green-600' :
+                        validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
+                        'text-blue-600'
+                      }`}>
+                        {getValidationMessage(currency.code)}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Help Section */}
+      <div className="text-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowTrustWalletGuide(true)}
+          className="flex items-center gap-2 mx-auto"
+        >
+          <HelpCircle className="h-4 w-4" />
+          Need help setting up Trust Wallet?
+        </Button>
+      </div>
     </div>
   );
 }
