@@ -67,7 +67,47 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Content */}
+      {/* Left Side - Visual */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
+        <div className="relative flex items-center justify-center p-12">
+          <div className="text-center text-white max-w-lg">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
+                <Shield className="h-12 w-12 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold mb-4">Secure Crypto Payments</h2>
+              <p className="text-xl text-primary-100 leading-relaxed">
+                Welcome to the future of payments. Manage your cryptocurrency transactions with confidence and security.
+              </p>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span className="font-medium">Non-Custodial Security</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-5 w-5" />
+                  <span className="font-medium">Instant Processing</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="h-5 w-5" />
+                  <span className="font-medium">Global Support</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Content */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           {/* Logo and Header */}
@@ -171,46 +211,6 @@ export default function Login() {
                 Privacy Policy
               </Link>
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Side - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
-        <div className="relative flex items-center justify-center p-12">
-          <div className="text-center text-white max-w-lg">
-            <div className="mb-8">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
-                <Shield className="h-12 w-12 text-white" />
-              </div>
-              <h2 className="text-3xl font-bold mb-4">Secure Crypto Payments</h2>
-              <p className="text-xl text-primary-100 leading-relaxed">
-                Welcome to the future of payments. Manage your cryptocurrency transactions with confidence and security.
-              </p>
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5" />
-                  <span className="font-medium">Non-Custodial Security</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-5 w-5" />
-                  <span className="font-medium">Instant Processing</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-center space-x-4 text-primary-100">
-                <div className="flex items-center space-x-2">
-                  <CreditCard className="h-5 w-5" />
-                  <span className="font-medium">Global Support</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

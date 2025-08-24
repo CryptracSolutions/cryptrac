@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, Star, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, Star, Users, TrendingUp, Network } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
@@ -45,10 +45,15 @@ export default function Home() {
   const supportedCryptos = [
     { symbol: "BTC", name: "Bitcoin" },
     { symbol: "ETH", name: "Ethereum" },
-    { symbol: "LTC", name: "Litecoin" },
-    { symbol: "ADA", name: "Cardano" },
-    { symbol: "DOT", name: "Polkadot" },
-    { symbol: "USDT", name: "Tether" }
+    { symbol: "SOL", name: "Solana" },
+    { symbol: "XRP", name: "Ripple" },
+    { symbol: "BNB", name: "BNB" },
+    { symbol: "TRX", name: "TRON" },
+    { symbol: "AVAX", name: "Avalanche" },
+    { symbol: "XLM", name: "Stellar" },
+    { symbol: "TON", name: "Toncoin" },
+    { symbol: "SUI", name: "Sui" },
+    { symbol: "USDC", name: "USD Coin" }
   ];
 
   const benefits = [
@@ -117,9 +122,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary-100/20 to-purple-100/20"></div>
         <div className="container-wide relative">
           <div className="mx-auto max-w-4xl text-center">
-            <Badge variant="secondary" className="mb-8 px-4 py-2 text-sm font-semibold bg-primary-100 text-primary-700 border-primary-200">
-              🚀 Now in Beta - Join the Future of Payments
-            </Badge>
+
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
               Get Paid in{" "}
               <span className="text-gradient-primary">Crypto</span>
@@ -178,10 +181,10 @@ export default function Home() {
         <div className="container-wide">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Accept All Major Cryptocurrencies
+              Accept 300+ Cryptocurrencies
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Support for Bitcoin, Ethereum, and many more digital currencies
+              Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies
             </p>
           </div>
           <div className="flex flex-wrap justify-center items-center gap-12">
@@ -267,8 +270,8 @@ export default function Home() {
                 <div className="space-y-4">
                   {benefits.map((benefit, index) => (
                     <div key={index} className="flex items-center gap-4">
-                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="h-4 w-4 text-primary-600" />
                       </div>
                       <span className="text-gray-700">{benefit}</span>
                     </div>
@@ -286,9 +289,9 @@ export default function Home() {
 
           {/* Fee Transparency Notice */}
           <div className="mt-16 max-w-4xl mx-auto">
-            <Alert className="border-blue-200 bg-blue-50 shadow-sm">
-              <Info className="h-5 w-5 text-blue-600" />
-              <AlertDescription className="text-blue-800 font-medium">
+            <Alert className="border-primary-200 bg-primary-50 shadow-sm">
+              <Info className="h-5 w-5 text-primary-600" />
+              <AlertDescription className="text-primary-800 font-medium">
                   <strong>Complete Transparency:</strong> Cryptrac&apos;s only revenue is the $19/month subscription.
                 Gateway fees (0.5% or 1%) are charged by the payment processor for handling transactions and go directly to them, not to Cryptrac. 
                 Network fees may vary by cryptocurrency and blockchain congestion.
@@ -327,22 +330,159 @@ export default function Home() {
             ))}
           </div>
           
-          {/* Detailed Fee Documentation */}
+          {/* Simplified Fee Documentation */}
           <div className="mt-20">
             <div className="text-center mb-12">
               <h3 className="text-3xl font-bold text-gray-900 mb-4">
-                Understanding Payment Fees: Crypto vs Traditional
+                Understanding Payment Fees
               </h3>
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                Complete breakdown of how crypto payments compare to traditional processors
+                Simple breakdown of how crypto payments work compared to traditional processors
               </p>
             </div>
-            <FeeDocumentation 
-              variant="full" 
-              showComparison={true}
-              showNetworkFees={true}
-              showGatewayFees={true}
-            />
+            
+            <div className="max-w-6xl mx-auto">
+              {/* Traditional vs Crypto Comparison */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                {/* Traditional Processors */}
+                <Card className="border-0 shadow-lg bg-white">
+                  <CardHeader className="text-center pb-6">
+                    <CardTitle className="text-2xl font-bold text-gray-900">Traditional Processors</CardTitle>
+                    <p className="text-gray-600">Stripe, PayPal, Square</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-gray-900 mb-2">2.9% + $0.30</div>
+                      <p className="text-gray-600">per transaction</p>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <span className="text-gray-700">Fixed percentage + fixed fee</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <span className="text-gray-700">Higher cost for small transactions</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <span className="text-gray-700">Requires bank account setup</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Crypto Payments */}
+                <Card className="border-2 border-primary-500 shadow-lg bg-white">
+                  <CardHeader className="text-center pb-6">
+                    <CardTitle className="text-2xl font-bold text-gray-900">Crypto Payments</CardTitle>
+                    <p className="text-gray-600">Bitcoin, Ethereum, Solana, etc.</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-primary-600 mb-2">0.5% - 1%</div>
+                      <p className="text-gray-600">gateway fee only</p>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <span className="text-gray-700">No fixed fees</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <span className="text-gray-700">Lower cost for all transaction sizes</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <span className="text-gray-700">Direct to your crypto wallet</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Fee Breakdown */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <Card className="border-0 shadow-lg bg-white">
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <DollarSign className="h-6 w-6 text-primary-600" />
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-900">Gateway Fee</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <div className="text-2xl font-bold text-primary-600 mb-2">0.5% - 1%</div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Charged by payment processor for handling transactions
+                    </p>
+                    <div className="text-xs text-gray-500">
+                      <div className="mb-1">• Direct payments: 0.5%</div>
+                      <div>• Auto-convert: 1%</div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg bg-white">
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Network className="h-6 w-6 text-gray-600" />
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-900">Network Fee</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <div className="text-2xl font-bold text-gray-600 mb-2">Variable</div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Charged by blockchain network (not Cryptrac)
+                    </p>
+                    <div className="text-xs text-gray-500">
+                      <div className="mb-1">• Bitcoin/Ethereum: Higher</div>
+                      <div>• Solana/XRP: Lower</div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg bg-white">
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="h-6 w-6 text-primary-600" />
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-900">Cryptrac Fee</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <div className="text-2xl font-bold text-primary-600 mb-2">$19/month</div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Subscription only - no transaction fees
+                    </p>
+                    <div className="text-xs text-gray-500">
+                      <div className="mb-1">• No percentage fees</div>
+                      <div>• No per-transaction fees</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Bottom Line */}
+              <Card className="border-2 border-primary-500 shadow-lg bg-gradient-to-r from-primary-50 to-purple-50">
+                <CardContent className="p-8 text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">The Bottom Line</h3>
+                  <p className="text-lg text-gray-700 mb-6">
+                    <strong>99% of the time, crypto payments are cheaper than traditional card payments.</strong>
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900 mb-2">Traditional (Stripe):</div>
+                      <div className="text-gray-600">$10 sale = $0.59 fee (5.9%)</div>
+                      <div className="text-gray-600">$100 sale = $3.20 fee (3.2%)</div>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900 mb-2">Crypto (Cryptrac):</div>
+                      <div className="text-gray-600">$10 sale = $0.05 fee (0.5%)</div>
+                      <div className="text-gray-600">$100 sale = $0.50 fee (0.5%)</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
@@ -358,7 +498,7 @@ export default function Home() {
             Join thousands of businesses already using Cryptrac to accept cryptocurrency payments securely and efficiently.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="xl" variant="secondary" className="text-lg px-8 py-4 shadow-lg" asChild>
+            <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-white text-primary-600 hover:bg-gray-50" asChild>
               <Link href="/signup">
                 Start Free 30-Day Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
