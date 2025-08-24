@@ -194,42 +194,89 @@ async function getMinimumAmount(currencyFrom: string, currencyTo: string): Promi
   }
 }
 
-// Function to validate if amount is sufficient for auto-forwarding
+// Validate that the *pay amount* in the customer's coin is high enough for NOWPayments auto-forwarding.
+// IMPORTANT: NOWPayments min-amount is defined for (payment currency -> payout currency).
+// Do not use fiat here; if the price is fiat, estimate the pay amount first and compare coin-to-coin.
 async function validateAmountForAutoForwarding(
-  priceAmount: number, 
-  priceCurrency: string, 
-  payoutCurrency: string,
-  feePercentage: number
+  priceAmount: number,
+  priceCurrency: string,
+  payCurrency: string,
+  payoutCurrency: string
 ): Promise<{ isValid: boolean; minAmount?: number; suggestedAmount?: number }> {
   try {
-    console.log(`🔍 Validating amount for auto-forwarding: ${priceAmount} ${priceCurrency} → ${payoutCurrency} (fee: ${feePercentage * 100}%)`)
-    
-    const minPayoutAmount = await getMinimumAmount(priceCurrency, payoutCurrency)
-    console.log(`📊 Minimum payout amount for ${payoutCurrency}: ${minPayoutAmount}`)
-    
-    // Calculate what the merchant would receive after fees
-    const merchantReceives = priceAmount * (1 - feePercentage)
-    console.log(`💰 Merchant would receive: ${merchantReceives} ${payoutCurrency}`)
-    
-    if (merchantReceives < minPayoutAmount) {
-      // Calculate how much the customer needs to pay to meet minimum
-      const suggestedPriceAmount = minPayoutAmount / (1 - feePercentage)
-      
-      console.log(`⚠️ Amount too small! Need at least: $${suggestedPriceAmount}`)
-      
-      return {
-        isValid: false,
-        minAmount: minPayoutAmount,
-        suggestedAmount: Math.ceil(suggestedPriceAmount * 100) / 100 // Round up to nearest cent
-      }
+    const apiKey = process.env.NOWPAYMENTS_API_KEY!;
+    const baseUrl = 'https://api.nowpayments.io/v1';
+
+    const fiatSet = new Set([
+      'usd','eur','gbp','aud','cad','chf','jpy','sgd','aed','inr','brl','mxn'
+    ]);
+    const isFiat = fiatSet.has(priceCurrency.toLowerCase());
+
+    console.log(
+      `🔍 Validating amount for auto-forwarding: ${priceAmount} ${priceCurrency} (pay=${payCurrency}) → payout=${payoutCurrency}`
+    );
+
+    // 1) Fetch minimum *pay* amount for pair payCurrency -> payoutCurrency
+    const minRes = await fetch(
+      `${baseUrl}/min-amount?currency_from=${payCurrency.toLowerCase()}&currency_to=${payoutCurrency.toLowerCase()}`,
+      { method: 'GET', headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' } }
+    );
+
+    if (!minRes.ok) {
+      const errText = await minRes.text();
+      console.warn(`⚠️ Could not fetch min-amount for ${payCurrency}→${payoutCurrency}: ${minRes.status} ${errText}`);
+      // Do not block if we cannot verify to avoid false floors
+      return { isValid: true };
     }
-    
-    console.log(`✅ Amount validation passed`)
-    return { isValid: true }
+
+    const minData = await minRes.json();
+    const minPayAmount = parseFloat(minData.min_amount);
+    if (!isFinite(minPayAmount) || minPayAmount <= 0) {
+      console.warn('⚠️ Invalid min-amount response:', minData);
+      return { isValid: true };
+    }
+    console.log(`📊 Minimum *pay* amount for ${payCurrency}→${payoutCurrency}: ${minPayAmount} ${payCurrency}`);
+
+    // 2) If priced in fiat, estimate how much of the *pay coin* the customer will actually send
+    if (isFiat) {
+      const estRes = await fetch(
+        `${baseUrl}/estimate?amount=${priceAmount}&currency_from=${priceCurrency.toLowerCase()}&currency_to=${payCurrency.toLowerCase()}`,
+        { method: 'GET', headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' } }
+      );
+
+      if (!estRes.ok) {
+        const errText = await estRes.text();
+        console.warn(`⚠️ Could not fetch estimate for ${priceAmount} ${priceCurrency}→${payCurrency}: ${estRes.status} ${errText}`);
+        return { isValid: true };
+      }
+
+      const estData = await estRes.json();
+      const estimatedPayAmount = parseFloat(estData.estimated_amount);
+      if (!isFinite(estimatedPayAmount)) {
+        console.warn('⚠️ Invalid estimate response:', estData);
+        return { isValid: true };
+      }
+
+      console.log(`📈 Estimated pay amount: ${estimatedPayAmount} ${payCurrency}`);
+
+      if (estimatedPayAmount < minPayAmount) {
+        // Suggest a new fiat price to meet min pay amount (linear on current quote)
+        const coinPerFiat = estimatedPayAmount / priceAmount; // payCoin per 1 fiat
+        const suggestedPriceAmount = Math.ceil((minPayAmount / coinPerFiat) * 100) / 100;
+        return { isValid: false, minAmount: minPayAmount, suggestedAmount: suggestedPriceAmount };
+      }
+      return { isValid: true };
+    }
+
+    // 3) If priced in crypto, compare directly
+    if (priceAmount < minPayAmount) {
+      return { isValid: false, minAmount: minPayAmount, suggestedAmount: Math.ceil(minPayAmount * 100) / 100 };
+    }
+
+    return { isValid: true };
   } catch (error) {
-    console.warn('⚠️ Could not validate amount for auto-forwarding:', error)
-    // If we can't validate, assume it's valid to avoid blocking payments
-    return { isValid: true }
+    console.warn('⚠️ Could not validate amount for auto-forwarding:', error);
+    return { isValid: true }; // do not block on transient errors
   }
 }
 
@@ -383,8 +430,8 @@ export async function POST(request: Request) {
           const validation = await validateAmountForAutoForwarding(
             paymentRequest.price_amount,
             paymentRequest.price_currency,
-            targetPayoutCurrency.toLowerCase(),
-            totalFeePct
+            paymentRequest.pay_currency,                  // ⬅️ NEW: validate against the coin the customer will pay in
+            targetPayoutCurrency.toLowerCase()
           )
 
           if (!validation.isValid) {
