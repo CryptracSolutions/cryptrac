@@ -3,9 +3,10 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info, Wallet, Shield, Coins, Star, ChevronDown, ChevronRight, Copy } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info, Wallet, Shield, Coins, Star, ChevronDown, ChevronRight, Copy, Plus } from 'lucide-react'
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 
 interface CurrencyInfo {
   code: string
@@ -44,82 +45,77 @@ interface WalletSetupStepProps {
 
 type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid'
 
-// Improved currency groups with automatic stablecoin inclusion
-const CURRENCY_GROUPS: CurrencyGroup[] = [
-  {
-    id: 'bitcoin',
-    name: 'Bitcoin',
-    description: 'The original cryptocurrency',
-    primary: { code: 'BTC', name: 'Bitcoin', network: 'Bitcoin', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [],
-    others: []
-  },
-  {
-    id: 'ethereum',
-    name: 'Ethereum Ecosystem',
-    description: 'Ethereum network - automatically includes USDT, USDC, DAI, PYUSD, ETH (Base) & USDC (Base)',
-    primary: { code: 'ETH', name: 'Ethereum', network: 'Ethereum', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDT', name: 'USDT', network: 'Ethereum', trust_wallet_compatible: true },
-      { code: 'USDC', name: 'USDC', network: 'Ethereum', trust_wallet_compatible: true },
-      { code: 'DAI', name: 'DAI', network: 'Ethereum', trust_wallet_compatible: true },
-      { code: 'PYUSD', name: 'PYUSD', network: 'Ethereum', trust_wallet_compatible: true },
-      { code: 'ETHBASE', name: 'ETH (Base)', network: 'Base', trust_wallet_compatible: true },
-      { code: 'USDCBASE', name: 'USDC (Base)', network: 'Base', trust_wallet_compatible: true },
-    ],
-    others: []
-  },
-  {
-    id: 'binance',
-    name: 'Binance Smart Chain',
-    description: 'BSC network - automatically includes USDT & USDC',
-    primary: { code: 'BNB', name: 'BNB', network: 'BSC', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDTBSC', name: 'USDT (BSC)', network: 'BSC', trust_wallet_compatible: true },
-      { code: 'USDCBSC', name: 'USDC (BSC)', network: 'BSC', trust_wallet_compatible: true },
-    ],
-    others: []
-  },
-  {
-    id: 'solana',
-    name: 'Solana Ecosystem',
-    description: 'Solana network - automatically includes USDC & USDT',
-    primary: { code: 'SOL', name: 'Solana', network: 'Solana', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDCSOL', name: 'USDC (Solana)', network: 'Solana', trust_wallet_compatible: true },
-      { code: 'USDTSOL', name: 'USDT (Solana)', network: 'Solana', trust_wallet_compatible: true },
-    ],
-    others: []
-  },
-  {
-    id: 'tron',
-    name: 'TRON Ecosystem',
-    description: 'TRON network - automatically includes USDT',
-    primary: { code: 'TRX', name: 'TRON', network: 'TRON', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [
-      { code: 'USDTTRC20', name: 'USDT (TRC-20)', network: 'TRON', trust_wallet_compatible: true },
-    ],
-    others: []
-  },
-  {
-    id: 'avalanche',
-    name: 'Avalanche Ecosystem',
-    description: 'Avalanche network',
-    primary: { code: 'AVAX', name: 'Avalanche', network: 'Avalanche', trust_wallet_compatible: true },
-    autoIncludedStablecoins: [],
-    others: []
-  }
-]
-
-const OTHER_POPULAR_CURRENCIES: CompatibleCurrency[] = [
-  { code: 'XRP', name: 'XRP', network: 'XRP Ledger', trust_wallet_compatible: true },
+// Popular cryptocurrencies for the first dropdown
+const POPULAR_CURRENCIES: CompatibleCurrency[] = [
+  { code: 'BTC', name: 'Bitcoin', network: 'Bitcoin', trust_wallet_compatible: true },
+  { code: 'ETH', name: 'Ethereum', network: 'Ethereum', trust_wallet_compatible: true },
+  { code: 'SOL', name: 'Solana', network: 'Solana', trust_wallet_compatible: true },
+  { code: 'BNB', name: 'BNB', network: 'BSC', trust_wallet_compatible: true },
+  { code: 'TRX', name: 'TRON', network: 'TRON', trust_wallet_compatible: true },
+  { code: 'TON', name: 'Toncoin', network: 'TON', trust_wallet_compatible: true },
+  { code: 'AVAX', name: 'Avalanche', network: 'Avalanche', trust_wallet_compatible: true },
   { code: 'DOGE', name: 'Dogecoin', network: 'Dogecoin', trust_wallet_compatible: true },
+  { code: 'XRP', name: 'XRP', network: 'XRP Ledger', trust_wallet_compatible: true },
   { code: 'LTC', name: 'Litecoin', network: 'Litecoin', trust_wallet_compatible: true },
   { code: 'ADA', name: 'Cardano', network: 'Cardano', trust_wallet_compatible: true },
-  { code: 'TON', name: 'TON', network: 'TON', trust_wallet_compatible: true },
   { code: 'SUI', name: 'Sui', network: 'Sui', trust_wallet_compatible: true },
+  { code: 'MATIC', name: 'Polygon', network: 'Polygon', trust_wallet_compatible: true },
   { code: 'ALGO', name: 'Algorand', network: 'Algorand', trust_wallet_compatible: true }
 ]
+
+// Stable coin associations for automatic inclusion
+const stableCoinAssociations: Record<string, string[]> = {
+  SOL: ['USDCSOL', 'USDTSOL'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
+  BNB: ['USDTBSC', 'USDCBSC'],
+  MATIC: ['USDTMATIC', 'USDCMATIC'],
+  TRX: ['USDTTRC20'],
+  TON: ['USDTTON'],
+  ARB: ['USDTARB', 'USDCARB'],
+  OP: ['USDTOP', 'USDCOP'],
+  ETHBASE: ['USDCBASE'],
+  ALGO: ['USDCALGO'],
+}
+
+const CURRENCY_NAMES: Record<string, string> = {
+  BTC: 'Bitcoin',
+  ETH: 'Ethereum',
+  BNB: 'BNB',
+  SOL: 'Solana',
+  TRX: 'TRON',
+  TON: 'Toncoin',
+  AVAX: 'Avalanche',
+  DOGE: 'Dogecoin',
+  XRP: 'XRP',
+  SUI: 'Sui',
+  MATIC: 'Polygon',
+  ADA: 'Cardano',
+  DOT: 'Polkadot',
+  LTC: 'Litecoin',
+  XLM: 'Stellar',
+  ARB: 'Arbitrum',
+  OP: 'Optimism',
+  ETHBASE: 'ETH (Base)',
+  ALGO: 'Algorand',
+  USDT: 'Tether (Ethereum)',
+  USDC: 'USD Coin (Ethereum)',
+  DAI: 'Dai (Ethereum)',
+  PYUSD: 'PayPal USD (Ethereum)',
+  USDCSOL: 'USD Coin (Solana)',
+  USDTSOL: 'Tether (Solana)',
+  USDTBSC: 'Tether (BSC)',
+  USDCBSC: 'USD Coin (BSC)',
+  USDTMATIC: 'Tether (Polygon)',
+  USDCMATIC: 'USD Coin (Polygon)',
+  USDTTRC20: 'Tether (Tron)',
+  USDTTON: 'Tether (TON)',
+  USDTARB: 'Tether (Arbitrum)',
+  USDCARB: 'USD Coin (Arbitrum)',
+  USDTOP: 'Tether (Optimism)',
+  USDCOP: 'USD Coin (Optimism)',
+  USDCBASE: 'USD Coin (Base)',
+  USDCALGO: 'USD Coin (Algorand)',
+}
 
 export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
   const [wallets, setWallets] = useState<Record<string, string>>({})
@@ -128,6 +124,8 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   const [loadingCurrencies, setLoadingCurrencies] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false)
+  const [selectedPopularCurrency, setSelectedPopularCurrency] = useState<string>('')
+  const [selectedAdditionalCurrency, setSelectedAdditionalCurrency] = useState<string>('')
 
   useEffect(() => {
     loadAdditionalCurrencies()
@@ -142,20 +140,12 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       if (response.ok) {
         const result = await response.json()
         if (result.success) {
-          // Filter out currencies that are already in our groups
-          const groupedCodes = [
-            ...CURRENCY_GROUPS.flatMap(group => [
-              group.primary.code,
-              ...group.autoIncludedStablecoins.map(c => c.code),
-              ...group.others.map(c => c.code)
-            ]),
-            ...OTHER_POPULAR_CURRENCIES.map(c => c.code)
-          ]
-
+          // Filter out currencies that are already in popular currencies
+          const popularCodes = POPULAR_CURRENCIES.map(c => c.code)
           const additional = result.currencies.filter((c: CurrencyInfo) => {
             const stableCoins = ['USDT', 'USDC', 'DAI', 'PYUSD', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'USDE', 'FDUSD', 'USDD']
             const isStable = stableCoins.some(sc => c.code.toUpperCase().includes(sc))
-            return !groupedCodes.includes(c.code) && c.enabled && !isStable
+            return !popularCodes.includes(c.code) && c.enabled && !isStable
           })
           console.log(`📊 Loaded ${additional.length} additional currencies:`, additional.map((c: CurrencyInfo) => c.code))
           setAdditionalCurrencies(additional)
@@ -170,6 +160,10 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     } finally {
       setLoadingCurrencies(false)
     }
+  }
+
+  const getCurrencyDisplayName = (code: string) => {
+    return CURRENCY_NAMES[code] || code
   }
 
   const validateAddress = async (currency: string, address: string) => {
@@ -254,6 +248,22 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     })
   }
 
+  const handleAddPopularCurrency = () => {
+    if (selectedPopularCurrency && !wallets[selectedPopularCurrency]) {
+      setWallets(prev => ({ ...prev, [selectedPopularCurrency]: '' }))
+      setValidationStatus(prev => ({ ...prev, [selectedPopularCurrency]: 'idle' }))
+      setSelectedPopularCurrency('')
+    }
+  }
+
+  const handleAddAdditionalCurrency = () => {
+    if (selectedAdditionalCurrency && !wallets[selectedAdditionalCurrency]) {
+      setWallets(prev => ({ ...prev, [selectedAdditionalCurrency]: '' }))
+      setValidationStatus(prev => ({ ...prev, [selectedAdditionalCurrency]: 'idle' }))
+      setSelectedAdditionalCurrency('')
+    }
+  }
+
   const getValidationIcon = (currency: string) => {
     const status = validationStatus[currency] || 'idle'
     switch (status) {
@@ -304,10 +314,23 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     onNext(validWallets)
   }
 
-  const filteredAdditionalCurrencies = additionalCurrencies.filter(currency =>
-    currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    currency.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filter additional currencies based on search term (same logic as wallets page)
+  const filteredAdditionalCurrencies = additionalCurrencies.filter(currency => {
+    // Check if this currency is a stable coin of any base currency
+    const isStableCoin = Object.values(stableCoinAssociations).some(stableCoins => 
+      stableCoins.includes(currency.code)
+    )
+    
+    // Check if this currency already has a wallet configured
+    const hasExistingWallet = Object.keys(wallets).includes(currency.code)
+    
+    // Include if not a stable coin, doesn't have existing wallet, and matches search term
+    return !isStableCoin && !hasExistingWallet && (
+      currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      currency.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })
 
   // Debug state updates
   useEffect(() => {
@@ -542,106 +565,147 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         </div>
       </div>
 
-      {/* Recommended Cryptocurrency Groups */}
-      <div className="space-y-8">
-        <div className="text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">
-            Recommended Cryptocurrencies
-          </h3>
-          <p className="text-base text-gray-600">
-            Configure at least one cryptocurrency to start accepting payments.
-          </p>
-        </div>
+      {/* Popular Cryptocurrencies Dropdown */}
+      <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+        <CardHeader className="pb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-lg">
+              <Star className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-900">Popular Cryptocurrencies</CardTitle>
+              <p className="text-base text-gray-600 mt-1">
+                Add support for the most widely used cryptocurrencies
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Select value={selectedPopularCurrency} onValueChange={setSelectedPopularCurrency}>
+              <SelectTrigger className="flex-1 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                <SelectValue placeholder="Select a popular cryptocurrency..." />
+              </SelectTrigger>
+              <SelectContent>
+                {POPULAR_CURRENCIES.filter(currency => !wallets[currency.code]).map((currency) => (
+                  <SelectItem key={currency.code} value={currency.code}>
+                    <div className="flex items-center gap-2">
+                      <CryptoIcon currency={currency.code} className="h-4 w-4" />
+                      <span>{currency.code} - {getCurrencyDisplayName(currency.code)}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleAddPopularCurrency}
+              disabled={!selectedPopularCurrency}
+              className="h-12 px-6 bg-[#7f5efd] hover:bg-[#6b4fd8] text-white flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        {CURRENCY_GROUPS.map((group) => (
-          <Card key={group.id} className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-            <CardHeader className="pb-6">
-              <div>
-                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                  <CryptoIcon currency={group.primary.code} className="h-6 w-6" />
-                  {group.name}
-                </CardTitle>
-                <p className="text-base text-gray-600 mt-2">{group.description}</p>
-                {group.autoIncludedStablecoins.length > 0 && (
-                  <p className="text-sm text-blue-600 mt-3 font-medium flex items-center gap-2">
-                    <Coins className="h-4 w-4" />
-                    ✨ Automatically includes stable coins for customer payments
-                  </p>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Primary Currency */}
-              {renderCurrencyInput(group.primary)}
+      {/* Additional Cryptocurrencies Dropdown */}
+      <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+        <CardHeader className="pb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+              <Coins className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-900">Additional Cryptocurrencies</CardTitle>
+              <p className="text-base text-gray-600 mt-1">
+                Search and add support for more cryptocurrencies
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Input
+              placeholder="Search for cryptocurrencies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12 h-12 text-base"
+            />
+          </div>
 
-              {/* Other currencies */}
-              {group.others.length > 0 && (
-                <div className="space-y-4">
-                  {group.others.map(currency => renderCurrencyInput(currency))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+          <div className="flex items-center gap-4">
+            <Select value={selectedAdditionalCurrency} onValueChange={setSelectedAdditionalCurrency}>
+              <SelectTrigger className="flex-1 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                <SelectValue placeholder="Select an additional cryptocurrency..." />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredAdditionalCurrencies.map((currency) => (
+                  <SelectItem key={currency.code} value={currency.code}>
+                    <div className="flex items-center gap-2">
+                      <CryptoIcon currency={currency.code} className="h-4 w-4" />
+                      <span>{currency.code} - {currency.display_name || currency.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleAddAdditionalCurrency}
+              disabled={!selectedAdditionalCurrency}
+              className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </Button>
+          </div>
 
-        {/* Other Popular Cryptocurrencies */}
+          {loadingCurrencies && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-[#7f5efd]" />
+              <span className="ml-3 text-base">Loading additional currencies...</span>
+            </div>
+          )}
+
+          {searchTerm && filteredAdditionalCurrencies.length === 0 && !loadingCurrencies && (
+            <div className="text-center py-8 text-gray-500">
+              <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg">No cryptocurrencies found matching &quot;{searchTerm}&quot;</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Configured Wallets */}
+      {Object.keys(wallets).length > 0 && (
         <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
           <CardHeader className="pb-6">
-            <div>
-              <CardTitle className="text-xl font-bold text-gray-900">Other Popular Cryptocurrencies</CardTitle>
-              <p className="text-base text-gray-600 mt-2">Additional widely used cryptocurrencies</p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                <Wallet className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-900">Configured Wallets</CardTitle>
+                <p className="text-base text-gray-600 mt-1">
+                  Enter wallet addresses for your selected cryptocurrencies
+                </p>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {OTHER_POPULAR_CURRENCIES.map(currency => renderCurrencyInput(currency))}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Additional Currencies Section */}
-      {additionalCurrencies.length > 0 && (
-        <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900">Additional Cryptocurrencies</CardTitle>
-            <p className="text-base text-gray-600">
-              Optional: Add support for more cryptocurrencies ({additionalCurrencies.length} available from NOWPayments)
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                placeholder="Search for cryptocurrencies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 text-base"
-              />
-            </div>
-
-            {loadingCurrencies ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#7f5efd]" />
-                <span className="ml-3 text-lg">Loading additional currencies...</span>
-              </div>
-            ) : (
-              <div className="grid gap-4 max-h-96 overflow-y-auto">
-                {filteredAdditionalCurrencies.map((currency) =>
-                  renderCurrencyInput({
-                    code: currency.code,
-                    name: currency.display_name,
-                    network: currency.network,
-                    trust_wallet_compatible: currency.trust_wallet_compatible
-                  })
-                )}
-
-                  {searchTerm && filteredAdditionalCurrencies.length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
-                      <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-lg">No cryptocurrencies found matching &quot;{searchTerm}&quot;</p>
-                    </div>
-                  )}
-              </div>
-            )}
+                         {Object.keys(wallets).map(currency => {
+               const currencyInfo = POPULAR_CURRENCIES.find(c => c.code === currency) || 
+                                  additionalCurrencies.find(c => c.code === currency)
+               if (!currencyInfo) return null
+               
+               return renderCurrencyInput({
+                 code: currency,
+                 name: currencyInfo.name,
+                 network: currencyInfo.network,
+                 trust_wallet_compatible: currencyInfo.trust_wallet_compatible || false
+               })
+             })}
           </CardContent>
         </Card>
       )}

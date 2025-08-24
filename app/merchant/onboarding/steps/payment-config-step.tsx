@@ -258,7 +258,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 variant="outline"
                 size="sm"
                 onClick={() => setShowFeeDetails(!showFeeDetails)}
-                className="text-blue-600 hover:text-blue-700"
+                className="text-[#7f5efd] hover:text-[#6b4fd8] border-[#7f5efd] hover:border-[#6b4fd8] hover:bg-[#7f5efd]/5"
               >
                 {showFeeDetails ? 'Hide' : 'Learn More'} About Fees
               </Button>

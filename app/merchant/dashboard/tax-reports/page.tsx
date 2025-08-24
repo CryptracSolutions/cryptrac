@@ -26,7 +26,8 @@ import {
   Star,
   Shield,
   Coins,
-  Printer
+  Printer,
+  XCircle
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card'
@@ -617,8 +618,10 @@ export default function TaxReportsPage() {
                               <th className="text-left py-3 px-4 font-semibold text-gray-900">Description</th>
                               <th className="text-right py-3 px-4 font-semibold text-gray-900">Gross Amount</th>
                               <th className="text-right py-3 px-4 font-semibold text-gray-900">Tax</th>
+                              <th className="text-right py-3 px-4 font-semibold text-gray-900">Fees</th>
                               <th className="text-right py-3 px-4 font-semibold text-gray-900">Net Amount</th>
                               <th className="text-center py-3 px-4 font-semibold text-gray-900">Status</th>
+                              <th className="text-center py-3 px-4 font-semibold text-gray-900">Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -636,6 +639,9 @@ export default function TaxReportsPage() {
                                 <td className="py-3 px-4 text-sm text-gray-600 text-right">
                                   ${transaction.tax_amount.toFixed(2)}
                                 </td>
+                                <td className="py-3 px-4 text-sm text-gray-600 text-right">
+                                  ${transaction.fees.toFixed(2)}
+                                </td>
                                 <td className="py-3 px-4 text-sm text-gray-900 text-right font-medium">
                                   ${transaction.net_amount.toFixed(2)}
                                 </td>
@@ -646,6 +652,34 @@ export default function TaxReportsPage() {
                                   >
                                     {transaction.status}
                                   </Badge>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                    {transaction.public_receipt_id && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => viewReceipt(transaction.public_receipt_id!)}
+                                        className="h-8 px-2 text-xs"
+                                        title="View customer receipt"
+                                      >
+                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                        Receipt
+                                      </Button>
+                                    )}
+                                    {transaction.status !== 'refunded' && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => markAsRefunded(transaction)}
+                                        className="h-8 px-2 text-xs"
+                                        title="Mark as refunded"
+                                      >
+                                        <XCircle className="h-3 w-3 mr-1" />
+                                        Refund
+                                      </Button>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))}

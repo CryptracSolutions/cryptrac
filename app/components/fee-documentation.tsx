@@ -2,7 +2,7 @@ import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Info, DollarSign, Network, CreditCard, Coins, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Info, DollarSign, Network, CreditCard, Coins, CheckCircle } from 'lucide-react'
 
 interface FeeDocumentationProps {
   variant?: 'full' | 'compact' | 'tooltip'
@@ -241,20 +241,7 @@ export function FeeDocumentation({
 
           <Separator />
 
-          {/* Impact on Small Payments */}
-          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-            <h3 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Why This Matters for Small Payments
-            </h3>
-            <p className="text-yellow-800 mb-3">
-              Both processor fees ($0.30 fixed per transaction) and crypto network fees have a bigger impact on small sales. 
-              For example, a $0.30 processor fee is 6% of a $5 sale.
-            </p>
-            <p className="text-yellow-800">
-              <strong>Recommendation:</strong> Set a minimum payment amount for both card and crypto payments to maintain profitability.
-            </p>
-          </div>
+
 
           {/* Cryptrac Revenue Transparency */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -268,15 +255,7 @@ export function FeeDocumentation({
             </p>
           </div>
 
-          {/* Bottom Line */}
-          {showComparison && (
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <h3 className="font-semibold text-green-900 mb-2">The Bottom Line</h3>
-              <p className="text-green-800 text-lg">
-                <strong>99% of the time, it will be cheaper for merchants to accept crypto payments vs. card payments.</strong>
-              </p>
-            </div>
-          )}
+
         </CardContent>
       </Card>
     </div>
