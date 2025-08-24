@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle } from 'lucide-react'
+import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle, Shield, Zap, CreditCard, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface PaymentData {
@@ -248,10 +248,14 @@ export default function PaymentSuccessPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading payment confirmation...</p>
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-6"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-primary-300 rounded-full animate-spin mx-auto" style={{ animationDelay: '0.5s' }}></div>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Payment Confirmation</h2>
+          <p className="text-gray-600">Please wait while we verify your payment...</p>
         </div>
       </div>
     )
@@ -259,84 +263,102 @@ export default function PaymentSuccessPage() {
 
   if (error || !paymentData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Payment Not Found</h2>
-              <p className="text-gray-600 mb-4">
-                {error || "The payment confirmation you're looking for doesn't exist."}
-              </p>
-              <Button onClick={() => window.location.href = '/'}>
-                Go Home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="h-10 w-10 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Payment Not Found</h2>
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            {error || "The payment confirmation you're looking for doesn't exist."}
+          </p>
+          <Button onClick={() => window.location.href = '/'} size="lg" className="shadow-lg">
+            Go Home
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
       <div className="max-w-2xl mx-auto px-4">
         {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+          <div className="relative mb-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto shadow-lg">
+              <CheckCircle className="h-12 w-12 text-green-600" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+              <CheckCircle className="h-5 w-5 text-white" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Confirmed!</h1>
-          <p className="text-gray-600">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Payment Confirmed!</h1>
+          <p className="text-lg text-gray-600 mb-4 leading-relaxed">
             Your payment has been successfully processed and confirmed on the blockchain.
           </p>
+          <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-4 w-4 text-primary-500" />
+              <span>Secure Transaction</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Zap className="h-4 w-4 text-primary-500" />
+              <span>Instant Confirmation</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <CreditCard className="h-4 w-4 text-primary-500" />
+              <span>Non-Custodial</span>
+            </div>
+          </div>
         </div>
 
         {/* Payment Summary */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Payment Summary</CardTitle>
-            <p className="text-sm text-gray-600">
-              Payment to {paymentData.payment_link.merchant.business_name}
+        <Card className="mb-8 shadow-lg border-0 bg-white">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-2xl font-bold text-gray-900">Payment Summary</CardTitle>
+            <p className="text-gray-600">
+              Payment to <span className="font-semibold text-gray-900">{paymentData.payment_link.merchant.business_name}</span>
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {/* Payment Details */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Amount Paid</Label>
-                <p className="text-lg font-semibold text-green-600">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
+                <Label className="text-sm font-semibold text-gray-700 mb-3 block">Amount Paid</Label>
+                <p className="text-2xl font-bold text-green-600 mb-2">
                   {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-600">
                   ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
                 </p>
               </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Payment Method</Label>
-                <p className="text-lg font-semibold">{paymentData.pay_currency.toUpperCase()}</p>
-                <Badge variant="secondary" className="text-xs mt-1">
+              <div className="text-center p-6 bg-blue-50 rounded-xl border border-blue-200">
+                <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payment Method</Label>
+                <p className="text-2xl font-bold text-blue-600 mb-2">{paymentData.pay_currency.toUpperCase()}</p>
+                <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-semibold">
                   {paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
                 </Badge>
               </div>
             </div>
 
-            <Separator />
+            <Separator className="my-6" />
 
             {/* Transaction Details */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-gray-700">Order ID</Label>
-                <div className="flex gap-2 mt-1">
+                <Label className="text-sm font-semibold text-gray-700 mb-3 block">Order ID</Label>
+                <div className="flex gap-3">
                   <Input
                     value={paymentData.order_id}
                     readOnly
-                    className="font-mono text-sm"
+                    className="font-mono text-sm bg-gray-50"
                   />
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="lg"
                     onClick={() => copyToClipboard(paymentData.order_id)}
+                    className="shadow-sm"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -346,30 +368,32 @@ export default function PaymentSuccessPage() {
               {/* Transaction Hash */}
               {paymentData.tx_hash && (
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Transaction Hash</Label>
-                  <div className="flex gap-2 mt-1">
+                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Transaction Hash</Label>
+                  <div className="flex gap-3">
                     <Input
                       value={paymentData.tx_hash}
                       readOnly
-                      className="font-mono text-sm"
+                      className="font-mono text-sm bg-gray-50"
                     />
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={() => copyToClipboard(paymentData.tx_hash!)}
+                      className="shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                     {getBlockExplorerUrl(paymentData.tx_hash, paymentData.pay_currency) && (
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="lg"
                         onClick={() => {
                           const explorerUrl = getBlockExplorerUrl(paymentData.tx_hash!, paymentData.pay_currency)
                           if (explorerUrl) {
                             window.open(explorerUrl, '_blank')
                           }
                         }}
+                        className="shadow-sm"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -381,30 +405,32 @@ export default function PaymentSuccessPage() {
               {/* Payin Hash */}
               {paymentData.payin_hash && (
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Payin Hash (Customer Transaction)</Label>
-                  <div className="flex gap-2 mt-1">
+                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payin Hash (Customer Transaction)</Label>
+                  <div className="flex gap-3">
                     <Input
                       value={paymentData.payin_hash}
                       readOnly
-                      className="font-mono text-sm"
+                      className="font-mono text-sm bg-gray-50"
                     />
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={() => copyToClipboard(paymentData.payin_hash!)}
+                      className="shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                     {getBlockExplorerUrl(paymentData.payin_hash, paymentData.pay_currency) && (
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="lg"
                         onClick={() => {
                           const explorerUrl = getBlockExplorerUrl(paymentData.payin_hash!, paymentData.pay_currency)
                           if (explorerUrl) {
                             window.open(explorerUrl, '_blank')
                           }
                         }}
+                        className="shadow-sm"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -416,30 +442,32 @@ export default function PaymentSuccessPage() {
               {/* Payout Hash */}
               {paymentData.payout_hash && (
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Payout Hash (Merchant Transaction)</Label>
-                  <div className="flex gap-2 mt-1">
+                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payout Hash (Merchant Transaction)</Label>
+                  <div className="flex gap-3">
                     <Input
                       value={paymentData.payout_hash}
                       readOnly
-                      className="font-mono text-sm"
+                      className="font-mono text-sm bg-gray-50"
                     />
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={() => copyToClipboard(paymentData.payout_hash!)}
+                      className="shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                     {getBlockExplorerUrl(paymentData.payout_hash, paymentData.payout_currency || paymentData.pay_currency) && (
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="lg"
                         onClick={() => {
                           const explorerUrl = getBlockExplorerUrl(paymentData.payout_hash!, paymentData.payout_currency || paymentData.pay_currency)
                           if (explorerUrl) {
                             window.open(explorerUrl, '_blank')
                           }
                         }}
+                        className="shadow-sm"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -452,18 +480,18 @@ export default function PaymentSuccessPage() {
         </Card>
 
         {/* Receipt Delivery */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Get Your Receipt</CardTitle>
-            <p className="text-sm text-gray-600">
+        <Card className="mb-8 shadow-lg border-0 bg-white">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-2xl font-bold text-gray-900">Get Your Receipt</CardTitle>
+            <p className="text-gray-600">
               Receive a detailed receipt for your records
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {/* Email Receipt */}
             <div>
-              <Label className="text-sm font-medium text-gray-700">Email Receipt</Label>
-              <div className="flex gap-2 mt-2">
+              <Label className="text-sm font-semibold text-gray-700 mb-3 block">Email Receipt</Label>
+              <div className="flex gap-3">
                 <Input
                   type="email"
                   placeholder="Enter your email address"
@@ -476,6 +504,8 @@ export default function PaymentSuccessPage() {
                   onClick={sendEmailReceipt}
                   disabled={sendingEmailReceipt || emailReceiptSent || !email.trim()}
                   variant={emailReceiptSent ? "secondary" : "default"}
+                  size="lg"
+                  className="shadow-sm"
                 >
                   {sendingEmailReceipt ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -490,14 +520,16 @@ export default function PaymentSuccessPage() {
                 </Button>
               </div>
               {emailReceiptSent && (
-                <p className="text-sm text-green-600 mt-1">
-                  ✅ Receipt sent to {email}
-                </p>
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 font-medium">
+                    ✅ Receipt sent to {email}
+                  </p>
+                </div>
               )}
             </div>
 
             <div className="text-center">
-              <p className="text-xs text-gray-500">
+              <p className="text-sm text-gray-500">
                 Receipts include complete transaction details for your records
               </p>
             </div>
@@ -505,33 +537,29 @@ export default function PaymentSuccessPage() {
         </Card>
 
         {/* Additional Information */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>What's Next?</CardTitle>
+        <Card className="mb-8 shadow-lg border-0 bg-white">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-2xl font-bold text-gray-900">What's Next?</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Payment Confirmed</p>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
+                <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Payment Confirmed</h3>
                 <p className="text-sm text-gray-600">
                   Your payment has been confirmed on the blockchain and the merchant has been notified.
                 </p>
               </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Mail className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Receipt Available</p>
+              <div className="text-center p-6 bg-blue-50 rounded-xl border border-blue-200">
+                <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Receipt Available</h3>
                 <p className="text-sm text-gray-600">
                   Request an email receipt above to keep detailed records of this transaction.
                 </p>
               </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <ExternalLink className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Blockchain Verification</p>
+              <div className="text-center p-6 bg-purple-50 rounded-xl border border-purple-200">
+                <ExternalLink className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Blockchain Verification</h3>
                 <p className="text-sm text-gray-600">
                   Use the transaction hashes above to verify your payment on the blockchain explorer.
                 </p>
@@ -541,10 +569,22 @@ export default function PaymentSuccessPage() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-8 pb-8">
-          <p className="text-sm text-gray-500">
-            Thank you for using Cryptrac for your payment!
-          </p>
+        <div className="text-center">
+          <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-xl p-8 border border-primary-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Thank you for using Cryptrac!</h3>
+            <p className="text-gray-600 mb-6">
+              Your payment has been processed securely and efficiently using cryptocurrency technology.
+            </p>
+            <Button 
+              onClick={() => window.location.href = '/'} 
+              variant="outline" 
+              size="lg"
+              className="shadow-sm"
+            >
+              Return Home
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

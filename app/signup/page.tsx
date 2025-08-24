@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Shield, Zap, CreditCard, CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -90,125 +90,183 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 p-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Logo and Header */}
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <Logo size="lg" />
+    <div className="min-h-screen flex">
+      {/* Left Side - Content */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md space-y-8">
+          {/* Logo and Header */}
+          <div className="text-center">
+            <div className="flex justify-center mb-8">
+              <Logo size="lg" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">Welcome to the future of payments</h1>
+            <p className="text-lg text-gray-600 leading-relaxed mb-6">
+              Join thousands of businesses already using Cryptrac to accept cryptocurrency payments from customers
+            </p>
+            <div className="flex justify-center">
+              <Badge className="bg-green-100 text-green-800 border-green-200 px-4 py-2 text-sm font-semibold">
+                30-day free trial
+              </Badge>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Get started with Cryptrac</h1>
-          <p className="mt-2 text-gray-600">
-            Accept crypto payments in minutes
-          </p>
-          <div className="flex justify-center mt-4">
-            <Badge variant="success" className="text-xs">
-              30-day free trial
-            </Badge>
+
+          {/* Signup Form */}
+          <Card className="shadow-xl border-0 bg-white">
+            <CardHeader className="space-y-2 pb-8">
+              <CardTitle className="text-2xl font-bold text-center text-gray-900">Create account</CardTitle>
+              <CardDescription className="text-center text-gray-600">
+                $19/month or $199/year after trial
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-8 pb-8">
+              <form onSubmit={handleSignup} className="space-y-6">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  label="Email Address"
+                  leftIcon={<Mail className="h-4 w-4" />}
+                  autoComplete="email"
+                  disabled={loading}
+                  required
+                />
+                
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create a strong password"
+                  label="Password"
+                  leftIcon={<Lock className="h-4 w-4" />}
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  }
+                  autoComplete="new-password"
+                  disabled={loading}
+                  required
+                />
+
+                <div className="text-sm text-gray-500">
+                  Password must be at least 6 characters long
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-14 text-lg font-semibold shadow-lg"
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? 'Creating account...' : 'Create Account'}
+                </Button>
+              </form>
+
+              <div className="mt-8 text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link 
+                    href="/login" 
+                    className="text-primary-600 hover:text-primary-700 font-semibold transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Features */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 text-sm text-gray-600">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <span>Accept Bitcoin, Ethereum, and more</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <span>Non-custodial - you control your funds</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <span>Gateway Fee: 0.5% (direct), 1% (auto-convert)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center text-sm text-gray-500">
+            <p>
+              By creating an account, you agree to our{' '}
+              <Link href="/terms" className="text-primary-600 hover:text-primary-700 transition-colors">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-primary-600 hover:text-primary-700 transition-colors">
+                Privacy Policy
+              </Link>
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Signup Form */}
-        <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl text-center">Create account</CardTitle>
-            <CardDescription className="text-center">
-              $19/month or $199/year after trial
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSignup} className="space-y-4">
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                label="Email"
-                leftIcon={<Mail className="h-4 w-4" />}
-                autoComplete="email"
-                disabled={loading}
-                required
-              />
-              
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a strong password"
-                label="Password"
-                leftIcon={<Lock className="h-4 w-4" />}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                }
-                autoComplete="new-password"
-                disabled={loading}
-                required
-              />
-
-              <div className="text-xs text-muted-foreground">
-                Password must be at least 6 characters long
+      {/* Right Side - Visual */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
+        <div className="relative flex items-center justify-center p-12">
+          <div className="text-center text-white max-w-lg">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
+                <Zap className="h-12 w-12 text-white" />
               </div>
-
-              <Button 
-                type="submit" 
-                className="w-full"
-                size="lg"
-                disabled={loading}
-              >
-                {loading ? 'Creating account...' : 'Create account'}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Already have an account?{' '}
-                <Link 
-                  href="/login" 
-                  className="text-primary hover:text-primary/80 font-medium"
-                >
-                  Sign in
-                </Link>
+              <h2 className="text-3xl font-bold mb-4">Start Accepting Crypto Today</h2>
+              <p className="text-xl text-primary-100 leading-relaxed">
+                Join the cryptocurrency revolution. Set up your payment gateway in minutes and start accepting digital payments from customers worldwide.
               </p>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Features */}
-        <div className="text-center space-y-3">
-          <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground">
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-              <span>Accept Bitcoin, Ethereum, and more</span>
+            {/* Trust Indicators */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span className="font-medium">Secure & Non-Custodial</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-5 w-5" />
+                  <span className="font-medium">Instant Setup</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="h-5 w-5" />
+                  <span className="font-medium">Global Support</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-              <span>Non-custodial - you control your funds</span>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-              <span>Cryptrac Gateway Fee: 0.5% (no conversion), 1% (auto-convert enabled)</span>
+
+            {/* CTA */}
+            <div className="mt-12">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-white text-white hover:bg-white hover:text-primary-600 transition-all"
+                asChild
+              >
+                <Link href="/signup">
+                  Get Started Now
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center text-sm text-muted-foreground">
-          <p>
-            By creating an account, you agree to our{' '}
-            <Link href="/terms" className="text-primary hover:text-primary/80">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-primary hover:text-primary/80">
-              Privacy Policy
-            </Link>
-          </p>
         </div>
       </div>
     </div>

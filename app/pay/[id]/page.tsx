@@ -9,7 +9,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 
@@ -978,10 +978,14 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading payment details...</p>
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-6"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-primary-300 rounded-full animate-spin mx-auto" style={{ animationDelay: '0.5s' }}></div>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Payment Details</h2>
+          <p className="text-gray-600">Please wait while we securely load your payment information...</p>
         </div>
       </div>
     )
@@ -989,12 +993,14 @@ export default function PaymentPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="h-10 w-10 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Payment Error</h1>
+          <p className="text-gray-600 mb-6 leading-relaxed">{error}</p>
+          <Button onClick={() => window.location.reload()} size="lg" className="shadow-lg">
             <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
@@ -1005,11 +1011,13 @@ export default function PaymentPage() {
 
   if (!paymentLink) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Link Not Found</h1>
-          <p className="text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="h-10 w-10 text-gray-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Payment Link Not Found</h1>
+          <p className="text-gray-600 leading-relaxed">The payment link you're looking for doesn't exist or has expired.</p>
         </div>
       </div>
     )
@@ -1018,66 +1026,84 @@ export default function PaymentPage() {
   const currentStatus = paymentStatus || paymentData
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
       <div className="max-w-2xl mx-auto px-4">
+        {/* Trust Indicators Header */}
+        <div className="flex items-center justify-center space-x-6 mb-8 text-sm text-gray-500">
+          <div className="flex items-center space-x-2">
+            <Shield className="h-4 w-4 text-primary-500" />
+            <span>Secure Payment</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Zap className="h-4 w-4 text-primary-500" />
+            <span>Instant Processing</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CreditCard className="h-4 w-4 text-primary-500" />
+            <span>Non-Custodial</span>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{paymentLink.title}</h1>
-        {paymentLink.description && (
-          <p className="text-gray-600">{paymentLink.description}</p>
-        )}
-        {paymentLink.subscription_id && (
-          <p className="text-sm text-gray-500 mt-1">This is a recurring invoice. Payments are not auto-debited.</p>
-        )}
-        <p className="text-sm text-gray-500 mt-2">
-          Powered by {paymentLink.merchant.business_name}
-        </p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">{paymentLink.title}</h1>
+          {paymentLink.description && (
+            <p className="text-lg text-gray-600 mb-4 leading-relaxed">{paymentLink.description}</p>
+          )}
+          {paymentLink.subscription_id && (
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 mb-4">
+              <span>Recurring Invoice</span>
+            </div>
+          )}
+          <div className="flex items-center justify-center space-x-2 text-gray-500">
+            <span>Powered by</span>
+            <span className="font-semibold text-gray-900">{paymentLink.merchant.business_name}</span>
+          </div>
         </div>
 
         {/* Payment Amount Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-center">Payment Details</CardTitle>
+        <Card className="mb-8 shadow-lg border-0 bg-white">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-bold text-gray-900">Payment Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {feeBreakdown && (
-              <div className="space-y-3">
-                <div className="flex justify-between">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2">
                   <span className="text-gray-600">Base Amount:</span>
-                  <span className="font-medium">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                  <span className="font-semibold text-gray-900">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
                 </div>
                 
                 {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
                   <>
                     {paymentLink.tax_rates.map((rate, index) => (
-                      <div key={index} className="flex justify-between text-sm">
+                      <div key={index} className="flex justify-between text-sm py-1">
                         <span className="text-gray-600">{rate.label} ({rate.percentage}%):</span>
-                        <span>${(feeBreakdown.baseAmount * (rate.percentage / 100)).toFixed(2)}</span>
+                        <span className="text-gray-700">${(feeBreakdown.baseAmount * (rate.percentage / 100)).toFixed(2)}</span>
                       </div>
                     ))}
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tax Total:</span>
-                      <span>${feeBreakdown.taxAmount.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-2 border-t border-gray-100">
+                      <span className="text-gray-600 font-medium">Tax Total:</span>
+                      <span className="font-semibold text-gray-900">${feeBreakdown.taxAmount.toFixed(2)}</span>
                     </div>
-                    <Separator />
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal with Tax:</span>
-                      <span className="font-medium">${feeBreakdown.subtotalWithTax.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600 font-medium">Subtotal with Tax:</span>
+                      <span className="font-semibold text-gray-900">${feeBreakdown.subtotalWithTax.toFixed(2)}</span>
                     </div>
                   </>
                 )}
                 
                 {feeBreakdown.platformFee > 0 && (
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm py-1">
                     <span className="text-gray-600">Gateway Fee ({((paymentLink.fee_percentage || 0) * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%):</span>
-                    <span>${feeBreakdown.platformFee.toFixed(2)}</span>
+                    <span className="text-gray-700">${feeBreakdown.platformFee.toFixed(2)}</span>
                   </div>
                 )}
                 
-                <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total Amount:</span>
-                  <span>${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                <Separator className="my-4" />
+                <div className="flex justify-between items-center py-3 bg-primary-50 rounded-lg px-4">
+                  <span className="text-lg font-bold text-gray-900">Total Amount:</span>
+                  <span className="text-2xl font-bold text-primary-600">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
                 </div>
               </div>
             )}
@@ -1086,18 +1112,21 @@ export default function PaymentPage() {
 
         {!paymentData ? (
           /* Currency Selection */
-          <Card>
-            <CardHeader>
-              <CardTitle>Select Payment Method</CardTitle>
+          <Card className="shadow-lg border-0 bg-white">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl font-bold text-gray-900">Select Payment Method</CardTitle>
+              <p className="text-gray-600">Choose your preferred cryptocurrency</p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {availableCurrencies.length === 0 ? (
-                <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <div className="text-center py-12">
+                  <div className="relative">
+                    <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+                  </div>
                   <p className="text-gray-600">Loading available currencies...</p>
                 </div>
               ) : (
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                   {availableCurrencies.map((currency) => {
                     const estimate = estimates[currency.code]
                     const isSelected = selectedCurrency === currency.code
@@ -1105,36 +1134,36 @@ export default function PaymentPage() {
                     return (
                       <div
                         key={currency.code}
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
                           isSelected 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50 shadow-md' 
+                            : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         }`}
                         onClick={() => setSelectedCurrency(currency.code)}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-4 h-4 rounded-full border-2 ${
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                               isSelected 
-                                ? 'border-blue-500 bg-blue-500' 
+                                ? 'border-primary-500 bg-primary-500' 
                                 : 'border-gray-300'
                             }`}>
                               {isSelected && (
-                                <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
                               )}
                             </div>
                             <div>
-                              <div className="font-medium">{currency.code.toUpperCase()}</div>
+                              <div className="font-semibold text-gray-900">{currency.code.toUpperCase()}</div>
                               <div className="text-sm text-gray-500">{currency.name}</div>
                             </div>
                           </div>
                           <div className="text-right">
                             {estimate && estimate.estimated_amount && typeof estimate.estimated_amount === 'number' && estimate.estimated_amount !== null ? (
-                              <div className="font-medium">
+                              <div className="font-bold text-lg text-gray-900">
                                 {estimate.estimated_amount.toFixed(6)}
                               </div>
                             ) : (
-                              <div>Calculating...</div>
+                              <div className="text-gray-400">Calculating...</div>
                             )}
                             <div className="text-sm text-gray-500">{currency.code.toUpperCase()}</div>
                           </div>
@@ -1149,18 +1178,18 @@ export default function PaymentPage() {
                 <Button 
                   onClick={createPayment} 
                   disabled={creatingPayment}
-                  className="w-full"
+                  className="w-full h-14 text-lg font-semibold shadow-lg"
                   size="lg"
                 >
                   {creatingPayment ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 mr-3 animate-spin" />
                       Creating Payment...
                     </>
                   ) : (
                     <>
                       Continue with {selectedCurrency.toUpperCase()}
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                      <ArrowRight className="h-5 w-5 ml-3" />
                     </>
                   )}
                 </Button>
@@ -1169,19 +1198,19 @@ export default function PaymentPage() {
           </Card>
         ) : (
           /* Payment Instructions */
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Payment Status */}
             {currentStatus && (
-              <Card>
+              <Card className="shadow-lg border-0 bg-white">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
+                  <CardTitle className="flex items-center space-x-3 text-xl">
                     {getStatusIcon(currentStatus.payment_status)}
                     <span>Payment Status</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <Badge className={`${getStatusColor(currentStatus.payment_status)} border`}>
+                    <Badge className={`${getStatusColor(currentStatus.payment_status)} border px-4 py-2 text-sm font-semibold`}>
                       {formatStatus(currentStatus.payment_status)}
                     </Badge>
                     {currentStatus.tx_hash && (
@@ -1193,8 +1222,10 @@ export default function PaymentPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => window.open(explorerUrl, '_blank')}
+                              className="shadow-sm"
                             >
-                              <ExternalLink className="h-3 w-3" />
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View Transaction
                             </Button>
                           ) : null
                         })()}
@@ -1203,8 +1234,10 @@ export default function PaymentPage() {
                   </div>
                   
                   {currentStatus.actually_paid && (
-                    <div className="mt-3 text-sm text-gray-600">
-                      Amount Received: {currentStatus.actually_paid} {currentStatus.pay_currency.toUpperCase()}
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="text-sm text-green-800">
+                        <span className="font-semibold">Amount Received:</span> {currentStatus.actually_paid} {currentStatus.pay_currency.toUpperCase()}
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -1212,24 +1245,25 @@ export default function PaymentPage() {
             )}
 
             {/* Payment Instructions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Send Payment</CardTitle>
+            <Card className="shadow-lg border-0 bg-white">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-bold text-gray-900">Send Payment</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8">
                 {/* Amount */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Amount to Send</Label>
-                  <div className="mt-1 flex items-center space-x-2">
+                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Amount to Send</Label>
+                  <div className="flex items-center space-x-3">
                     <Input
                       value={`${paymentData.pay_amount} ${paymentData.pay_currency.toUpperCase()}`}
                       readOnly
-                      className="font-mono"
+                      className="font-mono text-lg font-semibold bg-gray-50"
                     />
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={() => copyToClipboard(paymentData.pay_amount.toString(), 'Amount')}
+                      className="shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -1238,17 +1272,18 @@ export default function PaymentPage() {
 
                 {/* Address */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Payment Address</Label>
-                  <div className="mt-1 flex items-center space-x-2">
+                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payment Address</Label>
+                  <div className="flex items-center space-x-3">
                     <Input
                       value={paymentData.pay_address}
                       readOnly
-                      className="font-mono text-sm"
+                      className="font-mono text-sm bg-gray-50"
                     />
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
+                      className="shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -1258,23 +1293,27 @@ export default function PaymentPage() {
                 {/* QR Code */}
                 {qrCodeDataUrl && (
                   <div className="text-center">
-                    <Label className="text-sm font-medium text-gray-700">QR Code</Label>
-                    <div className="mt-2 inline-block p-4 bg-white rounded-lg border">
+                    <Label className="text-sm font-semibold text-gray-700 mb-4 block">QR Code</Label>
+                    <div className="inline-block p-6 bg-white rounded-xl border-2 border-gray-200 shadow-lg">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={qrCodeDataUrl}
                         alt="Payment QR Code"
-                        className="w-48 h-48 mx-auto"
+                        className="w-56 h-56 mx-auto"
                       />
                     </div>
+                    <p className="text-sm text-gray-500 mt-3">Scan with your crypto wallet app</p>
                   </div>
                 )}
 
                 {/* Instructions */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-900 mb-2">Payment Instructions:</h4>
-                  <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                    <li>Send exactly <strong>{paymentData.pay_amount} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                  <h4 className="font-semibold text-blue-900 mb-4 flex items-center">
+                    <Shield className="h-5 w-5 mr-2" />
+                    Payment Instructions
+                  </h4>
+                  <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                    <li>Send exactly <strong className="text-blue-900">{paymentData.pay_amount} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
                     <li>Do not send any other amount or currency</li>
                     <li>Payment will be confirmed automatically</li>
                     <li>You will be redirected once payment is complete</li>
@@ -1283,9 +1322,9 @@ export default function PaymentPage() {
 
                 {/* Monitoring Status */}
                 {isMonitoring && (
-                  <div className="text-center text-sm text-gray-500">
-                    <div className="flex items-center justify-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="text-center">
+                    <div className="flex items-center justify-center space-x-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary-500" />
                       <span>Monitoring payment status (checking every {Math.round(monitoringInterval / 1000)}s)</span>
                     </div>
                   </div>

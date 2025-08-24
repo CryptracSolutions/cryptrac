@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, Star, Users, TrendingUp } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
@@ -84,24 +84,24 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container-wide flex h-16 items-center justify-between">
           <Logo size="md" />
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link href="#features" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
               Features
             </Link>
-            <Link href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link href="#pricing" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
               Pricing
             </Link>
-            <Link href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link href="#faq" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
               FAQ
             </Link>
-            <Link href="#about" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link href="#about" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
               About
             </Link>
           </nav>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" asChild>
               <Link href="/login">Log in</Link>
             </Button>
@@ -114,66 +114,83 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-primary-50 py-20 sm:py-32">
-        <div className="container-wide">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-100/20 to-purple-100/20"></div>
+        <div className="container-wide relative">
           <div className="mx-auto max-w-4xl text-center">
-            <Badge variant="secondary" className="mb-6">
+            <Badge variant="secondary" className="mb-8 px-4 py-2 text-sm font-semibold bg-primary-100 text-primary-700 border-primary-200">
               🚀 Now in Beta - Join the Future of Payments
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
               Get Paid in{" "}
-              <span className="text-gradient">Crypto</span>
+              <span className="text-gradient-primary">Crypto</span>
             </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-6 text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-8">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
             </p>
             
             {/* Hero Transparency Callout */}
-            <div className="mt-8 mx-auto max-w-2xl">
-              <Alert className="border-green-200 bg-green-50">
-                <DollarSign className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
+            <div className="mt-8 mx-auto max-w-2xl mb-10">
+              <Alert className="border-green-200 bg-green-50 shadow-sm">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <AlertDescription className="text-green-800 font-medium">
                   <strong>Transparent Pricing:</strong> $19/month subscription - no transaction fees to Cryptrac. 
                   Gateway fees (0.5-1%) go to payment processor, not us.
                 </AlertDescription>
               </Alert>
             </div>
 
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Button size="lg" className="text-base" asChild>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button size="xl" className="text-lg px-8 py-4 shadow-lg" asChild>
                 <Link href="/signup">
                   Start Free 30-Day Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="text-base" asChild>
+              <Button variant="outline" size="xl" className="text-lg px-8 py-4" asChild>
                 <Link href="#pricing">View Pricing</Link>
               </Button>
             </div>
-            <div className="mt-6 text-sm text-muted-foreground">
+            <div className="mt-6 text-sm text-gray-500">
               30-day free trial • $19/month • No setup fees • Cancel anytime
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="mt-12 flex items-center justify-center space-x-8 text-sm text-gray-500">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-4 w-4 text-primary-500" />
+                <span>Secure & Non-Custodial</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Zap className="h-4 w-4 text-primary-500" />
+                <span>Instant Setup</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-primary-500" />
+                <span>Global Support</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Supported Cryptocurrencies */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Accept All Major Cryptocurrencies
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Support for Bitcoin, Ethereum, and many more digital currencies
             </p>
           </div>
-          <div className="flex flex-wrap justify-center items-center gap-8">
+          <div className="flex flex-wrap justify-center items-center gap-12">
             {supportedCryptos.map((crypto) => (
-              <div key={crypto.symbol} className="flex items-center gap-3">
+              <div key={crypto.symbol} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors">
                 <CryptoIcon currency={crypto.symbol} size="lg" />
                 <div>
-                  <div className="font-medium text-gray-900">{crypto.name}</div>
-                  <div className="text-sm text-muted-foreground">{crypto.symbol}</div>
+                  <div className="font-semibold text-gray-900 text-lg">{crypto.name}</div>
+                  <div className="text-sm text-gray-500">{crypto.symbol}</div>
                 </div>
               </div>
             ))}
@@ -185,24 +202,24 @@ export default function Home() {
       <section id="features" className="py-20 bg-gray-50">
         <div className="container-wide">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Everything you need to accept crypto payments
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Built for businesses of all sizes. From freelancers to enterprises, Cryptrac makes crypto payments simple.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-primary" />
+              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+                <CardHeader className="text-center pb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <feature.icon className="h-8 w-8 text-primary-600" />
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
+                <CardContent className="text-center">
+                  <CardDescription className="text-base leading-relaxed">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
@@ -216,48 +233,51 @@ export default function Home() {
       <section id="pricing" className="py-20 bg-white">
         <div className="container-wide">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Simple, transparent pricing
             </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               No hidden fees, no transaction fees to Cryptrac. Just a simple monthly subscription and transparent gateway fees.
             </p>
           </div>
 
           {/* Main Pricing Card */}
           <div className="max-w-lg mx-auto">
-            <Card className="border-2 border-primary shadow-xl">
-              <CardHeader className="text-center pb-8">
-                <div className="flex justify-center mb-4">
-                  <Badge variant="default" className="text-sm">
+            <Card className="border-2 border-primary-500 shadow-2xl bg-white relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-purple-500"></div>
+              <CardHeader className="text-center pb-8 pt-8">
+                <div className="flex justify-center mb-6">
+                  <Badge className="text-sm font-semibold bg-primary-500 text-white px-4 py-2">
                     Most Popular
                   </Badge>
                 </div>
-                <CardTitle className="text-3xl font-bold">Cryptrac</CardTitle>
-                <CardDescription className="text-lg">
+                <CardTitle className="text-3xl font-bold text-gray-900">Cryptrac</CardTitle>
+                <CardDescription className="text-lg text-gray-600">
                   Everything you need to get started
                 </CardDescription>
-                <div className="mt-6">
-                  <span className="text-4xl font-bold">$19</span>
-                  <span className="text-muted-foreground ml-2">/month</span>
+                <div className="mt-8">
+                  <span className="text-5xl font-bold text-gray-900">$19</span>
+                  <span className="text-gray-600 ml-2 text-xl">/month</span>
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-500 mt-2">
                   or $199/year (save $29)
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
+              <CardContent className="space-y-6 px-8 pb-8">
+                <div className="space-y-4">
                   {benefits.map((benefit, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-primary" />
-                      <span className="text-sm">{benefit}</span>
+                    <div key={index} className="flex items-center gap-4">
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="text-gray-700">{benefit}</span>
                     </div>
                   ))}
                 </div>
-                <Button size="lg" className="w-full" asChild>
+                <Button size="lg" className="w-full h-14 text-lg font-semibold shadow-lg" asChild>
                   <Link href="/signup">Start Free Trial</Link>
                 </Button>
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-xs text-center text-gray-500">
                   30-day free trial • No setup fees • Cancel anytime
                 </p>
               </CardContent>
@@ -266,9 +286,9 @@ export default function Home() {
 
           {/* Fee Transparency Notice */}
           <div className="mt-16 max-w-4xl mx-auto">
-            <Alert className="border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
+            <Alert className="border-blue-200 bg-blue-50 shadow-sm">
+              <Info className="h-5 w-5 text-blue-600" />
+              <AlertDescription className="text-blue-800 font-medium">
                   <strong>Complete Transparency:</strong> Cryptrac&apos;s only revenue is the $19/month subscription.
                 Gateway fees (0.5% or 1%) are charged by the payment processor for handling transactions and go directly to them, not to Cryptrac. 
                 Network fees may vary by cryptocurrency and blockchain congestion.
@@ -282,36 +302,38 @@ export default function Home() {
       <section id="faq" className="py-20 bg-gray-50">
         <div className="container-wide">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Frequently Asked Questions
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-xl text-gray-600">
               Everything you need to know about Cryptrac pricing and fees
             </p>
           </div>
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-4xl mx-auto space-y-6">
             {faqItems.map((item, index) => (
-              <Card key={index} className="border-0 shadow-sm">
+              <Card key={index} className="border-0 shadow-lg bg-white">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <HelpCircle className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <HelpCircle className="h-4 w-4 text-primary-600" />
+                    </div>
                     {item.question}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{item.answer}</p>
+                  <p className="text-gray-600 leading-relaxed">{item.answer}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
           
           {/* Detailed Fee Documentation */}
-          <div className="mt-16">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="mt-20">
+            <div className="text-center mb-12">
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">
                 Understanding Payment Fees: Crypto vs Traditional
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                 Complete breakdown of how crypto payments compare to traditional processors
               </p>
             </div>
@@ -326,62 +348,63 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-400">
-        <div className="container-wide text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
+      <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
+        <div className="container-wide text-center relative">
+          <h2 className="text-4xl font-bold text-white mb-6">
             Ready to start accepting crypto payments?
           </h2>
-          <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-100 mb-10 max-w-3xl mx-auto leading-relaxed">
             Join thousands of businesses already using Cryptrac to accept cryptocurrency payments securely and efficiently.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-base" asChild>
+            <Button size="xl" variant="secondary" className="text-lg px-8 py-4 shadow-lg" asChild>
               <Link href="/signup">
                 Start Free 30-Day Trial
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-base border-white text-white hover:bg-white hover:text-primary" asChild>
+            <Button size="xl" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-primary-600" asChild>
               <Link href="/login">Sign In</Link>
             </Button>
           </div>
-          <div className="mt-6 text-primary-100 text-sm">
+          <div className="mt-8 text-primary-100 text-sm">
             No credit card required • Full access during trial • $19/month after trial
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-16">
         <div className="container-wide">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <Logo variant="white" size="md" className="mb-4" />
-              <p className="text-gray-400 max-w-md">
+              <Logo variant="white" size="md" className="mb-6" />
+              <p className="text-gray-400 max-w-md leading-relaxed mb-6">
                 The simplest way to accept cryptocurrency payments. Non-custodial, secure, and designed for modern businesses.
               </p>
-              <div className="mt-4 text-sm text-gray-500">
+              <div className="text-sm text-gray-500">
                 Transparent pricing: $19/month subscription, no transaction fees to Cryptrac
               </div>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="#features" className="hover:text-white">Features</Link></li>
-                <li><Link href="#pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link href="#faq" className="hover:text-white">FAQ</Link></li>
-                <li><Link href="/signup" className="hover:text-white">Get Started</Link></li>
+              <h3 className="font-semibold mb-6 text-lg">Product</h3>
+              <ul className="space-y-3 text-gray-400">
+                <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
+                <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link href="#faq" className="hover:text-white transition-colors">FAQ</Link></li>
+                <li><Link href="/signup" className="hover:text-white transition-colors">Get Started</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
-                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+              <h3 className="font-semibold mb-6 text-lg">Legal</h3>
+              <ul className="space-y-3 text-gray-400">
+                <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
             <p>&copy; 2025 Cryptrac. All rights reserved.</p>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Shield, Zap, CreditCard } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -66,109 +66,152 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 p-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Logo and Header */}
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <Logo size="lg" />
+    <div className="min-h-screen flex">
+      {/* Left Side - Content */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md space-y-8">
+          {/* Logo and Header */}
+          <div className="text-center">
+            <div className="flex justify-center mb-8">
+              <Logo size="lg" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">Welcome back</h1>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              Sign in to your Cryptrac account to manage your crypto payments
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
-          <p className="mt-2 text-gray-600">
-            Sign in to your Cryptrac account
-          </p>
-        </div>
 
-        {/* Login Form */}
-        <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl text-center">Sign in</CardTitle>
-            <CardDescription className="text-center">
-              Enter your credentials to access your dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                label="Email"
-                leftIcon={<Mail className="h-4 w-4" />}
-                autoComplete="email"
-                disabled={loading}
-                required
-              />
-              
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                label="Password"
-                leftIcon={<Lock className="h-4 w-4" />}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                }
-                autoComplete="current-password"
-                disabled={loading}
-                required
-              />
+          {/* Login Form */}
+          <Card className="shadow-xl border-0 bg-white">
+            <CardHeader className="space-y-2 pb-8">
+              <CardTitle className="text-2xl font-bold text-center text-gray-900">Sign in</CardTitle>
+              <CardDescription className="text-center text-gray-600">
+                Enter your credentials to access your dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-8 pb-8">
+              <form onSubmit={handleLogin} className="space-y-6">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  label="Email Address"
+                  leftIcon={<Mail className="h-4 w-4" />}
+                  autoComplete="email"
+                  disabled={loading}
+                  required
+                />
+                
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  label="Password"
+                  leftIcon={<Lock className="h-4 w-4" />}
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  }
+                  autoComplete="current-password"
+                  disabled={loading}
+                  required
+                />
 
-              <div className="flex items-center justify-between">
-                <div className="text-sm">
-                  <Link 
-                    href="/forgot-password" 
-                    className="text-primary hover:text-primary/80 font-medium"
-                  >
-                    Forgot password?
-                  </Link>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm">
+                    <Link 
+                      href="/forgot-password" 
+                      className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 </div>
-              </div>
 
-              <Button 
-                type="submit" 
-                className="w-full"
-                size="lg"
-                disabled={loading}
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Don&apos;t have an account?{' '}
-                <Link 
-                  href="/signup" 
-                  className="text-primary hover:text-primary/80 font-medium"
+                <Button 
+                  type="submit" 
+                  className="w-full h-14 text-lg font-semibold shadow-lg"
+                  size="lg"
+                  disabled={loading}
                 >
-                  Sign up for free
-                </Link>
+                  {loading ? 'Signing in...' : 'Sign in to Dashboard'}
+                </Button>
+              </form>
+
+              <div className="mt-8 text-center">
+                <p className="text-sm text-gray-600">
+                  Don&apos;t have an account?{' '}
+                  <Link 
+                    href="/signup" 
+                    className="text-primary-600 hover:text-primary-700 font-semibold transition-colors"
+                  >
+                    Sign up for free
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Footer */}
+          <div className="text-center text-sm text-gray-500">
+            <p>
+              By signing in, you agree to our{' '}
+              <Link href="/terms" className="text-primary-600 hover:text-primary-700 transition-colors">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-primary-600 hover:text-primary-700 transition-colors">
+                Privacy Policy
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Visual */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-purple-600/90"></div>
+        <div className="relative flex items-center justify-center p-12">
+          <div className="text-center text-white max-w-lg">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
+                <Shield className="h-12 w-12 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold mb-4">Secure Crypto Payments</h2>
+              <p className="text-xl text-primary-100 leading-relaxed">
+                Welcome to the future of payments. Manage your cryptocurrency transactions with confidence and security.
               </p>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Footer */}
-        <div className="text-center text-sm text-muted-foreground">
-          <p>
-            By signing in, you agree to our{' '}
-            <Link href="/terms" className="text-primary hover:text-primary/80">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-primary hover:text-primary/80">
-              Privacy Policy
-            </Link>
-          </p>
+            {/* Trust Indicators */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span className="font-medium">Non-Custodial Security</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-5 w-5" />
+                  <span className="font-medium">Instant Processing</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-center space-x-4 text-primary-100">
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="h-5 w-5" />
+                  <span className="font-medium">Global Support</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
