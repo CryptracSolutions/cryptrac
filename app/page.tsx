@@ -148,7 +148,7 @@ export default function Home() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="outline" size="xl" className="text-lg px-8 py-4 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
+              <Button variant="outline" size="lg" className="text-lg px-8 py-3 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
                 <Link href="#pricing">View Pricing</Link>
               </Button>
             </div>
