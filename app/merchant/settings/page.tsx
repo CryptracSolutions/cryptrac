@@ -180,7 +180,7 @@ export default function MerchantSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: value })
       });
-      toast.success('Settings updated');
+              toast.success('Saved');
     } catch (err) {
       console.error('Failed to update notification setting:', err);
       toast.error('Failed to update settings');

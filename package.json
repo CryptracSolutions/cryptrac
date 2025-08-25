@@ -19,6 +19,7 @@
     "@solana/web3.js": "^1.98.2",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.51.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/qrcode": "^1.5.5",
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.7",

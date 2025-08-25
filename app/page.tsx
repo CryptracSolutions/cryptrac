@@ -112,6 +112,9 @@ export default function Home() {
             <Link href="#about" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
               About
             </Link>
+            <Link href="/contact" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+              Contact
+            </Link>
           </nav>
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100" asChild>
@@ -519,6 +522,7 @@ export default function Home() {
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
                 <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
               </ul>
             </div>
           </div>

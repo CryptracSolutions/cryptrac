@@ -434,5 +434,25 @@
       grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
     }
   }
+  
+  /* Toast notification styling */
+  [data-sonner-toast] {
+    background-color: white !important;
+    border: 1px solid hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  [data-sonner-toast][data-type="success"] {
+    border-color: #10b981 !important;
+  }
+
+  [data-sonner-toast][data-type="error"] {
+    border-color: #ef4444 !important;
+  }
+
+  [data-sonner-toast] [data-title] {
+    font-weight: 600 !important;
+    color: hsl(var(--foreground)) !important;
+  }
 }
 

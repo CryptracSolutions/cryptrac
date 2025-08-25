@@ -383,7 +383,7 @@ export default function CreatePaymentLinkPage() {
               variant="ghost" 
               size="sm" 
               onClick={() => router.back()}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-[#7f5efd] hover:bg-[#f5f3ff]"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
@@ -400,10 +400,10 @@ export default function CreatePaymentLinkPage() {
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-8">
               {/* Basic Information */}
-              <Card className="shadow-medium">
+              <Card className="shadow-medium border-0 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 heading-sm">
-                    <LinkIcon className="h-5 w-5" />
+                    <LinkIcon className="h-5 w-5 text-[#7f5efd]" />
                     Basic Information
                   </CardTitle>
                 </CardHeader>
@@ -435,10 +435,10 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Payment Details */}
-              <Card className="shadow-medium">
+              <Card className="shadow-medium border-0 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 heading-sm">
-                    <DollarSign className="h-5 w-5" />
+                    <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                     Payment Details
                   </CardTitle>
                 </CardHeader>
@@ -622,10 +622,10 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Advanced Settings */}
-              <Card className="shadow-medium">
+              <Card className="shadow-medium border-0 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 heading-sm">
-                    <Settings className="h-5 w-5" />
+                    <Settings className="h-5 w-5 text-[#7f5efd]" />
                     Advanced Settings
                   </CardTitle>
                 </CardHeader>
@@ -672,23 +672,10 @@ export default function CreatePaymentLinkPage() {
                             name="auto_convert_setting"
                             checked={form.auto_convert_enabled === null}
                             onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: null }))}
-                            className="h-4 w-4 text-primary"
+                            className="h-4 w-4 text-[#7f5efd]"
                           />
                           <Label htmlFor="auto_convert_global" className="text-body-sm">
                             Use global setting ({merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            id="auto_convert_enable"
-                            name="auto_convert_setting"
-                            checked={form.auto_convert_enabled === true}
-                            onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: true }))}
-                            className="h-4 w-4 text-primary"
-                          />
-                          <Label htmlFor="auto_convert_enable" className="text-body-sm">
-                            Enable auto-convert for this payment link
                           </Label>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -698,7 +685,7 @@ export default function CreatePaymentLinkPage() {
                             name="auto_convert_setting"
                             checked={form.auto_convert_enabled === false}
                             onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: false }))}
-                            className="h-4 w-4 text-primary"
+                            className="h-4 w-4 text-[#7f5efd]"
                           />
                           <Label htmlFor="auto_convert_disable" className="text-body-sm">
                             Disable auto-convert for this payment link
@@ -728,23 +715,10 @@ export default function CreatePaymentLinkPage() {
                             name="fee_setting"
                             checked={form.charge_customer_fee === null}
                             onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: null }))}
-                            className="h-4 w-4 text-primary"
+                            className="h-4 w-4 text-[#7f5efd]"
                           />
                           <Label htmlFor="fee_global" className="text-body-sm">
                             Use global setting ({merchantSettings?.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'})
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            id="customer_pays_fee"
-                            name="fee_setting"
-                            checked={form.charge_customer_fee === true}
-                            onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: true }))}
-                            className="h-4 w-4 text-primary"
-                          />
-                          <Label htmlFor="customer_pays_fee" className="text-body-sm">
-                            Customer pays gateway fee for this payment link
                           </Label>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -754,10 +728,10 @@ export default function CreatePaymentLinkPage() {
                             name="fee_setting"
                             checked={form.charge_customer_fee === false}
                             onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: false }))}
-                            className="h-4 w-4 text-primary"
+                            className="h-4 w-4 text-[#7f5efd]"
                           />
                           <Label htmlFor="merchant_pays_fee" className="text-body-sm">
-                            Merchant pays gateway fee for this payment link
+                            Merchant pays fee for this payment link
                           </Label>
                         </div>
                       </div>
@@ -785,10 +759,10 @@ export default function CreatePaymentLinkPage() {
 
             {/* Combined Preview & Fee Summary */}
             <div className="space-y-8">
-              <Card className="shadow-medium">
+              <Card className="shadow-medium border-0 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 heading-sm">
-                    <CreditCard className="h-5 w-5" />
+                    <CreditCard className="h-5 w-5 text-[#7f5efd]" />
                     Payment Link Preview
                   </CardTitle>
                 </CardHeader>
@@ -920,14 +894,14 @@ export default function CreatePaymentLinkPage() {
               type="button" 
               variant="outline" 
               onClick={() => router.back()}
-              className="px-6 py-3"
+              className="px-6 py-3 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading || availableCryptos.length === 0}
-              className="min-w-[150px] px-6 py-3"
+              className="min-w-[150px] px-6 py-3 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
             >
               {loading ? (
                 <>

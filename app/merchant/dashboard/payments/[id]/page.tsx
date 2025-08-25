@@ -194,6 +194,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
           <Button 
             variant="outline" 
             onClick={() => router.push('/merchant/dashboard/payments')}
+            className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
@@ -226,6 +227,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
           <Button 
             variant="outline" 
             onClick={() => router.push('/merchant/dashboard/payments')}
+            className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
@@ -245,7 +247,10 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             <p className="text-gray-600 mb-4">
               The payment link you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
             </p>
-            <Button onClick={() => router.push('/merchant/dashboard/payments')}>
+            <Button 
+              onClick={() => router.push('/merchant/dashboard/payments')}
+              className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+            >
               Return to Payment Links
             </Button>
           </CardContent>
@@ -277,6 +282,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
         <Button 
           variant="outline" 
           onClick={() => router.push('/merchant/dashboard/payments')}
+          className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
@@ -302,10 +308,10 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payment Link Information */}
         <div className="space-y-6">
-          <Card>
+          <Card className="shadow-medium border-0 bg-white">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5" />
+                <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                 <span>Payment Information</span>
               </CardTitle>
             </CardHeader>
@@ -385,10 +391,10 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-medium border-0 bg-white">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5" />
+                <Calendar className="h-5 w-5 text-[#7f5efd]" />
                 <span>Settings & Limits</span>
               </CardTitle>
             </CardHeader>
@@ -430,10 +436,10 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
         {/* QR Code and Actions */}
         <div className="space-y-6">
-          <Card>
+          <Card className="shadow-medium border-0 bg-white">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <LinkIcon className="h-5 w-5" />
+                <LinkIcon className="h-5 w-5 text-[#7f5efd]" />
                 <span>Payment URL</span>
               </CardTitle>
             </CardHeader>
@@ -446,13 +452,14 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                   <code className="flex-1 p-3 bg-gray-100 rounded-lg text-sm font-mono break-all">
                     {paymentLink.payment_url}
                   </code>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(paymentLink.payment_url)}
-                  >
-                    {copied ? 'Copied!' : <Copy className="h-4 w-4" />}
-                  </Button>
+                                  <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyToClipboard(paymentLink.payment_url)}
+                  className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+                >
+                  {copied ? 'Copied!' : <Copy className="h-4 w-4" />}
+                </Button>
                 </div>
               </div>
 
@@ -460,7 +467,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                 <Button
                   variant="outline"
                   onClick={() => window.open(paymentLink.payment_url, '_blank')}
-                  className="flex-1"
+                  className="flex-1 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Open Link
@@ -468,7 +475,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                 <Button
                   variant="outline"
                   onClick={() => copyToClipboard(paymentLink.payment_url)}
-                  className="flex-1"
+                  className="flex-1 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
                 >
                   <Copy className="mr-2 h-4 w-4" />
                   Copy URL
@@ -477,10 +484,10 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-medium border-0 bg-white">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <QrCode className="h-5 w-5" />
+                <QrCode className="h-5 w-5 text-[#7f5efd]" />
                 <span>QR Code</span>
               </CardTitle>
             </CardHeader>
@@ -503,7 +510,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                     // Implementation would depend on the QR code component
                     console.log('Download QR code');
                   }}
-                  className="w-full"
+                  className="w-full border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download QR Code

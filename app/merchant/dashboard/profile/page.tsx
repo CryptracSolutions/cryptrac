@@ -138,7 +138,7 @@ export default function ProfilePage() {
       }
 
       setSuccess(true);
-      toast.success('Profile updated successfully');
+              toast.success('Saved');
       
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);

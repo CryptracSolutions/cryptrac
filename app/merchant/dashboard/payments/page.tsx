@@ -400,8 +400,8 @@ export default function PaymentsPage() {
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-[#7f5efd] rounded-lg">
-              <LinkIcon className="h-6 w-6 text-white" />
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
+              <LinkIcon className="h-5 w-5 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-900 mb-1">{link.title}</h3>
@@ -568,8 +568,8 @@ export default function PaymentsPage() {
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-bold text-gray-900">Total Links</CardTitle>
-            <div className="p-3 bg-[#7f5efd] rounded-full">
-              <LinkIcon className="h-6 w-6 text-white" />
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
+              <LinkIcon className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
           <CardContent>
@@ -584,8 +584,8 @@ export default function PaymentsPage() {
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-bold text-gray-900">Active</CardTitle>
-            <div className="p-3 bg-[#7f5efd] rounded-full">
-              <TrendingUp className="h-6 w-6 text-white" />
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
+              <TrendingUp className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
           <CardContent>
@@ -600,8 +600,8 @@ export default function PaymentsPage() {
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-bold text-gray-900">Completed</CardTitle>
-            <div className="p-3 bg-[#7f5efd] rounded-full">
-              <CheckCircle className="h-6 w-6 text-white" />
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
+              <CheckCircle className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
           <CardContent>
@@ -616,8 +616,8 @@ export default function PaymentsPage() {
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-bold text-gray-900">Expired</CardTitle>
-            <div className="p-3 bg-[#7f5efd] rounded-full">
-              <AlertCircle className="h-6 w-6 text-white" />
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
+              <AlertCircle className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
           <CardContent>
@@ -632,8 +632,8 @@ export default function PaymentsPage() {
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-bold text-gray-900">Single Use</CardTitle>
-            <div className="p-3 bg-[#7f5efd] rounded-full">
-              <CreditCard className="h-6 w-6 text-white" />
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
+              <CreditCard className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
           <CardContent>
@@ -648,8 +648,8 @@ export default function PaymentsPage() {
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-bold text-gray-900">Total Revenue</CardTitle>
-            <div className="p-3 bg-[#7f5efd] rounded-full">
-              <DollarSign className="h-6 w-6 text-white" />
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
+              <DollarSign className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
           <CardContent>
