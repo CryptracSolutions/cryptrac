@@ -128,7 +128,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
             <Image src={merchant.logo_url} alt={merchant.business_name || 'Merchant'} width={80} height={80} />
           </div>
         )}
-        <h1 className="text-2xl font-bold">{merchant?.business_name || 'Cryptrac Merchant'}</h1>
+        <h1 className="text-2xl font-bold">{merchant?.business_name ?? 'Merchant'}</h1>
         {paymentLink?.title && <p className="text-gray-600">{paymentLink.title}</p>}
       </div>
 

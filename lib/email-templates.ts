@@ -93,13 +93,13 @@ function getBaseTemplate(
     <title>${title}</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
             color: #333;
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f8f9fa;
+            background-color: #f4f4f5;
         }
         .container {
             background: white;
@@ -180,7 +180,7 @@ function getBaseTemplate(
         }
         .view-button, .button {
             display: inline-block;
-            background: #007bff;
+            background: #7f5efd;
             color: white;
             padding: 12px 24px;
             text-decoration: none;
@@ -189,14 +189,14 @@ function getBaseTemplate(
             margin: 20px 0;
         }
         .button.success {
-            background: #28a745;
+            background: #70d68c;
         }
         .button.warning {
-            background: #ffc107;
+            background: #f6cf6a;
             color: #212529;
         }
         .button.danger {
-            background: #dc3545;
+            background: #e35c5c;
         }
         .footer {
             text-align: center;
@@ -241,7 +241,7 @@ function getBaseTemplate(
         ${content}
         
         <div class="footer">
-            <p>This is an automated email from Cryptrac.</p>
+            <p>This is an automated email.</p>
             <p>If you have any questions, please contact ${merchantName}.</p>
         </div>
     </div>

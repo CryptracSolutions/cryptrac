@@ -251,11 +251,7 @@ export default function Home() {
             <Card className="border-2 border-[#7f5efd] shadow-2xl bg-white relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa]"></div>
               <CardHeader className="text-center pb-8 pt-8">
-                <div className="flex justify-center mb-6">
-                  <Badge className="text-sm font-semibold bg-[#7f5efd] text-white px-4 py-2">
-                    Most Popular
-                  </Badge>
-                </div>
+                {/* Badge removed as there is only one plan */}
                 <CardTitle className="text-3xl font-bold text-gray-900">Cryptrac</CardTitle>
                 <CardDescription className="text-lg text-gray-600">
                   Everything you need to get started

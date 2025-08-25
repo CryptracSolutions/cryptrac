@@ -46,18 +46,18 @@ module.exports = {
           900: '#111827',
           950: '#030712',
         },
-        // Semantic colors
+        // Muted success palette (≈35 % saturation)
         success: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
+          50: '#f1fdf6',
+          100: '#e3f9ec',
+          200: '#c4f1d5',
+          300: '#9be8b7',
+          400: '#70d68c', // softened green
+          500: '#41c064',
+          600: '#2fa154',
+          700: '#28834a',
+          800: '#24663d',
+          900: '#1e4c32',
         },
         warning: {
           50: '#fffbeb',
@@ -120,7 +120,8 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        // Use Inter as the primary sans-serif font as per new typography guidelines
+        sans: ['Inter', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'monospace'],
       },
       fontSize: {
@@ -146,14 +147,10 @@ module.exports = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.5s ease-out",
-        "slide-up": "slide-up 0.3s ease-out",
-        "bounce-in": "bounce-in 0.6s ease-out",
-        "scale-in": "scale-in 0.2s ease-out",
-        "slide-in-from-top": "slide-in-from-top 0.3s ease-out",
-        "slide-in-from-bottom": "slide-in-from-bottom 0.3s ease-out",
-        "slide-in-from-left": "slide-in-from-left 0.3s ease-out",
-        "slide-in-from-right": "slide-in-from-right 0.3s ease-out",
+        // Standardised 200 ms fade & scale animations; removed bounce and slide-in variants
+        "fade-in": "fade-in 0.2s ease-in-out",
+        "slide-up": "slide-up 0.2s ease-in-out",
+        "scale-in": "scale-in 0.2s ease-in-out",
       },
       keyframes: {
         "accordion-down": {
@@ -164,6 +161,7 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        // Simplified keyframes to align with new animation guidelines
         "fade-in": {
           from: { opacity: "0" },
           to: { opacity: "1" },
@@ -172,31 +170,9 @@ module.exports = {
           from: { transform: "translateY(10px)", opacity: "0" },
           to: { transform: "translateY(0)", opacity: "1" },
         },
-        "bounce-in": {
-          "0%": { transform: "scale(0.3)", opacity: "0" },
-          "50%": { transform: "scale(1.05)" },
-          "70%": { transform: "scale(0.9)" },
-          "100%": { transform: "scale(1)", opacity: "1" },
-        },
         "scale-in": {
           from: { transform: "scale(0.95)", opacity: "0" },
           to: { transform: "scale(1)", opacity: "1" },
-        },
-        "slide-in-from-top": {
-          from: { transform: "translateY(-10px)", opacity: "0" },
-          to: { transform: "translateY(0)", opacity: "1" },
-        },
-        "slide-in-from-bottom": {
-          from: { transform: "translateY(10px)", opacity: "0" },
-          to: { transform: "translateY(0)", opacity: "1" },
-        },
-        "slide-in-from-left": {
-          from: { transform: "translateX(-10px)", opacity: "0" },
-          to: { transform: "translateX(0)", opacity: "1" },
-        },
-        "slide-in-from-right": {
-          from: { transform: "translateX(10px)", opacity: "0" },
-          to: { transform: "translateX(0)", opacity: "1" },
         },
       },
     },
