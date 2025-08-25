@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { ChevronDown, ArrowLeft, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 
 interface TaxRate {
@@ -235,6 +236,15 @@ export default function CreateSubscriptionPage() {
   return (
     <DashboardLayout user={user}>
       <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Subscriptions', href: '/merchant/subscriptions' },
+            { name: 'Create Subscription', href: '/merchant/subscriptions/create' }
+          ]} 
+        />
+        
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

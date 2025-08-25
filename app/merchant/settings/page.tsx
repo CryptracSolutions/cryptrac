@@ -26,6 +26,7 @@ import { Checkbox } from '@/app/components/ui/checkbox';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 interface TaxRate {
   id: string;
@@ -144,6 +145,7 @@ export default function MerchantSettingsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [lastSavedSettings, setLastSavedSettings] = useState<MerchantSettings | null>(null);
   const [notificationSettings, setNotificationSettings] = useState({
     email_payment_notifications_enabled: true,
     public_receipts_enabled: true,
@@ -257,6 +259,37 @@ export default function MerchantSettingsPage() {
         sales_type: merchant.sales_type || 'local'
       });
 
+      // Set the last saved settings for auto-save comparison
+      setLastSavedSettings({
+        charge_customer_fee: merchant.charge_customer_fee || false,
+        auto_convert_enabled: merchant.auto_convert_enabled || false,
+        preferred_payout_currency: merchant.preferred_payout_currency,
+        wallets,
+        payment_config: {
+          auto_forward: merchant.payment_config?.auto_forward ?? true,
+          fee_percentage: merchant.auto_convert_enabled ? 1.0 : 0.5,
+          ...(merchant.auto_convert_enabled ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
+        },
+        tax_enabled: merchant.tax_enabled || false,
+        tax_rates: (merchant.tax_rates || [
+          { id: '1', label: 'Sales Tax', percentage: 8.5 }
+        ]).map(
+          (rate: { id: string; label: string; percentage: number | string }) => ({
+            ...rate,
+            percentage: String(rate.percentage)
+          })
+        ),
+        business_address: merchant.business_address || {
+          street: '',
+          city: '',
+          state: '',
+          zip_code: '',
+          country: 'US'
+        },
+        tax_strategy: merchant.tax_strategy || 'origin',
+        sales_type: merchant.sales_type || 'local'
+      });
+
     } catch (error) {
       console.error('Error loading merchant data:', error);
       toast.error('Failed to load settings');
@@ -310,7 +343,8 @@ export default function MerchantSettingsPage() {
       }
 
       console.log('✅ Settings saved successfully');
-      toast.success('Settings saved successfully');
+      setLastSavedSettings(settings);
+      toast.success('Saved');
 
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -319,6 +353,75 @@ export default function MerchantSettingsPage() {
       setSaving(false);
     }
   };
+
+  // Auto-save functionality
+  const autoSave = async (newSettings: MerchantSettings) => {
+    if (JSON.stringify(newSettings) === JSON.stringify(lastSavedSettings)) {
+      return; // No changes to save
+    }
+    
+    try {
+      setSaving(true);
+      console.log('💾 Auto-saving settings...');
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.error('Auth error:', authError);
+        return;
+      }
+
+      // Update payment config based on auto_convert_enabled
+      const updatedPaymentConfig = {
+        auto_forward: newSettings.payment_config.auto_forward,
+        fee_percentage: newSettings.auto_convert_enabled ? 1.0 : 0.5,
+        ...(newSettings.auto_convert_enabled ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
+      };
+
+      const { error: updateError } = await supabase
+        .from('merchants')
+        .update({
+          charge_customer_fee: newSettings.charge_customer_fee,
+          auto_convert_enabled: newSettings.auto_convert_enabled,
+          preferred_payout_currency: newSettings.preferred_payout_currency,
+          payment_config: updatedPaymentConfig,
+          tax_enabled: newSettings.tax_enabled,
+          tax_rates: newSettings.tax_rates.map(rate => ({
+            ...rate,
+            percentage: parseFloat(rate.percentage)
+          })),
+          business_address: newSettings.business_address,
+          tax_strategy: newSettings.tax_strategy,
+          sales_type: newSettings.sales_type
+        })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        console.error('Error updating merchant:', updateError);
+        return;
+      }
+
+      console.log('✅ Settings auto-saved successfully');
+      setLastSavedSettings(newSettings);
+      toast.success('Saved');
+
+    } catch (error) {
+      console.error('Error auto-saving settings:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!lastSavedSettings) return; // Don't auto-save on initial load
+    
+    const timeoutId = setTimeout(() => {
+      autoSave(settings);
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [settings, lastSavedSettings]);
 
   const addTaxRate = () => {
     const newId = Date.now().toString();
@@ -357,6 +460,14 @@ export default function MerchantSettingsPage() {
   return (
     <DashboardLayout user={user}>
       <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Settings', href: '/merchant/settings' }
+          ]} 
+        />
+        
         {/* Enhanced Header */}
         <div className="space-y-2">
           <div className="flex items-center gap-4 mb-2">
@@ -370,31 +481,19 @@ export default function MerchantSettingsPage() {
           </p>
         </div>
 
-        {/* Unified Save Button */}
-        <div className="flex justify-end">
-          <Button 
-            onClick={saveSettings} 
-            disabled={saving}
-            size="lg"
-            className="flex items-center gap-3"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-5 w-5" />
-                Save All Settings
-              </>
-            )}
-          </Button>
-        </div>
+        {/* Auto-save indicator */}
+        {saving && (
+          <div className="flex justify-end">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Saving...
+            </div>
+          </div>
+        )}
 
         {/* Enhanced Tabs */}
         <Tabs defaultValue="payments" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-2 rounded-xl">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-2 rounded-lg">
             <TabsTrigger value="payments" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#7f5efd]">
               <CreditCard className="h-4 w-4" />
               Payments
@@ -414,7 +513,7 @@ export default function MerchantSettingsPage() {
             <Card className="card-hover shadow-lg">
               <CardHeader>
                 <CardTitle className="text-xl font-bold flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
                     <CreditCard className="h-6 w-6 text-white" />
                   </div>
                   Payment Configuration
@@ -574,7 +673,7 @@ export default function MerchantSettingsPage() {
             <Card className="card-hover shadow-lg">
               <CardHeader>
                 <CardTitle className="text-xl font-bold flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl">
+                  <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
                     <Calculator className="h-6 w-6 text-white" />
                   </div>
                   Tax Collection Settings
@@ -665,7 +764,7 @@ export default function MerchantSettingsPage() {
                       
                       <div className="space-y-4">
                         {settings.tax_rates.map((rate) => (
-                          <div key={rate.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:border-[#7f5efd] transition-colors">
+                          <div key={rate.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
                             <input
                               placeholder="Tax label (e.g., Sales Tax)"
                               value={rate.label}
@@ -700,7 +799,7 @@ export default function MerchantSettingsPage() {
                         ))}
                       </div>
                       
-                      <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <div className="text-body font-bold text-blue-900">
                           Total Default Tax Rate: {settings.tax_rates.reduce((sum, rate) => sum + (parseFloat(rate.percentage) || 0), 0).toFixed(1)}%
                         </div>
@@ -726,7 +825,7 @@ export default function MerchantSettingsPage() {
             <Card className="card-hover shadow-lg">
               <CardHeader>
                 <CardTitle className="text-xl font-bold flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl">
+                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
                     <Bell className="h-6 w-6 text-white" />
                   </div>
                   Notification Preferences
@@ -737,7 +836,7 @@ export default function MerchantSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:border-[#7f5efd] transition-colors">
+                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-green-100 rounded-lg">
                         <Bell className="h-5 w-5 text-green-600" />
@@ -755,7 +854,7 @@ export default function MerchantSettingsPage() {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:border-[#7f5efd] transition-colors">
+                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-blue-100 rounded-lg">
                         <CreditCard className="h-5 w-5 text-blue-600" />

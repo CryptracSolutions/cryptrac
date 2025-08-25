@@ -26,9 +26,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Badge } from '@/app/components/ui/badge';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import { supabase } from '@/lib/supabase-browser';
 import { toast } from 'sonner';
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+
 
 interface TaxRate {
   id: string;
@@ -366,56 +367,67 @@ export default function CreatePaymentLinkPage() {
   const fees = calculateFees();
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Create Payment Link</h1>
-            <p className="text-gray-600">Create a new cryptocurrency payment link for your customers</p>
+        <div className="space-y-4">
+          <Breadcrumbs 
+            items={[
+              { name: 'Dashboard', href: '/merchant/dashboard' },
+              { name: 'Payments', href: '/merchant/dashboard/payments' },
+              { name: 'Create Payment Link', href: '/merchant/dashboard/payments/create' }
+            ]} 
+          />
+          
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => router.back()}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <div>
+              <h1 className="heading-lg text-gray-900">Create Payment Link</h1>
+              <p className="text-body text-gray-600">Create a new cryptocurrency payment link for your customers</p>
+            </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Form */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-8">
               {/* Basic Information */}
-              <Card>
+              <Card className="shadow-medium">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 heading-sm">
                     <LinkIcon className="h-5 w-5" />
                     Basic Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title *</Label>
+                    <Label htmlFor="title" className="text-body font-medium">Title *</Label>
                     <Input
                       id="title"
                       placeholder="e.g., Product Purchase, Service Payment"
                       value={form.title}
                       onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                      className="form-input-enhanced"
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description" className="text-body font-medium">Description</Label>
                     <Textarea
                       id="description"
                       placeholder="Optional description for your customers"
                       value={form.description}
                       onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
+                      className="form-input-enhanced"
                       rows={3}
                     />
                   </div>
@@ -423,17 +435,17 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Payment Details */}
-              <Card>
+              <Card className="shadow-medium">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 heading-sm">
                     <DollarSign className="h-5 w-5" />
                     Payment Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="amount">Amount *</Label>
+                      <Label htmlFor="amount" className="text-body font-medium">Amount *</Label>
                       <Input
                         id="amount"
                         type="number"
@@ -442,14 +454,15 @@ export default function CreatePaymentLinkPage() {
                         placeholder="0.00"
                         value={form.amount}
                         onChange={(e) => setForm(prev => ({ ...prev, amount: e.target.value }))}
+                        className="form-input-enhanced"
                         required
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="currency">Currency</Label>
+                      <Label htmlFor="currency" className="text-body font-medium">Currency</Label>
                       <Select value={form.currency} onValueChange={(value) => setForm(prev => ({ ...prev, currency: value }))}>
-                        <SelectTrigger>
+                        <SelectTrigger className="form-input-enhanced">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -464,9 +477,9 @@ export default function CreatePaymentLinkPage() {
                   </div>
 
                   {/* Accepted Cryptocurrencies */}
-                  <div className="space-y-3">
-                    <Label>Accepted Cryptocurrencies *</Label>
-                      <p className="text-sm text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don&apos;t want to accept.</p>
+                  <div className="space-y-4">
+                    <Label className="text-body font-medium">Accepted Cryptocurrencies *</Label>
+                    <p className="text-body-sm text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don&apos;t want to accept.</p>
                     
                     {/* Stable Coin Information */}
                     <Alert className="bg-blue-50 border-blue-200">
@@ -485,15 +498,15 @@ export default function CreatePaymentLinkPage() {
                     </Alert>
 
                     {availableCryptos.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {availableCryptos.map(crypto => (
-                          <div key={crypto} className="flex items-center space-x-2">
+                          <div key={crypto} className="flex items-center space-x-3">
                             <Checkbox
                               id={crypto}
                               checked={form.accepted_cryptos.includes(crypto)}
                               onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
                             />
-                            <Label htmlFor={crypto} className="text-sm font-medium">
+                            <Label htmlFor={crypto} className="text-body-sm font-medium">
                               {crypto}
                             </Label>
                           </div>
@@ -510,21 +523,21 @@ export default function CreatePaymentLinkPage() {
                   </div>
 
                   {/* Tax Configuration */}
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-3">
                       <Checkbox
                         id="tax_enabled"
                         checked={form.tax_enabled}
                         onCheckedChange={(checked) => handleTaxEnabledToggle(checked === true)}
                       />
-                      <Label htmlFor="tax_enabled" className="text-sm font-medium">
+                      <Label htmlFor="tax_enabled" className="text-body font-medium">
                         Add tax to payment
                       </Label>
                     </div>
                     
                     {/* Show global tax settings info */}
                     {merchantSettings && (
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                      <div className="text-body-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Global tax setting: {merchantSettings.tax_enabled ? 'Enabled' : 'Disabled'}
                         {merchantSettings.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 && 
@@ -537,9 +550,9 @@ export default function CreatePaymentLinkPage() {
                     )}
                     
                     {form.tax_enabled && (
-                      <div className="ml-6 space-y-4">
+                      <div className="ml-6 space-y-6">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">Tax Rates</Label>
+                          <Label className="text-body font-medium">Tax Rates</Label>
                           <Button
                             type="button"
                             variant="outline"
@@ -552,14 +565,15 @@ export default function CreatePaymentLinkPage() {
                           </Button>
                         </div>
                         
-                          <div className="space-y-3">
-                            {form.tax_rates.map((taxRate) => (
-                              <div key={taxRate.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <div className="space-y-4">
+                          {form.tax_rates.map((taxRate) => (
+                            <div key={taxRate.id} className="flex items-center gap-4 p-4 border rounded-lg">
                               <div className="flex-1">
                                 <Input
                                   placeholder="Tax Label (e.g., State Tax, Local Tax)"
                                   value={taxRate.label}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'label', e.target.value)}
+                                  className="form-input-enhanced"
                                 />
                               </div>
                               
@@ -572,10 +586,11 @@ export default function CreatePaymentLinkPage() {
                                   placeholder="6.625"
                                   value={taxRate.percentage}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
+                                  className="form-input-enhanced"
                                 />
                               </div>
                               
-                              <span className="text-sm text-gray-500">%</span>
+                              <span className="text-body text-gray-500">%</span>
                               
                               {form.tax_rates.length > 1 && (
                                 <Button
@@ -592,7 +607,7 @@ export default function CreatePaymentLinkPage() {
                           ))}
                         </div>
                         
-                        <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                        <div className="text-body-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
                           <strong>Total Tax Rate:</strong> {fees.totalTaxPercentage.toFixed(3)}%
                           {fees.totalTaxAmount > 0 && (
                             <span className="ml-2">
@@ -607,27 +622,28 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Advanced Settings */}
-              <Card>
+              <Card className="shadow-medium">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 heading-sm">
                     <Settings className="h-5 w-5" />
                     Advanced Settings
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="expires_at">Expiration Date</Label>
+                      <Label htmlFor="expires_at" className="text-body font-medium">Expiration Date</Label>
                       <Input
                         id="expires_at"
                         type="datetime-local"
                         value={form.expires_at}
                         onChange={(e) => setForm(prev => ({ ...prev, expires_at: e.target.value }))}
+                        className="form-input-enhanced"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="max_uses">Maximum Uses</Label>
+                      <Label htmlFor="max_uses" className="text-body font-medium">Maximum Uses</Label>
                       <Input
                         id="max_uses"
                         type="number"
@@ -635,61 +651,62 @@ export default function CreatePaymentLinkPage() {
                         placeholder="Unlimited"
                         value={form.max_uses}
                         onChange={(e) => setForm(prev => ({ ...prev, max_uses: e.target.value }))}
+                        className="form-input-enhanced"
                       />
                     </div>
                   </div>
 
                   {/* Payment Options with Global Settings Display */}
-                  <div className="space-y-4">
-                    <div className="text-sm font-medium text-gray-700">Payment Options</div>
+                  <div className="space-y-6">
+                    <div className="text-body font-medium text-gray-700">Payment Options</div>
                     
                     {/* Auto-convert setting */}
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium text-gray-900">Auto-Convert Setting</div>
-                      <p className="text-sm text-gray-600">Automatically swap received funds to your payout currency.</p>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
+                    <div className="space-y-4">
+                      <div className="text-body font-medium text-gray-900">Auto-Convert Setting</div>
+                      <p className="text-body-sm text-gray-600">Automatically swap received funds to your payout currency.</p>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
                           <input
                             type="radio"
                             id="auto_convert_global"
                             name="auto_convert_setting"
                             checked={form.auto_convert_enabled === null}
                             onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: null }))}
-                            className="h-4 w-4 text-blue-600"
+                            className="h-4 w-4 text-primary"
                           />
-                          <Label htmlFor="auto_convert_global" className="text-sm">
+                          <Label htmlFor="auto_convert_global" className="text-body-sm">
                             Use global setting ({merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})
                           </Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <input
                             type="radio"
                             id="auto_convert_enable"
                             name="auto_convert_setting"
                             checked={form.auto_convert_enabled === true}
                             onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: true }))}
-                            className="h-4 w-4 text-blue-600"
+                            className="h-4 w-4 text-primary"
                           />
-                          <Label htmlFor="auto_convert_enable" className="text-sm">
+                          <Label htmlFor="auto_convert_enable" className="text-body-sm">
                             Enable auto-convert for this payment link
                           </Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <input
                             type="radio"
                             id="auto_convert_disable"
                             name="auto_convert_setting"
                             checked={form.auto_convert_enabled === false}
                             onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: false }))}
-                            className="h-4 w-4 text-blue-600"
+                            className="h-4 w-4 text-primary"
                           />
-                          <Label htmlFor="auto_convert_disable" className="text-sm">
+                          <Label htmlFor="auto_convert_disable" className="text-body-sm">
                             Disable auto-convert for this payment link
                           </Label>
                         </div>
                       </div>
                       
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                      <div className="text-body-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Current selection: {
                           form.auto_convert_enabled === null 
@@ -700,52 +717,52 @@ export default function CreatePaymentLinkPage() {
                     </div>
                     
                     {/* Gateway fee setting */}
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium text-gray-900">Gateway Fee Setting</div>
-                      <p className="text-sm text-gray-600">Choose who covers the NOWPayments gateway fee for this link.</p>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
+                    <div className="space-y-4">
+                      <div className="text-body font-medium text-gray-900">Gateway Fee Setting</div>
+                      <p className="text-body-sm text-gray-600">Choose who covers the NOWPayments gateway fee for this link.</p>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
                           <input
                             type="radio"
                             id="fee_global"
                             name="fee_setting"
                             checked={form.charge_customer_fee === null}
                             onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: null }))}
-                            className="h-4 w-4 text-blue-600"
+                            className="h-4 w-4 text-primary"
                           />
-                          <Label htmlFor="fee_global" className="text-sm">
+                          <Label htmlFor="fee_global" className="text-body-sm">
                             Use global setting ({merchantSettings?.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'})
                           </Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <input
                             type="radio"
                             id="customer_pays_fee"
                             name="fee_setting"
                             checked={form.charge_customer_fee === true}
                             onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: true }))}
-                            className="h-4 w-4 text-blue-600"
+                            className="h-4 w-4 text-primary"
                           />
-                          <Label htmlFor="customer_pays_fee" className="text-sm">
+                          <Label htmlFor="customer_pays_fee" className="text-body-sm">
                             Customer pays gateway fee for this payment link
                           </Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <input
                             type="radio"
                             id="merchant_pays_fee"
                             name="fee_setting"
                             checked={form.charge_customer_fee === false}
                             onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: false }))}
-                            className="h-4 w-4 text-blue-600"
+                            className="h-4 w-4 text-primary"
                           />
-                          <Label htmlFor="merchant_pays_fee" className="text-sm">
+                          <Label htmlFor="merchant_pays_fee" className="text-body-sm">
                             Merchant pays gateway fee for this payment link
                           </Label>
                         </div>
                       </div>
                       
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                      <div className="text-body-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Current selection: {
                           form.charge_customer_fee === null 
@@ -758,7 +775,7 @@ export default function CreatePaymentLinkPage() {
 
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
-                      <AlertDescription className="text-sm">
+                      <AlertDescription className="text-body-sm">
                         After successful payment, customers will be automatically redirected to Cryptrac&apos;s branded thank you page with options to receive their receipt.
                       </AlertDescription>
                   </Alert>
@@ -767,21 +784,21 @@ export default function CreatePaymentLinkPage() {
             </div>
 
             {/* Combined Preview & Fee Summary */}
-            <div className="space-y-6">
-              <Card>
+            <div className="space-y-8">
+              <Card className="shadow-medium">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 heading-sm">
                     <CreditCard className="h-5 w-5" />
                     Payment Link Preview
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   {/* Preview Section */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border-2 border-dashed border-blue-200">
-                    <div className="space-y-3">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border-2 border-dashed border-blue-200">
+                    <div className="space-y-4">
                       <div>
-                        <p className="font-semibold text-lg text-gray-900">{form.title || 'Payment Link Title'}</p>
-                        <p className="text-sm text-gray-600">{form.description || 'Payment description will appear here'}</p>
+                        <p className="heading-sm text-gray-900">{form.title || 'Payment Link Title'}</p>
+                        <p className="text-body-sm text-gray-600">{form.description || 'Payment description will appear here'}</p>
                       </div>
                       
                       <div className="flex items-center gap-2 flex-wrap">
@@ -801,7 +818,7 @@ export default function CreatePaymentLinkPage() {
                       </div>
 
                       {(form.expires_at || form.max_uses) && (
-                        <div className="text-xs text-gray-500 space-y-1">
+                        <div className="text-body-xs text-gray-500 space-y-1">
                           {form.expires_at && (
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
@@ -820,10 +837,10 @@ export default function CreatePaymentLinkPage() {
                   </div>
 
                   {/* Fee Breakdown */}
-                  <div className="space-y-3">
-                    <div className="text-sm font-medium text-gray-700 border-b pb-2">Payment Breakdown</div>
+                  <div className="space-y-4">
+                    <div className="text-body font-medium text-gray-700 border-b pb-2">Payment Breakdown</div>
                     
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-3 text-body-sm">
                       <div className="flex justify-between">
                         <span>Base Amount:</span>
                         <span className="font-medium">{form.currency} {fees.baseAmount.toFixed(2)}</span>
@@ -861,13 +878,13 @@ export default function CreatePaymentLinkPage() {
                         <span>{fees.effectiveSettings.charge_customer_fee ? '+' : ''}{form.currency} {fees.feeAmount.toFixed(2)}</span>
                       </div>
                       
-                      <div className="border-t pt-2 space-y-1">
+                      <div className="border-t pt-3 space-y-2">
                         <div className="flex justify-between font-bold text-lg">
                           <span>Customer Pays:</span>
-                          <span className="text-blue-600">{form.currency} {fees.totalAmount.toFixed(2)}</span>
+                          <span className="text-primary">{form.currency} {fees.totalAmount.toFixed(2)}</span>
                         </div>
                         
-                        <div className="flex justify-between text-sm text-gray-600">
+                        <div className="flex justify-between text-body-sm text-gray-600">
                           <span>You Receive:</span>
                           <span className="font-medium text-green-600">{form.currency} {fees.merchantReceives.toFixed(2)}</span>
                         </div>
@@ -877,7 +894,7 @@ export default function CreatePaymentLinkPage() {
                     {fees.effectiveSettings.auto_convert_enabled && (
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-xs">
+                        <AlertDescription className="text-body-xs">
                           Auto-convert enabled: 1% gateway fee applies (crypto will be converted to your preferred currency)
                         </AlertDescription>
                       </Alert>
@@ -886,7 +903,7 @@ export default function CreatePaymentLinkPage() {
                     {!fees.effectiveSettings.charge_customer_fee && (
                       <Alert>
                         <Info className="h-4 w-4" />
-                        <AlertDescription className="text-xs">
+                        <AlertDescription className="text-body-xs">
                           Gateway fee will be deducted from your payout
                         </AlertDescription>
                       </Alert>
@@ -903,13 +920,14 @@ export default function CreatePaymentLinkPage() {
               type="button" 
               variant="outline" 
               onClick={() => router.back()}
+              className="px-6 py-3"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading || availableCryptos.length === 0}
-              className="min-w-[150px]"
+              className="min-w-[150px] px-6 py-3"
             >
               {loading ? (
                 <>
@@ -926,7 +944,7 @@ export default function CreatePaymentLinkPage() {
           </div>
         </form>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
 

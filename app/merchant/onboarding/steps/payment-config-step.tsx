@@ -145,20 +145,20 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-8">
       {/* Main Configuration Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+      <Card className="shadow-medium">
+        <CardHeader className="space-y-6">
+          <CardTitle className="flex items-center gap-6">
             <Settings className="w-6 h-6 text-[#7f5efd]" />
             <span>Payment Configuration</span>
           </CardTitle>
-          <p className="text-gray-600">
+          <p className="text-body text-gray-600">
             Configure your payment preferences and fee settings. All cryptocurrencies from your wallet setup will be accepted.
           </p>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Non-Custodial Compliance Notice */}
           <Alert className="border-green-200 bg-green-50">
             <Shield className="h-4 w-4 text-green-600" />
@@ -169,8 +169,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
           </Alert>
 
           {/* Configured Cryptocurrencies Display */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+          <div className="space-y-6">
+            <h3 className="heading-sm text-gray-900 flex items-center gap-6">
               <span>Accepted Cryptocurrencies</span>
               <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
                 {expandedCurrencies.length} Total ({baseCurrencies.length} Base + {expandedCurrencies.length - baseCurrencies.length} Stable Coins)
@@ -185,9 +185,9 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             </Alert>
 
             {/* Base Currencies */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-gray-700">Base Cryptocurrencies</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="space-y-6">
+              <h4 className="text-body font-semibold text-gray-700">Base Cryptocurrencies</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {baseCurrencies.map((currency) => (
                   <div
                     key={currency}
@@ -211,9 +211,9 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
             {/* Stable Coins */}
               {expandedCurrencies.length > baseCurrencies.length && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">Included Stable Coins</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="space-y-6">
+                <h4 className="text-body font-semibold text-gray-700">Included Stable Coins</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   {expandedCurrencies.filter(currency => !baseCurrencies.includes(currency)).map((currency) => (
                     <div
                       key={currency}
@@ -248,9 +248,9 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
           <Separator />
 
           {/* Fee Responsibility Setting */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+              <h3 className="heading-sm text-gray-900 flex items-center gap-6">
                 <DollarSign className="w-5 h-5" />
                 <span>Gateway Fee Settings</span>
               </h3>
@@ -272,8 +272,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-3">
-              <div className="flex items-start space-x-3">
+            <div className="space-y-6">
+              <div className="flex items-start gap-6">
                 <Checkbox
                   checked={!formData.chargeCustomerFee}
                   onCheckedChange={(checked) => 
@@ -285,16 +285,16 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 />
                 <div className="flex-1">
                   <div className="font-medium text-gray-900">Merchant pays gateway fee</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-body text-gray-600">
                     You absorb the gateway fee. Customers pay the exact amount shown.
                   </div>
-                  <div className="text-xs text-green-600 mt-1">
+                  <div className="text-body-sm text-green-600 mt-1">
                     ✓ Better customer experience - no surprise fees
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start gap-6">
                 <Checkbox
                   checked={formData.chargeCustomerFee}
                   onCheckedChange={(checked) => 

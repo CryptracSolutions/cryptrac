@@ -200,18 +200,20 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <Logo className="mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to Cryptrac
-          </h1>
-            <p className="text-gray-600">
+        <div className="text-center space-y-6">
+          <Logo className="mx-auto" />
+          <div className="space-y-4">
+            <h1 className="heading-lg text-gray-900">
+              Welcome to Cryptrac
+            </h1>
+            <p className="text-body text-gray-600">
               Let&apos;s get your crypto payment system set up in just a few steps
             </p>
+          </div>
         </div>
 
         {/* Progress Stepper */}
-        <div className="max-w-4xl mx-auto mb-8">
+        <div className="max-w-4xl mx-auto space-y-8">
           <Stepper
             steps={ONBOARDING_STEPS}
             currentStep={currentStep}
@@ -220,7 +222,7 @@ export default function OnboardingPage() {
 
         {/* Error Display */}
         {error && (
-          <div className="max-w-2xl mx-auto mb-6">
+          <div className="max-w-2xl mx-auto space-y-6">
             <Alert className="border-red-200 bg-red-50">
               <AlertDescription className="text-red-800">
                 {error}
@@ -230,7 +232,7 @@ export default function OnboardingPage() {
         )}
 
         {/* Current Step Content */}
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-8">
           {renderCurrentStep()}
         </div>
       </div>

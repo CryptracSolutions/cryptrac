@@ -1,15 +1,24 @@
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 import PrintButton from '@/components/PrintButton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Badge } from '@/app/components/ui/badge';
+import { Separator } from '@/app/components/ui/separator';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
 function ReceiptNotAvailable() {
   return (
-    <div className="p-8 text-center">
-      <h1 className="text-2xl font-semibold">Receipt not available</h1>
-      <p className="mt-2 text-gray-600">This receipt could not be found.</p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <Card className="shadow-medium">
+          <CardContent className="p-8 text-center">
+            <h1 className="heading-lg text-gray-900 mb-2">Receipt not available</h1>
+            <p className="text-body text-gray-600">This receipt could not be found.</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -121,72 +130,187 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
     : null;
 
   return (
-    <div className="max-w-2xl mx-auto p-8 space-y-4 print:bg-white">
-      <div className="text-center space-y-2">
-        {merchant?.logo_url && (
-          <div className="flex justify-center">
-            <Image src={merchant.logo_url} alt={merchant.business_name || 'Merchant'} width={80} height={80} />
-          </div>
-        )}
-        <h1 className="text-2xl font-bold">{merchant?.business_name ?? 'Your Merchant'}</h1>
-        {paymentLink?.title && <p className="text-gray-600">{paymentLink.title}</p>}
-      </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <Card className="shadow-medium">
+          <CardContent className="p-8">
+            {/* Header */}
+            <div className="text-center space-y-4 mb-8">
+              {merchant?.logo_url && (
+                <div className="flex justify-center">
+                  <Image 
+                    src={merchant.logo_url} 
+                    alt={merchant.business_name || 'Merchant'} 
+                    width={80} 
+                    height={80}
+                    className="rounded-lg shadow-sm"
+                  />
+                </div>
+              )}
+              <div>
+                <h1 className="heading-lg text-gray-900 mb-2">
+                  {merchant?.business_name || 'Business Name Not Available'}
+                </h1>
+                {paymentLink?.title && (
+                  <p className="text-body text-gray-600">{paymentLink.title}</p>
+                )}
+              </div>
+              
+              {/* Status Badge */}
+              {tx.status && (
+                <div className="flex justify-center">
+                  <Badge 
+                    variant={tx.status === 'confirmed' ? 'default' : 'secondary'}
+                    className="text-sm"
+                  >
+                    {tx.status === 'confirmed' ? 'Payment Confirmed' : tx.status}
+                  </Badge>
+                </div>
+              )}
+            </div>
 
-      <div className="border-t pt-4 space-y-2 grid grid-cols-2 gap-2 text-sm">
-        <span>Amount</span><span className="text-right">{format(baseAmount, tx.currency)}</span>
-        {Number(tx.tax_amount || 0) > 0 && (
-          <>
-            <span>{tx.tax_label || 'Tax'}</span><span className="text-right">{format(tx.tax_amount, tx.currency)}</span>
-          </>
-        )}
-        <span className="font-medium">Subtotal</span><span className="text-right font-medium">{format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}</span>
-        {Number(tx.gateway_fee_amount || 0) > 0 && (
-          <>
-            <span>Gateway fee</span><span className="text-right">{format(tx.gateway_fee_amount, tx.currency)}</span>
-          </>
-        )}
-        {Number(tx.conversion_fee_amount || 0) > 0 && (
-          <>
-            <span>Conversion fee</span><span className="text-right">{format(tx.conversion_fee_amount, tx.currency)}</span>
-          </>
-        )}
-        {Number(tx.network_fee_amount || 0) > 0 && (
-          <>
-            <span>Network fee</span><span className="text-right">{format(tx.network_fee_amount, tx.currency)}</span>
-          </>
-        )}
-        <span className="font-bold border-t pt-2 col-span-1">Total paid</span><span className="font-bold border-t pt-2 text-right col-span-1">{format(totalPaid, tx.currency)}</span>
-      </div>
+            <Separator className="my-6" />
 
-      <div className="text-sm space-y-1">
-        <div>Paid at: {new Date(tx.created_at).toLocaleString()}</div>
-        {tx.nowpayments_payment_id && <div>Payment ID: {tx.nowpayments_payment_id}</div>}
-        {/* ENHANCED: Show cryptocurrency payment method */}
-        {cryptoPaymentInfo && (
-          <div>Paid with: {cryptoPaymentInfo}</div>
-        )}
-        {tx.asset && tx.network && (
-          <div>Network: {tx.asset} on {tx.network}</div>
-        )}
-        {/* ENHANCED: Show payment status */}
-        {tx.status && (
-          <div>Status: <span className="capitalize">{tx.status === 'confirmed' ? 'Confirmed' : tx.status}</span></div>
-        )}
-        {tx.tx_hash && (
-          <div>
-            Tx Hash:{' '}
-            {txLink ? (
-              <a href={txLink} className="text-blue-600" target="_blank" rel="noopener noreferrer">
-                {tx.tx_hash}
-              </a>
-            ) : (
-              tx.tx_hash
-            )}
-          </div>
-        )}
-      </div>
+            {/* Payment Details */}
+            <div className="space-y-4">
+              <h2 className="heading-sm text-gray-900">Payment Details</h2>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-body text-gray-600">Base Amount</span>
+                  <span className="text-body font-medium">{format(baseAmount, tx.currency)}</span>
+                </div>
+                
+                {Number(tx.tax_amount || 0) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-body text-gray-600">{tx.tax_label || 'Tax'}</span>
+                    <span className="text-body font-medium text-green-700">
+                      +{format(tx.tax_amount, tx.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                {Number(tx.tax_amount || 0) > 0 && (
+                  <div className="flex justify-between items-center border-t pt-3">
+                    <span className="text-body font-medium">Subtotal with Tax</span>
+                    <span className="text-body font-medium">
+                      {format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                {Number(tx.gateway_fee_amount || 0) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-body text-gray-600">Gateway Fee</span>
+                    <span className="text-body font-medium text-blue-700">
+                      +{format(tx.gateway_fee_amount, tx.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                {Number(tx.conversion_fee_amount || 0) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-body text-gray-600">Conversion Fee</span>
+                    <span className="text-body font-medium text-blue-700">
+                      +{format(tx.conversion_fee_amount, tx.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                {Number(tx.network_fee_amount || 0) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-body text-gray-600">Network Fee</span>
+                    <span className="text-body font-medium text-blue-700">
+                      +{format(tx.network_fee_amount, tx.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                <Separator className="my-4" />
+                
+                <div className="flex justify-between items-center">
+                  <span className="heading-sm text-gray-900">Total Paid</span>
+                  <span className="heading-sm text-primary font-bold">
+                    {format(totalPaid, tx.currency)}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-      <PrintButton />
+            <Separator className="my-6" />
+
+            {/* Transaction Information */}
+            <div className="space-y-4">
+              <h2 className="heading-sm text-gray-900">Transaction Information</h2>
+              
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Payment Date</span>
+                  <span className="font-medium">
+                    {new Date(tx.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+                
+                {tx.nowpayments_payment_id && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Payment ID</span>
+                    <span className="font-mono text-xs font-medium">{tx.nowpayments_payment_id}</span>
+                  </div>
+                )}
+                
+                {cryptoPaymentInfo && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Payment Method</span>
+                    <span className="font-medium">{cryptoPaymentInfo}</span>
+                  </div>
+                )}
+                
+                {tx.asset && tx.network && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Network</span>
+                    <span className="font-medium">{tx.asset} on {tx.network}</span>
+                  </div>
+                )}
+                
+                {tx.tx_hash && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Transaction Hash</span>
+                    <span className="font-mono text-xs">
+                      {txLink ? (
+                        <a 
+                          href={txLink} 
+                          className="text-primary hover:text-primary-600 transition-colors" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
+                        </a>
+                      ) : (
+                        <span className="font-medium">
+                          {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="my-6" />
+
+            {/* Print Button */}
+            <div className="flex justify-center">
+              <PrintButton />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

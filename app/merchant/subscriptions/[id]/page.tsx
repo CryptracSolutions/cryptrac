@@ -8,6 +8,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { toast } from 'react-hot-toast';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 interface Invoice {
   id: string;
@@ -343,28 +344,17 @@ export default function SubscriptionDetailPage() {
   return (
     <div className="p-4">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">📊 Dashboard</h1>
+        <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
         <p className="text-gray-600 mb-1">
           Manage your subscriptions and billing cycles.
         </p>
-        <nav className="flex" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link href="/merchant/subscriptions" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-                Subscriptions
-              </Link>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
-                  {sub?.title || 'Loading...'}
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Subscriptions', href: '/merchant/subscriptions' },
+            { name: sub?.title || 'Loading...', href: '#' }
+          ]} 
+        />
       </div>
 
       {sub && (
@@ -442,7 +432,7 @@ export default function SubscriptionDetailPage() {
       {cyclesWithOverrides.length > 0 && (
         <div className="mb-6 p-4 border rounded-lg">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">📅 Upcoming Billing Cycles</h2>
+            <h2 className="text-lg font-semibold">Upcoming Billing Cycles</h2>
             <div className="flex items-center gap-2">
               {!showAllCycles && cyclesWithOverrides.length >= 5 && (
                 <button
@@ -467,17 +457,17 @@ export default function SubscriptionDetailPage() {
             <p className="text-sm text-blue-800">
               {sub?.max_cycles ? (
                 <>
-                  <strong>📊 Subscription Progress:</strong> Showing {cyclesWithOverrides.length} upcoming cycles 
+                  <strong>Subscription Progress:</strong> Showing {cyclesWithOverrides.length} upcoming cycles 
                   (cycles {((sub.total_cycles || 0) + 1)} to {((sub.total_cycles || 0) + cyclesWithOverrides.length)} of {sub.max_cycles} total).
                 </>
               ) : (
                 <>
-                  <strong>🔄 Ongoing Subscription:</strong> Showing next {cyclesWithOverrides.length} billing cycles. 
+                  <strong>Ongoing Subscription:</strong> Showing next {cyclesWithOverrides.length} billing cycles. 
                   This subscription will continue indefinitely until canceled.
                 </>
               )}
               <br />
-              <strong>💡 Automatic billing</strong> will use these amounts when each cycle date arrives.
+              <strong>Automatic billing</strong> will use these amounts when each cycle date arrives.
             </p>
           </div>
           
@@ -517,10 +507,10 @@ export default function SubscriptionDetailPage() {
           
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
             <p className="text-sm text-green-800">
-              <strong>✅ Automatic Billing Active:</strong> The subscription scheduler runs every minute for immediate responsiveness. 
+              <strong>Automatic Billing Active:</strong> The subscription scheduler runs every minute for immediate responsiveness. 
               Invoices will be generated automatically within 1 minute when each cycle date arrives based on the amounts shown above.
               <br />
-              <strong>💡 Manual Generation:</strong> You can also generate invoices manually below for testing or early billing.
+              <strong>Manual Generation:</strong> You can also generate invoices manually below for testing or early billing.
             </p>
           </div>
         </div>
@@ -556,14 +546,14 @@ export default function SubscriptionDetailPage() {
             onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
             className="text-sm text-blue-600 hover:text-blue-800 underline"
           >
-            {showAdvancedOptions ? '🔽 Hide' : '🔧 Show'} Advanced Options (Future Cycle Targeting)
+            {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options (Future Cycle Targeting)
           </button>
         </div>
 
         {/* Advanced Options */}
         {showAdvancedOptions && (
           <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded">
-            <h4 className="font-medium mb-3 text-amber-800">🎯 Future Cycle Targeting</h4>
+            <h4 className="font-medium mb-3 text-amber-800">Future Cycle Targeting</h4>
             
             <div className="mb-4 p-3 bg-white border border-amber-300 rounded">
               <p className="text-sm text-amber-800 mb-2">
@@ -591,7 +581,7 @@ export default function SubscriptionDetailPage() {
               
               {targetCycleDate && (
                 <div className="p-3 bg-white border border-amber-300 rounded">
-                  <h5 className="font-medium text-amber-800 mb-2">📋 Preview for {formatDateOnly(targetCycleDate)}:</h5>
+                  <h5 className="font-medium text-amber-800 mb-2">Preview for {formatDateOnly(targetCycleDate)}:</h5>
                   <div className="text-sm space-y-1">
                     <div>
                       <span className="font-medium">Invoice Amount:</span> 
@@ -627,7 +617,7 @@ export default function SubscriptionDetailPage() {
         {invoiceLink && (
           <div className="space-y-4">
             <div className="p-3 bg-green-50 border border-green-200 rounded">
-              <p className="text-green-800 font-medium">✅ Invoice Generated Successfully!</p>
+              <p className="text-green-800 font-medium">Invoice Generated Successfully!</p>
               <p className="text-sm text-green-600 mt-1">
                 Payment URL: <a href={invoiceLink.url} target="_blank" rel="noopener noreferrer" className="underline">
                   {invoiceLink.url}
@@ -656,11 +646,11 @@ export default function SubscriptionDetailPage() {
 
       {/* ENHANCED: Amount Overrides Section with Better Explanation */}
       <div className="mb-6 p-4 border rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">💰 Amount Overrides</h2>
+        <h2 className="text-lg font-semibold mb-4">Amount Overrides</h2>
         
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
           <p className="text-sm text-green-800">
-            <strong>💡 How overrides work:</strong> When you schedule an override, it will automatically apply to all billing cycles on or after the effective date. 
+            <strong>How overrides work:</strong> When you schedule an override, it will automatically apply to all billing cycles on or after the effective date. 
             You can see how overrides affect upcoming cycles in the &quot;Upcoming Billing Cycles&quot; section above.
           </p>
         </div>
@@ -719,7 +709,7 @@ export default function SubscriptionDetailPage() {
           
           {/* Quick Preset Options */}
           <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-            <p className="text-sm font-medium text-blue-800 mb-2">💡 Quick Presets:</p>
+            <p className="text-sm font-medium text-blue-800 mb-2">Quick Presets:</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -797,7 +787,7 @@ export default function SubscriptionDetailPage() {
                       )}
                     </div>
                     {override.note && (
-                      <div className="text-sm text-gray-500 mt-1">📝 {override.note}</div>
+                      <div className="text-sm text-gray-500 mt-1">{override.note}</div>
                     )}
                   </div>
                   <span className="text-xs text-gray-400">
@@ -812,7 +802,7 @@ export default function SubscriptionDetailPage() {
 
       {/* Invoices Section */}
       <div className="p-4 border rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">📄 Invoice History</h2>
+        <h2 className="text-lg font-semibold mb-4">Invoice History</h2>
         
         {invoices.length === 0 ? (
           <p className="text-gray-600">No invoices generated yet.</p>

@@ -18,11 +18,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { supabase } from '@/lib/supabase-browser';
 import Link from 'next/link';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -293,11 +294,9 @@ export default function MerchantDashboard() {
 
   if (loading) {
     return (
-      <DashboardLayout user={user}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
+      </div>
     );
   }
 
@@ -307,8 +306,14 @@ export default function MerchantDashboard() {
 
   const businessName = user.user_metadata?.business_name || user.email?.split('@')[0] || 'Your Business';
   return (
-    <DashboardLayout user={user}>
-      <div className="space-y-8">
+    <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' }
+          ]} 
+        />
+        
         {/* Enhanced Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="space-y-2">
@@ -462,7 +467,7 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-100 rounded-xl">
+                  <div className="p-3 bg-blue-100 rounded-lg">
                     <Plus className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="text-left">
@@ -478,7 +483,7 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-100 rounded-xl">
+                  <div className="p-3 bg-purple-100 rounded-lg">
                     <CreditCard className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="text-left">
@@ -494,7 +499,7 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-indigo-100 rounded-xl">
+                  <div className="p-3 bg-indigo-100 rounded-lg">
                     <Calendar className="h-6 w-6 text-indigo-600" />
                   </div>
                   <div className="text-left">
@@ -534,7 +539,7 @@ export default function MerchantDashboard() {
               ) : (
                 <div className="space-y-4">
                   {recentTransactions.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div key={tx.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="p-2 bg-green-100 rounded-lg">
                           <DollarSign className="h-5 w-5 text-green-600" />
@@ -564,7 +569,7 @@ export default function MerchantDashboard() {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               {supportedCurrencies.map((crypto) => (
-                <div key={crypto.symbol} className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:border-[#7f5efd] hover:shadow-md transition-all duration-300">
+                <div key={crypto.symbol} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7f5efd] hover:shadow-md transition-all duration-200">
                   <CryptoIcon currency={crypto.symbol} className="h-10 w-10" />
                   <div>
                     <div className="font-bold text-sm">{crypto.symbol}</div>
@@ -609,7 +614,7 @@ export default function MerchantDashboard() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
 

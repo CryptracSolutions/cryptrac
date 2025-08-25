@@ -11,11 +11,12 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
 import ProfileForm from '@/app/components/settings/ProfileForm';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 interface MerchantSettings {
   // Profile information
@@ -180,17 +181,22 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <DashboardLayout user={user}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout user={user}>
       <div className="space-y-6">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Profile', href: '/merchant/dashboard/profile' }
+          ]} 
+        />
+        
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -203,8 +209,8 @@ export default function ProfilePage() {
                 <ArrowLeft className="h-4 w-4" /> Back to Dashboard
               </Button>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-            <p className="text-gray-600">Manage your business information and contact details</p>
+            <h1 className="heading-lg text-gray-900">Profile</h1>
+            <p className="text-body text-gray-600">Manage your business information and contact details</p>
           </div>
           <Button
             onClick={saveSettings}
@@ -243,6 +249,6 @@ export default function ProfilePage() {
           handleZipChange={handleZipChange}
         />
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

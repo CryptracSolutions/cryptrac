@@ -106,7 +106,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       <aside
         ref={ref}
         className={cn(
-          "flex flex-col bg-white border-r border-gray-200 transition-all duration-300",
+          "flex flex-col bg-white border-r border-gray-200 transition-all duration-200",
           collapsed ? "w-16" : "w-64",
           className
         )}

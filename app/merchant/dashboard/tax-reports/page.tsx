@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout'
+
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
@@ -34,6 +34,7 @@ import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
 import type { User } from '@supabase/supabase-js'
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard'
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
 
 interface TaxReportFilters {
   start_date: string
@@ -304,28 +305,33 @@ export default function TaxReportsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading tax reports...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading tax reports...</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout user={user}>
       <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Tax Reports', href: '/merchant/dashboard/tax-reports' }
+          ]} 
+        />
+        
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-4 mb-3">
               <BackToDashboard />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900">Tax Reports</h1>
-            <p className="text-lg text-gray-600 mt-2">Generate and export tax reports for your business</p>
+            <h1 className="heading-lg text-gray-900">Tax Reports</h1>
+            <p className="text-body text-gray-600 mt-2">Generate and export tax reports for your business</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -351,15 +357,15 @@ export default function TaxReportsPage() {
         ) : (
           <>
             {/* Filters */}
-            <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
+            <Card className="shadow-medium border-2 hover:shadow-xl transition-all duration-200">
+              <CardHeader className="space-y-6">
+                <div className="flex items-center gap-6">
                   <div className="p-2 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-lg">
                     <Filter className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl font-bold text-gray-900">Report Filters</CardTitle>
-                    <CardDescription className="text-base text-gray-600 mt-1">
+                    <CardTitle className="heading-sm text-gray-900">Report Filters</CardTitle>
+                    <CardDescription className="text-body text-gray-600 mt-1">
                       Configure your tax report parameters
                     </CardDescription>
                   </div>
@@ -699,7 +705,7 @@ export default function TaxReportsPage() {
           </>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
 

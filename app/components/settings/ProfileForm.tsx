@@ -145,36 +145,37 @@ interface ProfileFormProps {
 
 export default function ProfileForm({ settings, setSettings, handlePhoneChange, handleZipChange }: ProfileFormProps) {
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+    <div className="space-y-8">
+      <Card className="shadow-medium">
+        <CardHeader className="space-y-6">
+          <CardTitle className="flex items-center gap-6">
             <Building className="h-5 w-5" />
             Business Information
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-body">
             Basic information about your business
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Business Name *</label>
+              <label className="text-body font-medium">Business Name *</label>
               <Input
                 value={settings.business_name}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_name: e.target.value }))}
                 placeholder="Enter your business name"
+                className="form-input-enhanced"
                 required
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Business Type</label>
+              <label className="text-body font-medium">Business Type</label>
               <Select 
                 value={settings.business_type} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, business_type: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="form-input-enhanced">
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -186,12 +187,12 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Industry *</label>
+              <label className="text-body font-medium">Industry *</label>
               <Select 
                 value={settings.industry} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, industry: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="form-input-enhanced">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
                 <SelectContent>
@@ -203,56 +204,59 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Website</label>
+              <label className="text-body font-medium">Website</label>
               <Input
                 value={settings.website}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, website: e.target.value }))}
                 placeholder="https://your-website.com"
                 type="url"
+                className="form-input-enhanced"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Business Description</label>
+            <label className="text-body font-medium">Business Description</label>
             <Input
               value={settings.business_description}
               onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_description: e.target.value }))}
               placeholder="Brief description of your business"
+              className="form-input-enhanced"
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="shadow-medium">
+        <CardHeader className="space-y-6">
+          <CardTitle className="flex items-center gap-6">
             <Phone className="h-5 w-5" />
             Contact Information
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-body">
             Contact details for your business
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Phone Number *</label>
+              <label className="text-body font-medium">Phone Number *</label>
               <Input
                 value={settings.phone_number}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="(555) 123-4567"
                 maxLength={14}
+                className="form-input-enhanced"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Timezone</label>
+              <label className="text-body font-medium">Timezone</label>
               <Select 
                 value={settings.timezone} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, timezone: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="form-input-enhanced">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
                 <SelectContent>
@@ -268,20 +272,20 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="shadow-medium">
+        <CardHeader className="space-y-6">
+          <CardTitle className="flex items-center gap-6">
             <MapPin className="h-5 w-5" />
             Business Address
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-body">
             Your business address for tax and compliance purposes
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Street Address *</label>
+              <label className="text-body font-medium">Street Address *</label>
               <Input
                 value={settings.business_address.street || ''}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({
@@ -289,13 +293,14 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   business_address: { ...prev.business_address, street: e.target.value }
                 }))}
                 placeholder="123 Main Street"
+                className="form-input-enhanced"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">City *</label>
+                <label className="text-body font-medium">City *</label>
                 <Input
                   value={settings.business_address.city || ''}
                   onChange={(e) => setSettings((prev: MerchantSettings) => ({
@@ -303,12 +308,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, city: e.target.value }
                   }))}
                   placeholder="San Francisco"
+                  className="form-input-enhanced"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">State *</label>
+                <label className="text-body font-medium">State *</label>
                 <Select 
                   value={settings.business_address.state || ''} 
                   onValueChange={(value) => setSettings((prev: MerchantSettings) => ({
@@ -316,7 +322,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, state: value }
                   }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="form-input-enhanced">
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -330,12 +336,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">ZIP Code *</label>
+                <label className="text-body font-medium">ZIP Code *</label>
                 <Input
                   value={settings.business_address.zip_code || ''}
                   onChange={(e) => handleZipChange(e.target.value)}
                   placeholder="94105"
                   maxLength={10}
+                  className="form-input-enhanced"
                   required
                 />
               </div>

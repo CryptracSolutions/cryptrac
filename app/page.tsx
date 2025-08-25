@@ -186,8 +186,8 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-6xl mx-auto">
             {supportedCryptos.map((crypto) => (
-              <div key={crypto.symbol} className="flex flex-col items-center p-6 rounded-2xl hover:bg-[#f5f3ff] transition-all duration-300 group hover:shadow-lg">
-                <div className="p-3 bg-[#ede9fe] rounded-xl group-hover:bg-[#ddd6fe] transition-colors mb-4">
+              <div key={crypto.symbol} className="flex flex-col items-center p-6 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group hover:shadow-lg">
+                <div className="p-3 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-4">
                   <CryptoIcon currency={crypto.symbol} size="lg" />
                 </div>
                 <div className="text-center">
@@ -213,9 +213,9 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-                              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white group">
+                              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader className="text-center pb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-200">
                     <feature.icon className="h-8 w-8 text-white" />
                   </div>
                   <CardTitle className="text-xl font-bold text-gray-900">{feature.title}</CardTitle>

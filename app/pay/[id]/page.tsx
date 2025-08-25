@@ -1134,7 +1134,7 @@ export default function PaymentPage() {
                     return (
                       <div
                         key={currency.code}
-                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
                           isSelected 
                             ? 'border-primary-500 bg-primary-50 shadow-md' 
                             : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -1294,7 +1294,7 @@ export default function PaymentPage() {
                 {qrCodeDataUrl && (
                   <div className="text-center">
                     <Label className="text-sm font-semibold text-gray-700 mb-4 block">QR Code</Label>
-                    <div className="inline-block p-6 bg-white rounded-xl border-2 border-gray-200 shadow-lg">
+                    <div className="inline-block p-6 bg-white rounded-lg border-2 border-gray-200 shadow-lg">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={qrCodeDataUrl}
@@ -1307,7 +1307,7 @@ export default function PaymentPage() {
                 )}
 
                 {/* Instructions */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
                   <h4 className="font-semibold text-blue-900 mb-4 flex items-center">
                     <Shield className="h-5 w-5 mr-2" />
                     Payment Instructions

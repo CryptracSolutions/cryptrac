@@ -242,33 +242,35 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Card className="shadow-lg border-0 bg-white">
-        <CardHeader className="text-center pb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
+      <Card className="shadow-medium border-0 bg-white">
+        <CardHeader className="text-center space-y-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto">
             <Building2 className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
-            Complete your business profile
-          </CardTitle>
-          <p className="text-gray-600">
-            This information helps us customize your experience and ensure compliance with tax regulations.
-          </p>
+          <div className="space-y-4">
+            <CardTitle className="heading-sm text-gray-900">
+              Complete your business profile
+            </CardTitle>
+            <p className="text-body text-gray-600">
+              This information helps us customize your experience and ensure compliance with tax regulations.
+            </p>
+          </div>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
             
             {/* Business Information Section */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Building2 className="w-5 h-5 mr-2 text-[#7f5efd]" />
+            <div className="space-y-8">
+              <h3 className="heading-sm text-gray-900 flex items-center gap-6">
+                <Building2 className="w-5 h-5 text-[#7f5efd]" />
                 Business Information
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Business Name */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-body font-medium text-gray-700">
                     Business Name *
                   </label>
                   <Input
@@ -276,23 +278,23 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="Enter your business name"
                     value={formData.businessName}
                     onChange={(e) => handleInputChange('businessName', e.target.value)}
-                    className={errors.businessName ? 'border-red-300 focus:border-red-500' : ''}
+                    className={`form-input-enhanced ${errors.businessName ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.businessName && (
-                    <p className="text-sm text-red-600">{errors.businessName}</p>
+                    <p className="text-body-sm text-red-600">{errors.businessName}</p>
                   )}
                 </div>
 
                 {/* Business Type */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-body font-medium text-gray-700">
                     Business Type (Optional)
                   </label>
                   <Select 
                     value={formData.businessType} 
                     onValueChange={(value) => handleInputChange('businessType', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="form-input-enhanced">
                       <SelectValue placeholder="Select business type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -307,14 +309,14 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
                 {/* Industry */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-body font-medium text-gray-700">
                     Industry *
                   </label>
                   <Select 
                     value={formData.industry} 
                     onValueChange={(value) => handleInputChange('industry', value)}
                   >
-                    <SelectTrigger className={errors.industry ? 'border-red-300 focus:border-red-500' : ''}>
+                    <SelectTrigger className={`form-input-enhanced ${errors.industry ? 'border-red-300 focus:border-red-500' : ''}`}>
                       <SelectValue placeholder="Select your industry" />
                     </SelectTrigger>
                     <SelectContent>
@@ -332,7 +334,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
                 {/* Website */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-body font-medium text-gray-700">
                     Website (Optional)
                   </label>
                   <Input
@@ -340,17 +342,17 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="www.yourwebsite.com"
                     value={formData.website}
                     onChange={(e) => handleInputChange('website', e.target.value)}
-                    className={errors.website ? 'border-red-300 focus:border-red-500' : ''}
+                    className={`form-input-enhanced ${errors.website ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.website && (
-                    <p className="text-sm text-red-600">{errors.website}</p>
+                    <p className="text-body-sm text-red-600">{errors.website}</p>
                   )}
                 </div>
               </div>
 
               {/* Description */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-body font-medium text-gray-700">
                   Business Description (Optional)
                 </label>
                 <Textarea
@@ -358,22 +360,22 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={3}
-                  className="resize-none"
+                  className="form-input-enhanced resize-none"
                 />
               </div>
             </div>
 
             {/* Contact Information Section */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Phone className="w-5 h-5 mr-2 text-[#7f5efd]" />
+              <h3 className="heading-sm text-gray-900 flex items-center gap-6">
+                <Phone className="w-5 h-5 text-[#7f5efd]" />
                 Contact Information
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Phone Number */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-body font-medium text-gray-700">
                     Phone Number *
                   </label>
                   <Input
@@ -381,11 +383,11 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="(555) 123-4567"
                     value={formData.phoneNumber}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className={errors.phoneNumber ? 'border-red-300 focus:border-red-500' : ''}
+                    className={`form-input-enhanced ${errors.phoneNumber ? 'border-red-300 focus:border-red-500' : ''}`}
                     maxLength={14}
                   />
                   {errors.phoneNumber && (
-                    <p className="text-sm text-red-600">{errors.phoneNumber}</p>
+                    <p className="text-body-sm text-red-600">{errors.phoneNumber}</p>
                   )}
                   <p className="text-xs text-gray-500">
                     US phone number for support and verification
@@ -394,14 +396,14 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
                 {/* Timezone */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-body font-medium text-gray-700">
                     Timezone
                   </label>
                   <Select 
                     value={formData.timezone} 
                     onValueChange={(value) => handleInputChange('timezone', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="form-input-enhanced">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -417,18 +419,16 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             </div>
 
             {/* Business Address Section */}
-            <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-[#7f5efd]" />
-                  Business Address
-                </h3>
-              </div>
+            <div className="space-y-8">
+              <h3 className="heading-sm text-gray-900 flex items-center gap-6">
+                <MapPin className="w-5 h-5 text-[#7f5efd]" />
+                Business Address
+              </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Street Address */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-body font-medium text-gray-700">
                     Street Address *
                   </label>
                   <Input
@@ -436,41 +436,41 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="123 Main Street"
                     value={formData.businessAddress.street}
                     onChange={(e) => handleInputChange('businessAddress.street', e.target.value)}
-                    className={errors['businessAddress.street'] ? 'border-red-300 focus:border-red-500' : ''}
+                    className={`form-input-enhanced ${errors['businessAddress.street'] ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors['businessAddress.street'] && (
-                    <p className="text-sm text-red-600">{errors['businessAddress.street']}</p>
+                    <p className="text-body-sm text-red-600">{errors['businessAddress.street']}</p>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* City */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      City *
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="San Francisco"
-                      value={formData.businessAddress.city}
-                      onChange={(e) => handleInputChange('businessAddress.city', e.target.value)}
-                      className={errors['businessAddress.city'] ? 'border-red-300 focus:border-red-500' : ''}
-                    />
-                    {errors['businessAddress.city'] && (
-                      <p className="text-sm text-red-600">{errors['businessAddress.city']}</p>
-                    )}
+                                      <label className="text-body font-medium text-gray-700">
+                    City *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="San Francisco"
+                    value={formData.businessAddress.city}
+                    onChange={(e) => handleInputChange('businessAddress.city', e.target.value)}
+                    className={`form-input-enhanced ${errors['businessAddress.city'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                  />
+                  {errors['businessAddress.city'] && (
+                    <p className="text-body-sm text-red-600">{errors['businessAddress.city']}</p>
+                  )}
                   </div>
 
                   {/* State */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      State *
-                    </label>
+                                      <label className="text-body font-medium text-gray-700">
+                    State *
+                  </label>
                     <Select 
                       value={formData.businessAddress.state} 
                       onValueChange={(value) => handleInputChange('businessAddress.state', value)}
                     >
-                      <SelectTrigger className={errors['businessAddress.state'] ? 'border-red-300 focus:border-red-500' : ''}>
+                      <SelectTrigger className={`form-input-enhanced ${errors['businessAddress.state'] ? 'border-red-300 focus:border-red-500' : ''}`}>
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
@@ -482,26 +482,26 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                       </SelectContent>
                     </Select>
                     {errors['businessAddress.state'] && (
-                      <p className="text-sm text-red-600">{errors['businessAddress.state']}</p>
+                      <p className="text-body-sm text-red-600">{errors['businessAddress.state']}</p>
                     )}
                   </div>
 
                   {/* ZIP Code */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      ZIP Code *
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="94105"
-                      value={formData.businessAddress.zip_code}
-                      onChange={(e) => handleInputChange('businessAddress.zip_code', e.target.value)}
-                      className={errors['businessAddress.zip_code'] ? 'border-red-300 focus:border-red-500' : ''}
-                      maxLength={10}
-                    />
-                    {errors['businessAddress.zip_code'] && (
-                      <p className="text-sm text-red-600">{errors['businessAddress.zip_code']}</p>
-                    )}
+                                      <label className="text-body font-medium text-gray-700">
+                    ZIP Code *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="94105"
+                    value={formData.businessAddress.zip_code}
+                    onChange={(e) => handleInputChange('businessAddress.zip_code', e.target.value)}
+                    className={`form-input-enhanced ${errors['businessAddress.zip_code'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                    maxLength={10}
+                  />
+                  {errors['businessAddress.zip_code'] && (
+                    <p className="text-body-sm text-red-600">{errors['businessAddress.zip_code']}</p>
+                  )}
                   </div>
                 </div>
 
@@ -511,13 +511,13 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             {/* Info Alert */}
             <Alert className="border-blue-200 bg-blue-50">
               <AlertDescription className="text-blue-800">
-                💡 <strong>Important:</strong> This information will be used for tax reporting and compliance. 
+                <strong>Important:</strong> This information will be used for tax reporting and compliance. 
                 You can update it later in your profile settings.
               </AlertDescription>
             </Alert>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-6">
+            <div className="flex justify-between pt-8">
               <Button
                 type="button"
                 variant="outline"

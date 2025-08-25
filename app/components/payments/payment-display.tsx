@@ -162,7 +162,7 @@ export default function PaymentDisplay({
   if (!paymentInfo) {
     return (
       <Card className="max-w-md mx-auto">
-        <CardContent className="p-6">
+        <CardContent className="p-8">
           <Alert className="border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800">

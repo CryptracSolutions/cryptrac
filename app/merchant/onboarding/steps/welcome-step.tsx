@@ -35,29 +35,31 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Card className="shadow-lg border-0 bg-white">
-        <CardHeader className="text-center pb-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
+      <Card className="shadow-medium border-0 bg-white">
+        <CardHeader className="text-center space-y-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto">
             <Users className="w-10 h-10 text-white" />
           </div>
-          <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to Cryptrac
-          </CardTitle>
-          <p className="text-lg text-gray-600 max-w-md mx-auto">
-            Let&apos;s get you set up to accept cryptocurrency payments in just 5 easy steps. 
-            You&apos;ll be accepting crypto in no time!
-          </p>
+          <div className="space-y-4">
+            <CardTitle className="heading-lg text-gray-900">
+              Welcome to Cryptrac
+            </CardTitle>
+            <p className="text-body text-gray-600 max-w-md mx-auto">
+              Let&apos;s get you set up to accept cryptocurrency payments in just 5 easy steps. 
+              You&apos;ll be accepting crypto in no time!
+            </p>
+          </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {features.map((feature, index) => {
               const Icon = feature.icon
               return (
                 <div 
                   key={index}
-                  className="flex items-start space-x-3 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="flex items-start gap-6 p-6 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 bg-[#7f5efd]/10 rounded-lg flex items-center justify-center">
@@ -80,26 +82,26 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
           {/* What to Expect */}
           <div className="bg-gradient-to-r from-[#7f5efd]/5 to-blue-50 rounded-lg p-6">
             <h3 className="font-semibold text-gray-900 mb-3">What to expect:</h3>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-3">
+            <div className="space-y-4">
+              <div className="flex items-center gap-6">
                 <div className="w-6 h-6 bg-[#7f5efd] rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs font-bold">1</span>
                 </div>
                 <span className="text-sm text-gray-700">Tell us about your business</span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-6">
                 <div className="w-6 h-6 bg-[#7f5efd] rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs font-bold">2</span>
                 </div>
                 <span className="text-sm text-gray-700">Set up your crypto wallets</span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-6">
                 <div className="w-6 h-6 bg-[#7f5efd] rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs font-bold">3</span>
                 </div>
                 <span className="text-sm text-gray-700">Configure payment preferences</span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-6">
                 <div className="w-6 h-6 bg-[#7f5efd] rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs font-bold">4</span>
                 </div>
@@ -110,7 +112,7 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
 
           {/* Time Estimate */}
           <div className="text-center">
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-500">
               ⏱️ This should take about 5-10 minutes to complete
             </p>
           </div>

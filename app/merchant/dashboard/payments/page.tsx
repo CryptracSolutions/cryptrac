@@ -32,6 +32,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 interface PaymentLink {
   id: string;
@@ -394,12 +395,12 @@ export default function PaymentsPage() {
   const renderLink = (link: PaymentLink) => (
     <div
       key={link.id}
-      className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 bg-white"
+      className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all duration-200 bg-white"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-[#7f5efd] rounded-xl">
+            <div className="p-3 bg-[#7f5efd] rounded-lg">
               <LinkIcon className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
@@ -533,6 +534,14 @@ export default function PaymentsPage() {
 
   return (
     <div className="container mx-auto p-8 space-y-8">
+      {/* Breadcrumbs */}
+      <Breadcrumbs 
+        items={[
+          { name: 'Dashboard', href: '/merchant/dashboard' },
+          { name: 'Payments', href: '/merchant/dashboard/payments' }
+        ]} 
+      />
+      
       {/* Enhanced Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
         <div className="space-y-2">
@@ -709,7 +718,7 @@ export default function PaymentsPage() {
                 className="flex items-center gap-2 hover:bg-gray-100"
               >
                 <ChevronDown 
-                  className={`h-5 w-5 transition-transform duration-300 ${
+                  className={`h-5 w-5 transition-transform duration-200 ${
                     openSections[group.key] ? 'rotate-180' : ''
                   }`} 
                 />

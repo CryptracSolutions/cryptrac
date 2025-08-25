@@ -121,6 +121,25 @@
   ::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.5);
   }
+  
+  /* Ensure dropdown backgrounds are always solid */
+  [data-radix-select-content] {
+    background-color: white !important;
+    backdrop-filter: none !important;
+  }
+  
+  .dark [data-radix-select-content] {
+    background-color: rgb(31 41 55) !important;
+  }
+  
+  [data-radix-select-item] {
+    background-color: transparent;
+  }
+  
+  [data-radix-select-item][data-highlighted] {
+    background-color: rgb(127 94 253) !important;
+    color: white !important;
+  }
 }
 
 @layer components {

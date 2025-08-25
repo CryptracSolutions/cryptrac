@@ -324,7 +324,7 @@ export default function PaymentSuccessPage() {
           <CardContent className="space-y-6">
             {/* Payment Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
+              <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
                 <Label className="text-sm font-semibold text-gray-700 mb-3 block">Amount Paid</Label>
                 <p className="text-2xl font-bold text-green-600 mb-2">
                   {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
@@ -333,7 +333,7 @@ export default function PaymentSuccessPage() {
                   ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
                 </p>
               </div>
-              <div className="text-center p-6 bg-blue-50 rounded-xl border border-blue-200">
+              <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
                 <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payment Method</Label>
                 <p className="text-2xl font-bold text-blue-600 mb-2">{paymentData.pay_currency.toUpperCase()}</p>
                 <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-semibold">
@@ -522,7 +522,7 @@ export default function PaymentSuccessPage() {
               {emailReceiptSent && (
                 <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800 font-medium">
-                    ✅ Receipt sent to {email}
+                    Receipt sent to {email}
                   </p>
                 </div>
               )}
@@ -543,21 +543,21 @@ export default function PaymentSuccessPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
+                              <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
                 <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
                 <h3 className="font-semibold text-gray-900 mb-2">Payment Confirmed</h3>
                 <p className="text-sm text-gray-600">
                   Your payment has been confirmed on the blockchain and the merchant has been notified.
                 </p>
               </div>
-              <div className="text-center p-6 bg-blue-50 rounded-xl border border-blue-200">
+                              <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
                 <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                 <h3 className="font-semibold text-gray-900 mb-2">Receipt Available</h3>
                 <p className="text-sm text-gray-600">
                   Request an email receipt above to keep detailed records of this transaction.
                 </p>
               </div>
-              <div className="text-center p-6 bg-purple-50 rounded-xl border border-purple-200">
+                              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
                 <ExternalLink className="h-8 w-8 text-purple-600 mx-auto mb-3" />
                 <h3 className="font-semibold text-gray-900 mb-2">Blockchain Verification</h3>
                 <p className="text-sm text-gray-600">
@@ -570,7 +570,7 @@ export default function PaymentSuccessPage() {
 
         {/* Footer */}
         <div className="text-center">
-          <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-xl p-8 border border-primary-200">
+                      <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-lg p-8 border border-primary-200">
             <h3 className="text-xl font-bold text-gray-900 mb-3">Thank you for using Cryptrac!</h3>
             <p className="text-gray-600 mb-6">
               Your payment has been processed securely and efficiently using cryptocurrency technology.

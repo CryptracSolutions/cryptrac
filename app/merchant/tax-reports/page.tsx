@@ -4,11 +4,19 @@ import React from 'react'
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout'
 import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
 
 export default function TaxReportsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-8 p-8 bg-gray-50 min-h-screen">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Tax Reports', href: '/merchant/tax-reports' }
+          ]} 
+        />
         <Card className="shadow-soft">
           <CardHeader>
             <h1 className="text-2xl font-bold text-gray-900">Tax Reports</h1>

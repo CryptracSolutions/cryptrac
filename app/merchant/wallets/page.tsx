@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
 import WalletsManager from '@/app/components/settings/WalletsManager';
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
 
 interface MerchantSettings {
@@ -57,6 +58,7 @@ export default function WalletsPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false);
+  const [lastSavedSettings, setLastSavedSettings] = useState<MerchantSettings | null>(null);
   const [settings, setSettings] = useState<MerchantSettings>({
     // Wallet settings
     wallets: {},
@@ -106,7 +108,9 @@ export default function WalletsPage() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.settings) {
-            setSettings(prev => ({ ...prev, ...data.settings }));
+            const updatedSettings = { ...settings, ...data.settings };
+            setSettings(updatedSettings);
+            setLastSavedSettings(updatedSettings);
           }
         }
       } catch (error) {
@@ -139,7 +143,8 @@ export default function WalletsPage() {
       }
 
       setSuccess(true);
-      toast.success('Wallet settings updated successfully');
+      setLastSavedSettings(settings);
+      toast.success('Saved');
       
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
@@ -150,6 +155,48 @@ export default function WalletsPage() {
       setSaving(false);
     }
   };
+
+  // Auto-save functionality
+  const autoSave = async (newSettings: MerchantSettings) => {
+    if (JSON.stringify(newSettings) === JSON.stringify(lastSavedSettings)) {
+      return; // No changes to save
+    }
+    
+    try {
+      setSaving(true);
+
+      const response = await fetch('/api/merchants/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSettings),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save settings');
+      }
+
+      setLastSavedSettings(newSettings);
+      toast.success('Saved');
+
+    } catch (error) {
+      console.error('Failed to auto-save settings:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!lastSavedSettings) return; // Don't auto-save on initial load
+    
+    const timeoutId = setTimeout(() => {
+      autoSave(settings);
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [settings, lastSavedSettings]);
 
   if (loading) {
     return (
@@ -163,34 +210,35 @@ export default function WalletsPage() {
 
   return (
     <DashboardLayout user={user}>
-      <div className="space-y-6">
+      <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Wallets', href: '/merchant/wallets' }
+          ]} 
+        />
+        
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              <BackToDashboard />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">Wallet Addresses</h1>
-            <p className="text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <BackToDashboard />
           </div>
-          <Button
-            onClick={saveSettings}
-            disabled={saving}
-            className="flex items-center gap-2"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Save Changes
-              </>
-            )}
-          </Button>
+          <div>
+            <h1 className="heading-lg text-gray-900">Wallet Addresses</h1>
+            <p className="text-body text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>
+          </div>
         </div>
+
+        {/* Auto-save indicator */}
+        {saving && (
+          <div className="flex justify-end">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Saving...
+            </div>
+          </div>
+        )}
 
         {/* Success Alert */}
         {success && (

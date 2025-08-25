@@ -31,7 +31,7 @@ const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
         {...props}
       >
         {/* Cryptrac Logo */}
-        <div className={cn("flex items-center justify-center rounded-xl overflow-hidden", sizeClasses[size])}>
+        <div className={cn("flex items-center justify-center rounded-lg overflow-hidden", sizeClasses[size])}>
           <Image
             src="/logo.png"
             alt="Cryptrac Logo"

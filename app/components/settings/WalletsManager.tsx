@@ -414,14 +414,14 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
 
       {/* Enhanced Configured Wallets Section - Collapsible */}
       {hasExistingWallets && (
-        <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-300">
+        <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200">
           <CardHeader 
             className="pb-6 cursor-pointer"
             onClick={() => setWalletsExpanded(!walletsExpanded)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl shadow-soft">
+                <div className="p-3 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg shadow-soft">
                   <Wallet className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
@@ -452,7 +452,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                 {existingWallets.map((currency) => (
                   <Card 
                     key={currency} 
-                    className={`bg-white border-gray-200 shadow-soft hover:shadow-medium hover:border-purple-300 transition-all duration-300 ${hasStableCoins(currency) ? 'cursor-pointer' : ''} ${
+                    className={`bg-white border-gray-200 shadow-soft hover:shadow-medium hover:border-purple-300 transition-all duration-200 ${hasStableCoins(currency) ? 'cursor-pointer' : ''} ${
                       newlyAddedWallet === currency ? 'ring-2 ring-purple-500 ring-opacity-50 animate-pulse' : ''
                     }`}
                     onClick={(e) => handleWalletCardClick(currency, e)}
@@ -466,7 +466,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                               <CheckCircle className="h-3 w-3 text-white" />
                             </div>
                             {newlyAddedWallet === currency && (
-                              <div className="absolute -top-1 -right-1 p-1 bg-purple-500 rounded-full animate-bounce">
+                              <div className="absolute -top-1 -right-1 p-1 bg-purple-500 rounded-full animate-pulse">
                                 <Star className="h-3 w-3 text-white" />
                               </div>
                             )}
@@ -582,7 +582,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                       
                       {/* Enhanced stable coins display */}
                       {expandedStableCoins[currency] && hasStableCoins(currency) && (
-                        <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl">
+                        <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
                           <div className="flex items-center gap-2 mb-3">
                             <Coins className="h-4 w-4 text-purple-600" />
                             <span className="text-sm font-bold text-purple-800">
@@ -613,10 +613,10 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       )}
 
       {/* Enhanced Add New Wallet Section */}
-      <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-300">
+      <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200">
         <CardHeader className="pb-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl shadow-soft">
+            <div className="p-3 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg shadow-soft">
               <Plus className="h-6 w-6 text-purple-600" />
             </div>
             <div>
@@ -636,13 +636,13 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
               placeholder="Search cryptocurrencies (e.g., Bitcoin, Ethereum, Solana...)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-14 text-base border-gray-200 focus:border-purple-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-purple-500 rounded-xl"
+              className="pl-12 h-14 text-base border-gray-200 focus:border-purple-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-purple-500 rounded-lg"
             />
           </div>
           
           {loadingCurrencies ? (
             <div className="text-center py-12">
-              <div className="p-4 bg-gray-50 rounded-xl inline-block">
+              <div className="p-4 bg-gray-50 rounded-lg inline-block">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-gray-400" />
                 <p className="text-sm text-gray-600 font-medium">Loading currencies...</p>
               </div>
@@ -651,7 +651,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
             <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
               {filteredCurrencies.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="p-4 bg-gray-50 rounded-xl inline-block">
+                  <div className="p-4 bg-gray-50 rounded-lg inline-block">
                     <Search className="h-8 w-8 mx-auto mb-3 text-gray-400" />
                     <p className="text-sm text-gray-600 font-medium">
                       {searchTerm ? 'No cryptocurrencies found' : 'Start typing to search currencies'}
@@ -660,7 +660,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                 </div>
               ) : (
                 filteredCurrencies.map((currency) => (
-                  <Card key={currency.code} className="border border-gray-200 hover:border-purple-300 hover:shadow-medium transition-all duration-300 card-hover">
+                  <Card key={currency.code} className="border border-gray-200 hover:border-purple-300 hover:shadow-medium transition-all duration-200 card-hover">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
