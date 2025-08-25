@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, Star, Users, TrendingUp, Network } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, Network } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Badge } from "@/app/components/ui/badge";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
 import { Logo } from "@/app/components/ui/logo";
 import { CryptoIcon } from "@/app/components/ui/crypto-icon";
-import FeeDocumentation from "@/app/components/fee-documentation";
 
 export default function Home() {
   const features = [
@@ -475,7 +473,7 @@ export default function Home() {
             Join thousands of businesses already using Cryptrac to accept cryptocurrency payments securely and efficiently.
           </p>
           <div className="flex justify-center">
-            <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-white text-[#7f5efd] hover:bg-gray-50 transition-all duration-200" asChild>
+            <Button size="lg" className="text-lg px-8 py-4 shadow-lg bg-white text-[#7f5efd] hover:bg-gray-50 transition-all duration-200" asChild>
               <Link href="/signup">
                 Start Free 30-Day Trial
                 <ArrowRight className="ml-2 h-5 w-5" />

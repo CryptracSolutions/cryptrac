@@ -37,7 +37,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       if (!user) {
         supabase.auth.getUser().then(({ data }) => {
           if (data.user) {
-            setLocalUser(data.user as any)
+            setLocalUser(data.user as unknown as Record<string, unknown>)
           }
         })
       } else {
@@ -47,7 +47,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       // Subscribe to auth changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (session?.user) {
-          setLocalUser(session.user as any)
+          setLocalUser(session.user as unknown as Record<string, unknown>)
         } else if (event === 'SIGNED_OUT') {
           setLocalUser(null)
         }

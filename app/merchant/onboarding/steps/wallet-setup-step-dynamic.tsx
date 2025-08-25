@@ -3,7 +3,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info, Wallet, Shield, Coins, Star, ChevronDown, ChevronRight, Copy, Plus } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash2, Info, Wallet, Shield, Coins, Star, Copy, Plus } from 'lucide-react'
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
@@ -29,14 +29,7 @@ interface CompatibleCurrency {
   trust_wallet_compatible: boolean
 }
 
-interface CurrencyGroup {
-  id: string
-  name: string
-  description: string
-  primary: CompatibleCurrency
-  autoIncludedStablecoins: CompatibleCurrency[]
-  others: CompatibleCurrency[]
-}
+
 
 interface WalletSetupStepProps {
   onNext: (wallets: Record<string, string>) => void

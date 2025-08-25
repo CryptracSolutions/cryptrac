@@ -46,13 +46,13 @@ interface MerchantSettings {
     no_convert_fee?: number;
   };
   tax_enabled: boolean;
-  tax_rates: any[];
+  tax_rates: Array<{ id: string; label: string; percentage: string }>;
   tax_strategy: 'origin' | 'destination' | 'custom';
   sales_type: 'local' | 'online' | 'both';
 }
 
 export default function WalletsPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -99,7 +99,7 @@ export default function WalletsPage() {
           router.push('/login');
           return;
         }
-        setUser(user);
+        setUser(user as unknown as Record<string, unknown>);
 
         // Fetch settings from API
         const response = await fetch('/api/merchants/settings');

@@ -27,7 +27,7 @@ export function createClient(): SupabaseClient {
       from: () => ({
         select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
       }),
-    } as any;
+    } as unknown as SupabaseClient;
   }
 
   // Create new browser client using @supabase/ssr

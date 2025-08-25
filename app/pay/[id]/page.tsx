@@ -1017,7 +1017,7 @@ export default function PaymentPage() {
             <AlertCircle className="h-10 w-10 text-gray-500" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-3">Payment Link Not Found</h1>
-          <p className="text-gray-600 leading-relaxed">The payment link you're looking for doesn't exist or has expired.</p>
+          <p className="text-gray-600 leading-relaxed">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
         </div>
       </div>
     )

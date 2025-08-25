@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     
     // Task 6: Insert amount overrides if provided
     if (amount_overrides && amount_overrides.length > 0) {
-      const overridesToInsert = amount_overrides.map((override: any) => ({
+      const overridesToInsert = amount_overrides.map((override: Record<string, unknown>) => ({
         subscription_id: subscription.id,
         merchant_id: merchant.id,
         effective_from: override.effective_from,

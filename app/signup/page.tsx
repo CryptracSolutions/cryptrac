@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock, Shield, Zap, CreditCard, CheckCircle, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Shield, Zap, CreditCard, CheckCircle } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';

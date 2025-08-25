@@ -8,14 +8,10 @@ import {
   Building, 
   CreditCard, 
   Settings,
-  Database,
   AlertTriangle,
   Activity,
   DollarSign,
-  UserCheck,
-  Globe,
   BarChart3,
-  FileText,
   Bell,
   TrendingUp,
   TrendingDown,
@@ -23,12 +19,8 @@ import {
   EyeOff,
   RefreshCw,
   Zap,
-  Coins,
-  Star,
-  Calendar,
   Clock,
   CheckCircle,
-  XCircle,
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';

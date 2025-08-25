@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Badge } from '@/app/components/ui/badge';
 import { Input } from '@/app/components/ui/input';
@@ -94,7 +95,7 @@ function calculateUpcomingCycles(subscription: Subscription, requestedCount?: nu
   }
   
   const cycles = [];
-  let currentDate = new Date(subscription.next_billing_at);
+  const currentDate = new Date(subscription.next_billing_at);
   const startingCycleNumber = (subscription.total_cycles || 0) + 1;
   
   for (let i = 0; i < maxCyclesToShow; i++) {
@@ -144,7 +145,6 @@ export default function SubscriptionDetailPage() {
   
   // ENHANCED: Add state for upcoming cycles display
   const [showAllCycles, setShowAllCycles] = useState(false);
-  const [cyclesToShow, setCyclesToShow] = useState(5);
 
   const fetchInvoices = useCallback(async (): Promise<void> => {
     const { data: invs } = await supabase
@@ -215,7 +215,7 @@ export default function SubscriptionDetailPage() {
 
   const scheduleOverride = async (e: React.FormEvent) => {
     e.preventDefault();
-    const requestBody: any = { 
+    const requestBody: Record<string, unknown> = { 
       effective_from: override.effective_from, 
       amount: parseFloat(override.amount), 
       note: override.note 
@@ -298,7 +298,7 @@ export default function SubscriptionDetailPage() {
   };
 
   // ENHANCED: Calculate upcoming cycles with override information (dynamic count)
-  const upcomingCycles = sub ? calculateUpcomingCycles(sub, showAllCycles ? undefined : cyclesToShow) : [];
+  const upcomingCycles = sub ? calculateUpcomingCycles(sub, showAllCycles ? undefined : 5) : [];
   
   // Apply overrides to upcoming cycles
   const cyclesWithOverrides = upcomingCycles.map(cycle => {
@@ -350,10 +350,10 @@ export default function SubscriptionDetailPage() {
         <nav className="flex" aria-label="Breadcrumb">
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
             <li className="inline-flex items-center">
-              <a href="/merchant/subscriptions" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+              <Link href="/merchant/subscriptions" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                 Subscriptions
-              </a>
+              </Link>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
@@ -444,7 +444,7 @@ export default function SubscriptionDetailPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">📅 Upcoming Billing Cycles</h2>
             <div className="flex items-center gap-2">
-              {!showAllCycles && cyclesWithOverrides.length >= cyclesToShow && (
+              {!showAllCycles && cyclesWithOverrides.length >= 5 && (
                 <button
                   onClick={() => setShowAllCycles(true)}
                   className="text-sm text-blue-600 hover:text-blue-800 underline"
@@ -542,7 +542,7 @@ export default function SubscriptionDetailPage() {
           <h3 className="font-medium mb-2">Standard Generation</h3>
           <p className="text-sm text-gray-600 mb-3">
             Generate an invoice for the next scheduled billing cycle ({sub?.next_billing_at ? formatDateOnly(sub.next_billing_at.split('T')[0]) : 'Not scheduled'}).
-            This will advance your subscription's billing schedule.
+            This will advance your subscription&apos;s billing schedule.
           </p>
           <Button onClick={() => {setTargetCycleDate(''); generateInvoice();}} className="mb-4">
             Generate Next Invoice (${cyclesWithOverrides[0]?.amount || sub?.amount} {sub?.currency})
@@ -571,7 +571,7 @@ export default function SubscriptionDetailPage() {
                 primarily useful for testing amount overrides or special billing scenarios.
               </p>
               <ul className="text-xs text-amber-700 space-y-1">
-                <li>• <strong>Does NOT advance</strong> your subscription's normal billing schedule</li>
+                <li>• <strong>Does NOT advance</strong> your subscription&apos;s normal billing schedule</li>
                 <li>• <strong>Creates an additional invoice</strong> for the specified date</li>
                 <li>• <strong>Useful for testing</strong> how overrides will work on future cycles</li>
                 <li>• <strong>Customer will receive</strong> an email notification for the generated invoice</li>
@@ -661,7 +661,7 @@ export default function SubscriptionDetailPage() {
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
           <p className="text-sm text-green-800">
             <strong>💡 How overrides work:</strong> When you schedule an override, it will automatically apply to all billing cycles on or after the effective date. 
-            You can see how overrides affect upcoming cycles in the "Upcoming Billing Cycles" section above.
+            You can see how overrides affect upcoming cycles in the &quot;Upcoming Billing Cycles&quot; section above.
           </p>
         </div>
         

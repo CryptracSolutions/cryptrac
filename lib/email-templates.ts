@@ -263,7 +263,6 @@ export function generateUnifiedReceiptTemplate(
     title,
     tx_hash,
     payin_hash,
-    payout_hash,
     pay_currency,
     amount_received,
     status = 'confirmed',

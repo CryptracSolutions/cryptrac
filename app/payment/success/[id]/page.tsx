@@ -539,7 +539,7 @@ export default function PaymentSuccessPage() {
         {/* Additional Information */}
         <Card className="mb-8 shadow-lg border-0 bg-white">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-900">What's Next?</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">What&apos;s Next?</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

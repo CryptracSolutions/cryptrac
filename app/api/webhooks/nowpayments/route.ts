@@ -666,8 +666,7 @@ export async function POST(request: Request) {
       hash,
       tx_hash,
       transaction_hash,
-      payin_extra_id,
-      payout_extra_id
+
     } = body as {
       payment_id: string
       payment_status: string

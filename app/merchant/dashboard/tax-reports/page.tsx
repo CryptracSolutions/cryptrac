@@ -11,21 +11,13 @@ import {
   TrendingUp,
   DollarSign,
   Receipt,
-  AlertCircle,
   Loader2,
   RefreshCw,
   ExternalLink,
   BarChart3,
-  PieChart,
-  Calendar,
   FileText,
   Eye,
   EyeOff,
-  ChevronDown,
-  ChevronRight,
-  Star,
-  Shield,
-  Coins,
   Printer,
   XCircle
 } from 'lucide-react'
@@ -37,7 +29,7 @@ import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Badge } from '@/app/components/ui/badge'
-import { Alert, AlertDescription } from '@/app/components/ui/alert'
+
 import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
 import type { User } from '@supabase/supabase-js'
@@ -266,16 +258,7 @@ export default function TaxReportsPage() {
     window.open(receiptUrl, '_blank', 'noopener,noreferrer')
   }
 
-  const updateFilters = (updates: Partial<TaxReportFilters>) => {
-    setFilters(prev => ({ ...prev, ...updates }))
-  }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
-  }
 
   const generateReport = async () => {
     if (!user) return
@@ -386,7 +369,7 @@ export default function TaxReportsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700">Report Type</Label>
-                    <Select value={filters.report_type} onValueChange={(value: any) => setFilters({ ...filters, report_type: value })}>
+                    <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
                       <SelectTrigger className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
                       </SelectTrigger>
@@ -432,7 +415,7 @@ export default function TaxReportsPage() {
 
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700">Status</Label>
-                    <Select value={filters.status} onValueChange={(value: any) => setFilters({ ...filters, status: value })}>
+                    <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
                       <SelectTrigger className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
                       </SelectTrigger>

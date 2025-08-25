@@ -18,9 +18,6 @@ import {
   Users, 
   TrendingUp, 
   Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle,
   Eye,
   Edit,
   MoreHorizontal,
@@ -28,8 +25,7 @@ import {
   Download,
   BarChart3,
   CreditCard,
-  Receipt,
-  Zap
+  Receipt
 } from 'lucide-react';
 
 interface Subscription {
@@ -62,7 +58,7 @@ interface Subscription {
 }
 
 export default function MerchantSubscriptionsPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [filteredSubs, setFilteredSubs] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +70,7 @@ export default function MerchantSubscriptionsPage() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          setUser(session.user);
+          setUser(session.user as unknown as Record<string, unknown>);
         }
 
         const res = await makeAuthenticatedRequest('/api/subscriptions');
@@ -133,35 +129,7 @@ export default function MerchantSubscriptionsPage() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active': return '✓';
-      case 'paused': return '⏸';
-      case 'completed': return '🏁';
-      case 'canceled': return '✕';
-      default: return '?';
-    }
-  };
 
-  const formatInterval = (count: number, interval: string) => {
-    if (count === 1) {
-      return interval;
-    }
-    return `${count} ${interval}s`;
-  };
-
-  const getSubscriptionStats = () => {
-    const stats = {
-      total: subs.length,
-      active: subs.filter(s => s.status === 'active').length,
-      paused: subs.filter(s => s.status === 'paused').length,
-      completed: subs.filter(s => s.status === 'completed').length,
-      canceled: subs.filter(s => s.status === 'canceled').length,
-    };
-    return stats;
-  };
-
-  const stats = getSubscriptionStats();
 
   if (loading) {
     return (

@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const effectiveChargeCustomerFee = typeof charge_customer_fee === 'boolean' ? charge_customer_fee : merchant.charge_customer_fee;
     
     let taxAmount = 0;
-    let taxBreakdown: Record<string, number> = {};
+    const taxBreakdown: Record<string, number> = {};
     
     if (effectiveTaxEnabled && merchant.tax_rates && merchant.tax_rates.length > 0) {
       merchant.tax_rates.forEach((t: { label: string; percentage: number | string }) => {

@@ -62,7 +62,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       if (bodyText) {
         requestBody = JSON.parse(bodyText);
       }
-    } catch (e) {
+    } catch {
       // Ignore parsing errors for backward compatibility
     }
 

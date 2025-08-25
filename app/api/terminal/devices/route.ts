@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     if ('error' in auth) {
       return NextResponse.json({ error: auth.error }, { status: 401 });
     }
-    const { service, merchant, user } = auth;
+    const { service, merchant } = auth;
     const merchantWallets = merchant.wallets || {};
     const stableCoins = expandStableCoins(merchantWallets);
     const body = await request.json();

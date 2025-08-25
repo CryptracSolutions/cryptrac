@@ -9,7 +9,6 @@ import {
   BarChart3, 
   Settings, 
   Wallet,
-  QrCode,
   Users,
   Shield,
   Bell,

@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     const { data: settings } = await supabase
       .from('merchant_settings')
       .select('email_payment_notifications_enabled')
-      .eq('merchant_id', merchant.id)
+      .eq('merchant_id', merchant.id as string)
       .single();
 
     if (settings?.email_payment_notifications_enabled === false) {
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
     // Prepare data for unified template
     const templateData: MerchantNotificationData = {
-      merchantName: merchant.business_name,
+      merchantName: merchant.business_name as string,
       amount: notificationData.amount,
       currency: notificationData.currency,
       payment_type: notificationData.payment_type,
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       // Send email using standardized utility
       result = await sendEmailWithLogging(
         supabase,
-        merchant.email,
+        merchant.email as string,
         template.subject,
         template.text,
         template.html,
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
       // Still log even if email service not configured
       await sendEmailWithLogging(
         supabase,
-        merchant.email,
+        merchant.email as string,
         template.subject,
         template.text,
         template.html,

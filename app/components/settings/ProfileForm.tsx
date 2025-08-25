@@ -104,9 +104,41 @@ const US_TIMEZONES = [
   { code: 'Pacific/Honolulu', name: 'Hawaii Time (HT)' }
 ];
 
+interface MerchantSettings {
+  business_name: string;
+  business_type: string;
+  industry: string;
+  website: string;
+  business_description: string;
+  phone_number: string;
+  timezone: string;
+  business_address: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    country?: string;
+  };
+  // Other settings (kept for compatibility)
+  charge_customer_fee: boolean;
+  auto_convert_enabled: boolean;
+  preferred_payout_currency: string | null;
+  wallets: Record<string, string>;
+  payment_config: {
+    auto_forward?: boolean;
+    fee_percentage: number;
+    auto_convert_fee?: number;
+    no_convert_fee?: number;
+  };
+  tax_enabled: boolean;
+  tax_rates: Array<{ id: string; label: string; percentage: string }>;
+  tax_strategy: 'origin' | 'destination' | 'custom';
+  sales_type: 'local' | 'online' | 'both';
+}
+
 interface ProfileFormProps {
-  settings: any;
-  setSettings: React.Dispatch<React.SetStateAction<any>>;
+  settings: MerchantSettings;
+  setSettings: React.Dispatch<React.SetStateAction<MerchantSettings>>;
   handlePhoneChange: (value: string) => void;
   handleZipChange: (value: string) => void;
 }
@@ -130,7 +162,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <label className="text-sm font-medium">Business Name *</label>
               <Input
                 value={settings.business_name}
-                onChange={(e) => setSettings((prev: any) => ({ ...prev, business_name: e.target.value }))}
+                onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_name: e.target.value }))}
                 placeholder="Enter your business name"
                 required
               />
@@ -140,7 +172,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <label className="text-sm font-medium">Business Type</label>
               <Select 
                 value={settings.business_type} 
-                onValueChange={(value) => setSettings((prev: any) => ({ ...prev, business_type: value }))}
+                onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, business_type: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select business type" />
@@ -157,7 +189,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <label className="text-sm font-medium">Industry *</label>
               <Select 
                 value={settings.industry} 
-                onValueChange={(value) => setSettings((prev: any) => ({ ...prev, industry: value }))}
+                onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, industry: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your industry" />
@@ -174,7 +206,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <label className="text-sm font-medium">Website</label>
               <Input
                 value={settings.website}
-                onChange={(e) => setSettings((prev: any) => ({ ...prev, website: e.target.value }))}
+                onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, website: e.target.value }))}
                 placeholder="https://your-website.com"
                 type="url"
               />
@@ -185,7 +217,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             <label className="text-sm font-medium">Business Description</label>
             <Input
               value={settings.business_description}
-              onChange={(e) => setSettings((prev: any) => ({ ...prev, business_description: e.target.value }))}
+              onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_description: e.target.value }))}
               placeholder="Brief description of your business"
             />
           </div>
@@ -218,7 +250,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <label className="text-sm font-medium">Timezone</label>
               <Select 
                 value={settings.timezone} 
-                onValueChange={(value) => setSettings((prev: any) => ({ ...prev, timezone: value }))}
+                onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, timezone: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select timezone" />
@@ -251,8 +283,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             <div className="space-y-2">
               <label className="text-sm font-medium">Street Address *</label>
               <Input
-                value={settings.business_address?.street || ''}
-                onChange={(e) => setSettings((prev: any) => ({
+                value={settings.business_address.street || ''}
+                onChange={(e) => setSettings((prev: MerchantSettings) => ({
                   ...prev,
                   business_address: { ...prev.business_address, street: e.target.value }
                 }))}
@@ -265,8 +297,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <div className="space-y-2">
                 <label className="text-sm font-medium">City *</label>
                 <Input
-                  value={settings.business_address?.city || ''}
-                  onChange={(e) => setSettings((prev: any) => ({
+                  value={settings.business_address.city || ''}
+                  onChange={(e) => setSettings((prev: MerchantSettings) => ({
                     ...prev,
                     business_address: { ...prev.business_address, city: e.target.value }
                   }))}
@@ -278,8 +310,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <div className="space-y-2">
                 <label className="text-sm font-medium">State *</label>
                 <Select 
-                  value={settings.business_address?.state || ''} 
-                  onValueChange={(value) => setSettings((prev: any) => ({
+                  value={settings.business_address.state || ''} 
+                  onValueChange={(value) => setSettings((prev: MerchantSettings) => ({
                     ...prev,
                     business_address: { ...prev.business_address, state: value }
                   }))}
@@ -300,7 +332,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <div className="space-y-2">
                 <label className="text-sm font-medium">ZIP Code *</label>
                 <Input
-                  value={settings.business_address?.zip_code || ''}
+                  value={settings.business_address.zip_code || ''}
                   onChange={(e) => handleZipChange(e.target.value)}
                   placeholder="94105"
                   maxLength={10}

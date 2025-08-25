@@ -37,9 +37,9 @@ export async function POST(request: Request) {
 
     // Enhanced URL generation logic with multiple fallback strategies
     let paymentUrl = '';
-    let receipt_data: any = null;
-    let merchant_data: any = null;
-    let payment_link_data: any = null;
+    let receipt_data: Record<string, unknown> | null = null;
+    let merchant_data: Record<string, unknown> | null = null;
+    let payment_link_data: Record<string, unknown> | null = null;
     let urlType = 'unknown';
 
     // Strategy 1: Use public_receipt_id from receipt_data if available
@@ -150,8 +150,8 @@ export async function POST(request: Request) {
         .eq('id', receipt_data.payment_link_id)
         .single();
       
-      if (paymentLink?.merchants) {
-        merchant_data = paymentLink.merchants;
+      if (paymentLink?.merchants && !('error' in paymentLink.merchants)) {
+        merchant_data = paymentLink.merchants as Record<string, unknown>;
       }
     }
 
@@ -159,26 +159,26 @@ export async function POST(request: Request) {
 
     // Prepare receipt data for unified template
     const receiptDataForTemplate: ReceiptData = {
-      amount: receipt_data?.amount || 0,
-      currency: receipt_data?.currency || 'USD',
+      amount: (receipt_data?.amount as number) || 0,
+      currency: (receipt_data?.currency as string) || 'USD',
       payment_method: getPaymentMethodLabel(
-        payment_link_data?.source || 'payment_link',
-        receipt_data?.created_at
+        (payment_link_data?.source as string) || 'payment_link',
+        receipt_data?.created_at as string
       ),
-      title: payment_link_data?.title || 'Payment',
-      tx_hash: receipt_data?.tx_hash,
-      payin_hash: receipt_data?.payin_hash,
-      payout_hash: receipt_data?.payout_hash,
-      pay_currency: receipt_data?.pay_currency,
-      amount_received: receipt_data?.amount_received,
+      title: (payment_link_data?.title as string) || 'Payment',
+      tx_hash: receipt_data?.tx_hash as string | undefined,
+      payin_hash: receipt_data?.payin_hash as string | undefined,
+      payout_hash: receipt_data?.payout_hash as string | undefined,
+      pay_currency: receipt_data?.pay_currency as string | undefined,
+      amount_received: receipt_data?.amount_received as number | undefined,
       status: 'confirmed', // Always show as confirmed in receipt emails
-      created_at: receipt_data?.created_at,
-      order_id: receipt_data?.order_id,
-      transaction_id: receipt_data?.id || transaction_id || payment_id
+      created_at: receipt_data?.created_at as string | undefined,
+      order_id: receipt_data?.order_id as string | undefined,
+      transaction_id: (receipt_data?.id as string) || transaction_id || payment_id
     };
 
     const merchantDataForTemplate: MerchantData = {
-      business_name: merchantName
+      business_name: merchantName as string
     };
 
     // Generate email template using shared unified template

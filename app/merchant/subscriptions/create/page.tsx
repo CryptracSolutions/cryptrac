@@ -7,10 +7,7 @@ import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Badge } from '@/app/components/ui/badge';
-import { Separator } from '@/app/components/ui/separator';
-import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { ChevronDown, Info, ArrowLeft, AlertCircle, CreditCard, Calendar, DollarSign, Settings, Users, Receipt, Shield, Coins, Star, Plus, Minus, Clock, Zap } from 'lucide-react';
+import { ChevronDown, ArrowLeft, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
@@ -42,9 +39,9 @@ const FIAT_CURRENCIES = [
 
 export default function CreateSubscriptionPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
+  const [, setMerchantSettings] = useState<MerchantSettings | null>(null);
   const [availableCryptos, setAvailableCryptos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -88,7 +85,7 @@ export default function CreateSubscriptionPage() {
         return;
       }
 
-      setUser(session.user);
+      setUser(session.user as unknown as Record<string, unknown>);
 
       // Load merchant settings
       const { data: merchant, error: merchantError } = await supabase
@@ -138,65 +135,11 @@ export default function CreateSubscriptionPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement;
-    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
 
-  const handleCryptoChange = (crypto: string, checked: boolean) => {
-    setForm(prev => ({
-      ...prev,
-      accepted_cryptos: checked 
-        ? [...prev.accepted_cryptos, crypto]
-        : prev.accepted_cryptos.filter(c => c !== crypto)
-    }));
-  };
 
-  const formatInterval = () => {
-    const count = form.interval_count;
-    const interval = form.interval;
-    if (count === 1) {
-      return interval === 'day' ? 'day' : interval === 'week' ? 'week' : interval === 'month' ? 'month' : 'year';
-    }
-    return `${count} ${interval}s`;
-  };
 
-  const calculateFeePercentage = () => {
-    const chargeCustomerFee = form.charge_customer_fee ?? merchantSettings?.charge_customer_fee ?? false;
-    const autoConvertEnabled = form.auto_convert_enabled ?? merchantSettings?.auto_convert_enabled ?? false;
-    
-    if (!chargeCustomerFee) return 0;
-    
-    // Base fee: 0.5%
-    let fee = 0.5;
-    
-    // Auto-convert adds additional 0.5% (only for crypto-to-crypto)
-    if (autoConvertEnabled) {
-      fee += 0.5;
-    }
-    
-    return fee;
-  };
 
-  const calculatePreviewTotal = () => {
-    const amount = parseFloat(form.amount) || 0;
-    const feePercentage = calculateFeePercentage();
-    const feeAmount = amount * (feePercentage / 100);
-    
-    // Calculate tax
-    let taxAmount = 0;
-    if (form.tax_enabled && form.tax_rates.length > 0) {
-      const totalTaxPercentage = form.tax_rates.reduce((sum, rate) => sum + parseFloat(rate.percentage || '0'), 0);
-      taxAmount = amount * (totalTaxPercentage / 100);
-    }
-    
-    return {
-      subtotal: amount,
-      fee: feeAmount,
-      tax: taxAmount,
-      total: amount + feeAmount + taxAmount
-    };
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -287,7 +230,7 @@ export default function CreateSubscriptionPage() {
     );
   }
 
-  const preview = calculatePreviewTotal();
+
 
   return (
     <DashboardLayout user={user}>

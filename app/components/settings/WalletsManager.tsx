@@ -20,14 +20,12 @@ import {
   Eye,
   EyeOff,
   Copy,
-  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
-import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -103,7 +101,7 @@ interface CurrencyInfo {
 
 type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
-interface WalletsManagerProps<T = any> {
+interface WalletsManagerProps<T = Record<string, unknown>> {
   settings: T & {
     wallets: Record<string, string>;
   };
@@ -113,7 +111,7 @@ interface WalletsManagerProps<T = any> {
   setShowTrustWalletGuide: (show: boolean) => void;
 }
 
-export default function WalletsManager<T = any>({ settings, setSettings, setShowTrustWalletGuide }: WalletsManagerProps<T>) {
+export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, setShowTrustWalletGuide }: WalletsManagerProps<T>) {
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);
@@ -398,7 +396,7 @@ export default function WalletsManager<T = any>({ settings, setSettings, setShow
               <div className="font-semibold mb-1">Smart Wallet Setup</div>
               <p className="text-sm leading-relaxed">
                 Add a base cryptocurrency wallet and automatically support its stable coins. 
-                Click on wallets with stable coins to see what's included!
+                Click on wallets with stable coins to see what&apos;s included!
               </p>
             </AlertDescription>
           </div>

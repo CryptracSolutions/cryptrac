@@ -8,7 +8,7 @@ export interface EmailLogData {
   type: string;
   status: 'sent' | 'failed' | 'queued';
   error_message?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SendGridConfig {
@@ -27,11 +27,11 @@ export interface EmailSendResult {
 
 // Standardized email logging function
 export async function logEmailToDatabase(
-  supabase: any,
+  supabase: ReturnType<typeof createClient>,
   emailData: EmailLogData
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase.from('email_logs').insert({
+    const { error } = await supabase.from('email_logs').insert({
       email: emailData.email,
       type: emailData.type,
       status: emailData.status,
@@ -56,7 +56,7 @@ export async function logEmailToDatabase(
 // Standardized SendGrid email sending with retry logic
 export async function sendEmailWithRetry(
   config: SendGridConfig,
-  emailPayload: any,
+  emailPayload: Record<string, unknown>,
   maxRetries: number = 3
 ): Promise<{ success: boolean; status: 'sent' | 'failed'; error?: string }> {
   let lastError: string | undefined;
@@ -105,7 +105,7 @@ export function createSendGridPayload(
   htmlContent: string,
   config: SendGridConfig,
   categories: string[] = []
-): any {
+): Record<string, unknown> {
   return {
     personalizations: [{
       to: [{ email: to }],
@@ -164,14 +164,14 @@ export function getNotificationsEmailConfig(): SendGridConfig | null {
 
 // Comprehensive email sending function with logging
 export async function sendEmailWithLogging(
-  supabase: any,
+  supabase: ReturnType<typeof createClient>,
   to: string,
   subject: string,
   textContent: string,
   htmlContent: string,
   emailType: string,
   config: SendGridConfig,
-  metadata: Record<string, any> = {},
+  metadata: Record<string, unknown> = {},
   categories: string[] = []
 ): Promise<EmailSendResult> {
   let emailStatus: 'sent' | 'failed' | 'queued' = 'queued';
@@ -241,7 +241,7 @@ export async function sendEmailWithLogging(
 }
 
 // Create Supabase service client
-export function createServiceClient(): any {
+export function createServiceClient(): ReturnType<typeof createClient> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
