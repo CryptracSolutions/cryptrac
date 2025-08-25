@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
@@ -449,17 +449,14 @@ export default function MerchantSettingsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout user={user}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout user={user}>
-      <div className="space-y-8">
+    <div className="space-y-8">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -877,7 +874,6 @@ export default function MerchantSettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
   );
 }
 

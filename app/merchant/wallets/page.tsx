@@ -10,7 +10,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
@@ -200,17 +200,14 @@ export default function WalletsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout user={user}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout user={user}>
-      <div className="space-y-8">
+    <div className="space-y-8">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -269,6 +266,5 @@ export default function WalletsPage() {
           setShowTrustWalletGuide={setShowTrustWalletGuide}
         />
       </div>
-    </DashboardLayout>
   );
 }

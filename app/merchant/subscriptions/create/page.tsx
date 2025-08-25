@@ -11,7 +11,6 @@ import { ChevronDown, ArrowLeft, CreditCard, DollarSign, Settings, Users, Receip
 import { toast } from 'react-hot-toast';
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
 
 interface TaxRate {
   id: string;
@@ -234,8 +233,7 @@ export default function CreateSubscriptionPage() {
 
 
   return (
-    <DashboardLayout user={user}>
-      <div className="space-y-8">
+    <div className="space-y-8">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -718,7 +716,6 @@ export default function CreateSubscriptionPage() {
           </form>
         )}
       </div>
-    </DashboardLayout>
   );
 }
 
