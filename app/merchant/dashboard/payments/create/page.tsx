@@ -942,9 +942,8 @@ export default function CreatePaymentLinkPage() {
               )}
             </Button>
           </div>
-        </form>
+          </form>
       </div>
-    </div>
-  );
-}
+    );
+  }
 

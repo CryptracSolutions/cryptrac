@@ -704,8 +704,7 @@ export default function TaxReportsPage() {
             )}
           </>
         )}
-      </div>
-    </div>
-  );
-}
+        </div>
+    );
+  }
 

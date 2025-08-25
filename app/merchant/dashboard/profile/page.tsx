@@ -248,7 +248,6 @@ export default function ProfilePage() {
           handlePhoneChange={handlePhoneChange}
           handleZipChange={handleZipChange}
         />
-      </div>
-    </div>
-  );
-}
+        </div>
+    );
+  }

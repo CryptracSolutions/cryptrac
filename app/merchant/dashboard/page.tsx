@@ -612,8 +612,7 @@ export default function MerchantDashboard() {
               ))}
             </div>
           </CardContent>
-        </Card>
-      </div>
+          </Card>
     </div>
   );
 }
