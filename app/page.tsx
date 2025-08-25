@@ -142,7 +142,7 @@ export default function Home() {
 
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="xl" className="text-lg px-8 py-4 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+              <Button size="lg" className="text-lg px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
                 <Link href="/signup">
                   Start Free 30-Day Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
