@@ -295,7 +295,7 @@ export default function CreateSubscriptionPage() {
                       placeholder="e.g., Premium Plan, Monthly Service"
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       required
                     />
                   </div>
@@ -305,7 +305,7 @@ export default function CreateSubscriptionPage() {
                       placeholder="Brief description of the subscription"
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                     />
                   </div>
                 </div>
@@ -338,7 +338,7 @@ export default function CreateSubscriptionPage() {
                       placeholder="0.00"
                       value={form.amount}
                       onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       required
                     />
                   </div>
@@ -347,7 +347,7 @@ export default function CreateSubscriptionPage() {
                     <select
                       value={form.currency}
                       onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                      className="w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                      className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
                     >
                       {FIAT_CURRENCIES.map(currency => (
                         <option key={currency.code} value={currency.code}>
@@ -362,7 +362,7 @@ export default function CreateSubscriptionPage() {
                       <select
                         value={form.interval}
                         onChange={(e) => setForm({ ...form, interval: e.target.value })}
-                        className="flex-1 h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                        className="form-input-enhanced flex-1 h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
                       >
                         <option value="day">Day</option>
                         <option value="week">Week</option>
@@ -374,7 +374,7 @@ export default function CreateSubscriptionPage() {
                         min="1"
                         value={form.interval_count}
                         onChange={(e) => setForm({ ...form, interval_count: parseInt(e.target.value) || 1 })}
-                        className="w-20 h-12 text-center text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="form-input-enhanced w-20 h-12 text-center text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                   </div>
@@ -389,7 +389,7 @@ export default function CreateSubscriptionPage() {
                       placeholder="Leave empty for unlimited"
                       value={form.max_cycles}
                       onChange={(e) => setForm({ ...form, max_cycles: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                     />
                     <p className="text-xs text-gray-500">Leave empty for unlimited billing cycles</p>
                   </div>
@@ -399,7 +399,7 @@ export default function CreateSubscriptionPage() {
                       type="date"
                       value={form.anchor}
                       onChange={(e) => setForm({ ...form, anchor: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                     />
                     <p className="text-xs text-gray-500">Optional: Specific date to start billing</p>
                   </div>
@@ -430,7 +430,7 @@ export default function CreateSubscriptionPage() {
                       placeholder="Customer's full name"
                       value={form.customer_name}
                       onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                     />
                   </div>
                   <div className="space-y-2">
@@ -440,7 +440,7 @@ export default function CreateSubscriptionPage() {
                       placeholder="customer@example.com"
                       value={form.customer_email}
                       onChange={(e) => setForm({ ...form, customer_email: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       required
                     />
                   </div>
@@ -450,7 +450,7 @@ export default function CreateSubscriptionPage() {
                       placeholder="+1 (555) 123-4567"
                       value={form.customer_phone}
                       onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
-                      className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                     />
                   </div>
                 </div>
@@ -487,7 +487,7 @@ export default function CreateSubscriptionPage() {
                               setForm({ ...form, accepted_cryptos: form.accepted_cryptos.filter(c => c !== crypto) });
                             }
                           }}
-                          className="text-[#7f5efd]"
+                          className="form-input-enhanced text-[#7f5efd]"
                         />
                         <span className="text-sm font-medium">{crypto}</span>
                       </label>
@@ -507,7 +507,7 @@ export default function CreateSubscriptionPage() {
                           charge_customer_fee: value === 'inherit' ? null : value === 'yes'
                         });
                       }}
-                      className="w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                      className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
                     >
                       <option value="inherit">Inherit from merchant settings</option>
                       <option value="yes">Yes</option>
@@ -525,7 +525,7 @@ export default function CreateSubscriptionPage() {
                           auto_convert_enabled: value === 'inherit' ? null : value === 'yes'
                         });
                       }}
-                      className="w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                      className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
                     >
                       <option value="inherit">Inherit from merchant settings</option>
                       <option value="yes">Yes</option>
@@ -572,7 +572,7 @@ export default function CreateSubscriptionPage() {
                         min="1"
                         value={form.pause_after_missed_payments}
                         onChange={(e) => setForm({ ...form, pause_after_missed_payments: parseInt(e.target.value) || 3 })}
-                        className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -581,7 +581,7 @@ export default function CreateSubscriptionPage() {
                         <Checkbox
                           checked={form.auto_resume_on_payment}
                           onCheckedChange={(checked) => setForm({ ...form, auto_resume_on_payment: checked as boolean })}
-                          className="text-[#7f5efd]"
+                          className="form-input-enhanced text-[#7f5efd]"
                         />
                         <span className="text-sm text-gray-600">Automatically resume when payment is received</span>
                       </div>
@@ -596,7 +596,7 @@ export default function CreateSubscriptionPage() {
                         min="0"
                         value={form.invoice_due_days}
                         onChange={(e) => setForm({ ...form, invoice_due_days: parseInt(e.target.value) || 0 })}
-                        className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -606,7 +606,7 @@ export default function CreateSubscriptionPage() {
                         min="0"
                         value={form.generate_days_in_advance}
                         onChange={(e) => setForm({ ...form, generate_days_in_advance: parseInt(e.target.value) || 0 })}
-                        className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -616,7 +616,7 @@ export default function CreateSubscriptionPage() {
                         min="1"
                         value={form.past_due_after_days}
                         onChange={(e) => setForm({ ...form, past_due_after_days: parseInt(e.target.value) || 2 })}
-                        className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                   </div>
@@ -644,7 +644,7 @@ export default function CreateSubscriptionPage() {
                   <Checkbox
                     checked={form.tax_enabled}
                     onCheckedChange={(checked) => setForm({ ...form, tax_enabled: checked as boolean })}
-                    className="text-[#7f5efd]"
+                    className="form-input-enhanced text-[#7f5efd]"
                   />
                   <span className="text-sm font-semibold text-gray-700">Enable tax collection</span>
                 </div>
@@ -666,7 +666,7 @@ export default function CreateSubscriptionPage() {
                             }
                             setForm({ ...form, tax_rates: newRates });
                           }}
-                          className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                          className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                         />
                       </div>
                       <div className="space-y-2">
@@ -686,7 +686,7 @@ export default function CreateSubscriptionPage() {
                             }
                             setForm({ ...form, tax_rates: newRates });
                           }}
-                          className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                          className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                         />
                       </div>
                     </div>

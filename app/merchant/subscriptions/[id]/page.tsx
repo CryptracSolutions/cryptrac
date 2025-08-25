@@ -576,6 +576,7 @@ export default function SubscriptionDetailPage() {
                   value={targetCycleDate}
                   onChange={(e) => setTargetCycleDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
+                  className="form-input-enhanced"
                 />
               </div>
               
@@ -634,6 +635,7 @@ export default function SubscriptionDetailPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="customer@example.com"
                   required
+                  className="form-input-enhanced"
                 />
               </div>
               <Button type="submit" disabled={!email}>
@@ -669,6 +671,7 @@ export default function SubscriptionDetailPage() {
                 onChange={(e) => setOverride(prev => ({ ...prev, effective_from: e.target.value }))}
                 min={new Date().toISOString().split('T')[0]}
                 required
+                className="form-input-enhanced"
               />
               <p className="text-xs text-gray-500 mt-1">When the override begins</p>
             </div>
@@ -679,6 +682,7 @@ export default function SubscriptionDetailPage() {
                 value={override.effective_until}
                 onChange={(e) => setOverride(prev => ({ ...prev, effective_until: e.target.value }))}
                 min={override.effective_from || new Date().toISOString().split('T')[0]}
+                className="form-input-enhanced"
               />
               <p className="text-xs text-gray-500 mt-1">Leave empty for permanent override</p>
             </div>
@@ -695,6 +699,7 @@ export default function SubscriptionDetailPage() {
                 onChange={(e) => setOverride(prev => ({ ...prev, amount: e.target.value }))}
                 placeholder="29.99"
                 required
+                className="form-input-enhanced"
               />
             </div>
             <div>
@@ -703,6 +708,7 @@ export default function SubscriptionDetailPage() {
                 value={override.note}
                 onChange={(e) => setOverride(prev => ({ ...prev, note: e.target.value }))}
                 placeholder="Annual maintenance fee"
+                className="form-input-enhanced"
               />
             </div>
           </div>

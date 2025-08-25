@@ -376,7 +376,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700">Report Type</Label>
                     <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
-                      <SelectTrigger className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                    <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -391,7 +391,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700">Year</Label>
                     <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
-                      <SelectTrigger className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                      <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -406,7 +406,7 @@ export default function TaxReportsPage() {
                     <div className="space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Quarter</Label>
                       <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
-                        <SelectTrigger className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                        <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -422,7 +422,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700">Status</Label>
                     <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
-                      <SelectTrigger className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                      <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -442,7 +442,7 @@ export default function TaxReportsPage() {
                         type="date"
                         value={filters.start_date}
                         onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-                        className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -451,7 +451,7 @@ export default function TaxReportsPage() {
                         type="date"
                         value={filters.end_date}
                         onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-                        className="h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                   </div>
@@ -461,7 +461,7 @@ export default function TaxReportsPage() {
                   <Checkbox
                     checked={filters.tax_only}
                     onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
-                    className="text-[#7f5efd]"
+                    className="form-input-enhanced text-[#7f5efd]"
                   />
                   <Label className="text-sm font-medium text-gray-700">Show tax-only transactions</Label>
                 </div>

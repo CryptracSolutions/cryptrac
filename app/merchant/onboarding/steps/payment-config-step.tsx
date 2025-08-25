@@ -275,11 +275,12 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <div className="space-y-6">
               <div className="flex items-start gap-6">
                 <Checkbox
+                  className="form-input-enhanced"
                   checked={!formData.chargeCustomerFee}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      chargeCustomerFee: !checked 
+                  onCheckedChange={(checked) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      chargeCustomerFee: !checked
                     }))
                   }
                 />
@@ -296,11 +297,12 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               
               <div className="flex items-start gap-6">
                 <Checkbox
+                  className="form-input-enhanced"
                   checked={formData.chargeCustomerFee}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      chargeCustomerFee: !!checked 
+                  onCheckedChange={(checked) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      chargeCustomerFee: !!checked
                     }))
                   }
                 />
@@ -387,10 +389,11 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Checkbox
+                  className="form-input-enhanced"
                   checked={formData.autoConvert}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ 
-                      ...prev, 
+                  onCheckedChange={(checked) =>
+                    setFormData(prev => ({
+                      ...prev,
                       autoConvert: !!checked,
                       // Clear preferred currency if auto-convert is disabled
                       preferredPayoutCurrency: checked ? prev.preferredPayoutCurrency : null
@@ -422,7 +425,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                       }))
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="form-input-enhanced w-full">
                       <SelectValue placeholder="Select preferred payout currency" />
                     </SelectTrigger>
                     <SelectContent>

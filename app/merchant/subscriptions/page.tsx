@@ -272,14 +272,14 @@ export default function MerchantSubscriptionsPage() {
                   placeholder="Search subscriptions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                  className="form-input-enhanced pl-10 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                 />
               </div>
               <div>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                  className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
                 >
                   <option value="all">All Statuses</option>
                   <option value="active">Active</option>

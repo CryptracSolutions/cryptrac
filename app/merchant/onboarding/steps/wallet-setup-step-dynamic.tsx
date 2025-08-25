@@ -578,7 +578,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
             <Select value={selectedPopularCurrency} onValueChange={setSelectedPopularCurrency}>
-              <SelectTrigger className="flex-1 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+              <SelectTrigger className="form-input-enhanced flex-1 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                 <SelectValue placeholder="Select a popular cryptocurrency..." />
               </SelectTrigger>
               <SelectContent>
@@ -632,7 +632,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
 
           <div className="flex items-center gap-4">
             <Select value={selectedAdditionalCurrency} onValueChange={setSelectedAdditionalCurrency}>
-              <SelectTrigger className="flex-1 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+              <SelectTrigger className="form-input-enhanced flex-1 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                 <SelectValue placeholder="Select an additional cryptocurrency..." />
               </SelectTrigger>
               <SelectContent>
