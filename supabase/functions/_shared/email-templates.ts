@@ -99,7 +99,7 @@ function getBaseTemplate(
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f8f9fa;
+            background-color: #f3f4f6;
         }
         .container {
             background: white;
@@ -180,7 +180,7 @@ function getBaseTemplate(
         }
         .view-button, .button {
             display: inline-block;
-            background: #007bff;
+            background: #7f5efd;
             color: white;
             padding: 12px 24px;
             text-decoration: none;
@@ -189,14 +189,14 @@ function getBaseTemplate(
             margin: 20px 0;
         }
         .button.success {
-            background: #28a745;
+            background: #70d68c;
         }
         .button.warning {
-            background: #ffc107;
+            background: #f6cf6a;
             color: #212529;
         }
         .button.danger {
-            background: #dc3545;
+            background: #e35c5c;
         }
         .footer {
             text-align: center;
@@ -491,7 +491,7 @@ export function generateMerchantNotificationEmail(data: MerchantNotificationData
         <p>Best regards,<br>The Cryptrac Team</p>
   `;
 
-  const html = getBaseTemplate('Payment Received', '💰', '#28a745', 'Cryptrac', content);
+  const html = getBaseTemplate('Payment Received', '💰', '#28a745', merchantName, content);
 
   const text = `
 Payment Received

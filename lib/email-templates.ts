@@ -491,7 +491,7 @@ export function generateMerchantNotificationEmail(data: MerchantNotificationData
         <p>Best regards,<br>The Cryptrac Team</p>
   `;
 
-  const html = getBaseTemplate('Payment Received', '💰', '#28a745', 'Cryptrac', content);
+  const html = getBaseTemplate('Payment Received', '💰', '#28a745', merchantName, content);
 
   const text = `
 Payment Received

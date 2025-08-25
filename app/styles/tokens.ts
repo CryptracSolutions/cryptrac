@@ -1,6 +1,7 @@
 // Design tokens centralizing Cryptrac's new visual system
 // These tokens should be the single source of truth for colours, spacing, radii and typography
 // Components should import from this file instead of hard-coding values.
+// Design System Documentation: Use these tokens for all colors, spacing, etc. to maintain consistency. Primary purple for CTAs only, neutrals for bases.
 
 export const colors = {
   primary: {

@@ -128,26 +128,34 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
             <Image src={merchant.logo_url} alt={merchant.business_name || 'Merchant'} width={80} height={80} />
           </div>
         )}
-        <h1 className="text-2xl font-bold">{merchant?.business_name ?? 'Merchant'}</h1>
+        <h1 className="text-2xl font-bold">{merchant?.business_name ?? 'Your Merchant'}</h1>
         {paymentLink?.title && <p className="text-gray-600">{paymentLink.title}</p>}
       </div>
 
-      <div className="border-t pt-4 space-y-2">
-        <div className="flex justify-between"><span>Amount</span><span>{format(baseAmount, tx.currency)}</span></div>
+      <div className="border-t pt-4 space-y-2 grid grid-cols-2 gap-2 text-sm">
+        <span>Amount</span><span className="text-right">{format(baseAmount, tx.currency)}</span>
         {Number(tx.tax_amount || 0) > 0 && (
-          <div className="flex justify-between"><span>{tx.tax_label || 'Tax'}</span><span>{format(tx.tax_amount, tx.currency)}</span></div>
+          <>
+            <span>{tx.tax_label || 'Tax'}</span><span className="text-right">{format(tx.tax_amount, tx.currency)}</span>
+          </>
         )}
-        <div className="flex justify-between font-medium"><span>Subtotal</span><span>{format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}</span></div>
+        <span className="font-medium">Subtotal</span><span className="text-right font-medium">{format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}</span>
         {Number(tx.gateway_fee_amount || 0) > 0 && (
-          <div className="flex justify-between"><span>Gateway fee</span><span>{format(tx.gateway_fee_amount, tx.currency)}</span></div>
+          <>
+            <span>Gateway fee</span><span className="text-right">{format(tx.gateway_fee_amount, tx.currency)}</span>
+          </>
         )}
         {Number(tx.conversion_fee_amount || 0) > 0 && (
-          <div className="flex justify-between"><span>Conversion fee</span><span>{format(tx.conversion_fee_amount, tx.currency)}</span></div>
+          <>
+            <span>Conversion fee</span><span className="text-right">{format(tx.conversion_fee_amount, tx.currency)}</span>
+          </>
         )}
         {Number(tx.network_fee_amount || 0) > 0 && (
-          <div className="flex justify-between"><span>Network fee</span><span>{format(tx.network_fee_amount, tx.currency)}</span></div>
+          <>
+            <span>Network fee</span><span className="text-right">{format(tx.network_fee_amount, tx.currency)}</span>
+          </>
         )}
-        <div className="flex justify-between font-bold border-t pt-2"><span>Total paid</span><span>{format(totalPaid, tx.currency)}</span></div>
+        <span className="font-bold border-t pt-2 col-span-1">Total paid</span><span className="font-bold border-t pt-2 text-right col-span-1">{format(totalPaid, tx.currency)}</span>
       </div>
 
       <div className="text-sm space-y-1">

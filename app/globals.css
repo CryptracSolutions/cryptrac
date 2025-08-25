@@ -65,9 +65,7 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 263 91% 69%;
     
-    /* Dark theme gradients */
-    --gradient-primary: linear-gradient(135deg, #7f5efd 0%, #a78bfa 100%);
-    --gradient-secondary: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    /* Dark theme gradients removed */
   }
 }
 
@@ -150,13 +148,6 @@
     box-shadow: var(--shadow-2xl);
   }
   
-  /* Enhanced glass morphism effect */
-  .glass {
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
   /* Enhanced container utilities */
   .container-narrow {
     max-width: 56rem;
@@ -215,24 +206,24 @@
   
   /* Enhanced button styles */
   .btn-primary {
-    background: linear-gradient(135deg, #7f5efd 0%, #a78bfa 100%);
+    background: #7f5efd;
     color: white;
     font-weight: 600;
-    padding: 0.875rem 1.75rem;
+    padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px -1px rgb(127 94 253 / 0.2);
+    transition: all 0.2s ease-in-out;
+    box-shadow: var(--shadow-soft);
     position: relative;
     overflow: hidden;
   }
   
   .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -3px rgb(127 94 253 / 0.3);
+    background: #6d28d9;
+    box-shadow: var(--shadow-medium);
   }
   
   .btn-primary:active {
-    transform: translateY(0);
+    background: #5b21b6;
   }
   
   /* Enhanced form styles */
@@ -350,34 +341,18 @@
   
   /* Enhanced status indicators */
   .status-success {
-    background: var(--gradient-success);
+    background: #70d68c;
     color: white;
   }
   
   .status-warning {
-    background: var(--gradient-warning);
+    background: #f6cf6a;
     color: white;
   }
   
   .status-error {
-    background: var(--gradient-error);
+    background: #f18f8f;
     color: white;
-  }
-  
-  /* Enhanced loading states */
-  .loading-shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
-  }
-  
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
   }
   
   /* Enhanced responsive utilities */

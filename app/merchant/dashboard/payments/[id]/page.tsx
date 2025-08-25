@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Badge } from '@/app/components/ui/badge';
 import { QRCode } from '@/app/components/ui/qr-code';
 import { supabase } from '@/lib/supabase-browser';
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
 
 interface PaymentLink {
   id: string;
@@ -291,6 +292,12 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
           </Badge>
         </div>
       </div>
+
+      <Breadcrumbs items={[
+        {name: 'Dashboard', href: '/merchant/dashboard'},
+        {name: 'Payments', href: '/merchant/dashboard/payments'},
+        {name: paymentLink.title, href: '#'}
+      ]} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payment Link Information */}

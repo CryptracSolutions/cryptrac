@@ -13,6 +13,10 @@ module.exports = {
       center: true,
       padding: "2rem",
       screens: {
+        "sm": "640px",
+        "md": "768px",
+        "lg": "1024px",
+        "xl": "1280px",
         "2xl": "1400px",
       },
     },
@@ -64,8 +68,8 @@ module.exports = {
           100: '#fef3c7',
           200: '#fde68a',
           300: '#fcd34d',
-          400: '#fbbf24',
-          500: '#f59e0b',
+          400: '#e9d68c', // muted
+          500: '#d6b370', // muted
           600: '#d97706',
           700: '#b45309',
           800: '#92400e',
@@ -76,8 +80,8 @@ module.exports = {
           100: '#fee2e2',
           200: '#fecaca',
           300: '#fca5a5',
-          400: '#f87171',
-          500: '#ef4444',
+          400: '#d68c8c', // muted
+          500: '#c07070', // muted
           600: '#dc2626',
           700: '#b91c1c',
           800: '#991b1b',
@@ -115,9 +119,9 @@ module.exports = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "16px",
+        md: "calc(16px - 2px)",
+        sm: "calc(16px - 4px)",
       },
       fontFamily: {
         // Use Inter as the primary sans-serif font as per new typography guidelines
@@ -149,7 +153,6 @@ module.exports = {
         "accordion-up": "accordion-up 0.2s ease-out",
         // Standardised 200 ms fade & scale animations; removed bounce and slide-in variants
         "fade-in": "fade-in 0.2s ease-in-out",
-        "slide-up": "slide-up 0.2s ease-in-out",
         "scale-in": "scale-in 0.2s ease-in-out",
       },
       keyframes: {
@@ -165,10 +168,6 @@ module.exports = {
         "fade-in": {
           from: { opacity: "0" },
           to: { opacity: "1" },
-        },
-        "slide-up": {
-          from: { transform: "translateY(10px)", opacity: "0" },
-          to: { transform: "translateY(0)", opacity: "1" },
         },
         "scale-in": {
           from: { transform: "scale(0.95)", opacity: "0" },

@@ -127,8 +127,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#f5f3ff] via-white to-[#f5f3ff] py-20 sm:py-32">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#ede9fe]/20 to-[#ddd6fe]/20"></div>
+      <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
         <div className="container-wide relative">
           <div className="mx-auto max-w-4xl text-center">
 

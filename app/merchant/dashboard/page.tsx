@@ -395,7 +395,7 @@ export default function MerchantDashboard() {
         )}
 
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
               <CardTitle className="text-lg font-bold text-gray-900">Total Revenue</CardTitle>

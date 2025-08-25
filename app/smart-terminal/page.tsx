@@ -5,6 +5,7 @@ import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { QRCode } from '@/app/components/ui/qr-code';
+import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 
 interface TerminalDevice {
   id: string;
@@ -366,126 +367,132 @@ export default function SmartTerminalPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-2xl font-bold mb-4">Smart Terminal</h1>
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 max-w-sm">
-          {error}
-        </div>
-      )}
-      {step === 'amount' && !paymentLink && (
-        <div className="w-full max-w-sm space-y-4">
-          <div className="text-center text-3xl" aria-live="polite">{amount || '0.00'}</div>
-          <div className="bg-gray-100 p-2 rounded text-sm space-y-1" aria-live="polite">
-            <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
-            {tax && merchantSettings?.tax_rates && merchantSettings.tax_rates.map((rate, index) => (
-              <div key={index} className="flex justify-between text-green-700">
-                <span>{rate.label} ({rate.percentage}%)</span>
-                <span>+{((baseAmount * rate.percentage) / 100).toFixed(2)}</span>
-              </div>
-            ))}
-            {tax && <div className="flex justify-between font-medium text-green-700 border-t pt-2">
-              <span>Total Tax</span><span>+{taxAmount.toFixed(2)}</span>
-            </div>}
-            {tax && <div className="flex justify-between font-medium border-t pt-2">
-              <span>Subtotal with Tax</span><span>{preview.subtotal_with_tax.toFixed(2)}</span>
-            </div>}
-            {chargeFee && <div className="flex justify-between text-blue-700">
-              <span>Gateway fee ({merchantSettings?.auto_convert_enabled ? '1.0' : '0.5'}%)</span>
-              <span>+{gatewayFee.toFixed(2)}</span>
-            </div>}
-            <div className="flex justify-between font-semibold"><span>Total (pre-tip)</span><span>{preTipTotal.toFixed(2)}</span></div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {[1,2,3,4,5,6,7,8,9,'0','.'].map((d: string | number)=> (
-              <Button key={d} className="h-16" aria-label={`digit ${d}`} onClick={()=>appendDigit(String(d))}>{d}</Button>
-            ))}
-            <Button className="h-16" onClick={backspace} aria-label="backspace">⌫</Button>
-            <Button className="h-16" onClick={clearAmount} aria-label="clear">C</Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <label>
-              <input type="checkbox" className="mr-2" checked={tax ?? false} disabled={tax === undefined} onChange={e=>setTax(e.target.checked)} aria-label="Add tax"/>Add tax
-            </label>
-            <label>
-              <input type="checkbox" className="mr-2" checked={chargeFee ?? false} disabled={chargeFee === undefined} onChange={e=>setChargeFee(e.target.checked)} aria-label="Charge customer fee" />Charge customer fee
-            </label>
-          </div>
-          <Button onClick={readyForPayment} className="w-full h-14" aria-label="ready" disabled={!amount}>Ready for payment</Button>
-        </div>
-      )}
-      {step === 'customer' && !paymentLink && (
-        <div className="w-full max-w-sm space-y-4">
-          <div className="bg-gray-100 p-2 rounded text-sm space-y-1" aria-live="polite">
-            <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
-            {tax && merchantSettings?.tax_rates && merchantSettings.tax_rates.map((rate, index) => (
-              <div key={index} className="flex justify-between text-green-700">
-                <span>{rate.label} ({rate.percentage}%)</span>
-                <span>+{((baseAmount * rate.percentage) / 100).toFixed(2)}</span>
-              </div>
-            ))}
-            {tax && <div className="flex justify-between font-medium text-green-700 border-t pt-2">
-              <span>Total Tax</span><span>+{taxAmount.toFixed(2)}</span>
-            </div>}
-            {tax && <div className="flex justify-between font-medium border-t pt-2">
-              <span>Subtotal with Tax</span><span>{preview.subtotal_with_tax.toFixed(2)}</span>
-            </div>}
-            {chargeFee && <div className="flex justify-between text-blue-700">
-              <span>Gateway fee ({merchantSettings?.auto_convert_enabled ? '1.0' : '0.5'}%)</span>
-              <span>+{gatewayFee.toFixed(2)}</span>
-            </div>}
-            <div className="flex justify-between font-semibold"><span>Total (pre-tip)</span><span>{preTipTotal.toFixed(2)}</span></div>
-          </div>
-          <div className="flex gap-2 justify-center">
-            {(device?.tip_presets || defaultTips).map((p:number)=> (
-              <Button key={p} variant={tipPercent===p?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(p); setTipSelected(true);}} aria-label={`tip ${p}%`}>{p}%</Button>
-            ))}
-            <Button variant={tipPercent===0 && tipSelected?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(0); setTipSelected(true);}} aria-label="no tip">No Tip</Button>
-          </div>
-          <select value={crypto} onChange={e=>setCrypto(e.target.value)} className="border p-2 rounded w-full" aria-label="crypto">
-            {availableCurrencies.map((c:string)=> <option key={c} value={c}>{c}</option>)}
-          </select>
-          {tipSelected && <div className="text-center text-xl">Final Total: {finalTotal.toFixed(2)}</div>}
-          <Button onClick={generate} className="w-full h-14" aria-label="pay now" disabled={!tipSelected || loading}>Pay now</Button>
-        </div>
-      )}
-      {paymentLink && paymentData && (
-        <div className="flex flex-col items-center space-y-4" aria-live="polite">
-          {(() => {
-            const uri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount);
-            const showAmount = uri === paymentData.pay_address;
-            return (
-              <>
-                <QRCode value={uri} size={256} />
-                <div className="font-medium">{paymentData.pay_currency}</div>
-                {showAmount && <div>Send amount: {paymentData.pay_amount} {paymentData.pay_currency}</div>}
-                <div className="flex gap-2">
-                  <Button onClick={() => navigator.clipboard.writeText(paymentData.pay_address)}>Copy address</Button>
-                  {showAmount && <Button onClick={() => navigator.clipboard.writeText(String(paymentData.pay_amount))}>Copy amount</Button>}
-                  <Button variant="outline" onClick={() => { setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setStatus(''); setTipSelected(false); setTipPercent(null); }}>Back</Button>
-                </div>
-              </>
-            );
-          })()}
-          <div className="text-sm text-center">
-            <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
-            {invoiceBreakdown?.tax_amount ? <div className="flex justify-between"><span>Tax</span><span>{invoiceBreakdown.tax_amount.toFixed(2)}</span></div> : null}
-            {invoiceBreakdown?.gateway_fee ? <div className="flex justify-between"><span>Gateway fee</span><span>{invoiceBreakdown.gateway_fee.toFixed(2)}</span></div> : null}
-            {invoiceBreakdown?.tip_amount ? <div className="flex justify-between"><span>Tip</span><span>{invoiceBreakdown.tip_amount.toFixed(2)}</span></div> : null}
-            <div className="flex justify-between font-semibold"><span>Total</span><span>{(invoiceBreakdown?.final_total || finalTotal).toFixed(2)}</span></div>
-          </div>
-          <div>Status: {status}</div>
-          {status === 'confirmed' && (
-            <div className="space-y-2 w-full max-w-sm">
-              <div className="flex gap-2">
-                <Input placeholder="Email for receipt" value={receipt.email} onChange={e=>setReceipt({email:e.target.value})} aria-label="receipt email" />
-                <Button onClick={sendEmailReceipt} disabled={!receipt.email.trim()}>Send Receipt</Button>
-              </div>
-              <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount'); setTax(merchantSettings?.tax_enabled); setChargeFee(merchantSettings?.charge_customer_fee);}}>New Sale</Button>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <h1 className="text-2xl font-bold text-center">Smart Terminal</h1>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 max-w-sm">
+              {error}
             </div>
           )}
-        </div>
-      )}
+          {step === 'amount' && !paymentLink && (
+            <div className="w-full max-w-sm space-y-4">
+              <div className="text-center text-3xl" aria-live="polite">{amount || '0.00'}</div>
+              <div className="bg-gray-100 p-2 rounded text-sm space-y-1" aria-live="polite">
+                <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
+                {tax && merchantSettings?.tax_rates && merchantSettings.tax_rates.map((rate, index) => (
+                  <div key={index} className="flex justify-between text-green-700">
+                    <span>{rate.label} ({rate.percentage}%)</span>
+                    <span>+{((baseAmount * rate.percentage) / 100).toFixed(2)}</span>
+                  </div>
+                ))}
+                {tax && <div className="flex justify-between font-medium text-green-700 border-t pt-2">
+                  <span>Total Tax</span><span>+{taxAmount.toFixed(2)}</span>
+                </div>}
+                {tax && <div className="flex justify-between font-medium border-t pt-2">
+                  <span>Subtotal with Tax</span><span>{preview.subtotal_with_tax.toFixed(2)}</span>
+                </div>}
+                {chargeFee && <div className="flex justify-between text-blue-700">
+                  <span>Gateway fee ({merchantSettings?.auto_convert_enabled ? '1.0' : '0.5'}%)</span>
+                  <span>+{gatewayFee.toFixed(2)}</span>
+                </div>}
+                <div className="flex justify-between font-semibold"><span>Total (pre-tip)</span><span>{preTipTotal.toFixed(2)}</span></div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[1,2,3,4,5,6,7,8,9,'0','.'].map((d: string | number)=> (
+                  <Button key={d} className="h-16" aria-label={`digit ${d}`} onClick={()=>appendDigit(String(d))}>{d}</Button>
+                ))}
+                <Button className="h-16" onClick={backspace} aria-label="backspace">⌫</Button>
+                <Button className="h-16" onClick={clearAmount} aria-label="clear">C</Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <label>
+                  <input type="checkbox" className="mr-2" checked={tax ?? false} disabled={tax === undefined} onChange={e=>setTax(e.target.checked)} aria-label="Add tax"/>Add tax
+                </label>
+                <label>
+                  <input type="checkbox" className="mr-2" checked={chargeFee ?? false} disabled={chargeFee === undefined} onChange={e=>setChargeFee(e.target.checked)} aria-label="Charge customer fee" />Charge customer fee
+                </label>
+              </div>
+              <Button onClick={readyForPayment} className="w-full h-14" aria-label="ready" disabled={!amount}>Ready for payment</Button>
+            </div>
+          )}
+          {step === 'customer' && !paymentLink && (
+            <div className="w-full max-w-sm space-y-4">
+              <div className="bg-gray-100 p-2 rounded text-sm space-y-1" aria-live="polite">
+                <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
+                {tax && merchantSettings?.tax_rates && merchantSettings.tax_rates.map((rate, index) => (
+                  <div key={index} className="flex justify-between text-green-700">
+                    <span>{rate.label} ({rate.percentage}%)</span>
+                    <span>+{((baseAmount * rate.percentage) / 100).toFixed(2)}</span>
+                  </div>
+                ))}
+                {tax && <div className="flex justify-between font-medium text-green-700 border-t pt-2">
+                  <span>Total Tax</span><span>+{taxAmount.toFixed(2)}</span>
+                </div>}
+                {tax && <div className="flex justify-between font-medium border-t pt-2">
+                  <span>Subtotal with Tax</span><span>{preview.subtotal_with_tax.toFixed(2)}</span>
+                </div>}
+                {chargeFee && <div className="flex justify-between text-blue-700">
+                  <span>Gateway fee ({merchantSettings?.auto_convert_enabled ? '1.0' : '0.5'}%)</span>
+                  <span>+{gatewayFee.toFixed(2)}</span>
+                </div>}
+                <div className="flex justify-between font-semibold"><span>Total (pre-tip)</span><span>{preTipTotal.toFixed(2)}</span></div>
+              </div>
+              <div className="flex gap-2 justify-center">
+                {(device?.tip_presets || defaultTips).map((p:number)=> (
+                  <Button key={p} variant={tipPercent===p?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(p); setTipSelected(true);}} aria-label={`tip ${p}%`}>{p}%</Button>
+                ))}
+                <Button variant={tipPercent===0 && tipSelected?'default':'outline'} className="h-12" onClick={()=>{setTipPercent(0); setTipSelected(true);}} aria-label="no tip">No Tip</Button>
+              </div>
+              <select value={crypto} onChange={e=>setCrypto(e.target.value)} className="border p-2 rounded w-full" aria-label="crypto">
+                {availableCurrencies.map((c:string)=> <option key={c} value={c}>{c}</option>)}
+              </select>
+              {tipSelected && <div className="text-center text-xl">Final Total: {finalTotal.toFixed(2)}</div>}
+              <Button onClick={generate} className="w-full h-14" aria-label="pay now" disabled={!tipSelected || loading}>Pay now</Button>
+            </div>
+          )}
+          {paymentLink && paymentData && (
+            <div className="flex flex-col items-center space-y-4" aria-live="polite">
+              {(() => {
+                const uri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount);
+                const showAmount = uri === paymentData.pay_address;
+                return (
+                  <>
+                    <QRCode value={uri} size={256} />
+                    <div className="font-medium">{paymentData.pay_currency}</div>
+                    {showAmount && <div>Send amount: {paymentData.pay_amount} {paymentData.pay_currency}</div>}
+                    <div className="flex gap-2">
+                      <Button onClick={() => navigator.clipboard.writeText(paymentData.pay_address)}>Copy address</Button>
+                      {showAmount && <Button onClick={() => navigator.clipboard.writeText(String(paymentData.pay_amount))}>Copy amount</Button>}
+                      <Button variant="outline" onClick={() => { setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setStatus(''); setTipSelected(false); setTipPercent(null); }}>Back</Button>
+                    </div>
+                  </>
+                );
+              })()}
+              <div className="text-sm text-center">
+                <div className="flex justify-between"><span>Subtotal</span><span>{baseAmount.toFixed(2)}</span></div>
+                {invoiceBreakdown?.tax_amount ? <div className="flex justify-between"><span>Tax</span><span>{invoiceBreakdown.tax_amount.toFixed(2)}</span></div> : null}
+                {invoiceBreakdown?.gateway_fee ? <div className="flex justify-between"><span>Gateway fee</span><span>{invoiceBreakdown.gateway_fee.toFixed(2)}</span></div> : null}
+                {invoiceBreakdown?.tip_amount ? <div className="flex justify-between"><span>Tip</span><span>{invoiceBreakdown.tip_amount.toFixed(2)}</span></div> : null}
+                <div className="flex justify-between font-semibold"><span>Total</span><span>{(invoiceBreakdown?.final_total || finalTotal).toFixed(2)}</span></div>
+              </div>
+              <div>Status: {status}</div>
+              {status === 'confirmed' && (
+                <div className="space-y-2 w-full max-w-sm">
+                  <div className="flex gap-2">
+                    <Input placeholder="Email for receipt" value={receipt.email} onChange={e=>setReceipt({email:e.target.value})} aria-label="receipt email" />
+                    <Button onClick={sendEmailReceipt} disabled={!receipt.email.trim()}>Send Receipt</Button>
+                  </div>
+                  <Button onClick={()=>{setPaymentLink(null); setPaymentData(null); setInvoiceBreakdown(null); setAmount(''); setStatus(''); setTipPercent(null); setTipSelected(false); setStep('amount'); setTax(merchantSettings?.tax_enabled); setChargeFee(merchantSettings?.charge_customer_fee);}}>New Sale</Button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
