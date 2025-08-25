@@ -131,7 +131,7 @@ export default function Home() {
 
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-8 leading-tight">
               Get Paid in{" "}
-              <span className="text-gradient-primary">Crypto</span>
+              <span className="text-[#7f5efd]">Crypto</span>
             </h1>
             <p className="text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.

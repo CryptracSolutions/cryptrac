@@ -92,8 +92,7 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
+      <div className="hidden lg:flex flex-1 bg-[#7f5efd] relative overflow-hidden">
         <div className="relative flex items-center justify-center p-12">
           <div className="text-center text-white max-w-lg">
             <div className="mb-8">
