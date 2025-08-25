@@ -131,8 +131,8 @@ export default function Signup() {
       </div>
 
       {/* Right Side - Content */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex-1 flex items-start justify-center p-8 pt-16">
+        <div className="w-full max-w-md space-y-6">
           {/* Logo and Header */}
           <div className="text-center">
             <div className="flex justify-center mb-8">

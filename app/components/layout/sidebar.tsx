@@ -16,7 +16,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Calculator,
-  Zap
+  Zap,
+  Smartphone,
+  RefreshCw
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -33,6 +35,7 @@ interface SidebarProps {
 const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
   ({ userRole = "merchant", className, collapsed = false, onToggleCollapse }, ref) => {
     const pathname = usePathname()
+    const [quickActionsExpanded, setQuickActionsExpanded] = React.useState(false)
     
     const merchantNavigation = [
       {
@@ -46,12 +49,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
         icon: CreditCard,
       },
       {
-        name: "Quick Actions",
-        href: "/merchant/dashboard#quick-actions",
-        icon: Zap,
-      },
-      {
-        name: "Tax Reports",
+        name: "Transactions",
         href: "/merchant/dashboard/tax-reports",
         icon: Calculator,
       },
@@ -157,6 +155,55 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
               </Link>
             )
           })}
+          
+          {/* Quick Actions Expandable Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => setQuickActionsExpanded(!quickActionsExpanded)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left",
+                "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+                collapsed && "justify-center"
+              )}
+            >
+              <Zap className="h-5 w-5 flex-shrink-0" />
+              {!collapsed && (
+                <>
+                  <span>Quick Actions</span>
+                  <ChevronRight className={cn(
+                    "h-4 w-4 ml-auto transition-transform",
+                    quickActionsExpanded && "rotate-90"
+                  )} />
+                </>
+              )}
+            </button>
+            
+            {quickActionsExpanded && !collapsed && (
+              <div className="ml-8 space-y-1">
+                <Link
+                  href="/smart-terminal"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <Smartphone className="h-4 w-4 flex-shrink-0" />
+                  <span>Smart Terminal</span>
+                </Link>
+                <Link
+                  href="/merchant/dashboard/payments/create"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <CreditCard className="h-4 w-4 flex-shrink-0" />
+                  <span>Create Payment Link</span>
+                </Link>
+                <Link
+                  href="/merchant/subscriptions/create"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 flex-shrink-0" />
+                  <span>Create Subscription</span>
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
         
         {/* Footer */}

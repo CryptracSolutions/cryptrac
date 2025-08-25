@@ -126,6 +126,12 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-32 w-96 h-96 bg-[#7f5efd]/5 rounded-full animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-[#7f5efd]/5 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#7f5efd]/3 rounded-full animate-ping" style={{animationDuration: '4s'}}></div>
+        </div>
         <div className="container-wide relative">
           <div className="mx-auto max-w-4xl text-center">
 

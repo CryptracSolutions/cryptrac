@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TerminalDevice {
   id: string;
@@ -523,22 +524,32 @@ export default function SmartTerminalPage() {
                   <span>{preTipTotal.toFixed(2)}</span>
                 </div>
               </div>
-              <div className="flex gap-3 justify-center">
-                {(device?.tip_presets || defaultTips).map((p:number)=> (
+              <div className="flex gap-3 justify-center flex-wrap">
+                {(device?.tip_presets || defaultTips).map((p: number) => (
                   <Button 
                     key={p} 
-                    variant={tipPercent===p?'default':'outline'} 
-                    className="h-12 px-4" 
-                    onClick={()=>{setTipPercent(p); setTipSelected(true);}} 
+                    variant={tipPercent === p ? 'default' : 'outline'} 
+                    className={cn(
+                      "h-12 px-4 min-w-[60px] font-semibold",
+                      tipPercent === p 
+                        ? "bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                        : "border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+                    )}
+                    onClick={() => {setTipPercent(p); setTipSelected(true);}} 
                     aria-label={`tip ${p}%`}
                   >
                     {p}%
                   </Button>
                 ))}
                 <Button 
-                  variant={tipPercent===0 && tipSelected?'default':'outline'} 
-                  className="h-12 px-4" 
-                  onClick={()=>{setTipPercent(0); setTipSelected(true);}} 
+                  variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'} 
+                  className={cn(
+                    "h-12 px-4 min-w-[80px] font-semibold",
+                    tipPercent === 0 && tipSelected
+                      ? "bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                      : "border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+                  )}
+                  onClick={() => {setTipPercent(0); setTipSelected(true);}} 
                   aria-label="no tip"
                 >
                   No Tip

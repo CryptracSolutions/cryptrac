@@ -79,7 +79,7 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
           
           {/* Main Content */}
           <main className="flex-1 overflow-hidden">
-            <div className="h-full">
+            <div className="h-full p-6 md:p-8">
               {children}
             </div>
           </main>

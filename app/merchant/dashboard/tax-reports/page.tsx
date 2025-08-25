@@ -356,7 +356,165 @@ export default function TaxReportsPage() {
           </div>
         ) : (
           <>
-            {/* Filters */}
+            {/* Report Summary Cards */}
+            {reportData && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                        <DollarSign className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Gross Sales</p>
+                        <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_gross_sales.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
+                        <Receipt className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Tax Collected</p>
+                        <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_tax_collected.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                        <Calculator className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Net Revenue</p>
+                        <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_net_revenue.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
+                        <TrendingUp className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Transactions</p>
+                        <p className="text-2xl font-bold text-gray-900">{reportData.summary.total_transactions}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Detailed Transactions */}
+            {reportData && (
+              <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                <CardHeader className="pb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-r from-gray-500 to-slate-500 rounded-lg">
+                      <BarChart3 className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-gray-900">Transaction Details</CardTitle>
+                      <CardDescription className="text-base text-gray-600 mt-1">
+                        Detailed view of all transactions in this report
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Description</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Gross Amount</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Tax</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Fees</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Net Amount</th>
+                          <th className="text-center py-3 px-4 font-semibold text-gray-900">Status</th>
+                          <th className="text-center py-3 px-4 font-semibold text-gray-900">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.transactions.map((transaction) => (
+                          <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-3 px-4 text-sm text-gray-600">
+                              {new Date(transaction.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-gray-900 font-medium">
+                              {transaction.product_description}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-gray-900 text-right">
+                              ${transaction.gross_amount.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-gray-600 text-right">
+                              ${transaction.tax_amount.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-gray-600 text-right">
+                              ${transaction.fees.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-gray-900 text-right font-medium">
+                              ${transaction.net_amount.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <Badge
+                                variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {transaction.status}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                {transaction.public_receipt_id && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => viewReceipt(transaction.public_receipt_id!)}
+                                    className="h-8 px-2 text-xs"
+                                    title="View customer receipt"
+                                  >
+                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                    Receipt
+                                  </Button>
+                                )}
+                                {transaction.status !== 'refunded' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => markAsRefunded(transaction)}
+                                    className="h-8 px-2 text-xs"
+                                    title="Mark as refunded"
+                                  >
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Refund
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Filters - Smaller and Less Intrusive */}
             <Card className="shadow-medium border-2 hover:shadow-xl transition-all duration-200">
               <CardHeader className="space-y-6">
                 <div className="flex items-center gap-6">
@@ -468,217 +626,48 @@ export default function TaxReportsPage() {
               </CardContent>
             </Card>
 
-            {/* Report Summary */}
+            {/* Export Report Section */}
             {reportData && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
-                          <DollarSign className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Gross Sales</p>
-                          <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_gross_sales.toFixed(2)}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
-                          <Receipt className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Tax Collected</p>
-                          <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_tax_collected.toFixed(2)}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                          <Calculator className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Net Revenue</p>
-                          <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_net_revenue.toFixed(2)}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
-                          <TrendingUp className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Transactions</p>
-                          <p className="text-2xl font-bold text-gray-900">{reportData.summary.total_transactions}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Export Options */}
-                <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                  <CardHeader className="pb-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
-                          <Download className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-2xl font-bold text-gray-900">Export Report</CardTitle>
-                          <CardDescription className="text-base text-gray-600 mt-1">
-                            Download your tax report in various formats
-                          </CardDescription>
-                        </div>
-                      </div>
+              <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                <CardHeader className="pb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                      <Download className="h-6 w-6 text-white" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Button
-                        onClick={() => exportToCSV()}
-                        disabled={exportingCSV}
-                        className="h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white flex items-center gap-2"
-                      >
-                        {exportingCSV ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <FileText className="h-5 w-5" />
-                        )}
-                        {exportingCSV ? 'Exporting...' : 'Export to CSV'}
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => window.print()}
-                        className="h-12 text-base font-medium flex items-center gap-2"
-                      >
-                        <Printer className="h-5 w-5" />
-                        Print Report
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowDetailedView(!showDetailedView)}
-                        className="h-12 text-base font-medium flex items-center gap-2"
-                      >
-                        {showDetailedView ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        {showDetailedView ? 'Hide Details' : 'Show Details'}
-                      </Button>
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-gray-900">Export Report</CardTitle>
+                      <CardDescription className="text-base text-gray-600 mt-1">
+                        Download your tax report in various formats
+                      </CardDescription>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Detailed Transactions */}
-                {showDetailedView && (
-                  <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                    <CardHeader className="pb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-r from-gray-500 to-slate-500 rounded-lg">
-                          <BarChart3 className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-2xl font-bold text-gray-900">Transaction Details</CardTitle>
-                          <CardDescription className="text-base text-gray-600 mt-1">
-                            Detailed view of all transactions in this report
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
-                              <th className="text-left py-3 px-4 font-semibold text-gray-900">Description</th>
-                              <th className="text-right py-3 px-4 font-semibold text-gray-900">Gross Amount</th>
-                              <th className="text-right py-3 px-4 font-semibold text-gray-900">Tax</th>
-                              <th className="text-right py-3 px-4 font-semibold text-gray-900">Fees</th>
-                              <th className="text-right py-3 px-4 font-semibold text-gray-900">Net Amount</th>
-                              <th className="text-center py-3 px-4 font-semibold text-gray-900">Status</th>
-                              <th className="text-center py-3 px-4 font-semibold text-gray-900">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {reportData.transactions.map((transaction) => (
-                              <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                <td className="py-3 px-4 text-sm text-gray-600">
-                                  {new Date(transaction.created_at).toLocaleDateString()}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-900 font-medium">
-                                  {transaction.product_description}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-900 text-right">
-                                  ${transaction.gross_amount.toFixed(2)}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-600 text-right">
-                                  ${transaction.tax_amount.toFixed(2)}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-600 text-right">
-                                  ${transaction.fees.toFixed(2)}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-900 text-right font-medium">
-                                  ${transaction.net_amount.toFixed(2)}
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <Badge
-                                    variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
-                                    className="text-xs"
-                                  >
-                                    {transaction.status}
-                                  </Badge>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <div className="flex items-center justify-center gap-2">
-                                    {transaction.public_receipt_id && (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => viewReceipt(transaction.public_receipt_id!)}
-                                        className="h-8 px-2 text-xs"
-                                        title="View customer receipt"
-                                      >
-                                        <ExternalLink className="h-3 w-3 mr-1" />
-                                        Receipt
-                                      </Button>
-                                    )}
-                                    {transaction.status !== 'refunded' && (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => markAsRefunded(transaction)}
-                                        className="h-8 px-2 text-xs"
-                                        title="Mark as refunded"
-                                      >
-                                        <XCircle className="h-3 w-3 mr-1" />
-                                        Refund
-                                      </Button>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button
+                      onClick={() => exportToCSV()}
+                      disabled={exportingCSV}
+                      className="h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white flex items-center gap-2"
+                    >
+                      {exportingCSV ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <FileText className="h-5 w-5" />
+                      )}
+                      {exportingCSV ? 'Exporting...' : 'Export to CSV'}
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => window.print()}
+                      className="h-12 text-base font-medium flex items-center gap-2"
+                    >
+                      <Printer className="h-5 w-5" />
+                      Print Report
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* No Data State */}

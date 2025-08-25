@@ -122,6 +122,29 @@
     background-color: hsl(var(--muted-foreground) / 0.5);
   }
   
+  /* Enhanced dropdown styles for better readability */
+  [data-radix-dropdown-content] {
+    background-color: white !important;
+    backdrop-filter: none !important;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-large);
+  }
+
+  .dark [data-radix-dropdown-content] {
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border));
+  }
+
+  [data-radix-dropdown-item] {
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-radix-dropdown-item][data-highlighted] {
+    background-color: #7f5efd !important;
+    color: white !important;
+  }
+
   /* Ensure dropdown backgrounds are always solid */
   [data-radix-select-content] {
     background-color: white !important;
@@ -362,6 +385,25 @@
   .status-success {
     background: #70d68c;
     color: white;
+  }
+  
+  /* Hero section animations */
+  @keyframes subtle-float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+  }
+  
+  .animate-subtle-float {
+    animation: subtle-float 6s ease-in-out infinite;
+  }
+  
+  @keyframes gentle-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.1; transform: scale(1.05); }
+  }
+  
+  .animate-gentle-pulse {
+    animation: gentle-pulse 4s ease-in-out infinite;
   }
   
   .status-warning {
