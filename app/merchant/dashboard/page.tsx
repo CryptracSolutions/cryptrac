@@ -343,7 +343,7 @@ export default function MerchantDashboard() {
                     You have {newPayments.length} new payment{newPayments.length > 1 ? 's' : ''}!
                   </span>
                 </div>
-                <Button size="sm" variant="success" onClick={markPaymentsSeen}>
+                <Button size="sm" variant="default" onClick={markPaymentsSeen}>
                   Mark as seen
                 </Button>
               </div>
