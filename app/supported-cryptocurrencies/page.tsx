@@ -18,6 +18,15 @@ interface Currency {
   rate_usd?: number;
 }
 
+interface DeduplicatedCurrency {
+  code: string;
+  name: string;
+  display_name: string;
+  networks: string[];
+  is_stablecoin: boolean;
+  rate_usd?: number;
+}
+
 export default function SupportedCryptocurrencies() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,16 +63,65 @@ export default function SupportedCryptocurrencies() {
     fetchCurrencies();
   }, []);
 
+  // Deduplicate currencies and group by networks
+  const deduplicatedCurrencies = useMemo(() => {
+    const currencyMap = new Map<string, DeduplicatedCurrency>();
+    
+    currencies.forEach(currency => {
+      const baseCode = currency.code.split('BSC')[0].split('ERC20')[0].split('MATIC')[0].split('C')[0];
+      const baseName = (currency.display_name || currency.name || currency.code)
+        .replace(/\s*\([^)]*\)/g, '') // Remove parenthetical network info
+        .replace(/\s*\(Binance Smart Chain\)/g, '')
+        .replace(/\s*\(ERC20\)/g, '')
+        .replace(/\s*\(Polygon\)/g, '')
+        .replace(/\s*\(C-Chain\)/g, '')
+        .trim();
+      
+      // Filter stablecoins to only allow USDT, USDC, DAI (on ETH), and PYUSD (on ETH)
+      if (currency.is_stablecoin) {
+        const allowedStablecoins = ['USDT', 'USDC'];
+        const allowedStablecoinsWithNetwork = ['DAI', 'PYUSD'];
+        
+        const isAllowedStablecoin = allowedStablecoins.includes(baseCode) || 
+          (allowedStablecoinsWithNetwork.includes(baseCode) && currency.network === 'ETH');
+        
+        if (!isAllowedStablecoin) {
+          return; // Skip this stablecoin
+        }
+      }
+      
+      if (currencyMap.has(baseCode)) {
+        const existing = currencyMap.get(baseCode)!;
+        if (currency.network && !existing.networks.includes(currency.network)) {
+          existing.networks.push(currency.network);
+        }
+      } else {
+        currencyMap.set(baseCode, {
+          code: baseCode,
+          name: baseName,
+          display_name: baseName,
+          networks: currency.network ? [currency.network] : [],
+          is_stablecoin: currency.is_stablecoin,
+          rate_usd: currency.rate_usd
+        });
+      }
+    });
+    
+    return Array.from(currencyMap.values()).sort((a, b) => 
+      a.display_name.localeCompare(b.display_name)
+    );
+  }, [currencies]);
+
   // Filter currencies based on search term
   const filteredCurrencies = useMemo(() => {
-    if (!searchTerm) return currencies;
+    if (!searchTerm) return deduplicatedCurrencies;
     
     const searchLower = searchTerm.toLowerCase();
-    return currencies.filter(currency => 
-      (currency.display_name || currency.name || '').toLowerCase().includes(searchLower) ||
+    return deduplicatedCurrencies.filter(currency => 
+      currency.display_name.toLowerCase().includes(searchLower) ||
       currency.code.toLowerCase().includes(searchLower)
     );
-  }, [currencies, searchTerm]);
+  }, [deduplicatedCurrencies, searchTerm]);
 
   // Separate stablecoins and regular currencies
   const stablecoins = filteredCurrencies.filter(c => c.is_stablecoin);
@@ -223,7 +281,7 @@ export default function SupportedCryptocurrencies() {
               {/* Results count */}
               <div className="text-center mb-8">
                 <p className="text-gray-600">
-                  Showing <span className="font-semibold text-[#7f5efd]">{filteredCurrencies.length}</span> supported currencies
+                  Showing <span className="font-semibold text-[#7f5efd]">{filteredCurrencies.length}</span> unique cryptocurrencies
                   {searchTerm && ` matching "${searchTerm}"`}
                 </p>
               </div>
@@ -232,20 +290,22 @@ export default function SupportedCryptocurrencies() {
               {stablecoins.length > 0 && (
                 <>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Stablecoins</h2>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4 max-w-7xl mx-auto mb-12">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 max-w-7xl mx-auto mb-12">
                     {stablecoins.map((currency) => (
-                      <Card key={`${currency.code}-${currency.network || 'default'}`} className="p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-[#ede9fe] bg-[#f5f3ff]/30">
-                        <div className="flex flex-col items-center">
-                          <div className="p-2 bg-[#ede9fe] rounded-lg mb-3">
+                      <Card key={currency.code} className="p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-[#ede9fe] bg-[#f5f3ff]/30">
+                        <div className="flex flex-col items-center h-full">
+                          <div className="p-2 bg-[#ede9fe] rounded-lg mb-3 flex-shrink-0">
                             <CryptoIcon currency={currency.code} size="md" />
                           </div>
-                          <div className="text-center">
+                          <div className="text-center flex-1 flex flex-col justify-center min-h-0">
                             <div className="font-semibold text-gray-900 text-sm mb-1 uppercase">{currency.code}</div>
-                            <div className="text-xs text-gray-500 truncate max-w-full" title={currency.display_name || currency.name}>
-                              {currency.display_name || currency.name}
+                            <div className="text-xs text-gray-500 leading-tight px-1" title={currency.display_name}>
+                              {currency.display_name}
                             </div>
-                            {currency.network && (
-                              <div className="text-xs text-[#7f5efd] mt-1">{currency.network}</div>
+                            {currency.networks.length > 0 && (
+                              <div className="text-xs text-[#7f5efd] mt-1">
+                                {currency.networks.length > 1 ? `${currency.networks.length} networks` : currency.networks[0]}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -259,20 +319,22 @@ export default function SupportedCryptocurrencies() {
               {regularCurrencies.length > 0 && (
                 <>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Cryptocurrencies</h2>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4 max-w-7xl mx-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 max-w-7xl mx-auto">
                     {regularCurrencies.map((currency) => (
-                      <Card key={`${currency.code}-${currency.network || 'default'}`} className="p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-gray-200 bg-white">
-                        <div className="flex flex-col items-center">
-                          <div className="p-2 bg-gray-100 rounded-lg mb-3">
+                      <Card key={currency.code} className="p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-gray-200 bg-white">
+                        <div className="flex flex-col items-center h-full">
+                          <div className="p-2 bg-gray-100 rounded-lg mb-3 flex-shrink-0">
                             <CryptoIcon currency={currency.code} size="md" />
                           </div>
-                          <div className="text-center">
+                          <div className="text-center flex-1 flex flex-col justify-center min-h-0">
                             <div className="font-semibold text-gray-900 text-sm mb-1 uppercase">{currency.code}</div>
-                            <div className="text-xs text-gray-500 truncate max-w-full" title={currency.display_name || currency.name}>
-                              {currency.display_name || currency.name}
+                            <div className="text-xs text-gray-500 leading-tight px-1" title={currency.display_name}>
+                              {currency.display_name}
                             </div>
-                            {currency.network && (
-                              <div className="text-xs text-[#7f5efd] mt-1">{currency.network}</div>
+                            {currency.networks.length > 0 && (
+                              <div className="text-xs text-[#7f5efd] mt-1">
+                                {currency.networks.length > 1 ? `${currency.networks.length} networks` : currency.networks[0]}
+                              </div>
                             )}
                           </div>
                         </div>
