@@ -68,7 +68,21 @@ export default function SupportedCryptocurrencies() {
     const currencyMap = new Map<string, DeduplicatedCurrency>();
     
     currencies.forEach(currency => {
-      const baseCode = currency.code.split('BSC')[0].split('ERC20')[0].split('MATIC')[0].split('C')[0];
+      // Extract base code more reliably
+      let baseCode = currency.code;
+      
+      // Handle common network suffixes
+      if (baseCode.includes('BSC')) {
+        baseCode = baseCode.replace('BSC', '');
+      } else if (baseCode.includes('ERC20')) {
+        baseCode = baseCode.replace('ERC20', '');
+      } else if (baseCode.includes('MATIC')) {
+        baseCode = baseCode.replace('MATIC', '');
+      } else if (baseCode.includes('C') && baseCode !== 'USDC') {
+        // Only remove 'C' if it's not part of USDC
+        baseCode = baseCode.replace('C', '');
+      }
+      
       const baseName = (currency.display_name || currency.name || currency.code)
         .replace(/\s*\([^)]*\)/g, '') // Remove parenthetical network info
         .replace(/\s*\(Binance Smart Chain\)/g, '')
@@ -77,15 +91,11 @@ export default function SupportedCryptocurrencies() {
         .replace(/\s*\(C-Chain\)/g, '')
         .trim();
       
-      // Filter stablecoins to only allow USDT, USDC, DAI (on ETH), and PYUSD (on ETH)
+      // Filter stablecoins to only allow USDT and USDC
       if (currency.is_stablecoin) {
         const allowedStablecoins = ['USDT', 'USDC'];
-        const allowedStablecoinsWithNetwork = ['DAI', 'PYUSD'];
         
-        const isAllowedStablecoin = allowedStablecoins.includes(baseCode) || 
-          (allowedStablecoinsWithNetwork.includes(baseCode) && currency.network === 'ETH');
-        
-        if (!isAllowedStablecoin) {
+        if (!allowedStablecoins.includes(baseCode)) {
           return; // Skip this stablecoin
         }
       }
