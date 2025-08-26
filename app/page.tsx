@@ -132,8 +132,8 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
-        {/* Animated Background - Thin Purple Waves */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* Animated Background - properly stacked behind content */}
+        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
           {/* Wave 1 - Top to bottom */}
           <div className="absolute inset-0 opacity-15">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
