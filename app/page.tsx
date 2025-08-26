@@ -129,11 +129,46 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
-        {/* Animated Background */}
+        {/* Animated Background - Thin Purple Waves */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-32 w-96 h-96 bg-[#7f5efd]/5 rounded-full animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-[#7f5efd]/5 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#7f5efd]/3 rounded-full animate-ping" style={{animationDuration: '4s'}}></div>
+          {/* Wave 1 - Top to bottom */}
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
+              <path
+                d="M0,200 Q300,100 600,200 T1200,200 L1200,800 L0,800 Z"
+                fill="#7f5efd"
+                className="animate-wave-1"
+              />
+            </svg>
+          </div>
+          
+          {/* Wave 2 - Bottom to top */}
+          <div className="absolute inset-0 opacity-8">
+            <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
+              <path
+                d="M0,600 Q300,500 600,600 T1200,600 L1200,800 L0,800 Z"
+                fill="#7f5efd"
+                className="animate-wave-2"
+              />
+            </svg>
+          </div>
+          
+          {/* Wave 3 - Diagonal flow */}
+          <div className="absolute inset-0 opacity-6">
+            <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
+              <path
+                d="M0,400 Q400,300 800,400 T1200,400 L1200,800 L0,800 Z"
+                fill="#7f5efd"
+                className="animate-wave-3"
+              />
+            </svg>
+          </div>
+          
+          {/* Floating particles */}
+          <div className="absolute top-20 left-20 w-2 h-2 bg-[#7f5efd]/30 rounded-full animate-float-1"></div>
+          <div className="absolute top-40 right-32 w-1 h-1 bg-[#7f5efd]/40 rounded-full animate-float-2"></div>
+          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#7f5efd]/35 rounded-full animate-float-3"></div>
+          <div className="absolute bottom-20 right-1/3 w-1 h-1 bg-[#7f5efd]/25 rounded-full animate-float-4"></div>
         </div>
         <div className="container-wide relative">
           <div className="mx-auto max-w-4xl text-center">
@@ -183,9 +218,9 @@ export default function Home() {
       </section>
 
       {/* Supported Cryptocurrencies */}
-      <section className="py-20 bg-white">
+      <section className="py-16 bg-white">
         <div className="container-wide">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Accept 300+ Cryptocurrencies
             </h2>
@@ -193,18 +228,50 @@ export default function Home() {
               Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-6xl mx-auto">
-            {supportedCryptos.map((crypto) => (
-              <div key={crypto.symbol} className="flex flex-col items-center p-6 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group hover:shadow-lg">
-                <div className="p-3 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-4">
-                  <CryptoIcon currency={crypto.symbol} size="lg" />
+          
+          {/* Featured Cryptocurrencies */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-700 mb-6 text-center">Popular Cryptocurrencies</h3>
+            <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4 max-w-5xl mx-auto">
+              {supportedCryptos.slice(0, 10).map((crypto) => (
+                <div key={crypto.symbol} className="flex flex-col items-center p-4 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group">
+                  <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-3">
+                    <CryptoIcon currency={crypto.symbol} size="md" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900 text-sm mb-1">{crypto.symbol}</div>
+                    <div className="text-xs text-gray-500">{crypto.name}</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="font-semibold text-gray-900 text-base mb-1">{crypto.name}</div>
-                  <div className="text-sm text-[#7f5efd] font-medium">{crypto.symbol}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* Additional Cryptocurrencies */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-700 mb-6 text-center">More Supported Cryptocurrencies</h3>
+            <div className="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 xl:grid-cols-15 gap-3 max-w-6xl mx-auto">
+              {supportedCryptos.slice(10).map((crypto) => (
+                <div key={crypto.symbol} className="flex flex-col items-center p-3 rounded-md hover:bg-[#f5f3ff] transition-all duration-200 group">
+                  <div className="p-1.5 bg-[#ede9fe] rounded-md group-hover:bg-[#ddd6fe] transition-colors mb-2">
+                    <CryptoIcon currency={crypto.symbol} size="sm" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-gray-900 text-xs">{crypto.symbol}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              <span className="font-semibold text-[#7f5efd]">300+ cryptocurrencies</span> supported and counting
+            </p>
+            <Button variant="outline" size="sm" className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
+              <Link href="/signup">View All Supported Cryptocurrencies</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -498,16 +565,49 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">
         <div className="container-wide">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
+            {/* Brand Section */}
+            <div className="lg:col-span-2">
               <Logo variant="white" size="md" className="mb-6" />
               <p className="text-gray-400 max-w-md leading-relaxed mb-6">
                 The simplest way to accept cryptocurrency payments. Non-custodial, secure, and designed for modern businesses.
               </p>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 mb-6">
                 Transparent pricing: $19/month subscription, no transaction fees to Cryptrac
               </div>
+              {/* Social Links */}
+              <div className="flex space-x-4">
+                <Link
+                  href="https://twitter.com/cryptrac"
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Twitter"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                  </svg>
+                </Link>
+                <Link
+                  href="https://github.com/cryptrac"
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="GitHub"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                </Link>
+                <Link
+                  href="https://linkedin.com/company/cryptrac"
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="LinkedIn"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </Link>
+              </div>
             </div>
+
+            {/* Product Section */}
             <div>
               <h3 className="font-semibold mb-6 text-lg">Product</h3>
               <ul className="space-y-3 text-gray-400">
@@ -515,19 +615,77 @@ export default function Home() {
                 <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                 <li><Link href="#faq" className="hover:text-white transition-colors">FAQ</Link></li>
                 <li><Link href="/signup" className="hover:text-white transition-colors">Get Started</Link></li>
+                <li><Link href="/docs" className="hover:text-white transition-colors">API Documentation</Link></li>
+                <li><Link href="/status" className="hover:text-white transition-colors">System Status</Link></li>
               </ul>
             </div>
+
+            {/* Support Section */}
             <div>
-              <h3 className="font-semibold mb-6 text-lg">Legal</h3>
+              <h3 className="font-semibold mb-6 text-lg">Support</h3>
               <ul className="space-y-3 text-gray-400">
-                <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/help" className="hover:text-white transition-colors">Help Center</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+                <li><Link href="/security" className="hover:text-white transition-colors">Security</Link></li>
+                <li><Link href="/compliance" className="hover:text-white transition-colors">Compliance</Link></li>
+                <li><Link href="/status" className="hover:text-white transition-colors">Service Status</Link></li>
+              </ul>
+            </div>
+
+            {/* Resources Section */}
+            <div>
+              <h3 className="font-semibold mb-6 text-lg">Resources</h3>
+              <ul className="space-y-3 text-gray-400">
+                <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
+                <li><Link href="/guides" className="hover:text-white transition-colors">Integration Guides</Link></li>
+                <li><Link href="/partners" className="hover:text-white transition-colors">Partners</Link></li>
+                <li><Link href="/developers" className="hover:text-white transition-colors">Developer Hub</Link></li>
+                <li><Link href="/webinars" className="hover:text-white transition-colors">Webinars</Link></li>
+              </ul>
+            </div>
+
+            {/* Company Section */}
+            <div>
+              <h3 className="font-semibold mb-6 text-lg">Company</h3>
+              <ul className="space-y-3 text-gray-400">
+                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
+                <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
+                <li><Link href="/press" className="hover:text-white transition-colors">Press</Link></li>
+                <li><Link href="/investors" className="hover:text-white transition-colors">Investors</Link></li>
+                <li><Link href="/legal" className="hover:text-white transition-colors">Legal</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Cryptrac. All rights reserved.</p>
+
+          {/* Bottom Section */}
+          <div className="border-t border-gray-800 mt-12 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8">
+                <p className="text-gray-400 text-sm">
+                  &copy; 2025 Cryptrac. All rights reserved.
+                </p>
+                <div className="flex items-center space-x-6">
+                  <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    Privacy Policy
+                  </Link>
+                  <Link href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    Terms of Service
+                  </Link>
+                  <Link href="/cookies" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    Cookie Policy
+                  </Link>
+                </div>
+              </div>
+              <div className="flex items-center space-x-6 mt-4 md:mt-0">
+                <span className="text-gray-400 text-sm">
+                  Built with security and compliance in mind
+                </span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-400 text-sm">All systems operational</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

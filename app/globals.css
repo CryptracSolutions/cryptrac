@@ -406,6 +406,150 @@
     animation: gentle-pulse 4s ease-in-out infinite;
   }
   
+  /* Cryptrac Purple Wave Animations */
+  @keyframes wave-1 {
+    0%, 100% { 
+      transform: translateX(-100px) translateY(0px);
+      opacity: 0.1;
+    }
+    25% { 
+      transform: translateX(-50px) translateY(-20px);
+      opacity: 0.15;
+    }
+    50% { 
+      transform: translateX(0px) translateY(-10px);
+      opacity: 0.1;
+    }
+    75% { 
+      transform: translateX(50px) translateY(-30px);
+      opacity: 0.12;
+    }
+  }
+  
+  .animate-wave-1 {
+    animation: wave-1 20s ease-in-out infinite;
+  }
+  
+  @keyframes wave-2 {
+    0%, 100% { 
+      transform: translateX(100px) translateY(0px);
+      opacity: 0.08;
+    }
+    33% { 
+      transform: translateX(50px) translateY(20px);
+      opacity: 0.12;
+    }
+    66% { 
+      transform: translateX(-25px) translateY(10px);
+      opacity: 0.08;
+    }
+  }
+  
+  .animate-wave-2 {
+    animation: wave-2 25s ease-in-out infinite;
+    animation-delay: -5s;
+  }
+  
+  @keyframes wave-3 {
+    0%, 100% { 
+      transform: translateX(-50px) translateY(50px);
+      opacity: 0.06;
+    }
+    50% { 
+      transform: translateX(75px) translateY(-25px);
+      opacity: 0.1;
+    }
+  }
+  
+  .animate-wave-3 {
+    animation: wave-3 30s ease-in-out infinite;
+    animation-delay: -10s;
+  }
+  
+  /* Floating particle animations */
+  @keyframes float-1 {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.3;
+    }
+    25% { 
+      transform: translateY(-15px) translateX(10px);
+      opacity: 0.4;
+    }
+    50% { 
+      transform: translateY(-25px) translateX(-5px);
+      opacity: 0.3;
+    }
+    75% { 
+      transform: translateY(-10px) translateX(15px);
+      opacity: 0.35;
+    }
+  }
+  
+  .animate-float-1 {
+    animation: float-1 8s ease-in-out infinite;
+  }
+  
+  @keyframes float-2 {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.4;
+    }
+    33% { 
+      transform: translateY(-20px) translateX(-8px);
+      opacity: 0.5;
+    }
+    66% { 
+      transform: translateY(-12px) translateX(12px);
+      opacity: 0.4;
+    }
+  }
+  
+  .animate-float-2 {
+    animation: float-2 12s ease-in-out infinite;
+    animation-delay: -3s;
+  }
+  
+  @keyframes float-3 {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.35;
+    }
+    50% { 
+      transform: translateY(-18px) translateX(6px);
+      opacity: 0.45;
+    }
+  }
+  
+  .animate-float-3 {
+    animation: float-3 10s ease-in-out infinite;
+    animation-delay: -6s;
+  }
+  
+  @keyframes float-4 {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.25;
+    }
+    25% { 
+      transform: translateY(-8px) translateX(-12px);
+      opacity: 0.35;
+    }
+    50% { 
+      transform: translateY(-16px) translateX(8px);
+      opacity: 0.25;
+    }
+    75% { 
+      transform: translateY(-6px) translateX(-4px);
+      opacity: 0.3;
+    }
+  }
+  
+  .animate-float-4 {
+    animation: float-4 14s ease-in-out infinite;
+    animation-delay: -9s;
+  }
+  
   .status-warning {
     background: #f6cf6a;
     color: white;

@@ -320,7 +320,7 @@ export default function TaxReportsPage() {
         <Breadcrumbs 
           items={[
             { name: 'Dashboard', href: '/merchant/dashboard' },
-            { name: 'Tax Reports', href: '/merchant/dashboard/tax-reports' }
+            { name: 'Transactions', href: '/merchant/dashboard/tax-reports' }
           ]} 
         />
         
@@ -330,8 +330,8 @@ export default function TaxReportsPage() {
             <div className="flex items-center gap-4 mb-3">
               <BackToDashboard />
             </div>
-            <h1 className="heading-lg text-gray-900">Tax Reports</h1>
-            <p className="text-body text-gray-600 mt-2">Generate and export tax reports for your business</p>
+            <h1 className="heading-lg text-gray-900">Transactions</h1>
+            <p className="text-body text-gray-600 mt-2">View and manage all your transaction history</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
