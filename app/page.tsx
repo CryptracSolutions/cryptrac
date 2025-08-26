@@ -132,7 +132,7 @@ export default function Home() {
         {/* Animated Background - Thin Purple Waves */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Wave 1 - Top to bottom */}
-          <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 opacity-15">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
               <path
                 d="M0,200 Q300,100 600,200 T1200,200 L1200,800 L0,800 Z"

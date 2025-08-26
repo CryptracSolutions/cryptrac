@@ -550,6 +550,19 @@
     animation-delay: -9s;
   }
   
+  /* Custom opacity classes for wave animations */
+  .opacity-15 {
+    opacity: 0.15;
+  }
+  
+  .opacity-8 {
+    opacity: 0.08;
+  }
+  
+  .opacity-6 {
+    opacity: 0.06;
+  }
+  
   .status-warning {
     background: #f6cf6a;
     color: white;
