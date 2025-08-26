@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Info, Network } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Network } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Alert, AlertDescription } from "@/app/components/ui/alert";
 import { Logo } from "@/app/components/ui/logo";
 import { CryptoIcon } from "@/app/components/ui/crypto-icon";
 
@@ -135,53 +134,53 @@ export default function Home() {
         {/* Minimal Geometric Line Background */}
         <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
           {/* Horizontal lines */}
-          <div className="absolute top-[20%] left-0 right-0 h-px bg-[#7f5efd]/20"></div>
-          <div className="absolute top-[40%] left-0 right-0 h-px bg-[#7f5efd]/15"></div>
-          <div className="absolute top-[60%] left-0 right-0 h-px bg-[#7f5efd]/10"></div>
-          <div className="absolute top-[80%] left-0 right-0 h-px bg-[#7f5efd]/15"></div>
+          <div className="absolute top-[20%] left-0 right-0 h-px bg-[#7f5efd]/30"></div>
+          <div className="absolute top-[40%] left-0 right-0 h-px bg-[#7f5efd]/25"></div>
+          <div className="absolute top-[60%] left-0 right-0 h-px bg-[#7f5efd]/20"></div>
+          <div className="absolute top-[80%] left-0 right-0 h-px bg-[#7f5efd]/25"></div>
           
           {/* Vertical lines */}
-          <div className="absolute top-0 bottom-0 left-[15%] w-px bg-[#7f5efd]/10"></div>
-          <div className="absolute top-0 bottom-0 left-[30%] w-px bg-[#7f5efd]/15"></div>
-          <div className="absolute top-0 bottom-0 left-[45%] w-px bg-[#7f5efd]/8"></div>
-          <div className="absolute top-0 bottom-0 left-[55%] w-px bg-[#7f5efd]/8"></div>
-          <div className="absolute top-0 bottom-0 left-[70%] w-px bg-[#7f5efd]/15"></div>
-          <div className="absolute top-0 bottom-0 left-[85%] w-px bg-[#7f5efd]/10"></div>
+          <div className="absolute top-0 bottom-0 left-[15%] w-px bg-[#7f5efd]/20"></div>
+          <div className="absolute top-0 bottom-0 left-[30%] w-px bg-[#7f5efd]/25"></div>
+          <div className="absolute top-0 bottom-0 left-[45%] w-px bg-[#7f5efd]/18"></div>
+          <div className="absolute top-0 bottom-0 left-[55%] w-px bg-[#7f5efd]/18"></div>
+          <div className="absolute top-0 bottom-0 left-[70%] w-px bg-[#7f5efd]/25"></div>
+          <div className="absolute top-0 bottom-0 left-[85%] w-px bg-[#7f5efd]/20"></div>
           
           {/* Diagonal accent lines */}
           <div className="absolute inset-0">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
               {/* Main diagonal */}
-              <line x1="0" y1="400" x2="1200" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.3" />
+              <line x1="0" y1="400" x2="1200" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.4" />
               {/* Supporting diagonal */}
-              <line x1="0" y1="600" x2="1200" y2="400" stroke="#7f5efd" strokeWidth="0.5" opacity="0.15" />
+              <line x1="0" y1="600" x2="1200" y2="400" stroke="#7f5efd" strokeWidth="0.5" opacity="0.25" />
               {/* Counter diagonal */}
-              <line x1="1200" y1="600" x2="0" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.2" />
+              <line x1="1200" y1="600" x2="0" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.3" />
             </svg>
           </div>
           
           {/* Animated accent lines */}
-          <div className="absolute top-[30%] left-0 w-32 h-px bg-gradient-to-r from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-right"></div>
-          <div className="absolute top-[70%] right-0 w-32 h-px bg-gradient-to-l from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-left"></div>
-          <div className="absolute left-[25%] top-0 h-32 w-px bg-gradient-to-b from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-down"></div>
-          <div className="absolute right-[25%] bottom-0 h-32 w-px bg-gradient-to-t from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-up"></div>
+          <div className="absolute top-[30%] left-0 w-32 h-px bg-gradient-to-r from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-right"></div>
+          <div className="absolute top-[70%] right-0 w-32 h-px bg-gradient-to-l from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-left"></div>
+          <div className="absolute left-[25%] top-0 h-32 w-px bg-gradient-to-b from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-down"></div>
+          <div className="absolute right-[25%] bottom-0 h-32 w-px bg-gradient-to-t from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-up"></div>
           
           {/* Corner accents */}
           <div className="absolute top-0 left-0 w-24 h-24">
-            <div className="absolute top-0 left-0 w-full h-px bg-[#7f5efd]/30"></div>
-            <div className="absolute top-0 left-0 h-full w-px bg-[#7f5efd]/30"></div>
+            <div className="absolute top-0 left-0 w-full h-px bg-[#7f5efd]/40"></div>
+            <div className="absolute top-0 left-0 h-full w-px bg-[#7f5efd]/40"></div>
           </div>
           <div className="absolute top-0 right-0 w-24 h-24">
-            <div className="absolute top-0 right-0 w-full h-px bg-[#7f5efd]/30"></div>
-            <div className="absolute top-0 right-0 h-full w-px bg-[#7f5efd]/30"></div>
+            <div className="absolute top-0 right-0 w-full h-px bg-[#7f5efd]/40"></div>
+            <div className="absolute top-0 right-0 h-full w-px bg-[#7f5efd]/40"></div>
           </div>
           <div className="absolute bottom-0 left-0 w-24 h-24">
-            <div className="absolute bottom-0 left-0 w-full h-px bg-[#7f5efd]/30"></div>
-            <div className="absolute bottom-0 left-0 h-full w-px bg-[#7f5efd]/30"></div>
+            <div className="absolute bottom-0 left-0 w-full h-px bg-[#7f5efd]/40"></div>
+            <div className="absolute bottom-0 left-0 h-full w-px bg-[#7f5efd]/40"></div>
           </div>
           <div className="absolute bottom-0 right-0 w-24 h-24">
-            <div className="absolute bottom-0 right-0 w-full h-px bg-[#7f5efd]/30"></div>
-            <div className="absolute bottom-0 right-0 h-full w-px bg-[#7f5efd]/30"></div>
+            <div className="absolute bottom-0 right-0 w-full h-px bg-[#7f5efd]/40"></div>
+            <div className="absolute bottom-0 right-0 h-full w-px bg-[#7f5efd]/40"></div>
           </div>
         </div>
         <div className="container-wide relative z-10">
@@ -189,7 +188,7 @@ export default function Home() {
 
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-8 leading-tight">
               Get Paid in{" "}
-              <span className="text-[#7f5efd]">Crypto</span>
+              <span className="font-mono text-[#7f5efd] tracking-wider" style={{ fontFamily: "'Orbitron', 'Space Mono', monospace", fontWeight: 900, letterSpacing: "0.05em" }}>Crypto</span>
             </h1>
             <p className="text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
@@ -236,7 +235,7 @@ export default function Home() {
         <div className="container-wide">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Accept 300+ Cryptocurrencies
+              Accept <span className="text-[#7f5efd]">300+</span> Cryptocurrencies
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies
@@ -244,7 +243,7 @@ export default function Home() {
           </div>
           
           {/* All Cryptocurrencies - Uniform Grid */}
-          <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4 max-w-6xl mx-auto mb-8">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4 max-w-6xl mx-auto mb-8">
             {supportedCryptos.map((crypto) => (
               <div key={crypto.symbol} className="flex flex-col items-center p-4 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group">
                 <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-3">
@@ -264,7 +263,7 @@ export default function Home() {
               <span className="font-semibold text-[#7f5efd]">300+ cryptocurrencies</span> supported and counting
             </p>
             <Button variant="outline" size="sm" className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
-              <Link href="/signup">View All Supported Cryptocurrencies</Link>
+              <Link href="/supported-cryptocurrencies">View All Supported Cryptocurrencies</Link>
             </Button>
           </div>
         </div>
@@ -352,17 +351,6 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* Fee Transparency Notice */}
-          <div className="mt-16 max-w-4xl mx-auto">
-            <Alert className="border-[#ede9fe] bg-[#f5f3ff] shadow-sm">
-              <Info className="h-5 w-5 text-[#7f5efd]" />
-              <AlertDescription className="text-[#6d28d9] font-medium">
-                  <strong>Complete Transparency:</strong> Cryptrac&apos;s only revenue is the $19/month subscription.
-                Gateway fees (0.5% or 1%) are charged by the payment processor for handling transactions and go directly to them, not to Cryptrac. 
-                Network fees may vary by cryptocurrency and blockchain congestion.
-              </AlertDescription>
-            </Alert>
-          </div>
         </div>
       </section>
 
@@ -441,7 +429,7 @@ export default function Home() {
                 <Card className="border-2 border-[#7f5efd] shadow-lg bg-white">
                   <CardHeader className="text-center pb-6">
                     <CardTitle className="text-2xl font-bold text-gray-900">Crypto Payments</CardTitle>
-                    <p className="text-gray-600">Bitcoin, Ethereum, Solana, etc.</p>
+                    <p className="text-gray-600">Cryptrac</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="text-center">
