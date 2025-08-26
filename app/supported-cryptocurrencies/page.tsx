@@ -71,29 +71,44 @@ export default function SupportedCryptocurrencies() {
       // Extract base code more reliably
       let baseCode = currency.code;
       
-      // Handle common network suffixes
+      // Handle common network suffixes and variations
       if (baseCode.includes('BSC')) {
         baseCode = baseCode.replace('BSC', '');
       } else if (baseCode.includes('ERC20')) {
         baseCode = baseCode.replace('ERC20', '');
       } else if (baseCode.includes('MATIC')) {
         baseCode = baseCode.replace('MATIC', '');
-      } else if (baseCode.includes('C') && baseCode !== 'USDC') {
-        // Only remove 'C' if it's not part of USDC
-        baseCode = baseCode.replace('C', '');
+      } else if (baseCode.includes('ARB')) {
+        baseCode = baseCode.replace('ARB', '');
+      } else if (baseCode.includes('OP')) {
+        baseCode = baseCode.replace('OP', '');
+      } else if (baseCode.includes('DOT')) {
+        baseCode = baseCode.replace('DOT', '');
+      } else if (baseCode.includes('XLM')) {
+        baseCode = baseCode.replace('XLM', '');
+      } else if (baseCode.includes('E') && baseCode !== 'USDE' && !baseCode.startsWith('USD')) {
+        // Remove 'E' suffix but protect USDE and USD variants
+        baseCode = baseCode.replace(/E$/, '');
       }
       
+      // Clean up the base name
       const baseName = (currency.display_name || currency.name || currency.code)
         .replace(/\s*\([^)]*\)/g, '') // Remove parenthetical network info
         .replace(/\s*\(Binance Smart Chain\)/g, '')
         .replace(/\s*\(ERC20\)/g, '')
         .replace(/\s*\(Polygon\)/g, '')
         .replace(/\s*\(C-Chain\)/g, '')
+        .replace(/\s*Bridged/g, '') // Remove "Bridged" text
         .trim();
       
       // Filter stablecoins to only allow USDT and USDC
       if (currency.is_stablecoin) {
         const allowedStablecoins = ['USDT', 'USDC'];
+        
+        // Check if the base code starts with USD but is not USDT or USDC
+        if (baseCode.startsWith('USD') && !allowedStablecoins.includes(baseCode)) {
+          return; // Skip USD variants that are not USDT or USDC
+        }
         
         if (!allowedStablecoins.includes(baseCode)) {
           return; // Skip this stablecoin
