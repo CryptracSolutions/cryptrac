@@ -466,6 +466,15 @@
     animation-delay: -10s;
   }
   
+  /* Ensure SVG <path> transforms are applied consistently */
+  svg .animate-wave-1,
+  svg .animate-wave-2,
+  svg .animate-wave-3 {
+    transform-box: fill-box;       /* critical for Safari & some Chromium builds */
+    transform-origin: center;      /* so your translateX/Y animate around center */
+    will-change: transform, opacity;
+  }
+  
   /* Floating particle animations */
   @keyframes float-1 {
     0%, 100% { 

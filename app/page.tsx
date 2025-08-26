@@ -132,8 +132,8 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
-        {/* Animated Background - properly stacked behind content */}
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Animated Background - Thin Purple Waves */}
+        <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
           {/* Wave 1 - Top to bottom */}
           <div className="absolute inset-0 opacity-15">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
@@ -173,7 +173,7 @@ export default function Home() {
           <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#7f5efd]/35 rounded-full animate-float-3"></div>
           <div className="absolute bottom-20 right-1/3 w-1 h-1 bg-[#7f5efd]/25 rounded-full animate-float-4"></div>
         </div>
-        <div className="container-wide relative">
+        <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">
 
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-8 leading-tight">
@@ -550,9 +550,9 @@ export default function Home() {
         <div className="container-wide">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Brand Section */}
-            <div className="lg:col-span-2">
+            <div>
               <Logo variant="white" size="md" className="mb-6" />
-              <p className="text-gray-400 max-w-md leading-relaxed mb-6">
+              <p className="text-gray-400 leading-relaxed mb-6">
                 The simplest way to accept cryptocurrency payments. Non-custodial, secure, and designed for modern businesses.
               </p>
               <div className="text-sm text-gray-500 mb-6">
