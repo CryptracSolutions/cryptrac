@@ -651,6 +651,82 @@
     animation-delay: -6s;
   }
   
+  /* Minimal line animations for hero section */
+  @keyframes slide-right {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateX(calc(100vw + 100%));
+      opacity: 0;
+    }
+  }
+  
+  .animate-slide-right {
+    animation: slide-right 15s ease-in-out infinite;
+  }
+  
+  @keyframes slide-left {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateX(calc(-100vw - 100%));
+      opacity: 0;
+    }
+  }
+  
+  .animate-slide-left {
+    animation: slide-left 15s ease-in-out infinite;
+    animation-delay: 7.5s;
+  }
+  
+  @keyframes slide-down {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(calc(100vh + 100%));
+      opacity: 0;
+    }
+  }
+  
+  .animate-slide-down {
+    animation: slide-down 12s ease-in-out infinite;
+    animation-delay: 3s;
+  }
+  
+  @keyframes slide-up {
+    0% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(calc(-100vh - 100%));
+      opacity: 0;
+    }
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 12s ease-in-out infinite;
+    animation-delay: 9s;
+  }
+  
   /* Original floating particle animations kept for backward compatibility */
   @keyframes float-1 {
     0%, 100% { 

@@ -132,46 +132,57 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
-        {/* Enhanced Animated Background - Visible Purple Waves */}
+        {/* Minimal Geometric Line Background */}
         <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
-          {/* Wave 1 - Top to bottom */}
-          <div className="absolute inset-0 opacity-20">
+          {/* Horizontal lines */}
+          <div className="absolute top-[20%] left-0 right-0 h-px bg-[#7f5efd]/20"></div>
+          <div className="absolute top-[40%] left-0 right-0 h-px bg-[#7f5efd]/15"></div>
+          <div className="absolute top-[60%] left-0 right-0 h-px bg-[#7f5efd]/10"></div>
+          <div className="absolute top-[80%] left-0 right-0 h-px bg-[#7f5efd]/15"></div>
+          
+          {/* Vertical lines */}
+          <div className="absolute top-0 bottom-0 left-[15%] w-px bg-[#7f5efd]/10"></div>
+          <div className="absolute top-0 bottom-0 left-[30%] w-px bg-[#7f5efd]/15"></div>
+          <div className="absolute top-0 bottom-0 left-[45%] w-px bg-[#7f5efd]/8"></div>
+          <div className="absolute top-0 bottom-0 left-[55%] w-px bg-[#7f5efd]/8"></div>
+          <div className="absolute top-0 bottom-0 left-[70%] w-px bg-[#7f5efd]/15"></div>
+          <div className="absolute top-0 bottom-0 left-[85%] w-px bg-[#7f5efd]/10"></div>
+          
+          {/* Diagonal accent lines */}
+          <div className="absolute inset-0">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
-              <path
-                d="M0,200 Q300,100 600,200 T1200,200 L1200,800 L0,800 Z"
-                fill="#7f5efd"
-                className="animate-wave-1-enhanced"
-              />
+              {/* Main diagonal */}
+              <line x1="0" y1="400" x2="1200" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.3" />
+              {/* Supporting diagonal */}
+              <line x1="0" y1="600" x2="1200" y2="400" stroke="#7f5efd" strokeWidth="0.5" opacity="0.15" />
+              {/* Counter diagonal */}
+              <line x1="1200" y1="600" x2="0" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.2" />
             </svg>
           </div>
           
-          {/* Wave 2 - Bottom to top */}
-          <div className="absolute inset-0 opacity-15">
-            <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
-              <path
-                d="M0,600 Q300,500 600,600 T1200,600 L1200,800 L0,800 Z"
-                fill="#7f5efd"
-                className="animate-wave-2-enhanced"
-              />
-            </svg>
-          </div>
+          {/* Animated accent lines */}
+          <div className="absolute top-[30%] left-0 w-32 h-px bg-gradient-to-r from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-right"></div>
+          <div className="absolute top-[70%] right-0 w-32 h-px bg-gradient-to-l from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-left"></div>
+          <div className="absolute left-[25%] top-0 h-32 w-px bg-gradient-to-b from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-down"></div>
+          <div className="absolute right-[25%] bottom-0 h-32 w-px bg-gradient-to-t from-transparent via-[#7f5efd] to-transparent opacity-40 animate-slide-up"></div>
           
-          {/* Wave 3 - Diagonal flow */}
-          <div className="absolute inset-0 opacity-12">
-            <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
-              <path
-                d="M0,400 Q400,300 800,400 T1200,400 L1200,800 L0,800 Z"
-                fill="#7f5efd"
-                className="animate-wave-3-enhanced"
-              />
-            </svg>
+          {/* Corner accents */}
+          <div className="absolute top-0 left-0 w-24 h-24">
+            <div className="absolute top-0 left-0 w-full h-px bg-[#7f5efd]/30"></div>
+            <div className="absolute top-0 left-0 h-full w-px bg-[#7f5efd]/30"></div>
           </div>
-          
-          {/* Enhanced Floating particles with larger sizes */}
-          <div className="absolute top-20 left-20 particle-enhanced bg-[#7f5efd]/50 rounded-full animate-float-1-enhanced"></div>
-          <div className="absolute top-40 right-32 particle-small-enhanced bg-[#7f5efd]/60 rounded-full animate-float-2-enhanced"></div>
-          <div className="absolute bottom-32 left-1/4 particle-medium-enhanced bg-[#7f5efd]/55 rounded-full animate-float-3-enhanced"></div>
-          <div className="absolute bottom-20 right-1/3 particle-small-enhanced bg-[#7f5efd]/45 rounded-full animate-float-4-enhanced"></div>
+          <div className="absolute top-0 right-0 w-24 h-24">
+            <div className="absolute top-0 right-0 w-full h-px bg-[#7f5efd]/30"></div>
+            <div className="absolute top-0 right-0 h-full w-px bg-[#7f5efd]/30"></div>
+          </div>
+          <div className="absolute bottom-0 left-0 w-24 h-24">
+            <div className="absolute bottom-0 left-0 w-full h-px bg-[#7f5efd]/30"></div>
+            <div className="absolute bottom-0 left-0 h-full w-px bg-[#7f5efd]/30"></div>
+          </div>
+          <div className="absolute bottom-0 right-0 w-24 h-24">
+            <div className="absolute bottom-0 right-0 w-full h-px bg-[#7f5efd]/30"></div>
+            <div className="absolute bottom-0 right-0 h-full w-px bg-[#7f5efd]/30"></div>
+          </div>
         </div>
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">
