@@ -69,26 +69,31 @@ export default function SupportedCryptocurrencies() {
     
     currencies.forEach(currency => {
       // Extract base code more reliably
-      let baseCode = currency.code;
+      let baseCode = currency.code.toUpperCase();
+      const originalCode = baseCode;
       
-      // Handle common network suffixes and variations
-      if (baseCode.includes('BSC')) {
-        baseCode = baseCode.replace('BSC', '');
-      } else if (baseCode.includes('ERC20')) {
-        baseCode = baseCode.replace('ERC20', '');
-      } else if (baseCode.includes('MATIC')) {
-        baseCode = baseCode.replace('MATIC', '');
-      } else if (baseCode.includes('ARB')) {
-        baseCode = baseCode.replace('ARB', '');
-      } else if (baseCode.includes('OP')) {
-        baseCode = baseCode.replace('OP', '');
-      } else if (baseCode.includes('DOT')) {
-        baseCode = baseCode.replace('DOT', '');
-      } else if (baseCode.includes('XLM')) {
-        baseCode = baseCode.replace('XLM', '');
-      } else if (baseCode.includes('E') && baseCode !== 'USDE' && !baseCode.startsWith('USD')) {
-        // Remove 'E' suffix but protect USDE and USD variants
-        baseCode = baseCode.replace(/E$/, '');
+      // Special cases - don't modify these codes as they are actual currency symbols
+      const doNotModify = ['DOT', 'ADA', 'XLM', 'ARB', 'OP', 'APT', 'NEAR', 'FTM', 'ONE', 'ROSE'];
+      
+      // Only process suffixes if not in the do-not-modify list
+      if (!doNotModify.includes(baseCode)) {
+        // Handle common network suffixes and variations
+        if (baseCode.includes('BSC')) {
+          baseCode = baseCode.replace('BSC', '');
+        } else if (baseCode.includes('ERC20')) {
+          baseCode = baseCode.replace('ERC20', '');
+        } else if (baseCode.includes('MATIC')) {
+          baseCode = baseCode.replace('MATIC', '');
+        } else if (baseCode.includes('TRC20')) {
+          baseCode = baseCode.replace('TRC20', '');
+        } else if (baseCode.includes('BEP20')) {
+          baseCode = baseCode.replace('BEP20', '');
+        } else if (baseCode.includes('SOL')) {
+          // Don't remove SOL as it's Solana
+          if (baseCode !== 'SOL') {
+            baseCode = baseCode.replace('SOL', '');
+          }
+        }
       }
       
       // Clean up the base name
@@ -101,16 +106,27 @@ export default function SupportedCryptocurrencies() {
         .replace(/\s*Bridged/g, '') // Remove "Bridged" text
         .trim();
       
-      // Filter stablecoins to only allow USDT and USDC
+      // Filter stablecoins - Only allow USDT, USDC, DAI (ETH), and PYUSD (ETH)
       if (currency.is_stablecoin) {
         const allowedStablecoins = ['USDT', 'USDC'];
+        const allowedWithNetwork = [
+          { code: 'DAI', network: 'ETH' },
+          { code: 'PYUSD', network: 'ETH' }
+        ];
         
-        // Check if the base code starts with USD but is not USDT or USDC
-        if (baseCode.startsWith('USD') && !allowedStablecoins.includes(baseCode)) {
-          return; // Skip USD variants that are not USDT or USDC
+        // Check if it's one of the basic allowed stablecoins
+        let isAllowed = allowedStablecoins.includes(baseCode);
+        
+        // Check if it's one of the network-specific allowed stablecoins
+        if (!isAllowed) {
+          isAllowed = allowedWithNetwork.some(allowed => 
+            baseCode === allowed.code && 
+            (currency.network?.toUpperCase().includes(allowed.network) || 
+             originalCode.includes('ERC20'))
+          );
         }
         
-        if (!allowedStablecoins.includes(baseCode)) {
+        if (!isAllowed) {
           return; // Skip this stablecoin
         }
       }
