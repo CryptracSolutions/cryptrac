@@ -75,6 +75,9 @@ export default function TermsOfService() {
             <Link href="/privacy" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               Privacy Policy
             </Link>
+            <Link href="/cookies" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+              Cookie Policy
+            </Link>
             <Link href="/help" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               Help Center
             </Link>
