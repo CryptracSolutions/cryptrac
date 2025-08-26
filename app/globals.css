@@ -406,7 +406,96 @@
     animation: gentle-pulse 4s ease-in-out infinite;
   }
   
-  /* Cryptrac Purple Wave Animations */
+  /* Enhanced Cryptrac Purple Wave Animations - More Visible Version */
+  @keyframes wave-1-enhanced {
+    0%, 100% { 
+      transform: translateX(-150px) translateY(0px);
+      opacity: 0.2;
+    }
+    25% { 
+      transform: translateX(-75px) translateY(-30px);
+      opacity: 0.25;
+    }
+    50% { 
+      transform: translateX(0px) translateY(-15px);
+      opacity: 0.2;
+    }
+    75% { 
+      transform: translateX(75px) translateY(-45px);
+      opacity: 0.22;
+    }
+  }
+  
+  .animate-wave-1-enhanced {
+    animation: wave-1-enhanced 15s ease-in-out infinite;
+  }
+  
+  @keyframes wave-2-enhanced {
+    0%, 100% { 
+      transform: translateX(150px) translateY(0px);
+      opacity: 0.15;
+    }
+    33% { 
+      transform: translateX(75px) translateY(30px);
+      opacity: 0.2;
+    }
+    66% { 
+      transform: translateX(-40px) translateY(15px);
+      opacity: 0.15;
+    }
+  }
+  
+  .animate-wave-2-enhanced {
+    animation: wave-2-enhanced 18s ease-in-out infinite;
+    animation-delay: -3s;
+  }
+  
+  @keyframes wave-3-enhanced {
+    0%, 100% { 
+      transform: translateX(-75px) translateY(75px);
+      opacity: 0.12;
+    }
+    50% { 
+      transform: translateX(100px) translateY(-40px);
+      opacity: 0.18;
+    }
+  }
+  
+  .animate-wave-3-enhanced {
+    animation: wave-3-enhanced 22s ease-in-out infinite;
+    animation-delay: -7s;
+  }
+  
+  /* Enhanced opacity classes for better wave visibility */
+  .opacity-20 {
+    opacity: 0.2;
+  }
+  
+  .opacity-15 {
+    opacity: 0.15;
+  }
+  
+  .opacity-12 {
+    opacity: 0.12;
+  }
+  
+  /* Enhanced particle sizes */
+  .particle-enhanced {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  
+  .particle-small-enhanced {
+    width: 8px !important;
+    height: 8px !important;
+  }
+  
+  .particle-medium-enhanced {
+    width: 10px !important;
+    height: 10px !important;
+  }
+  
+  /* Original animations kept for backward compatibility */
   @keyframes wave-1 {
     0%, 100% { 
       transform: translateX(-100px) translateY(0px);
@@ -469,13 +558,100 @@
   /* Ensure SVG <path> transforms are applied consistently */
   svg .animate-wave-1,
   svg .animate-wave-2,
-  svg .animate-wave-3 {
+  svg .animate-wave-3,
+  svg .animate-wave-1-enhanced,
+  svg .animate-wave-2-enhanced,
+  svg .animate-wave-3-enhanced {
     transform-box: fill-box;       /* critical for Safari & some Chromium builds */
     transform-origin: center;      /* so your translateX/Y animate around center */
     will-change: transform, opacity;
   }
   
-  /* Floating particle animations */
+  /* Enhanced Floating Particle Animations with Larger Size and Better Visibility */
+  @keyframes float-1-enhanced {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px) scale(1);
+      opacity: 0.5;
+    }
+    25% { 
+      transform: translateY(-25px) translateX(15px) scale(1.2);
+      opacity: 0.7;
+    }
+    50% { 
+      transform: translateY(-40px) translateX(-10px) scale(1.1);
+      opacity: 0.5;
+    }
+    75% { 
+      transform: translateY(-15px) translateX(25px) scale(1.3);
+      opacity: 0.6;
+    }
+  }
+  
+  .animate-float-1-enhanced {
+    animation: float-1-enhanced 6s ease-in-out infinite;
+  }
+  
+  @keyframes float-2-enhanced {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px) scale(1);
+      opacity: 0.6;
+    }
+    33% { 
+      transform: translateY(-30px) translateX(-12px) scale(1.4);
+      opacity: 0.8;
+    }
+    66% { 
+      transform: translateY(-18px) translateX(18px) scale(1.2);
+      opacity: 0.6;
+    }
+  }
+  
+  .animate-float-2-enhanced {
+    animation: float-2-enhanced 8s ease-in-out infinite;
+    animation-delay: -2s;
+  }
+  
+  @keyframes float-3-enhanced {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px) scale(1);
+      opacity: 0.55;
+    }
+    50% { 
+      transform: translateY(-28px) translateX(10px) scale(1.3);
+      opacity: 0.75;
+    }
+  }
+  
+  .animate-float-3-enhanced {
+    animation: float-3-enhanced 7s ease-in-out infinite;
+    animation-delay: -4s;
+  }
+  
+  @keyframes float-4-enhanced {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px) scale(1);
+      opacity: 0.45;
+    }
+    25% { 
+      transform: translateY(-12px) translateX(-18px) scale(1.2);
+      opacity: 0.65;
+    }
+    50% { 
+      transform: translateY(-24px) translateX(12px) scale(1.4);
+      opacity: 0.45;
+    }
+    75% { 
+      transform: translateY(-8px) translateX(-6px) scale(1.1);
+      opacity: 0.55;
+    }
+  }
+  
+  .animate-float-4-enhanced {
+    animation: float-4-enhanced 9s ease-in-out infinite;
+    animation-delay: -6s;
+  }
+  
+  /* Original floating particle animations kept for backward compatibility */
   @keyframes float-1 {
     0%, 100% { 
       transform: translateY(0px) translateX(0px);

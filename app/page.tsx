@@ -132,46 +132,46 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
-        {/* Animated Background - Thin Purple Waves */}
+        {/* Enhanced Animated Background - Visible Purple Waves */}
         <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
           {/* Wave 1 - Top to bottom */}
-          <div className="absolute inset-0 opacity-15">
+          <div className="absolute inset-0 opacity-20">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
               <path
                 d="M0,200 Q300,100 600,200 T1200,200 L1200,800 L0,800 Z"
                 fill="#7f5efd"
-                className="animate-wave-1"
+                className="animate-wave-1-enhanced"
               />
             </svg>
           </div>
           
           {/* Wave 2 - Bottom to top */}
-          <div className="absolute inset-0 opacity-8">
+          <div className="absolute inset-0 opacity-15">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
               <path
                 d="M0,600 Q300,500 600,600 T1200,600 L1200,800 L0,800 Z"
                 fill="#7f5efd"
-                className="animate-wave-2"
+                className="animate-wave-2-enhanced"
               />
             </svg>
           </div>
           
           {/* Wave 3 - Diagonal flow */}
-          <div className="absolute inset-0 opacity-6">
+          <div className="absolute inset-0 opacity-12">
             <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
               <path
                 d="M0,400 Q400,300 800,400 T1200,400 L1200,800 L0,800 Z"
                 fill="#7f5efd"
-                className="animate-wave-3"
+                className="animate-wave-3-enhanced"
               />
             </svg>
           </div>
           
-          {/* Floating particles */}
-          <div className="absolute top-20 left-20 w-2 h-2 bg-[#7f5efd]/30 rounded-full animate-float-1"></div>
-          <div className="absolute top-40 right-32 w-1 h-1 bg-[#7f5efd]/40 rounded-full animate-float-2"></div>
-          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#7f5efd]/35 rounded-full animate-float-3"></div>
-          <div className="absolute bottom-20 right-1/3 w-1 h-1 bg-[#7f5efd]/25 rounded-full animate-float-4"></div>
+          {/* Enhanced Floating particles with larger sizes */}
+          <div className="absolute top-20 left-20 particle-enhanced bg-[#7f5efd]/50 rounded-full animate-float-1-enhanced"></div>
+          <div className="absolute top-40 right-32 particle-small-enhanced bg-[#7f5efd]/60 rounded-full animate-float-2-enhanced"></div>
+          <div className="absolute bottom-32 left-1/4 particle-medium-enhanced bg-[#7f5efd]/55 rounded-full animate-float-3-enhanced"></div>
+          <div className="absolute bottom-20 right-1/3 particle-small-enhanced bg-[#7f5efd]/45 rounded-full animate-float-4-enhanced"></div>
         </div>
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">
