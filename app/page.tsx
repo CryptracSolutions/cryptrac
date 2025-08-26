@@ -229,39 +229,19 @@ export default function Home() {
             </p>
           </div>
           
-          {/* Featured Cryptocurrencies */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-700 mb-6 text-center">Popular Cryptocurrencies</h3>
-            <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4 max-w-5xl mx-auto">
-              {supportedCryptos.slice(0, 10).map((crypto) => (
-                <div key={crypto.symbol} className="flex flex-col items-center p-4 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group">
-                  <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-3">
-                    <CryptoIcon currency={crypto.symbol} size="md" />
-                  </div>
-                  <div className="text-center">
-                    <div className="font-semibold text-gray-900 text-sm mb-1">{crypto.symbol}</div>
-                    <div className="text-xs text-gray-500">{crypto.name}</div>
-                  </div>
+          {/* All Cryptocurrencies - Uniform Grid */}
+          <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4 max-w-6xl mx-auto mb-8">
+            {supportedCryptos.map((crypto) => (
+              <div key={crypto.symbol} className="flex flex-col items-center p-4 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group">
+                <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-3">
+                  <CryptoIcon currency={crypto.symbol} size="md" />
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Additional Cryptocurrencies */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-700 mb-6 text-center">More Supported Cryptocurrencies</h3>
-            <div className="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 xl:grid-cols-15 gap-3 max-w-6xl mx-auto">
-              {supportedCryptos.slice(10).map((crypto) => (
-                <div key={crypto.symbol} className="flex flex-col items-center p-3 rounded-md hover:bg-[#f5f3ff] transition-all duration-200 group">
-                  <div className="p-1.5 bg-[#ede9fe] rounded-md group-hover:bg-[#ddd6fe] transition-colors mb-2">
-                    <CryptoIcon currency={crypto.symbol} size="sm" />
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-gray-900 text-xs">{crypto.symbol}</div>
-                  </div>
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900 text-sm mb-1">{crypto.symbol}</div>
+                  <div className="text-xs text-gray-500">{crypto.name}</div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
           {/* Call to Action */}
