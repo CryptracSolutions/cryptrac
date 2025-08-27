@@ -106,27 +106,18 @@ export default function SupportedCryptocurrencies() {
         .replace(/\s*Bridged/g, '') // Remove "Bridged" text
         .trim();
       
-      // Filter stablecoins - Only allow USDT, USDC, DAI (ETH), and PYUSD (ETH)
+      // Filter stablecoins - Block specific stablecoins, allow all others
       if (currency.is_stablecoin) {
-        const allowedStablecoins = ['USDT', 'USDC'];
-        const allowedWithNetwork = [
-          { code: 'DAI', network: 'ETH' },
-          { code: 'PYUSD', network: 'ETH' }
+        // List of stablecoins to BLOCK (all others are allowed)
+        const blockedStablecoins = [
+          'BUSD', 'BUSDBSC', 'BUSDMATIC', 'CUSD', 'DAIARB', 'EURT', 
+          'FDUSDBSC', 'FDUSDERC20', 'GUSD', 'JST', 'PAX', 'TUSD', 
+          'USDDBSC', 'USDDTRC20', 'USDE', 'USDJ', 'USDP', 'USDR', 
+          'USDSSOL', 'UST', 'XAUT'
         ];
         
-        // Check if it's one of the basic allowed stablecoins
-        let isAllowed = allowedStablecoins.includes(baseCode);
-        
-        // Check if it's one of the network-specific allowed stablecoins
-        if (!isAllowed) {
-          isAllowed = allowedWithNetwork.some(allowed => 
-            baseCode === allowed.code && 
-            (currency.network?.toUpperCase().includes(allowed.network) || 
-             originalCode.includes('ERC20'))
-          );
-        }
-        
-        if (!isAllowed) {
+        // Check if this stablecoin should be blocked
+        if (blockedStablecoins.includes(originalCode)) {
           return; // Skip this stablecoin
         }
       }
