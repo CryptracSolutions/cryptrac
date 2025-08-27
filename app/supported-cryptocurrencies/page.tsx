@@ -158,7 +158,7 @@ export default function SupportedCryptocurrencies() {
           name: baseName,
           display_name: baseName,
           networks: currency.network ? [currency.network] : [],
-          is_stablecoin: currency.is_stablecoin,
+          is_stablecoin: currency.is_stablecoin || false,
           rate_usd: currency.rate_usd
         });
       }
