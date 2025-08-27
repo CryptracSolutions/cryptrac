@@ -18,23 +18,42 @@ export async function GET() {
     }
 
     // Return all currencies with their original data
-    const currencyList = currencies.map(currency => ({
-      code: currency.code,
-      name: currency.name,
-      symbol: currency.symbol,
-      network: currency.network,
-      is_token: currency.is_token,
-      parent_currency: currency.parent_currency,
-      enabled: currency.enabled,
-      min_amount: currency.min_amount,
-      max_amount: currency.max_amount,
-      decimals: currency.decimals,
-      icon_url: currency.icon_url,
-      nowpayments_code: currency.nowpayments_code,
-      contract_address: currency.contract_address,
-      // Add a flag to identify stablecoins (you may need to adjust this logic)
-      is_stablecoin: currency.is_stablecoin || false
-    }));
+    const currencyList = currencies.map(currency => {
+      // Determine if it's a stablecoin based on common patterns
+      const isStablecoin = currency.name.toLowerCase().includes('dollar') ||
+                          currency.name.toLowerCase().includes('usd') ||
+                          currency.name.toLowerCase().includes('tether') ||
+                          currency.name.toLowerCase().includes('coin') ||
+                          currency.code.includes('USD') ||
+                          currency.code.includes('USDT') ||
+                          currency.code.includes('USDC') ||
+                          currency.code.includes('DAI') ||
+                          currency.code.includes('BUSD') ||
+                          currency.code.includes('GUSD') ||
+                          currency.code.includes('USDP') ||
+                          currency.code.includes('PYUSD') ||
+                          currency.code.includes('USDR') ||
+                          currency.code.includes('UST') ||
+                          currency.code.includes('USDE') ||
+                          currency.code.includes('FDUSD');
+
+      return {
+        code: currency.code,
+        name: currency.name,
+        symbol: currency.symbol,
+        network: currency.network,
+        is_token: currency.is_token,
+        parent_currency: currency.parent_currency,
+        enabled: currency.enabled,
+        min_amount: currency.min_amount,
+        max_amount: currency.max_amount,
+        decimals: currency.decimals,
+        icon_url: currency.icon_url,
+        nowpayments_code: currency.nowpayments_code,
+        contract_address: currency.contract_address,
+        is_stablecoin: isStablecoin
+      };
+    });
 
     console.log(`✅ Returning ${currencyList.length} currencies for review`);
 
