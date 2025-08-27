@@ -133,111 +133,104 @@ export default function Home() {
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
         {/* Flowing Wave Background */}
         <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
-          {/* Main Wave Layer 1 - Purple */}
+          {/* Primary Purple Wave Flow */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-1" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
-            style={{ transform: 'translateX(-10%)' }}
           >
             <defs>
-              <linearGradient id="purpleGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="#c7d2fe" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#a5b4fc" stopOpacity="0.3" />
+              <linearGradient id="purpleFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#c7d2fe" stopOpacity="0.1" />
+                <stop offset="30%" stopColor="#a5b4fc" stopOpacity="0.3" />
+                <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.1" />
               </linearGradient>
             </defs>
-            <path 
-              d="M0,400 Q300,200 600,350 T1200,300 L1200,500 Q900,650 600,500 T0,550 Z" 
-              fill="url(#purpleGradient1)"
-            />
+            {/* Main purple wave streams */}
+            <path d="M-100,300 Q200,150 500,250 Q800,350 1300,200" stroke="url(#purpleFlow1)" strokeWidth="2" fill="none" opacity="0.6" />
+            <path d="M-100,320 Q200,170 500,270 Q800,370 1300,220" stroke="url(#purpleFlow1)" strokeWidth="1.5" fill="none" opacity="0.5" />
+            <path d="M-100,340 Q200,190 500,290 Q800,390 1300,240" stroke="url(#purpleFlow1)" strokeWidth="1" fill="none" opacity="0.4" />
+            <path d="M-100,360 Q200,210 500,310 Q800,410 1300,260" stroke="url(#purpleFlow1)" strokeWidth="0.8" fill="none" opacity="0.3" />
+            <path d="M-100,380 Q200,230 500,330 Q800,430 1300,280" stroke="url(#purpleFlow1)" strokeWidth="0.6" fill="none" opacity="0.2" />
           </svg>
 
-          {/* Wave Layer 2 - Cyan */}
+          {/* Secondary Cyan Wave Flow */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-2" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
-            style={{ transform: 'translateX(5%)' }}
           >
             <defs>
-              <linearGradient id="cyanGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.4" />
-                <stop offset="50%" stopColor="#a7f3d0" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.4" />
+              <linearGradient id="cyanFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#a7f3d0" stopOpacity="0.1" />
+                <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.3" />
+                <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#a7f3d0" stopOpacity="0.1" />
               </linearGradient>
             </defs>
-            <path 
-              d="M0,300 Q400,150 800,280 T1200,250 L1200,450 Q800,600 400,450 T0,500 Z" 
-              fill="url(#cyanGradient1)"
-            />
+            {/* Cyan wave streams */}
+            <path d="M-50,400 Q300,250 600,350 Q900,450 1250,300" stroke="url(#cyanFlow1)" strokeWidth="2" fill="none" opacity="0.7" />
+            <path d="M-50,420 Q300,270 600,370 Q900,470 1250,320" stroke="url(#cyanFlow1)" strokeWidth="1.5" fill="none" opacity="0.6" />
+            <path d="M-50,440 Q300,290 600,390 Q900,490 1250,340" stroke="url(#cyanFlow1)" strokeWidth="1" fill="none" opacity="0.5" />
+            <path d="M-50,460 Q300,310 600,410 Q900,510 1250,360" stroke="url(#cyanFlow1)" strokeWidth="0.8" fill="none" opacity="0.4" />
           </svg>
 
-          {/* Wave Layer 3 - Light Purple */}
+          {/* Tertiary Purple-Cyan Blend */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-3" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
-            style={{ transform: 'translateX(-5%)' }}
           >
             <defs>
-              <linearGradient id="purpleGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#f3e8ff" stopOpacity="0.2" />
-                <stop offset="50%" stopColor="#e9d5ff" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#d8b4fe" stopOpacity="0.2" />
+              <linearGradient id="blendFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.15" />
+                <stop offset="50%" stopColor="#cffafe" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#f3e8ff" stopOpacity="0.15" />
               </linearGradient>
             </defs>
-            <path 
-              d="M0,500 Q350,300 700,450 T1200,400 L1200,600 Q850,750 500,600 T0,650 Z" 
-              fill="url(#purpleGradient2)"
-            />
+            {/* Blended wave streams */}
+            <path d="M100,500 Q400,350 700,450 Q1000,550 1400,400" stroke="url(#blendFlow1)" strokeWidth="1.8" fill="none" opacity="0.6" />
+            <path d="M100,520 Q400,370 700,470 Q1000,570 1400,420" stroke="url(#blendFlow1)" strokeWidth="1.3" fill="none" opacity="0.5" />
+            <path d="M100,540 Q400,390 700,490 Q1000,590 1400,440" stroke="url(#blendFlow1)" strokeWidth="0.9" fill="none" opacity="0.4" />
           </svg>
 
-          {/* Wave Layer 4 - Soft Cyan */}
+          {/* Upper Cyan Flow */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-4" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
-            style={{ transform: 'translateX(8%)' }}
           >
             <defs>
-              <linearGradient id="cyanGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#ecfeff" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="#cffafe" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#a7f3d0" stopOpacity="0.3" />
+              <linearGradient id="upperCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#ecfeff" stopOpacity="0.1" />
               </linearGradient>
             </defs>
-            <path 
-              d="M0,200 Q450,50 900,180 T1200,150 L1200,350 Q750,500 300,350 T0,400 Z" 
-              fill="url(#cyanGradient2)"
-            />
+            {/* Upper flowing lines */}
+            <path d="M-200,150 Q100,50 400,120 Q700,190 1000,100 Q1100,80 1400,120" stroke="url(#upperCyan)" strokeWidth="1.5" fill="none" opacity="0.5" />
+            <path d="M-200,170 Q100,70 400,140 Q700,210 1000,120 Q1100,100 1400,140" stroke="url(#upperCyan)" strokeWidth="1" fill="none" opacity="0.4" />
+            <path d="M-200,190 Q100,90 400,160 Q700,230 1000,140 Q1100,120 1400,160" stroke="url(#upperCyan)" strokeWidth="0.7" fill="none" opacity="0.3" />
           </svg>
 
-          {/* Additional Flowing Lines */}
+          {/* Delicate Purple Accent Lines */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-5" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
           >
             <defs>
-              <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#7f5efd" stopOpacity="0.1" />
-                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#7f5efd" stopOpacity="0.1" />
+              <linearGradient id="purpleAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f3e8ff" stopOpacity="0.1" />
+                <stop offset="50%" stopColor="#d8b4fe" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#e9d5ff" stopOpacity="0.1" />
               </linearGradient>
             </defs>
-            <path 
-              d="M0,350 Q600,200 1200,320" 
-              stroke="url(#accentGradient)" 
-              strokeWidth="2" 
-              fill="none"
-            />
-            <path 
-              d="M0,450 Q600,300 1200,420" 
-              stroke="url(#accentGradient)" 
-              strokeWidth="1.5" 
-              fill="none"
-            />
+            {/* Delicate accent lines */}
+            <path d="M50,250 Q350,100 650,200 Q950,300 1350,150" stroke="url(#purpleAccent)" strokeWidth="0.8" fill="none" opacity="0.4" />
+            <path d="M50,600 Q350,450 650,550 Q950,650 1350,500" stroke="url(#purpleAccent)" strokeWidth="0.6" fill="none" opacity="0.3" />
+            <path d="M200,350 Q500,200 800,300 Q1100,400 1200,250" stroke="url(#purpleAccent)" strokeWidth="0.5" fill="none" opacity="0.25" />
           </svg>
         </div>
         <div className="container-wide relative z-10">
@@ -245,7 +238,7 @@ export default function Home() {
 
             <h1 className="font-martina text-7xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-capsule text-[#7f5efd] font-semibold">Crypto</span>
+              <span className="font-martina text-[#7f5efd] font-bold text-8xl">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
