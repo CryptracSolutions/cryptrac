@@ -73,7 +73,16 @@ export default function SupportedCryptocurrencies() {
       const originalCode = baseCode;
       
       // Special cases - don't modify these codes as they are actual currency symbols
-      const doNotModify = ['DOT', 'ADA', 'XLM', 'ARB', 'OP', 'APT', 'NEAR', 'FTM', 'ONE', 'ROSE'];
+      const doNotModify = [
+        'DOT', 'ADA', 'XLM', 'ARB', 'OP', 'APT', 'NEAR', 'FTM', 'ONE', 'ROSE',
+        // Add the 16 missing currencies that should not be deduplicated
+        'CFXMAINNET', 'CROMAINNET', 'FTMMAINNET', 'INJMAINNET', 'MATICMAINNET', 
+        'STRKMAINNET', 'BRGBSC', 'GALAERC20', 'INJERC20',
+        // USD pair tokens that should remain separate
+        'MATICUSDCE', 'OPUSDCE',
+        // Stablecoins that should be allowed
+        'BUSD', 'BUSDBSC', 'BUSDMATIC', 'PAX', 'TUSDTRC20'
+      ];
       
       // Only process suffixes if not in the do-not-modify list
       if (!doNotModify.includes(baseCode)) {
@@ -92,6 +101,11 @@ export default function SupportedCryptocurrencies() {
           // Don't remove SOL as it's Solana
           if (baseCode !== 'SOL') {
             baseCode = baseCode.replace('SOL', '');
+          }
+        } else if (baseCode.includes('MAINNET')) {
+          // Don't remove MAINNET suffix for certain tokens
+          if (!['CFXMAINNET', 'CROMAINNET', 'FTMMAINNET', 'INJMAINNET', 'MATICMAINNET', 'STRKMAINNET'].includes(baseCode)) {
+            baseCode = baseCode.replace('MAINNET', '');
           }
         }
       }
