@@ -83,7 +83,7 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
   }
 
   try {
-    const response = await fetch(`${NOWPAYMENTS_API_BASE}/full-currencies`, {
+    const response = await fetch(`${NOWPAYMENTS_API_BASE}/available-currencies`, {
       method: 'GET',
       headers: {
         'x-api-key': NOWPAYMENTS_API_KEY,
@@ -113,7 +113,7 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
               : ''
 
         return {
-          code: codeValue.toLowerCase(),
+          code: codeValue.toUpperCase(),
           name: String(currency.name ?? currency.code ?? codeValue),
           network: String(currency.network ?? 'Unknown'),
           is_available: currency.is_available !== false,
