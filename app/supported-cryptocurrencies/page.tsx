@@ -18,13 +18,170 @@ interface Currency {
   rate_usd?: number;
 }
 
-interface DeduplicatedCurrency {
-  code: string;
-  name: string;
-  display_name: string;
-  networks: string[];
-  is_stablecoin: boolean;
-  rate_usd?: number;
+// Approved cryptocurrencies list - exactly 153 currencies
+const APPROVED_CURRENCIES: Record<string, string> = {
+  '1INCH': '1inch Network',
+  'AAVE': 'Aave',
+  'ALGO': 'Algorand',
+  'APT': 'Aptos',
+  'ARB': 'Arbitrum',
+  'ARV': 'Ariva',
+  'ARK': 'Ark',
+  'AVAXC': 'Avalanche',
+  'AVAX': 'AVAX',
+  'AXS': 'Axie Infinity',
+  'BABYDOGE': 'Baby Doge Coin',
+  'BAT': 'Basic Attention Token',
+  'BAZED': 'Bazed Games',
+  'BEAM': 'Beam',
+  'BERA': 'Berachain',
+  'BNB': 'Binance Coin',
+  'BUSD': 'Binance USD',
+  'BUSDBSC': 'Binance USD',
+  'BUSDMATIC': 'Binance USD',
+  'BTC': 'Bitcoin',
+  'BCH': 'Bitcoin Cash',
+  'BRETTBASE': 'Brett',
+  'CAKE': 'CAKE',
+  'ADA': 'Cardano',
+  'CSPR': 'Casper',
+  'LINK': 'Chainlink',
+  'CSWAP': 'ChainSwap',
+  'CHZ': 'Chiliz',
+  'CFX': 'Conflux',
+  'CFXMAINNET': 'Conflux',
+  'ATOM': 'Cosmos',
+  'COTI': 'COTI',
+  'CRO': 'Cronos',
+  'CROMAINNET': 'Cronos',
+  'DAI': 'DAI',
+  'DASH': 'Dash',
+  'MANA': 'Decentraland',
+  'DOGE': 'Dogecoin',
+  'ENJ': 'Enjin Coin',
+  'ETH': 'Ethereum',
+  'ETHARB': 'Ethereum',
+  'ETHBASE': 'Ethereum',
+  'ZKSYNC': 'Ethereum',
+  'ETC': 'Ethereum Classic',
+  'FTM': 'Fantom',
+  'FTMMAINNET': 'Fantom',
+  'FIL': 'Filecoin',
+  'FLOKI': 'Floki',
+  'FRONT': 'Frontier',
+  'FTT': 'FTT',
+  'FUN': 'FUNToken',
+  'GALAERC20': 'GALAERC20',
+  'ONE': 'Harmony',
+  'HBAR': 'Hedera Hashgraph',
+  'HEX': 'Hex',
+  'HYPE': 'Hyperliquid',
+  'ILV': 'Illuvium',
+  'INJERC20': 'Injective',
+  'INJMAINNET': 'Injective Protocol',
+  'INJ': 'Injective Protocol',
+  'IOTA': 'IOTA',
+  'IOTX': 'IOTX',
+  'JASMY': 'JasmyCoin',
+  'JETTON': 'JetTon Games',
+  'KAIA': 'Kaia',
+  'KAS': 'Kaspa',
+  'KMD': 'Komodo',
+  'KNC': 'Kyber Network Crystal',
+  'ZROARB': 'LayerZero',
+  'ZRO': 'LayerZero',
+  'LGCY': 'LGCY Network',
+  'LTC': 'Litecoin',
+  'MATIC': 'Polygon',
+  'XMR': 'Monero',
+  'MYRO': 'Myro',
+  'NANO': 'Nano',
+  'NEAR': 'Near',
+  'NEO': 'NEO',
+  'NOT': 'Notcoin',
+  'OCEAN': 'Ocean Protocol',
+  'TRUMP': 'OFFICIAL TRUMP',
+  'OKB': 'OKB',
+  'OMG': 'OMG Network',
+  'PYUSD': 'PayPal USD',
+  'PEPE': 'Pepe',
+  'DOT': 'Polkadot',
+  'MATICMAINNET': 'Polygon',
+  'PLS': 'Pulsechain',
+  'RVN': 'Ravencoin',
+  'XRP': 'Ripple',
+  'SEI': 'Sei',
+  'SHIB': 'Shiba Inu',
+  'SOL': 'Solana',
+  'STX': 'Stacks',
+  'STRKMAINNET': 'Starknet',
+  'XLM': 'Stellar',
+  'STRAX': 'Stratis',
+  'SUI': 'Sui',
+  'SUPER': 'SUPER',
+  'TET': 'Tectum',
+  'TENSHI': 'Tenshi',
+  'LUNA': 'Terra',
+  'LUNC': 'Terra Classic',
+  'USDTARB': 'Tether',
+  'USDTARC20': 'Tether',
+  'USDTOP': 'Tether',
+  'USDTALGO': 'Tether USD',
+  'USDTBSC': 'Tether USD',
+  'USDTCELO': 'Tether USD',
+  'USDTEOS': 'Tether USD',
+  'USDTERC20': 'Tether USD',
+  'USDTKAVA': 'Tether USD',
+  'USDTNEAR': 'Tether USD',
+  'USDTMATIC': 'Tether USD',
+  'USDTSOL': 'Tether USD',
+  'USDTXTZ': 'Tether USD',
+  'USDTTON': 'Tether USD',
+  'USDTTRC20': 'Tether USD',
+  'USDTDOT': 'Tether',
+  'XTZ': 'Tezos',
+  'GRT': 'The Graph',
+  'THETA': 'THETA',
+  'RUNE': 'THORChain',
+  'TON': 'Toncoin',
+  'TRX': 'Tron',
+  'TUSDTRC20': 'TrueUSD',
+  'UNI': 'Uniswap',
+  'USDCALGO': 'USD Coin',
+  'USDCARC20': 'USD Coin',
+  'USDCBASE': 'USD Coin',
+  'USDCBSC': 'USD Coin',
+  'USDC': 'USD Coin',
+  'USDCKCC': 'USD Coin',
+  'USDCOP': 'USD Coin',
+  'USDCMATIC': 'USD Coin',
+  'USDCSOL': 'USD Coin',
+  'USDCARB': 'USD Coin',
+  'OPUSDCE': 'USD Coin',
+  'MATICUSDCE': 'USD Coin',
+  'USDCXLM': 'USDC',
+  'VET': 'VeChain',
+  'VLX': 'Velas',
+  'VELO': 'Velo',
+  'VERSE': 'Verse',
+  'WAVES': 'Waves',
+  'WBTCMATIC': 'Wrapped Bitcoin (Polygon)',
+  'XDC': 'XDC Network',
+  'XYO': 'XYO Network',
+  'YFI': 'yearn.finance',
+  'ZBC': 'Zebec Protocol',
+  'ZK': 'zkSync',
+  'ZROERC20': 'LayerZero (Ethereum)'
+};
+
+// Helper to check if currency is approved
+function isApprovedCurrency(code: string): boolean {
+  return code.toUpperCase() in APPROVED_CURRENCIES;
+}
+
+// Helper to get display name for approved currency
+function getApprovedDisplayName(code: string): string {
+  return APPROVED_CURRENCIES[code.toUpperCase()] || code;
 }
 
 export default function SupportedCryptocurrencies() {
@@ -43,12 +200,20 @@ export default function SupportedCryptocurrencies() {
         const data = await response.json();
         
         if (data.success && data.currencies) {
-          // Sort currencies alphabetically by name
-          const sortedCurrencies = data.currencies.sort((a: Currency, b: Currency) => 
+          // Filter to only include approved currencies
+          const approvedCurrencies = data.currencies.filter((currency: Currency) => 
+            isApprovedCurrency(currency.code)
+          );
+          
+          // Update display names and sort alphabetically
+          const processedCurrencies = approvedCurrencies.map((currency: Currency) => ({
+            ...currency,
+            display_name: getApprovedDisplayName(currency.code)
+          })).sort((a: Currency, b: Currency) => 
             (a.display_name || a.name || a.code).localeCompare(b.display_name || b.name || b.code)
           );
           
-          setCurrencies(sortedCurrencies);
+          setCurrencies(processedCurrencies);
         } else {
           throw new Error(data.message || 'Failed to fetch currencies');
         }
@@ -63,134 +228,36 @@ export default function SupportedCryptocurrencies() {
     fetchCurrencies();
   }, []);
 
-  // Deduplicate currencies and group by networks
-  const deduplicatedCurrencies = useMemo(() => {
-    const currencyMap = new Map<string, DeduplicatedCurrency>();
-    
-    currencies.forEach(currency => {
-      // Extract base code more reliably
-      let baseCode = currency.code.toUpperCase();
-      const originalCode = baseCode;
-      
-      // Special cases - don't modify these codes as they are actual currency symbols
-      const doNotModify = [
-        'DOT', 'ADA', 'XLM', 'ARB', 'OP', 'APT', 'NEAR', 'FTM', 'ONE', 'ROSE',
-        // Add the 16 missing currencies that should not be deduplicated
-        'CFXMAINNET', 'CROMAINNET', 'FTMMAINNET', 'INJMAINNET', 'MATICMAINNET', 
-        'STRKMAINNET', 'BRGBSC', 'GALAERC20', 'INJERC20',
-        // USD pair tokens that should remain separate
-        'MATICUSDCE', 'OPUSDCE',
-        // Stablecoins that should be allowed
-        'BUSD', 'BUSDBSC', 'BUSDMATIC', 'PAX', 'TUSDTRC20',
-        // USDT variants - keep all network versions separate
-        'USDTALGO', 'USDTARB', 'USDTARC20', 'USDTBSC', 'USDTCELO', 'USDTDOT',
-        'USDTEOS', 'USDTERC20', 'USDTKAVA', 'USDTMATIC', 'USDTNEAR', 'USDTOP',
-        'USDTSOL', 'USDTTON', 'USDTTRC20', 'USDTXTZ',
-        // USDC variants - keep all network versions separate  
-        'USDCALGO', 'USDCARB', 'USDCARC20', 'USDCBASE', 'USDCBSC', 'USDCKCC',
-        'USDCMATIC', 'USDCOP', 'USDCSOL', 'USDCXLM'
-      ];
-      
-      // Only process suffixes if not in the do-not-modify list
-      if (!doNotModify.includes(baseCode)) {
-        // Handle common network suffixes and variations
-        if (baseCode.includes('BSC')) {
-          baseCode = baseCode.replace('BSC', '');
-        } else if (baseCode.includes('ERC20')) {
-          baseCode = baseCode.replace('ERC20', '');
-        } else if (baseCode.includes('MATIC')) {
-          baseCode = baseCode.replace('MATIC', '');
-        } else if (baseCode.includes('TRC20')) {
-          baseCode = baseCode.replace('TRC20', '');
-        } else if (baseCode.includes('BEP20')) {
-          baseCode = baseCode.replace('BEP20', '');
-        } else if (baseCode.includes('SOL')) {
-          // Don't remove SOL as it's Solana
-          if (baseCode !== 'SOL') {
-            baseCode = baseCode.replace('SOL', '');
-          }
-        } else if (baseCode.includes('MAINNET')) {
-          // Don't remove MAINNET suffix for certain tokens
-          if (!['CFXMAINNET', 'CROMAINNET', 'FTMMAINNET', 'INJMAINNET', 'MATICMAINNET', 'STRKMAINNET'].includes(baseCode)) {
-            baseCode = baseCode.replace('MAINNET', '');
-          }
-        }
-      }
-      
-      // Clean up the base name
-      const baseName = (currency.display_name || currency.name || currency.code)
-        .replace(/\s*\([^)]*\)/g, '') // Remove parenthetical network info
-        .replace(/\s*\(Binance Smart Chain\)/g, '')
-        .replace(/\s*\(ERC20\)/g, '')
-        .replace(/\s*\(Polygon\)/g, '')
-        .replace(/\s*\(C-Chain\)/g, '')
-        .replace(/\s*Bridged/g, '') // Remove "Bridged" text
-        .trim();
-      
-      // List of all cryptocurrencies to remove from the platform
-      const blockedCurrencies = [
-        'ZIL', 'ZENT', 'ZEN', 'ZEC', 'XZC', 'XYM', 'XVG', 'XEM', 'XEC', 'XCUR', 'XCAD', 'XAUT',
-        'WINTRC20', 'WOLFERC20', 'WABI', 'VPS', 'VOLT', 'VIB', 'UST', 'USDSSOL', 'USDR', 'USDP',
-        'USDJ', 'USDE', 'USDDTRC20', 'USDDBSC', 'TUP', 'TTC', 'TRVL', 'TOMO', 'TLOSERC20',
-        'TLOS', 'TKO', 'TFUEL', 'SYSEVM', 'SXPMAINNET', 'SUPER', 'SUNDOG', 'SUN', 'STZENT', 'STPT',
-        'STKK', 'SRK', 'SPI', 'SOON', 'SNSY', 'SNEK', 'SIDUSERC20', 'SFUND', 'SCRAT', 'SAND',
-        'RXCG', 'RJVERC20', 'RJVBSC', 'REP', 'RBIF', 'RAINCOIN', 'RACA', 'QUACK', 'QTUM', 'POOLZ',
-        'POOLX', 'POODL', 'PONKE', 'PLX', 'PIVX', 'PIT', 'PIKA', 'PEW', 'PENG', 'PEIPEI', 'ONT',
-        'ONIGI', 'OM', 'NWC', 'NTVRK', 'NPXS', 'NOW', 'NIKO', 'NFTB', 'NFAIERC20', 'NEVER', 'NETVR',
-        'NEIROERC20', 'MX', 'MEW', 'MEMHASH', 'MCO', 'MARSH', 'MAJOR', 'LSK', 'LNQ', 'LINGO', 'LEASH',
-        'LBPERC20', 'KLVMAINNET', 'KLV', 'KLAY', 'KISHU', 'KIBABSC', 'KIBA', 'KEANU', 'JST', 'IPMB',
-        'IDBSC', 'ID', 'ICX', 'HT', 'HOTCROSS', 'HOT', 'HOGE', 'HMSTR', 'GUSD', 'GUARD', 'GT', 'GSPI',
-        'GRS', 'GRAPE', 'GMXARB', 'GMX', 'GHC', 'GGTKN', 'GETH', 'GERC20', 'GBSC', 'GAS', 'GARI',
-        'GAL', 'GAFA', 'FTN', 'FLUF', 'FITFI', 'FIRO', 'FEG', 'FDUSDERC20', 'FDUSDBSC', 'EURT', 'EURR',
-        'ETHW', 'ETHLNA', 'EPIC', 'EOS', 'EGLDBSC', 'EGLD', 'DOGS', 'DOGECOIN', 'DIVI', 'DINO', 'DGMOON',
-        'DGI', 'DGD', 'DGB', 'DCR', 'DAO', 'DAIARB', 'DADDY', 'CVC', 'CUSD', 'CULT', 'CUDOS', 'CTSI',
-        'CNS', 'CHR', 'CGPTBSC', 'CGPT', 'CATSTON', 'CATI', 'C98', 'BTTCBSC', 'BTTC', 'BTG', 'BTFA',
-        'BRISEMAINNET', 'BRISE', 'BONE', 'BOBA', 'BNBMAINNET', 'BLOCKS', 'BIFIERC20', 'BELBSC', 'BEL',
-        'BEFI', 'BANANA', 'BAD', 'AWEBASE', 'AVN', 'AVA2ERC20', 'AVA2BSC', 'ATLAS', 'ARPABSC', 'ARPA',
-        'APE', 'AITECH', 'AE'
-      ];
-      
-      // Check if this currency should be blocked
-      if (blockedCurrencies.includes(originalCode) || blockedCurrencies.includes(baseCode)) {
-        return; // Skip this currency
-      }
-      
-      if (currencyMap.has(baseCode)) {
-        const existing = currencyMap.get(baseCode)!;
-        if (currency.network && !existing.networks.includes(currency.network)) {
-          existing.networks.push(currency.network);
-        }
-      } else {
-        currencyMap.set(baseCode, {
-          code: baseCode,
-          name: baseName,
-          display_name: baseName,
-          networks: currency.network ? [currency.network] : [],
-          is_stablecoin: currency.is_stablecoin || false,
-          rate_usd: currency.rate_usd
-        });
-      }
-    });
-    
-    return Array.from(currencyMap.values()).sort((a, b) => 
-      a.display_name.localeCompare(b.display_name)
-    );
-  }, [currencies]);
-
   // Filter currencies based on search term
   const filteredCurrencies = useMemo(() => {
-    if (!searchTerm) return deduplicatedCurrencies;
+    if (!searchTerm) return currencies;
     
     const searchLower = searchTerm.toLowerCase();
-    return deduplicatedCurrencies.filter(currency => 
-      currency.display_name.toLowerCase().includes(searchLower) ||
+    return currencies.filter(currency => 
+      (currency.display_name || currency.name || '').toLowerCase().includes(searchLower) ||
       currency.code.toLowerCase().includes(searchLower)
     );
-  }, [deduplicatedCurrencies, searchTerm]);
+  }, [currencies, searchTerm]);
 
   // Separate stablecoins and regular currencies
   const stablecoins = filteredCurrencies.filter(c => c.is_stablecoin);
   const regularCurrencies = filteredCurrencies.filter(c => !c.is_stablecoin);
+
+  // Count unique currencies (deduplicated)
+  const uniqueCurrencyCount = useMemo(() => {
+    const uniqueCodes = new Set(filteredCurrencies.map(c => {
+      // Get base currency code for counting
+      let baseCode = c.code.toUpperCase();
+      
+      // Special handling for currencies with network suffixes
+      if (baseCode.startsWith('USDT')) return 'USDT';
+      if (baseCode.startsWith('USDC')) return 'USDC';
+      if (baseCode.startsWith('BUSD')) return 'BUSD';
+      
+      return baseCode;
+    }));
+    return uniqueCodes.size;
+  }, [filteredCurrencies]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,7 +295,7 @@ export default function SupportedCryptocurrencies() {
 
       {/* Hero Section with Background */}
       <section className="relative overflow-hidden bg-white py-16 sm:py-24">
-        {/* Minimal Geometric Line Background - Matching landing page */}
+        {/* Minimal Geometric Line Background */}
         <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
           {/* Horizontal lines */}
           <div className="absolute top-[20%] left-0 right-0 h-px bg-[#7f5efd]/30"></div>
@@ -292,7 +359,7 @@ export default function SupportedCryptocurrencies() {
               All Supported <span className="text-[#7f5efd]">Cryptocurrencies</span>
             </h1>
             <p className="text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
-              Over <span className="font-semibold text-[#7f5efd]">300+ digital currencies</span> supported for instant, secure payments
+              <span className="font-semibold text-[#7f5efd]">{Object.keys(APPROVED_CURRENCIES).length} cryptocurrencies</span> supported for instant, secure payments
             </p>
 
             {/* Search Bar */}
@@ -346,7 +413,7 @@ export default function SupportedCryptocurrencies() {
               {/* Results count */}
               <div className="text-center mb-8">
                 <p className="text-gray-600">
-                  Showing <span className="font-semibold text-[#7f5efd]">{filteredCurrencies.length}</span> unique cryptocurrencies
+                  Showing <span className="font-semibold text-[#7f5efd]">{uniqueCurrencyCount}</span> unique cryptocurrencies
                   {searchTerm && ` matching "${searchTerm}"`}
                 </p>
               </div>
@@ -367,9 +434,9 @@ export default function SupportedCryptocurrencies() {
                             <div className="text-xs text-gray-500 leading-tight px-1" title={currency.display_name}>
                               {currency.display_name}
                             </div>
-                            {currency.networks.length > 0 && (
+                            {currency.network && (
                               <div className="text-xs text-[#7f5efd] mt-1">
-                                {currency.networks.length > 1 ? `${currency.networks.length} networks` : currency.networks[0]}
+                                {currency.network}
                               </div>
                             )}
                           </div>
@@ -396,9 +463,9 @@ export default function SupportedCryptocurrencies() {
                             <div className="text-xs text-gray-500 leading-tight px-1" title={currency.display_name}>
                               {currency.display_name}
                             </div>
-                            {currency.networks.length > 0 && (
+                            {currency.network && (
                               <div className="text-xs text-[#7f5efd] mt-1">
-                                {currency.networks.length > 1 ? `${currency.networks.length} networks` : currency.networks[0]}
+                                {currency.network}
                               </div>
                             )}
                           </div>
