@@ -243,21 +243,8 @@ export default function SupportedCryptocurrencies() {
   const stablecoins = filteredCurrencies.filter(c => c.is_stablecoin);
   const regularCurrencies = filteredCurrencies.filter(c => !c.is_stablecoin);
 
-  // Count unique currencies (deduplicated)
-  const uniqueCurrencyCount = useMemo(() => {
-    const uniqueCodes = new Set(filteredCurrencies.map(c => {
-      // Get base currency code for counting
-      let baseCode = c.code.toUpperCase();
-      
-      // Special handling for currencies with network suffixes
-      if (baseCode.startsWith('USDT')) return 'USDT';
-      if (baseCode.startsWith('USDC')) return 'USDC';
-      if (baseCode.startsWith('BUSD')) return 'BUSD';
-      
-      return baseCode;
-    }));
-    return uniqueCodes.size;
-  }, [filteredCurrencies]);
+  // Count total displayed currencies
+  const displayedCurrencyCount = filteredCurrencies.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -359,7 +346,7 @@ export default function SupportedCryptocurrencies() {
               All Supported <span className="text-[#7f5efd]">Cryptocurrencies</span>
             </h1>
             <p className="text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
-              <span className="font-semibold text-[#7f5efd]">{Object.keys(APPROVED_CURRENCIES).length} cryptocurrencies</span> supported for instant, secure payments
+              <span className="font-semibold text-[#7f5efd]">{Object.keys(APPROVED_CURRENCIES).length} supported cryptocurrencies</span> for instant, secure payments
             </p>
 
             {/* Search Bar */}
@@ -413,7 +400,7 @@ export default function SupportedCryptocurrencies() {
               {/* Results count */}
               <div className="text-center mb-8">
                 <p className="text-gray-600">
-                  Showing <span className="font-semibold text-[#7f5efd]">{uniqueCurrencyCount}</span> unique cryptocurrencies
+                  Showing <span className="font-semibold text-[#7f5efd]">{displayedCurrencyCount}</span> {displayedCurrencyCount === 1 ? 'cryptocurrency' : 'cryptocurrencies'}
                   {searchTerm && ` matching "${searchTerm}"`}
                 </p>
               </div>
