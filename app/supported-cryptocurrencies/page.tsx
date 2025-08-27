@@ -14,7 +14,7 @@ interface Currency {
   display_name?: string;
   image?: string;
   network?: string;
-  is_stablecoin: boolean;
+  is_stablecoin?: boolean;
   rate_usd?: number;
 }
 
@@ -107,11 +107,36 @@ export default function SupportedCryptocurrencies() {
         .trim();
       
       // Filter stablecoins - Block specific stablecoins, allow all others
-      if (currency.is_stablecoin) {
+      // First, determine if this is a stablecoin based on the code and name
+      const isStablecoin = currency.is_stablecoin || 
+                          currency.code.includes('USD') ||
+                          currency.code.includes('USDT') ||
+                          currency.code.includes('USDC') ||
+                          currency.code.includes('DAI') ||
+                          currency.code.includes('BUSD') ||
+                          currency.code.includes('GUSD') ||
+                          currency.code.includes('USDP') ||
+                          currency.code.includes('PYUSD') ||
+                          currency.code.includes('USDR') ||
+                          currency.code.includes('UST') ||
+                          currency.code.includes('USDE') ||
+                          currency.code.includes('FDUSD') ||
+                          currency.code.includes('CUSD') ||
+                          currency.code.includes('TUSD') ||
+                          currency.code.includes('PAX') ||
+                          currency.code.includes('JST') ||
+                          currency.code.includes('EURT') ||
+                          currency.code.includes('XAUT') ||
+                          currency.name.toLowerCase().includes('dollar') ||
+                          currency.name.toLowerCase().includes('tether') ||
+                          currency.name.toLowerCase().includes('usd') ||
+                          currency.name.toLowerCase().includes('stablecoin');
+      
+      if (isStablecoin) {
         // List of stablecoins to BLOCK (all others are allowed)
         const blockedStablecoins = [
           'BUSD', 'BUSDBSC', 'BUSDMATIC', 'CUSD', 'DAIARB', 'EURT', 
-          'FDUSDBSC', 'FDUSDERC20', 'GUSD', 'JST', 'PAX', 'TUSD', 
+          'FDUSDBSC', 'FDUSDERC20', 'FDUSD', 'GUSD', 'JST', 'PAX', 'TUSD', 
           'USDDBSC', 'USDDTRC20', 'USDE', 'USDJ', 'USDP', 'USDR', 
           'USDSSOL', 'UST', 'XAUT'
         ];
