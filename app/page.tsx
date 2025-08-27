@@ -235,10 +235,13 @@ export default function Home() {
         <div className="container-wide">
           <div className="text-center mb-12">
             <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-4">
-              Accept <span className="text-[#7f5efd]">300+</span> Cryptocurrencies
+              Accept <span className="text-[#7f5efd]">150+</span> Cryptocurrencies
             </h2>
             <p className="font-phonic text-base font-normal text-gray-600 max-w-2xl mx-auto">
               Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies
+            </p>
+            <p className="font-phonic text-sm font-normal text-gray-500 max-w-xl mx-auto mt-3">
+              Choose which cryptocurrencies you want to accept - you're not required to accept all of them
             </p>
           </div>
           
@@ -260,7 +263,7 @@ export default function Home() {
           {/* Call to Action */}
           <div className="text-center">
             <p className="font-phonic text-base text-gray-600 mb-4">
-              <span className="font-medium text-[#7f5efd]">300+ cryptocurrencies</span> supported and counting
+              <span className="font-medium text-[#7f5efd]">150+ cryptocurrencies</span> supported and counting
             </p>
             <Button variant="outline" size="sm" className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
               <Link href="/supported-cryptocurrencies">View All Supported Cryptocurrencies</Link>
