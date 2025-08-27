@@ -141,18 +141,18 @@ export default function Home() {
           >
             <defs>
               <linearGradient id="purpleFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#c7d2fe" stopOpacity="0.1" />
-                <stop offset="30%" stopColor="#a5b4fc" stopOpacity="0.3" />
-                <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.1" />
+                <stop offset="0%" stopColor="#c7d2fe" stopOpacity="0.25" />
+                <stop offset="30%" stopColor="#a5b4fc" stopOpacity="0.5" />
+                <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.25" />
               </linearGradient>
             </defs>
             {/* Main purple wave streams */}
-            <path d="M-100,300 Q200,150 500,250 Q800,350 1300,200" stroke="url(#purpleFlow1)" strokeWidth="2" fill="none" opacity="0.6" />
-            <path d="M-100,320 Q200,170 500,270 Q800,370 1300,220" stroke="url(#purpleFlow1)" strokeWidth="1.5" fill="none" opacity="0.5" />
-            <path d="M-100,340 Q200,190 500,290 Q800,390 1300,240" stroke="url(#purpleFlow1)" strokeWidth="1" fill="none" opacity="0.4" />
-            <path d="M-100,360 Q200,210 500,310 Q800,410 1300,260" stroke="url(#purpleFlow1)" strokeWidth="0.8" fill="none" opacity="0.3" />
-            <path d="M-100,380 Q200,230 500,330 Q800,430 1300,280" stroke="url(#purpleFlow1)" strokeWidth="0.6" fill="none" opacity="0.2" />
+            <path d="M-100,300 Q200,150 500,250 Q800,350 1300,200" stroke="url(#purpleFlow1)" strokeWidth="2.5" fill="none" opacity="0.8" />
+            <path d="M-100,320 Q200,170 500,270 Q800,370 1300,220" stroke="url(#purpleFlow1)" strokeWidth="2" fill="none" opacity="0.7" />
+            <path d="M-100,340 Q200,190 500,290 Q800,390 1300,240" stroke="url(#purpleFlow1)" strokeWidth="1.5" fill="none" opacity="0.6" />
+            <path d="M-100,360 Q200,210 500,310 Q800,410 1300,260" stroke="url(#purpleFlow1)" strokeWidth="1.2" fill="none" opacity="0.5" />
+            <path d="M-100,380 Q200,230 500,330 Q800,430 1300,280" stroke="url(#purpleFlow1)" strokeWidth="1" fill="none" opacity="0.4" />
           </svg>
 
           {/* Secondary Cyan Wave Flow */}
@@ -163,17 +163,17 @@ export default function Home() {
           >
             <defs>
               <linearGradient id="cyanFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#a7f3d0" stopOpacity="0.1" />
-                <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.3" />
-                <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#a7f3d0" stopOpacity="0.1" />
+                <stop offset="0%" stopColor="#a7f3d0" stopOpacity="0.25" />
+                <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.5" />
+                <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#a7f3d0" stopOpacity="0.25" />
               </linearGradient>
             </defs>
             {/* Cyan wave streams */}
-            <path d="M-50,400 Q300,250 600,350 Q900,450 1250,300" stroke="url(#cyanFlow1)" strokeWidth="2" fill="none" opacity="0.7" />
-            <path d="M-50,420 Q300,270 600,370 Q900,470 1250,320" stroke="url(#cyanFlow1)" strokeWidth="1.5" fill="none" opacity="0.6" />
-            <path d="M-50,440 Q300,290 600,390 Q900,490 1250,340" stroke="url(#cyanFlow1)" strokeWidth="1" fill="none" opacity="0.5" />
-            <path d="M-50,460 Q300,310 600,410 Q900,510 1250,360" stroke="url(#cyanFlow1)" strokeWidth="0.8" fill="none" opacity="0.4" />
+            <path d="M-50,400 Q300,250 600,350 Q900,450 1250,300" stroke="url(#cyanFlow1)" strokeWidth="2.5" fill="none" opacity="0.85" />
+            <path d="M-50,420 Q300,270 600,370 Q900,470 1250,320" stroke="url(#cyanFlow1)" strokeWidth="2" fill="none" opacity="0.75" />
+            <path d="M-50,440 Q300,290 600,390 Q900,490 1250,340" stroke="url(#cyanFlow1)" strokeWidth="1.5" fill="none" opacity="0.65" />
+            <path d="M-50,460 Q300,310 600,410 Q900,510 1250,360" stroke="url(#cyanFlow1)" strokeWidth="1.2" fill="none" opacity="0.55" />
           </svg>
 
           {/* Tertiary Purple-Cyan Blend */}
@@ -184,15 +184,15 @@ export default function Home() {
           >
             <defs>
               <linearGradient id="blendFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.15" />
-                <stop offset="50%" stopColor="#cffafe" stopOpacity="0.25" />
-                <stop offset="100%" stopColor="#f3e8ff" stopOpacity="0.15" />
+                <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#cffafe" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#f3e8ff" stopOpacity="0.3" />
               </linearGradient>
             </defs>
             {/* Blended wave streams */}
-            <path d="M100,500 Q400,350 700,450 Q1000,550 1400,400" stroke="url(#blendFlow1)" strokeWidth="1.8" fill="none" opacity="0.6" />
-            <path d="M100,520 Q400,370 700,470 Q1000,570 1400,420" stroke="url(#blendFlow1)" strokeWidth="1.3" fill="none" opacity="0.5" />
-            <path d="M100,540 Q400,390 700,490 Q1000,590 1400,440" stroke="url(#blendFlow1)" strokeWidth="0.9" fill="none" opacity="0.4" />
+            <path d="M100,500 Q400,350 700,450 Q1000,550 1400,400" stroke="url(#blendFlow1)" strokeWidth="2.2" fill="none" opacity="0.75" />
+            <path d="M100,520 Q400,370 700,470 Q1000,570 1400,420" stroke="url(#blendFlow1)" strokeWidth="1.8" fill="none" opacity="0.65" />
+            <path d="M100,540 Q400,390 700,490 Q1000,590 1400,440" stroke="url(#blendFlow1)" strokeWidth="1.4" fill="none" opacity="0.55" />
           </svg>
 
           {/* Upper Cyan Flow */}
@@ -203,15 +203,15 @@ export default function Home() {
           >
             <defs>
               <linearGradient id="upperCyan" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.2" />
-                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#ecfeff" stopOpacity="0.1" />
+                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.35" />
+                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#ecfeff" stopOpacity="0.25" />
               </linearGradient>
             </defs>
             {/* Upper flowing lines */}
-            <path d="M-200,150 Q100,50 400,120 Q700,190 1000,100 Q1100,80 1400,120" stroke="url(#upperCyan)" strokeWidth="1.5" fill="none" opacity="0.5" />
-            <path d="M-200,170 Q100,70 400,140 Q700,210 1000,120 Q1100,100 1400,140" stroke="url(#upperCyan)" strokeWidth="1" fill="none" opacity="0.4" />
-            <path d="M-200,190 Q100,90 400,160 Q700,230 1000,140 Q1100,120 1400,160" stroke="url(#upperCyan)" strokeWidth="0.7" fill="none" opacity="0.3" />
+            <path d="M-200,150 Q100,50 400,120 Q700,190 1000,100 Q1100,80 1400,120" stroke="url(#upperCyan)" strokeWidth="2" fill="none" opacity="0.7" />
+            <path d="M-200,170 Q100,70 400,140 Q700,210 1000,120 Q1100,100 1400,140" stroke="url(#upperCyan)" strokeWidth="1.5" fill="none" opacity="0.6" />
+            <path d="M-200,190 Q100,90 400,160 Q700,230 1000,140 Q1100,120 1400,160" stroke="url(#upperCyan)" strokeWidth="1.2" fill="none" opacity="0.5" />
           </svg>
 
           {/* Delicate Purple Accent Lines */}
@@ -222,15 +222,15 @@ export default function Home() {
           >
             <defs>
               <linearGradient id="purpleAccent" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#f3e8ff" stopOpacity="0.1" />
-                <stop offset="50%" stopColor="#d8b4fe" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#e9d5ff" stopOpacity="0.1" />
+                <stop offset="0%" stopColor="#f3e8ff" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#d8b4fe" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#e9d5ff" stopOpacity="0.2" />
               </linearGradient>
             </defs>
             {/* Delicate accent lines */}
-            <path d="M50,250 Q350,100 650,200 Q950,300 1350,150" stroke="url(#purpleAccent)" strokeWidth="0.8" fill="none" opacity="0.4" />
-            <path d="M50,600 Q350,450 650,550 Q950,650 1350,500" stroke="url(#purpleAccent)" strokeWidth="0.6" fill="none" opacity="0.3" />
-            <path d="M200,350 Q500,200 800,300 Q1100,400 1200,250" stroke="url(#purpleAccent)" strokeWidth="0.5" fill="none" opacity="0.25" />
+            <path d="M50,250 Q350,100 650,200 Q950,300 1350,150" stroke="url(#purpleAccent)" strokeWidth="1.2" fill="none" opacity="0.6" />
+            <path d="M50,600 Q350,450 650,550 Q950,650 1350,500" stroke="url(#purpleAccent)" strokeWidth="1" fill="none" opacity="0.5" />
+            <path d="M200,350 Q500,200 800,300 Q1100,400 1200,250" stroke="url(#purpleAccent)" strokeWidth="0.8" fill="none" opacity="0.45" />
           </svg>
         </div>
         <div className="container-wide relative z-10">
@@ -238,7 +238,7 @@ export default function Home() {
 
             <h1 className="font-martina text-7xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-martina text-[#7f5efd] font-bold text-8xl">Crypto</span>
+              <span className="font-phonic text-[#7f5efd] font-black text-7xl tracking-tight">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
