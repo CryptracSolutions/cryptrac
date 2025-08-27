@@ -188,7 +188,7 @@ export default function Home() {
 
             <h1 className="font-martina text-7xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-phonic text-[#7f5efd] font-medium">Crypto</span>
+              <span className="font-capsule text-[#7f5efd] font-semibold">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
@@ -241,7 +241,7 @@ export default function Home() {
               Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies
             </p>
             <p className="font-phonic text-sm font-normal text-gray-500 max-w-xl mx-auto mt-3">
-              Choose which cryptocurrencies you want to accept - you're not required to accept all of them
+              Complete choice - Accept and receive only what you want to
             </p>
           </div>
           
