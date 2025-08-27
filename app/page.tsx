@@ -131,57 +131,114 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
-        {/* Minimal Geometric Line Background */}
+        {/* Flowing Wave Background */}
         <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
-          {/* Horizontal lines */}
-          <div className="absolute top-[20%] left-0 right-0 h-px bg-[#7f5efd]/30"></div>
-          <div className="absolute top-[40%] left-0 right-0 h-px bg-[#7f5efd]/25"></div>
-          <div className="absolute top-[60%] left-0 right-0 h-px bg-[#7f5efd]/20"></div>
-          <div className="absolute top-[80%] left-0 right-0 h-px bg-[#7f5efd]/25"></div>
-          
-          {/* Vertical lines */}
-          <div className="absolute top-0 bottom-0 left-[15%] w-px bg-[#7f5efd]/20"></div>
-          <div className="absolute top-0 bottom-0 left-[30%] w-px bg-[#7f5efd]/25"></div>
-          <div className="absolute top-0 bottom-0 left-[45%] w-px bg-[#7f5efd]/18"></div>
-          <div className="absolute top-0 bottom-0 left-[55%] w-px bg-[#7f5efd]/18"></div>
-          <div className="absolute top-0 bottom-0 left-[70%] w-px bg-[#7f5efd]/25"></div>
-          <div className="absolute top-0 bottom-0 left-[85%] w-px bg-[#7f5efd]/20"></div>
-          
-          {/* Diagonal accent lines */}
-          <div className="absolute inset-0">
-            <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
-              {/* Main diagonal */}
-              <line x1="0" y1="400" x2="1200" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.4" />
-              {/* Supporting diagonal */}
-              <line x1="0" y1="600" x2="1200" y2="400" stroke="#7f5efd" strokeWidth="0.5" opacity="0.25" />
-              {/* Counter diagonal */}
-              <line x1="1200" y1="600" x2="0" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.3" />
-            </svg>
-          </div>
-          
-          {/* Animated accent lines */}
-          <div className="absolute top-[30%] left-0 w-32 h-px bg-gradient-to-r from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-right"></div>
-          <div className="absolute top-[70%] right-0 w-32 h-px bg-gradient-to-l from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-left"></div>
-          <div className="absolute left-[25%] top-0 h-32 w-px bg-gradient-to-b from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-down"></div>
-          <div className="absolute right-[25%] bottom-0 h-32 w-px bg-gradient-to-t from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-up"></div>
-          
-          {/* Corner accents */}
-          <div className="absolute top-0 left-0 w-24 h-24">
-            <div className="absolute top-0 left-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute top-0 left-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24">
-            <div className="absolute top-0 right-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute top-0 right-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
-          <div className="absolute bottom-0 left-0 w-24 h-24">
-            <div className="absolute bottom-0 left-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute bottom-0 left-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
-          <div className="absolute bottom-0 right-0 w-24 h-24">
-            <div className="absolute bottom-0 right-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute bottom-0 right-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
+          {/* Main Wave Layer 1 - Purple */}
+          <svg 
+            className="absolute inset-0 w-full h-full animate-wave-flow-1" 
+            viewBox="0 0 1200 800" 
+            preserveAspectRatio="none"
+            style={{ transform: 'translateX(-10%)' }}
+          >
+            <defs>
+              <linearGradient id="purpleGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#c7d2fe" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#a5b4fc" stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+            <path 
+              d="M0,400 Q300,200 600,350 T1200,300 L1200,500 Q900,650 600,500 T0,550 Z" 
+              fill="url(#purpleGradient1)"
+            />
+          </svg>
+
+          {/* Wave Layer 2 - Cyan */}
+          <svg 
+            className="absolute inset-0 w-full h-full animate-wave-flow-2" 
+            viewBox="0 0 1200 800" 
+            preserveAspectRatio="none"
+            style={{ transform: 'translateX(5%)' }}
+          >
+            <defs>
+              <linearGradient id="cyanGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.4" />
+                <stop offset="50%" stopColor="#a7f3d0" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.4" />
+              </linearGradient>
+            </defs>
+            <path 
+              d="M0,300 Q400,150 800,280 T1200,250 L1200,450 Q800,600 400,450 T0,500 Z" 
+              fill="url(#cyanGradient1)"
+            />
+          </svg>
+
+          {/* Wave Layer 3 - Light Purple */}
+          <svg 
+            className="absolute inset-0 w-full h-full animate-wave-flow-3" 
+            viewBox="0 0 1200 800" 
+            preserveAspectRatio="none"
+            style={{ transform: 'translateX(-5%)' }}
+          >
+            <defs>
+              <linearGradient id="purpleGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f3e8ff" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#e9d5ff" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#d8b4fe" stopOpacity="0.2" />
+              </linearGradient>
+            </defs>
+            <path 
+              d="M0,500 Q350,300 700,450 T1200,400 L1200,600 Q850,750 500,600 T0,650 Z" 
+              fill="url(#purpleGradient2)"
+            />
+          </svg>
+
+          {/* Wave Layer 4 - Soft Cyan */}
+          <svg 
+            className="absolute inset-0 w-full h-full animate-wave-flow-4" 
+            viewBox="0 0 1200 800" 
+            preserveAspectRatio="none"
+            style={{ transform: 'translateX(8%)' }}
+          >
+            <defs>
+              <linearGradient id="cyanGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ecfeff" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#cffafe" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#a7f3d0" stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+            <path 
+              d="M0,200 Q450,50 900,180 T1200,150 L1200,350 Q750,500 300,350 T0,400 Z" 
+              fill="url(#cyanGradient2)"
+            />
+          </svg>
+
+          {/* Additional Flowing Lines */}
+          <svg 
+            className="absolute inset-0 w-full h-full animate-wave-flow-5" 
+            viewBox="0 0 1200 800" 
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#7f5efd" stopOpacity="0.1" />
+                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#7f5efd" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+            <path 
+              d="M0,350 Q600,200 1200,320" 
+              stroke="url(#accentGradient)" 
+              strokeWidth="2" 
+              fill="none"
+            />
+            <path 
+              d="M0,450 Q600,300 1200,420" 
+              stroke="url(#accentGradient)" 
+              strokeWidth="1.5" 
+              fill="none"
+            />
+          </svg>
         </div>
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">

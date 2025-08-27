@@ -174,6 +174,12 @@ module.exports = {
         // Standardised 200 ms fade & scale animations; removed bounce and slide-in variants
         "fade-in": "fade-in 0.2s ease-in-out",
         "scale-in": "scale-in 0.2s ease-in-out",
+        // Wave flow animations for hero background
+        'wave-flow-1': 'wave-flow-1 20s ease-in-out infinite',
+        'wave-flow-2': 'wave-flow-2 25s ease-in-out infinite',
+        'wave-flow-3': 'wave-flow-3 30s ease-in-out infinite',
+        'wave-flow-4': 'wave-flow-4 22s ease-in-out infinite',
+        'wave-flow-5': 'wave-flow-5 35s ease-in-out infinite',
       },
       keyframes: {
         "accordion-down": {
@@ -192,6 +198,32 @@ module.exports = {
         "scale-in": {
           from: { transform: "scale(0.95)", opacity: "0" },
           to: { transform: "scale(1)", opacity: "1" },
+        },
+        // Wave flow keyframes for hero background
+        'wave-flow-1': {
+          '0%': { transform: 'translateX(-10%) translateY(0px)' },
+          '50%': { transform: 'translateX(-5%) translateY(-10px)' },
+          '100%': { transform: 'translateX(-10%) translateY(0px)' },
+        },
+        'wave-flow-2': {
+          '0%': { transform: 'translateX(5%) translateY(0px)' },
+          '50%': { transform: 'translateX(10%) translateY(8px)' },
+          '100%': { transform: 'translateX(5%) translateY(0px)' },
+        },
+        'wave-flow-3': {
+          '0%': { transform: 'translateX(-5%) translateY(0px)' },
+          '50%': { transform: 'translateX(0%) translateY(-5px)' },
+          '100%': { transform: 'translateX(-5%) translateY(0px)' },
+        },
+        'wave-flow-4': {
+          '0%': { transform: 'translateX(8%) translateY(0px)' },
+          '50%': { transform: 'translateX(12%) translateY(6px)' },
+          '100%': { transform: 'translateX(8%) translateY(0px)' },
+        },
+        'wave-flow-5': {
+          '0%': { transform: 'translateX(0%) translateY(0px)' },
+          '50%': { transform: 'translateX(3%) translateY(-3px)' },
+          '100%': { transform: 'translateX(0%) translateY(0px)' },
         },
       },
     },
