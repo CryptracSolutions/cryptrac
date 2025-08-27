@@ -106,45 +106,32 @@ export default function SupportedCryptocurrencies() {
         .replace(/\s*Bridged/g, '') // Remove "Bridged" text
         .trim();
       
-      // Filter stablecoins - Block specific stablecoins, allow all others
-      // First, determine if this is a stablecoin based on the code and name
-      const isStablecoin = currency.is_stablecoin || 
-                          currency.code.includes('USD') ||
-                          currency.code.includes('USDT') ||
-                          currency.code.includes('USDC') ||
-                          currency.code.includes('DAI') ||
-                          currency.code.includes('BUSD') ||
-                          currency.code.includes('GUSD') ||
-                          currency.code.includes('USDP') ||
-                          currency.code.includes('PYUSD') ||
-                          currency.code.includes('USDR') ||
-                          currency.code.includes('UST') ||
-                          currency.code.includes('USDE') ||
-                          currency.code.includes('FDUSD') ||
-                          currency.code.includes('CUSD') ||
-                          currency.code.includes('TUSD') ||
-                          currency.code.includes('PAX') ||
-                          currency.code.includes('JST') ||
-                          currency.code.includes('EURT') ||
-                          currency.code.includes('XAUT') ||
-                          currency.name.toLowerCase().includes('dollar') ||
-                          currency.name.toLowerCase().includes('tether') ||
-                          currency.name.toLowerCase().includes('usd') ||
-                          currency.name.toLowerCase().includes('stablecoin');
+      // List of all cryptocurrencies to remove from the platform
+      const blockedCurrencies = [
+        'ZIL', 'ZENT', 'ZEN', 'ZEC', 'XZC', 'XYM', 'XVG', 'XEM', 'XEC', 'XCUR', 'XCAD', 'XAUT',
+        'WINTRC20', 'WOLFERC20', 'WABI', 'VPS', 'VOLT', 'VIB', 'UST', 'USDSSOL', 'USDR', 'USDP',
+        'USDJ', 'USDE', 'USDDTRC20', 'USDDBSC', 'TUSD', 'TUP', 'TTC', 'TRVL', 'TOMO', 'TLOSERC20',
+        'TLOS', 'TKO', 'TFUEL', 'SYSEVM', 'SXPMAINNET', 'SUPER', 'SUNDOG', 'SUN', 'STZENT', 'STPT',
+        'STKK', 'SRK', 'SPI', 'SOON', 'SNSY', 'SNEK', 'SIDUSERC20', 'SFUND', 'SCRAT', 'SAND',
+        'RXCG', 'RJVERC20', 'RJVBSC', 'REP', 'RBIF', 'RAINCOIN', 'RACA', 'QUACK', 'QTUM', 'POOLZ',
+        'POOLX', 'POODL', 'PONKE', 'PLX', 'PIVX', 'PIT', 'PIKA', 'PEW', 'PENG', 'PEIPEI', 'ONT',
+        'ONIGI', 'OM', 'NWC', 'NTVRK', 'NPXS', 'NOW', 'NIKO', 'NFTB', 'NFAIERC20', 'NEVER', 'NETVR',
+        'NEIROERC20', 'MX', 'MEW', 'MEMHASH', 'MCO', 'MARSH', 'MAJOR', 'LSK', 'LNQ', 'LINGO', 'LEASH',
+        'LBPERC20', 'KLVMAINNET', 'KLV', 'KLAY', 'KISHU', 'KIBABSC', 'KIBA', 'KEANU', 'JST', 'IPMB',
+        'IDBSC', 'ID', 'ICX', 'HT', 'HOTCROSS', 'HOT', 'HOGE', 'HMSTR', 'GUSD', 'GUARD', 'GT', 'GSPI',
+        'GRS', 'GRAPE', 'GMXARB', 'GMX', 'GHC', 'GGTKN', 'GETH', 'GERC20', 'GBSC', 'GAS', 'GARI',
+        'GAL', 'GAFA', 'FTN', 'FLUF', 'FITFI', 'FIRO', 'FEG', 'FDUSDERC20', 'FDUSDBSC', 'EURT', 'EURR',
+        'ETHW', 'ETHLNA', 'EPIC', 'EOS', 'EGLDBSC', 'EGLD', 'DOGS', 'DOGECOIN', 'DIVI', 'DINO', 'DGMOON',
+        'DGI', 'DGD', 'DGB', 'DCR', 'DAO', 'DAIARB', 'DADDY', 'CVC', 'CUSD', 'CULT', 'CUDOS', 'CTSI',
+        'CNS', 'CHR', 'CGPTBSC', 'CGPT', 'CATSTON', 'CATI', 'C98', 'BTTCBSC', 'BTTC', 'BTG', 'BTFA',
+        'BRISEMAINNET', 'BRISE', 'BONE', 'BOBA', 'BNBMAINNET', 'BLOCKS', 'BIFIERC20', 'BELBSC', 'BEL',
+        'BEFI', 'BANANA', 'BAD', 'AWEBASE', 'AVN', 'AVA2ERC20', 'AVA2BSC', 'ATLAS', 'ARPABSC', 'ARPA',
+        'APE', 'AITECH', 'AE'
+      ];
       
-      if (isStablecoin) {
-        // List of stablecoins to BLOCK (all others are allowed)
-        const blockedStablecoins = [
-          'BUSD', 'BUSDBSC', 'BUSDMATIC', 'CUSD', 'DAIARB', 'EURT', 
-          'FDUSDBSC', 'FDUSDERC20', 'FDUSD', 'GUSD', 'JST', 'PAX', 'TUSD', 
-          'USDDBSC', 'USDDTRC20', 'USDE', 'USDJ', 'USDP', 'USDR', 
-          'USDSSOL', 'UST', 'XAUT'
-        ];
-        
-        // Check if this stablecoin should be blocked
-        if (blockedStablecoins.includes(originalCode)) {
-          return; // Skip this stablecoin
-        }
+      // Check if this currency should be blocked
+      if (blockedCurrencies.includes(originalCode) || blockedCurrencies.includes(baseCode)) {
+        return; // Skip this currency
       }
       
       if (currencyMap.has(baseCode)) {
