@@ -99,8 +99,8 @@ export default function Signup() {
               <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
                 <Zap className="h-12 w-12 text-white" />
               </div>
-              <h2 className="text-3xl font-bold mb-4">Start Accepting Crypto Today</h2>
-              <p className="text-xl text-white/90 leading-relaxed">
+              <h2 className="font-phonic text-4xl font-normal mb-4">Start Accepting Crypto Today</h2>
+              <p className="font-capsule text-base text-white/90">
                 Join the cryptocurrency revolution. Set up your payment gateway in minutes and start accepting digital payments from customers worldwide.
               </p>
             </div>
@@ -110,19 +110,19 @@ export default function Signup() {
               <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-5 w-5" />
-                  <span className="font-medium">Secure & Non-Custodial</span>
+                  <span className="font-phonic font-normal">Secure & Non-Custodial</span>
                 </div>
               </div>
               <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Zap className="h-5 w-5" />
-                  <span className="font-medium">Instant Setup</span>
+                  <span className="font-phonic font-normal">Instant Setup</span>
                 </div>
               </div>
               <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <CreditCard className="h-5 w-5" />
-                  <span className="font-medium">Global Support</span>
+                  <span className="font-phonic font-normal">Global Support</span>
                 </div>
               </div>
             </div>
@@ -138,12 +138,12 @@ export default function Signup() {
             <div className="flex justify-center mb-8">
               <Logo size="lg" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3">Welcome to the future of payments</h1>
-            <p className="text-lg text-gray-600 leading-relaxed mb-6">
+            <h1 className="font-martina text-6xl font-normal text-gray-900 mb-3">Welcome to the future of payments</h1>
+            <p className="font-capsule text-base text-gray-600 mb-6">
               Join thousands of businesses already using Cryptrac to accept cryptocurrency payments from customers
             </p>
             <div className="flex justify-center">
-              <Badge className="bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe] px-4 py-2 text-sm font-semibold">
+              <Badge className="bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe] px-4 py-2">
                 30-day free trial
               </Badge>
             </div>
@@ -152,8 +152,8 @@ export default function Signup() {
           {/* Signup Form */}
           <Card className="shadow-xl border-0 bg-white">
             <CardHeader className="space-y-2 pb-8">
-              <CardTitle className="text-2xl font-bold text-center text-gray-900">Create account</CardTitle>
-              <CardDescription className="text-center text-gray-600">
+              <CardTitle className="font-phonic text-3xl font-normal text-center text-gray-900">Create account</CardTitle>
+              <CardDescription className="font-phonic text-base text-center text-gray-600">
                 $19/month or $199/year after trial
               </CardDescription>
             </CardHeader>
@@ -192,13 +192,13 @@ export default function Signup() {
                   required
                 />
 
-                <div className="text-sm text-gray-500">
+                <div className="font-phonic text-sm text-gray-500">
                   Password must be at least 6 characters long
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full h-14 text-lg font-semibold shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                  className="w-full h-14 font-phonic text-base font-normal shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                   size="lg"
                   disabled={loading}
                 >
@@ -207,11 +207,11 @@ export default function Signup() {
               </form>
 
               <div className="mt-8 text-center">
-                <p className="text-sm text-gray-600">
+                <p className="font-phonic text-sm text-gray-600">
                   Already have an account?{' '}
                   <Link 
                     href="/login" 
-                    className="text-[#7f5efd] hover:text-[#7c3aed] font-semibold transition-colors"
+                    className="text-[#7f5efd] hover:text-[#7c3aed] font-phonic font-normal transition-colors"
                   >
                     Sign in
                   </Link>
@@ -222,10 +222,11 @@ export default function Signup() {
 
           {/* Features */}
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 text-sm text-gray-600">
+            <div className="grid grid-cols-1 gap-3">
+
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />
-                <span>Accept Bitcoin, Ethereum, and more</span>
+                <span className="font-phonic text-sm text-gray-600">Accept Bitcoin, Ethereum, and more</span>
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />

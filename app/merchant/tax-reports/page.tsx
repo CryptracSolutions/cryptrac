@@ -17,13 +17,13 @@ export default function TaxReportsPage() {
       />
       <Card className="shadow-soft">
         <CardHeader>
-          <h1 className="text-2xl font-bold text-gray-900">Tax Reports</h1>
-          <p className="text-gray-600">Generate and view your cryptocurrency tax reports</p>
+          <h1 className="font-phonic text-3xl font-normal text-gray-900">Tax Reports</h1>
+          <p className="font-capsule text-base font-normal text-gray-600">Generate and view your cryptocurrency tax reports</p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Placeholder for reports */}
           <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-            <p className="text-gray-600 mb-4">No reports generated yet.</p>
+            <p className="font-capsule text-base font-normal text-gray-600 mb-4">No reports generated yet.</p>
             <Button className="bg-primary-500 text-white">Generate Report</Button>
           </div>
           {/* Add table or list here in future */}

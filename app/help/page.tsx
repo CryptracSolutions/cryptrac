@@ -63,16 +63,16 @@ export default function HelpPage() {
         <div className="container-wide flex h-16 items-center justify-between">
           <Logo size="md" />
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/privacy" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/privacy" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/terms" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Terms of Service
             </Link>
-            <Link href="/cookies" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/cookies" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Cookie Policy
             </Link>
-            <Link href="/contact" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/contact" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Contact
             </Link>
           </nav>
@@ -100,10 +100,10 @@ export default function HelpPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Support & Documentation
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Help & Support Guide
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
               Comprehensive assistance for merchants and customers using Cryptrac's cryptocurrency payment processing platform
             </p>
             <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
@@ -126,7 +126,7 @@ export default function HelpPage() {
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
             <CardHeader className="pb-4">
-              <CardTitle className="text-sm font-semibold text-gray-900">Table of Contents</CardTitle>
+              <CardTitle className="font-phonic text-sm font-normal text-gray-900">Table of Contents</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <nav className="space-y-1 pb-4">

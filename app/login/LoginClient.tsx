@@ -75,8 +75,8 @@ export default function Login() {
               <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
                 <Shield className="h-12 w-12 text-white" />
               </div>
-              <h2 className="text-3xl font-bold mb-4">Secure Crypto Payments</h2>
-              <p className="text-xl text-white/90 leading-relaxed">
+              <h2 className="font-phonic text-4xl font-normal mb-4">Secure Crypto Payments</h2>
+              <p className="font-capsule text-base text-white/90">
                 Welcome to the future of payments. Manage your cryptocurrency transactions with confidence and security.
               </p>
             </div>
@@ -86,19 +86,19 @@ export default function Login() {
               <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-5 w-5" />
-                  <span className="font-medium">Non-Custodial Security</span>
+                  <span className="font-phonic font-normal">Non-Custodial Security</span>
                 </div>
               </div>
               <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <Zap className="h-5 w-5" />
-                  <span className="font-medium">Instant Processing</span>
+                  <span className="font-phonic font-normal">Instant Processing</span>
                 </div>
               </div>
               <div className="flex items-center justify-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
                   <CreditCard className="h-5 w-5" />
-                  <span className="font-medium">Global Support</span>
+                  <span className="font-phonic font-normal">Global Support</span>
                 </div>
               </div>
             </div>
@@ -114,8 +114,8 @@ export default function Login() {
             <div className="flex justify-center mb-8">
               <Logo size="lg" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3">Welcome back</h1>
-            <p className="text-lg text-gray-600 leading-relaxed">
+            <h1 className="font-martina text-6xl font-normal text-gray-900 mb-3">Welcome back</h1>
+            <p className="font-capsule text-base text-gray-600">
               Sign in to your Cryptrac account to manage your crypto payments
             </p>
           </div>
@@ -123,8 +123,8 @@ export default function Login() {
           {/* Login Form */}
           <Card className="shadow-xl border-0 bg-white">
             <CardHeader className="space-y-2 pb-8">
-              <CardTitle className="text-2xl font-bold text-center text-gray-900">Sign in</CardTitle>
-              <CardDescription className="text-center text-gray-600">
+              <CardTitle className="font-phonic text-3xl font-normal text-center text-gray-900">Sign in</CardTitle>
+              <CardDescription className="font-phonic text-base text-center text-gray-600">
                 Enter your credentials to access your dashboard
               </CardDescription>
             </CardHeader>
@@ -167,7 +167,7 @@ export default function Login() {
                   <div className="text-sm">
                     <Link 
                       href="/forgot-password" 
-                      className="text-[#7f5efd] hover:text-[#7c3aed] font-medium transition-colors"
+                      className="font-phonic text-[#7f5efd] hover:text-[#7c3aed] font-normal transition-colors"
                     >
                       Forgot password?
                     </Link>
@@ -176,7 +176,7 @@ export default function Login() {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-14 text-lg font-semibold shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                  className="w-full h-14 font-phonic text-base font-normal shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                   size="lg"
                   disabled={loading}
                 >
@@ -189,7 +189,7 @@ export default function Login() {
                   Don&apos;t have an account?{' '}
                   <Link 
                     href="/signup" 
-                    className="text-[#7f5efd] hover:text-[#7c3aed] font-semibold transition-colors"
+                    className="font-phonic text-[#7f5efd] hover:text-[#7c3aed] font-normal transition-colors"
                   >
                     Sign up for free
                   </Link>

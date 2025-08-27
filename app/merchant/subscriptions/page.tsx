@@ -138,7 +138,7 @@ export default function MerchantSubscriptionsPage() {
         <div className="flex justify-center items-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading subscriptions...</p>
+          <p className="font-capsule text-base font-normal text-gray-600">Loading subscriptions...</p>
         </div>
       </div>
     </div>
@@ -161,8 +161,8 @@ export default function MerchantSubscriptionsPage() {
             <div className="flex items-center gap-4 mb-3">
               <BackToDashboard />
             </div>
-            <h1 className="heading-lg text-gray-900">Subscriptions</h1>
-            <p className="text-body text-gray-600 mt-2">Manage recurring payments and customer subscriptions</p>
+            <h1 className="font-phonic text-5xl font-normal text-gray-900">Subscriptions</h1>
+            <p className="font-capsule text-base font-normal text-gray-600 mt-2">Manage recurring payments and customer subscriptions</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -191,7 +191,7 @@ export default function MerchantSubscriptionsPage() {
                   <CreditCard className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-body-sm font-medium text-gray-600">Active Subscriptions</p>
+                  <p className="font-phonic text-sm font-normal text-gray-600">Active Subscriptions</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {subs.filter(s => s.status === 'active').length}
                   </p>
@@ -207,7 +207,7 @@ export default function MerchantSubscriptionsPage() {
                   <DollarSign className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-body-sm font-medium text-gray-600">Monthly Revenue</p>
+                  <p className="font-phonic text-sm font-normal text-gray-600">Monthly Revenue</p>
                   <p className="text-2xl font-bold text-gray-900">
                     ${subs.filter(s => s.status === 'active').reduce((sum, s) => sum + s.amount, 0).toFixed(2)}
                   </p>
@@ -223,7 +223,7 @@ export default function MerchantSubscriptionsPage() {
                   <Users className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-body-sm font-medium text-gray-600">Total Customers</p>
+                  <p className="font-phonic text-sm font-normal text-gray-600">Total Customers</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {new Set(subs.map(s => s.customer_id)).size}
                   </p>
@@ -239,7 +239,7 @@ export default function MerchantSubscriptionsPage() {
                   <TrendingUp className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-body-sm font-medium text-gray-600">Success Rate</p>
+                  <p className="font-phonic text-sm font-normal text-gray-600">Success Rate</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {subs.length > 0 ? Math.round((subs.filter(s => s.status === 'active').length / subs.length) * 100) : 0}%
                   </p>
@@ -322,8 +322,8 @@ export default function MerchantSubscriptionsPage() {
                     <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                       <CreditCard className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Subscriptions Found</h3>
-                    <p className="text-gray-600 mb-6">
+                    <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">No Subscriptions Found</h3>
+                    <p className="font-capsule text-base font-normal text-gray-600 mb-6">
                       {searchTerm || statusFilter !== 'all' 
                         ? 'Try adjusting your search or filters to see more results.'
                         : 'Get started by creating your first subscription.'
@@ -348,7 +348,7 @@ export default function MerchantSubscriptionsPage() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
-                            <h3 className="text-xl font-bold text-gray-900">{subscription.title}</h3>
+                            <h3 className="font-phonic text-2xl font-normal text-gray-900">{subscription.title}</h3>
                             <Badge
                               variant={getStatusVariant(subscription.status)}
                               className="text-xs font-medium"
@@ -397,7 +397,7 @@ export default function MerchantSubscriptionsPage() {
                             <div className="bg-gray-50 rounded-lg p-3 mb-4">
                               <div className="flex items-center gap-2 mb-2">
                                 <Receipt className="h-4 w-4 text-gray-500" />
-                                <span className="text-body-sm font-medium text-gray-700">Recent Invoices</span>
+                                <span className="font-phonic text-sm font-normal text-gray-700">Recent Invoices</span>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {subscription.subscription_invoices.slice(0, 3).map((invoice, index) => (

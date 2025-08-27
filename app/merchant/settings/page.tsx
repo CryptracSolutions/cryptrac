@@ -470,10 +470,10 @@ export default function MerchantSettingsPage() {
           <div className="flex items-center gap-4 mb-2">
             <BackToDashboard />
           </div>
-          <h1 className="heading-xl text-gray-900">
+          <h1 className="font-phonic text-6xl font-normal text-gray-900">
             Account Settings
           </h1>
-          <p className="text-body-lg text-gray-600 font-medium">
+          <p className="font-capsule text-base font-normal text-gray-600">
             Manage your payment preferences, tax settings, and notifications
           </p>
         </div>
@@ -509,20 +509,20 @@ export default function MerchantSettingsPage() {
           <TabsContent value="payments" className="space-y-8">
             <Card className="card-hover shadow-lg">
               <CardHeader>
-                <CardTitle className="text-xl font-bold flex items-center gap-3">
+                <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
                   <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
                     <CreditCard className="h-6 w-6 text-white" />
                   </div>
                   Payment Configuration
                 </CardTitle>
-                <CardDescription className="text-body">
+                <CardDescription className="font-capsule text-base font-normal">
                   Configure your payment processing preferences and fees
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
                 <Alert className="border-green-200 bg-green-50">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <AlertDescription className="text-body">
+                  <AlertDescription className="font-capsule text-base font-normal">
                     <strong>Auto-Forward Enabled:</strong> All payments are automatically forwarded to your configured wallet addresses. 
                     No funds are held by Cryptrac.
                   </AlertDescription>
@@ -535,22 +535,22 @@ export default function MerchantSettingsPage() {
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <DollarSign className="h-5 w-5 text-blue-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Gateway Fee Structure</h3>
+                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Gateway Fee Structure</h3>
                       </div>
                       
                       <div className="space-y-4">
                         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                           <div>
-                            <p className="font-bold text-gray-900">Gateway Fee</p>
-                            <p className="text-sm text-gray-600">
+                            <p className="font-phonic text-base font-normal text-gray-900">Gateway Fee</p>
+                            <p className="font-phonic text-sm font-normal text-gray-600">
                               {settings.auto_convert_enabled ? 'With auto-convert enabled' : 'With auto-convert disabled'}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-lg text-[#7f5efd]">
+                            <p className="font-phonic text-2xl font-normal text-[#7f5efd]">
                               {settings.auto_convert_enabled ? '1.0%' : '0.5%'}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="font-phonic text-xs font-normal text-gray-500">
                               {settings.auto_convert_enabled ? 'Higher rate for conversion' : 'Standard rate'}
                             </p>
                           </div>
@@ -563,7 +563,7 @@ export default function MerchantSettingsPage() {
                                checked={!settings.charge_customer_fee}
                                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: !(checked as boolean) }))}
                              />
-                             <label htmlFor="merchant-pays-fee" className="text-body font-medium">
+                             <label htmlFor="merchant-pays-fee" className="font-phonic text-base font-normal">
                                Merchant pays gateway fee
                              </label>
                            </div>
@@ -574,7 +574,7 @@ export default function MerchantSettingsPage() {
                                checked={settings.charge_customer_fee}
                                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
                              />
-                            <label htmlFor="customer-pays-fee" className="text-body font-medium">
+                            <label htmlFor="customer-pays-fee" className="font-phonic text-base font-normal">
                               Customer pays gateway fee
                             </label>
                           </div>
@@ -589,7 +589,7 @@ export default function MerchantSettingsPage() {
                         <div className="p-2 bg-green-100 rounded-lg">
                           <Zap className="h-5 w-5 text-green-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Auto-Convert Settings</h3>
+                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Auto-Convert Settings</h3>
                       </div>
                       
                       <div className="space-y-4">
@@ -607,14 +607,14 @@ export default function MerchantSettingsPage() {
                               }
                             }))}
                           />
-                          <label htmlFor="auto-convert" className="text-body font-medium">
+                          <label htmlFor="auto-convert" className="font-phonic text-base font-normal">
                             Enable automatic conversion to preferred payout currency
                           </label>
                         </div>
                         
                         {settings.auto_convert_enabled && (
                           <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Preferred Payout Currency</label>
+                            <label className="font-phonic text-sm font-normal text-gray-700">Preferred Payout Currency</label>
                             <Select 
                               value={settings.preferred_payout_currency || ''} 
                               onValueChange={(value) => setSettings(prev => ({ ...prev, preferred_payout_currency: value }))}
@@ -652,7 +652,7 @@ export default function MerchantSettingsPage() {
                                 })()}
                               </SelectContent>
                             </Select>
-                            <p className="text-sm text-gray-500">
+                            <p className="font-phonic text-sm font-normal text-gray-500">
                               Convert all payments to this currency before forwarding to your wallet
                             </p>
                           </div>
@@ -669,13 +669,13 @@ export default function MerchantSettingsPage() {
           <TabsContent value="tax" className="space-y-8">
             <Card className="card-hover shadow-lg">
               <CardHeader>
-                <CardTitle className="text-xl font-bold flex items-center gap-3">
+                <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
                   <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
                     <Calculator className="h-6 w-6 text-white" />
                   </div>
                   Tax Collection Settings
                 </CardTitle>
-                <CardDescription className="text-body">
+                <CardDescription className="font-capsule text-base font-normal">
                   Configure tax collection for your payments
                 </CardDescription>
               </CardHeader>
@@ -686,7 +686,7 @@ export default function MerchantSettingsPage() {
                     checked={settings.tax_enabled}
                     onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked as boolean }))}
                   />
-                  <label htmlFor="tax-enabled" className="text-body font-bold">
+                  <label htmlFor="tax-enabled" className="font-phonic text-base font-normal">
                     Enable tax collection
                   </label>
                 </div>
@@ -699,7 +699,7 @@ export default function MerchantSettingsPage() {
                         <div className="p-2 bg-purple-100 rounded-lg">
                           <Calculator className="h-5 w-5 text-purple-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Tax Strategy</h3>
+                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Tax Strategy</h3>
                       </div>
                       <Select 
                         value={settings.tax_strategy} 
@@ -722,7 +722,7 @@ export default function MerchantSettingsPage() {
                         <div className="p-2 bg-green-100 rounded-lg">
                           <Zap className="h-5 w-5 text-green-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Sales Type</h3>
+                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Sales Type</h3>
                       </div>
                       <Select 
                         value={settings.sales_type} 
@@ -746,7 +746,7 @@ export default function MerchantSettingsPage() {
                           <div className="p-2 bg-red-100 rounded-lg">
                             <DollarSign className="h-5 w-5 text-red-600" />
                           </div>
-                          <h3 className="text-lg font-bold text-gray-900">Default Tax Rates</h3>
+                          <h3 className="font-phonic text-2xl font-normal text-gray-900">Default Tax Rates</h3>
                         </div>
                         <Button
                           variant="outline"
@@ -780,7 +780,7 @@ export default function MerchantSettingsPage() {
                                 min="0"
                                 max="100"
                               />
-                              <span className="text-sm font-bold text-gray-600">%</span>
+                              <span className="font-phonic text-sm font-normal text-gray-600">%</span>
                             </div>
                             {settings.tax_rates.length > 1 && (
                               <Button
@@ -797,7 +797,7 @@ export default function MerchantSettingsPage() {
                       </div>
                       
                       <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="text-body font-bold text-blue-900">
+                        <div className="font-phonic text-base font-normal text-blue-900">
                           Total Default Tax Rate: {settings.tax_rates.reduce((sum, rate) => sum + (parseFloat(rate.percentage) || 0), 0).toFixed(1)}%
                         </div>
                       </div>
@@ -806,7 +806,7 @@ export default function MerchantSettingsPage() {
                     {/* Tax Information */}
                     <Alert className="border-orange-200 bg-orange-50">
                       <AlertCircle className="h-5 w-5 text-orange-600" />
-                      <AlertDescription className="text-body">
+                      <AlertDescription className="font-capsule text-base font-normal">
                         <strong>Important:</strong> Cryptrac helps you charge and report taxes accurately but does not file or remit taxes. 
                         Consult with a tax professional for compliance requirements in your jurisdiction.
                       </AlertDescription>
@@ -821,13 +821,13 @@ export default function MerchantSettingsPage() {
           <TabsContent value="notifications" className="space-y-8">
             <Card className="card-hover shadow-lg">
               <CardHeader>
-                <CardTitle className="text-xl font-bold flex items-center gap-3">
+                <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
                   <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
                     <Bell className="h-6 w-6 text-white" />
                   </div>
                   Notification Preferences
                 </CardTitle>
-                <CardDescription className="text-body">
+                <CardDescription className="font-capsule text-base font-normal">
                   Manage email alerts and public receipts
                 </CardDescription>
               </CardHeader>
@@ -839,8 +839,8 @@ export default function MerchantSettingsPage() {
                         <Bell className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900">Payment Notifications</h3>
-                        <p className="text-body text-gray-600">Receive email alerts when payments are received</p>
+                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Payment Notifications</h3>
+                        <p className="font-capsule text-base font-normal text-gray-600">Receive email alerts when payments are received</p>
                       </div>
                     </div>
                     <Checkbox
@@ -857,8 +857,8 @@ export default function MerchantSettingsPage() {
                         <CreditCard className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900">Public Receipts</h3>
-                        <p className="text-body text-gray-600">Make payment receipts publicly accessible</p>
+                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Public Receipts</h3>
+                        <p className="font-capsule text-base font-normal text-gray-600">Make payment receipts publicly accessible</p>
                       </div>
                     </div>
                     <Checkbox

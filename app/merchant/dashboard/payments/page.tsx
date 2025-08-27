@@ -404,7 +404,7 @@ export default function PaymentsPage() {
               <LinkIcon className="h-5 w-5 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{link.title}</h3>
+              <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-1">{link.title}</h3>
               <div className="flex items-center gap-3">
                 {getStatusBadge(link.status, link)}
                 {(link.source === 'subscription' || link.subscription_id) && (
@@ -422,7 +422,7 @@ export default function PaymentsPage() {
           </div>
 
           {link.description && (
-            <p className="text-body text-gray-600 mb-4">{link.description}</p>
+            <p className="font-capsule text-base font-normal text-gray-600 mb-4">{link.description}</p>
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -482,7 +482,7 @@ export default function PaymentsPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7f5efd] mx-auto mb-4"></div>
-            <p className="text-body text-gray-600">Loading payment links...</p>
+            <p className="font-capsule text-base font-normal text-gray-600">Loading payment links...</p>
           </div>
         </div>
       </div>
@@ -495,7 +495,7 @@ export default function PaymentsPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <p className="text-body text-red-600 mb-6">Error: {error}</p>
+            <p className="font-capsule text-base font-normal text-red-600 mb-6">Error: {error}</p>
             <div className="flex gap-4 justify-center">
               <Button onClick={fetchPaymentLinks} variant="outline" size="lg">
                 Try Again
@@ -548,10 +548,10 @@ export default function PaymentsPage() {
           <div className="flex items-center gap-4 mb-2">
             <BackToDashboard />
           </div>
-          <h1 className="heading-xl text-gray-900">
+          <h1 className="font-phonic text-6xl font-normal text-gray-900">
             Payment Management
           </h1>
-          <p className="text-body-lg text-gray-600 font-medium">View and manage all your payments</p>
+          <p className="font-phonic text-2xl font-normal text-gray-600">View and manage all your payments</p>
         </div>
         <div className="flex gap-4">
           <Link href="/merchant/subscriptions">
@@ -567,7 +567,7 @@ export default function PaymentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-gray-900">Total Links</CardTitle>
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Total Links</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <LinkIcon className="h-5 w-5 text-white" />
             </div>
@@ -576,14 +576,14 @@ export default function PaymentsPage() {
             <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.total_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <BarChart3 className="h-4 w-4" />
-              <span className="text-sm">All payment links</span>
+              <span className="font-phonic text-sm font-normal">All payment links</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-gray-900">Active</CardTitle>
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Active</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
@@ -592,14 +592,14 @@ export default function PaymentsPage() {
             <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.active_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <Zap className="h-4 w-4" />
-              <span className="text-sm">Accepting payments</span>
+              <span className="font-phonic text-sm font-normal">Accepting payments</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-gray-900">Completed</CardTitle>
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Completed</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
@@ -608,14 +608,14 @@ export default function PaymentsPage() {
             <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.completed_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <CheckCircle className="h-4 w-4" />
-              <span className="text-sm">Finished or max uses</span>
+              <span className="font-phonic text-sm font-normal">Finished or max uses</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-gray-900">Expired</CardTitle>
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Expired</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <AlertCircle className="h-5 w-5 text-white" />
             </div>
@@ -624,14 +624,14 @@ export default function PaymentsPage() {
             <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.expired_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <Clock className="h-4 w-4" />
-              <span className="text-sm">Past expiry date</span>
+              <span className="font-phonic text-sm font-normal">Past expiry date</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-gray-900">Single Use</CardTitle>
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Single Use</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <CreditCard className="h-5 w-5 text-white" />
             </div>
@@ -640,14 +640,14 @@ export default function PaymentsPage() {
             <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.single_use_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <Users className="h-4 w-4" />
-              <span className="text-sm">One-time payments</span>
+              <span className="font-phonic text-sm font-normal">One-time payments</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-lg font-bold text-gray-900">Total Revenue</CardTitle>
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Total Revenue</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
@@ -658,7 +658,7 @@ export default function PaymentsPage() {
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <TrendingUp className="h-4 w-4" />
-              <span className="text-sm">{statistics.total_payments} payments</span>
+              <span className="font-phonic text-sm font-normal">{statistics.total_payments} payments</span>
             </div>
           </CardContent>
         </Card>
@@ -674,7 +674,7 @@ export default function PaymentsPage() {
                 placeholder="Search payment links..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 text-body"
+                className="pl-12 h-12 font-capsule text-base font-normal"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -705,7 +705,7 @@ export default function PaymentsPage() {
                     {group.items.length}
                   </Badge>
                 </CardTitle>
-                <CardDescription className="text-body">
+                <CardDescription className="font-capsule text-base font-normal">
                   {group.key === 'links' && 'Standard payment links for invoices and sales'}
                   {group.key === 'pos' && 'Point-of-sale transactions from Smart Terminal'}
                   {group.key === 'subscriptions' && 'Recurring subscription payments'}
@@ -733,8 +733,8 @@ export default function PaymentsPage() {
                   <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                     <LinkIcon className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
-                  <p className="text-body text-gray-500 mb-6">Get started by creating your first payment link</p>
+                  <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
+                  <p className="font-capsule text-base font-normal text-gray-500 mb-6">Get started by creating your first payment link</p>
                   {group.key === 'links' && (
                     <Link href="/merchant/dashboard/payments/create">
                       <Button size="lg" className="flex items-center gap-3">
@@ -784,7 +784,7 @@ export default function PaymentsPage() {
               >
                 Previous
               </Button>
-              <div className="flex items-center px-6 py-3 text-body font-medium text-gray-600 bg-gray-50 rounded-lg">
+              <div className="flex items-center px-6 py-3 font-capsule text-base font-normal text-gray-600 bg-gray-50 rounded-lg">
                 Page {currentPage} of {totalPages}
               </div>
               <Button

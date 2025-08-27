@@ -93,10 +93,10 @@ export default function ContactPage() {
         <div className="container-wide flex h-16 items-center justify-between">
           <Logo size="md" />
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/privacy" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/privacy" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/terms" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Terms of Service
             </Link>
             <Link href="/cookies" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">

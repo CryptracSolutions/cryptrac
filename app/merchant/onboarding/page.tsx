@@ -203,10 +203,10 @@ export default function OnboardingPage() {
         <div className="text-center space-y-6">
           <Logo className="mx-auto" />
           <div className="space-y-4">
-            <h1 className="heading-lg text-gray-900">
+            <h1 className="font-phonic text-5xl font-normal text-gray-900">
               Welcome to Cryptrac
             </h1>
-            <p className="text-body text-gray-600">
+            <p className="font-capsule text-base font-normal text-gray-600">
               Let&apos;s get your crypto payment system set up in just a few steps
             </p>
           </div>
@@ -224,7 +224,7 @@ export default function OnboardingPage() {
         {error && (
           <div className="max-w-2xl mx-auto space-y-6">
             <Alert className="border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">
+              <AlertDescription className="font-capsule text-base font-normal text-red-800">
                 {error}
               </AlertDescription>
             </Alert>

@@ -389,8 +389,8 @@ export default function CreatePaymentLinkPage() {
               Back
             </Button>
             <div>
-              <h1 className="heading-lg text-gray-900">Create Payment Link</h1>
-              <p className="text-body text-gray-600">Create a new cryptocurrency payment link for your customers</p>
+              <h1 className="font-phonic text-5xl font-normal text-gray-900">Create Payment Link</h1>
+              <p className="font-capsule text-base font-normal text-gray-600">Create a new cryptocurrency payment link for your customers</p>
             </div>
           </div>
         </div>
@@ -402,14 +402,14 @@ export default function CreatePaymentLinkPage() {
               {/* Basic Information */}
               <Card className="shadow-medium border-0 bg-white">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 heading-sm">
+                  <CardTitle className="flex items-center gap-2 font-phonic text-base font-normal">
                     <LinkIcon className="h-5 w-5 text-[#7f5efd]" />
                     Basic Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-body font-medium">Title *</Label>
+                    <Label htmlFor="title" className="font-phonic text-base font-normal">Title *</Label>
                     <Input
                       id="title"
                       placeholder="e.g., Product Purchase, Service Payment"
@@ -421,7 +421,7 @@ export default function CreatePaymentLinkPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-body font-medium">Description</Label>
+                    <Label htmlFor="description" className="font-capsule text-base font-normal">Description</Label>
                     <Textarea
                       id="description"
                       placeholder="Optional description for your customers"
@@ -437,7 +437,7 @@ export default function CreatePaymentLinkPage() {
               {/* Payment Details */}
               <Card className="shadow-medium border-0 bg-white">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 heading-sm">
+                  <CardTitle className="flex items-center gap-2 font-phonic text-base font-normal">
                     <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                     Payment Details
                   </CardTitle>
@@ -445,7 +445,7 @@ export default function CreatePaymentLinkPage() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="amount" className="text-body font-medium">Amount *</Label>
+                      <Label htmlFor="amount" className="font-phonic text-base font-normal">Amount *</Label>
                       <Input
                         id="amount"
                         type="number"
@@ -460,7 +460,7 @@ export default function CreatePaymentLinkPage() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="currency" className="text-body font-medium">Currency</Label>
+                      <Label htmlFor="currency" className="font-phonic text-base font-normal">Currency</Label>
                       <Select value={form.currency} onValueChange={(value) => setForm(prev => ({ ...prev, currency: value }))}>
                         <SelectTrigger className="form-input-enhanced">
                           <SelectValue />
@@ -478,8 +478,8 @@ export default function CreatePaymentLinkPage() {
 
                   {/* Accepted Cryptocurrencies */}
                   <div className="space-y-4">
-                    <Label className="text-body font-medium">Accepted Cryptocurrencies *</Label>
-                    <p className="text-body-sm text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don&apos;t want to accept.</p>
+                    <Label className="font-phonic text-base font-normal">Accepted Cryptocurrencies *</Label>
+                    <p className="font-phonic text-sm font-normal text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don&apos;t want to accept.</p>
                     
                     {/* Stable Coin Information */}
                     <Alert className="bg-blue-50 border-blue-200">
@@ -506,7 +506,7 @@ export default function CreatePaymentLinkPage() {
                               checked={form.accepted_cryptos.includes(crypto)}
                               onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
                             />
-                            <Label htmlFor={crypto} className="text-body-sm font-medium">
+                            <Label htmlFor={crypto} className="font-phonic text-sm font-normal">
                               {crypto}
                             </Label>
                           </div>
@@ -537,7 +537,7 @@ export default function CreatePaymentLinkPage() {
                     
                     {/* Show global tax settings info */}
                     {merchantSettings && (
-                      <div className="text-body-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                      <div className="font-phonic text-xs font-normal text-gray-500 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Global tax setting: {merchantSettings.tax_enabled ? 'Enabled' : 'Disabled'}
                         {merchantSettings.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 && 
@@ -632,7 +632,7 @@ export default function CreatePaymentLinkPage() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="expires_at" className="text-body font-medium">Expiration Date</Label>
+                      <Label htmlFor="expires_at" className="font-phonic text-base font-normal">Expiration Date</Label>
                       <Input
                         id="expires_at"
                         type="datetime-local"
@@ -643,7 +643,7 @@ export default function CreatePaymentLinkPage() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="max_uses" className="text-body font-medium">Maximum Uses</Label>
+                      <Label htmlFor="max_uses" className="font-phonic text-base font-normal">Maximum Uses</Label>
                       <Input
                         id="max_uses"
                         type="number"
@@ -658,12 +658,12 @@ export default function CreatePaymentLinkPage() {
 
                   {/* Payment Options with Global Settings Display */}
                   <div className="space-y-6">
-                    <div className="text-body font-medium text-gray-700">Payment Options</div>
+                    <div className="font-phonic text-base font-normal text-gray-700">Payment Options</div>
                     
                     {/* Auto-convert setting */}
                     <div className="space-y-4">
-                      <div className="text-body font-medium text-gray-900">Auto-Convert Setting</div>
-                      <p className="text-body-sm text-gray-600">Automatically swap received funds to your payout currency.</p>
+                      <div className="font-phonic text-base font-normal text-gray-900">Auto-Convert Setting</div>
+                      <p className="font-phonic text-sm font-normal text-gray-600">Automatically swap received funds to your payout currency.</p>
                       <div className="space-y-3">
                         <div className="flex items-center space-x-3">
                           <input
@@ -674,7 +674,7 @@ export default function CreatePaymentLinkPage() {
                             onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: null }))}
                             className="h-4 w-4 text-[#7f5efd]"
                           />
-                          <Label htmlFor="auto_convert_global" className="text-body-sm">
+                          <Label htmlFor="auto_convert_global" className="font-phonic text-sm font-normal">
                             Use global setting ({merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})
                           </Label>
                         </div>
@@ -687,13 +687,13 @@ export default function CreatePaymentLinkPage() {
                             onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: false }))}
                             className="h-4 w-4 text-[#7f5efd]"
                           />
-                          <Label htmlFor="auto_convert_disable" className="text-body-sm">
+                          <Label htmlFor="auto_convert_disable" className="font-phonic text-sm font-normal">
                             Disable auto-convert for this payment link
                           </Label>
                         </div>
                       </div>
                       
-                      <div className="text-body-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                      <div className="font-phonic text-xs font-normal text-gray-500 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Current selection: {
                           form.auto_convert_enabled === null 
@@ -705,8 +705,8 @@ export default function CreatePaymentLinkPage() {
                     
                     {/* Gateway fee setting */}
                     <div className="space-y-4">
-                      <div className="text-body font-medium text-gray-900">Gateway Fee Setting</div>
-                      <p className="text-body-sm text-gray-600">Choose who covers the NOWPayments gateway fee for this link.</p>
+                      <div className="font-phonic text-base font-normal text-gray-900">Gateway Fee Setting</div>
+                      <p className="font-phonic text-sm font-normal text-gray-600">Choose who covers the NOWPayments gateway fee for this link.</p>
                       <div className="space-y-3">
                         <div className="flex items-center space-x-3">
                           <input
@@ -717,7 +717,7 @@ export default function CreatePaymentLinkPage() {
                             onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: null }))}
                             className="h-4 w-4 text-[#7f5efd]"
                           />
-                          <Label htmlFor="fee_global" className="text-body-sm">
+                          <Label htmlFor="fee_global" className="font-phonic text-sm font-normal">
                             Use global setting ({merchantSettings?.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'})
                           </Label>
                         </div>
@@ -730,13 +730,13 @@ export default function CreatePaymentLinkPage() {
                             onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: false }))}
                             className="h-4 w-4 text-[#7f5efd]"
                           />
-                          <Label htmlFor="merchant_pays_fee" className="text-body-sm">
+                          <Label htmlFor="merchant_pays_fee" className="font-phonic text-sm font-normal">
                             Merchant pays fee for this payment link
                           </Label>
                         </div>
                       </div>
                       
-                      <div className="text-body-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                      <div className="font-phonic text-xs font-normal text-gray-500 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Current selection: {
                           form.charge_customer_fee === null 
@@ -749,7 +749,7 @@ export default function CreatePaymentLinkPage() {
 
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
-                      <AlertDescription className="text-body-sm">
+                      <AlertDescription className="font-phonic text-sm font-normal">
                         After successful payment, customers will be automatically redirected to Cryptrac&apos;s branded thank you page with options to receive their receipt.
                       </AlertDescription>
                   </Alert>
@@ -761,7 +761,7 @@ export default function CreatePaymentLinkPage() {
             <div className="space-y-8">
               <Card className="shadow-medium border-0 bg-white">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 heading-sm">
+                  <CardTitle className="flex items-center gap-2 font-phonic text-base font-normal">
                     <CreditCard className="h-5 w-5 text-[#7f5efd]" />
                     Payment Link Preview
                   </CardTitle>
@@ -771,8 +771,8 @@ export default function CreatePaymentLinkPage() {
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border-2 border-dashed border-blue-200">
                     <div className="space-y-4">
                       <div>
-                        <p className="heading-sm text-gray-900">{form.title || 'Payment Link Title'}</p>
-                        <p className="text-body-sm text-gray-600">{form.description || 'Payment description will appear here'}</p>
+                        <p className="font-phonic text-base font-normal text-gray-900">{form.title || 'Payment Link Title'}</p>
+                        <p className="font-phonic text-sm font-normal text-gray-600">{form.description || 'Payment description will appear here'}</p>
                       </div>
                       
                       <div className="flex items-center gap-2 flex-wrap">
@@ -792,7 +792,7 @@ export default function CreatePaymentLinkPage() {
                       </div>
 
                       {(form.expires_at || form.max_uses) && (
-                        <div className="text-body-xs text-gray-500 space-y-1">
+                        <div className="font-phonic text-xs font-normal text-gray-500 space-y-1">
                           {form.expires_at && (
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
@@ -812,9 +812,9 @@ export default function CreatePaymentLinkPage() {
 
                   {/* Fee Breakdown */}
                   <div className="space-y-4">
-                    <div className="text-body font-medium text-gray-700 border-b pb-2">Payment Breakdown</div>
+                    <div className="font-phonic text-base font-normal text-gray-700 border-b pb-2">Payment Breakdown</div>
                     
-                    <div className="space-y-3 text-body-sm">
+                    <div className="space-y-3 font-phonic text-sm font-normal">
                       <div className="flex justify-between">
                         <span>Base Amount:</span>
                         <span className="font-medium">{form.currency} {fees.baseAmount.toFixed(2)}</span>
@@ -868,7 +868,7 @@ export default function CreatePaymentLinkPage() {
                     {fees.effectiveSettings.auto_convert_enabled && (
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-body-xs">
+                        <AlertDescription className="font-phonic text-xs font-normal">
                           Auto-convert enabled: 1% gateway fee applies (crypto will be converted to your preferred currency)
                         </AlertDescription>
                       </Alert>
@@ -877,7 +877,7 @@ export default function CreatePaymentLinkPage() {
                     {!fees.effectiveSettings.charge_customer_fee && (
                       <Alert>
                         <Info className="h-4 w-4" />
-                        <AlertDescription className="text-body-xs">
+                        <AlertDescription className="font-phonic text-xs font-normal">
                           Gateway fee will be deducted from your payout
                         </AlertDescription>
                       </Alert>

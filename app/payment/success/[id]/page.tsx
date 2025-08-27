@@ -254,7 +254,7 @@ export default function PaymentSuccessPage() {
             <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-6"></div>
             <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-primary-300 rounded-full animate-spin mx-auto" style={{ animationDelay: '0.5s' }}></div>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Payment Confirmation</h2>
+          <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-2">Loading Payment Confirmation</h2>
           <p className="text-gray-600">Please wait while we verify your payment...</p>
         </div>
       </div>
@@ -268,7 +268,7 @@ export default function PaymentSuccessPage() {
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Payment Not Found</h2>
+          <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-3">Payment Not Found</h2>
           <p className="text-gray-600 mb-6 leading-relaxed">
             {error || "The payment confirmation you're looking for doesn't exist."}
           </p>
@@ -293,8 +293,8 @@ export default function PaymentSuccessPage() {
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Payment Confirmed!</h1>
-          <p className="text-lg text-gray-600 mb-4 leading-relaxed">
+          <h1 className="font-phonic text-6xl font-normal text-gray-900 mb-3">Payment Confirmed!</h1>
+          <p className="font-capsule text-base text-gray-600 mb-4">
             Your payment has been successfully processed and confirmed on the blockchain.
           </p>
           <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
@@ -316,17 +316,17 @@ export default function PaymentSuccessPage() {
         {/* Payment Summary */}
         <Card className="mb-8 shadow-lg border-0 bg-white">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-900">Payment Summary</CardTitle>
+            <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Summary</CardTitle>
             <p className="text-gray-600">
-              Payment to <span className="font-semibold text-gray-900">{paymentData.payment_link.merchant.business_name}</span>
+              Payment to <span className="font-phonic font-medium text-gray-900">{paymentData.payment_link.merchant.business_name}</span>
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Payment Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
-                <Label className="text-sm font-semibold text-gray-700 mb-3 block">Amount Paid</Label>
-                <p className="text-2xl font-bold text-green-600 mb-2">
+                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount Paid</Label>
+                <p className="font-phonic text-3xl font-medium text-green-600 mb-2">
                   {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
                 </p>
                 <p className="text-sm text-gray-600">

@@ -222,15 +222,15 @@ export default function WalletsPage() {
             <BackToDashboard />
           </div>
           <div>
-            <h1 className="heading-lg text-gray-900">Wallet Addresses</h1>
-            <p className="text-body text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>
+            <h1 className="font-phonic text-5xl font-normal text-gray-900">Wallet Addresses</h1>
+            <p className="font-capsule text-base font-normal text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>
           </div>
         </div>
 
         {/* Auto-save indicator */}
         {saving && (
           <div className="flex justify-end">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 font-phonic text-sm font-normal text-gray-600">
               <Loader2 className="h-4 w-4 animate-spin" />
               Saving...
             </div>
@@ -241,7 +241,7 @@ export default function WalletsPage() {
         {success && (
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
+            <AlertDescription className="font-capsule text-base font-normal text-green-800">
               Your wallet settings have been updated successfully.
             </AlertDescription>
           </Alert>

@@ -101,10 +101,10 @@ export default function CookiePolicy() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Legal Documentation
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Cookie Policy
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
               Learn how Cryptrac uses cookies and similar tracking technologies to enhance your experience
             </p>
             <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
@@ -127,7 +127,7 @@ export default function CookiePolicy() {
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
             <CardHeader className="pb-4">
-              <CardTitle className="text-sm font-semibold text-gray-900">Table of Contents</CardTitle>
+              <CardTitle className="font-phonic text-sm font-normal text-gray-900">Table of Contents</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <nav className="space-y-1 pb-4">
@@ -160,7 +160,7 @@ export default function CookiePolicy() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Cookie className="h-8 w-8 text-[#7f5efd]" />
                     1. Introduction
                   </h2>
@@ -172,16 +172,16 @@ export default function CookiePolicy() {
                       This policy explains how Cryptrac Solutions uses cookies and tracking technologies
                     </p>
                   </div>
-                  <p className="text-gray-700 leading-relaxed mb-4">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
                     This Cookie Policy explains how Cryptrac Solutions ("Company," "we," "us," or "our") uses cookies and similar tracking technologies when you visit our website, use our mobile applications, or interact with our cryptocurrency payment processing services (collectively, the "Service"). This policy should be read in conjunction with our Privacy Policy and Terms of Service.
                   </p>
-                  <p className="text-gray-700 leading-relaxed mb-4">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
                     Cookies are small text files that are placed on your device when you visit a website or use an application. They are widely used to make websites and applications work more efficiently and to provide information to website owners about user behavior and preferences.
                   </p>
-                  <p className="text-gray-700 leading-relaxed mb-4">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
                     By continuing to use our Service, you consent to our use of cookies and similar technologies as described in this policy. You can control and manage cookies through your browser settings, though disabling certain cookies may affect the functionality of our Service.
                   </p>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed">
                     We are committed to transparency about our data practices and want to ensure you understand how and why we use cookies. This policy provides detailed information about the types of cookies we use, their purposes, and how you can manage your cookie preferences.
                   </p>
                 </section>
@@ -190,11 +190,11 @@ export default function CookiePolicy() {
 
                 {/* Section 2: Types of Cookies */}
                 <section id="types" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Settings className="h-8 w-8 text-[#7f5efd]" />
                     2. Types of Cookies We Use
                   </h2>
-                  <p className="text-gray-700 leading-relaxed mb-6">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     Our Service uses several different types of cookies, each serving specific purposes to enhance your experience and enable the proper functioning of our platform. Understanding these categories will help you make informed decisions about your cookie preferences.
                   </p>
                   
@@ -321,18 +321,18 @@ export default function CookiePolicy() {
 
                 {/* Section 3: Third-Party Services */}
                 <section id="third-party" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     3. Third-Party Cookies and Services
                   </h2>
-                  <p className="text-gray-700 leading-relaxed mb-6">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     Our Service integrates with several third-party providers that may set their own cookies when you use our platform. These integrations are essential for providing comprehensive cryptocurrency payment processing services and maintaining the security and functionality of our platform.
                   </p>
                   
                   <div className="grid md:grid-cols-2 gap-4 mb-6">
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="text-lg text-gray-900">Supabase</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Supabase</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="text-sm text-gray-600 mb-2">Database and authentication provider</p>
@@ -346,7 +346,7 @@ export default function CookiePolicy() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="text-lg text-gray-900">NOWPayments</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">NOWPayments</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="text-sm text-gray-600 mb-2">Cryptocurrency payment processor</p>
@@ -360,7 +360,7 @@ export default function CookiePolicy() {
 
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="text-lg text-gray-900">SendGrid</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">SendGrid</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="text-sm text-gray-600 mb-2">Email communications</p>
@@ -374,7 +374,7 @@ export default function CookiePolicy() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="text-lg text-gray-900">Hosting Providers</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Hosting Providers</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="text-sm text-gray-600 mb-2">Content delivery and security</p>
@@ -398,22 +398,22 @@ export default function CookiePolicy() {
 
                 {/* Section 4: Cookie Management */}
                 <section id="management" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Settings className="h-8 w-8 text-[#7f5efd]" />
                     4. Cookie Management and Your Choices
                   </h2>
                   
-                  <p className="text-gray-700 leading-relaxed mb-6">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     You have several options for managing cookies and controlling how they are used when you interact with our Service. Understanding these options will help you make choices that align with your privacy preferences while maintaining the functionality you need.
                   </p>
 
                   <div className="space-y-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="text-lg text-gray-900">Browser Settings</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Browser Settings</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <p className="text-gray-700">Most modern browsers provide direct cookie control:</p>
+                        <p className="font-capsule text-base font-normal text-gray-700">Most modern browsers provide direct cookie control:</p>
                         <ul className="space-y-2 text-sm text-gray-600">
                           <li className="flex items-start gap-2">
                             <Badge variant="outline" className="mt-0.5">1</Badge>
@@ -438,7 +438,7 @@ export default function CookiePolicy() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="text-lg text-gray-900">Mobile Device Controls</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Mobile Device Controls</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="text-gray-700 mb-3">Mobile platforms provide additional privacy controls:</p>
@@ -461,7 +461,7 @@ export default function CookiePolicy() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="text-lg text-gray-900">Third-Party Opt-Out</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Third-Party Opt-Out</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="text-gray-700 mb-3">Many services offer their own opt-out mechanisms:</p>
@@ -494,12 +494,12 @@ export default function CookiePolicy() {
 
                 {/* Section 5: Data Retention */}
                 <section id="retention" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Clock className="h-8 w-8 text-[#7f5efd]" />
                     5. Data Retention and Cookie Lifespan
                   </h2>
                   
-                  <p className="text-gray-700 leading-relaxed mb-6">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     Different types of cookies have varying lifespans, and understanding these timeframes can help you make informed decisions about your privacy preferences and data management.
                   </p>
 
@@ -547,7 +547,7 @@ export default function CookiePolicy() {
                     </Card>
                   </div>
 
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed">
                     We regularly review and update our cookie retention practices to ensure they align with privacy best practices and regulatory requirements. Cookies that are no longer needed for their intended purpose are automatically expired or deleted according to our data retention schedules.
                   </p>
                 </section>
@@ -556,12 +556,12 @@ export default function CookiePolicy() {
 
                 {/* Section 6: Security & Privacy */}
                 <section id="security" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     6. Security and Privacy Considerations
                   </h2>
                   
-                  <p className="text-gray-700 leading-relaxed mb-6">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     The security of cookie data is a critical aspect of our overall privacy and security framework. We implement multiple layers of protection to ensure that cookie information is handled securely and in accordance with privacy best practices.
                   </p>
 
@@ -644,19 +644,19 @@ export default function CookiePolicy() {
 
                 {/* Section 7: Updates */}
                 <section id="updates" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
                     7. Updates to This Cookie Policy
                   </h2>
                   
-                  <p className="text-gray-700 leading-relaxed mb-6">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     We may update this Cookie Policy from time to time to reflect changes in our practices, technologies, legal requirements, or service offerings. When we make significant changes to this policy, we will notify users through appropriate channels and provide information about the nature of the changes.
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-4 mb-6">
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="text-lg text-gray-900">Notification Methods</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Notification Methods</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <ul className="space-y-2 text-sm text-gray-600">
@@ -678,7 +678,7 @@ export default function CookiePolicy() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="text-lg text-gray-900">Your Rights</CardTitle>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Your Rights</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <ul className="space-y-2 text-sm text-gray-600">
@@ -699,7 +699,7 @@ export default function CookiePolicy() {
                     </Card>
                   </div>
 
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed">
                     Effective dates will be clearly indicated, and we maintain previous policy versions when legally required. Your continued use of our Service after updates constitutes acceptance of the revised Cookie Policy. We encourage periodic review to stay informed about our practices.
                   </p>
                 </section>
@@ -708,12 +708,12 @@ export default function CookiePolicy() {
 
                 {/* Section 8: Contact */}
                 <section id="contact" className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     8. Contact Information and Support
                   </h2>
                   
-                  <p className="text-gray-700 leading-relaxed mb-6">
+                  <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     If you have questions about our Cookie Policy, need assistance with cookie settings, or want to exercise your privacy rights related to cookie data, we provide several ways to contact our support team.
                   </p>
                   

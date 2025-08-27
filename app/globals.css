@@ -1,7 +1,136 @@
 @import "tailwindcss";
 
+/* Font definitions based on Robinhood's typography system */
+@font-face {
+  font-family: 'Phonic';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: local('Inter Light'), local('Inter-Light'), 
+       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7SUc.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Phonic';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: local('Inter Regular'), local('Inter-Regular'), 
+       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7SUc.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Phonic';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: local('Inter Medium'), local('Inter-Medium'),
+       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa5ZL7SUc.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Phonic';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: local('Inter Bold'), local('Inter-Bold'),
+       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMaEZL7SUc.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Capsule Sans Text';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: local('DM Sans Light'), local('DMSans-Light'),
+       url('https://fonts.gstatic.com/s/dmsans/v14/rP2sp2ywxg089UriCZaIGDWCBl0O8Q.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Capsule Sans Text';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: local('DM Sans Regular'), local('DMSans-Regular'),
+       url('https://fonts.gstatic.com/s/dmsans/v14/rP2tp2ywxg089UriOZSCHBeHFl0.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Capsule Sans Text';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: local('DM Sans Medium'), local('DMSans-Medium'),
+       url('https://fonts.gstatic.com/s/dmsans/v14/rP2sp2ywxg089UriCZ2IHTWCBl0O8Q.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Capsule Sans Text';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: local('DM Sans SemiBold'), local('DMSans-SemiBold'),
+       url('https://fonts.gstatic.com/s/dmsans/v14/rP2sp2ywxg089UriCZKIFTWCBl0O8Q.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Capsule Sans Text';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: local('DM Sans Bold'), local('DMSans-Bold'),
+       url('https://fonts.gstatic.com/s/dmsans/v14/rP2sp2ywxg089UriCZOIETWCBl0O8Q.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Martina Plantijn';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: local('Playfair Display'), local('PlayfairDisplay-Regular'),
+       url('https://fonts.gstatic.com/s/playfairdisplay/v36/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvUDQZNLo_U2r.woff2') format('woff2');
+}
+
 @layer base {
   :root {
+    /* Typography System Variables based on Robinhood */
+    --font-primary: 'Phonic', Helvetica, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    --font-secondary: 'Capsule Sans Text', sans-serif;
+    --font-accent: 'Martina Plantijn', serif;
+    --font-fallback: 'Times New Roman', serif;
+    
+    /* Font sizes and line heights */
+    --text-hero: 90px;
+    --text-hero-line: 79.2px;
+    --text-hero-spacing: -4.661px;
+    
+    --text-brand: 72px;
+    --text-brand-line: 78px;
+    --text-brand-spacing: -1px;
+    
+    --text-h1: 52px;
+    --text-h1-line: 62px;
+    --text-h1-spacing: -2px;
+    
+    --text-h2: 40px;
+    --text-h2-line: 48px;
+    --text-h2-spacing: -1px;
+    
+    --text-h3: 22px;
+    --text-h3-line: 30px;
+    --text-h3-spacing: -0.5px;
+    
+    --text-body: 16px;
+    --text-body-line: 24px;
+    --text-body-spacing: -0.25px;
+    
+    --text-small: 14px;
+    --text-small-line: 22px;
+    --text-small-spacing: -0.1px;
+    
+    --text-fine: 12px;
+    --text-fine-line: 19px;
+    --text-fine-spacing: -0.1px;
     /* Cryptrac Brand Colors */
     --primary: 263 91% 69%; /* #7f5efd */
     --primary-foreground: 0 0% 100%;
@@ -77,9 +206,12 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-size: var(--text-body);
+    line-height: var(--text-body-line);
+    letter-spacing: var(--text-body-spacing);
     font-feature-settings: "rlig" 1, "calt" 1;
-    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -288,84 +420,135 @@
     border-color: #d1d5db;
   }
   
-  /* Enhanced typography system */
-  .heading-3xl {
-    font-size: 4.5rem;
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.025em;
-  }
-  
-  .heading-2xl {
-    font-size: 3.75rem;
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.025em;
-  }
-  
-  .heading-xl {
-    font-size: 3rem;
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.025em;
-  }
-  
-  .heading-lg {
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-  }
-  
-  .heading-md {
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-  }
-  
-  .heading-sm {
-    font-size: 1.75rem;
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-  }
-  
-  .heading-xs {
-    font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-  }
-  
-  .text-body-xl {
-    font-size: 1.25rem;
-    line-height: 1.7;
+  /* Robinhood Typography System */
+  /* Hero Headlines - Phonic */
+  .text-hero {
+    font-family: var(--font-primary);
+    font-size: var(--text-hero);
     font-weight: 500;
+    line-height: var(--text-hero-line);
+    letter-spacing: var(--text-hero-spacing);
   }
   
-  .text-body-lg {
-    font-size: 1.125rem;
-    line-height: 1.7;
-    font-weight: 500;
-  }
-  
-  .text-body {
-    font-size: 1rem;
-    line-height: 1.6;
+  /* Brand Statement Headlines - Martina Plantijn */
+  .text-brand {
+    font-family: var(--font-accent);
+    font-size: var(--text-brand);
     font-weight: 400;
+    line-height: var(--text-brand-line);
+    letter-spacing: var(--text-brand-spacing);
   }
   
-  .text-body-sm {
-    font-size: 0.875rem;
-    line-height: 1.5;
+  /* Section Headlines - Phonic */
+  .text-h1 {
+    font-family: var(--font-primary);
+    font-size: var(--text-h1);
     font-weight: 400;
+    line-height: var(--text-h1-line);
+    letter-spacing: var(--text-h1-spacing);
   }
   
-  .text-body-xs {
-    font-size: 0.75rem;
-    line-height: 1.4;
+  .text-h2 {
+    font-family: var(--font-primary);
+    font-size: var(--text-h2);
     font-weight: 400;
+    line-height: var(--text-h2-line);
+    letter-spacing: var(--text-h2-spacing);
+  }
+  
+  .text-h3 {
+    font-family: var(--font-primary);
+    font-size: var(--text-h3);
+    font-weight: 400;
+    line-height: var(--text-h3-line);
+    letter-spacing: var(--text-h3-spacing);
+  }
+  
+  /* Body Text - Phonic */
+  .text-body-primary {
+    font-family: var(--font-primary);
+    font-size: var(--text-body);
+    font-weight: 400;
+    line-height: var(--text-body-line);
+    letter-spacing: var(--text-body-spacing);
+  }
+  
+  /* Secondary Body Text - Capsule Sans Text */
+  .text-body-secondary {
+    font-family: var(--font-secondary);
+    font-size: var(--text-body);
+    font-weight: 400;
+    line-height: var(--text-body-line);
+    letter-spacing: var(--text-body-spacing);
+  }
+  
+  /* Small Text - Phonic */
+  .text-small {
+    font-family: var(--font-primary);
+    font-size: var(--text-small);
+    font-weight: 400;
+    line-height: var(--text-small-line);
+    letter-spacing: var(--text-small-spacing);
+  }
+  
+  /* Fine Print - Phonic */
+  .text-fine {
+    font-family: var(--font-primary);
+    font-size: var(--text-fine);
+    font-weight: 400;
+    line-height: var(--text-fine-line);
+    letter-spacing: var(--text-fine-spacing);
+  }
+  
+  /* Responsive font sizes */
+  @media (max-width: 768px) {
+    .text-hero {
+      font-size: 60px;
+      line-height: 56px;
+      letter-spacing: -3px;
+    }
+    
+    .text-brand {
+      font-size: 48px;
+      line-height: 52px;
+    }
+    
+    .text-h1 {
+      font-size: 36px;
+      line-height: 42px;
+      letter-spacing: -1.5px;
+    }
+    
+    .text-h2 {
+      font-size: 28px;
+      line-height: 34px;
+      letter-spacing: -0.8px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .text-hero {
+      font-size: 48px;
+      line-height: 44px;
+      letter-spacing: -2.5px;
+    }
+    
+    .text-brand {
+      font-size: 36px;
+      line-height: 40px;
+    }
+    
+    .text-h1 {
+      font-size: 28px;
+      line-height: 32px;
+      letter-spacing: -1px;
+    }
+    
+    .text-h2 {
+      font-size: 22px;
+      line-height: 28px;
+      letter-spacing: -0.5px;
+    }
   }
   
   /* Enhanced spacing utilities */

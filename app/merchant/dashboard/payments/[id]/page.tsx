@@ -200,8 +200,8 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Payment Link Details</h1>
-            <p className="text-gray-600 mt-1">Loading payment link information...</p>
+            <h1 className="font-phonic text-5xl font-normal text-gray-900">Payment Link Details</h1>
+            <p className="font-capsule text-base font-normal text-gray-600 mt-1">Loading payment link information...</p>
           </div>
         </div>
         
@@ -233,18 +233,18 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Payment Link Details</h1>
-            <p className="text-gray-600 mt-1">Unable to load payment link information</p>
+            <h1 className="font-phonic text-5xl font-normal text-gray-900">Payment Link Details</h1>
+            <p className="font-capsule text-base font-normal text-gray-600 mt-1">Unable to load payment link information</p>
           </div>
         </div>
         
         <Card>
           <CardContent className="p-6 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">
               {error || 'Payment Link Not Found'}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="font-capsule text-base font-normal text-gray-600 mb-4">
               The payment link you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
             </p>
             <Button 
@@ -288,8 +288,8 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
           Back
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">{paymentLink.title}</h1>
-          <p className="text-gray-600 mt-1">Payment link details and management</p>
+          <h1 className="font-phonic text-5xl font-normal text-gray-900">{paymentLink.title}</h1>
+          <p className="font-capsule text-base font-normal text-gray-600 mt-1">Payment link details and management</p>
         </div>
         <div className="flex items-center space-x-2">
           {getStatusIcon(paymentLink.status)}
@@ -317,7 +317,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-500">Amount</label>
+                <label className="font-phonic text-sm font-normal text-gray-500">Amount</label>
                 <div className="text-2xl font-bold text-gray-900">
                   {formatCurrency(paymentLink.amount, paymentLink.currency)}
                 </div>
@@ -326,7 +326,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
               {/* Subscription Invoice Number */}
               {paymentLink.subscription_invoice && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Invoice Number</label>
+                  <label className="font-phonic text-sm font-normal text-gray-500">Invoice Number</label>
                   <div className="text-lg font-semibold text-blue-600">
                     {paymentLink.subscription_invoice.invoice_number}
                   </div>
@@ -338,14 +338,14 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
               {paymentLink.description && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Description</label>
+                  <label className="font-phonic text-sm font-normal text-gray-500">Description</label>
                   <p className="text-gray-900">{paymentLink.description}</p>
                 </div>
               )}
 
               {/* Fee Breakdown */}
               <div className="p-3 bg-gray-50 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Fee Breakdown</h4>
+                <h4 className="font-phonic text-sm font-normal text-gray-700 mb-2">Fee Breakdown</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Base Amount:</span>
@@ -379,7 +379,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-500">Accepted Cryptocurrencies</label>
+                <label className="font-phonic text-sm font-normal text-gray-500">Accepted Cryptocurrencies</label>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {paymentLink.accepted_cryptos.map((crypto) => (
                     <Badge key={crypto} variant="secondary">
@@ -401,32 +401,32 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Created</label>
+                  <label className="font-phonic text-sm font-normal text-gray-500">Created</label>
                   <p className="text-gray-900">{formatDate(paymentLink.created_at)}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Link ID</label>
+                  <label className="font-phonic text-sm font-normal text-gray-500">Link ID</label>
                   <p className="text-gray-900 font-mono text-sm">{paymentLink.link_id}</p>
                 </div>
               </div>
 
               {paymentLink.expires_at && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Expires</label>
+                  <label className="font-phonic text-sm font-normal text-gray-500">Expires</label>
                   <p className="text-gray-900">{formatDate(paymentLink.expires_at)}</p>
                 </div>
               )}
 
               {paymentLink.max_uses && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Maximum Uses</label>
+                  <label className="font-phonic text-sm font-normal text-gray-500">Maximum Uses</label>
                   <p className="text-gray-900">{paymentLink.max_uses}</p>
                 </div>
               )}
 
               {paymentLink.redirect_url && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Redirect URL</label>
+                  <label className="font-phonic text-sm font-normal text-gray-500">Redirect URL</label>
                   <p className="text-gray-900 break-all">{paymentLink.redirect_url}</p>
                 </div>
               )}
@@ -445,7 +445,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-500 mb-2 block">
+                <label className="font-phonic text-sm font-normal text-gray-500 mb-2 block">
                   Share this URL with customers
                 </label>
                 <div className="flex items-center space-x-2">
@@ -500,7 +500,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                     className="border border-gray-200"
                   />
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="font-phonic text-sm font-normal text-gray-500">
                   Customers can scan this QR code to access the payment link
                 </p>
                 <Button

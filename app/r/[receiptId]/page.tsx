@@ -14,8 +14,8 @@ function ReceiptNotAvailable() {
       <div className="max-w-2xl mx-auto px-4">
         <Card className="shadow-medium">
           <CardContent className="p-8 text-center">
-            <h1 className="heading-lg text-gray-900 mb-2">Receipt not available</h1>
-            <p className="text-body text-gray-600">This receipt could not be found.</p>
+            <h1 className="font-phonic text-5xl font-normal text-gray-900 mb-2">Receipt not available</h1>
+            <p className="font-capsule text-base font-normal text-gray-600">This receipt could not be found.</p>
           </CardContent>
         </Card>
       </div>
@@ -148,11 +148,11 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 </div>
               )}
               <div>
-                <h1 className="heading-lg text-gray-900 mb-2">
+                <h1 className="font-phonic text-5xl font-normal text-gray-900 mb-2">
                   {merchant?.business_name || 'Business Name Not Available'}
                 </h1>
                 {paymentLink?.title && (
-                  <p className="text-body text-gray-600">{paymentLink.title}</p>
+                  <p className="font-capsule text-base font-normal text-gray-600">{paymentLink.title}</p>
                 )}
               </div>
               
@@ -161,7 +161,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 <div className="flex justify-center">
                   <Badge 
                     variant={tx.status === 'confirmed' ? 'default' : 'secondary'}
-                    className="text-sm"
+                    className="font-phonic text-sm font-normal"
                   >
                     {tx.status === 'confirmed' ? 'Payment Confirmed' : tx.status}
                   </Badge>
@@ -173,18 +173,18 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
 
             {/* Payment Details */}
             <div className="space-y-4">
-              <h2 className="heading-sm text-gray-900">Payment Details</h2>
+              <h2 className="font-phonic text-3xl font-normal text-gray-900">Payment Details</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-body text-gray-600">Base Amount</span>
-                  <span className="text-body font-medium">{format(baseAmount, tx.currency)}</span>
+                  <span className="font-capsule text-base font-normal text-gray-600">Base Amount</span>
+                  <span className="font-phonic text-base font-normal">{format(baseAmount, tx.currency)}</span>
                 </div>
                 
                 {Number(tx.tax_amount || 0) > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-body text-gray-600">{tx.tax_label || 'Tax'}</span>
-                    <span className="text-body font-medium text-green-700">
+                    <span className="font-capsule text-base font-normal text-gray-600">{tx.tax_label || 'Tax'}</span>
+                    <span className="font-phonic text-base font-normal text-green-700">
                       +{format(tx.tax_amount, tx.currency)}
                     </span>
                   </div>
@@ -192,8 +192,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 
                 {Number(tx.tax_amount || 0) > 0 && (
                   <div className="flex justify-between items-center border-t pt-3">
-                    <span className="text-body font-medium">Subtotal with Tax</span>
-                    <span className="text-body font-medium">
+                    <span className="font-phonic text-base font-normal">Subtotal with Tax</span>
+                    <span className="font-phonic text-base font-normal">
                       {format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}
                     </span>
                   </div>
@@ -201,8 +201,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 
                 {Number(tx.gateway_fee_amount || 0) > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-body text-gray-600">Gateway Fee</span>
-                    <span className="text-body font-medium text-blue-700">
+                    <span className="font-capsule text-base font-normal text-gray-600">Gateway Fee</span>
+                    <span className="font-phonic text-base font-normal text-blue-700">
                       +{format(tx.gateway_fee_amount, tx.currency)}
                     </span>
                   </div>
@@ -210,8 +210,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 
                 {Number(tx.conversion_fee_amount || 0) > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-body text-gray-600">Conversion Fee</span>
-                    <span className="text-body font-medium text-blue-700">
+                    <span className="font-capsule text-base font-normal text-gray-600">Conversion Fee</span>
+                    <span className="font-phonic text-base font-normal text-blue-700">
                       +{format(tx.conversion_fee_amount, tx.currency)}
                     </span>
                   </div>
@@ -219,8 +219,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 
                 {Number(tx.network_fee_amount || 0) > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-body text-gray-600">Network Fee</span>
-                    <span className="text-body font-medium text-blue-700">
+                    <span className="font-capsule text-base font-normal text-gray-600">Network Fee</span>
+                    <span className="font-phonic text-base font-normal text-blue-700">
                       +{format(tx.network_fee_amount, tx.currency)}
                     </span>
                   </div>
@@ -229,8 +229,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 <Separator className="my-4" />
                 
                 <div className="flex justify-between items-center">
-                  <span className="heading-sm text-gray-900">Total Paid</span>
-                  <span className="heading-sm text-primary font-bold">
+                  <span className="font-phonic text-3xl font-normal text-gray-900">Total Paid</span>
+                  <span className="font-phonic text-3xl font-normal text-primary">
                     {format(totalPaid, tx.currency)}
                   </span>
                 </div>
@@ -241,12 +241,12 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
 
             {/* Transaction Information */}
             <div className="space-y-4">
-              <h2 className="heading-sm text-gray-900">Transaction Information</h2>
+              <h2 className="font-phonic text-3xl font-normal text-gray-900">Transaction Information</h2>
               
-              <div className="space-y-3 text-sm">
+              <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Payment Date</span>
-                  <span className="font-medium">
+                  <span className="font-capsule text-sm font-normal text-gray-600">Payment Date</span>
+                  <span className="font-phonic text-sm font-normal">
                     {new Date(tx.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -259,28 +259,28 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 
                 {tx.nowpayments_payment_id && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Payment ID</span>
-                    <span className="font-mono text-xs font-medium">{tx.nowpayments_payment_id}</span>
+                    <span className="font-capsule text-sm font-normal text-gray-600">Payment ID</span>
+                    <span className="font-mono text-xs font-normal">{tx.nowpayments_payment_id}</span>
                   </div>
                 )}
                 
                 {cryptoPaymentInfo && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Payment Method</span>
-                    <span className="font-medium">{cryptoPaymentInfo}</span>
+                    <span className="font-capsule text-sm font-normal text-gray-600">Payment Method</span>
+                    <span className="font-phonic text-sm font-normal">{cryptoPaymentInfo}</span>
                   </div>
                 )}
                 
                 {tx.asset && tx.network && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Network</span>
-                    <span className="font-medium">{tx.asset} on {tx.network}</span>
+                    <span className="font-capsule text-sm font-normal text-gray-600">Network</span>
+                    <span className="font-phonic text-sm font-normal">{tx.asset} on {tx.network}</span>
                   </div>
                 )}
                 
                 {tx.tx_hash && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Transaction Hash</span>
+                    <span className="font-capsule text-sm font-normal text-gray-600">Transaction Hash</span>
                     <span className="font-mono text-xs">
                       {txLink ? (
                         <a 
@@ -292,7 +292,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                           {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
                         </a>
                       ) : (
-                        <span className="font-medium">
+                        <span className="font-phonic text-sm font-normal">
                           {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
                         </span>
                       )}

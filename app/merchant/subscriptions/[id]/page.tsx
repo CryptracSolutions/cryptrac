@@ -334,7 +334,7 @@ export default function SubscriptionDetailPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading subscription details...</p>
+            <p className="font-capsule text-base font-normal text-gray-600">Loading subscription details...</p>
           </div>
         </div>
       </div>
@@ -344,8 +344,8 @@ export default function SubscriptionDetailPage() {
   return (
     <div className="p-4">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
-        <p className="text-gray-600 mb-1">
+        <h1 className="font-phonic text-3xl font-normal mb-2">Dashboard</h1>
+        <p className="font-capsule text-base font-normal text-gray-600 mb-1">
           Manage your subscriptions and billing cycles.
         </p>
         <Breadcrumbs 
@@ -359,8 +359,8 @@ export default function SubscriptionDetailPage() {
 
       {sub && (
         <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">{sub.title}</h1>
-          <p className="text-gray-600 mb-1">
+          <h1 className="font-phonic text-3xl font-normal mb-2">{sub.title}</h1>
+          <p className="font-capsule text-base font-normal text-gray-600 mb-1">
             {sub.amount} {sub.currency} every {sub.interval_count} {sub.interval}
             {sub.interval_count > 1 ? 's' : ''}
             {sub.max_cycles && (
@@ -370,7 +370,7 @@ export default function SubscriptionDetailPage() {
             )}
           </p>
           {sub.next_billing_at && (
-            <p className="text-gray-600 mb-1">
+            <p className="font-capsule text-base font-normal text-gray-600 mb-1">
               Next billing: {sub.next_billing_at ? new Date(sub.next_billing_at).toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -386,7 +386,7 @@ export default function SubscriptionDetailPage() {
           {/* Customer Information */}
           {customer && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-semibold mb-2">Customer Information</h3>
+              <h3 className="font-phonic text-base font-normal mb-2">Customer Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 {customer.name && (
                   <div>
@@ -409,7 +409,7 @@ export default function SubscriptionDetailPage() {
 
           {/* Timing Configuration */}
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold mb-2">Timing Configuration</h3>
+            <h3 className="font-phonic text-base font-normal mb-2">Timing Configuration</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="font-medium">Invoice Due Days:</span> {sub.invoice_due_days || 0}
@@ -432,7 +432,7 @@ export default function SubscriptionDetailPage() {
       {cyclesWithOverrides.length > 0 && (
         <div className="mb-6 p-4 border rounded-lg">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Upcoming Billing Cycles</h2>
+            <h2 className="font-phonic text-2xl font-normal">Upcoming Billing Cycles</h2>
             <div className="flex items-center gap-2">
               {!showAllCycles && cyclesWithOverrides.length >= 5 && (
                 <button
@@ -518,7 +518,7 @@ export default function SubscriptionDetailPage() {
 
       {/* ENHANCED: Generate Invoice Section with Better UX */}
       <div className="mb-6 p-4 border rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">🧾 Manual Invoice Generation</h2>
+        <h2 className="font-phonic text-2xl font-normal mb-4">🧾 Manual Invoice Generation</h2>
         
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
           <p className="text-sm text-blue-800">
@@ -529,8 +529,8 @@ export default function SubscriptionDetailPage() {
 
         {/* Standard Generation */}
         <div className="mb-4">
-          <h3 className="font-medium mb-2">Standard Generation</h3>
-          <p className="text-sm text-gray-600 mb-3">
+          <h3 className="font-phonic text-base font-normal mb-2">Standard Generation</h3>
+          <p className="font-phonic text-sm font-normal text-gray-600 mb-3">
             Generate an invoice for the next scheduled billing cycle ({sub?.next_billing_at ? formatDateOnly(sub.next_billing_at.split('T')[0]) : 'Not scheduled'}).
             This will advance your subscription&apos;s billing schedule.
           </p>
@@ -648,7 +648,7 @@ export default function SubscriptionDetailPage() {
 
       {/* ENHANCED: Amount Overrides Section with Better Explanation */}
       <div className="mb-6 p-4 border rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">Amount Overrides</h2>
+        <h2 className="font-phonic text-2xl font-normal mb-4">Amount Overrides</h2>
         
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
           <p className="text-sm text-green-800">
@@ -659,12 +659,12 @@ export default function SubscriptionDetailPage() {
         
         {/* Schedule New Override */}
         <form onSubmit={scheduleOverride} className="space-y-4 mb-6">
-          <h3 className="font-medium">Schedule New Override</h3>
+          <h3 className="font-phonic text-base font-normal">Schedule New Override</h3>
           
           {/* Date Range Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Start Date (Effective From)</label>
+              <label className="block font-phonic text-sm font-normal mb-1">Start Date (Effective From)</label>
               <Input
                 type="date"
                 value={override.effective_from}
@@ -673,10 +673,10 @@ export default function SubscriptionDetailPage() {
                 required
                 className="form-input-enhanced"
               />
-              <p className="text-xs text-gray-500 mt-1">When the override begins</p>
+              <p className="font-phonic text-xs font-normal text-gray-500 mt-1">When the override begins</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">End Date (Optional)</label>
+              <label className="block font-phonic text-sm font-normal mb-1">End Date (Optional)</label>
               <Input
                 type="date"
                 value={override.effective_until}
@@ -684,14 +684,14 @@ export default function SubscriptionDetailPage() {
                 min={override.effective_from || new Date().toISOString().split('T')[0]}
                 className="form-input-enhanced"
               />
-              <p className="text-xs text-gray-500 mt-1">Leave empty for permanent override</p>
+              <p className="font-phonic text-xs font-normal text-gray-500 mt-1">Leave empty for permanent override</p>
             </div>
           </div>
           
           {/* Amount and Note Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">New Amount</label>
+              <label className="block font-phonic text-sm font-normal mb-1">New Amount</label>
               <Input
                 type="number"
                 step="0.01"
@@ -703,7 +703,7 @@ export default function SubscriptionDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Note (Optional)</label>
+              <label className="block font-phonic text-sm font-normal mb-1">Note (Optional)</label>
               <Input
                 value={override.note}
                 onChange={(e) => setOverride(prev => ({ ...prev, note: e.target.value }))}
@@ -768,7 +768,7 @@ export default function SubscriptionDetailPage() {
         {/* Existing Overrides */}
         {amountOverrides.length > 0 && (
           <div>
-            <h3 className="font-medium mb-3">Scheduled Overrides</h3>
+            <h3 className="font-phonic text-base font-normal mb-3">Scheduled Overrides</h3>
             <div className="space-y-2">
               {amountOverrides.map(override => (
                 <div key={override.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
@@ -808,10 +808,10 @@ export default function SubscriptionDetailPage() {
 
       {/* Invoices Section */}
       <div className="p-4 border rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">Invoice History</h2>
+        <h2 className="font-phonic text-2xl font-normal mb-4">Invoice History</h2>
         
         {invoices.length === 0 ? (
-          <p className="text-gray-600">No invoices generated yet.</p>
+          <p className="font-capsule text-base font-normal text-gray-600">No invoices generated yet.</p>
         ) : (
           <div className="space-y-3">
             {invoices.map(invoice => (

@@ -308,7 +308,7 @@ export default function TaxReportsPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading tax reports...</p>
+          <p className="font-capsule text-base font-normal text-gray-600">Loading tax reports...</p>
         </div>
       </div>
     )
@@ -330,8 +330,8 @@ export default function TaxReportsPage() {
             <div className="flex items-center gap-4 mb-3">
               <BackToDashboard />
             </div>
-            <h1 className="heading-lg text-gray-900">Transactions</h1>
-            <p className="text-body text-gray-600 mt-2">View and manage all your transaction history</p>
+            <h1 className="font-phonic text-5xl font-normal text-gray-900">Transactions</h1>
+            <p className="font-capsule text-base font-normal text-gray-600 mt-2">View and manage all your transaction history</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -366,7 +366,7 @@ export default function TaxReportsPage() {
                         <DollarSign className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Gross Sales</p>
+                        <p className="font-phonic text-sm font-normal text-gray-600">Gross Sales</p>
                         <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_gross_sales.toFixed(2)}</p>
                       </div>
                     </div>
@@ -380,7 +380,7 @@ export default function TaxReportsPage() {
                         <Receipt className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Tax Collected</p>
+                        <p className="font-phonic text-sm font-normal text-gray-600">Tax Collected</p>
                         <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_tax_collected.toFixed(2)}</p>
                       </div>
                     </div>
@@ -394,7 +394,7 @@ export default function TaxReportsPage() {
                         <Calculator className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Net Revenue</p>
+                        <p className="font-phonic text-sm font-normal text-gray-600">Net Revenue</p>
                         <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_net_revenue.toFixed(2)}</p>
                       </div>
                     </div>
@@ -408,7 +408,7 @@ export default function TaxReportsPage() {
                         <TrendingUp className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Transactions</p>
+                        <p className="font-phonic text-sm font-normal text-gray-600">Transactions</p>
                         <p className="text-2xl font-bold text-gray-900">{reportData.summary.total_transactions}</p>
                       </div>
                     </div>
@@ -426,8 +426,8 @@ export default function TaxReportsPage() {
                       <BarChart3 className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl font-bold text-gray-900">Transaction Details</CardTitle>
-                      <CardDescription className="text-base text-gray-600 mt-1">
+                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Transaction Details</CardTitle>
+                      <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
                         Detailed view of all transactions in this report
                       </CardDescription>
                     </div>
@@ -438,14 +438,14 @@ export default function TaxReportsPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Description</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Gross Amount</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Tax</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Fees</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-900">Net Amount</th>
-                          <th className="text-center py-3 px-4 font-semibold text-gray-900">Status</th>
-                          <th className="text-center py-3 px-4 font-semibold text-gray-900">Actions</th>
+                          <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Date</th>
+                          <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Description</th>
+                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Gross Amount</th>
+                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Tax</th>
+                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Fees</th>
+                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Net Amount</th>
+                          <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Status</th>
+                          <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -522,8 +522,8 @@ export default function TaxReportsPage() {
                     <Filter className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="heading-sm text-gray-900">Report Filters</CardTitle>
-                    <CardDescription className="text-body text-gray-600 mt-1">
+                    <CardTitle className="font-phonic text-base font-normal text-gray-900">Report Filters</CardTitle>
+                    <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
                       Configure your tax report parameters
                     </CardDescription>
                   </div>
@@ -532,7 +532,7 @@ export default function TaxReportsPage() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Report Type</Label>
+                    <Label className="font-phonic text-sm font-normal text-gray-700">Report Type</Label>
                     <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
                     <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
@@ -547,7 +547,7 @@ export default function TaxReportsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Year</Label>
+                    <Label className="font-phonic text-sm font-normal text-gray-700">Year</Label>
                     <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
                       <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
@@ -562,7 +562,7 @@ export default function TaxReportsPage() {
 
                   {filters.report_type === 'quarterly' && (
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-gray-700">Quarter</Label>
+                      <Label className="font-phonic text-sm font-normal text-gray-700">Quarter</Label>
                       <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
                         <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                           <SelectValue />
@@ -578,7 +578,7 @@ export default function TaxReportsPage() {
                   )}
 
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Status</Label>
+                    <Label className="font-phonic text-sm font-normal text-gray-700">Status</Label>
                     <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
                       <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                         <SelectValue />
@@ -595,7 +595,7 @@ export default function TaxReportsPage() {
                 {filters.report_type === 'custom' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-gray-700">Start Date</Label>
+                      <Label className="font-phonic text-sm font-normal text-gray-700">Start Date</Label>
                       <Input
                         type="date"
                         value={filters.start_date}
@@ -604,7 +604,7 @@ export default function TaxReportsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-gray-700">End Date</Label>
+                      <Label className="font-phonic text-sm font-normal text-gray-700">End Date</Label>
                       <Input
                         type="date"
                         value={filters.end_date}
@@ -621,7 +621,7 @@ export default function TaxReportsPage() {
                     onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
                     className="form-input-enhanced text-[#7f5efd]"
                   />
-                  <Label className="text-sm font-medium text-gray-700">Show tax-only transactions</Label>
+                  <Label className="font-phonic text-sm font-normal text-gray-700">Show tax-only transactions</Label>
                 </div>
               </CardContent>
             </Card>
@@ -635,8 +635,8 @@ export default function TaxReportsPage() {
                       <Download className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl font-bold text-gray-900">Export Report</CardTitle>
-                      <CardDescription className="text-base text-gray-600 mt-1">
+                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Export Report</CardTitle>
+                      <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
                         Download your tax report in various formats
                       </CardDescription>
                     </div>
@@ -678,8 +678,8 @@ export default function TaxReportsPage() {
                     <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                       <BarChart3 className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Report Generated</h3>
-                    <p className="text-gray-600 mb-6">Configure your filters and generate a tax report to see your data.</p>
+                    <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">No Report Generated</h3>
+                    <p className="font-capsule text-base font-normal text-gray-600 mb-6">Configure your filters and generate a tax report to see your data.</p>
                     <Button
                       onClick={generateReport}
                       disabled={loadingReport}

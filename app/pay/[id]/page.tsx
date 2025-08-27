@@ -998,8 +998,8 @@ export default function PaymentPage() {
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Payment Error</h1>
-          <p className="text-gray-600 mb-6 leading-relaxed">{error}</p>
+          <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-3">Payment Error</h1>
+          <p className="font-phonic text-base text-gray-600 mb-6">{error}</p>
           <Button onClick={() => window.location.reload()} size="lg" className="shadow-lg">
             <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
@@ -1016,8 +1016,8 @@ export default function PaymentPage() {
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-gray-500" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Payment Link Not Found</h1>
-          <p className="text-gray-600 leading-relaxed">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
+          <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-3">Payment Link Not Found</h1>
+          <p className="font-phonic text-base text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
         </div>
       </div>
     )
@@ -1032,78 +1032,78 @@ export default function PaymentPage() {
         <div className="flex items-center justify-center space-x-6 mb-8 text-sm text-gray-500">
           <div className="flex items-center space-x-2">
             <Shield className="h-4 w-4 text-primary-500" />
-            <span>Secure Payment</span>
+            <span className="font-phonic">Secure Payment</span>
           </div>
           <div className="flex items-center space-x-2">
             <Zap className="h-4 w-4 text-primary-500" />
-            <span>Instant Processing</span>
+            <span className="font-phonic">Instant Processing</span>
           </div>
           <div className="flex items-center space-x-2">
             <CreditCard className="h-4 w-4 text-primary-500" />
-            <span>Non-Custodial</span>
+            <span className="font-phonic">Non-Custodial</span>
           </div>
         </div>
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">{paymentLink.title}</h1>
+          <h1 className="font-phonic text-6xl font-normal text-gray-900 mb-3">{paymentLink.title}</h1>
           {paymentLink.description && (
-            <p className="text-lg text-gray-600 mb-4 leading-relaxed">{paymentLink.description}</p>
+            <p className="font-capsule text-base text-gray-600 mb-4">{paymentLink.description}</p>
           )}
           {paymentLink.subscription_id && (
-            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 mb-4">
-              <span>Recurring Invoice</span>
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 mb-4">
+              <span className="font-phonic text-sm text-blue-800">Recurring Invoice</span>
             </div>
           )}
           <div className="flex items-center justify-center space-x-2 text-gray-500">
-            <span>Powered by</span>
-            <span className="font-semibold text-gray-900">{paymentLink.merchant.business_name}</span>
+            <span className="font-phonic text-sm">Powered by</span>
+            <span className="font-phonic text-sm font-medium text-gray-900">{paymentLink.merchant.business_name}</span>
           </div>
         </div>
 
         {/* Payment Amount Card */}
         <Card className="mb-8 shadow-lg border-0 bg-white">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl font-bold text-gray-900">Payment Details</CardTitle>
+            <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {feeBreakdown && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600">Base Amount:</span>
-                  <span className="font-semibold text-gray-900">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                  <span className="font-phonic text-base text-gray-600">Base Amount:</span>
+                  <span className="font-phonic text-base font-medium text-gray-900">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
                 </div>
                 
                 {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
                   <>
                     {paymentLink.tax_rates.map((rate, index) => (
                       <div key={index} className="flex justify-between text-sm py-1">
-                        <span className="text-gray-600">{rate.label} ({rate.percentage}%):</span>
-                        <span className="text-gray-700">${(feeBreakdown.baseAmount * (rate.percentage / 100)).toFixed(2)}</span>
+                        <span className="font-phonic text-sm text-gray-600">{rate.label} ({rate.percentage}%):</span>
+                        <span className="font-phonic text-sm text-gray-700">${(feeBreakdown.baseAmount * (rate.percentage / 100)).toFixed(2)}</span>
                       </div>
                     ))}
                     <div className="flex justify-between items-center py-2 border-t border-gray-100">
-                      <span className="text-gray-600 font-medium">Tax Total:</span>
-                      <span className="font-semibold text-gray-900">${feeBreakdown.taxAmount.toFixed(2)}</span>
+                      <span className="font-phonic text-base font-normal text-gray-600">Tax Total:</span>
+                      <span className="font-phonic text-base font-medium text-gray-900">${feeBreakdown.taxAmount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600 font-medium">Subtotal with Tax:</span>
-                      <span className="font-semibold text-gray-900">${feeBreakdown.subtotalWithTax.toFixed(2)}</span>
+                      <span className="font-phonic text-base font-normal text-gray-600">Subtotal with Tax:</span>
+                      <span className="font-phonic text-base font-medium text-gray-900">${feeBreakdown.subtotalWithTax.toFixed(2)}</span>
                     </div>
                   </>
                 )}
                 
                 {feeBreakdown.platformFee > 0 && (
                   <div className="flex justify-between text-sm py-1">
-                    <span className="text-gray-600">Gateway Fee ({((paymentLink.fee_percentage || 0) * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%):</span>
-                    <span className="text-gray-700">${feeBreakdown.platformFee.toFixed(2)}</span>
+                    <span className="font-phonic text-sm text-gray-600">Gateway Fee ({((paymentLink.fee_percentage || 0) * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%):</span>
+                    <span className="font-phonic text-sm text-gray-700">${feeBreakdown.platformFee.toFixed(2)}</span>
                   </div>
                 )}
                 
                 <Separator className="my-4" />
                 <div className="flex justify-between items-center py-3 bg-primary-50 rounded-lg px-4">
-                  <span className="text-lg font-bold text-gray-900">Total Amount:</span>
-                  <span className="text-2xl font-bold text-primary-600">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                  <span className="font-phonic text-xl font-normal text-gray-900">Total Amount:</span>
+                  <span className="font-phonic text-3xl font-medium text-primary-600">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
                 </div>
               </div>
             )}
@@ -1114,8 +1114,8 @@ export default function PaymentPage() {
           /* Currency Selection */
           <Card className="shadow-lg border-0 bg-white">
             <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl font-bold text-gray-900">Select Payment Method</CardTitle>
-              <p className="text-gray-600">Choose your preferred cryptocurrency</p>
+              <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Select Payment Method</CardTitle>
+              <p className="font-phonic text-base text-gray-600">Choose your preferred cryptocurrency</p>
             </CardHeader>
             <CardContent className="space-y-6">
               {availableCurrencies.length === 0 ? (
@@ -1123,7 +1123,7 @@ export default function PaymentPage() {
                   <div className="relative">
                     <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
                   </div>
-                  <p className="text-gray-600">Loading available currencies...</p>
+                  <p className="font-phonic text-base text-gray-600">Loading available currencies...</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -1153,19 +1153,19 @@ export default function PaymentPage() {
                               )}
                             </div>
                             <div>
-                              <div className="font-semibold text-gray-900">{currency.code.toUpperCase()}</div>
-                              <div className="text-sm text-gray-500">{currency.name}</div>
+                              <div className="font-phonic text-base font-medium text-gray-900">{currency.code.toUpperCase()}</div>
+                              <div className="font-phonic text-sm text-gray-500">{currency.name}</div>
                             </div>
                           </div>
                           <div className="text-right">
                             {estimate && estimate.estimated_amount && typeof estimate.estimated_amount === 'number' && estimate.estimated_amount !== null ? (
-                              <div className="font-bold text-lg text-gray-900">
+                              <div className="font-phonic text-lg font-medium text-gray-900">
                                 {estimate.estimated_amount.toFixed(6)}
                               </div>
                             ) : (
-                              <div className="text-gray-400">Calculating...</div>
+                              <div className="font-phonic text-base text-gray-400">Calculating...</div>
                             )}
-                            <div className="text-sm text-gray-500">{currency.code.toUpperCase()}</div>
+                            <div className="font-phonic text-sm text-gray-500">{currency.code.toUpperCase()}</div>
                           </div>
                         </div>
                       </div>
@@ -1178,7 +1178,7 @@ export default function PaymentPage() {
                 <Button 
                   onClick={createPayment} 
                   disabled={creatingPayment}
-                  className="w-full h-14 text-lg font-semibold shadow-lg"
+                  className="w-full h-14 font-phonic text-base font-normal shadow-lg"
                   size="lg"
                 >
                   {creatingPayment ? (

@@ -124,23 +124,43 @@ module.exports = {
         sm: "calc(16px - 4px)",
       },
       fontFamily: {
-        // Use Inter as the primary sans-serif font as per new typography guidelines
-        sans: ['Inter', 'sans-serif'],
+        // Robinhood-inspired typography system
+        'phonic': ['Phonic', 'Helvetica', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Arial', 'sans-serif'],
+        'capsule': ['"Capsule Sans Text"', 'sans-serif'],
+        'martina': ['"Martina Plantijn"', 'serif'],
+        sans: ['Phonic', 'Helvetica', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Arial', 'sans-serif'],
+        serif: ['"Martina Plantijn"', 'serif'],
         mono: ['var(--font-geist-mono)', 'monospace'],
       },
       fontSize: {
-        'xs': ['0.75rem', { lineHeight: '1rem' }],
-        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
-        'base': ['1rem', { lineHeight: '1.6rem' }],
-        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
-        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
-        '2xl': ['1.5rem', { lineHeight: '2rem' }],
-        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
-        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
-        '5xl': ['3rem', { lineHeight: '1.1' }],
-        '6xl': ['3.75rem', { lineHeight: '1.1' }],
-        '7xl': ['4.5rem', { lineHeight: '1' }],
-        '8xl': ['6rem', { lineHeight: '1' }],
+        // Fine print
+        'xs': ['12px', { lineHeight: '19px', letterSpacing: '-0.1px' }],
+        // Small text
+        'sm': ['14px', { lineHeight: '22px', letterSpacing: '-0.1px' }],
+        // Body text
+        'base': ['16px', { lineHeight: '24px', letterSpacing: '-0.25px' }],
+        // Large body text
+        'lg': ['18px', { lineHeight: '26px', letterSpacing: '-0.25px' }],
+        'xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.3px' }],
+        // Subheadings
+        '2xl': ['22px', { lineHeight: '30px', letterSpacing: '-0.5px' }],
+        // Section headers
+        '3xl': ['28px', { lineHeight: '34px', letterSpacing: '-0.8px' }],
+        '4xl': ['36px', { lineHeight: '42px', letterSpacing: '-1px' }],
+        // Main headers
+        '5xl': ['40px', { lineHeight: '48px', letterSpacing: '-1px' }],
+        '6xl': ['52px', { lineHeight: '62px', letterSpacing: '-2px' }],
+        // Brand statement
+        '7xl': ['72px', { lineHeight: '78px', letterSpacing: '-1px' }],
+        // Hero
+        '8xl': ['90px', { lineHeight: '79.2px', letterSpacing: '-4.661px' }],
+      },
+      fontWeight: {
+        light: '300',
+        normal: '400', 
+        medium: '500',
+        semibold: '600',
+        bold: '700',
       },
       spacing: {
         '18': '4.5rem',

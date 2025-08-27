@@ -65,7 +65,7 @@ export default function DebugCurrencies() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-          <p className="mt-4 text-gray-600">Loading all currencies...</p>
+          <p className="mt-4 font-capsule text-base font-normal text-gray-600">Loading all currencies...</p>
         </div>
       </div>
     );
@@ -75,7 +75,7 @@ export default function DebugCurrencies() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">{error}</p>
+          <p className="font-phonic text-base font-normal text-red-600">{error}</p>
         </div>
       </div>
     );
@@ -84,21 +84,21 @@ export default function DebugCurrencies() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">All NOWPayments Currencies</h1>
+        <h1 className="font-phonic text-5xl font-normal text-gray-900 mb-8">All NOWPayments Currencies</h1>
         
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Total Currencies</h3>
-            <p className="text-3xl font-bold text-purple-600">{currencies.length}</p>
+            <h3 className="font-phonic text-2xl font-normal text-gray-900">Total Currencies</h3>
+            <p className="font-phonic text-3xl font-normal text-purple-600">{currencies.length}</p>
           </Card>
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Stablecoins</h3>
-            <p className="text-3xl font-bold text-green-600">{stablecoins.length}</p>
+            <h3 className="font-phonic text-2xl font-normal text-gray-900">Stablecoins</h3>
+            <p className="font-phonic text-3xl font-normal text-green-600">{stablecoins.length}</p>
           </Card>
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Non-Stablecoins</h3>
-            <p className="text-3xl font-bold text-blue-600">{nonStablecoins.length}</p>
+            <h3 className="font-phonic text-2xl font-normal text-gray-900">Non-Stablecoins</h3>
+            <p className="font-phonic text-3xl font-normal text-blue-600">{nonStablecoins.length}</p>
           </Card>
         </div>
 
@@ -106,7 +106,7 @@ export default function DebugCurrencies() {
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`px-4 py-2 rounded-lg font-phonic font-normal ${
               filter === 'all' 
                 ? 'bg-purple-600 text-white' 
                 : 'bg-white text-gray-700 border border-gray-300'
@@ -116,7 +116,7 @@ export default function DebugCurrencies() {
           </button>
           <button
             onClick={() => setFilter('stablecoins')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`px-4 py-2 rounded-lg font-phonic font-normal ${
               filter === 'stablecoins' 
                 ? 'bg-green-600 text-white' 
                 : 'bg-white text-gray-700 border border-gray-300'
@@ -126,7 +126,7 @@ export default function DebugCurrencies() {
           </button>
           <button
             onClick={() => setFilter('non-stablecoins')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`px-4 py-2 rounded-lg font-phonic font-normal ${
               filter === 'non-stablecoins' 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-white text-gray-700 border border-gray-300'
@@ -139,7 +139,7 @@ export default function DebugCurrencies() {
         {/* Currencies List */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="font-phonic text-3xl font-normal text-gray-900">
               {filter === 'all' && 'All Currencies'}
               {filter === 'stablecoins' && 'Stablecoins Only'}
               {filter === 'non-stablecoins' && 'Non-Stablecoins Only'}
@@ -151,22 +151,22 @@ export default function DebugCurrencies() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-phonic text-xs font-normal text-gray-500 uppercase tracking-wider">
                     Code
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-phonic text-xs font-normal text-gray-500 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-phonic text-xs font-normal text-gray-500 uppercase tracking-wider">
                     Network
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-phonic text-xs font-normal text-gray-500 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-phonic text-xs font-normal text-gray-500 uppercase tracking-wider">
                     Min Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-phonic text-xs font-normal text-gray-500 uppercase tracking-wider">
                     NOWPayments Code
                   </th>
                 </tr>
@@ -174,17 +174,17 @@ export default function DebugCurrencies() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredCurrencies.map((currency, index) => (
                   <tr key={`${currency.code}-${index}`} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap font-phonic text-sm font-normal text-gray-900">
                       {currency.code}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap font-phonic text-sm font-normal text-gray-500">
                       {currency.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap font-phonic text-sm font-normal text-gray-500">
                       {currency.network || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      <span className={`inline-flex px-2 py-1 font-phonic text-xs font-normal rounded-full ${
                         currency.is_stablecoin 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-blue-100 text-blue-800'
@@ -192,10 +192,10 @@ export default function DebugCurrencies() {
                         {currency.is_stablecoin ? 'Stablecoin' : 'Cryptocurrency'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap font-phonic text-sm font-normal text-gray-500">
                       {currency.min_amount}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap font-phonic text-sm font-normal text-gray-500">
                       {currency.nowpayments_code || '-'}
                     </td>
                   </tr>
@@ -217,7 +217,7 @@ export default function DebugCurrencies() {
               link.download = `currencies-${filter}-${new Date().toISOString().split('T')[0]}.json`;
               link.click();
             }}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-phonic font-normal hover:bg-purple-700"
           >
             Export {filter === 'all' ? 'All' : filter} Currencies as JSON
           </button>

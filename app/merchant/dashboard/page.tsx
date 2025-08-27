@@ -317,10 +317,10 @@ export default function MerchantDashboard() {
         {/* Enhanced Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="heading-xl text-gray-900">
+            <h1 className="font-phonic text-6xl font-normal text-gray-900">
               Welcome back, {businessName}!
             </h1>
-            <p className="text-body-lg text-gray-600 font-medium">
+            <p className="font-capsule text-base font-normal text-gray-600">
               Here&apos;s what&apos;s happening with your cryptocurrency payments today.
             </p>
           </div>
@@ -344,7 +344,7 @@ export default function MerchantDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-6 w-6 text-green-600" />
-                  <span className="text-body-lg font-semibold text-green-900">
+                  <span className="font-phonic text-base font-medium text-green-900">
                     You have {newPayments.length} new payment{newPayments.length > 1 ? 's' : ''}!
                   </span>
                 </div>
@@ -357,11 +357,11 @@ export default function MerchantDashboard() {
                   <li key={p.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
                     <div className="flex items-center gap-3">
                       <DollarSign className="h-5 w-5 text-green-600" />
-                      <span className="font-semibold text-green-900">
+                      <span className="font-phonic font-medium text-green-900">
                         {formatCurrency(p.amount, p.currency)}
                       </span>
                     </div>
-                    <span className="text-sm text-green-700">
+                    <span className="font-phonic text-sm text-green-700">
                       {new Date(p.created_at).toLocaleString()}
                     </span>
                   </li>
@@ -380,17 +380,17 @@ export default function MerchantDashboard() {
                   <Clock className="h-6 w-6 text-orange-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-orange-900 mb-1">Free Trial Active</h3>
-                  <p className="text-body text-orange-700">
+                  <h3 className="font-phonic text-2xl font-normal text-orange-900 mb-1">Free Trial Active</h3>
+                  <p className="font-phonic text-base text-orange-700">
                     Your trial ends on {new Date(trialEnd).toLocaleDateString()}. $99 One-time setup fee + $19/mo subscription will be charged to continue accepting crypto payments.
                   </p>
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-900">Ends in</div>
-                    <div className="text-lg font-semibold text-orange-700">{trialCountdown}</div>
+                    <div className="font-phonic text-3xl font-normal text-orange-900">Ends in</div>
+                    <div className="font-phonic text-xl font-normal text-orange-700">{trialCountdown}</div>
                   </div>
-                  <Link href="/merchant/settings" className="text-sm text-orange-700 underline font-medium">
+                  <Link href="/merchant/settings" className="font-phonic text-sm text-orange-700 underline font-normal">
                     Cancel Subscription
                   </Link>
                 </div>
@@ -403,48 +403,48 @@ export default function MerchantDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="text-lg font-bold text-gray-900">Total Revenue</CardTitle>
+              <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Total Revenue</CardTitle>
               <div className="p-3 bg-[#7f5efd] rounded-full">
                 <DollarSign className="h-6 w-6 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2 text-[#7f5efd]">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="font-phonic text-4xl font-medium mb-2 text-[#7f5efd]">${stats.totalRevenue.toFixed(2)}</div>
               <div className="flex items-center gap-2 text-gray-600">
                 <TrendingUp className="h-4 w-4" />
-                <span className="text-sm">Growing steadily</span>
+                <span className="font-phonic text-sm">Growing steadily</span>
               </div>
             </CardContent>
           </Card>
 
           <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="text-lg font-bold text-gray-900">Payment Links</CardTitle>
+              <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Payment Links</CardTitle>
               <div className="p-3 bg-[#7f5efd] rounded-full">
                 <LinkIcon className="h-6 w-6 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{stats.paymentLinks}</div>
+              <div className="font-phonic text-4xl font-medium mb-2 text-[#7f5efd]">{stats.paymentLinks}</div>
               <div className="flex items-center gap-2 text-gray-600">
                 <Users className="h-4 w-4" />
-                <span className="text-sm">Active links</span>
+                <span className="font-phonic text-sm">Active links</span>
               </div>
             </CardContent>
           </Card>
 
           <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="text-lg font-bold text-gray-900">Successful Payments</CardTitle>
+              <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Successful Payments</CardTitle>
               <div className="p-3 bg-[#7f5efd] rounded-full">
                 <CheckCircle className="h-6 w-6 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{stats.successfulPayments}</div>
+              <div className="font-phonic text-4xl font-medium mb-2 text-[#7f5efd]">{stats.successfulPayments}</div>
               <div className="flex items-center gap-2 text-gray-600">
                 <Zap className="h-4 w-4" />
-                <span className="text-sm">Completed transactions</span>
+                <span className="font-phonic text-sm">Completed transactions</span>
               </div>
             </CardContent>
           </Card>
@@ -455,8 +455,8 @@ export default function MerchantDashboard() {
           {/* Enhanced Quick Actions */}
           <Card className="card-hover shadow-lg">
             <CardHeader id="quick-actions">
-              <CardTitle className="text-xl font-bold">Quick Actions</CardTitle>
-              <CardDescription className="text-body">
+              <CardTitle className="font-phonic text-3xl font-normal">Quick Actions</CardTitle>
+              <CardDescription className="font-phonic text-base">
                 Get started with accepting cryptocurrency payments
               </CardDescription>
             </CardHeader>
@@ -471,8 +471,8 @@ export default function MerchantDashboard() {
                     <Plus className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold text-lg">Create Payment Link</div>
-                    <div className="text-sm text-gray-500">Generate a link to accept crypto payments</div>
+                    <div className="font-phonic text-xl font-normal">Create Payment Link</div>
+                    <div className="font-phonic text-sm text-gray-500">Generate a link to accept crypto payments</div>
                   </div>
                 </div>
               </Button>
@@ -487,8 +487,8 @@ export default function MerchantDashboard() {
                     <CreditCard className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold text-lg">Smart Terminal</div>
-                    <div className="text-sm text-gray-500">Accept in-person crypto payments</div>
+                    <div className="font-phonic text-xl font-normal">Smart Terminal</div>
+                    <div className="font-phonic text-sm text-gray-500">Accept in-person crypto payments</div>
                   </div>
                 </div>
               </Button>
@@ -503,8 +503,8 @@ export default function MerchantDashboard() {
                     <Calendar className="h-6 w-6 text-indigo-600" />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold text-lg">Create Subscription</div>
-                    <div className="text-sm text-gray-500">Set up a recurring payment plan</div>
+                    <div className="font-phonic text-xl font-normal">Create Subscription</div>
+                    <div className="font-phonic text-sm text-gray-500">Set up a recurring payment plan</div>
                   </div>
                 </div>
               </Button>
@@ -514,8 +514,8 @@ export default function MerchantDashboard() {
           {/* Enhanced Recent Activity */}
           <Card className="card-hover shadow-lg">
             <CardHeader>
-              <CardTitle className="text-xl font-bold">Recent Activity</CardTitle>
-              <CardDescription className="text-body">
+              <CardTitle className="font-phonic text-3xl font-normal">Recent Activity</CardTitle>
+              <CardDescription className="font-phonic text-base">
                 Your latest payment link activity
               </CardDescription>
             </CardHeader>
@@ -525,8 +525,8 @@ export default function MerchantDashboard() {
                   <div className="p-4 bg-gray-100 rounded-full mb-6">
                     <Calendar className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">No activity yet</h3>
-                  <p className="text-body text-gray-500 mb-6 max-w-sm">
+                  <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-3">No activity yet</h3>
+                  <p className="font-phonic text-base text-gray-500 mb-6 max-w-sm">
                     Create your first payment link to start seeing activity here.
                   </p>
                   <Button
@@ -545,11 +545,11 @@ export default function MerchantDashboard() {
                           <DollarSign className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                          <p className="font-bold text-lg">{formatCurrency(tx.amount, tx.currency)}</p>
-                          <p className="text-sm text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
+                          <p className="font-phonic text-lg font-medium">{formatCurrency(tx.amount, tx.currency)}</p>
+                          <p className="font-phonic text-sm text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{tx.currency}</span>
+                      <span className="font-phonic text-sm font-normal text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{tx.currency}</span>
                     </div>
                   ))}
                 </div>
@@ -561,8 +561,8 @@ export default function MerchantDashboard() {
         {/* Enhanced Supported Cryptocurrencies */}
         <Card className="card-hover shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-bold">Cryptocurrencies you currently accept</CardTitle>
-            <CardDescription className="text-body">
+            <CardTitle className="font-phonic text-3xl font-normal">Cryptocurrencies you currently accept</CardTitle>
+            <CardDescription className="font-phonic text-base">
               Accept payments in these popular cryptocurrencies
             </CardDescription>
           </CardHeader>
@@ -572,8 +572,8 @@ export default function MerchantDashboard() {
                 <div key={crypto.symbol} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7f5efd] hover:shadow-md transition-all duration-200">
                   <CryptoIcon currency={crypto.symbol} className="h-10 w-10" />
                   <div>
-                    <div className="font-bold text-sm">{crypto.symbol}</div>
-                    <div className="text-xs text-gray-500">{crypto.name}</div>
+                    <div className="font-phonic text-sm font-medium">{crypto.symbol}</div>
+                    <div className="font-phonic text-xs text-gray-500">{crypto.name}</div>
                   </div>
                 </div>
               ))}
@@ -584,8 +584,8 @@ export default function MerchantDashboard() {
         {/* Enhanced Getting Started Guide */}
         <Card className="card-hover shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-bold">Getting Started</CardTitle>
-            <CardDescription className="text-body">
+            <CardTitle className="font-phonic text-3xl font-normal">Getting Started</CardTitle>
+            <CardDescription className="font-phonic text-base">
               Follow these steps to start accepting cryptocurrency payments
             </CardDescription>
           </CardHeader>
@@ -593,7 +593,7 @@ export default function MerchantDashboard() {
             <div className="space-y-6">
               {steps.map(step => (
                 <div key={step.id} className="flex items-start gap-6">
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-phonic text-lg font-normal ${
                     step.completed 
                       ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg' 
                       : 'bg-gray-100 text-gray-400'
@@ -601,10 +601,10 @@ export default function MerchantDashboard() {
                     {step.completed ? <CheckCircle className="h-6 w-6" /> : step.id}
                   </div>
                   <div className="flex-1">
-                    <h4 className={`text-lg font-bold mb-2 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                    <h4 className={`font-phonic text-xl font-normal mb-2 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
                       {step.title}
                     </h4>
-                    <p className={`text-body ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
+                    <p className={`font-phonic text-base ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
                       {step.description}
                     </p>
                   </div>

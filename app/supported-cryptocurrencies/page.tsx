@@ -253,19 +253,19 @@ export default function SupportedCryptocurrencies() {
         <div className="container-wide flex h-16 items-center justify-between">
           <Logo size="md" />
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Home
             </Link>
-            <Link href="/#features" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/#features" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Features
             </Link>
-            <Link href="/#pricing" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/#pricing" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Pricing
             </Link>
-            <Link href="/help" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/help" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Help
             </Link>
-            <Link href="/contact" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/contact" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
               Contact
             </Link>
           </nav>
@@ -342,11 +342,11 @@ export default function SupportedCryptocurrencies() {
               Back to Home
             </Link>
             
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
+            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-6 leading-tight">
               All Supported <span className="text-[#7f5efd]">Cryptocurrencies</span>
             </h1>
-            <p className="text-xl leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
-              <span className="font-semibold text-[#7f5efd]">{Object.keys(APPROVED_CURRENCIES).length} supported cryptocurrencies</span> for instant, secure payments
+            <p className="font-capsule text-base font-normal leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
+              <span className="font-phonic text-base font-normal text-[#7f5efd]">{Object.keys(APPROVED_CURRENCIES).length} supported cryptocurrencies</span> for instant, secure payments
             </p>
 
             {/* Search Bar */}
@@ -356,7 +356,7 @@ export default function SupportedCryptocurrencies() {
                 <input
                   type="text"
                   placeholder="Search by name or ticker symbol..."
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7f5efd] focus:border-transparent text-gray-900"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7f5efd] focus:border-transparent font-phonic text-base font-normal text-gray-900"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -364,18 +364,18 @@ export default function SupportedCryptocurrencies() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 font-phonic text-sm font-normal text-gray-600">
               <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Shield className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-medium">Non-Custodial</span>
+                <span className="font-phonic text-sm font-normal">Non-Custodial</span>
               </div>
               <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Zap className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-medium">Instant Processing</span>
+                <span className="font-phonic text-sm font-normal">Instant Processing</span>
               </div>
               <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Globe className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-medium">Global Support</span>
+                <span className="font-phonic text-sm font-normal">Global Support</span>
               </div>
             </div>
           </div>

@@ -209,8 +209,8 @@ export default function ProfilePage() {
                 <ArrowLeft className="h-4 w-4" /> Back to Dashboard
               </Button>
             </div>
-            <h1 className="heading-lg text-gray-900">Profile</h1>
-            <p className="text-body text-gray-600">Manage your business information and contact details</p>
+            <h1 className="font-phonic text-5xl font-normal text-gray-900">Profile</h1>
+            <p className="font-capsule text-base font-normal text-gray-600">Manage your business information and contact details</p>
           </div>
           <Button
             onClick={saveSettings}
@@ -235,7 +235,7 @@ export default function ProfilePage() {
         {success && (
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
+            <AlertDescription className="font-capsule text-base font-normal text-green-800">
               Your profile has been updated successfully.
             </AlertDescription>
           </Alert>

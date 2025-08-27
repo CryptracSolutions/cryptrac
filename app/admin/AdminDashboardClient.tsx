@@ -211,14 +211,14 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-lg text-gray-600 mt-2">Platform overview and administrative controls</p>
+            <h1 className="font-phonic text-6xl font-normal text-gray-900">Admin Dashboard</h1>
+            <p className="font-capsule text-base font-normal text-gray-600 mt-2">Platform overview and administrative controls</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               onClick={() => setShowSensitiveData(!showSensitiveData)}
-              className="flex items-center gap-2 font-medium"
+              className="flex items-center gap-2 font-phonic font-normal"
             >
               {showSensitiveData ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               {showSensitiveData ? 'Hide' : 'Show'} Sensitive Data
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
             <Button
               onClick={refreshData}
               disabled={refreshing}
-              className="flex items-center gap-2 font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white"
+              className="flex items-center gap-2 font-phonic font-normal bg-[#7f5efd] hover:bg-[#6b4fd8] text-white"
             >
               {refreshing ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
@@ -248,15 +248,15 @@ export default function AdminDashboard() {
                     <stat.icon className="h-6 w-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="font-phonic text-sm font-normal text-gray-600">{stat.title}</p>
+                    <p className="font-phonic text-3xl font-normal text-gray-900">{stat.value}</p>
                     <div className="flex items-center gap-2 mt-1">
                       {stat.changeType === 'positive' ? (
                         <TrendingUp className="h-4 w-4 text-green-500" />
                       ) : (
                         <TrendingDown className="h-4 w-4 text-red-500" />
                       )}
-                      <span className={`text-sm font-medium ${
+                      <span className={`font-phonic text-sm font-normal ${
                         stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {stat.change}
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-3">{stat.description}</p>
+                <p className="font-phonic text-xs font-normal text-gray-500 mt-3">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -280,8 +280,8 @@ export default function AdminDashboard() {
                     <section.icon className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-bold text-gray-900">{section.title}</CardTitle>
-                    <CardDescription className="text-base text-gray-600 mt-1">
+                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">{section.title}</CardTitle>
+                    <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
                       {section.description}
                     </CardDescription>
                   </div>
@@ -292,7 +292,7 @@ export default function AdminDashboard() {
                   <Button
                     key={actionIndex}
                     variant="outline"
-                    className="w-full justify-start h-12 text-base font-medium"
+                    className="w-full justify-start h-12 font-phonic text-base font-normal"
                     onClick={() => router.push(action.href)}
                   >
                     {action.label}
@@ -312,15 +312,15 @@ export default function AdminDashboard() {
                   <Bell className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl font-bold text-gray-900">Recent Activity</CardTitle>
-                  <CardDescription className="text-base text-gray-600 mt-1">
+                  <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Recent Activity</CardTitle>
+                  <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
                     Latest platform events and notifications
                   </CardDescription>
                 </div>
               </div>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 font-medium"
+                className="flex items-center gap-2 font-phonic font-normal"
               >
                 View All
               </Button>
@@ -334,13 +334,13 @@ export default function AdminDashboard() {
                     {getStatusIcon(activity.status)}
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{activity.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                    <p className="text-xs text-gray-500 mt-2">{activity.time}</p>
+                    <h4 className="font-phonic text-base font-normal text-gray-900">{activity.title}</h4>
+                    <p className="font-phonic text-sm font-normal text-gray-600 mt-1">{activity.description}</p>
+                    <p className="font-phonic text-xs font-normal text-gray-500 mt-2">{activity.time}</p>
                   </div>
                   <Badge
                     variant={activity.status === 'completed' ? 'default' : 'secondary'}
-                    className="text-xs"
+                    className="font-phonic text-xs font-normal"
                   >
                     {activity.status}
                   </Badge>
@@ -358,8 +358,8 @@ export default function AdminDashboard() {
                 <Zap className="h-6 w-6 text-white" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold text-gray-900">Quick Actions</CardTitle>
-                <CardDescription className="text-base text-gray-600 mt-1">
+                <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Quick Actions</CardTitle>
+                <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
                   Common administrative tasks
                 </CardDescription>
               </div>
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
-                className="h-16 text-base font-medium flex flex-col items-center gap-2"
+                className="h-16 font-phonic text-base font-normal flex flex-col items-center gap-2"
                 onClick={() => router.push('/admin/merchants')}
               >
                 <Building className="h-6 w-6" />
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 variant="outline"
-                className="h-16 text-base font-medium flex flex-col items-center gap-2"
+                className="h-16 font-phonic text-base font-normal flex flex-col items-center gap-2"
                 onClick={() => router.push('/admin/analytics')}
               >
                 <BarChart3 className="h-6 w-6" />
@@ -385,7 +385,7 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 variant="outline"
-                className="h-16 text-base font-medium flex flex-col items-center gap-2"
+                className="h-16 font-phonic text-base font-normal flex flex-col items-center gap-2"
                 onClick={() => router.push('/admin/settings')}
               >
                 <Settings className="h-6 w-6" />
