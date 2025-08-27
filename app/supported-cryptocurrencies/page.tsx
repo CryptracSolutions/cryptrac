@@ -123,6 +123,7 @@ const APPROVED_CURRENCIES: Record<string, string> = {
   'TENSHI': 'Tenshi',
   'LUNA': 'Terra',
   'LUNC': 'Terra Classic',
+  'USDT': 'Tether USD',
   'USDTARB': 'Tether',
   'USDTARC20': 'Tether',
   'USDTOP': 'Tether',
