@@ -81,7 +81,14 @@ export default function SupportedCryptocurrencies() {
         // USD pair tokens that should remain separate
         'MATICUSDCE', 'OPUSDCE',
         // Stablecoins that should be allowed
-        'BUSD', 'BUSDBSC', 'BUSDMATIC', 'PAX', 'TUSDTRC20'
+        'BUSD', 'BUSDBSC', 'BUSDMATIC', 'PAX', 'TUSDTRC20',
+        // USDT variants - keep all network versions separate
+        'USDTALGO', 'USDTARB', 'USDTARC20', 'USDTBSC', 'USDTCELO', 'USDTDOT',
+        'USDTEOS', 'USDTERC20', 'USDTKAVA', 'USDTMATIC', 'USDTNEAR', 'USDTOP',
+        'USDTSOL', 'USDTTON', 'USDTTRC20', 'USDTXTZ',
+        // USDC variants - keep all network versions separate  
+        'USDCALGO', 'USDCARB', 'USDCARC20', 'USDCBASE', 'USDCBSC', 'USDCKCC',
+        'USDCMATIC', 'USDCOP', 'USDCSOL', 'USDCXLM'
       ];
       
       // Only process suffixes if not in the do-not-modify list
@@ -124,7 +131,7 @@ export default function SupportedCryptocurrencies() {
       const blockedCurrencies = [
         'ZIL', 'ZENT', 'ZEN', 'ZEC', 'XZC', 'XYM', 'XVG', 'XEM', 'XEC', 'XCUR', 'XCAD', 'XAUT',
         'WINTRC20', 'WOLFERC20', 'WABI', 'VPS', 'VOLT', 'VIB', 'UST', 'USDSSOL', 'USDR', 'USDP',
-        'USDJ', 'USDE', 'USDDTRC20', 'USDDBSC', 'TUSD', 'TUP', 'TTC', 'TRVL', 'TOMO', 'TLOSERC20',
+        'USDJ', 'USDE', 'USDDTRC20', 'USDDBSC', 'TUP', 'TTC', 'TRVL', 'TOMO', 'TLOSERC20',
         'TLOS', 'TKO', 'TFUEL', 'SYSEVM', 'SXPMAINNET', 'SUPER', 'SUNDOG', 'SUN', 'STZENT', 'STPT',
         'STKK', 'SRK', 'SPI', 'SOON', 'SNSY', 'SNEK', 'SIDUSERC20', 'SFUND', 'SCRAT', 'SAND',
         'RXCG', 'RJVERC20', 'RJVBSC', 'REP', 'RBIF', 'RAINCOIN', 'RACA', 'QUACK', 'QTUM', 'POOLZ',
