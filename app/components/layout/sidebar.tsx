@@ -126,17 +126,17 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       <aside
         ref={ref}
         className={cn(
-          "flex flex-col bg-white border-r border-gray-200 transition-all duration-200 h-screen",
+          "flex flex-col bg-black border-r border-gray-800 transition-all duration-200 h-screen",
           collapsed ? "w-16" : "w-64",
           className
         )}
       >
         {/* Brand */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-800">
           <div className={cn("flex items-center gap-3 justify-center")}> 
             <Logo size="lg" showText={false} />
             {!collapsed && (
-              <span className="font-phonic text-base font-normal text-gray-900">Cryptrac</span>
+              <span className="font-phonic text-lg leading-tight font-normal text-white">Cryptrac</span>
             )}
           </div>
         </div>
@@ -154,7 +154,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                   "flex items-center gap-3 px-3 py-3 rounded-lg font-phonic text-sm font-normal transition-colors",
                   isActive
                     ? "bg-[#7f5efd] text-white"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff]",
+                    : "text-gray-300 hover:text-white hover:bg-white/5",
                   collapsed && "justify-center"
                 )}
               >
@@ -178,7 +178,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                   onClick={() => setQuickActionsExpanded(!quickActionsExpanded)}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal transition-colors w-full text-left",
-                    isQuickActive ? "bg-[#7f5efd] text-white" : "text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff]",
+                    isQuickActive ? "bg-[#7f5efd] text-white" : "text-gray-300 hover:text-white hover:bg-white/5",
                     collapsed && "justify-center"
                   )}
                 >
@@ -200,21 +200,21 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
               <div className="ml-8 space-y-1">
                 <Link
                   href="/smart-terminal"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                 >
                   <Smartphone className="h-4 w-4 flex-shrink-0" />
                   <span>Smart Terminal</span>
                 </Link>
                 <Link
                   href="/merchant/dashboard/payments/create"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                 >
                   <CreditCard className="h-4 w-4 flex-shrink-0" />
                   <span>Create Payment Link</span>
                 </Link>
                 <Link
                   href="/merchant/subscriptions/create"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                 >
                   <RefreshCw className="h-4 w-4 flex-shrink-0" />
                   <span>Create Subscription</span>
@@ -225,7 +225,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
         </nav>
         
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-800">
           {userRole === "merchant" && !collapsed && (
             <div className="mb-4">
               <Badge variant="warning" className="w-full justify-center text-xs">
@@ -237,7 +237,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
           <Link
             href="/help"
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-300 hover:text-white hover:bg-white/5 transition-colors",
               collapsed && "justify-center"
             )}
           >

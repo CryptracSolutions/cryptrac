@@ -166,7 +166,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                 </Button>
                 
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-lg border bg-popover shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="absolute right-0 mt-2 w-64 rounded-lg border border-gray-200 bg-white shadow-xl z-50">
                     <div className="p-4 border-b">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
