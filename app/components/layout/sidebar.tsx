@@ -18,7 +18,8 @@ import {
   Calculator,
   Zap,
   Smartphone,
-  RefreshCw
+  RefreshCw,
+  User
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -47,6 +48,11 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
         name: "Payments",
         href: "/merchant/dashboard/payments",
         icon: CreditCard,
+      },
+      {
+        name: "Profile",
+        href: "/merchant/dashboard/profile",
+        icon: User,
       },
       {
         name: "Transactions",
@@ -104,34 +110,14 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       <aside
         ref={ref}
         className={cn(
-          "flex flex-col bg-white border-r border-gray-200 transition-all duration-200",
+          "flex flex-col bg-white border-r border-gray-200 transition-all duration-200 h-screen",
           collapsed ? "w-16" : "w-64",
           className
         )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          {!collapsed && <Logo size="md" />}
-          {collapsed && <Logo size="md" showText={false} />}
-          
-          {onToggleCollapse && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleCollapse}
-              className="h-8 w-8 p-0"
-            >
-              {collapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
-          )}
-        </div>
         
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
             
@@ -140,7 +126,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal transition-colors",
+                  "flex items-center gap-3 px-3 py-3 rounded-lg font-phonic text-sm font-normal transition-colors",
                   isActive
                     ? "bg-[#7f5efd] text-white"
                     : "text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff]",

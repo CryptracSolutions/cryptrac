@@ -102,12 +102,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       }
     }
     
-    const navigation = localUser ? [
-      { name: 'Dashboard', href: getDashboardLink(localUser.user_metadata?.role) },
-      { name: 'Payments', href: '/merchant/dashboard/payments' },
-      { name: 'Profile', href: '/merchant/dashboard/profile' },
-      { name: 'Settings', href: '/merchant/settings' },
-    ] : [
+    const navigation = localUser ? [] : [
       { name: 'Features', href: '/#features' },
       { name: 'Pricing', href: '/#pricing' },
       { name: 'About', href: '/about' },
@@ -127,18 +122,20 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
             <Logo size="md" />
           </Link>
           
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
+          {/* Desktop Navigation - Only for non-authenticated users */}
+          {!localUser && (
+            <nav className="hidden md:flex items-center space-x-6">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          )}
           
           {/* Right Side */}
           <div className="flex items-center space-x-4">
@@ -195,32 +192,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                       </div>
                     </div>
                     
-                    <div className="py-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start px-4 py-2 text-sm"
-                        onClick={() => {
-                          router.push('/merchant/dashboard/profile')
-                          setIsProfileOpen(false)
-                        }}
-                      >
-                        <User className="mr-3 h-4 w-4" />
-                        Profile
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start px-4 py-2 text-sm"
-                        onClick={() => {
-                          router.push('/merchant/settings')
-                          setIsProfileOpen(false)
-                        }}
-                      >
-                        <Settings className="mr-3 h-4 w-4" />
-                        Settings
-                      </Button>
-                    </div>
+                    {/* Profile and Settings buttons removed - functionality moved to sidebar */}
                     
                     <div className="border-t py-2">
                       <Button
@@ -266,8 +238,8 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           </div>
         </div>
         
-        {/* Mobile Menu */}
-        {isMenuOpen && (
+        {/* Mobile Menu - Only for non-authenticated users */}
+        {isMenuOpen && !localUser && (
           <div className="md:hidden border-t bg-background">
             <div className="container-wide py-4 space-y-2">
               {navigation.map((item) => (
@@ -281,16 +253,14 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                 </Link>
               ))}
               
-              {!localUser && (
-                <div className="pt-4 space-y-2">
-                  <Button variant="ghost" size="sm" className="w-full" asChild>
-                    <Link href="/login">Log in</Link>
-                  </Button>
-                  <Button size="sm" className="w-full" asChild>
-                    <Link href="/signup">Get Started</Link>
-                  </Button>
-                </div>
-              )}
+              <div className="pt-4 space-y-2">
+                <Button variant="ghost" size="sm" className="w-full" asChild>
+                  <Link href="/login">Log in</Link>
+                </Button>
+                <Button size="sm" className="w-full" asChild>
+                  <Link href="/signup">Get Started</Link>
+                </Button>
+              </div>
             </div>
           </div>
         )}

@@ -38,46 +38,49 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
     }, [])
     
     return (
-      <div ref={ref} className={cn("min-h-screen bg-gray-50", className)}>
-        {/* Header */}
-        <Header 
-          user={user} 
-          onMobileMenuToggle={showSidebar ? () => setMobileMenuOpen(!mobileMenuOpen) : undefined}
-        />
-        
-        <div className="flex">
-          {/* Sidebar - Desktop */}
-          {showSidebar && (
-            <>
-              {/* Desktop Sidebar */}
-              <div className="hidden md:block">
-                <Sidebar
-                  userRole={userRole}
-                  collapsed={sidebarCollapsed}
-                  onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      <div ref={ref} className={cn("min-h-screen bg-gray-50 flex", className)}>
+        {/* Full-height sidebar */}
+        {showSidebar && (
+          <>
+            {/* Desktop Sidebar */}
+            <div className="hidden md:block fixed left-0 top-0 h-full z-40">
+              <Sidebar
+                userRole={userRole}
+                collapsed={sidebarCollapsed}
+                onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+              />
+            </div>
+            
+            {/* Mobile Sidebar Overlay */}
+            {mobileMenuOpen && (
+              <div className="fixed inset-0 z-50 md:hidden">
+                <div 
+                  className="fixed inset-0 bg-black/50" 
+                  onClick={() => setMobileMenuOpen(false)}
                 />
-              </div>
-              
-              {/* Mobile Sidebar Overlay */}
-              {mobileMenuOpen && (
-                <div className="fixed inset-0 z-50 md:hidden">
-                  <div 
-                    className="fixed inset-0 bg-black/50" 
-                    onClick={() => setMobileMenuOpen(false)}
+                <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
+                  <Sidebar
+                    userRole={userRole}
+                    collapsed={false}
+                    onToggleCollapse={() => setMobileMenuOpen(false)}
                   />
-                  <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
-                    <Sidebar
-                      userRole={userRole}
-                      collapsed={false}
-                      onToggleCollapse={() => setMobileMenuOpen(false)}
-                    />
-                  </div>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Main content area with header */}
+        <div className={cn(
+          "flex-1 flex flex-col",
+          showSidebar && !sidebarCollapsed && "md:ml-64",
+          showSidebar && sidebarCollapsed && "md:ml-16"
+        )}>
+          <Header 
+            user={user} 
+            onMobileMenuToggle={showSidebar ? () => setMobileMenuOpen(!mobileMenuOpen) : undefined}
+          />
           
-          {/* Main Content */}
           <main className="flex-1 overflow-hidden">
             <div className="h-full p-6 md:p-8">
               {children}
