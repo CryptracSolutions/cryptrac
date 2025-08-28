@@ -52,7 +52,7 @@ interface MerchantSettings {
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
+  const [, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -188,7 +188,7 @@ export default function ProfilePage() {
   }
 
   return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -197,25 +197,31 @@ export default function ProfilePage() {
           ]} 
         />
         
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
+        {/* Enhanced Header */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+          <div className="space-y-2">
             <div className="flex items-center gap-4 mb-2">
               <Button 
                 variant="outline" 
                 onClick={() => router.push('/merchant/dashboard')}
                 className="flex items-center gap-2"
+                size="lg"
               >
                 <ArrowLeft className="h-4 w-4" /> Back to Dashboard
               </Button>
             </div>
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Profile</h1>
-            <p className="font-capsule text-base font-normal text-gray-600">Manage your business information and contact details</p>
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+              Business Profile
+            </h1>
+            <p className="font-capsule text-base font-normal text-gray-600">
+              Manage your business information and contact details
+            </p>
           </div>
           <Button
             onClick={saveSettings}
             disabled={saving}
             className="flex items-center gap-2"
+            size="lg"
           >
             {saving ? (
               <>
@@ -231,17 +237,17 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        {/* Success Alert */}
+        {/* Enhanced Success Alert */}
         {success && (
-          <Alert className="border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
+          <Alert className="border-green-200 bg-green-50 shadow-lg">
+            <CheckCircle className="h-5 w-5 text-green-600" />
             <AlertDescription className="font-capsule text-base font-normal text-green-800">
-              Your profile has been updated successfully.
+              <strong>Profile Updated!</strong> Your business information has been saved successfully.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Profile Form */}
+        {/* Enhanced Profile Form */}
         <ProfileForm
           settings={settings}
           setSettings={setSettings}

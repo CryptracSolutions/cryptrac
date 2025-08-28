@@ -146,122 +146,126 @@ interface ProfileFormProps {
 export default function ProfileForm({ settings, setSettings, handlePhoneChange, handleZipChange }: ProfileFormProps) {
   return (
     <div className="space-y-8">
-      <Card className="shadow-medium">
-        <CardHeader className="space-y-6">
-          <CardTitle className="flex items-center gap-6">
-            <Building className="h-5 w-5" />
+      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+        <CardHeader>
+          <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
+              <Building className="h-6 w-6 text-white" />
+            </div>
             Business Information
           </CardTitle>
-          <CardDescription className="text-body">
-            Basic information about your business
+          <CardDescription className="font-capsule text-base font-normal">
+            Basic information about your business and operations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-body font-medium">Business Name *</label>
+              <label className="font-phonic text-base font-normal text-gray-700">Business Name *</label>
               <Input
                 value={settings.business_name}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_name: e.target.value }))}
                 placeholder="Enter your business name"
-                className="form-input-enhanced"
+                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
                 required
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-body font-medium">Business Type</label>
+              <label className="font-phonic text-base font-normal text-gray-700">Business Type</label>
               <Select 
                 value={settings.business_type} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, business_type: value }))}
               >
-                <SelectTrigger className="form-input-enhanced">
+                <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent>
                   {BUSINESS_TYPES.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                    <SelectItem key={type} value={type} className="font-capsule text-base font-normal">{type}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-body font-medium">Industry *</label>
+              <label className="font-phonic text-base font-normal text-gray-700">Industry *</label>
               <Select 
                 value={settings.industry} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, industry: value }))}
               >
-                <SelectTrigger className="form-input-enhanced">
+                <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
                 <SelectContent>
                   {INDUSTRIES.map(industry => (
-                    <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                    <SelectItem key={industry} value={industry} className="font-capsule text-base font-normal">{industry}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-body font-medium">Website</label>
+              <label className="font-phonic text-base font-normal text-gray-700">Website</label>
               <Input
                 value={settings.website}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, website: e.target.value }))}
                 placeholder="https://your-website.com"
                 type="url"
-                className="form-input-enhanced"
+                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-body font-medium">Business Description</label>
+            <label className="font-phonic text-base font-normal text-gray-700">Business Description</label>
             <Input
               value={settings.business_description}
               onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_description: e.target.value }))}
               placeholder="Brief description of your business"
-              className="form-input-enhanced"
+              className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="shadow-medium">
-        <CardHeader className="space-y-6">
-          <CardTitle className="flex items-center gap-6">
-            <Phone className="h-5 w-5" />
+      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+        <CardHeader>
+          <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
+              <Phone className="h-6 w-6 text-white" />
+            </div>
             Contact Information
           </CardTitle>
-          <CardDescription className="text-body">
-            Contact details for your business
+          <CardDescription className="font-capsule text-base font-normal">
+            Contact details and business preferences
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-body font-medium">Phone Number *</label>
+              <label className="font-phonic text-base font-normal text-gray-700">Phone Number *</label>
               <Input
                 value={settings.phone_number}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="(555) 123-4567"
                 maxLength={14}
-                className="form-input-enhanced"
+                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-body font-medium">Timezone</label>
+              <label className="font-phonic text-base font-normal text-gray-700">Timezone</label>
               <Select 
                 value={settings.timezone} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, timezone: value }))}
               >
-                <SelectTrigger className="form-input-enhanced">
+                <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
                 <SelectContent>
                   {US_TIMEZONES.map(timezone => (
-                    <SelectItem key={timezone.code} value={timezone.code}>
+                    <SelectItem key={timezone.code} value={timezone.code} className="font-capsule text-base font-normal">
                       {timezone.name}
                     </SelectItem>
                   ))}
@@ -272,20 +276,22 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         </CardContent>
       </Card>
 
-      <Card className="shadow-medium">
-        <CardHeader className="space-y-6">
-          <CardTitle className="flex items-center gap-6">
-            <MapPin className="h-5 w-5" />
+      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+        <CardHeader>
+          <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
+              <MapPin className="h-6 w-6 text-white" />
+            </div>
             Business Address
           </CardTitle>
-          <CardDescription className="text-body">
+          <CardDescription className="font-capsule text-base font-normal">
             Your business address for tax and compliance purposes
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-body font-medium">Street Address *</label>
+              <label className="font-phonic text-base font-normal text-gray-700">Street Address *</label>
               <Input
                 value={settings.business_address.street || ''}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({
@@ -293,14 +299,14 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   business_address: { ...prev.business_address, street: e.target.value }
                 }))}
                 placeholder="123 Main Street"
-                className="form-input-enhanced"
+                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-body font-medium">City *</label>
+                <label className="font-phonic text-base font-normal text-gray-700">City *</label>
                 <Input
                   value={settings.business_address.city || ''}
                   onChange={(e) => setSettings((prev: MerchantSettings) => ({
@@ -308,13 +314,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, city: e.target.value }
                   }))}
                   placeholder="San Francisco"
-                  className="form-input-enhanced"
+                  className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-body font-medium">State *</label>
+                <label className="font-phonic text-base font-normal text-gray-700">State *</label>
                 <Select 
                   value={settings.business_address.state || ''} 
                   onValueChange={(value) => setSettings((prev: MerchantSettings) => ({
@@ -322,12 +328,12 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, state: value }
                   }))}
                 >
-                  <SelectTrigger className="form-input-enhanced">
+                  <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
                     {US_STATES.map(state => (
-                      <SelectItem key={state.code} value={state.code}>
+                      <SelectItem key={state.code} value={state.code} className="font-capsule text-base font-normal">
                         {state.name}
                       </SelectItem>
                     ))}
@@ -336,13 +342,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               </div>
 
               <div className="space-y-2">
-                <label className="text-body font-medium">ZIP Code *</label>
+                <label className="font-phonic text-base font-normal text-gray-700">ZIP Code *</label>
                 <Input
                   value={settings.business_address.zip_code || ''}
                   onChange={(e) => handleZipChange(e.target.value)}
                   placeholder="94105"
                   maxLength={10}
-                  className="form-input-enhanced"
+                  className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
                   required
                 />
               </div>
