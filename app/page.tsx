@@ -133,104 +133,63 @@ export default function Home() {
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
         {/* Flowing Wave Background */}
         <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
-          {/* Primary Purple Wave Flow */}
+          {/* Primary Cyan Wave Flow */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-1" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
           >
             <defs>
-              <linearGradient id="purpleFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#c7d2fe" stopOpacity="0.25" />
-                <stop offset="30%" stopColor="#a5b4fc" stopOpacity="0.5" />
-                <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.25" />
+              <linearGradient id="cyanFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.7" />
+                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.6" />
               </linearGradient>
             </defs>
-            {/* Main purple wave streams */}
-            <path d="M-100,300 Q200,150 500,250 Q800,350 1300,200" stroke="url(#purpleFlow1)" strokeWidth="2.5" fill="none" opacity="0.8" />
-            <path d="M-100,320 Q200,170 500,270 Q800,370 1300,220" stroke="url(#purpleFlow1)" strokeWidth="2" fill="none" opacity="0.7" />
-            <path d="M-100,340 Q200,190 500,290 Q800,390 1300,240" stroke="url(#purpleFlow1)" strokeWidth="1.5" fill="none" opacity="0.6" />
-            <path d="M-100,360 Q200,210 500,310 Q800,410 1300,260" stroke="url(#purpleFlow1)" strokeWidth="1.2" fill="none" opacity="0.5" />
-            <path d="M-100,380 Q200,230 500,330 Q800,430 1300,280" stroke="url(#purpleFlow1)" strokeWidth="1" fill="none" opacity="0.4" />
+            {/* Main cyan wave streams */}
+            <path d="M-100,200 Q300,100 600,180 Q900,260 1300,150" stroke="url(#cyanFlow)" strokeWidth="4" fill="none" opacity="0.85" />
+            <path d="M-100,220 Q300,120 600,200 Q900,280 1300,170" stroke="url(#cyanFlow)" strokeWidth="3.5" fill="none" opacity="0.75" />
+            <path d="M-100,240 Q300,140 600,220 Q900,300 1300,190" stroke="url(#cyanFlow)" strokeWidth="3" fill="none" opacity="0.65" />
+            <path d="M-100,260 Q300,160 600,240 Q900,320 1300,210" stroke="url(#cyanFlow)" strokeWidth="2.5" fill="none" opacity="0.55" />
           </svg>
 
-          {/* Secondary Cyan Wave Flow */}
+          {/* Secondary Purple Wave Flow */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-2" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
           >
             <defs>
-              <linearGradient id="cyanFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#a7f3d0" stopOpacity="0.25" />
-                <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.5" />
-                <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#a7f3d0" stopOpacity="0.25" />
+              <linearGradient id="purpleFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#c7d2fe" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.7" />
               </linearGradient>
             </defs>
-            {/* Cyan wave streams */}
-            <path d="M-50,400 Q300,250 600,350 Q900,450 1250,300" stroke="url(#cyanFlow1)" strokeWidth="2.5" fill="none" opacity="0.85" />
-            <path d="M-50,420 Q300,270 600,370 Q900,470 1250,320" stroke="url(#cyanFlow1)" strokeWidth="2" fill="none" opacity="0.75" />
-            <path d="M-50,440 Q300,290 600,390 Q900,490 1250,340" stroke="url(#cyanFlow1)" strokeWidth="1.5" fill="none" opacity="0.65" />
-            <path d="M-50,460 Q300,310 600,410 Q900,510 1250,360" stroke="url(#cyanFlow1)" strokeWidth="1.2" fill="none" opacity="0.55" />
+            {/* Purple wave streams */}
+            <path d="M-50,350 Q350,250 650,330 Q950,410 1250,300" stroke="url(#purpleFlow)" strokeWidth="4.5" fill="none" opacity="0.8" />
+            <path d="M-50,370 Q350,270 650,350 Q950,430 1250,320" stroke="url(#purpleFlow)" strokeWidth="4" fill="none" opacity="0.7" />
+            <path d="M-50,390 Q350,290 650,370 Q950,450 1250,340" stroke="url(#purpleFlow)" strokeWidth="3.5" fill="none" opacity="0.6" />
+            <path d="M-50,410 Q350,310 650,390 Q950,470 1250,360" stroke="url(#purpleFlow)" strokeWidth="3" fill="none" opacity="0.5" />
           </svg>
 
-          {/* Tertiary Purple-Cyan Blend */}
+          {/* Tertiary Blended Wave Flow */}
           <svg 
             className="absolute inset-0 w-full h-full animate-wave-flow-3" 
             viewBox="0 0 1200 800" 
             preserveAspectRatio="none"
           >
             <defs>
-              <linearGradient id="blendFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="#cffafe" stopOpacity="0.45" />
-                <stop offset="100%" stopColor="#f3e8ff" stopOpacity="0.3" />
+              <linearGradient id="blendFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.5" />
+                <stop offset="30%" stopColor="#a78bfa" stopOpacity="0.7" />
+                <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#e0e7ff" stopOpacity="0.4" />
               </linearGradient>
             </defs>
             {/* Blended wave streams */}
-            <path d="M100,500 Q400,350 700,450 Q1000,550 1400,400" stroke="url(#blendFlow1)" strokeWidth="2.2" fill="none" opacity="0.75" />
-            <path d="M100,520 Q400,370 700,470 Q1000,570 1400,420" stroke="url(#blendFlow1)" strokeWidth="1.8" fill="none" opacity="0.65" />
-            <path d="M100,540 Q400,390 700,490 Q1000,590 1400,440" stroke="url(#blendFlow1)" strokeWidth="1.4" fill="none" opacity="0.55" />
-          </svg>
-
-          {/* Upper Cyan Flow */}
-          <svg 
-            className="absolute inset-0 w-full h-full animate-wave-flow-4" 
-            viewBox="0 0 1200 800" 
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="upperCyan" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.35" />
-                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#ecfeff" stopOpacity="0.25" />
-              </linearGradient>
-            </defs>
-            {/* Upper flowing lines */}
-            <path d="M-200,150 Q100,50 400,120 Q700,190 1000,100 Q1100,80 1400,120" stroke="url(#upperCyan)" strokeWidth="2" fill="none" opacity="0.7" />
-            <path d="M-200,170 Q100,70 400,140 Q700,210 1000,120 Q1100,100 1400,140" stroke="url(#upperCyan)" strokeWidth="1.5" fill="none" opacity="0.6" />
-            <path d="M-200,190 Q100,90 400,160 Q700,230 1000,140 Q1100,120 1400,160" stroke="url(#upperCyan)" strokeWidth="1.2" fill="none" opacity="0.5" />
-          </svg>
-
-          {/* Delicate Purple Accent Lines */}
-          <svg 
-            className="absolute inset-0 w-full h-full animate-wave-flow-5" 
-            viewBox="0 0 1200 800" 
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="purpleAccent" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#f3e8ff" stopOpacity="0.2" />
-                <stop offset="50%" stopColor="#d8b4fe" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#e9d5ff" stopOpacity="0.2" />
-              </linearGradient>
-            </defs>
-            {/* Delicate accent lines */}
-            <path d="M50,250 Q350,100 650,200 Q950,300 1350,150" stroke="url(#purpleAccent)" strokeWidth="1.2" fill="none" opacity="0.6" />
-            <path d="M50,600 Q350,450 650,550 Q950,650 1350,500" stroke="url(#purpleAccent)" strokeWidth="1" fill="none" opacity="0.5" />
-            <path d="M200,350 Q500,200 800,300 Q1100,400 1200,250" stroke="url(#purpleAccent)" strokeWidth="0.8" fill="none" opacity="0.45" />
+            <path d="M100,450 Q400,350 700,430 Q1000,510 1400,380" stroke="url(#blendFlow)" strokeWidth="3.5" fill="none" opacity="0.75" />
+            <path d="M100,470 Q400,370 700,450 Q1000,530 1400,400" stroke="url(#blendFlow)" strokeWidth="3" fill="none" opacity="0.65" />
           </svg>
         </div>
         <div className="container-wide relative z-10">
@@ -238,7 +197,7 @@ export default function Home() {
 
             <h1 className="font-martina text-7xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-phonic text-[#7f5efd] font-black text-7xl tracking-tight">Crypto</span>
+              <span className="font-sans text-[#7f5efd] font-medium text-7xl tracking-wide lowercase">crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
@@ -600,11 +559,11 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">
         <div className="container-wide">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             {/* Brand Section */}
-            <div>
+            <div className="lg:col-span-1">
               <Logo variant="white" size="md" className="mb-6" />
-              <p className="font-phonic text-base text-gray-400 mb-6">
+              <p className="font-phonic text-base text-gray-400 mb-6 leading-relaxed">
                 The simplest way to accept cryptocurrency payments. Non-custodial, secure, and designed for modern businesses.
               </p>
               <div className="font-phonic text-sm text-gray-500 mb-6">
@@ -634,7 +593,7 @@ export default function Home() {
             </div>
 
             {/* Product Section */}
-            <div>
+            <div className="lg:col-span-1">
               <h3 className="font-phonic text-2xl font-normal mb-6">Product</h3>
               <ul className="space-y-3 font-phonic text-sm text-gray-400">
                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
@@ -645,7 +604,7 @@ export default function Home() {
             </div>
 
             {/* Support Section */}
-            <div>
+            <div className="lg:col-span-1">
               <h3 className="font-phonic text-2xl font-normal mb-6">Support</h3>
               <ul className="space-y-3 font-phonic text-sm text-gray-400">
                 <li><Link href="/help" className="hover:text-white transition-colors">Help Center</Link></li>
@@ -655,7 +614,7 @@ export default function Home() {
             </div>
 
             {/* Company Section */}
-            <div>
+            <div className="lg:col-span-1">
               <h3 className="font-phonic text-2xl font-normal mb-6">Company</h3>
               <ul className="space-y-3 font-phonic text-sm text-gray-400">
                 <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
@@ -667,8 +626,8 @@ export default function Home() {
 
           {/* Bottom Section */}
           <div className="border-t border-gray-800 mt-12 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-6 lg:space-y-0">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-8">
                 <p className="font-phonic text-xs text-gray-400">
                   &copy; 2025 Cryptrac. All rights reserved.
                 </p>
@@ -684,7 +643,7 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-              <div className="flex items-center space-x-6 mt-4 md:mt-0">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-6">
                 <span className="font-phonic text-xs text-gray-400">
                   Built with security and compliance in mind
                 </span>
