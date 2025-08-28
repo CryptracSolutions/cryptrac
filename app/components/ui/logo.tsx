@@ -33,15 +33,17 @@ const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
         {...props}
       >
         {/* Cryptrac Logo */}
-        <div className={cn("flex items-center justify-center rounded-lg overflow-hidden", sizeClasses[size], emblemClassName)}>
-          <Image
-            src="/logo.png"
-            alt="Cryptrac Logo"
-            width={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
-            height={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
-            className="h-full w-full object-contain"
-            priority
-          />
+        <div className={cn("flex items-center justify-center rounded-lg", sizeClasses[size], emblemClassName)}>
+          <div className="h-full w-full rounded-lg overflow-hidden">
+            <Image
+              src="/logo.png"
+              alt="Cryptrac Logo"
+              width={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
+              height={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
+              className="h-full w-full object-contain"
+              priority
+            />
+          </div>
         </div>
         
         {showText && (
