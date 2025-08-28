@@ -4,6 +4,7 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
 import { CryptoIcon } from "@/app/components/ui/crypto-icon";
+import { LandingNav } from "@/app/components/layout/landing-nav";
 
 export default function Home() {
   const features = [
@@ -95,39 +96,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="container-wide flex h-16 items-center justify-between">
-          <Logo size="md" />
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#features" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Features
-            </Link>
-            <Link href="#pricing" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Pricing
-            </Link>
-            <Link href="#faq" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              FAQ
-            </Link>
-            <Link href="#about" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              About
-            </Link>
-            <Link href="/help" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Help
-            </Link>
-            <Link href="/contact" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Contact
-            </Link>
-          </nav>
-          <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-gray-100" asChild>
-              <Link href="/login">Log in</Link>
-            </Button>
-            <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-              <Link href="/signup">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <LandingNav />
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
@@ -136,7 +105,7 @@ export default function Home() {
 
             <h1 className="font-martina text-7xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-sans text-[#7f5efd] font-medium text-7xl tracking-wide lowercase">crypto</span>
+              <span className="font-martina text-[#7f5efd] font-bold text-7xl">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
