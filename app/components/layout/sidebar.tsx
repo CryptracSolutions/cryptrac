@@ -133,7 +133,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       >
         {/* Brand */}
         <div className="p-4">
-          <div className={cn("flex items-center gap-4", collapsed ? "justify-center" : "justify-start")}> 
+          <div className={cn("flex items-center gap-4 justify-center")}> 
             <Logo size="xl" showText={false} emblemClassName="bg-transparent" />
             {!collapsed && (
               <span className="font-phonic text-2xl leading-tight font-medium text-white tracking-tight">Cryptrac</span>
@@ -226,14 +226,6 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
         
         {/* Footer */}
         <div className="p-4 border-t border-gray-800">
-          {userRole === "merchant" && !collapsed && (
-            <div className="mb-4">
-              <Badge variant="warning" className="w-full justify-center text-xs">
-                Trial Active
-              </Badge>
-            </div>
-          )}
-          
           <Link
             href="/help"
             className={cn(
