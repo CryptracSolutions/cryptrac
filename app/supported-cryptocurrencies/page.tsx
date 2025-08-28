@@ -280,62 +280,9 @@ export default function SupportedCryptocurrencies() {
         </div>
       </header>
 
-      {/* Hero Section with Background */}
-      <section className="relative overflow-hidden bg-white py-16 sm:py-24">
-        {/* Minimal Geometric Line Background */}
-        <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
-          {/* Horizontal lines */}
-          <div className="absolute top-[20%] left-0 right-0 h-px bg-[#7f5efd]/30"></div>
-          <div className="absolute top-[40%] left-0 right-0 h-px bg-[#7f5efd]/25"></div>
-          <div className="absolute top-[60%] left-0 right-0 h-px bg-[#7f5efd]/20"></div>
-          <div className="absolute top-[80%] left-0 right-0 h-px bg-[#7f5efd]/25"></div>
-          
-          {/* Vertical lines */}
-          <div className="absolute top-0 bottom-0 left-[15%] w-px bg-[#7f5efd]/20"></div>
-          <div className="absolute top-0 bottom-0 left-[30%] w-px bg-[#7f5efd]/25"></div>
-          <div className="absolute top-0 bottom-0 left-[45%] w-px bg-[#7f5efd]/18"></div>
-          <div className="absolute top-0 bottom-0 left-[55%] w-px bg-[#7f5efd]/18"></div>
-          <div className="absolute top-0 bottom-0 left-[70%] w-px bg-[#7f5efd]/25"></div>
-          <div className="absolute top-0 bottom-0 left-[85%] w-px bg-[#7f5efd]/20"></div>
-          
-          {/* Diagonal accent lines */}
-          <div className="absolute inset-0">
-            <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
-              {/* Main diagonal */}
-              <line x1="0" y1="400" x2="1200" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.4" />
-              {/* Supporting diagonal */}
-              <line x1="0" y1="600" x2="1200" y2="400" stroke="#7f5efd" strokeWidth="0.5" opacity="0.25" />
-              {/* Counter diagonal */}
-              <line x1="1200" y1="600" x2="0" y2="200" stroke="#7f5efd" strokeWidth="0.5" opacity="0.3" />
-            </svg>
-          </div>
-          
-          {/* Animated accent lines */}
-          <div className="absolute top-[30%] left-0 w-32 h-px bg-gradient-to-r from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-right"></div>
-          <div className="absolute top-[70%] right-0 w-32 h-px bg-gradient-to-l from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-left"></div>
-          <div className="absolute left-[25%] top-0 h-32 w-px bg-gradient-to-b from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-down"></div>
-          <div className="absolute right-[25%] bottom-0 h-32 w-px bg-gradient-to-t from-transparent via-[#7f5efd] to-transparent opacity-50 animate-slide-up"></div>
-          
-          {/* Corner accents */}
-          <div className="absolute top-0 left-0 w-24 h-24">
-            <div className="absolute top-0 left-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute top-0 left-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24">
-            <div className="absolute top-0 right-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute top-0 right-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
-          <div className="absolute bottom-0 left-0 w-24 h-24">
-            <div className="absolute bottom-0 left-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute bottom-0 left-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
-          <div className="absolute bottom-0 right-0 w-24 h-24">
-            <div className="absolute bottom-0 right-0 w-full h-px bg-[#7f5efd]/40"></div>
-            <div className="absolute bottom-0 right-0 h-full w-px bg-[#7f5efd]/40"></div>
-          </div>
-        </div>
-
-        <div className="container-wide relative z-10">
+      {/* Hero Section */}
+      <section className="relative bg-white py-16 sm:py-24">
+        <div className="container-wide">
           <div className="mx-auto max-w-4xl text-center">
             <Link href="/" className="inline-flex items-center text-[#7f5efd] hover:text-[#7c3aed] transition-colors mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />

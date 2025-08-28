@@ -105,7 +105,7 @@ export default function Home() {
 
             <h1 className="font-martina text-7xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-martina text-[#7f5efd] font-bold text-7xl">Crypto</span>
+              <span className="font-martina text-[#7f5efd] font-normal text-7xl">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
@@ -125,7 +125,7 @@ export default function Home() {
               </Button>
             </div>
             <div className="font-phonic text-xs text-gray-500 mt-6">
-              30-day free trial • $19/month • No setup fees • Cancel anytime
+              30-day free trial • $19/month • Cancel anytime
             </div>
 
             {/* Trust Indicators */}
@@ -243,7 +243,7 @@ export default function Home() {
                   Everything you need to get started
                 </CardDescription>
                 <div className="mt-8">
-                  <span className="font-phonic text-7xl font-medium text-gray-900">$19</span>
+                  <span className="font-phonic text-7xl font-medium text-[#7f5efd]">$19</span>
                   <span className="font-phonic text-2xl font-normal text-gray-600 ml-2">/month</span>
                 </div>
                 <div className="font-phonic text-sm text-gray-500 mt-2">

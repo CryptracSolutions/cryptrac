@@ -81,7 +81,7 @@ export default function PaymentLinksInfo() {
         {/* Key Features */}
         <div className="bg-gray-50 rounded-2xl p-12 mb-16">
           <h2 className="font-phonic text-4xl font-normal text-center mb-12">Everything You Need</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="space-y-6">
               {[
                 "Custom amount or fixed pricing",
@@ -164,12 +164,9 @@ export default function PaymentLinksInfo() {
           <p className="font-capsule text-lg text-white/90 mb-8 max-w-2xl mx-auto">
             Start creating payment links today and get paid faster with cryptocurrency.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button size="lg" className="bg-white text-[#7f5efd] hover:bg-gray-50" asChild>
               <Link href="/signup">Start Free Trial</Link>
-            </Button>
-            <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10" asChild>
-              <Link href="/merchant/dashboard/payments/create">Create Payment Link</Link>
             </Button>
           </div>
         </div>

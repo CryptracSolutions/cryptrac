@@ -81,16 +81,16 @@ export function LandingNav() {
             )}
           </div>
 
-          <Link href="#features" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
+          <Link href="/#features" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
             Features
           </Link>
-          <Link href="#pricing" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
+          <Link href="/#pricing" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
             Pricing
           </Link>
-          <Link href="#faq" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
+          <Link href="/#faq" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
             FAQ
           </Link>
-          <Link href="#about" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
+          <Link href="/#about" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
             About
           </Link>
           <Link href="/help" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
@@ -142,28 +142,28 @@ export function LandingNav() {
             </div>
             
             <Link
-              href="#features"
+              href="/#features"
               className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Features
             </Link>
             <Link
-              href="#pricing"
+              href="/#pricing"
               className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link
-              href="#faq"
+              href="/#faq"
               className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               FAQ
             </Link>
             <Link
-              href="#about"
+              href="/#about"
               className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >

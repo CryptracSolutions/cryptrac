@@ -81,7 +81,7 @@ export default function SmartTerminalInfo() {
         {/* Key Features */}
         <div className="bg-gray-50 rounded-2xl p-12 mb-16">
           <h2 className="font-phonic text-4xl font-normal text-center mb-12">Everything You Need</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="space-y-6">
               {[
                 "QR code generation for instant payments",
@@ -117,6 +117,45 @@ export default function SmartTerminalInfo() {
           </div>
         </div>
 
+        {/* Use Cases */}
+        <div className="mb-16">
+          <h2 className="font-phonic text-4xl font-normal text-center mb-12">Perfect For</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center">
+                <CardTitle className="font-phonic text-2xl">Retail Stores</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <CardDescription className="font-phonic text-base">
+                  Transform any device into a crypto payment terminal. Perfect for brick-and-mortar stores accepting digital payments.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center">
+                <CardTitle className="font-phonic text-2xl">Food & Beverage</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <CardDescription className="font-phonic text-base">
+                  Fast, secure payments for restaurants, cafes, and food trucks. Reduce wait times with QR code payments.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center">
+                <CardTitle className="font-phonic text-2xl">Service Businesses</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <CardDescription className="font-phonic text-base">
+                  Salons, repair shops, and professional services. Accept payments anywhere with mobile-optimized terminals.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* CTA Section */}
         <div className="text-center bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] rounded-2xl p-12">
           <h2 className="font-phonic text-4xl font-normal text-white mb-6">
@@ -125,12 +164,9 @@ export default function SmartTerminalInfo() {
           <p className="font-capsule text-lg text-white/90 mb-8 max-w-2xl mx-auto">
             Join thousands of businesses using Cryptrac Smart Terminal for secure crypto payments.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button size="lg" className="bg-white text-[#7f5efd] hover:bg-gray-50" asChild>
               <Link href="/signup">Start Free Trial</Link>
-            </Button>
-            <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10" asChild>
-              <Link href="/smart-terminal">Try Smart Terminal</Link>
             </Button>
           </div>
         </div>
