@@ -100,25 +100,25 @@
     --font-fallback: 'Times New Roman', serif;
     
     /* Font sizes and line heights */
-    --text-hero: 90px;
-    --text-hero-line: 79.2px;
-    --text-hero-spacing: -4.661px;
+    --text-hero: 80px;
+    --text-hero-line: 72px;
+    --text-hero-spacing: -4px;
     
-    --text-brand: 72px;
-    --text-brand-line: 78px;
-    --text-brand-spacing: -1px;
+    --text-brand: 64px;
+    --text-brand-line: 70px;
+    --text-brand-spacing: -0.9px;
     
-    --text-h1: 52px;
-    --text-h1-line: 62px;
-    --text-h1-spacing: -2px;
+    --text-h1: 46px;
+    --text-h1-line: 56px;
+    --text-h1-spacing: -1.8px;
     
-    --text-h2: 40px;
-    --text-h2-line: 48px;
-    --text-h2-spacing: -1px;
+    --text-h2: 36px;
+    --text-h2-line: 44px;
+    --text-h2-spacing: -0.9px;
     
-    --text-h3: 22px;
-    --text-h3-line: 30px;
-    --text-h3-spacing: -0.5px;
+    --text-h3: 20px;
+    --text-h3-line: 28px;
+    --text-h3-spacing: -0.4px;
     
     --text-body: 16px;
     --text-body-line: 24px;
@@ -503,34 +503,34 @@
   /* Responsive font sizes */
   @media (max-width: 768px) {
     .text-hero {
-      font-size: 60px;
-      line-height: 56px;
-      letter-spacing: -3px;
+      font-size: 54px;
+      line-height: 50px;
+      letter-spacing: -2.5px;
     }
     
     .text-brand {
-      font-size: 48px;
-      line-height: 52px;
+      font-size: 56px;
+      line-height: 62px;
     }
     
     .text-h1 {
-      font-size: 36px;
-      line-height: 42px;
-      letter-spacing: -1.5px;
+      font-size: 40px;
+      line-height: 48px;
+      letter-spacing: -1.2px;
     }
     
     .text-h2 {
-      font-size: 28px;
-      line-height: 34px;
-      letter-spacing: -0.8px;
+      font-size: 32px;
+      line-height: 38px;
+      letter-spacing: -0.7px;
     }
   }
   
   @media (max-width: 480px) {
     .text-hero {
-      font-size: 48px;
-      line-height: 44px;
-      letter-spacing: -2.5px;
+      font-size: 42px;
+      line-height: 40px;
+      letter-spacing: -2px;
     }
     
     .text-brand {

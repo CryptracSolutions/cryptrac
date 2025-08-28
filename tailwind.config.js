@@ -143,17 +143,17 @@ module.exports = {
         'lg': ['18px', { lineHeight: '26px', letterSpacing: '-0.25px' }],
         'xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.3px' }],
         // Subheadings
-        '2xl': ['22px', { lineHeight: '30px', letterSpacing: '-0.5px' }],
+        '2xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.4px' }],
         // Section headers
-        '3xl': ['28px', { lineHeight: '34px', letterSpacing: '-0.8px' }],
-        '4xl': ['36px', { lineHeight: '42px', letterSpacing: '-1px' }],
+        '3xl': ['26px', { lineHeight: '32px', letterSpacing: '-0.7px' }],
+        '4xl': ['32px', { lineHeight: '38px', letterSpacing: '-0.9px' }],
         // Main headers
-        '5xl': ['40px', { lineHeight: '48px', letterSpacing: '-1px' }],
-        '6xl': ['52px', { lineHeight: '62px', letterSpacing: '-2px' }],
+        '5xl': ['36px', { lineHeight: '44px', letterSpacing: '-0.9px' }],
+        '6xl': ['46px', { lineHeight: '56px', letterSpacing: '-1.8px' }],
         // Brand statement
-        '7xl': ['72px', { lineHeight: '78px', letterSpacing: '-1px' }],
+        '7xl': ['64px', { lineHeight: '70px', letterSpacing: '-0.9px' }],
         // Hero
-        '8xl': ['90px', { lineHeight: '79.2px', letterSpacing: '-4.661px' }],
+        '8xl': ['80px', { lineHeight: '72px', letterSpacing: '-4px' }],
       },
       fontWeight: {
         light: '300',
