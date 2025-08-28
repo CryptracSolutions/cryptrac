@@ -38,6 +38,13 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
     const pathname = usePathname()
     const [quickActionsExpanded, setQuickActionsExpanded] = React.useState(false)
     
+    // Routes under Quick Actions for active detection
+    const quickActionsChildHrefs = [
+      "/smart-terminal",
+      "/merchant/dashboard/payments/create",
+      "/merchant/subscriptions/create",
+    ]
+    
     const merchantNavigation = [
       {
         name: "Dashboard",
@@ -106,6 +113,15 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
     
     const navigation = userRole === "admin" ? adminNavigation : merchantNavigation
     
+    // Determine single active item using longest matching prefix
+    const activeHref = React.useMemo(() => {
+      const matches = navigation
+        .map((n) => n.href)
+        .filter((href) => pathname === href || pathname.startsWith(href + "/"))
+        .sort((a, b) => b.length - a.length)
+      return matches[0]
+    }, [pathname, navigation])
+    
     return (
       <aside
         ref={ref}
@@ -115,11 +131,20 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
           className
         )}
       >
-        
+        {/* Brand */}
+        <div className="p-4 border-b border-gray-200">
+          <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+            <Logo size="md" showText={false} />
+            {!collapsed && (
+              <span className="font-phonic text-sm font-normal text-gray-900">Cryptrac</span>
+            )}
+          </div>
+        </div>
+
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+            const isActive = item.href === activeHref
             
             return (
               <Link
@@ -144,25 +169,32 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
           
           {/* Quick Actions Expandable Menu */}
           <div className="space-y-1">
-            <button
-              onClick={() => setQuickActionsExpanded(!quickActionsExpanded)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal transition-colors w-full text-left",
-                "text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff]",
-                collapsed && "justify-center"
-              )}
-            >
-              <Zap className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && (
-                <>
-                  <span>Quick Actions</span>
-                  <ChevronRight className={cn(
-                    "h-4 w-4 ml-auto transition-transform",
-                    quickActionsExpanded && "rotate-90"
-                  )} />
-                </>
-              )}
-            </button>
+            {(() => {
+              const isQuickActive =
+                quickActionsExpanded ||
+                quickActionsChildHrefs.some((href) => pathname === href || pathname.startsWith(href + "/"))
+              return (
+                <button
+                  onClick={() => setQuickActionsExpanded(!quickActionsExpanded)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal transition-colors w-full text-left",
+                    isQuickActive ? "bg-[#7f5efd] text-white" : "text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff]",
+                    collapsed && "justify-center"
+                  )}
+                >
+                  <Zap className="h-5 w-5 flex-shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span>Quick Actions</span>
+                      <ChevronRight className={cn(
+                        "h-4 w-4 ml-auto transition-transform",
+                        quickActionsExpanded && "rotate-90"
+                      )} />
+                    </>
+                  )}
+                </button>
+              )
+            })()}
             
             {quickActionsExpanded && !collapsed && (
               <div className="ml-8 space-y-1">

@@ -119,7 +119,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         <div className="container-wide flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <Logo size="md" />
+            <Logo size="md" showText={!localUser} />
           </Link>
           
           {/* Desktop Navigation - Only for non-authenticated users */}
