@@ -85,16 +85,8 @@ export default function HelpPage() {
         </div>
       </header>
 
-      {/* Hero Section with Geometric Lines */}
+      {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-16">
-        {/* Minimal Geometric Line Background */}
-        <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-[30%] left-0 right-0 h-px bg-[#7f5efd]/10"></div>
-          <div className="absolute top-[70%] left-0 right-0 h-px bg-[#7f5efd]/10"></div>
-          <div className="absolute top-0 bottom-0 left-[20%] w-px bg-[#7f5efd]/10"></div>
-          <div className="absolute top-0 bottom-0 right-[20%] w-px bg-[#7f5efd]/10"></div>
-        </div>
-        
         <div className="container-wide relative z-10">
           <div className="text-center">
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">

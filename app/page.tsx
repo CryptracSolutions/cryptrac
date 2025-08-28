@@ -131,67 +131,6 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
-        {/* Flowing Wave Background */}
-        <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none" aria-hidden="true">
-          {/* Primary Cyan Wave Flow */}
-          <svg 
-            className="absolute inset-0 w-full h-full animate-wave-flow-1" 
-            viewBox="0 0 1200 800" 
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="cyanFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.7" />
-                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.6" />
-              </linearGradient>
-            </defs>
-            {/* Main cyan wave streams */}
-            <path d="M-100,200 Q300,100 600,180 Q900,260 1300,150" stroke="url(#cyanFlow)" strokeWidth="4" fill="none" opacity="0.85" />
-            <path d="M-100,220 Q300,120 600,200 Q900,280 1300,170" stroke="url(#cyanFlow)" strokeWidth="3.5" fill="none" opacity="0.75" />
-            <path d="M-100,240 Q300,140 600,220 Q900,300 1300,190" stroke="url(#cyanFlow)" strokeWidth="3" fill="none" opacity="0.65" />
-            <path d="M-100,260 Q300,160 600,240 Q900,320 1300,210" stroke="url(#cyanFlow)" strokeWidth="2.5" fill="none" opacity="0.55" />
-          </svg>
-
-          {/* Secondary Purple Wave Flow */}
-          <svg 
-            className="absolute inset-0 w-full h-full animate-wave-flow-2" 
-            viewBox="0 0 1200 800" 
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="purpleFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#c7d2fe" stopOpacity="0.6" />
-                <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.7" />
-              </linearGradient>
-            </defs>
-            {/* Purple wave streams */}
-            <path d="M-50,350 Q350,250 650,330 Q950,410 1250,300" stroke="url(#purpleFlow)" strokeWidth="4.5" fill="none" opacity="0.8" />
-            <path d="M-50,370 Q350,270 650,350 Q950,430 1250,320" stroke="url(#purpleFlow)" strokeWidth="4" fill="none" opacity="0.7" />
-            <path d="M-50,390 Q350,290 650,370 Q950,450 1250,340" stroke="url(#purpleFlow)" strokeWidth="3.5" fill="none" opacity="0.6" />
-            <path d="M-50,410 Q350,310 650,390 Q950,470 1250,360" stroke="url(#purpleFlow)" strokeWidth="3" fill="none" opacity="0.5" />
-          </svg>
-
-          {/* Tertiary Blended Wave Flow */}
-          <svg 
-            className="absolute inset-0 w-full h-full animate-wave-flow-3" 
-            viewBox="0 0 1200 800" 
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="blendFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#cffafe" stopOpacity="0.5" />
-                <stop offset="30%" stopColor="#a78bfa" stopOpacity="0.7" />
-                <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#e0e7ff" stopOpacity="0.4" />
-              </linearGradient>
-            </defs>
-            {/* Blended wave streams */}
-            <path d="M100,450 Q400,350 700,430 Q1000,510 1400,380" stroke="url(#blendFlow)" strokeWidth="3.5" fill="none" opacity="0.75" />
-            <path d="M100,470 Q400,370 700,450 Q1000,530 1400,400" stroke="url(#blendFlow)" strokeWidth="3" fill="none" opacity="0.65" />
-          </svg>
-        </div>
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">
 
