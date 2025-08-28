@@ -103,9 +103,9 @@ export default function Home() {
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">
 
-            <h1 className="font-martina text-7xl font-normal text-gray-900 mb-8">
+            <h1 className="font-martina text-3xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-martina text-[#7f5efd] font-normal text-7xl">Crypto</span>
+              <span className="font-martina text-[#7f5efd] font-normal text-3xl">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
@@ -151,7 +151,7 @@ export default function Home() {
       <section className="py-16 bg-white">
         <div className="container-wide">
           <div className="text-center mb-12">
-            <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-4">
+            <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
               Accept <span className="text-[#7f5efd]">150+</span> Cryptocurrencies
             </h2>
             <p className="font-phonic text-base font-normal text-gray-600 max-w-2xl mx-auto">
@@ -193,7 +193,7 @@ export default function Home() {
       <section id="features" className="py-24 bg-gray-50">
         <div className="container-wide">
           <div className="text-center mb-20">
-            <h2 className="font-phonic text-6xl font-normal text-gray-900 mb-6">
+            <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6">
               Everything you need to accept crypto payments
             </h2>
             <p className="font-capsule text-base text-gray-600 max-w-3xl mx-auto">
@@ -224,7 +224,7 @@ export default function Home() {
       <section id="pricing" className="py-24 bg-white">
         <div className="container-wide">
           <div className="text-center mb-20">
-            <h2 className="font-phonic text-6xl font-normal text-gray-900 mb-6">
+            <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6">
               Simple, transparent pricing
             </h2>
             <p className="font-capsule text-base text-gray-600 max-w-3xl mx-auto">
@@ -238,12 +238,12 @@ export default function Home() {
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa]"></div>
               <CardHeader className="text-center pb-8 pt-8">
                 {/* Badge removed as there is only one plan */}
-                <CardTitle className="font-phonic text-4xl font-normal text-gray-900">Cryptrac</CardTitle>
+                <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Cryptrac</CardTitle>
                 <CardDescription className="font-phonic text-base text-gray-600">
                   Everything you need to get started
                 </CardDescription>
                 <div className="mt-8">
-                  <span className="font-phonic text-7xl font-medium text-[#7f5efd]">$19</span>
+                  <span className="font-phonic text-3xl font-medium text-[#7f5efd]">$19</span>
                   <span className="font-phonic text-2xl font-normal text-gray-600 ml-2">/month</span>
                 </div>
                 <div className="font-phonic text-sm text-gray-500 mt-2">
@@ -278,7 +278,7 @@ export default function Home() {
       <section id="faq" className="py-24 bg-gray-50">
         <div className="container-wide">
           <div className="text-center mb-20">
-            <h2 className="font-phonic text-6xl font-normal text-gray-900 mb-6">
+            <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6">
               Frequently Asked Questions
             </h2>
             <p className="font-phonic text-base text-gray-600">
@@ -306,7 +306,7 @@ export default function Home() {
           {/* Simplified Fee Documentation */}
           <div className="mt-20">
             <div className="text-center mb-12">
-              <h3 className="font-phonic text-5xl font-normal text-gray-900 mb-4">
+              <h3 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
                 Understanding Payment Fees
               </h3>
               <p className="font-phonic text-base text-gray-600 max-w-3xl mx-auto">
@@ -325,7 +325,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="text-center">
-                      <div className="font-phonic text-5xl font-medium text-gray-900 mb-2">2.9% + $0.30</div>
+                      <div className="font-phonic text-3xl font-medium text-gray-900 mb-2">2.9% + $0.30</div>
                       <p className="font-phonic text-sm text-gray-600">per transaction</p>
                     </div>
                     <div className="space-y-3">
@@ -353,7 +353,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="text-center">
-                      <div className="font-phonic text-5xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
+                      <div className="font-phonic text-3xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
                       <p className="font-phonic text-sm text-gray-600">gateway fee only</p>
                     </div>
                     <div className="space-y-3">
@@ -444,7 +444,7 @@ export default function Home() {
       <section className="py-24 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
         <div className="container-wide text-center relative">
-          <h2 className="font-phonic text-6xl font-normal text-white mb-6">
+          <h2 className="font-phonic text-3xl font-normal text-white mb-6">
             Ready to start accepting crypto payments?
           </h2>
           <p className="font-capsule text-base text-white/90 mb-10 max-w-3xl mx-auto">

@@ -389,7 +389,7 @@ export default function CreatePaymentLinkPage() {
               Back
             </Button>
             <div>
-              <h1 className="font-phonic text-5xl font-normal text-gray-900">Create Payment Link</h1>
+              <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Create Payment Link</h1>
               <p className="font-capsule text-base font-normal text-gray-600">Create a new cryptocurrency payment link for your customers</p>
             </div>
           </div>

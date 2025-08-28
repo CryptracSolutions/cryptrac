@@ -249,7 +249,7 @@ export default function CreateSubscriptionPage() {
             <div className="flex items-center gap-4 mb-3">
               <BackToDashboard />
             </div>
-            <h1 className="font-phonic text-6xl font-normal text-gray-900">Create Subscription</h1>
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Create Subscription</h1>
             <p className="font-phonic text-2xl font-normal text-gray-600 mt-2">Set up recurring payments for your customers</p>
           </div>
           <div className="flex items-center gap-3">

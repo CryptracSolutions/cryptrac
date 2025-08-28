@@ -998,7 +998,7 @@ export default function PaymentPage() {
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
           </div>
-          <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-3">Payment Error</h1>
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Error</h1>
           <p className="font-phonic text-base text-gray-600 mb-6">{error}</p>
           <Button onClick={() => window.location.reload()} size="lg" className="shadow-lg">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -1016,7 +1016,7 @@ export default function PaymentPage() {
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-gray-500" />
           </div>
-          <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-3">Payment Link Not Found</h1>
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Link Not Found</h1>
           <p className="font-phonic text-base text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
         </div>
       </div>
@@ -1046,7 +1046,9 @@ export default function PaymentPage() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="font-phonic text-6xl font-normal text-gray-900 mb-3">{paymentLink.title}</h1>
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            {paymentLink.title}
+          </h1>
           {paymentLink.description && (
             <p className="font-capsule text-base text-gray-600 mb-4">{paymentLink.description}</p>
           )}

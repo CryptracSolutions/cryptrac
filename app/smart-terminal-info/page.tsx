@@ -25,7 +25,7 @@ export default function SmartTerminalInfo() {
           <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-2xl flex items-center justify-center mx-auto mb-8">
             <Smartphone className="h-10 w-10 text-white" />
           </div>
-          <h1 className="font-martina text-6xl font-normal text-gray-900 mb-6">
+          <h1 className="font-martina text-3xl font-normal text-gray-900 mb-6">
             Smart Terminal
           </h1>
           <p className="font-capsule text-xl text-gray-600 max-w-3xl mx-auto">
@@ -80,7 +80,7 @@ export default function SmartTerminalInfo() {
 
         {/* Key Features */}
         <div className="bg-gray-50 rounded-2xl p-12 mb-16">
-          <h2 className="font-phonic text-4xl font-normal text-center mb-12">Everything You Need</h2>
+          <h2 className="font-phonic text-3xl font-normal text-center mb-12">Everything You Need</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
             <div className="space-y-6 flex flex-col items-start">
               {[
@@ -119,7 +119,7 @@ export default function SmartTerminalInfo() {
 
         {/* Use Cases */}
         <div className="mb-16">
-          <h2 className="font-phonic text-4xl font-normal text-center mb-12">Perfect For</h2>
+          <h2 className="font-phonic text-3xl font-normal text-center mb-12">Perfect For</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="border-0 shadow-lg">
               <CardHeader className="text-center">
@@ -158,7 +158,7 @@ export default function SmartTerminalInfo() {
 
         {/* CTA Section */}
         <div className="text-center bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] rounded-2xl p-12">
-          <h2 className="font-phonic text-4xl font-normal text-white mb-6">
+          <h2 className="font-phonic text-3xl font-normal text-white mb-6">
             Ready to Get Started?
           </h2>
           <p className="font-capsule text-lg text-white/90 mb-8 max-w-2xl mx-auto">

@@ -344,7 +344,7 @@ export default function SubscriptionDetailPage() {
   return (
     <div className="p-4">
       <div className="mb-6">
-        <h1 className="font-phonic text-3xl font-normal mb-2">Dashboard</h1>
+        <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Dashboard</h1>
         <p className="font-capsule text-base font-normal text-gray-600 mb-1">
           Manage your subscriptions and billing cycles.
         </p>
@@ -359,7 +359,7 @@ export default function SubscriptionDetailPage() {
 
       {sub && (
         <div className="mb-6">
-          <h1 className="font-phonic text-3xl font-normal mb-2">{sub.title}</h1>
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">{sub.title}</h1>
           <p className="font-capsule text-base font-normal text-gray-600 mb-1">
             {sub.amount} {sub.currency} every {sub.interval_count} {sub.interval}
             {sub.interval_count > 1 ? 's' : ''}

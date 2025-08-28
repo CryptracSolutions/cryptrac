@@ -148,7 +148,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 </div>
               )}
               <div>
-                <h1 className="font-phonic text-5xl font-normal text-gray-900 mb-2">
+                <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
                   {merchant?.business_name || 'Business Name Not Available'}
                 </h1>
                 {paymentLink?.title && (

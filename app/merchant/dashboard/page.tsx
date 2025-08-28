@@ -317,7 +317,7 @@ export default function MerchantDashboard() {
         {/* Enhanced Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="font-phonic text-6xl font-normal text-gray-900">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Welcome back, {businessName}!
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600">

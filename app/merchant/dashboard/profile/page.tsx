@@ -209,7 +209,7 @@ export default function ProfilePage() {
                 <ArrowLeft className="h-4 w-4" /> Back to Dashboard
               </Button>
             </div>
-            <h1 className="font-phonic text-5xl font-normal text-gray-900">Profile</h1>
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Profile</h1>
             <p className="font-capsule text-base font-normal text-gray-600">Manage your business information and contact details</p>
           </div>
           <Button

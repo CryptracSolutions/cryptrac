@@ -375,7 +375,7 @@ export default function SmartTerminalPage() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
       <Card className="w-full max-w-md shadow-medium">
         <CardHeader className="text-center">
-          <h1 className="font-phonic text-5xl font-normal text-gray-900">Smart Terminal</h1>
+          <h1 className="font-phonic text-3xl font-normal text-gray-900">Smart Terminal</h1>
           <p className="font-phonic text-base text-gray-600">Accept cryptocurrency payments instantly</p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -389,7 +389,7 @@ export default function SmartTerminalPage() {
           )}
           {step === 'amount' && !paymentLink && (
             <div className="w-full max-w-sm space-y-6">
-              <div className="text-center font-phonic text-7xl font-medium text-primary" aria-live="polite">
+              <div className="text-center font-phonic text-3xl font-medium text-primary" aria-live="polite">
                 {amount || '0.00'}
               </div>
               <div className="bg-gray-50 p-4 rounded-lg text-body-sm space-y-2" aria-live="polite">

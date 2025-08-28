@@ -330,7 +330,7 @@ export default function TaxReportsPage() {
             <div className="flex items-center gap-4 mb-3">
               <BackToDashboard />
             </div>
-            <h1 className="font-phonic text-5xl font-normal text-gray-900">Transactions</h1>
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Transactions</h1>
             <p className="font-capsule text-base font-normal text-gray-600 mt-2">View and manage all your transaction history</p>
           </div>
           <div className="flex items-center gap-3">

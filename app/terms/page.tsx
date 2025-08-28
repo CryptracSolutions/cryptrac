@@ -160,7 +160,7 @@ export default function TermsOfService() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <FileText className="h-8 w-8 text-[#7f5efd]" />
                     1. Introduction and Acceptance of Terms
                   </h2>

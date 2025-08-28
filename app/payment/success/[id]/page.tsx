@@ -293,7 +293,7 @@ export default function PaymentSuccessPage() {
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
           </div>
-          <h1 className="font-phonic text-6xl font-normal text-gray-900 mb-3">Payment Confirmed!</h1>
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Confirmed!</h1>
           <p className="font-capsule text-base text-gray-600 mb-4">
             Your payment has been successfully processed and confirmed on the blockchain.
           </p>

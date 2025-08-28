@@ -548,7 +548,7 @@ export default function PaymentsPage() {
           <div className="flex items-center gap-4 mb-2">
             <BackToDashboard />
           </div>
-          <h1 className="font-phonic text-6xl font-normal text-gray-900">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
             Payment Management
           </h1>
           <p className="font-phonic text-2xl font-normal text-gray-600">View and manage all your payments</p>

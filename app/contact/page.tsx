@@ -122,7 +122,7 @@ export default function ContactPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Customer Support
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Contact Us
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
@@ -181,7 +181,7 @@ export default function ContactPage() {
               <div className="space-y-12">
                 {/* Section 1: Contact Information */}
                 <section id="contact-info">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     Contact Information
                   </h2>
@@ -265,7 +265,7 @@ export default function ContactPage() {
 
                 {/* Section 2: Support Hours */}
                 <section id="support-hours">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Clock className="h-8 w-8 text-[#7f5efd]" />
                     Support Hours & Availability
                   </h2>
@@ -316,7 +316,7 @@ export default function ContactPage() {
 
                 {/* Section 3: Contact Form */}
                 <section id="contact-form">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <MessageSquare className="h-8 w-8 text-[#7f5efd]" />
                     Send us a Message
                   </h2>
@@ -394,7 +394,7 @@ export default function ContactPage() {
 
                 {/* Section 4: FAQ */}
                 <section id="faq">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <HelpCircle className="h-8 w-8 text-[#7f5efd]" />
                     Frequently Asked Questions
                   </h2>
@@ -450,7 +450,7 @@ export default function ContactPage() {
 
                 {/* Section 5: Emergency Support */}
                 <section id="emergency">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
                     Emergency Support
                   </h2>

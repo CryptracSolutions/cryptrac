@@ -142,7 +142,7 @@ export default function BlogPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Cryptrac Blog
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Insights & Updates
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
@@ -435,7 +435,7 @@ export default function BlogPage() {
       {/* Call to Action */}
       <section className="bg-gradient-to-r from-[#7f5efd] to-[#6547e8] py-16 mt-16">
         <div className="container-wide text-center">
-          <h2 className="font-phonic text-4xl font-normal text-white mb-4">
+          <h2 className="font-phonic text-3xl font-normal text-white mb-4">
             Ready to Accept Cryptocurrency Payments?
           </h2>
           <p className="font-capsule text-lg font-normal text-white/80 mb-8 max-w-2xl mx-auto">

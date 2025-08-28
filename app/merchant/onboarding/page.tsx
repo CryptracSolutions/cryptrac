@@ -203,7 +203,7 @@ export default function OnboardingPage() {
         <div className="text-center space-y-6">
           <Logo className="mx-auto" />
           <div className="space-y-4">
-            <h1 className="font-phonic text-5xl font-normal text-gray-900">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Welcome to Cryptrac
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600">

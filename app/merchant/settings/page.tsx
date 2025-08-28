@@ -470,7 +470,7 @@ export default function MerchantSettingsPage() {
           <div className="flex items-center gap-4 mb-2">
             <BackToDashboard />
           </div>
-          <h1 className="font-phonic text-6xl font-normal text-gray-900">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
             Account Settings
           </h1>
           <p className="font-capsule text-base font-normal text-gray-600">

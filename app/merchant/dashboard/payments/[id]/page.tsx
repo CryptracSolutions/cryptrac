@@ -288,7 +288,9 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
           Back
         </Button>
         <div className="flex-1">
-          <h1 className="font-phonic text-5xl font-normal text-gray-900">{paymentLink.title}</h1>
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            {paymentLink.title}
+          </h1>
           <p className="font-capsule text-base font-normal text-gray-600 mt-1">Payment link details and management</p>
         </div>
         <div className="flex items-center space-x-2">

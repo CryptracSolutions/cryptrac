@@ -17,7 +17,7 @@ export default function TaxReportsPage() {
       />
       <Card className="shadow-soft">
         <CardHeader>
-          <h1 className="font-phonic text-3xl font-normal text-gray-900">Tax Reports</h1>
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Tax Reports</h1>
           <p className="font-capsule text-base font-normal text-gray-600">Generate and view your cryptocurrency tax reports</p>
         </CardHeader>
         <CardContent className="space-y-6">

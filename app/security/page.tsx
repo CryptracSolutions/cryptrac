@@ -99,7 +99,7 @@ export default function SecurityPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Platform Security
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Security at Cryptrac
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
@@ -158,7 +158,7 @@ export default function SecurityPage() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Security Overview */}
                 <section id="overview" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     1. Security Overview
                   </h2>
@@ -219,7 +219,7 @@ export default function SecurityPage() {
 
                 {/* Section 2: Platform Security */}
                 <section id="platform-security" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Lock className="h-8 w-8 text-[#7f5efd]" />
                     2. Platform Security Architecture
                   </h2>
@@ -317,7 +317,7 @@ export default function SecurityPage() {
 
                 {/* Section 3: Data Protection */}
                 <section id="data-protection" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Database className="h-8 w-8 text-[#7f5efd]" />
                     3. Data Protection and Privacy
                   </h2>
@@ -391,7 +391,7 @@ export default function SecurityPage() {
 
                 {/* Section 4: Transaction Security */}
                 <section id="transaction-security" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Zap className="h-8 w-8 text-[#7f5efd]" />
                     4. Transaction Security
                   </h2>
@@ -485,7 +485,7 @@ export default function SecurityPage() {
 
                 {/* Section 5: Authentication & Access */}
                 <section id="authentication" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <UserCheck className="h-8 w-8 text-[#7f5efd]" />
                     5. Authentication and Access Control
                   </h2>
@@ -553,7 +553,7 @@ export default function SecurityPage() {
 
                 {/* Section 6: Infrastructure Security */}
                 <section id="infrastructure" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Server className="h-8 w-8 text-[#7f5efd]" />
                     6. Infrastructure Security
                   </h2>
@@ -647,7 +647,7 @@ export default function SecurityPage() {
 
                 {/* Section 7: Compliance & Standards */}
                 <section id="compliance" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <CheckCircle2 className="h-8 w-8 text-[#7f5efd]" />
                     7. Compliance and Security Standards
                   </h2>
@@ -721,7 +721,7 @@ export default function SecurityPage() {
 
                 {/* Section 8: Incident Response */}
                 <section id="incident-response" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertTriangle className="h-8 w-8 text-[#7f5efd]" />
                     8. Incident Response and Recovery
                   </h2>
@@ -785,7 +785,7 @@ export default function SecurityPage() {
 
                 {/* Section 9: User Security Responsibilities */}
                 <section id="user-security" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     9. Your Security Responsibilities
                   </h2>
@@ -875,7 +875,7 @@ export default function SecurityPage() {
 
                 {/* Section 10: Security Reporting */}
                 <section id="reporting" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Eye className="h-8 w-8 text-[#7f5efd]" />
                     10. Security Issue Reporting
                   </h2>
@@ -944,7 +944,7 @@ export default function SecurityPage() {
 
                 {/* Section 11: Contact Information */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     11. Security Contact Information
                   </h2>

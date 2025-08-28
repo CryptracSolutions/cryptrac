@@ -138,7 +138,7 @@ export default function Signup() {
             <div className="flex justify-center mb-8">
               <Logo size="lg" />
             </div>
-            <h1 className="font-martina text-6xl font-normal text-gray-900 mb-3">Welcome to the future of payments</h1>
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Welcome to the future of payments</h1>
             <p className="font-capsule text-base text-gray-600 mb-6">
               Join thousands of businesses already using Cryptrac to accept cryptocurrency payments from customers
             </p>

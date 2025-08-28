@@ -289,7 +289,7 @@ export default function SupportedCryptocurrencies() {
               Back to Home
             </Link>
             
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-6 leading-tight">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-6 leading-tight">
               All Supported <span className="text-[#7f5efd]">Cryptocurrencies</span>
             </h1>
             <p className="font-capsule text-base font-normal leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
@@ -427,7 +427,7 @@ export default function SupportedCryptocurrencies() {
       <section className="py-16 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
         <div className="container-wide text-center relative">
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <h2 className="text-3xl font-normal text-white mb-4">
             Ready to accept crypto payments?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
