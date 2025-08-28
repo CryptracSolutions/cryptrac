@@ -81,8 +81,8 @@ export default function SubscriptionsInfo() {
         {/* Key Features */}
         <div className="bg-gray-50 rounded-2xl p-12 mb-16">
           <h2 className="font-phonic text-4xl font-normal text-center mb-12">Everything You Need</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+            <div className="space-y-6 flex flex-col items-start">
               {[
                 "Multiple billing frequencies",
                 "Trial periods and grace periods",
@@ -90,7 +90,7 @@ export default function SubscriptionsInfo() {
                 "Failed payment recovery",
                 "Proration and plan changes"
               ].map((feature, index) => (
-                <div key={index} className="flex items-center gap-4">
+                <div key={index} className="flex items-center gap-4 w-full">
                   <div className="w-6 h-6 bg-[#f5f3ff] rounded-full flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="h-4 w-4 text-[#7f5efd]" />
                   </div>
@@ -98,7 +98,7 @@ export default function SubscriptionsInfo() {
                 </div>
               ))}
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col items-start">
               {[
                 "Customer portal for self-service",
                 "Detailed subscription analytics",
@@ -106,7 +106,7 @@ export default function SubscriptionsInfo() {
                 "Tax handling and compliance",
                 "Multi-currency support"
               ].map((feature, index) => (
-                <div key={index} className="flex items-center gap-4">
+                <div key={index} className="flex items-center gap-4 w-full">
                   <div className="w-6 h-6 bg-[#f5f3ff] rounded-full flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="h-4 w-4 text-[#7f5efd]" />
                   </div>

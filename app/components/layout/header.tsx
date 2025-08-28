@@ -110,7 +110,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     ] : [
       { name: 'Features', href: '/#features' },
       { name: 'Pricing', href: '/#pricing' },
-      { name: 'About', href: '/#about' },
+      { name: 'About', href: '/about' },
     ]
     
     return (

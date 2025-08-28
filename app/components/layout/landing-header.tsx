@@ -90,7 +90,7 @@ export function Header() {
             FAQ
           </Link>
           <Link 
-            href="#about" 
+            href="/about" 
             className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors"
           >
             About
@@ -194,7 +194,7 @@ export function Header() {
               FAQ
             </Link>
             <Link 
-              href="#about" 
+              href="/about" 
               className="block font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors"
               onClick={closeMobileMenu}
             >
