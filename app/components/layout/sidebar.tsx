@@ -133,10 +133,12 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       >
         {/* Brand */}
         <div className="p-4 border-b border-gray-200">
-          <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+          <div className={cn("flex items-center gap-3 justify-center")}> 
             <Logo size="md" showText={false} />
             {!collapsed && (
-              <span className="font-phonic text-sm font-normal text-gray-900">Cryptrac</span>
+              <span className="font-phonic text-sm font-bold text-gray-900 tracking-wide">
+                CRYPTRAC
+              </span>
             )}
           </div>
         </div>

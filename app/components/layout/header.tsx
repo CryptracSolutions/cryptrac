@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { Menu, X, LogOut, User, Settings, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
-import { Logo } from "@/app/components/ui/logo"
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar"
 import { createClient } from "@/lib/supabase-browser"
 import { toast } from "react-hot-toast"
@@ -117,10 +116,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         )}
       >
         <div className="container-wide flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <Logo size="md" showText={!localUser} />
-          </Link>
+          {/* Logo removed intentionally */}
           
           {/* Desktop Navigation - Only for non-authenticated users */}
           {!localUser && (
