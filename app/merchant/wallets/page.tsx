@@ -222,8 +222,8 @@ export default function WalletsPage() {
             <BackToDashboard />
           </div>
           <div>
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Wallet Addresses</h1>
-            <p className="font-capsule text-base font-normal text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>
+            <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-4">Wallet Addresses</h1>
+            <p className="font-phonic text-base font-normal text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>
           </div>
         </div>
 
@@ -241,7 +241,7 @@ export default function WalletsPage() {
         {success && (
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="font-capsule text-base font-normal text-green-800">
+            <AlertDescription className="font-phonic text-base font-normal text-green-800">
               Your wallet settings have been updated successfully.
             </AlertDescription>
           </Alert>

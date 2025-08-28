@@ -223,7 +223,7 @@ export default function CreateSubscriptionPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="font-capsule text-base font-normal text-gray-600">Loading merchant settings...</p>
+            <p className="font-phonic text-base font-normal text-gray-600">Loading merchant settings...</p>
           </div>
         </div>
       </div>
@@ -271,7 +271,7 @@ export default function CreateSubscriptionPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
-            <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-lg">
@@ -279,7 +279,7 @@ export default function CreateSubscriptionPage() {
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Basic Information</CardTitle>
-                    <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
                       Set up the core details of your subscription
                     </CardDescription>
                   </div>
@@ -311,7 +311,7 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Pricing Configuration */}
-            <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
@@ -319,7 +319,7 @@ export default function CreateSubscriptionPage() {
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Pricing Configuration</CardTitle>
-                    <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
                       Set the amount, currency, and billing frequency
                     </CardDescription>
                   </div>
@@ -406,7 +406,7 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Customer Information */}
-            <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
@@ -414,7 +414,7 @@ export default function CreateSubscriptionPage() {
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Customer Information</CardTitle>
-                    <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
                       Customer details for the subscription
                     </CardDescription>
                   </div>
@@ -456,7 +456,7 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Payment Settings */}
-            <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
@@ -464,7 +464,7 @@ export default function CreateSubscriptionPage() {
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Settings</CardTitle>
-                    <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
                       Configure cryptocurrency payment options
                     </CardDescription>
                   </div>
@@ -535,7 +535,7 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Advanced Settings */}
-            <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -544,7 +544,7 @@ export default function CreateSubscriptionPage() {
                     </div>
                     <div>
                       <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Advanced Settings</CardTitle>
-                      <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
+                      <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
                         Configure advanced subscription behavior
                       </CardDescription>
                     </div>
@@ -623,7 +623,7 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Tax Configuration */}
-            <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
@@ -631,7 +631,7 @@ export default function CreateSubscriptionPage() {
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Tax Configuration</CardTitle>
-                    <CardDescription className="font-capsule text-base font-normal text-gray-600 mt-1">
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
                       Configure tax settings for this subscription
                     </CardDescription>
                   </div>

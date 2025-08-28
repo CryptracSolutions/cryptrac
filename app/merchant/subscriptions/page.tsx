@@ -138,7 +138,7 @@ export default function MerchantSubscriptionsPage() {
         <div className="flex justify-center items-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="font-capsule text-base font-normal text-gray-600">Loading subscriptions...</p>
+          <p className="font-phonic text-base font-normal text-gray-600">Loading subscriptions...</p>
         </div>
       </div>
     </div>
@@ -162,7 +162,7 @@ export default function MerchantSubscriptionsPage() {
               <BackToDashboard />
             </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Subscriptions</h1>
-            <p className="font-capsule text-base font-normal text-gray-600 mt-2">Manage recurring payments and customer subscriptions</p>
+            <p className="font-phonic text-base font-normal text-gray-600 mt-2">Manage recurring payments and customer subscriptions</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -184,10 +184,10 @@ export default function MerchantSubscriptionsPage() {
 
         {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="shadow-medium border-2 hover:shadow-xl transition-all duration-200">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                   <CreditCard className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -200,10 +200,10 @@ export default function MerchantSubscriptionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-medium border-2 hover:shadow-xl transition-all duration-200">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                   <DollarSign className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -216,10 +216,10 @@ export default function MerchantSubscriptionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-medium border-2 hover:shadow-xl transition-all duration-200">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                   <Users className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -232,10 +232,10 @@ export default function MerchantSubscriptionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                   <TrendingUp className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -250,10 +250,10 @@ export default function MerchantSubscriptionsPage() {
         </div>
 
         {/* Filters and Search */}
-        <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
           <CardHeader className="pb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                 <Filter className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -316,14 +316,14 @@ export default function MerchantSubscriptionsPage() {
         ) : (
           <div className="space-y-6">
             {filteredSubs.length === 0 ? (
-              <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardContent className="pt-12 pb-12">
                   <div className="text-center">
                     <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                       <CreditCard className="h-8 w-8 text-gray-400" />
                     </div>
                     <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">No Subscriptions Found</h3>
-                    <p className="font-capsule text-base font-normal text-gray-600 mb-6">
+                    <p className="font-phonic text-base font-normal text-gray-600 mb-6">
                       {searchTerm || statusFilter !== 'all' 
                         ? 'Try adjusting your search or filters to see more results.'
                         : 'Get started by creating your first subscription.'

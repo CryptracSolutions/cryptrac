@@ -473,7 +473,7 @@ export default function MerchantSettingsPage() {
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
             Account Settings
           </h1>
-          <p className="font-capsule text-base font-normal text-gray-600">
+          <p className="font-phonic text-base font-normal text-gray-600">
             Manage your payment preferences, tax settings, and notifications
           </p>
         </div>
@@ -507,22 +507,22 @@ export default function MerchantSettingsPage() {
 
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-8">
-            <Card className="card-hover shadow-lg">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader>
                 <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                     <CreditCard className="h-6 w-6 text-white" />
                   </div>
                   Payment Configuration
                 </CardTitle>
-                <CardDescription className="font-capsule text-base font-normal">
+                <CardDescription className="font-phonic text-base font-normal">
                   Configure your payment processing preferences and fees
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
                 <Alert className="border-green-200 bg-green-50">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <AlertDescription className="font-capsule text-base font-normal">
+                  <AlertDescription className="font-phonic text-base font-normal">
                     <strong>Auto-Forward Enabled:</strong> All payments are automatically forwarded to your configured wallet addresses. 
                     No funds are held by Cryptrac.
                   </AlertDescription>
@@ -667,15 +667,15 @@ export default function MerchantSettingsPage() {
 
           {/* Tax Management Tab */}
           <TabsContent value="tax" className="space-y-8">
-            <Card className="card-hover shadow-lg">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader>
                 <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                     <Calculator className="h-6 w-6 text-white" />
                   </div>
                   Tax Collection Settings
                 </CardTitle>
-                <CardDescription className="font-capsule text-base font-normal">
+                <CardDescription className="font-phonic text-base font-normal">
                   Configure tax collection for your payments
                 </CardDescription>
               </CardHeader>
@@ -806,7 +806,7 @@ export default function MerchantSettingsPage() {
                     {/* Tax Information */}
                     <Alert className="border-orange-200 bg-orange-50">
                       <AlertCircle className="h-5 w-5 text-orange-600" />
-                      <AlertDescription className="font-capsule text-base font-normal">
+                      <AlertDescription className="font-phonic text-base font-normal">
                         <strong>Important:</strong> Cryptrac helps you charge and report taxes accurately but does not file or remit taxes. 
                         Consult with a tax professional for compliance requirements in your jurisdiction.
                       </AlertDescription>
@@ -819,15 +819,15 @@ export default function MerchantSettingsPage() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-8">
-            <Card className="card-hover shadow-lg">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader>
                 <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
                     <Bell className="h-6 w-6 text-white" />
                   </div>
                   Notification Preferences
                 </CardTitle>
-                <CardDescription className="font-capsule text-base font-normal">
+                <CardDescription className="font-phonic text-base font-normal">
                   Manage email alerts and public receipts
                 </CardDescription>
               </CardHeader>
@@ -840,7 +840,7 @@ export default function MerchantSettingsPage() {
                       </div>
                       <div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Payment Notifications</h3>
-                        <p className="font-capsule text-base font-normal text-gray-600">Receive email alerts when payments are received</p>
+                        <p className="font-phonic text-base font-normal text-gray-600">Receive email alerts when payments are received</p>
                       </div>
                     </div>
                     <Checkbox
@@ -858,7 +858,7 @@ export default function MerchantSettingsPage() {
                       </div>
                       <div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Public Receipts</h3>
-                        <p className="font-capsule text-base font-normal text-gray-600">Make payment receipts publicly accessible</p>
+                        <p className="font-phonic text-base font-normal text-gray-600">Make payment receipts publicly accessible</p>
                       </div>
                     </div>
                     <Checkbox

@@ -390,7 +390,7 @@ export default function CreatePaymentLinkPage() {
             </Button>
             <div>
               <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Create Payment Link</h1>
-              <p className="font-capsule text-base font-normal text-gray-600">Create a new cryptocurrency payment link for your customers</p>
+              <p className="font-phonic text-base font-normal text-gray-600">Create a new cryptocurrency payment link for your customers</p>
             </div>
           </div>
         </div>
@@ -400,7 +400,7 @@ export default function CreatePaymentLinkPage() {
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-8">
               {/* Basic Information */}
-              <Card className="shadow-medium border-0 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 font-phonic text-base font-normal">
                     <LinkIcon className="h-5 w-5 text-[#7f5efd]" />
@@ -435,7 +435,7 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Payment Details */}
-              <Card className="shadow-medium border-0 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 font-phonic text-base font-normal">
                     <DollarSign className="h-5 w-5 text-[#7f5efd]" />
@@ -622,7 +622,7 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Advanced Settings */}
-              <Card className="shadow-medium border-0 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 heading-sm">
                     <Settings className="h-5 w-5 text-[#7f5efd]" />
@@ -759,7 +759,7 @@ export default function CreatePaymentLinkPage() {
 
             {/* Combined Preview & Fee Summary */}
             <div className="space-y-8">
-              <Card className="shadow-medium border-0 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 font-phonic text-base font-normal">
                     <CreditCard className="h-5 w-5 text-[#7f5efd]" />

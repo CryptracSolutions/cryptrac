@@ -140,10 +140,10 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+                    ? "bg-[#7f5efd] text-white"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff]",
                   collapsed && "justify-center"
                 )}
               >
@@ -161,8 +161,8 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
             <button
               onClick={() => setQuickActionsExpanded(!quickActionsExpanded)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left",
-                "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+                "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal transition-colors w-full text-left",
+                "text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff]",
                 collapsed && "justify-center"
               )}
             >
@@ -182,21 +182,21 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
               <div className="ml-8 space-y-1">
                 <Link
                   href="/smart-terminal"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors"
                 >
                   <Smartphone className="h-4 w-4 flex-shrink-0" />
                   <span>Smart Terminal</span>
                 </Link>
                 <Link
                   href="/merchant/dashboard/payments/create"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors"
                 >
                   <CreditCard className="h-4 w-4 flex-shrink-0" />
                   <span>Create Payment Link</span>
                 </Link>
                 <Link
                   href="/merchant/subscriptions/create"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors"
                 >
                   <RefreshCw className="h-4 w-4 flex-shrink-0" />
                   <span>Create Subscription</span>
@@ -219,7 +219,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
           <Link
             href="/help"
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-lg font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-[#f5f3ff] transition-colors",
               collapsed && "justify-center"
             )}
           >

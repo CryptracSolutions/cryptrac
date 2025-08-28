@@ -373,7 +373,7 @@ export default function SmartTerminalPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-      <Card className="w-full max-w-md shadow-medium">
+      <Card className="w-full max-w-md border-0 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
         <CardHeader className="text-center">
           <h1 className="font-phonic text-3xl font-normal text-gray-900">Smart Terminal</h1>
           <p className="font-phonic text-base text-gray-600">Accept cryptocurrency payments instantly</p>
