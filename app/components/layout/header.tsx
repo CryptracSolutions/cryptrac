@@ -115,7 +115,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           className
         )}
       >
-        <div className="container-wide flex h-16 items-center justify-between">
+        <div className="container-wide flex h-16 items-center">
           {/* Logo removed intentionally */}
           
           {/* Desktop Navigation - Only for non-authenticated users */}
@@ -134,7 +134,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           )}
           
           {/* Right Side */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 ml-auto">
             {localUser ? (
               /* User Menu */
               <div className="relative" data-profile-dropdown>
