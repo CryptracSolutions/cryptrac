@@ -7,5 +7,7 @@ export default async function SubscriptionsLayout({
 }: {
   children: React.ReactNode
 }) {
+  // The DashboardLayout is now applied at the merchant level
+  // This layout just passes through the children
   return <>{children}</>
 }

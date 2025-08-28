@@ -1,6 +1,3 @@
-import { DashboardLayout } from '@/app/components/layout/dashboard-layout'
-import { createServerClient } from '@/lib/supabase-server'
-
 export const metadata = {
   title: 'Merchant Dashboard',
 }
@@ -10,11 +7,7 @@ export default async function MerchantDashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Fetch user data on server side to pass to layout (optional)
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  return <DashboardLayout user={user}>{children}</DashboardLayout>
+  // The DashboardLayout is now applied at the merchant level
+  // This layout just passes through the children
+  return <>{children}</>
 }
