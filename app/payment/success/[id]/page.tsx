@@ -248,14 +248,14 @@ export default function PaymentSuccessPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-6"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-primary-300 rounded-full animate-spin mx-auto" style={{ animationDelay: '0.5s' }}></div>
+            <div className="w-16 h-16 border-4 border-[#ede9fe] border-t-[#7f5efd] rounded-full animate-spin mx-auto mb-6"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-[#ddd6fe] rounded-full animate-spin mx-auto" style={{ animationDelay: '0.5s' }}></div>
           </div>
           <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-2">Loading Payment Confirmation</h2>
-          <p className="text-gray-600">Please wait while we verify your payment...</p>
+          <p className="font-phonic text-base font-normal text-gray-600">Please wait while we verify your payment...</p>
         </div>
       </div>
     )
@@ -263,16 +263,16 @@ export default function PaymentSuccessPage() {
 
   if (error || !paymentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center container-narrow">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
           </div>
           <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-3">Payment Not Found</h2>
-          <p className="text-gray-600 mb-6 leading-relaxed">
+          <p className="font-phonic text-base font-normal text-gray-600 mb-6 leading-relaxed">
             {error || "The payment confirmation you're looking for doesn't exist."}
           </p>
-          <Button onClick={() => window.location.href = '/'} size="lg" className="shadow-lg">
+          <Button onClick={() => window.location.href = '/'} size="lg" className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
             Go Home
           </Button>
         </div>
@@ -281,43 +281,43 @@ export default function PaymentSuccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="min-h-screen bg-background py-8">
+      <div className="container-narrow">
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="relative mb-6">
             <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto shadow-lg">
               <CheckCircle className="h-12 w-12 text-green-600" />
             </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#7f5efd] rounded-full flex items-center justify-center">
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
           </div>
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Confirmed!</h1>
-          <p className="font-capsule text-base text-gray-600 mb-4">
+          <p className="font-phonic text-base font-normal text-gray-600 mb-4">
             Your payment has been successfully processed and confirmed on the blockchain.
           </p>
           <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
             <div className="flex items-center space-x-2">
-              <Shield className="h-4 w-4 text-primary-500" />
-              <span>Secure Transaction</span>
+              <Shield className="h-4 w-4 text-[#7f5efd]" />
+              <span className="font-phonic font-normal">Secure Transaction</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Zap className="h-4 w-4 text-primary-500" />
-              <span>Instant Confirmation</span>
+              <Zap className="h-4 w-4 text-[#7f5efd]" />
+              <span className="font-phonic font-normal">Instant Confirmation</span>
             </div>
             <div className="flex items-center space-x-2">
-              <CreditCard className="h-4 w-4 text-primary-500" />
-              <span>Non-Custodial</span>
+              <CreditCard className="h-4 w-4 text-[#7f5efd]" />
+              <span className="font-phonic font-normal">Non-Custodial</span>
             </div>
           </div>
         </div>
 
         {/* Payment Summary */}
-        <Card className="mb-8 shadow-lg border-0 bg-white">
+        <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
           <CardHeader className="text-center pb-6">
             <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Summary</CardTitle>
-            <p className="text-gray-600">
+            <p className="font-phonic text-base font-normal text-gray-600">
               Payment to <span className="font-phonic font-medium text-gray-900">{paymentData.payment_link.merchant.business_name}</span>
             </p>
           </CardHeader>
@@ -329,13 +329,13 @@ export default function PaymentSuccessPage() {
                 <p className="font-phonic text-3xl font-medium text-green-600 mb-2">
                   {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="font-phonic text-sm font-normal text-gray-600">
                   ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
                 </p>
               </div>
               <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payment Method</Label>
-                <p className="text-2xl font-bold text-blue-600 mb-2">{paymentData.pay_currency.toUpperCase()}</p>
+                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Method</Label>
+                <p className="font-phonic text-2xl font-normal text-blue-600 mb-2">{paymentData.pay_currency.toUpperCase()}</p>
                 <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-semibold">
                   {paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
                 </Badge>
@@ -347,7 +347,7 @@ export default function PaymentSuccessPage() {
             {/* Transaction Details */}
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-semibold text-gray-700 mb-3 block">Order ID</Label>
+                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Order ID</Label>
                 <div className="flex gap-3">
                   <Input
                     value={paymentData.order_id}
@@ -358,7 +358,7 @@ export default function PaymentSuccessPage() {
                     variant="outline"
                     size="lg"
                     onClick={() => copyToClipboard(paymentData.order_id)}
-                    className="shadow-sm"
+                    className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -368,7 +368,7 @@ export default function PaymentSuccessPage() {
               {/* Transaction Hash */}
               {paymentData.tx_hash && (
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Transaction Hash</Label>
+                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Transaction Hash</Label>
                   <div className="flex gap-3">
                     <Input
                       value={paymentData.tx_hash}
@@ -379,7 +379,7 @@ export default function PaymentSuccessPage() {
                       variant="outline"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.tx_hash!)}
-                      className="shadow-sm"
+                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -393,7 +393,7 @@ export default function PaymentSuccessPage() {
                             window.open(explorerUrl, '_blank')
                           }
                         }}
-                        className="shadow-sm"
+                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -405,7 +405,7 @@ export default function PaymentSuccessPage() {
               {/* Payin Hash */}
               {paymentData.payin_hash && (
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payin Hash (Customer Transaction)</Label>
+                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payin Hash (Customer Transaction)</Label>
                   <div className="flex gap-3">
                     <Input
                       value={paymentData.payin_hash}
@@ -416,7 +416,7 @@ export default function PaymentSuccessPage() {
                       variant="outline"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.payin_hash!)}
-                      className="shadow-sm"
+                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -430,7 +430,7 @@ export default function PaymentSuccessPage() {
                             window.open(explorerUrl, '_blank')
                           }
                         }}
-                        className="shadow-sm"
+                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -442,7 +442,7 @@ export default function PaymentSuccessPage() {
               {/* Payout Hash */}
               {paymentData.payout_hash && (
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payout Hash (Merchant Transaction)</Label>
+                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payout Hash (Merchant Transaction)</Label>
                   <div className="flex gap-3">
                     <Input
                       value={paymentData.payout_hash}
@@ -453,7 +453,7 @@ export default function PaymentSuccessPage() {
                       variant="outline"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.payout_hash!)}
-                      className="shadow-sm"
+                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -467,7 +467,7 @@ export default function PaymentSuccessPage() {
                             window.open(explorerUrl, '_blank')
                           }
                         }}
-                        className="shadow-sm"
+                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -480,17 +480,17 @@ export default function PaymentSuccessPage() {
         </Card>
 
         {/* Receipt Delivery */}
-        <Card className="mb-8 shadow-lg border-0 bg-white">
+        <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-900">Get Your Receipt</CardTitle>
-            <p className="text-gray-600">
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Get Your Receipt</CardTitle>
+            <p className="font-phonic text-base font-normal text-gray-600">
               Receive a detailed receipt for your records
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Email Receipt */}
             <div>
-              <Label className="text-sm font-semibold text-gray-700 mb-3 block">Email Receipt</Label>
+              <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Email Receipt</Label>
               <div className="flex gap-3">
                 <Input
                   type="email"
@@ -505,7 +505,7 @@ export default function PaymentSuccessPage() {
                   disabled={sendingEmailReceipt || emailReceiptSent || !email.trim()}
                   variant={emailReceiptSent ? "secondary" : "default"}
                   size="lg"
-                  className="shadow-sm"
+                  className={`font-phonic text-base font-normal px-8 py-3 shadow-sm ${emailReceiptSent ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'}`}
                 >
                   {sendingEmailReceipt ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -521,7 +521,7 @@ export default function PaymentSuccessPage() {
               </div>
               {emailReceiptSent && (
                 <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 font-medium">
+                  <p className="font-phonic text-sm font-medium text-green-800">
                     Receipt sent to {email}
                   </p>
                 </div>
@@ -529,7 +529,7 @@ export default function PaymentSuccessPage() {
             </div>
 
             <div className="text-center">
-              <p className="text-sm text-gray-500">
+              <p className="font-phonic text-sm font-normal text-gray-500">
                 Receipts include complete transaction details for your records
               </p>
             </div>
@@ -537,30 +537,30 @@ export default function PaymentSuccessPage() {
         </Card>
 
         {/* Additional Information */}
-        <Card className="mb-8 shadow-lg border-0 bg-white">
+        <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-900">What&apos;s Next?</CardTitle>
+            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">What&apos;s Next?</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
                 <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-2">Payment Confirmed</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-phonic font-normal text-gray-900 mb-2">Payment Confirmed</h3>
+                <p className="font-phonic text-sm font-normal text-gray-600">
                   Your payment has been confirmed on the blockchain and the merchant has been notified.
                 </p>
               </div>
                               <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
                 <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-2">Receipt Available</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-phonic font-normal text-gray-900 mb-2">Receipt Available</h3>
+                <p className="font-phonic text-sm font-normal text-gray-600">
                   Request an email receipt above to keep detailed records of this transaction.
                 </p>
               </div>
                               <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
                 <ExternalLink className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-2">Blockchain Verification</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-phonic font-normal text-gray-900 mb-2">Blockchain Verification</h3>
+                <p className="font-phonic text-sm font-normal text-gray-600">
                   Use the transaction hashes above to verify your payment on the blockchain explorer.
                 </p>
               </div>
@@ -570,16 +570,16 @@ export default function PaymentSuccessPage() {
 
         {/* Footer */}
         <div className="text-center">
-                      <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-lg p-8 border border-primary-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Thank you for using Cryptrac!</h3>
-            <p className="text-gray-600 mb-6">
+                      <div className="bg-gradient-to-r from-[#f5f3ff] to-purple-50 rounded-lg p-8 border border-[#ede9fe]">
+            <h3 className="font-phonic text-xl font-normal text-gray-900 mb-3">Thank you for using Cryptrac!</h3>
+            <p className="font-phonic text-base font-normal text-gray-600 mb-6">
               Your payment has been processed securely and efficiently using cryptocurrency technology.
             </p>
             <Button 
               onClick={() => window.location.href = '/'} 
               variant="outline" 
               size="lg"
-              className="shadow-sm"
+              className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
             >
               Return Home
               <ArrowRight className="h-4 w-4 ml-2" />

@@ -978,14 +978,14 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-6"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-primary-300 rounded-full animate-spin mx-auto" style={{ animationDelay: '0.5s' }}></div>
+            <div className="w-16 h-16 border-4 border-[#ede9fe] border-t-[#7f5efd] rounded-full animate-spin mx-auto mb-6"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-[#ddd6fe] rounded-full animate-spin mx-auto" style={{ animationDelay: '0.5s' }}></div>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Payment Details</h2>
-          <p className="text-gray-600">Please wait while we securely load your payment information...</p>
+          <h2 className="font-phonic text-xl font-normal text-gray-900 mb-2">Loading Payment Details</h2>
+          <p className="font-phonic text-base font-normal text-gray-600">Please wait while we securely load your payment information...</p>
         </div>
       </div>
     )
@@ -993,14 +993,14 @@ export default function PaymentPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center container-narrow">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
           </div>
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Error</h1>
-          <p className="font-phonic text-base text-gray-600 mb-6">{error}</p>
-          <Button onClick={() => window.location.reload()} size="lg" className="shadow-lg">
+          <p className="font-phonic text-base font-normal text-gray-600 mb-6">{error}</p>
+          <Button onClick={() => window.location.reload()} size="lg" className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
             <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
@@ -1011,13 +1011,13 @@ export default function PaymentPage() {
 
   if (!paymentLink) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center container-narrow">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-gray-500" />
           </div>
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Link Not Found</h1>
-          <p className="font-phonic text-base text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
+          <p className="font-phonic text-base font-normal text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
         </div>
       </div>
     )
@@ -1026,21 +1026,21 @@ export default function PaymentPage() {
   const currentStatus = paymentStatus || paymentData
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="min-h-screen bg-background py-8">
+      <div className="container-narrow">
         {/* Trust Indicators Header */}
         <div className="flex items-center justify-center space-x-6 mb-8 text-sm text-gray-500">
           <div className="flex items-center space-x-2">
-            <Shield className="h-4 w-4 text-primary-500" />
-            <span className="font-phonic">Secure Payment</span>
+            <Shield className="h-4 w-4 text-[#7f5efd]" />
+            <span className="font-phonic font-normal">Secure Payment</span>
           </div>
           <div className="flex items-center space-x-2">
-            <Zap className="h-4 w-4 text-primary-500" />
-            <span className="font-phonic">Instant Processing</span>
+            <Zap className="h-4 w-4 text-[#7f5efd]" />
+            <span className="font-phonic font-normal">Instant Processing</span>
           </div>
           <div className="flex items-center space-x-2">
-            <CreditCard className="h-4 w-4 text-primary-500" />
-            <span className="font-phonic">Non-Custodial</span>
+            <CreditCard className="h-4 w-4 text-[#7f5efd]" />
+            <span className="font-phonic font-normal">Non-Custodial</span>
           </div>
         </div>
 
@@ -1050,7 +1050,7 @@ export default function PaymentPage() {
             {paymentLink.title}
           </h1>
           {paymentLink.description && (
-            <p className="font-capsule text-base text-gray-600 mb-4">{paymentLink.description}</p>
+            <p className="font-phonic text-base font-normal text-gray-600 mb-4">{paymentLink.description}</p>
           )}
           {paymentLink.subscription_id && (
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 mb-4">
@@ -1064,7 +1064,7 @@ export default function PaymentPage() {
         </div>
 
         {/* Payment Amount Card */}
-        <Card className="mb-8 shadow-lg border-0 bg-white">
+        <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
           <CardHeader className="text-center pb-4">
             <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Details</CardTitle>
           </CardHeader>
@@ -1103,9 +1103,9 @@ export default function PaymentPage() {
                 )}
                 
                 <Separator className="my-4" />
-                <div className="flex justify-between items-center py-3 bg-primary-50 rounded-lg px-4">
+                <div className="flex justify-between items-center py-3 bg-[#f5f3ff] rounded-lg px-4">
                   <span className="font-phonic text-xl font-normal text-gray-900">Total Amount:</span>
-                  <span className="font-phonic text-3xl font-medium text-primary-600">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                  <span className="font-phonic text-3xl font-medium text-[#7c3aed]">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
                 </div>
               </div>
             )}
@@ -1114,18 +1114,18 @@ export default function PaymentPage() {
 
         {!paymentData ? (
           /* Currency Selection */
-          <Card className="shadow-lg border-0 bg-white">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
             <CardHeader className="text-center pb-6">
               <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Select Payment Method</CardTitle>
-              <p className="font-phonic text-base text-gray-600">Choose your preferred cryptocurrency</p>
+              <p className="font-phonic text-base font-normal text-gray-600">Choose your preferred cryptocurrency</p>
             </CardHeader>
             <CardContent className="space-y-6">
               {availableCurrencies.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="relative">
-                    <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-12 h-12 border-4 border-[#ede9fe] border-t-[#7f5efd] rounded-full animate-spin mx-auto mb-4"></div>
                   </div>
-                  <p className="font-phonic text-base text-gray-600">Loading available currencies...</p>
+                  <p className="font-phonic text-base font-normal text-gray-600">Loading available currencies...</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -1138,7 +1138,7 @@ export default function PaymentPage() {
                         key={currency.code}
                         className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
                           isSelected 
-                            ? 'border-primary-500 bg-primary-50 shadow-md' 
+                            ? 'border-[#7f5efd] bg-[#f5f3ff] shadow-md' 
                             : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         }`}
                         onClick={() => setSelectedCurrency(currency.code)}
@@ -1147,7 +1147,7 @@ export default function PaymentPage() {
                           <div className="flex items-center space-x-4">
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                               isSelected 
-                                ? 'border-primary-500 bg-primary-500' 
+                                ? 'border-[#7f5efd] bg-[#7f5efd]' 
                                 : 'border-gray-300'
                             }`}>
                               {isSelected && (
@@ -1180,7 +1180,7 @@ export default function PaymentPage() {
                 <Button 
                   onClick={createPayment} 
                   disabled={creatingPayment}
-                  className="w-full h-14 font-phonic text-base font-normal shadow-lg"
+                  className="w-full h-14 font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                   size="lg"
                 >
                   {creatingPayment ? (
@@ -1203,9 +1203,9 @@ export default function PaymentPage() {
           <div className="space-y-8">
             {/* Payment Status */}
             {currentStatus && (
-              <Card className="shadow-lg border-0 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-xl">
+                  <CardTitle className="font-phonic text-xl font-normal flex items-center space-x-3">
                     {getStatusIcon(currentStatus.payment_status)}
                     <span>Payment Status</span>
                   </CardTitle>
@@ -1224,7 +1224,7 @@ export default function PaymentPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => window.open(explorerUrl, '_blank')}
-                              className="shadow-sm"
+                              className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                             >
                               <ExternalLink className="h-4 w-4 mr-2" />
                               View Transaction
@@ -1247,14 +1247,14 @@ export default function PaymentPage() {
             )}
 
             {/* Payment Instructions */}
-            <Card className="shadow-lg border-0 bg-white">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold text-gray-900">Send Payment</CardTitle>
+                <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Send Payment</CardTitle>
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* Amount */}
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Amount to Send</Label>
+                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount to Send</Label>
                   <div className="flex items-center space-x-3">
                     <Input
                       value={`${paymentData.pay_amount} ${paymentData.pay_currency.toUpperCase()}`}
@@ -1265,7 +1265,7 @@ export default function PaymentPage() {
                       variant="outline"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.pay_amount.toString(), 'Amount')}
-                      className="shadow-sm"
+                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -1274,7 +1274,7 @@ export default function PaymentPage() {
 
                 {/* Address */}
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 mb-3 block">Payment Address</Label>
+                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Address</Label>
                   <div className="flex items-center space-x-3">
                     <Input
                       value={paymentData.pay_address}
@@ -1285,7 +1285,7 @@ export default function PaymentPage() {
                       variant="outline"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                      className="shadow-sm"
+                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -1295,7 +1295,7 @@ export default function PaymentPage() {
                 {/* QR Code */}
                 {qrCodeDataUrl && (
                   <div className="text-center">
-                    <Label className="text-sm font-semibold text-gray-700 mb-4 block">QR Code</Label>
+                    <Label className="font-phonic text-sm font-normal text-gray-700 mb-4 block">QR Code</Label>
                     <div className="inline-block p-6 bg-white rounded-lg border-2 border-gray-200 shadow-lg">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -1304,17 +1304,17 @@ export default function PaymentPage() {
                         className="w-56 h-56 mx-auto"
                       />
                     </div>
-                    <p className="text-sm text-gray-500 mt-3">Scan with your crypto wallet app</p>
+                    <p className="font-phonic text-sm font-normal text-gray-500 mt-3">Scan with your crypto wallet app</p>
                   </div>
                 )}
 
                 {/* Instructions */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-                  <h4 className="font-semibold text-blue-900 mb-4 flex items-center">
+                  <h4 className="font-phonic font-normal text-blue-900 mb-4 flex items-center">
                     <Shield className="h-5 w-5 mr-2" />
                     Payment Instructions
                   </h4>
-                  <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                  <ol className="font-phonic text-sm font-normal text-blue-800 space-y-2 list-decimal list-inside">
                     <li>Send exactly <strong className="text-blue-900">{paymentData.pay_amount} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
                     <li>Do not send any other amount or currency</li>
                     <li>Payment will be confirmed automatically</li>
@@ -1326,8 +1326,8 @@ export default function PaymentPage() {
                 {isMonitoring && (
                   <div className="text-center">
                     <div className="flex items-center justify-center space-x-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
-                      <Loader2 className="h-5 w-5 animate-spin text-primary-500" />
-                      <span>Monitoring payment status (checking every {Math.round(monitoringInterval / 1000)}s)</span>
+                      <Loader2 className="h-5 w-5 animate-spin text-[#7f5efd]" />
+                      <span className="font-phonic font-normal">Monitoring payment status (checking every {Math.round(monitoringInterval / 1000)}s)</span>
                     </div>
                   </div>
                 )}
