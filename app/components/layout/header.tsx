@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Menu, X, LogOut, User, Settings, ChevronDown } from "lucide-react"
+import { GlobalSearch } from "@/app/components/search/GlobalSearch"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar"
@@ -116,7 +117,12 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         )}
       >
         <div className="container-wide flex h-16 items-center">
-          {/* Logo removed intentionally */}
+          {/* Global Search (left-aligned) */}
+          {localUser && (
+            <div className="hidden md:block w-full max-w-md">
+              <GlobalSearch />
+            </div>
+          )}
           
           {/* Desktop Navigation - Only for non-authenticated users */}
           {!localUser && (

@@ -19,7 +19,10 @@ export const metadata: Metadata = {
     description: "Modern, non-custodial crypto payments for Bitcoin, Ethereum, Solana, and more."
   },
   icons: {
-    icon: "/icon.png"
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png" }
+    ]
   }
 };
 
@@ -35,6 +38,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="icon" href="/icon.png" sizes="any" />
       </head>
       <body className="antialiased">
