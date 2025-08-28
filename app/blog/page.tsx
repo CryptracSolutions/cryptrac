@@ -188,7 +188,7 @@ export default function BlogPage() {
             {/* Featured Posts */}
             {selectedCategory === "All" && featuredPosts.length > 0 && (
               <div className="mb-12">
-                <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-2">
+                <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-2">
                   <Award className="h-6 w-6 text-[#7f5efd]" />
                   Featured Articles
                 </h2>

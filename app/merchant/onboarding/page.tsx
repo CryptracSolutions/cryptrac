@@ -203,9 +203,9 @@ export default function OnboardingPage() {
         <div className="text-center space-y-6">
           <Logo className="mx-auto" />
           <div className="space-y-4">
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
               Welcome to Cryptrac
-            </h1>
+            </h2>
             <p className="font-capsule text-base font-normal text-gray-600">
               Let&apos;s get your crypto payment system set up in just a few steps
             </p>

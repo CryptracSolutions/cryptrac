@@ -160,7 +160,7 @@ export default function TermsOfService() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <FileText className="h-8 w-8 text-[#7f5efd]" />
                     1. Introduction and Acceptance of Terms
                   </h2>
@@ -187,7 +187,7 @@ export default function TermsOfService() {
 
                 {/* Section 2: Service Description */}
                 <section id="service" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Zap className="h-8 w-8 text-[#7f5efd]" />
                     2. Description of Service
                   </h2>
@@ -260,7 +260,7 @@ export default function TermsOfService() {
 
                 {/* Section 3: Eligibility */}
                 <section id="eligibility" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     3. Eligibility and Account Registration
                   </h2>
@@ -300,7 +300,7 @@ export default function TermsOfService() {
 
                 {/* Section 4: Merchant Responsibilities */}
                 <section id="merchant" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     4. Merchant Responsibilities and Obligations
                   </h2>
@@ -366,7 +366,7 @@ export default function TermsOfService() {
 
                 {/* Section 5: Customer Obligations */}
                 <section id="customer" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <CreditCard className="h-8 w-8 text-[#7f5efd]" />
                     5. Customer Payment Process and Obligations
                   </h2>
@@ -406,7 +406,7 @@ export default function TermsOfService() {
 
                 {/* Section 6: Fees */}
                 <section id="fees" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Scale className="h-8 w-8 text-[#7f5efd]" />
                     6. Fees and Payment Processing
                   </h2>
@@ -456,7 +456,7 @@ export default function TermsOfService() {
 
                 {/* Section 7: Prohibited Uses */}
                 <section id="prohibited" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Ban className="h-8 w-8 text-[#7f5efd]" />
                     7. Prohibited Uses and Conduct
                   </h2>
@@ -502,7 +502,7 @@ export default function TermsOfService() {
 
                 {/* Section 8: Intellectual Property */}
                 <section id="intellectual" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Lock className="h-8 w-8 text-[#7f5efd]" />
                     8. Intellectual Property Rights
                   </h2>
@@ -540,7 +540,7 @@ export default function TermsOfService() {
 
                 {/* Section 9: Privacy */}
                 <section id="privacy" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     9. Privacy and Data Protection
                   </h2>
@@ -583,7 +583,7 @@ export default function TermsOfService() {
 
                 {/* Section 10: Liability */}
                 <section id="liability" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
                     10. Limitation of Liability and Disclaimers
                   </h2>
@@ -618,7 +618,7 @@ export default function TermsOfService() {
 
                 {/* Section 11: Indemnification */}
                 <section id="indemnification" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     11. Indemnification
                   </h2>
@@ -655,7 +655,7 @@ export default function TermsOfService() {
 
                 {/* Section 12: Termination */}
                 <section id="termination" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
                     12. Termination
                   </h2>
@@ -700,7 +700,7 @@ export default function TermsOfService() {
 
                 {/* Section 13: Dispute Resolution */}
                 <section id="dispute" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Scale className="h-8 w-8 text-[#7f5efd]" />
                     13. Dispute Resolution and Governing Law
                   </h2>
@@ -746,7 +746,7 @@ export default function TermsOfService() {
 
                 {/* Section 14: Force Majeure */}
                 <section id="force" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
                     14. Force Majeure
                   </h2>
@@ -793,7 +793,7 @@ export default function TermsOfService() {
 
                 {/* Section 15: General Provisions */}
                 <section id="general" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <FileText className="h-8 w-8 text-[#7f5efd]" />
                     15. Severability and Entire Agreement
                   </h2>
@@ -832,7 +832,7 @@ export default function TermsOfService() {
 
                 {/* Section 16: Contact */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     16. Contact Information
                   </h2>

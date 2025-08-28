@@ -151,7 +151,7 @@ export default function HelpPage() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Welcome */}
                 <section id="welcome" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <HelpCircle className="h-8 w-8 text-[#7f5efd]" />
                     1. Welcome to Cryptrac
                   </h2>
@@ -178,7 +178,7 @@ export default function HelpPage() {
 
                 {/* Section 2: Getting Started for Merchants */}
                 <section id="merchants" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     2. Getting Started for Merchants
                   </h2>
@@ -273,7 +273,7 @@ export default function HelpPage() {
 
                 {/* Section 3: Merchant Dashboard Features */}
                 <section id="dashboard" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Settings className="h-8 w-8 text-[#7f5efd]" />
                     3. Merchant Dashboard Features
                   </h2>
@@ -347,7 +347,7 @@ export default function HelpPage() {
 
                 {/* Section 4: Customer Payment Guide */}
                 <section id="customers" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <CreditCard className="h-8 w-8 text-[#7f5efd]" />
                     4. Customer Payment Guide
                   </h2>
@@ -444,7 +444,7 @@ export default function HelpPage() {
 
                 {/* Section 5: Troubleshooting */}
                 <section id="troubleshooting" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Wrench className="h-8 w-8 text-[#7f5efd]" />
                     5. Troubleshooting Common Issues
                   </h2>
@@ -537,7 +537,7 @@ export default function HelpPage() {
 
                 {/* Section 6: Security Best Practices */}
                 <section id="security" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     6. Security Best Practices
                   </h2>
@@ -611,7 +611,7 @@ export default function HelpPage() {
 
                 {/* Section 7: Contact Information */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     7. Contact Information and Support Channels
                   </h2>

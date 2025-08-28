@@ -152,7 +152,7 @@ export default function CookiePolicy() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Cookie className="h-8 w-8 text-[#7f5efd]" />
                     1. Introduction
                   </h2>
@@ -182,7 +182,7 @@ export default function CookiePolicy() {
 
                 {/* Section 2: Types of Cookies */}
                 <section id="types" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Settings className="h-8 w-8 text-[#7f5efd]" />
                     2. Types of Cookies We Use
                   </h2>
@@ -313,7 +313,7 @@ export default function CookiePolicy() {
 
                 {/* Section 3: Third-Party Services */}
                 <section id="third-party" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     3. Third-Party Cookies and Services
                   </h2>
@@ -390,7 +390,7 @@ export default function CookiePolicy() {
 
                 {/* Section 4: Cookie Management */}
                 <section id="management" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Settings className="h-8 w-8 text-[#7f5efd]" />
                     4. Cookie Management and Your Choices
                   </h2>
@@ -486,7 +486,7 @@ export default function CookiePolicy() {
 
                 {/* Section 5: Data Retention */}
                 <section id="retention" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Clock className="h-8 w-8 text-[#7f5efd]" />
                     5. Data Retention and Cookie Lifespan
                   </h2>
@@ -548,7 +548,7 @@ export default function CookiePolicy() {
 
                 {/* Section 6: Security & Privacy */}
                 <section id="security" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     6. Security and Privacy Considerations
                   </h2>
@@ -636,7 +636,7 @@ export default function CookiePolicy() {
 
                 {/* Section 7: Updates */}
                 <section id="updates" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
                     7. Updates to This Cookie Policy
                   </h2>
@@ -700,7 +700,7 @@ export default function CookiePolicy() {
 
                 {/* Section 8: Contact */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     8. Contact Information and Support
                   </h2>

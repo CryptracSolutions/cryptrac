@@ -103,9 +103,9 @@ export default function Home() {
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">
 
-            <h1 className="font-martina text-3xl font-normal text-gray-900 mb-8">
+            <h1 className="font-martina text-4xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-martina text-[#7f5efd] font-normal text-3xl">Crypto</span>
+              <span className="font-martina text-[#7f5efd] font-normal text-4xl">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
@@ -243,7 +243,7 @@ export default function Home() {
                   Everything you need to get started
                 </CardDescription>
                 <div className="mt-8">
-                  <span className="font-phonic text-3xl font-medium text-[#7f5efd]">$19</span>
+                  <span className="font-phonic text-4xl font-medium text-[#7f5efd]">$19</span>
                   <span className="font-phonic text-2xl font-normal text-gray-600 ml-2">/month</span>
                 </div>
                 <div className="font-phonic text-sm text-gray-500 mt-2">
@@ -325,7 +325,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="text-center">
-                      <div className="font-phonic text-3xl font-medium text-gray-900 mb-2">2.9% + $0.30</div>
+                      <div className="font-phonic text-4xl font-medium text-gray-900 mb-2">2.9% + $0.30</div>
                       <p className="font-phonic text-sm text-gray-600">per transaction</p>
                     </div>
                     <div className="space-y-3">
@@ -353,7 +353,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="text-center">
-                      <div className="font-phonic text-3xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
+                      <div className="font-phonic text-4xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
                       <p className="font-phonic text-sm text-gray-600">gateway fee only</p>
                     </div>
                     <div className="space-y-3">
@@ -384,7 +384,7 @@ export default function Home() {
                     <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Gateway Fee</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <div className="font-phonic text-3xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
+                    <div className="font-phonic text-4xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
                     <p className="font-phonic text-sm text-gray-600 mb-4">
                       Charged by payment processor for handling transactions
                     </p>
@@ -403,7 +403,7 @@ export default function Home() {
                     <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Network Fee</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <div className="font-phonic text-3xl font-medium text-gray-600 mb-2">Variable</div>
+                    <div className="font-phonic text-4xl font-medium text-gray-600 mb-2">Variable</div>
                     <p className="font-phonic text-sm text-gray-600 mb-4">
                       Charged by blockchain network (not Cryptrac)
                     </p>
@@ -422,7 +422,7 @@ export default function Home() {
                     <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Cryptrac Fee</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <div className="font-phonic text-3xl font-medium text-[#7f5efd] mb-2">$19/month</div>
+                    <div className="font-phonic text-4xl font-medium text-[#7f5efd] mb-2">$19/month</div>
                     <p className="font-phonic text-sm text-gray-600 mb-4">
                       Subscription only - no transaction fees
                     </p>

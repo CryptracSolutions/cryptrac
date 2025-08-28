@@ -159,7 +159,7 @@ export default function AboutPage() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Building className="h-8 w-8 text-[#7f5efd]" />
                     1. About Cryptrac
                   </h2>
@@ -220,7 +220,7 @@ export default function AboutPage() {
 
                 {/* Section 2: Mission */}
                 <section id="mission" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Target className="h-8 w-8 text-[#7f5efd]" />
                     2. Our Mission
                   </h2>
@@ -231,7 +231,7 @@ export default function AboutPage() {
 
                   <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30 mb-6">
                     <CardHeader>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900 text-center">
+                      <CardTitle className="font-phonic text-2xl font-normal text-gray-900 text-center">
                         "Making Cryptocurrency Payments as Simple as Traditional Payments"
                       </CardTitle>
                     </CardHeader>
@@ -301,7 +301,7 @@ export default function AboutPage() {
 
                 {/* Section 3: Vision */}
                 <section id="vision" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Lightbulb className="h-8 w-8 text-[#7f5efd]" />
                     3. Our Vision
                   </h2>
@@ -353,7 +353,7 @@ export default function AboutPage() {
 
                 {/* Section 4: Values */}
                 <section id="values" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Heart className="h-8 w-8 text-[#7f5efd]" />
                     4. Our Core Values
                   </h2>
@@ -453,7 +453,7 @@ export default function AboutPage() {
 
                 {/* Section 5: Story */}
                 <section id="story" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Rocket className="h-8 w-8 text-[#7f5efd]" />
                     5. Our Story
                   </h2>
@@ -538,7 +538,7 @@ export default function AboutPage() {
 
                 {/* Section 6: Technology */}
                 <section id="technology" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Zap className="h-8 w-8 text-[#7f5efd]" />
                     6. Our Technology
                   </h2>
@@ -612,7 +612,7 @@ export default function AboutPage() {
 
                 {/* Section 7: Security */}
                 <section id="security" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     7. Security-First Approach
                   </h2>
@@ -686,7 +686,7 @@ export default function AboutPage() {
 
                 {/* Section 8: Team */}
                 <section id="team" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     8. Our Team
                   </h2>
@@ -769,7 +769,7 @@ export default function AboutPage() {
 
                 {/* Section 9: Achievements */}
                 <section id="achievements" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Award className="h-8 w-8 text-[#7f5efd]" />
                     9. Key Achievements
                   </h2>
@@ -843,7 +843,7 @@ export default function AboutPage() {
 
                 {/* Section 10: Future */}
                 <section id="future" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <TrendingUp className="h-8 w-8 text-[#7f5efd]" />
                     10. Looking Forward
                   </h2>
@@ -915,7 +915,7 @@ export default function AboutPage() {
 
                 {/* Section 11: Contact */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     11. Get in Touch
                   </h2>
