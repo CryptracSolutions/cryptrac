@@ -13,6 +13,7 @@ import { toast } from "react-hot-toast"
 
 interface HeaderProps {
   user?: {
+    id?: string
     email?: string
     user_metadata?: {
       role?: string
