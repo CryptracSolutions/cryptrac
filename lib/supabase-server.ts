@@ -55,13 +55,15 @@ export async function createServerClient( ) {
             console.log(`Getting cookie ${key}: ${value ? 'found' : 'undefined'}`); // Debug
             return value || null; // ✅ Return null instead of undefined
           },
-          setItem: (key: string, value: string, options: CookieOptions = {}) => {
-            console.log(`Setting cookie ${key}=${value}`); // Debug
-            cookieStore.set({ name: key, value, ...options });
+          setItem: (key: string, _value: string, _options: CookieOptions = {}) => {
+            console.log(`Cannot set cookie ${key} during SSR`); // Debug
+            // Cannot set cookies during SSR in Next.js 15
+            // This will be handled by the client-side or in route handlers
           },
-          removeItem: (key: string, options: CookieOptions = {}) => {
-            console.log(`Removing cookie ${key}`); // Debug
-            cookieStore.delete({ name: key, ...options });
+          removeItem: (key: string, _options: CookieOptions = {}) => {
+            console.log(`Cannot remove cookie ${key} during SSR`); // Debug
+            // Cannot delete cookies during SSR in Next.js 15
+            // This will be handled by the client-side or in route handlers
           },
         },
         autoRefreshToken: true,

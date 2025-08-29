@@ -10,11 +10,23 @@ export default async function MerchantLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Fetch user data on server side to pass to layout
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null;
+  
+  try {
+    // Fetch user data on server side to pass to layout
+    const supabase = await createServerClient()
+    const {
+      data: { user: userData },
+      error
+    } = await supabase.auth.getUser()
+    
+    if (!error) {
+      user = userData;
+    }
+  } catch (error) {
+    console.error('Error fetching user in merchant layout:', error);
+    // Continue with user as null
+  }
 
   return <DashboardLayout user={user}>{children}</DashboardLayout>
 }
