@@ -99,13 +99,13 @@ export default function Home() {
       <LandingNav />
 
       {/* Hero Section */}
-      <section id="hero" className="relative overflow-hidden bg-white py-20 sm:py-32">
+      <section id="hero" className="relative overflow-hidden bg-gray-50 py-20 sm:py-32">
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-4xl text-center">
 
-            <h1 className="font-martina text-4xl font-normal text-gray-900 mb-8">
+            <h1 className="font-martina text-5xl sm:text-6xl font-normal text-gray-900 mb-8">
               Get Paid in{" "}
-              <span className="font-martina text-[#7f5efd] font-normal text-4xl">Crypto</span>
+              <span className="font-martina text-[#7f5efd] font-semibold text-5xl sm:text-6xl">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
@@ -148,7 +148,7 @@ export default function Home() {
       </section>
 
       {/* Supported Cryptocurrencies */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gray-50">
         <div className="container-wide">
           <div className="text-center mb-12">
             <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
@@ -221,7 +221,7 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 bg-white">
+      <section id="pricing" className="py-24 bg-gray-50">
         <div className="container-wide">
           <div className="text-center mb-20">
             <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6">

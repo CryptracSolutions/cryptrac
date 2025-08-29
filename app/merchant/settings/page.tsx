@@ -490,34 +490,40 @@ export default function MerchantSettingsPage() {
 
         {/* Enhanced Tabs */}
         <Tabs defaultValue="payments" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-2 rounded-lg">
-            <TabsTrigger value="payments" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#7f5efd]">
-              <CreditCard className="h-4 w-4" />
-              Payments
-            </TabsTrigger>
-            <TabsTrigger value="tax" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#7f5efd]">
-              <Calculator className="h-4 w-4" />
-              Tax
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#7f5efd]">
-              <Bell className="h-4 w-4" />
-              Notifications
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center">
+            <TabsList className="grid grid-cols-3 bg-white border-2 border-gray-200 p-1 rounded-xl shadow-lg">
+              <TabsTrigger value="payments" className="flex items-center gap-2 px-6 py-3 rounded-lg font-phonic text-base font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
+                <CreditCard className="h-5 w-5" />
+                Payments
+              </TabsTrigger>
+              <TabsTrigger value="tax" className="flex items-center gap-2 px-6 py-3 rounded-lg font-phonic text-base font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
+                <Calculator className="h-5 w-5" />
+                Tax
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="flex items-center gap-2 px-6 py-3 rounded-lg font-phonic text-base font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
+                <Bell className="h-5 w-5" />
+                Notifications
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader>
-                <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
+            <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+              <CardHeader className="pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
                     <CreditCard className="h-6 w-6 text-white" />
                   </div>
-                  Payment Configuration
-                </CardTitle>
-                <CardDescription className="font-phonic text-base font-normal">
-                  Configure your payment processing preferences and fees
-                </CardDescription>
+                  <div>
+                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">
+                      Payment Configuration
+                    </CardTitle>
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600">
+                      Configure your payment processing preferences and fees
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-8">
                 <Alert className="border-green-200 bg-green-50">
@@ -667,17 +673,21 @@ export default function MerchantSettingsPage() {
 
           {/* Tax Management Tab */}
           <TabsContent value="tax" className="space-y-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader>
-                <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
+            <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+              <CardHeader className="pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
                     <Calculator className="h-6 w-6 text-white" />
                   </div>
-                  Tax Collection Settings
-                </CardTitle>
-                <CardDescription className="font-phonic text-base font-normal">
-                  Configure tax collection for your payments
-                </CardDescription>
+                  <div>
+                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">
+                      Tax Collection Settings
+                    </CardTitle>
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600">
+                      Configure tax collection for your payments
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="flex items-center space-x-3">
@@ -819,17 +829,21 @@ export default function MerchantSettingsPage() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader>
-                <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
+            <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+              <CardHeader className="pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
                     <Bell className="h-6 w-6 text-white" />
                   </div>
-                  Notification Preferences
-                </CardTitle>
-                <CardDescription className="font-phonic text-base font-normal">
-                  Manage email alerts and public receipts
-                </CardDescription>
+                  <div>
+                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">
+                      Notification Preferences
+                    </CardTitle>
+                    <CardDescription className="font-phonic text-base font-normal text-gray-600">
+                      Manage email alerts and public receipts
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="space-y-6">

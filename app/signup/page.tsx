@@ -93,8 +93,8 @@ export default function Signup() {
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
       <div className="hidden lg:flex flex-1 bg-[#7f5efd] relative overflow-hidden">
-        <div className="relative flex items-center justify-center p-12">
-          <div className="text-center text-white max-w-lg">
+        <div className="relative flex w-full items-center justify-center px-12 py-12">
+          <div className="text-center text-white max-w-lg mx-auto">
             <div className="mb-8">
               <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
                 <Zap className="h-12 w-12 text-white" />

@@ -264,6 +264,13 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   </div>
                 )}
                 
+                {tx.payment_link_id && (
+                  <div className="flex justify-between">
+                    <span className="font-phonic text-sm font-normal text-gray-600">Link ID</span>
+                    <span className="font-mono text-xs font-normal">{tx.payment_link_id}</span>
+                  </div>
+                )}
+                
                 {cryptoPaymentInfo && (
                   <div className="flex justify-between">
                     <span className="font-phonic text-sm font-normal text-gray-600">Payment Method</span>

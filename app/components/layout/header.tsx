@@ -28,8 +28,31 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
     const [isProfileOpen, setIsProfileOpen] = React.useState(false)
     const [localUser, setLocalUser] = React.useState(user)
+    const [businessName, setBusinessName] = React.useState<string | null>(null)
     const router = useRouter()
     const supabase = createClient()
+    
+    // Fetch merchant business name
+    const fetchBusinessName = React.useCallback(async (userId: string) => {
+      try {
+        const { data: merchant, error } = await supabase
+          .from('merchants')
+          .select('business_name')
+          .eq('user_id', userId)
+          .single()
+          
+        if (error) {
+          console.error('Error fetching merchant business name:', error)
+          return
+        }
+        
+        if (merchant?.business_name) {
+          setBusinessName(merchant.business_name)
+        }
+      } catch (error) {
+        console.error('Error fetching business name:', error)
+      }
+    }, [supabase])
     
     // Make header resilient to missing user prop
     React.useEffect(() => {
@@ -38,25 +61,31 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         supabase.auth.getUser().then(({ data }) => {
           if (data.user) {
             setLocalUser(data.user as unknown as Record<string, unknown>)
+            fetchBusinessName(data.user.id)
           }
         })
       } else {
         setLocalUser(user)
+        if (user?.id) {
+          fetchBusinessName(user.id)
+        }
       }
       
       // Subscribe to auth changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (session?.user) {
           setLocalUser(session.user as unknown as Record<string, unknown>)
+          fetchBusinessName(session.user.id)
         } else if (event === 'SIGNED_OUT') {
           setLocalUser(null)
+          setBusinessName(null)
         }
       })
       
       return () => {
         subscription.unsubscribe()
       }
-    }, [user, supabase.auth])
+    }, [user, supabase.auth, fetchBusinessName])
     
     // Close profile dropdown when clicking outside
     React.useEffect(() => {
@@ -88,6 +117,8 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       }
       return email.split('@')[0].slice(0, 2).toUpperCase()
     }
+    
+    const displayBusinessName = businessName || localUser?.user_metadata?.business_name || 'Account'
     
     const getDashboardLink = (role?: string) => {
       switch (role) {
@@ -153,12 +184,12 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                   <div className="flex items-center space-x-2">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-                        {getInitials(localUser.email || '', localUser.user_metadata?.business_name)}
+                        {getInitials(localUser.email || '', displayBusinessName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden sm:block text-left">
                       <div className="text-sm font-medium leading-none">
-                        {localUser.user_metadata?.business_name || 'Account'}
+                        {displayBusinessName}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {localUser.email}
@@ -177,12 +208,12 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                            {getInitials(localUser.email || '', localUser.user_metadata?.business_name)}
+                            {getInitials(localUser.email || '', displayBusinessName)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">
-                            {localUser.user_metadata?.business_name || 'Account'}
+                            {displayBusinessName}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
                             {localUser.email}

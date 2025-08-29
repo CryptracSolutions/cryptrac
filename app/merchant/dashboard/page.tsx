@@ -373,30 +373,17 @@ export default function MerchantDashboard() {
 
         {/* Enhanced Trial Banner */}
         {trialEnd && (
-          <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 shadow-lg">
-            <CardContent className="pt-8">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-100 rounded-full">
-                  <Clock className="h-6 w-6 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-phonic text-2xl font-normal text-orange-900 mb-1">Free Trial Active</h3>
-                  <p className="font-phonic text-base text-orange-700">
-                    Your trial ends on {new Date(trialEnd).toLocaleDateString()}. $99 One-time setup fee + $19/mo subscription will be charged to continue accepting crypto payments.
-                  </p>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-center">
-                    <div className="font-phonic text-3xl font-normal text-orange-900">Ends in</div>
-                    <div className="font-phonic text-xl font-normal text-orange-700">{trialCountdown}</div>
-                  </div>
-                  <Link href="/merchant/settings" className="font-phonic text-sm text-orange-700 underline font-normal">
-                    Cancel Subscription
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <Alert className="border-orange-200 bg-orange-50">
+            <Clock className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800 flex items-center justify-between">
+              <span className="font-phonic text-sm">
+                <strong>Free Trial:</strong> Ends {new Date(trialEnd).toLocaleDateString()} ({trialCountdown})
+              </span>
+              <Link href="/merchant/settings" className="font-phonic text-xs text-orange-700 underline hover:text-orange-900 ml-4">
+                Manage Plan
+              </Link>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Enhanced Stats Cards */}

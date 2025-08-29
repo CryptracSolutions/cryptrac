@@ -155,7 +155,7 @@ export default function PrivacyPolicy() {
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Shield className="h-8 w-8 text-[#7f5efd]" />
                     1. Introduction
                   </h2>
@@ -185,7 +185,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 2: Information We Collect */}
                 <section id="information-collected" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Database className="h-8 w-8 text-[#7f5efd]" />
                     2. Information We Collect
                   </h2>
@@ -313,7 +313,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 3: How We Use Your Information */}
                 <section id="how-we-use" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Settings className="h-8 w-8 text-[#7f5efd]" />
                     3. How We Use Your Information
                   </h2>
@@ -436,7 +436,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 4: Information Sharing and Disclosure */}
                 <section id="information-sharing" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     4. Information Sharing and Disclosure
                   </h2>
@@ -537,7 +537,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 5: Data Security and Protection */}
                 <section id="data-security" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Lock className="h-8 w-8 text-[#7f5efd]" />
                     5. Data Security and Protection
                   </h2>
@@ -610,7 +610,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 6: Your Privacy Rights and Choices */}
                 <section id="privacy-rights" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Eye className="h-8 w-8 text-[#7f5efd]" />
                     6. Your Privacy Rights and Choices
                   </h2>
@@ -717,7 +717,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 7: International Data Transfers */}
                 <section id="international-transfers" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Globe className="h-8 w-8 text-[#7f5efd]" />
                     7. International Data Transfers and Processing
                   </h2>
@@ -753,7 +753,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 8: Data Retention and Deletion */}
                 <section id="data-retention" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Clock className="h-8 w-8 text-[#7f5efd]" />
                     8. Data Retention and Deletion
                   </h2>
@@ -813,7 +813,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 9: Children's Privacy */}
                 <section id="children-privacy" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
                     9. Children's Privacy
                   </h2>
@@ -844,7 +844,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 10: Changes to This Policy */}
                 <section id="policy-changes" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
                     10. Changes to This Privacy Policy
                   </h2>
@@ -903,7 +903,7 @@ export default function PrivacyPolicy() {
 
                 {/* Section 11: Contact Information */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-5xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Phone className="h-8 w-8 text-[#7f5efd]" />
                     11. Contact Information and Privacy Support
                   </h2>

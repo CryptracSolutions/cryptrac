@@ -69,8 +69,8 @@ export default function Login() {
     <div className="min-h-screen flex">
       {/* Left Side - Visual */}
       <div className="hidden lg:flex flex-1 bg-[#7f5efd] relative overflow-hidden">
-        <div className="relative flex items-center justify-center p-12">
-          <div className="text-center text-white max-w-lg">
+        <div className="relative flex w-full items-center justify-center px-12 py-12">
+          <div className="text-center text-white max-w-lg mx-auto">
             <div className="mb-8">
               <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
                 <Shield className="h-12 w-12 text-white" />
@@ -114,7 +114,6 @@ export default function Login() {
             <div className="flex justify-center mb-8">
               <Logo size="lg" />
             </div>
-            <h1 className="font-martina text-6xl font-normal text-gray-900 mb-3">Welcome back</h1>
             <p className="font-capsule text-base text-gray-600">
               Sign in to your Cryptrac account to manage your crypto payments
             </p>

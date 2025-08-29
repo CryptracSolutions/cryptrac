@@ -9,7 +9,6 @@ import { Badge } from '@/app/components/ui/badge';
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { 
-  Search, 
   Plus,
   ExternalLink,
   Copy,
@@ -104,7 +103,6 @@ export default function PaymentsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -144,7 +142,6 @@ export default function PaymentsPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '50',
-        ...(searchTerm && { search: searchTerm }),
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
@@ -197,7 +194,7 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, statusFilter, router]);
+  }, [currentPage, statusFilter, router]);
 
   useEffect(() => {
     fetchPaymentLinks();
@@ -425,26 +422,34 @@ export default function PaymentsPage() {
             <p className="font-capsule text-base font-normal text-gray-600 mb-4">{link.description}</p>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-green-600" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-green-100 rounded-lg">
+                <DollarSign className="h-4 w-4 text-green-600" />
+              </div>
               <span className="font-bold text-lg text-gray-900">
                 {formatCurrency(link.amount, link.currency)}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-gray-100 rounded-lg">
+                <Calendar className="h-4 w-4 text-gray-500" />
+              </div>
               <span className="text-sm text-gray-600">Created {formatDate(link.created_at)}</span>
             </div>
             {link.expires_at && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-gray-100 rounded-lg">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                </div>
                 <span className="text-sm text-gray-600">Expires {formatDate(link.expires_at)}</span>
               </div>
             )}
             {link.max_uses && (
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-gray-500" />
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-gray-100 rounded-lg">
+                  <Users className="h-4 w-4 text-gray-500" />
+                </div>
                 <span className="text-sm text-gray-600">{link.usage_count}/{link.max_uses} uses</span>
               </div>
             )}
@@ -564,16 +569,16 @@ export default function PaymentsPage() {
       </div>
 
       {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Total Links</CardTitle>
+            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Total Links</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <LinkIcon className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.total_links}</div>
+          <CardContent className="pt-0">
+            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.total_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <BarChart3 className="h-4 w-4" />
               <span className="font-phonic text-sm font-normal">All payment links</span>
@@ -583,13 +588,13 @@ export default function PaymentsPage() {
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Active</CardTitle>
+            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Active</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.active_links}</div>
+          <CardContent className="pt-0">
+            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.active_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <Zap className="h-4 w-4" />
               <span className="font-phonic text-sm font-normal">Accepting payments</span>
@@ -599,13 +604,13 @@ export default function PaymentsPage() {
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Completed</CardTitle>
+            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Completed</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.completed_links}</div>
+          <CardContent className="pt-0">
+            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.completed_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <CheckCircle className="h-4 w-4" />
               <span className="font-phonic text-sm font-normal">Finished or max uses</span>
@@ -615,13 +620,13 @@ export default function PaymentsPage() {
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Expired</CardTitle>
+            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Expired</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <AlertCircle className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.expired_links}</div>
+          <CardContent className="pt-0">
+            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.expired_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <Clock className="h-4 w-4" />
               <span className="font-phonic text-sm font-normal">Past expiry date</span>
@@ -631,13 +636,13 @@ export default function PaymentsPage() {
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Single Use</CardTitle>
+            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Single Use</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <CreditCard className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">{statistics.single_use_links}</div>
+          <CardContent className="pt-0">
+            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.single_use_links}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <Users className="h-4 w-4" />
               <span className="font-phonic text-sm font-normal">One-time payments</span>
@@ -647,13 +652,13 @@ export default function PaymentsPage() {
 
         <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Total Revenue</CardTitle>
+            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Total Revenue</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-2 text-[#7f5efd]">
+          <CardContent className="pt-0">
+            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">
               {formatCurrency(statistics.total_revenue)}
             </div>
             <div className="flex items-center gap-2 text-gray-600">
@@ -664,34 +669,21 @@ export default function PaymentsPage() {
         </Card>
       </div>
 
-      {/* Enhanced Search and Filter */}
-      <Card className="shadow-lg">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                placeholder="Search payment links..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 font-capsule text-base font-normal"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48 h-12">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Status Filter */}
+      <div className="flex justify-center">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-64 h-12 bg-white border-2 border-gray-200 shadow-md hover:shadow-lg transition-all duration-200">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+            <SelectItem value="paused">Paused</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Enhanced Payment Links by Category */}
       {groups.map(group => (

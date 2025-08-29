@@ -111,7 +111,7 @@ export default function TaxReportsPage() {
 
     useEffect(() => {
       if (user) {
-        loadTaxReport()
+        loadInitialTransactions()
       }
     }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -130,6 +130,48 @@ export default function TaxReportsPage() {
       router.push('/auth/login')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadInitialTransactions = async () => {
+    if (!user) return
+
+    try {
+      setLoadingReport(true)
+      console.log('📊 Loading initial transactions...')
+
+      // Load just the last 5 transactions to start
+      const params = new URLSearchParams({
+        user_id: user.id,
+        report_type: 'custom',
+        start_date: '2020-01-01T00:00:00.000Z', // Wide date range
+        end_date: new Date().toISOString(),
+        status: 'all',
+        export_format: 'json',
+        limit: '5'
+      })
+
+      const response = await fetch(`/api/tax-reports?${params}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to load initial transactions')
+      }
+
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to load initial transactions')
+      }
+
+      console.log('✅ Initial transactions loaded:', data.data)
+      setReportData(data.data)
+
+    } catch (error) {
+      console.error('❌ Error loading initial transactions:', error)
+      // Don't show toast error for initial load - just quietly fail
+      console.log('Continuing without initial data...')
+    } finally {
+      setLoadingReport(false)
     }
   }
 
@@ -325,28 +367,13 @@ export default function TaxReportsPage() {
         />
         
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <div>
             <div className="flex items-center gap-4 mb-3">
               <BackToDashboard />
             </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Transactions</h1>
             <p className="font-phonic text-base font-normal text-gray-600 mt-2">View and manage all your transaction history</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={generateReport}
-              disabled={loadingReport}
-              className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] flex items-center gap-2"
-            >
-              {loadingReport ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              {loadingReport ? 'Generating...' : 'Generate Report'}
-            </Button>
           </div>
         </div>
 
@@ -509,6 +536,25 @@ export default function TaxReportsPage() {
                         ))}
                       </tbody>
                     </table>
+                    
+                    {/* View More button - only show if we have the initial 5 and there might be more */}
+                    {reportData.transactions.length === 5 && reportData.total_count > 5 && (
+                      <div className="flex justify-center pt-6 border-t border-gray-200 mt-6">
+                        <Button
+                          variant="outline"
+                          onClick={() => loadTaxReport()}
+                          disabled={loadingReport}
+                          className="font-phonic text-sm font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] flex items-center gap-2"
+                        >
+                          {loadingReport ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                          {loadingReport ? 'Loading...' : `View More (${reportData.total_count - 5} more)`}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -622,6 +668,22 @@ export default function TaxReportsPage() {
                     className="form-input-enhanced text-[#7f5efd]"
                   />
                   <Label className="font-phonic text-sm font-normal text-gray-700">Show tax-only transactions</Label>
+                </div>
+
+                {/* Generate Report Button */}
+                <div className="pt-4 border-t border-gray-200">
+                  <Button
+                    onClick={generateReport}
+                    disabled={loadingReport}
+                    className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white h-12 flex items-center gap-2"
+                  >
+                    {loadingReport ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    {loadingReport ? 'Generating...' : 'Generate Report'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
