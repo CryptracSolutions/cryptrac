@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
+import { createClient } from "@supabase/supabase-js"
 import { SearchApiResponse } from "@/types/search"
 
 export async function GET(request: NextRequest) {
@@ -12,10 +13,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ pages: [], payment_links: [] })
     }
 
-    // Get authenticated user via server client
-    const supabase = await createServerClient()
-    const { data: userData } = await supabase.auth.getUser()
+    // Create both server client for auth and service role client for data access
+    const serverClient = await createServerClient()
+    const { data: userData, error: authError } = await serverClient.auth.getUser()
     const user = userData?.user
+    
+    console.log(`[SEARCH AUTH DEBUG] User auth result:`, { 
+      user: user?.id, 
+      email: user?.email, 
+      authError: authError?.message 
+    })
+
+    // Create service role client for database queries
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Comprehensive pages and actions to search
     const allPages = [
