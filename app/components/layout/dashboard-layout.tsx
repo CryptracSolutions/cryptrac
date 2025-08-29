@@ -4,6 +4,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Header } from "./header"
 import { Sidebar } from "./sidebar"
+import { CommandPalette } from "@/app/components/search/CommandPalette"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -22,6 +23,7 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
   ({ children, user, className, showSidebar = true }, ref) => {
     const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+    const [commandPaletteOpen, setCommandPaletteOpen] = React.useState(false)
     
     const userRole = user?.user_metadata?.role || "merchant"
     
@@ -35,6 +37,20 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
       
       window.addEventListener('resize', handleResize)
       return () => window.removeEventListener('resize', handleResize)
+    }, [])
+    
+    // Global keyboard shortcuts
+    React.useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // CMD/CTRL + K to open command palette
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault()
+          setCommandPaletteOpen(true)
+        }
+      }
+      
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
     }, [])
     
     return (
@@ -79,6 +95,7 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
           <Header 
             user={user} 
             onMobileMenuToggle={showSidebar ? () => setMobileMenuOpen(!mobileMenuOpen) : undefined}
+            onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
           />
           
           <main className="flex-1 overflow-hidden">
@@ -87,6 +104,12 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
             </div>
           </main>
         </div>
+        
+        {/* Command Palette */}
+        <CommandPalette 
+          isOpen={commandPaletteOpen}
+          onClose={() => setCommandPaletteOpen(false)}
+        />
       </div>
     )
   }
