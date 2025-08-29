@@ -86,6 +86,7 @@ export interface SearchApiResponse {
     currency?: string
     status?: string
     created_at?: string
+    is_exact_link_match?: boolean
   }>
   transactions: Array<{
     id: string

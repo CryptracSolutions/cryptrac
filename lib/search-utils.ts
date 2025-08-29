@@ -158,18 +158,25 @@ export function transformApiResponse(apiResponse: SearchApiResponse): SearchResu
   
   // Transform payment links
   apiResponse.payment_links?.forEach(link => {
+    // If this is an exact link_id match, route directly to the payment link page
+    const href = link.is_exact_link_match 
+      ? `/merchant/dashboard/payments/${link.id}`
+      : `/merchant/dashboard/payments?link=${encodeURIComponent(link.link_id)}`
+    
     results.push({
       id: `payment-link-${link.id}`,
       title: link.title || link.link_id,
       description: link.amount ? `${link.amount} ${link.currency || 'USD'}` : undefined,
-      href: `/merchant/dashboard/payments?link=${encodeURIComponent(link.link_id)}`,
+      href,
       category: 'payment_links',
       icon: 'Link',
-      badge: link.status,
+      badge: link.status || undefined,
       metadata: {
         amount: link.amount,
         currency: link.currency,
-        created_at: link.created_at
+        created_at: link.created_at,
+        link_id: link.link_id,
+        is_exact_match: link.is_exact_link_match
       }
     })
   })

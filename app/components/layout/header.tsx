@@ -21,11 +21,10 @@ interface HeaderProps {
   } | null
   className?: string
   onMobileMenuToggle?: () => void
-  onCommandPaletteOpen?: () => void
 }
 
 const Header = React.forwardRef<HTMLElement, HeaderProps>(
-  ({ user, className, onMobileMenuToggle, onCommandPaletteOpen }, ref) => {
+  ({ user, className, onMobileMenuToggle }, ref) => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
     const [isProfileOpen, setIsProfileOpen] = React.useState(false)
     const [localUser, setLocalUser] = React.useState(user)
@@ -121,7 +120,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           {/* Global Search (left-aligned) */}
           {localUser && (
             <div className="hidden md:block w-full max-w-md">
-              <GlobalSearch onCommandPaletteOpen={onCommandPaletteOpen} />
+              <GlobalSearch />
             </div>
           )}
           

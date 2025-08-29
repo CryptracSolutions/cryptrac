@@ -88,13 +88,13 @@ export async function GET(request: NextRequest) {
     let helpArticles: SearchApiResponse['help_articles'] = []
     let settings: SearchApiResponse['settings'] = []
     if (merchantId) {
-      // Enhanced payment links query
+      // Enhanced payment links query with link_id specific search
       const { data } = await supabase
         .from("payment_links")
         .select("id,title,link_id,amount,currency,status,created_at,expires_at")
         .eq("merchant_id", merchantId)
         .or(
-          `title.ilike.%${q}%,link_id.ilike.%${q}%,description.ilike.%${q}%`
+          `title.ilike.%${q}%,link_id.ilike.%${q}%,description.ilike.%${q}%,link_id.eq.${q}`
         )
         .order("updated_at", { ascending: false })
         .limit(15)
@@ -105,7 +105,9 @@ export async function GET(request: NextRequest) {
         amount: link.amount,
         currency: link.currency,
         status: link.status,
-        created_at: link.created_at
+        created_at: link.created_at,
+        // Add a flag to indicate if this is an exact link_id match for special routing
+        is_exact_link_match: link.link_id === q
       }))
 
       // Enhanced transactions query
