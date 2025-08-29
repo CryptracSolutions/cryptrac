@@ -45,7 +45,10 @@ export function LandingNav() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container-wide flex h-16 items-center justify-between">
-        <Logo size="md" />
+        <div className="flex items-center gap-3">
+          <Logo size="lg" showText={false} emblemClassName="bg-transparent" />
+          <span className="font-phonic text-xl leading-tight font-medium text-gray-900 tracking-tight">Cryptrac</span>
+        </div>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
@@ -89,6 +92,9 @@ export function LandingNav() {
           </Link>
           <Link href="/#faq" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
             FAQ
+          </Link>
+          <Link href="/blog" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
+            Blog
           </Link>
           <Link href="/about" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] transition-colors">
             About
@@ -161,6 +167,13 @@ export function LandingNav() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               FAQ
+            </Link>
+            <Link
+              href="/blog"
+              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Blog
             </Link>
             <Link
               href="/about"
