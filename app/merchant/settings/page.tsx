@@ -486,15 +486,7 @@ export default function MerchantSettingsPage() {
           </p>
         </div>
 
-        {/* Auto-save indicator */}
-        {saving && (
-          <div className="flex justify-end">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
-            </div>
-          </div>
-        )}
+        
 
         {/* Enhanced Tabs */}
         <Tabs defaultValue="payments" className="space-y-8">
