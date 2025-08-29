@@ -26,8 +26,33 @@ export async function createServerClient( ) {
       auth: {
         storage: {
           getItem: (key: string) => {
-            const value = cookieStore.get(key)?.value;
-            console.log(`Getting cookie ${key}: ${value || 'undefined'}`); // Debug
+            // Handle chunked cookies (split across multiple cookies like .0, .1, etc.)
+            let value = cookieStore.get(key)?.value;
+            
+            if (!value) {
+              // Check for chunked cookies
+              const chunks: string[] = [];
+              let chunkIndex = 0;
+              
+              while (true) {
+                const chunkCookie = cookieStore.get(`${key}.${chunkIndex}`);
+                if (!chunkCookie) break;
+                
+                let chunkValue = chunkCookie.value;
+                // Handle base64 prefix in chunks
+                if (chunkValue.startsWith('base64-')) {
+                  chunkValue = chunkValue.substring(7);
+                }
+                chunks.push(chunkValue);
+                chunkIndex++;
+              }
+              
+              if (chunks.length > 0) {
+                value = chunks.join('');
+              }
+            }
+            
+            console.log(`Getting cookie ${key}: ${value ? 'found' : 'undefined'}`); // Debug
             return value || null; // ✅ Return null instead of undefined
           },
           setItem: (key: string, value: string, options: CookieOptions = {}) => {

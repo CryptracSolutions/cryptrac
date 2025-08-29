@@ -9,12 +9,12 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
-  Info,
   DollarSign,
   Calculator,
   Bell,
   CreditCard,
-  Zap
+  Zap,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -180,7 +180,7 @@ export default function MerchantSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: value })
       });
-              toast.success('Saved');
+              // Removed success toast per requirements
     } catch (err) {
       console.error('Failed to update notification setting:', err);
       toast.error('Failed to update settings');
@@ -243,9 +243,9 @@ export default function MerchantSettingsPage() {
         tax_rates: (merchant.tax_rates || [
           { id: '1', label: 'Sales Tax', percentage: 8.5 }
         ]).map(
-          (rate: { id: string; label: string; percentage: number | string }) => ({
+          (rate: { id: string; label: string; percentage: number | string | null | undefined }) => ({
             ...rate,
-            percentage: String(rate.percentage)
+            percentage: rate.percentage == null ? '0.0' : String(rate.percentage)
           })
         ),
         business_address: merchant.business_address || {
@@ -274,9 +274,9 @@ export default function MerchantSettingsPage() {
         tax_rates: (merchant.tax_rates || [
           { id: '1', label: 'Sales Tax', percentage: 8.5 }
         ]).map(
-          (rate: { id: string; label: string; percentage: number | string }) => ({
+          (rate: { id: string; label: string; percentage: number | string | null | undefined }) => ({
             ...rate,
-            percentage: String(rate.percentage)
+            percentage: rate.percentage == null ? '0.0' : String(rate.percentage)
           })
         ),
         business_address: merchant.business_address || {
@@ -344,7 +344,6 @@ export default function MerchantSettingsPage() {
 
       console.log('✅ Settings saved successfully');
       setLastSavedSettings(settings);
-      toast.success('Saved');
 
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -403,7 +402,6 @@ export default function MerchantSettingsPage() {
 
       console.log('✅ Settings auto-saved successfully');
       setLastSavedSettings(newSettings);
-      toast.success('Saved');
 
     } catch (error) {
       console.error('Error auto-saving settings:', error);
@@ -492,24 +490,24 @@ export default function MerchantSettingsPage() {
         <Tabs defaultValue="payments" className="space-y-8">
           <div className="w-full">
             <div className="border-b border-gray-200">
-              <TabsList className="flex space-x-8 px-4 bg-transparent h-auto p-0" aria-label="Tabs">
+              <TabsList className="flex w-full px-4 bg-transparent h-auto p-0" aria-label="Tabs">
                 <TabsTrigger 
                   value="payments" 
-                  className="flex items-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
                 >
                   <CreditCard className="h-5 w-5" />
                   Payments
                 </TabsTrigger>
                 <TabsTrigger 
                   value="tax" 
-                  className="flex items-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
                 >
                   <Calculator className="h-5 w-5" />
                   Tax
                 </TabsTrigger>
                 <TabsTrigger 
                   value="notifications" 
-                  className="flex items-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
                 >
                   <Bell className="h-5 w-5" />
                   Notifications
@@ -714,8 +712,8 @@ export default function MerchantSettingsPage() {
                     {/* Tax Strategy */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Calculator className="h-5 w-5 text-purple-600" />
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                          <Calculator className="h-5 w-5 text-[#7f5efd]" />
                         </div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Tax Strategy</h3>
                       </div>
@@ -772,7 +770,7 @@ export default function MerchantSettingsPage() {
                           onClick={addTaxRate}
                           className="flex items-center gap-3"
                         >
-                          <Info className="h-5 w-5" />
+                          <Plus className="h-5 w-5" />
                           Add Rate
                         </Button>
                       </div>
@@ -814,11 +812,7 @@ export default function MerchantSettingsPage() {
                         ))}
                       </div>
                       
-                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="font-phonic text-base font-normal text-blue-900">
-                          Total Default Tax Rate: {settings.tax_rates.reduce((sum, rate) => sum + (parseFloat(rate.percentage) || 0), 0).toFixed(1)}%
-                        </div>
-                      </div>
+                      {/* Removed total default tax rate box */}
                     </div>
 
                     {/* Tax Information */}
