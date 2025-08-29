@@ -454,8 +454,8 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Plus className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-[#7f5efd]/10 rounded-lg">
+                    <Plus className="h-6 w-6 text-[#7f5efd]" />
                   </div>
                   <div className="text-left">
                     <div className="font-phonic text-xl font-normal">Create Payment Link</div>
@@ -470,8 +470,8 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <CreditCard className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-[#7f5efd]/10 rounded-lg">
+                    <CreditCard className="h-6 w-6 text-[#7f5efd]" />
                   </div>
                   <div className="text-left">
                     <div className="font-phonic text-xl font-normal">Smart Terminal</div>
@@ -486,8 +486,8 @@ export default function MerchantDashboard() {
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-indigo-100 rounded-lg">
-                    <Calendar className="h-6 w-6 text-indigo-600" />
+                    <div className="p-3 bg-[#7f5efd]/10 rounded-lg">
+                    <Calendar className="h-6 w-6 text-[#7f5efd]" />
                   </div>
                   <div className="text-left">
                     <div className="font-phonic text-xl font-normal">Create Subscription</div>
@@ -582,7 +582,7 @@ export default function MerchantDashboard() {
                 <div key={step.id} className="flex items-start gap-6">
                   <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-phonic text-lg font-normal ${
                     step.completed 
-                      ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg' 
+                      ? 'bg-[#7f5efd]/10 text-[#7f5efd]' 
                       : 'bg-gray-100 text-gray-400'
                   }`}>
                     {step.completed ? <CheckCircle className="h-6 w-6" /> : step.id}
