@@ -50,37 +50,49 @@ export async function createServerClient( ) {
           setItem: (key: string, value: string, options: CookieOptions = {}) => {
             console.log(`Setting cookie ${key}: ${value ? 'has_value' : 'empty'}`); // Debug
             
-            // Handle large values by chunking into multiple cookies
-            const CHUNK_SIZE = 3800; // Conservative size to avoid cookie limits
-            
-            if (value.length > CHUNK_SIZE) {
-              // Split large value into chunks
-              const chunks = [];
-              for (let i = 0; i < value.length; i += CHUNK_SIZE) {
-                chunks.push(value.slice(i, i + CHUNK_SIZE));
-              }
+            try {
+              // Handle large values by chunking into multiple cookies
+              const CHUNK_SIZE = 3800; // Conservative size to avoid cookie limits
               
-              // Set chunked cookies
-              chunks.forEach((chunk, index) => {
-                const chunkKey = index === 0 ? key : `${key}.${index}`;
-                cookieStore.set({ name: chunkKey, value: chunk, ...options });
-              });
-            } else {
-              cookieStore.set({ name: key, value, ...options });
+              if (value.length > CHUNK_SIZE) {
+                // Split large value into chunks
+                const chunks = [];
+                for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+                  chunks.push(value.slice(i, i + CHUNK_SIZE));
+                }
+                
+                // Set chunked cookies
+                chunks.forEach((chunk, index) => {
+                  const chunkKey = index === 0 ? key : `${key}.${index}`;
+                  cookieStore.set({ name: chunkKey, value: chunk, ...options });
+                });
+              } else {
+                cookieStore.set({ name: key, value, ...options });
+              }
+            } catch (error) {
+              console.log(`Cannot set cookie ${key}: cookies can only be modified in Server Actions or Route Handlers`);
+              // In read-only contexts (like page components), we can't set cookies
+              // This is expected behavior and not an error
             }
           },
           removeItem: (key: string, options: CookieOptions = {}) => {
             console.log(`Removing cookie ${key}`); // Debug
             
-            // Remove the main cookie and any chunked versions
-            const allCookies = cookieStore.getAll();
-            const cookiesToRemove = allCookies.filter(cookie => 
-              cookie.name === key || cookie.name.startsWith(`${key}.`)
-            );
-            
-            cookiesToRemove.forEach(cookie => {
-              cookieStore.delete({ name: cookie.name, ...options });
-            });
+            try {
+              // Remove the main cookie and any chunked versions
+              const allCookies = cookieStore.getAll();
+              const cookiesToRemove = allCookies.filter(cookie => 
+                cookie.name === key || cookie.name.startsWith(`${key}.`)
+              );
+              
+              cookiesToRemove.forEach(cookie => {
+                cookieStore.delete({ name: cookie.name, ...options });
+              });
+            } catch (error) {
+              console.log(`Cannot remove cookie ${key}: cookies can only be modified in Server Actions or Route Handlers`);
+              // In read-only contexts (like page components), we can't remove cookies
+              // This is expected behavior and not an error
+            }
           },
         },
         autoRefreshToken: true,
