@@ -89,15 +89,19 @@ export async function GET(request: NextRequest) {
     let settings: SearchApiResponse['settings'] = []
     if (merchantId) {
       // Enhanced payment links query with link_id specific search
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("payment_links")
-        .select("id,title,link_id,amount,currency,status,created_at,expires_at")
+        .select("id,title,link_id,amount,currency,status,created_at,expires_at,updated_at")
         .eq("merchant_id", merchantId)
         .or(
           `title.ilike.%${q}%,link_id.ilike.%${q}%,description.ilike.%${q}%,link_id.eq.${q}`
         )
         .order("updated_at", { ascending: false })
         .limit(15)
+      
+      if (error) {
+        console.error("Search error for payment_links:", error)
+      }
       paymentLinks = (data || []).map(link => ({
         id: link.id,
         title: link.title,

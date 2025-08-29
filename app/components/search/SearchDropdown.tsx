@@ -116,15 +116,8 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
       
       handle = setTimeout(async () => {
         if (!searchQuery.trim()) {
-          // Show suggestions when empty
-          const suggestions = getSearchSuggestions()
-          const grouped = groupResults(suggestions.map(result => ({ 
-            result, 
-            finalScore: 1, 
-            matchScore: 1, 
-            weightScore: 1 
-          })))
-          setResultGroups(grouped)
+          // Clear result groups when empty - let the empty state handle suggestions
+          setResultGroups([])
           setSelectedIndex(0)
           return
         }

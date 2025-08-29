@@ -490,21 +490,32 @@ export default function MerchantSettingsPage() {
 
         {/* Enhanced Tabs */}
         <Tabs defaultValue="payments" className="space-y-8">
-          <div className="flex justify-center">
-            <TabsList className="grid grid-cols-3 bg-white border-2 border-gray-200 p-2 rounded-xl shadow-lg">
-              <TabsTrigger value="payments" className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-phonic text-sm font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
-                <CreditCard className="h-4 w-4 text-[#7f5efd] group-data-[state=active]:text-white" />
-                Payments
-              </TabsTrigger>
-              <TabsTrigger value="tax" className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-phonic text-sm font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
-                <Calculator className="h-4 w-4 text-[#7f5efd] group-data-[state=active]:text-white" />
-                Tax
-              </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-phonic text-sm font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
-                <Bell className="h-4 w-4 text-[#7f5efd] group-data-[state=active]:text-white" />
-                Notifications
-              </TabsTrigger>
-            </TabsList>
+          <div className="w-full">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-4" aria-label="Tabs">
+                <TabsTrigger 
+                  value="payments" 
+                  className="flex items-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
+                >
+                  <CreditCard className="h-5 w-5" />
+                  Payments
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tax" 
+                  className="flex items-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
+                >
+                  <Calculator className="h-5 w-5" />
+                  Tax
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="notifications" 
+                  className="flex items-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
+                >
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                </TabsTrigger>
+              </nav>
+            </div>
           </div>
 
           {/* Payments Tab */}
@@ -526,20 +537,13 @@ export default function MerchantSettingsPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-8">
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <AlertDescription className="font-phonic text-base font-normal">
-                    <strong>Auto-Forward Enabled:</strong> All payments are automatically forwarded to your configured wallet addresses. 
-                    No funds are held by Cryptrac.
-                  </AlertDescription>
-                </Alert>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <DollarSign className="h-5 w-5 text-blue-600" />
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                          <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                         </div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Gateway Fee Structure</h3>
                       </div>
@@ -564,22 +568,24 @@ export default function MerchantSettingsPage() {
                         
                         <div className="space-y-3">
                           <div className="flex items-center space-x-3">
-                                                         <Checkbox
-                               id="merchant-pays-fee"
-                               checked={!settings.charge_customer_fee}
-                               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: !(checked as boolean) }))}
-                             />
+                            <Checkbox
+                              id="merchant-pays-fee"
+                              checked={!settings.charge_customer_fee}
+                              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: !(checked as boolean) }))}
+                              className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                            />
                              <label htmlFor="merchant-pays-fee" className="font-phonic text-base font-normal">
                                Merchant pays gateway fee
                              </label>
                            </div>
                            
-                           <div className="flex items-center space-x-3">
-                             <Checkbox
-                               id="customer-pays-fee"
-                               checked={settings.charge_customer_fee}
-                               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
-                             />
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              id="customer-pays-fee"
+                              checked={settings.charge_customer_fee}
+                              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
+                              className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                            />
                             <label htmlFor="customer-pays-fee" className="font-phonic text-base font-normal">
                               Customer pays gateway fee
                             </label>
@@ -592,8 +598,8 @@ export default function MerchantSettingsPage() {
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Zap className="h-5 w-5 text-green-600" />
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                          <Zap className="h-5 w-5 text-[#7f5efd]" />
                         </div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Auto-Convert Settings</h3>
                       </div>
@@ -612,6 +618,7 @@ export default function MerchantSettingsPage() {
                                 ...(checked ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
                               }
                             }))}
+                            className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                           />
                           <label htmlFor="auto-convert" className="font-phonic text-base font-normal">
                             Enable automatic conversion to preferred payout currency
@@ -695,6 +702,7 @@ export default function MerchantSettingsPage() {
                     id="tax-enabled"
                     checked={settings.tax_enabled}
                     onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked as boolean }))}
+                    className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                   />
                   <label htmlFor="tax-enabled" className="font-phonic text-base font-normal">
                     Enable tax collection
@@ -729,8 +737,8 @@ export default function MerchantSettingsPage() {
                     {/* Sales Type */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Zap className="h-5 w-5 text-green-600" />
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                          <Zap className="h-5 w-5 text-[#7f5efd]" />
                         </div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Sales Type</h3>
                       </div>
@@ -753,8 +761,8 @@ export default function MerchantSettingsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-red-100 rounded-lg">
-                            <DollarSign className="h-5 w-5 text-red-600" />
+                          <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                            <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                           </div>
                           <h3 className="font-phonic text-2xl font-normal text-gray-900">Default Tax Rates</h3>
                         </div>
@@ -849,8 +857,8 @@ export default function MerchantSettingsPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-green-100 rounded-lg">
-                        <Bell className="h-5 w-5 text-green-600" />
+                      <div className="p-3 bg-[#7f5efd]/10 rounded-lg">
+                        <Bell className="h-5 w-5 text-[#7f5efd]" />
                       </div>
                       <div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Payment Notifications</h3>
@@ -862,13 +870,14 @@ export default function MerchantSettingsPage() {
                       onCheckedChange={(checked) =>
                         updateNotificationSetting('email_payment_notifications_enabled', !!checked)
                       }
+                      className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                     />
                   </div>
                   
                   <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-blue-100 rounded-lg">
-                        <CreditCard className="h-5 w-5 text-blue-600" />
+                      <div className="p-3 bg-[#7f5efd]/10 rounded-lg">
+                        <CreditCard className="h-5 w-5 text-[#7f5efd]" />
                       </div>
                       <div>
                         <h3 className="font-phonic text-2xl font-normal text-gray-900">Public Receipts</h3>
@@ -880,6 +889,7 @@ export default function MerchantSettingsPage() {
                       onCheckedChange={(checked) =>
                         updateNotificationSetting('public_receipts_enabled', !!checked)
                       }
+                      className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                     />
                   </div>
                 </div>
