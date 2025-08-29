@@ -144,7 +144,6 @@ export default function WalletsPage() {
 
       setSuccess(true);
       setLastSavedSettings(settings);
-      toast.success('Saved');
       
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
@@ -178,7 +177,6 @@ export default function WalletsPage() {
       }
 
       setLastSavedSettings(newSettings);
-      toast.success('Saved');
 
     } catch (error) {
       console.error('Failed to auto-save settings:', error);
@@ -227,15 +225,7 @@ export default function WalletsPage() {
           </div>
         </div>
 
-        {/* Auto-save indicator */}
-        {saving && (
-          <div className="flex justify-end">
-            <div className="flex items-center gap-2 font-phonic text-sm font-normal text-gray-600">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
-            </div>
-          </div>
-        )}
+        
 
         {/* Success Alert */}
         {success && (
