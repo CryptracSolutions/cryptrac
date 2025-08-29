@@ -421,8 +421,8 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg shadow-soft">
-                  <Wallet className="h-6 w-6 text-purple-600" />
+                <div className="p-3 bg-gradient-to-br from-[#7f5efd]/10 to-[#7c3aed]/10 rounded-lg shadow-soft">
+                  <Wallet className="h-6 w-6 text-[#7f5efd]" />
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -616,8 +616,8 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200">
         <CardHeader className="pb-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg shadow-soft">
-              <Plus className="h-6 w-6 text-purple-600" />
+            <div className="p-3 bg-gradient-to-br from-[#7f5efd]/10 to-[#7c3aed]/10 rounded-lg shadow-soft">
+              <Plus className="h-6 w-6 text-[#7f5efd]" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-gray-900">

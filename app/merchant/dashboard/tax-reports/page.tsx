@@ -72,6 +72,8 @@ interface Transaction {
   refund_date: string | null
   // ENHANCED: Added public_receipt_id for receipt links
   public_receipt_id: string | null
+  // Added link_id for payment link identification
+  link_id: string | null
 }
 
 interface TaxReportData {
@@ -467,6 +469,7 @@ export default function TaxReportsPage() {
                         <tr className="border-b border-gray-200">
                           <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Date</th>
                           <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Description</th>
+                          <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Link ID</th>
                           <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Gross Amount</th>
                           <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Tax</th>
                           <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Fees</th>
@@ -483,6 +486,15 @@ export default function TaxReportsPage() {
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-900 font-medium">
                               {transaction.product_description}
+                            </td>
+                            <td className="py-3 px-4 text-xs font-mono">
+                              {transaction.link_id ? (
+                                <span className="bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
+                                  {transaction.link_id}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-900 text-right">
                               ${transaction.gross_amount.toFixed(2)}

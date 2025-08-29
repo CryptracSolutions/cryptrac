@@ -294,16 +294,8 @@ export function getSearchSuggestions(): SearchResult[] {
       title: 'Dashboard',
       description: 'View your business overview',
       href: '/merchant/dashboard',
-      category: 'pages',
+      category: 'actions',
       icon: 'LayoutDashboard'
-    },
-    {
-      id: 'page-analytics',
-      title: 'Analytics',
-      description: 'View business reports and metrics',
-      href: '/merchant/dashboard/analytics',
-      category: 'analytics',
-      icon: 'BarChart3'
     }
   ]
 }

@@ -99,7 +99,7 @@ export default function SecurityPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Platform Security
             </Badge>
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Security at Cryptrac
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">

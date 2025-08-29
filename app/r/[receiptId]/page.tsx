@@ -90,7 +90,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   if (tx.payment_link_id) {
     const { data: linkData } = await supabase
       .from('payment_links')
-      .select('title')
+      .select('title, link_id')
       .eq('id', tx.payment_link_id)
       .single();
     paymentLink = linkData;
@@ -240,72 +240,85 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
             <Separator className="my-6" />
 
             {/* Transaction Information */}
-            <div className="space-y-4">
-              <h2 className="font-phonic text-2xl font-normal text-gray-900">Transaction Information</h2>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="font-phonic text-sm font-normal text-gray-600">Payment Date</span>
-                  <span className="font-phonic text-sm font-normal">
-                    {new Date(tx.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
+            <div className="bg-white border-2 border-gray-200 rounded-xl shadow-lg p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0-1.125.504-1.125 1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
                 </div>
-                
-                {tx.nowpayments_payment_id && (
-                  <div className="flex justify-between">
-                    <span className="font-phonic text-sm font-normal text-gray-600">Payment ID</span>
-                    <span className="font-mono text-xs font-normal">{tx.nowpayments_payment_id}</span>
+                <div>
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900">Transaction Information</h2>
+                  <p className="font-phonic text-sm font-normal text-gray-600">Payment details and transaction data</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="font-phonic text-sm font-normal text-gray-600">Payment Date</span>
+                    <span className="font-phonic text-sm font-medium text-gray-900">
+                      {new Date(tx.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
                   </div>
-                )}
-                
-                {tx.payment_link_id && (
-                  <div className="flex justify-between">
-                    <span className="font-phonic text-sm font-normal text-gray-600">Link ID</span>
-                    <span className="font-mono text-xs font-normal">{tx.payment_link_id}</span>
-                  </div>
-                )}
-                
-                {cryptoPaymentInfo && (
-                  <div className="flex justify-between">
-                    <span className="font-phonic text-sm font-normal text-gray-600">Payment Method</span>
-                    <span className="font-phonic text-sm font-normal">{cryptoPaymentInfo}</span>
-                  </div>
-                )}
-                
-                {tx.asset && tx.network && (
-                  <div className="flex justify-between">
-                    <span className="font-phonic text-sm font-normal text-gray-600">Network</span>
-                    <span className="font-phonic text-sm font-normal">{tx.asset} on {tx.network}</span>
-                  </div>
-                )}
-                
-                {tx.tx_hash && (
-                  <div className="flex justify-between">
-                    <span className="font-phonic text-sm font-normal text-gray-600">Transaction Hash</span>
-                    <span className="font-mono text-xs">
-                      {txLink ? (
-                        <a 
-                          href={txLink} 
-                          className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors" 
-                          target="_blank" 
+                  
+                  {tx.nowpayments_payment_id && (
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="font-phonic text-sm font-normal text-gray-600">Payment ID</span>
+                      <span className="font-mono text-xs font-medium bg-gray-100 px-2 py-1 rounded">{tx.nowpayments_payment_id}</span>
+                    </div>
+                  )}
+                  
+                  {paymentLink?.link_id && (
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="font-phonic text-sm font-normal text-gray-600">Link ID</span>
+                      <span className="font-mono text-xs font-medium bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">{paymentLink.link_id}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {cryptoPaymentInfo && (
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="font-phonic text-sm font-normal text-gray-600">Payment Method</span>
+                      <span className="font-phonic text-sm font-medium text-gray-900">{cryptoPaymentInfo}</span>
+                    </div>
+                  )}
+                  
+                  {tx.asset && tx.network && (
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="font-phonic text-sm font-normal text-gray-600">Network</span>
+                      <span className="font-phonic text-sm font-medium text-gray-900">{tx.asset} on {tx.network}</span>
+                    </div>
+                  )}
+                  
+                  {tx.tx_hash && (
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="font-phonic text-sm font-normal text-gray-600">Transaction Hash</span>
+                      <span className="font-mono text-xs">
+                        {txLink ? (
+                          <a 
+                            href={txLink} 
+                            className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors bg-[#7f5efd]/10 px-2 py-1 rounded inline-block" 
+                            target="_blank" 
                           rel="noopener noreferrer"
                         >
                           {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
                         </a>
-                      ) : (
-                        <span className="font-phonic text-sm font-normal">
-                          {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                )}
+                        ) : (
+                          <span className="bg-gray-100 px-2 py-1 rounded">
+                            {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

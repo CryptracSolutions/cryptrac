@@ -222,7 +222,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
   }
 
   return (
-    <div ref={dropdownRef} className={cn("relative w-full max-w-md", className)}>
+    <div ref={dropdownRef} className={cn("relative w-full max-w-sm", className)}>
       <div className="relative">
         <Input
           ref={inputRef}
@@ -232,7 +232,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
           onFocus={handleFocus}
           placeholder="Search"
           leftIcon={<Search className="h-4 w-4" />}
-          className="bg-white border border-gray-200 rounded-lg"
+          className="bg-white border border-gray-200 rounded-lg h-9 text-sm focus:border-[#7f5efd] focus:ring-1 focus:ring-[#7f5efd]/20 transition-colors"
         />
         
         {/* Keyboard shortcut indicator */}
@@ -267,22 +267,55 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
               </div>
             )}
 
-            {!loading && !query.trim() && recentSearches.length > 0 && (
-              <div className="p-2">
-                <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                  <Clock className="h-3 w-3" />
-                  Recent Searches
+            {!loading && !query.trim() && (
+              <div className="py-2">
+                {recentSearches.length > 0 && (
+                  <div className="mb-3">
+                    <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                      <Clock className="h-3 w-3" />
+                      Recent Searches
+                    </div>
+                    {recentSearches.map((recentQuery, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleRecentClick(recentQuery)}
+                        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-50 text-left text-sm text-gray-600"
+                      >
+                        <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <span className="truncate">{recentQuery}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                <div>
+                  <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                    <Zap className="h-3 w-3" />
+                    Quick Actions
+                  </div>
+                  {getSearchSuggestions().map((suggestion) => {
+                    const IconComponent = CATEGORY_ICONS[suggestion.category] || Search
+                    return (
+                      <button
+                        key={suggestion.id}
+                        onClick={() => handleResultClick(suggestion)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex-shrink-0">
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-gray-100 text-gray-500">
+                            <IconComponent className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-700 truncate">{suggestion.title}</div>
+                          {suggestion.description && (
+                            <div className="text-xs text-gray-500 truncate">{suggestion.description}</div>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
-                {recentSearches.map((recentQuery, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleRecentClick(recentQuery)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 text-left text-sm text-gray-600"
-                  >
-                    <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    <span className="truncate">{recentQuery}</span>
-                  </button>
-                ))}
               </div>
             )}
 

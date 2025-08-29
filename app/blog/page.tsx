@@ -142,7 +142,7 @@ export default function BlogPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Cryptrac Blog
             </Badge>
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Insights & Updates
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
@@ -248,7 +248,7 @@ export default function BlogPage() {
 
             {/* All Posts */}
             <div>
-              <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6 flex items-center gap-2">
+              <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-2">
                 <BookOpen className="h-6 w-6 text-[#7f5efd]" />
                 {selectedCategory === "All" ? "All Articles" : `${selectedCategory} Articles`}
                 <Badge variant="outline" className="text-sm">

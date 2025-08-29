@@ -491,17 +491,17 @@ export default function MerchantSettingsPage() {
         {/* Enhanced Tabs */}
         <Tabs defaultValue="payments" className="space-y-8">
           <div className="flex justify-center">
-            <TabsList className="grid grid-cols-3 bg-white border-2 border-gray-200 p-1 rounded-xl shadow-lg">
-              <TabsTrigger value="payments" className="flex items-center gap-2 px-6 py-3 rounded-lg font-phonic text-base font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
-                <CreditCard className="h-5 w-5" />
+            <TabsList className="grid grid-cols-3 bg-white border-2 border-gray-200 p-2 rounded-xl shadow-lg">
+              <TabsTrigger value="payments" className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-phonic text-sm font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
+                <CreditCard className="h-4 w-4 text-[#7f5efd] group-data-[state=active]:text-white" />
                 Payments
               </TabsTrigger>
-              <TabsTrigger value="tax" className="flex items-center gap-2 px-6 py-3 rounded-lg font-phonic text-base font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
-                <Calculator className="h-5 w-5" />
+              <TabsTrigger value="tax" className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-phonic text-sm font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
+                <Calculator className="h-4 w-4 text-[#7f5efd] group-data-[state=active]:text-white" />
                 Tax
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center gap-2 px-6 py-3 rounded-lg font-phonic text-base font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
-                <Bell className="h-5 w-5" />
+              <TabsTrigger value="notifications" className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-phonic text-sm font-normal transition-all duration-200 data-[state=active]:bg-[#7f5efd] data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-50">
+                <Bell className="h-4 w-4 text-[#7f5efd] group-data-[state=active]:text-white" />
                 Notifications
               </TabsTrigger>
             </TabsList>
