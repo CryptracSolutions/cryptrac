@@ -88,16 +88,29 @@ export async function GET(request: NextRequest) {
     let helpArticles: SearchApiResponse['help_articles'] = []
     let settings: SearchApiResponse['settings'] = []
     if (merchantId) {
+      console.log(`[SEARCH DEBUG] Searching for query: "${q}", merchant_id: ${merchantId}`)
+      
+      // First, let's see what payment links exist for this merchant
+      const { data: allLinks } = await supabase
+        .from("payment_links")
+        .select("id,title,link_id")
+        .eq("merchant_id", merchantId)
+        .limit(10)
+      
+      console.log(`[SEARCH DEBUG] All payment links for merchant:`, allLinks)
+      
       // Enhanced payment links query with link_id specific search
       const { data, error } = await supabase
         .from("payment_links")
-        .select("id,title,link_id,amount,currency,status,created_at,expires_at,updated_at")
+        .select("id,title,link_id,amount,currency,status,created_at,expires_at")
         .eq("merchant_id", merchantId)
         .or(
           `title.ilike.%${q}%,link_id.ilike.%${q}%,description.ilike.%${q}%,link_id.eq.${q}`
         )
-        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(15)
+      
+      console.log(`[SEARCH DEBUG] Payment links query result:`, { data: data?.length, error })
       
       if (error) {
         console.error("Search error for payment_links:", error)
