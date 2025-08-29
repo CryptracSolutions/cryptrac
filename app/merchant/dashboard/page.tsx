@@ -324,17 +324,7 @@ export default function MerchantDashboard() {
               Here&apos;s what&apos;s happening with your cryptocurrency payments today.
             </p>
           </div>
-          <div className="flex gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => router.push('/merchant/dashboard/payments')}
-              className="flex items-center gap-3"
-              size="lg"
-            >
-              <LinkIcon className="h-5 w-5" />
-              Manage Payments
-            </Button>
-          </div>
+          
         </div>
 
         {/* Enhanced New Payments Alert */}
@@ -509,8 +499,8 @@ export default function MerchantDashboard() {
             <CardContent>
               {recentTransactions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="p-4 bg-gray-100 rounded-full mb-6">
-                    <Calendar className="h-8 w-8 text-gray-400" />
+                  <div className="p-4 bg-[#7f5efd]/10 rounded-full mb-6">
+                    <Calendar className="h-8 w-8 text-[#7f5efd]" />
                   </div>
                   <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-3">No activity yet</h3>
                   <p className="font-phonic text-base text-gray-500 mb-6 max-w-sm">
@@ -528,8 +518,8 @@ export default function MerchantDashboard() {
                   {recentTransactions.map(tx => (
                     <div key={tx.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-4">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <DollarSign className="h-5 w-5 text-green-600" />
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                          <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                         </div>
                         <div>
                           <p className="font-phonic text-lg font-medium">{formatCurrency(tx.amount, tx.currency)}</p>
