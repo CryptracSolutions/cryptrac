@@ -108,7 +108,7 @@ export default function Home() {
               <span className="font-martina text-[#7f5efd] font-semibold text-5xl sm:text-6xl">Crypto</span>
             </h1>
             <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
-              Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all supported cryptos.
+              Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all major cryptos.
             </p>
             
 

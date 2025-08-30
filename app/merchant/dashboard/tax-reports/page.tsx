@@ -349,13 +349,10 @@ export default function TaxReportsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="font-phonic text-base font-normal text-gray-600">Loading tax reports...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -379,7 +376,7 @@ export default function TaxReportsPage() {
           </div>
         </div>
 
-        {loading ? (
+        {loadingReport ? (
           <div className="flex items-center justify-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7f5efd]"></div>
           </div>

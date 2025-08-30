@@ -189,33 +189,8 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
-            onClick={() => router.push('/merchant/dashboard/payments')}
-            className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="font-phonic text-5xl font-normal text-gray-900">Payment Link Details</h1>
-            <p className="font-capsule text-base font-normal text-gray-600 mt-1">Loading payment link information...</p>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
       </div>
     );
   }

@@ -76,7 +76,7 @@ const FIAT_CURRENCIES = [
 
 export default function CreatePaymentLinkPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
   const [availableCryptos, setAvailableCryptos] = useState<string[]>([]);
   const [form, setForm] = useState<CreatePaymentLinkForm>({
@@ -148,6 +148,8 @@ export default function CreatePaymentLinkPage() {
     } catch (error) {
       console.error('Error loading merchant settings:', error);
       toast.error('Failed to load merchant settings');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -365,6 +367,14 @@ export default function CreatePaymentLinkPage() {
   };
 
   const fees = calculateFees();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
