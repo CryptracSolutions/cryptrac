@@ -218,7 +218,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-12 space-y-12">
         {/* Header */}
         <div className="text-center space-y-6">
           <Logo className="mx-auto" />
@@ -233,7 +233,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Progress Stepper */}
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto">
           <Stepper
             steps={ONBOARDING_STEPS}
             currentStep={currentStep}
@@ -252,7 +252,7 @@ export default function OnboardingPage() {
         )}
 
         {/* Current Step Content */}
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className="max-w-3xl mx-auto space-y-8">
           {renderCurrentStep()}
         </div>
       </div>

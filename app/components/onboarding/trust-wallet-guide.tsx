@@ -234,15 +234,15 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
             <Button
               onClick={() => setHasWallet(false)}
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center space-y-2 hover:bg-blue-50 hover:border-blue-200"
+              className="p-6 flex flex-col items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-200 h-full"
             >
               <Download className="w-8 h-8 text-blue-600" />
-              <span className="font-medium">No, I need to set up a wallet</span>
-              <span className="text-sm text-gray-500 text-center">
+              <span className="font-medium text-center">No, I need to set up a wallet</span>
+              <span className="text-sm text-gray-500 text-center leading-snug">
                 We'll guide you through downloading and setting up Trust Wallet
               </span>
             </Button>
@@ -250,11 +250,11 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             <Button
               onClick={() => setHasWallet(true)}
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center space-y-2 hover:bg-green-50 hover:border-green-200"
+              className="p-6 flex flex-col items-center justify-center gap-2 hover:bg-green-50 hover:border-green-200 h-full"
             >
               <CheckCircle className="w-8 h-8 text-green-600" />
-              <span className="font-medium">Yes, I already have a wallet</span>
-              <span className="text-sm text-gray-500 text-center">
+              <span className="font-medium text-center">Yes, I already have a wallet</span>
+              <span className="text-sm text-gray-500 text-center leading-snug">
                 Skip to entering your wallet addresses
               </span>
             </Button>

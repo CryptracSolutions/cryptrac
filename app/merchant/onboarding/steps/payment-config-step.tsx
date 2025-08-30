@@ -275,7 +275,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <div className="space-y-6">
               <div className="flex items-start gap-6">
                 <Checkbox
-                  className="form-input-enhanced"
+                  className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                   checked={!formData.chargeCustomerFee}
                   onCheckedChange={(checked) =>
                     setFormData(prev => ({
@@ -297,7 +297,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               
               <div className="flex items-start gap-6">
                 <Checkbox
-                  className="form-input-enhanced"
+                  className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                   checked={formData.chargeCustomerFee}
                   onCheckedChange={(checked) =>
                     setFormData(prev => ({
@@ -347,7 +347,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     <span className="sr-only">About Auto-Convert OFF</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:rounded-xl bg-white">
                   <DialogHeader>
                     <DialogTitle>Auto-Convert OFF (Receive the Same Crypto)</DialogTitle>
                   </DialogHeader>
@@ -365,7 +365,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     <span className="sr-only">About Auto-Convert ON</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:rounded-xl bg-white">
                   <DialogHeader>
                     <DialogTitle>Auto-Convert ON (Auto-Convert to Preferred Cryptocurrency)</DialogTitle>
                   </DialogHeader>
@@ -389,7 +389,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Checkbox
-                  className="form-input-enhanced"
+                  className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                   checked={formData.autoConvert}
                   onCheckedChange={(checked) =>
                     setFormData(prev => ({

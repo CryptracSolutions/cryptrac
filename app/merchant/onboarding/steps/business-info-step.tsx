@@ -443,7 +443,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* City */}
                   <div className="space-y-2">
                                       <label className="text-body font-medium text-gray-700">
@@ -454,7 +454,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="San Francisco"
                     value={formData.businessAddress.city}
                     onChange={(e) => handleInputChange('businessAddress.city', e.target.value)}
-                    className={`form-input-enhanced ${errors['businessAddress.city'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 ${errors['businessAddress.city'] ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors['businessAddress.city'] && (
                     <p className="text-body-sm text-red-600">{errors['businessAddress.city']}</p>
@@ -470,7 +470,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                       value={formData.businessAddress.state} 
                       onValueChange={(value) => handleInputChange('businessAddress.state', value)}
                     >
-                      <SelectTrigger className={`form-input-enhanced ${errors['businessAddress.state'] ? 'border-red-300 focus:border-red-500' : ''}`}>
+                      <SelectTrigger className={`form-input-enhanced h-12 ${errors['businessAddress.state'] ? 'border-red-300 focus:border-red-500' : ''}`}>
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
@@ -496,7 +496,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="94105"
                     value={formData.businessAddress.zip_code}
                     onChange={(e) => handleInputChange('businessAddress.zip_code', e.target.value)}
-                    className={`form-input-enhanced ${errors['businessAddress.zip_code'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 ${errors['businessAddress.zip_code'] ? 'border-red-300 focus:border-red-500' : ''}`}
                     maxLength={10}
                   />
                   {errors['businessAddress.zip_code'] && (

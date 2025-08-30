@@ -289,11 +289,24 @@
   
   [data-radix-select-item] {
     background-color: transparent;
+    outline: none !important;
+    box-shadow: none !important;
   }
   
   [data-radix-select-item][data-highlighted] {
     background-color: rgb(127 94 253) !important;
     color: white !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  /* Remove focus ring/border from options inside Radix Select/Dropdown while preserving hover color */
+  [data-radix-select-content] [role="option"]:focus-visible,
+  [data-radix-select-content] [data-radix-select-item]:focus-visible,
+  [data-radix-dropdown-content] [data-radix-dropdown-item]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
   }
 }
 

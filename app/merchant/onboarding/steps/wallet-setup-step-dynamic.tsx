@@ -480,18 +480,11 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center space-y-6">
-        <div className="flex items-center justify-center">
-          <div className="p-3 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-lg">
-            <Wallet className="h-8 w-8 text-white" />
-          </div>
-        </div>
-        <div className="space-y-4">
-          <h2 className="heading-lg text-gray-900">Set Up Your Crypto Wallets</h2>
-          <p className="text-body text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Configure wallet addresses for the cryptocurrencies you want to accept. Major stablecoins will be automatically included for each ecosystem.
-          </p>
-        </div>
+      <div className="text-center space-y-4">
+        <h2 className="heading-lg text-gray-900">Set Up Your Crypto Wallets</h2>
+        <p className="text-body text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          Configure wallet addresses for the cryptocurrencies you want to accept. Major stablecoins will be automatically included for each ecosystem.
+        </p>
         <div className="flex items-center justify-center gap-4">
           <Badge variant={configuredCurrencies.length > 0 ? "default" : "outline"} className="text-sm font-medium px-4 py-2">
             {configuredCurrencies.length} configured
@@ -516,59 +509,28 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         />
       )}
 
-      {/* Stable Coin Information */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-6">
-        <div className="flex items-start gap-6">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Info className="h-6 w-6 text-blue-600" />
-          </div>
-          <div className="text-blue-800">
-            <h3 className="heading-sm mb-3">Smart Wallet Setup - Automatic Stable Coin Support</h3>
-            <p className="text-body mb-4 leading-relaxed">
-              Configure one wallet address per ecosystem and automatically support multiple payment options:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-body-sm">
-              <div className="flex items-center gap-6">
-                <Star className="h-4 w-4 text-blue-600" />
-                <span><strong>SOL wallet</strong> → enables SOL + USDC & USDT on Solana</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <Star className="h-4 w-4 text-blue-600" />
-                <span><strong>ETH wallet</strong> → enables ETH + USDT, USDC, DAI & PYUSD on Ethereum</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <Star className="h-4 w-4 text-blue-600" />
-                <span><strong>BNB wallet</strong> → enables BNB + USDT & USDC on BSC</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <Star className="h-4 w-4 text-blue-600" />
-                <span><strong>MATIC wallet</strong> → enables MATIC + USDT & USDC on Polygon</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <Star className="h-4 w-4 text-blue-600" />
-                <span><strong>TRX wallet</strong> → enables TRX + USDT on Tron</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <Star className="h-4 w-4 text-blue-600" />
-                <span><strong>TON wallet</strong> → enables TON + USDT on TON</span>
-              </div>
-            </div>
-            <p className="text-body mt-4 font-semibold">
-              No need for separate addresses - stable coins use the same wallet as their base currency!
-            </p>
-          </div>
-        </div>
+      {/* Smart Wallet Info - simplified and neutral */}
+      <div className="border rounded-lg p-4 bg-white">
+        <h3 className="heading-sm mb-2 text-gray-900">Smart Wallet Setup - Automatic Stable Coin Support</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Configure one wallet address per ecosystem and automatically support multiple payment options:
+        </p>
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
+          <li className="flex items-start gap-2"><span className="text-[#7f5efd] mt-0.5">•</span><span><strong>SOL wallet</strong> enables SOL + USDC & USDT on Solana</span></li>
+          <li className="flex items-start gap-2"><span className="text-[#7f5efd] mt-0.5">•</span><span><strong>ETH wallet</strong> enables ETH + USDT, USDC, DAI & PYUSD on Ethereum</span></li>
+          <li className="flex items-start gap-2"><span className="text-[#7f5efd] mt-0.5">•</span><span><strong>BNB wallet</strong> enables BNB + USDT & USDC on BSC</span></li>
+          <li className="flex items-start gap-2"><span className="text-[#7f5efd] mt-0.5">•</span><span><strong>MATIC wallet</strong> enables MATIC + USDT & USDC on Polygon</span></li>
+          <li className="flex items-start gap-2"><span className="text-[#7f5efd] mt-0.5">•</span><span><strong>TRX wallet</strong> enables TRX + USDT on Tron</span></li>
+          <li className="flex items-start gap-2"><span className="text-[#7f5efd] mt-0.5">•</span><span><strong>TON wallet</strong> enables TON + USDT on TON</span></li>
+        </ul>
       </div>
 
-      {/* Popular Cryptocurrencies Dropdown */}
-      <Card className="shadow-medium border-2 hover:shadow-xl transition-all duration-200">
+      {/* Recommended Cryptocurrencies Dropdown */}
+      <Card className="shadow-medium border rounded-lg transition-all duration-200">
         <CardHeader className="space-y-6">
           <div className="flex items-center gap-6">
-            <div className="p-2 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-lg">
-              <Star className="h-6 w-6 text-white" />
-            </div>
             <div>
-              <CardTitle className="heading-sm text-gray-900">Popular Cryptocurrencies</CardTitle>
+              <CardTitle className="heading-sm text-gray-900">Recommended Cryptocurrencies</CardTitle>
               <p className="text-body text-gray-600 mt-1">
                 Add support for the most widely used cryptocurrencies
               </p>
@@ -579,7 +541,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           <div className="flex items-center gap-4">
             <Select value={selectedPopularCurrency} onValueChange={setSelectedPopularCurrency}>
               <SelectTrigger className="form-input-enhanced flex-1 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
-                <SelectValue placeholder="Select a popular cryptocurrency..." />
+                <SelectValue placeholder="Select a recommended cryptocurrency..." />
               </SelectTrigger>
               <SelectContent>
                 {POPULAR_CURRENCIES.filter(currency => !wallets[currency.code]).map((currency) => (
@@ -605,15 +567,12 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       </Card>
 
       {/* Additional Cryptocurrencies Dropdown */}
-      <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+      <Card className="border rounded-lg shadow-medium transition-all duration-200">
         <CardHeader className="pb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
-              <Coins className="h-6 w-6 text-white" />
-            </div>
             <div>
-              <CardTitle className="text-xl font-bold text-gray-900">Additional Cryptocurrencies</CardTitle>
-              <p className="text-base text-gray-600 mt-1">
+              <CardTitle className="heading-sm text-gray-900">Additional Cryptocurrencies</CardTitle>
+              <p className="text-body text-gray-600 mt-1">
                 Search and add support for more cryptocurrencies
               </p>
             </div>
@@ -674,15 +633,12 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
 
       {/* Configured Wallets */}
       {Object.keys(wallets).length > 0 && (
-        <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+        <Card className="border rounded-lg shadow-medium transition-all duration-200">
           <CardHeader className="pb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                <Wallet className="h-6 w-6 text-white" />
-              </div>
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Configured Wallets</CardTitle>
-                <p className="text-base text-gray-600 mt-1">
+                <CardTitle className="heading-sm text-gray-900">Configured Wallets</CardTitle>
+                <p className="text-body text-gray-600 mt-1">
                   Enter wallet addresses for your selected cryptocurrencies
                 </p>
               </div>
@@ -706,32 +662,13 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )}
 
       {/* Progress Summary */}
-      <Card className={`border-2 shadow-lg transition-all duration-200 ${
-        canProceed ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
-      }`}>
-        <CardContent className="pt-8">
-          <div className="flex items-center gap-4">
-            {canProceed ? (
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            ) : (
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <AlertCircle className="h-6 w-6 text-blue-600" />
-              </div>
-            )}
-            <div>
-              <p className="text-lg font-bold">
-                {canProceed
-                  ? `✅ Ready to continue with ${configuredCurrencies.length} configured ${configuredCurrencies.length === 1 ? 'cryptocurrency' : 'cryptocurrencies'}`
-                  : '⚠️ Configure at least 1 cryptocurrency to continue'
-                }
-              </p>
-              <p className="text-base text-gray-600 mt-1">
-                You can always add more cryptocurrencies later in your settings
-              </p>
-            </div>
-          </div>
+      <Card className="border rounded-lg shadow-soft">
+        <CardContent className="py-4">
+          <p className="text-sm text-gray-700 text-center">
+            {canProceed
+              ? `${configuredCurrencies.length} configured ${configuredCurrencies.length === 1 ? 'cryptocurrency' : 'cryptocurrencies'} — you can add more later in settings`
+              : 'Configure at least 1 cryptocurrency to continue'}
+          </p>
         </CardContent>
       </Card>
 
