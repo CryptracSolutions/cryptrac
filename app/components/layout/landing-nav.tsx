@@ -6,10 +6,12 @@ import { ChevronDown, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Logo } from "@/app/components/ui/logo"
+import { supabase } from "@/lib/supabase-browser"
 
 export function LandingNav() {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false)
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -23,6 +25,23 @@ export function LandingNav() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isDropdownOpen])
+
+  // Detect and subscribe to auth state to toggle Dashboard button
+  React.useEffect(() => {
+    let isMounted = true
+    supabase.auth.getUser().then(({ data }) => {
+      if (!isMounted) return
+      setIsLoggedIn(!!data.user)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return
+      setIsLoggedIn(!!session?.user)
+    })
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
 
   const whatWeOfferItems = [
     { 
@@ -109,12 +128,20 @@ export function LandingNav() {
         
         {/* Auth Buttons */}
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
-            <Link href="/login">Log in</Link>
-          </Button>
-          <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-            <Link href="/signup">Get Started</Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+              <Link href="/merchant/dashboard">Dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                <Link href="/signup">Get Started</Link>
+              </Button>
+            </>
+          )}
           
           {/* Mobile Menu Button */}
           <Button
@@ -198,12 +225,20 @@ export function LandingNav() {
             </Link>
             
             <div className="pt-4 space-y-2 border-t">
-              <Button variant="ghost" size="sm" className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-                <Link href="/signup">Get Started</Link>
-              </Button>
+              {isLoggedIn ? (
+                <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                  <Link href="/merchant/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Log in</Link>
+                  </Button>
+                  <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                    <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
