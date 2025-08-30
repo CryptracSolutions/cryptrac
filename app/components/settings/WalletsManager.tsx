@@ -373,16 +373,12 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       return false;
     }
     
-    // Check if this currency is a stable coin of any base currency
-    const isStableCoin = Object.values(stableCoinAssociations).some(stableCoins => 
-      stableCoins.includes(currency.code)
-    );
-    
     // Check if this currency already has a wallet configured
     const hasExistingWallet = existingWallets.includes(currency.code);
     
-    // Include if approved, not a stable coin, doesn't have existing wallet, and matches search term
-    return !isStableCoin && !hasExistingWallet && (
+    // Include if approved, doesn't have existing wallet, and matches search term
+    // Note: We do NOT filter out stablecoins - users should be able to add any approved currency
+    return !hasExistingWallet && (
       currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       currency.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
