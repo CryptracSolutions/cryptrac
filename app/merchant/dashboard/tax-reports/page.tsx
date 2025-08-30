@@ -120,13 +120,15 @@ export default function TaxReportsPage() {
   const checkAuth = async () => {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser()
-      
+
       if (!authUser) {
         router.push('/auth/login')
         return
       }
 
       setUser(authUser)
+      // Start loading initial data after auth is complete
+      setLoadingReport(true)
     } catch (error) {
       console.error('Auth error:', error)
       router.push('/auth/login')

@@ -132,17 +132,12 @@ export default function MerchantSubscriptionsPage() {
 
 
 
-  if (loading) {
+    if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7f5efd] mx-auto mb-4"></div>
-          <p className="font-phonic text-base font-normal text-gray-600">Loading subscriptions...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
       </div>
-    </div>
-  );
+    );
   }
 
   return (

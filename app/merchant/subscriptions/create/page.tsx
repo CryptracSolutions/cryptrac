@@ -219,13 +219,8 @@ export default function CreateSubscriptionPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7f5efd] mx-auto mb-4"></div>
-            <p className="font-phonic text-base font-normal text-gray-600">Loading merchant settings...</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
       </div>
     );
   }
