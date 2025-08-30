@@ -7,6 +7,7 @@ import { Loader2, CheckCircle, XCircle, AlertCircle, Search, ExternalLink, Trash
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import { isApprovedCurrency, getApprovedDisplayName } from '@/lib/approved-currencies'
 
 interface CurrencyInfo {
   code: string
@@ -127,23 +128,32 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   const loadAdditionalCurrencies = async () => {
     try {
       setLoadingCurrencies(true)
-      console.log('📡 Loading additional currencies from dynamic API...')
+      console.log('📡 Loading additional currencies from nowpayments API...')
 
-      const response = await fetch('/api/currencies?popular=false')
+      const response = await fetch('/api/nowpayments/currencies')
       if (response.ok) {
-        const result = await response.json()
-        if (result.success) {
-          // Filter out currencies that are already in popular currencies
+        const data = await response.json()
+        if (data.success && data.currencies) {
+          // Filter to only include approved currencies
+          const approvedCurrencies = data.currencies.filter((currency: CurrencyInfo) => 
+            isApprovedCurrency(currency.code)
+          )
+          
+          // Update display names and filter out popular currencies
           const popularCodes = POPULAR_CURRENCIES.map(c => c.code)
-          const additional = result.currencies.filter((c: CurrencyInfo) => {
-            const stableCoins = ['USDT', 'USDC', 'DAI', 'PYUSD', 'BUSD', 'TUSD', 'FRAX', 'LUSD', 'USDP', 'GUSD', 'USDE', 'FDUSD', 'USDD']
-            const isStable = stableCoins.some(sc => c.code.toUpperCase().includes(sc))
-            return !popularCodes.includes(c.code) && c.enabled && !isStable
-          })
-          console.log(`📊 Loaded ${additional.length} additional currencies:`, additional.map((c: CurrencyInfo) => c.code))
-          setAdditionalCurrencies(additional)
+          const processedCurrencies = approvedCurrencies.map((currency: CurrencyInfo) => ({
+            ...currency,
+            display_name: getApprovedDisplayName(currency.code)
+          })).filter((c: CurrencyInfo) => {
+            return !popularCodes.includes(c.code) && c.enabled
+          }).sort((a: CurrencyInfo, b: CurrencyInfo) => 
+            (a.display_name || a.name || a.code).localeCompare(b.display_name || b.name || b.code)
+          )
+          
+          console.log(`📊 Loaded ${processedCurrencies.length} additional approved currencies`)
+          setAdditionalCurrencies(processedCurrencies)
         } else {
-          console.error('Failed to load currencies:', result.error)
+          console.error('Failed to load currencies:', data.message || 'Unknown error')
         }
       } else {
         console.error('Failed to fetch currencies:', response.status)

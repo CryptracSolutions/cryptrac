@@ -26,6 +26,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Input } from '@/app/components/ui/input';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
+import { isApprovedCurrency, getApprovedDisplayName } from '@/lib/approved-currencies';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -148,16 +149,29 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     const loadAdditionalCurrencies = async () => {
       try {
         setLoadingCurrencies(true);
-        const response = await fetch('/api/currencies');
+        const response = await fetch('/api/nowpayments/currencies');
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.currencies) {
-            setAdditionalCurrencies(data.currencies);
+            // Filter to only include approved currencies
+            const approvedCurrencies = data.currencies.filter((currency: CurrencyInfo) => 
+              isApprovedCurrency(currency.code)
+            );
+            
+            // Update display names and sort alphabetically
+            const processedCurrencies = approvedCurrencies.map((currency: CurrencyInfo) => ({
+              ...currency,
+              display_name: getApprovedDisplayName(currency.code)
+            })).sort((a: CurrencyInfo, b: CurrencyInfo) => 
+              (a.display_name || a.name || a.code).localeCompare(b.display_name || b.name || b.code)
+            );
+            
+            setAdditionalCurrencies(processedCurrencies);
           
             // Initialize validation status for additional currencies
             setValidationStatus(prev => {
               const newStatus = { ...prev };
-              data.currencies.forEach((currency: CurrencyInfo) => {
+              processedCurrencies.forEach((currency: CurrencyInfo) => {
                 if (!newStatus[currency.code]) {
                   // Check if this currency has an existing wallet
                   if (settings.wallets && settings.wallets[currency.code] && settings.wallets[currency.code].trim()) {
@@ -354,6 +368,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   );
 
   const filteredCurrencies = additionalCurrencies.filter(currency => {
+    // First check if currency is approved
+    if (!isApprovedCurrency(currency.code)) {
+      return false;
+    }
+    
     // Check if this currency is a stable coin of any base currency
     const isStableCoin = Object.values(stableCoinAssociations).some(stableCoins => 
       stableCoins.includes(currency.code)
@@ -362,7 +381,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     // Check if this currency already has a wallet configured
     const hasExistingWallet = existingWallets.includes(currency.code);
     
-    // Include if not a stable coin, doesn't have existing wallet, and matches search term
+    // Include if approved, not a stable coin, doesn't have existing wallet, and matches search term
     return !isStableCoin && !hasExistingWallet && (
       currency.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       currency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
