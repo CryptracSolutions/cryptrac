@@ -133,12 +133,15 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       >
         {/* Brand */}
         <div className="pt-3 pb-2 px-4">
-          <div className={cn("flex items-center gap-3 justify-center")}> 
+          <Link href="/" className={cn("flex items-center gap-3 justify-center hover:opacity-90 transition-opacity")}> 
             <Logo size="lg" showText={false} emblemClassName="bg-transparent" />
             {!collapsed && (
               <span className="font-phonic text-xl leading-tight font-medium text-white tracking-tight">Cryptrac</span>
             )}
-          </div>
+            {collapsed && (
+              <span className="sr-only">Cryptrac</span>
+            )}
+          </Link>
         </div>
 
         {/* Navigation */}

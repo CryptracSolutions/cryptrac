@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/app/components/ui/button";
 import { Logo } from "@/app/components/ui/logo";
 import { ChevronDown, Menu, X } from "lucide-react";
+import { getCurrentUser } from "@/lib/supabase-browser";
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -21,6 +23,11 @@ export function Header() {
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    // Detect if user is logged in to show Dashboard button
+    getCurrentUser().then((user) => setIsLoggedIn(!!user));
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
@@ -120,21 +127,33 @@ export function Header() {
         
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center space-x-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
-            asChild
-          >
-            <Link href="/login">Log in</Link>
-          </Button>
-          <Button 
-            size="sm" 
-            className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-            asChild
-          >
-            <Link href="/signup">Get Started</Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button 
+              size="sm" 
+              className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+              asChild
+            >
+              <Link href="/merchant/dashboard">Dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
+                asChild
+              >
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button 
+                size="sm" 
+                className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                asChild
+              >
+                <Link href="/signup">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
         
         {/* Mobile Menu Button */}
@@ -234,21 +253,33 @@ export function Header() {
           
           {/* Mobile Buttons */}
           <div className="mt-6 space-y-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
-              asChild
-            >
-              <Link href="/login" onClick={closeMobileMenu}>Log in</Link>
-            </Button>
-            <Button 
-              size="sm" 
-              className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-              asChild
-            >
-              <Link href="/signup" onClick={closeMobileMenu}>Get Started</Link>
-            </Button>
+            {isLoggedIn ? (
+              <Button 
+                size="sm" 
+                className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                asChild
+              >
+                <Link href="/merchant/dashboard" onClick={closeMobileMenu}>Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
+                  asChild
+                >
+                  <Link href="/login" onClick={closeMobileMenu}>Log in</Link>
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                  asChild
+                >
+                  <Link href="/signup" onClick={closeMobileMenu}>Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
