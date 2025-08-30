@@ -278,7 +278,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="Enter your business name"
                     value={formData.businessName}
                     onChange={(e) => handleInputChange('businessName', e.target.value)}
-                    className={`form-input-enhanced ${errors.businessName ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 ${errors.businessName ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.businessName && (
                     <p className="text-body-sm text-red-600">{errors.businessName}</p>
@@ -290,11 +290,11 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   <label className="text-body font-medium text-gray-700">
                     Business Type (Optional)
                   </label>
-                  <Select 
-                    value={formData.businessType} 
+                  <Select
+                    value={formData.businessType}
                     onValueChange={(value) => handleInputChange('businessType', value)}
                   >
-                    <SelectTrigger className="form-input-enhanced">
+                    <SelectTrigger className="form-input-enhanced h-12">
                       <SelectValue placeholder="Select business type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -312,11 +312,11 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   <label className="text-body font-medium text-gray-700">
                     Industry *
                   </label>
-                  <Select 
-                    value={formData.industry} 
+                  <Select
+                    value={formData.industry}
                     onValueChange={(value) => handleInputChange('industry', value)}
                   >
-                    <SelectTrigger className={`form-input-enhanced ${errors.industry ? 'border-red-300 focus:border-red-500' : ''}`}>
+                    <SelectTrigger className={`form-input-enhanced h-12 ${errors.industry ? 'border-red-300 focus:border-red-500' : ''}`}>
                       <SelectValue placeholder="Select your industry" />
                     </SelectTrigger>
                     <SelectContent>
@@ -342,7 +342,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="www.yourwebsite.com"
                     value={formData.website}
                     onChange={(e) => handleInputChange('website', e.target.value)}
-                    className={`form-input-enhanced ${errors.website ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 ${errors.website ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.website && (
                     <p className="text-body-sm text-red-600">{errors.website}</p>
@@ -383,7 +383,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="(555) 123-4567"
                     value={formData.phoneNumber}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className={`form-input-enhanced ${errors.phoneNumber ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 ${errors.phoneNumber ? 'border-red-300 focus:border-red-500' : ''}`}
                     maxLength={14}
                   />
                   {errors.phoneNumber && (
@@ -399,11 +399,11 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   <label className="text-body font-medium text-gray-700">
                     Timezone
                   </label>
-                  <Select 
-                    value={formData.timezone} 
+                  <Select
+                    value={formData.timezone}
                     onValueChange={(value) => handleInputChange('timezone', value)}
                   >
-                    <SelectTrigger className="form-input-enhanced">
+                    <SelectTrigger className="form-input-enhanced h-12">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -436,7 +436,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="123 Main Street"
                     value={formData.businessAddress.street}
                     onChange={(e) => handleInputChange('businessAddress.street', e.target.value)}
-                    className={`form-input-enhanced ${errors['businessAddress.street'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 ${errors['businessAddress.street'] ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors['businessAddress.street'] && (
                     <p className="text-body-sm text-red-600">{errors['businessAddress.street']}</p>

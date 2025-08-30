@@ -172,16 +172,23 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
           <div className="space-y-6">
             <h3 className="heading-sm text-gray-900 flex items-center gap-6">
               <span>Accepted Cryptocurrencies</span>
-              <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+              <div className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">
                 {expandedCurrencies.length} Total ({baseCurrencies.length} Base + {expandedCurrencies.length - baseCurrencies.length} Stable Coins)
-              </Badge>
+              </div>
             </h3>
             
-            <Alert className="border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
-                <strong>Smart Configuration:</strong> Your {baseCurrencies.length} base cryptocurrencies automatically include {expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility.
-              </AlertDescription>
+            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Info className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <AlertDescription className="text-purple-800">
+                  <div className="font-semibold mb-1">Smart Configuration: Your X base cryptocurrencies automatically include X stable coins for maximum payment flexibility</div>
+                  <p className="text-sm leading-relaxed">
+                    Your {baseCurrencies.length} base cryptocurrencies automatically include {expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility.
+                  </p>
+                </AlertDescription>
+              </div>
             </Alert>
 
             {/* Base Currencies */}
@@ -191,15 +198,15 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 {baseCurrencies.map((currency) => (
                   <div
                     key={currency}
-                    className="border border-green-200 bg-green-50 rounded-lg p-3"
+                    className="border border-purple-200 bg-purple-50 rounded-lg p-3"
                   >
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                       <div className="flex-1">
-                        <div className="font-medium text-sm text-green-900">
+                        <div className="font-medium text-sm text-purple-900">
                           {currency}
                         </div>
-                        <div className="text-xs text-green-700">
+                        <div className="text-xs text-purple-700">
                           {getCurrencyDisplayName(currency)}
                         </div>
                       </div>
@@ -264,12 +271,18 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               </Button>
             </div>
             
-            <Alert className="border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
-                <strong>Gateway Fee Responsibility:</strong> Choose who pays the gateway fee.
-                This setting can be overridden for individual payment links.
-              </AlertDescription>
+            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Info className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <AlertDescription className="text-purple-800">
+                  <div className="font-semibold mb-1">Gateway Fee Responsibility: Choose who pays the gateway fee. This setting can be overridden for individual payment links.</div>
+                  <p className="text-sm leading-relaxed">
+                    Choose who pays the gateway fee. This setting can be overridden for individual payment links.
+                  </p>
+                </AlertDescription>
+              </div>
             </Alert>
 
             <div className="space-y-6">
@@ -318,12 +331,14 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               </div>
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border border-purple-200 rounded-lg p-4 shadow-soft">
               <div className="flex items-start space-x-2">
-                <HelpCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-yellow-900">Gateway Fee Examples</h4>
-                  <ul className="text-sm text-yellow-800 mt-1 space-y-1">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <HelpCircle className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-purple-900">Gateway Fee Examples</h4>
+                  <ul className="text-sm text-purple-800 mt-2 space-y-1">
                     <li>• <strong>Merchant pays (Direct):</strong> $100 payment = customer pays $100, you receive $99.50 (0.5% fee)</li>
                     <li>• <strong>Customer pays (Direct):</strong> $100 payment = customer pays $100.50, you receive $100</li>
                     <li>• <strong>Merchant pays (Auto-convert):</strong> $100 payment = customer pays $100, you receive $99.00 (1% fee)</li>
@@ -378,12 +393,18 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               </Dialog>
             </div>
 
-            <Alert className="border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
-                <strong>Auto-Conversion:</strong> Automatically convert all received payments to your preferred cryptocurrency.
-                Higher gateway fee (1%) applies when enabled.
-              </AlertDescription>
+            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Info className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <AlertDescription className="text-purple-800">
+                  <div className="font-semibold mb-1">Auto-Conversion: Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled.</div>
+                  <p className="text-sm leading-relaxed">
+                    Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled.
+                  </p>
+                </AlertDescription>
+              </div>
             </Alert>
 
             <div className="space-y-3">

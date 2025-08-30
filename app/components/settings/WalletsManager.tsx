@@ -685,7 +685,10 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                         <div className="flex items-center gap-3">
                           <CryptoIcon currency={currency.code} className="h-10 w-10" />
                           <div>
-                            <div className="font-semibold text-gray-900">{currency.display_name || currency.name}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-gray-900 text-sm uppercase bg-gray-100 px-2 py-0.5 rounded">{currency.code}</span>
+                              <span className="font-semibold text-gray-900">{currency.display_name || currency.name}</span>
+                            </div>
                             <div className="text-sm text-gray-500">{currency.network}</div>
                           </div>
                         </div>
