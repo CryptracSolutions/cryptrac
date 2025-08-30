@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/app/components/ui/button'
 import WalletsManager from '@/app/components/settings/WalletsManager'
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
-import { CheckCircle } from 'lucide-react'
+import Tooltip from '@/app/components/ui/tooltip'
+import { CheckCircle, HelpCircle } from 'lucide-react'
 
 interface WalletSetupStepProps {
   onNext: (wallets: Record<string, string>) => void
@@ -14,6 +15,30 @@ interface WalletSetupStepProps {
 type MerchantSettings = Record<string, any> & {
   wallets: Record<string, string>
 }
+
+// Recommended currencies for merchants
+const recommendedCurrencies = [
+  { code: 'BTC', name: 'Bitcoin' },
+  { code: 'ETH', name: 'Ethereum' },
+  { code: 'ETHBASE', name: 'Ethereum' },
+  { code: 'SOL', name: 'Solana' },
+  { code: 'ALGO', name: 'Algorand' },
+  { code: 'AVAX', name: 'Avalanche' },
+  { code: 'BNBBSC', name: 'Binance Coin (BSC)' },
+  { code: 'BUSD', name: 'Binance USD' },
+  { code: 'ADA', name: 'Cardano' },
+  { code: 'CRO', name: 'Crypto.com Coin' },
+  { code: 'DOGE', name: 'Dogecoin' },
+  { code: 'HBAR', name: 'Hedera Hashgraph' },
+  { code: 'HYPE', name: 'Hyperliquid' },
+  { code: 'LTC', name: 'Litecoin' },
+  { code: 'DOT', name: 'Polkadot' },
+  { code: 'XRP', name: 'Ripple' },
+  { code: 'SUI', name: 'Sui' },
+  { code: 'TON', name: 'Toncoin' },
+  { code: 'TRX', name: 'Tron' },
+  { code: 'XLM', name: 'Stellar' },
+]
 
 export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false)
@@ -59,6 +84,25 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           </div>
         </div>
       )}
+
+      {/* Recommended Currencies Tooltip */}
+      <div className="flex justify-center">
+        <Tooltip
+          trigger={
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
+            >
+              <HelpCircle className="h-4 w-4" />
+              Highly recommended
+            </Button>
+          }
+          title="Recommended Networks & Wallets"
+          description="These are the most popular cryptocurrencies that Cryptrac merchants typically accept for payments"
+          recommendedCurrencies={recommendedCurrencies}
+          className="w-full flex justify-center"
+        />
+      </div>
 
       {/* Wallets Manager - exact same component as /merchant/wallets */}
       <WalletsManager
