@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Stepper } from '@/app/components/ui/stepper'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Logo } from '@/app/components/ui/logo'
+import { useOnboardingCleanup } from '@/lib/hooks/useOnboardingCleanup'
 
 // Import step components
 import WelcomeStep from './steps/welcome-step'
@@ -56,6 +57,7 @@ interface OnboardingData {
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const { cleanupIncompleteOnboarding, isLoading: cleanupLoading } = useOnboardingCleanup()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -90,6 +92,24 @@ export default function OnboardingPage() {
       chargeCustomerFee: false
     }
   })
+
+  // Cleanup any incomplete onboarding data when component mounts
+  useEffect(() => {
+    const performCleanup = async () => {
+      try {
+        console.log('🧹 Checking for incomplete onboarding data to cleanup...');
+        const result = await cleanupIncompleteOnboarding();
+        if (result && result.cleanedCount > 0) {
+          console.log(`✅ Cleaned up ${result.cleanedCount} incomplete merchant record(s)`);
+        }
+      } catch (error) {
+        console.error('⚠️ Failed to cleanup incomplete onboarding data:', error);
+        // Don't fail the onboarding flow if cleanup fails
+      }
+    };
+
+    performCleanup();
+  }, [cleanupIncompleteOnboarding]);
 
   const handleNext = () => {
     if (currentStep < ONBOARDING_STEPS.length) {

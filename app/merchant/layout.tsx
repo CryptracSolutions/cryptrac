@@ -1,20 +1,26 @@
+'use client'
+
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout'
-import { createServerClient } from '@/lib/supabase-server'
+import { usePathname } from 'next/navigation'
+import { useAuth } from '@/lib/auth-guards'
 
-export const metadata = {
-  title: 'Merchant Portal',
-}
-
-export default async function MerchantLayout({
+export default function MerchantLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Fetch user data on server side to pass to layout
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { session } = useAuth()
+  const pathname = usePathname()
+  
+  // Hide sidebar during onboarding
+  const isOnboarding = pathname.includes('/onboarding')
 
-  return <DashboardLayout user={user}>{children}</DashboardLayout>
+  return (
+    <DashboardLayout 
+      user={session?.user} 
+      showSidebar={!isOnboarding}
+    >
+      {children}
+    </DashboardLayout>
+  )
 }
