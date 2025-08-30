@@ -1,4 +1,4 @@
-// Approved cryptocurrencies list - exactly 153 currencies
+// Approved cryptocurrencies list - exactly 155 currencies (includes CRO, EOS, QTUM)
 export const APPROVED_CURRENCIES: Record<string, string> = {
   '1INCH': '1inch Network',
   'AAVE': 'Aave',
@@ -33,13 +33,14 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'CFXMAINNET': 'Conflux',
   'ATOM': 'Cosmos',
   'COTI': 'COTI',
-  'CRO': 'Cronos',
+  'CRO': 'Crypto.com Coin',
   'CROMAINNET': 'Cronos',
   'DAI': 'DAI',
   'DASH': 'Dash',
   'MANA': 'Decentraland',
   'DOGE': 'Dogecoin',
   'ENJ': 'Enjin Coin',
+  'EOS': 'EOS',
   'ETH': 'Ethereum',
   'ETHARB': 'Ethereum',
   'ETHBASE': 'Ethereum',
@@ -88,6 +89,7 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'DOT': 'Polkadot',
   'MATICMAINNET': 'Polygon',
   'PLS': 'Pulsechain',
+  'QTUM': 'QTUM',
   'RVN': 'Ravencoin',
   'XRP': 'Ripple',
   'SEI': 'Sei',
@@ -150,6 +152,7 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'XYO': 'XYO Network',
   'YFI': 'yearn.finance',
   'ZBC': 'Zebec Protocol',
+  'ZEC': 'Zcash',
   'ZK': 'zkSync',
   'ZROERC20': 'LayerZero (Ethereum)'
 };
