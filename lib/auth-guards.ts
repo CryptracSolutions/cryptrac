@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserSupabaseClient } from './supabase-browser';
 import { User } from '@supabase/supabase-js';
 
 // Types for user roles
@@ -25,10 +25,7 @@ export function useRoleGuard(
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserSupabaseClient();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -111,10 +108,7 @@ export function useAuth() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserSupabaseClient();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -175,10 +169,7 @@ export function isAdmin(session: UserSession | null): boolean {
 
 // Logout function
 export async function logout() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserSupabaseClient();
   
   await supabase.auth.signOut();
 }

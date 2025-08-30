@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const EXCLUDED_PREFIXES = [
-  '/_next', '/static', '/assets', '/api',
+  '/_next', '/static', '/assets',
   '/favicon.ico', '/robots.txt', '/sitemap.xml', '/manifest.json'
 ]
 
@@ -63,8 +63,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Match all routes EXCEPT Next.js internals, static assets, images, API, and common public files
+  // Match all routes EXCEPT Next.js internals, static assets, images, and common public files
   matcher: [
-    '/((?!_next|static|assets|api|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next|static|assets|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
