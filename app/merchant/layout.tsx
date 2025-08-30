@@ -19,6 +19,7 @@ export default function MerchantLayout({
     <DashboardLayout 
       user={session?.user} 
       showSidebar={!isOnboarding}
+      showHeader={!isOnboarding}
     >
       {children}
     </DashboardLayout>

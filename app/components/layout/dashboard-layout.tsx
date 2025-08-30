@@ -16,10 +16,11 @@ interface DashboardLayoutProps {
   } | null
   className?: string
   showSidebar?: boolean
+  showHeader?: boolean
 }
 
 const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
-  ({ children, user, className, showSidebar = true }, ref) => {
+  ({ children, user, className, showSidebar = true, showHeader = true }, ref) => {
     const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
     
@@ -76,13 +77,18 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
           showSidebar && !sidebarCollapsed && "md:ml-64",
           showSidebar && sidebarCollapsed && "md:ml-16"
         )}>
-          <Header 
-            user={user} 
-            onMobileMenuToggle={showSidebar ? () => setMobileMenuOpen(!mobileMenuOpen) : undefined}
-          />
+          {showHeader && (
+            <Header 
+              user={user} 
+              onMobileMenuToggle={showSidebar ? () => setMobileMenuOpen(!mobileMenuOpen) : undefined}
+            />
+          )}
           
           <main className="flex-1 overflow-hidden">
-            <div className="h-full p-6 md:p-8">
+            <div className={cn(
+              "h-full",
+              showHeader ? "p-6 md:p-8" : "p-0"
+            )}>
               {children}
             </div>
           </main>
