@@ -16,10 +16,11 @@ interface TooltipProps {
   title: string
   description: string
   recommendedCurrencies: RecommendedCurrency[]
+  onCurrencyClick?: (currencyCode: string) => void
   className?: string
 }
 
-export default function Tooltip({ trigger, title, description, recommendedCurrencies, className = "" }: TooltipProps) {
+export default function Tooltip({ trigger, title, description, recommendedCurrencies, onCurrencyClick, className = "" }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
 
@@ -93,7 +94,13 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
                 {recommendedCurrencies.map((currency) => (
                   <div
                     key={currency.code}
-                    className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all duration-200 border border-purple-100"
+                    onClick={() => {
+                      if (onCurrencyClick) {
+                        onCurrencyClick(currency.code)
+                        setIsOpen(false) // Close tooltip when currency is selected
+                      }
+                    }}
+                    className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all duration-200 border border-purple-100 cursor-pointer"
                   >
                     <CryptoIcon currency={currency.code} className="h-6 w-6 flex-shrink-0" />
                     <div className="flex-1 min-w-0">

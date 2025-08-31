@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Wallet,
   Info,
@@ -110,9 +110,10 @@ interface WalletsManagerProps<T = Record<string, unknown>> {
     wallets: Record<string, string>;
   }>>;
   setShowTrustWalletGuide: (show: boolean) => void;
+  focusCurrency?: string;
 }
 
-export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, setShowTrustWalletGuide }: WalletsManagerProps<T>) {
+export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, setShowTrustWalletGuide, focusCurrency }: WalletsManagerProps<T>) {
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);
@@ -122,12 +123,13 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [walletsExpanded, setWalletsExpanded] = useState(false);
   const [newlyAddedWallet, setNewlyAddedWallet] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize validation status for all currencies
   useEffect(() => {
     const initialValidation: Record<string, ValidationStatus> = {};
     const initialHidden: Record<string, boolean> = {};
-    
+
     // Initialize for existing wallets (assume they are valid)
     if (settings.wallets) {
       Object.keys(settings.wallets).forEach(currency => {
@@ -139,10 +141,26 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
         }
       });
     }
-    
+
     setValidationStatus(initialValidation);
     setHiddenAddresses(initialHidden);
   }, [settings.wallets]);
+
+  // Handle focusCurrency prop to automatically focus and search for a currency
+  useEffect(() => {
+    if (focusCurrency) {
+      // Set the search term to the currency code to filter the list
+      setSearchTerm(focusCurrency.toLowerCase());
+
+      // Focus the search input after a short delay to ensure the component has updated
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [focusCurrency]);
 
   // Load additional currencies
   useEffect(() => {
@@ -410,20 +428,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
             <AlertDescription className="text-purple-800">
               <div className="font-semibold mb-1">Smart Wallet Setup</div>
               <p className="text-sm leading-relaxed">
-                Add a base cryptocurrency wallet and automatically support its stable coins. 
+                Add a base cryptocurrency wallet and automatically support its stable coins.
                 Click on wallets with stable coins to see what&apos;s included!
               </p>
             </AlertDescription>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowTrustWalletGuide(true)}
-            className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
-          >
-            <HelpCircle className="h-4 w-4" />
-            Setup Guide
-          </Button>
         </div>
       </Alert>
 
@@ -648,6 +657,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
+              ref={searchInputRef}
               placeholder="Search cryptocurrencies (e.g., Bitcoin, Ethereum, Solana...)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

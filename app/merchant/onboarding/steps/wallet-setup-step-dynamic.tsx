@@ -45,6 +45,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   const [settings, setSettings] = useState<MerchantSettings>({
     wallets: {}
   } as MerchantSettings)
+  const [focusCurrency, setFocusCurrency] = useState<string | undefined>()
 
   // Check if we have at least one valid wallet configured
   const hasValidWallet = Object.keys(settings.wallets).some(currency => 
@@ -59,6 +60,12 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )
     )
     onNext(validWallets)
+  }
+
+  const handleCurrencyClick = (currencyCode: string) => {
+    setFocusCurrency(currencyCode)
+    // Clear the focus after a short delay to allow re-clicking the same currency
+    setTimeout(() => setFocusCurrency(undefined), 2000)
   }
 
   return (
@@ -85,6 +92,18 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         </div>
       )}
 
+      {/* Setup Guide Button */}
+      <div className="flex justify-center">
+        <Button
+          variant="outline"
+          onClick={() => setShowTrustWalletGuide(true)}
+          className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
+        >
+          <HelpCircle className="h-4 w-4" />
+          Setup Guide
+        </Button>
+      </div>
+
       {/* Recommended Currencies Tooltip */}
       <div className="flex justify-center">
         <Tooltip
@@ -100,6 +119,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           title="Recommended Networks & Wallets"
           description="These are the most popular cryptocurrencies that Cryptrac merchants typically accept for payments"
           recommendedCurrencies={recommendedCurrencies}
+          onCurrencyClick={handleCurrencyClick}
           className="w-full flex justify-center"
         />
       </div>
@@ -109,6 +129,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         settings={settings}
         setSettings={setSettings}
         setShowTrustWalletGuide={setShowTrustWalletGuide}
+        focusCurrency={focusCurrency}
       />
 
       {/* Progress indicator */}

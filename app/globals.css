@@ -1,41 +1,8 @@
 @import "tailwindcss";
 
 /* Font definitions based on Robinhood's typography system */
-@font-face {
-  font-family: 'Phonic';
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  src: local('Inter Light'), local('Inter-Light'), 
-       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7W0Q5r-c.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Phonic';
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  src: local('Inter Regular'), local('Inter-Regular'), 
-       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5r-c.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Phonic';
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-  src: local('Inter Medium'), local('Inter-Medium'),
-       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa5ZL7W0Q5r-c.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Phonic';
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  src: local('Inter Bold'), local('Inter-Bold'),
-       url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMaEZL7W0Q5r-c.woff2') format('woff2');
-}
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
 
 @font-face {
   font-family: 'Capsule Sans Text';
@@ -94,7 +61,7 @@
 @layer base {
   :root {
     /* Typography System Variables based on Robinhood */
-    --font-primary: 'Phonic', Helvetica, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    --font-primary: 'Inter', Helvetica, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     --font-secondary: 'Capsule Sans Text', sans-serif;
     --font-accent: 'Martina Plantijn', serif;
     --font-fallback: 'Times New Roman', serif;
