@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import {
   Save,
   CheckCircle,
-  Loader2
+  Loader2,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 
@@ -18,6 +19,7 @@ import WalletsManager from '@/app/components/settings/WalletsManager';
 import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
+import Tooltip from '@/app/components/ui/tooltip';
 
 interface MerchantSettings {
   // Wallet settings
@@ -52,6 +54,30 @@ interface MerchantSettings {
   sales_type: 'local' | 'online' | 'both';
 }
 
+// Recommended currencies for merchants
+const recommendedCurrencies = [
+  { code: 'BTC', name: 'Bitcoin' },
+  { code: 'ETH', name: 'Ethereum' },
+  { code: 'ETHBASE', name: 'Ethereum' },
+  { code: 'SOL', name: 'Solana' },
+  { code: 'ALGO', name: 'Algorand' },
+  { code: 'AVAX', name: 'Avalanche' },
+  { code: 'BNBBSC', name: 'Binance Coin (BSC)' },
+  { code: 'BUSD', name: 'Binance USD' },
+  { code: 'ADA', name: 'Cardano' },
+  { code: 'CRO', name: 'Crypto.com Coin' },
+  { code: 'DOGE', name: 'Dogecoin' },
+  { code: 'HBAR', name: 'Hedera Hashgraph' },
+  { code: 'HYPE', name: 'Hyperliquid' },
+  { code: 'LTC', name: 'Litecoin' },
+  { code: 'DOT', name: 'Polkadot' },
+  { code: 'XRP', name: 'Ripple' },
+  { code: 'SUI', name: 'Sui' },
+  { code: 'TON', name: 'Toncoin' },
+  { code: 'TRX', name: 'Tron' },
+  { code: 'XLM', name: 'Stellar' },
+]
+
 export default function WalletsPage() {
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +85,7 @@ export default function WalletsPage() {
   const [success, setSuccess] = useState(false);
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false);
   const [lastSavedSettings, setLastSavedSettings] = useState<MerchantSettings | null>(null);
+  const [focusCurrency, setFocusCurrency] = useState<string | undefined>();
   const [settings, setSettings] = useState<MerchantSettings>({
     // Wallet settings
     wallets: {},
@@ -188,13 +215,20 @@ export default function WalletsPage() {
   // Debounced auto-save effect
   useEffect(() => {
     if (!lastSavedSettings) return; // Don't auto-save on initial load
-    
+
     const timeoutId = setTimeout(() => {
       autoSave(settings);
     }, 1000); // 1 second debounce
 
     return () => clearTimeout(timeoutId);
   }, [settings, lastSavedSettings]);
+
+  // Handle currency selection from recommended currencies tooltip
+  const handleCurrencyClick = (currencyCode: string) => {
+    setFocusCurrency(currencyCode);
+    // Clear the focus after a short delay to allow re-clicking the same currency
+    setTimeout(() => setFocusCurrency(undefined), 2000);
+  };
 
   if (loading) {
     return (
@@ -241,19 +275,40 @@ export default function WalletsPage() {
         {showTrustWalletGuide && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <TrustWalletGuide 
-                onComplete={() => setShowTrustWalletGuide(false)} 
-                onSkip={() => setShowTrustWalletGuide(false)} 
+              <TrustWalletGuide
+                onComplete={() => setShowTrustWalletGuide(false)}
+                onSkip={() => setShowTrustWalletGuide(false)}
               />
             </div>
           </div>
         )}
+
+        {/* Recommended Currencies Tooltip */}
+        <div className="flex justify-center">
+          <Tooltip
+            trigger={
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
+              >
+                <HelpCircle className="h-4 w-4" />
+                Highly recommended
+              </Button>
+            }
+            title="Recommended Networks & Wallets"
+            description="These are the most popular cryptocurrencies that Cryptrac merchants typically accept for payments"
+            recommendedCurrencies={recommendedCurrencies}
+            onCurrencyClick={handleCurrencyClick}
+            className="w-full flex justify-center"
+          />
+        </div>
 
         {/* Wallets Manager */}
         <WalletsManager
           settings={settings}
           setSettings={setSettings}
           setShowTrustWalletGuide={setShowTrustWalletGuide}
+          focusCurrency={focusCurrency}
         />
       </div>
   );

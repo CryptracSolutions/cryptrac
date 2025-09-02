@@ -89,6 +89,8 @@ interface ReportTransaction {
   refund_date: string | null
   // ENHANCED: Added public_receipt_id for receipt links
   public_receipt_id: string | null
+  // Added link_id for payment link identification
+  link_id: string | null
 }
 
 export async function GET(request: Request) {
@@ -258,7 +260,9 @@ export async function GET(request: Request) {
         refund_amount: Number(t.refund_amount || 0),
         refund_date: t.refunded_at,
         // ENHANCED: Include public_receipt_id for receipt links
-        public_receipt_id: t.public_receipt_id
+        public_receipt_id: t.public_receipt_id,
+        // Include link_id from payment_links for UI display
+        link_id: paymentLink?.link_id || null
       } as ReportTransaction
     })
 
@@ -355,7 +359,8 @@ export async function GET(request: Request) {
             status: t.status,
             refund_amount: Number(t.refund_amount || 0),
             refund_date: t.refunded_at,
-            public_receipt_id: t.public_receipt_id
+            public_receipt_id: t.public_receipt_id,
+            link_id: paymentLink?.link_id || null
           }
         })
       }
@@ -541,4 +546,3 @@ function generateAuditCSV(transactions: ReportTransaction[], summary: Transactio
 
   return csvContent
 }
-
