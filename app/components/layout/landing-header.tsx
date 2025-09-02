@@ -5,12 +5,13 @@ import Link from "next/link";
 import { Button } from "@/app/components/ui/button";
 import { Logo } from "@/app/components/ui/logo";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { getCurrentUser } from "@/lib/supabase-browser";
+import { getCurrentUser, supabase } from "@/lib/supabase-browser";
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [canAccessDashboard, setCanAccessDashboard] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -25,8 +26,50 @@ export function Header() {
   };
 
   useEffect(() => {
-    // Detect if user is logged in to show Dashboard button
-    getCurrentUser().then((user) => setIsLoggedIn(!!user));
+    let isMounted = true;
+    const evaluateAccess = async () => {
+      const user = await getCurrentUser();
+      if (!isMounted) return;
+      setIsLoggedIn(!!user);
+
+      if (!user) {
+        setCanAccessDashboard(false);
+        return;
+      }
+
+      const role = (user.user_metadata as any)?.role;
+      if (role && role !== 'merchant') {
+        setCanAccessDashboard(true);
+        return;
+      }
+
+      try {
+        const { data: merchant, error } = await supabase
+          .from('merchants')
+          .select('onboarding_completed, onboarded, user_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          setCanAccessDashboard(false);
+          return;
+        }
+        const completed = !!(merchant?.onboarding_completed || merchant?.onboarded);
+        setCanAccessDashboard(completed);
+      } catch (_e) {
+        setCanAccessDashboard(false);
+      }
+    };
+
+    evaluateAccess();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      evaluateAccess();
+    });
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
@@ -128,13 +171,24 @@ export function Header() {
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center space-x-3">
           {isLoggedIn ? (
-            <Button 
-              size="sm" 
-              className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-              asChild
-            >
-              <Link href="/merchant/dashboard">Dashboard</Link>
-            </Button>
+            canAccessDashboard ? (
+              <Button 
+                size="sm" 
+                className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                asChild
+              >
+                <Link href="/merchant/dashboard">Dashboard</Link>
+              </Button>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
+                asChild
+              >
+                <Link href="/merchant/onboarding">Continue Onboarding</Link>
+              </Button>
+            )
           ) : (
             <>
               <Button 
@@ -254,13 +308,24 @@ export function Header() {
           {/* Mobile Buttons */}
           <div className="mt-6 space-y-3">
             {isLoggedIn ? (
-              <Button 
-                size="sm" 
-                className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-                asChild
-              >
-                <Link href="/merchant/dashboard" onClick={closeMobileMenu}>Dashboard</Link>
-              </Button>
+              canAccessDashboard ? (
+                <Button 
+                  size="sm" 
+                  className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                  asChild
+                >
+                  <Link href="/merchant/dashboard" onClick={closeMobileMenu}>Dashboard</Link>
+                </Button>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
+                  asChild
+                >
+                  <Link href="/merchant/onboarding" onClick={closeMobileMenu}>Continue Onboarding</Link>
+                </Button>
+              )
             ) : (
               <>
                 <Button 
@@ -286,4 +351,3 @@ export function Header() {
     </header>
   );
 }
-

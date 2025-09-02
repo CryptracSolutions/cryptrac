@@ -47,12 +47,27 @@ export default function Login() {
         const role = session.user.user_metadata.role || 'merchant';
         console.log('Verified client session:', JSON.stringify(session, null, 2));
         console.log('Role after login:', role);
-        
-        // Redirect based on role
+
+        // Redirect based on role and onboarding status
         if (role === 'admin') {
           router.push('/admin');
         } else {
-          router.push('/merchant/dashboard');
+          try {
+            const { data: merchant, error } = await supabase
+              .from('merchants')
+              .select('onboarding_completed, onboarded, user_id')
+              .eq('user_id', session.user.id)
+              .single();
+
+            const completed = !!(merchant?.onboarding_completed || merchant?.onboarded);
+            if (error || !completed) {
+              router.push('/merchant/onboarding');
+            } else {
+              router.push('/merchant/dashboard');
+            }
+          } catch (_e) {
+            router.push('/merchant/onboarding');
+          }
         }
       } else {
         toast.error('Session not available');
@@ -217,4 +232,3 @@ export default function Login() {
 }
 
 export const dynamic = 'force-dynamic';
-

@@ -12,6 +12,7 @@ export function LandingNav() {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
+  const [canAccessDashboard, setCanAccessDashboard] = React.useState(false)
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -26,17 +27,57 @@ export function LandingNav() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isDropdownOpen])
 
-  // Detect and subscribe to auth state to toggle Dashboard button
+  // Detect and subscribe to auth state, and determine dashboard visibility
   React.useEffect(() => {
     let isMounted = true
-    supabase.auth.getUser().then(({ data }) => {
+
+    const evaluateAccess = async () => {
+      const { data } = await supabase.auth.getUser()
+      const user = data.user
       if (!isMounted) return
-      setIsLoggedIn(!!data.user)
+
+      setIsLoggedIn(!!user)
+
+      if (!user) {
+        setCanAccessDashboard(false)
+        return
+      }
+
+      const role = (user.user_metadata as any)?.role
+
+      // Non-merchant roles can access their dashboards
+      if (role && role !== 'merchant') {
+        setCanAccessDashboard(true)
+        return
+      }
+
+      // Merchant: check onboarding status
+      try {
+        const { data: merchant, error } = await supabase
+          .from('merchants')
+          .select('onboarding_completed, onboarded, user_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (error) {
+          // If there's an error or no merchant yet, treat as not completed
+          setCanAccessDashboard(false)
+          return
+        }
+
+        const completed = !!(merchant?.onboarding_completed || merchant?.onboarded)
+        setCanAccessDashboard(completed)
+      } catch (_e) {
+        setCanAccessDashboard(false)
+      }
+    }
+
+    evaluateAccess()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
+      evaluateAccess()
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return
-      setIsLoggedIn(!!session?.user)
-    })
+
     return () => {
       isMounted = false
       subscription.unsubscribe()
@@ -129,9 +170,15 @@ export function LandingNav() {
         {/* Auth Buttons */}
         <div className="flex items-center space-x-3">
           {isLoggedIn ? (
-            <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-              <Link href="/merchant/dashboard">Dashboard</Link>
-            </Button>
+            canAccessDashboard ? (
+              <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                <Link href="/merchant/dashboard">Dashboard</Link>
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
+                <Link href="/merchant/onboarding">Continue Onboarding</Link>
+              </Button>
+            )
           ) : (
             <>
               <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
@@ -226,9 +273,15 @@ export function LandingNav() {
             
             <div className="pt-4 space-y-2 border-t">
               {isLoggedIn ? (
-                <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-                  <Link href="/merchant/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
-                </Button>
+                canAccessDashboard ? (
+                  <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                    <Link href="/merchant/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="sm" className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
+                    <Link href="/merchant/onboarding" onClick={() => setIsMobileMenuOpen(false)}>Continue Onboarding</Link>
+                  </Button>
+                )
               ) : (
                 <>
                   <Button variant="ghost" size="sm" className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
