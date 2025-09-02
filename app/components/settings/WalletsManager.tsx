@@ -34,12 +34,14 @@ const stableCoinAssociations: Record<string, string[]> = {
   ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
   BNB: ['USDTBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
-  TRX: ['USDTTRC20'],
+  TRX: ['USDTTRC20', 'TUSDTRC20'],
   TON: ['USDTTON'],
   ARB: ['USDTARB', 'USDCARB'],
   OP: ['USDTOP', 'USDCOP'],
   ETHBASE: ['USDCBASE'],
   ALGO: ['USDCALGO'],
+  AVAXC: ['USDCARC20', 'USDTARC20'],
+  AVAX: ['USDCARC20', 'USDTARC20'],
 };
 
 const CURRENCY_NAMES: Record<string, string> = {

@@ -38,6 +38,7 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // Avalanche ecosystem - same as Ethereum format
   AVAX: /^0x[a-fA-F0-9]{40}$/,
+  AVAXC: /^0x[a-fA-F0-9]{40}$/,
   
   // Other major cryptocurrencies with comprehensive format support
   DOGE: /^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{32}$/,
@@ -288,6 +289,7 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   TON: { name: 'Toncoin', network: 'TON', addressType: 'TON address (multiple formats)' },
   USDTTON: { name: 'Tether (TON)', network: 'TON', addressType: 'TON address' },
   AVAX: { name: 'Avalanche', network: 'Avalanche', addressType: 'Avalanche address' },
+  AVAXC: { name: 'Avalanche (AVAXC)', network: 'Avalanche', addressType: 'Avalanche address' },
   DOGE: { name: 'Dogecoin', network: 'Dogecoin', addressType: 'Dogecoin address' },
   XRP: { name: 'XRP', network: 'XRP Ledger', addressType: 'XRP address' },
   SUI: { name: 'Sui', network: 'Sui', addressType: 'Sui address' },

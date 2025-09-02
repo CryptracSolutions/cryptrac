@@ -156,7 +156,7 @@ Object.entries(NETWORKS).forEach(([networkId, network]) => {
 })
 
 // Stablecoin identifiers
-const STABLECOIN_IDENTIFIERS = ['USDT', 'USDC', 'DAI', 'PYUSD', 'BUSD']
+const STABLECOIN_IDENTIFIERS = ['USDT', 'USDC', 'DAI', 'PYUSD']
 
 export function isStablecoin(currencyCode: string): boolean {
   const upper = currencyCode.toUpperCase()
