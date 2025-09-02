@@ -193,6 +193,15 @@ export async function POST(request: NextRequest) {
     // Generate payment URL
     const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/${linkId}`;
 
+    // Normalize source to satisfy DB check constraint
+    // DB allows only: 'manual', 'subscription', 'pos'
+    const normalizedSource = (() => {
+      const s = String(source || '').toLowerCase();
+      if (s === 'dashboard') return 'manual';
+      if (s === 'subscription' || s === 'pos' || s === 'manual') return s;
+      return 'manual';
+    })();
+
     // Build payload and insert payment link
     const payload: Record<string, unknown> = {
       merchant_id: merchant.id,
@@ -235,7 +244,7 @@ export async function POST(request: NextRequest) {
       }
     };
     // Mark source so downstream payment creation can apply correct fee delegation
-    payload.source = source || 'dashboard';
+    payload.source = normalizedSource;
     if (subscription_id) payload.subscription_id = subscription_id;
     if (pos_device_id) payload.pos_device_id = pos_device_id;
 

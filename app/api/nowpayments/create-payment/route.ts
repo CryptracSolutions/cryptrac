@@ -385,7 +385,7 @@ export async function POST(request: Request) {
     // and shows it to the user (including fee if applicable). In these cases we should
     // NOT ask NOWPayments to add the fee on top again; it will always be deducted from payout.
     const sourceStr = String((paymentLinkData as any).source || '').toLowerCase()
-    const isLinkFlow = sourceStr === 'pos' || sourceStr === 'dashboard' || sourceStr === 'subscription'
+    const isLinkFlow = sourceStr === 'pos' || sourceStr === 'subscription' || sourceStr === 'dashboard' || sourceStr === 'manual'
 
     // Prepare payment request for NOWPayments
     interface PaymentRequest {

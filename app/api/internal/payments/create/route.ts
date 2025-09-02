@@ -82,6 +82,15 @@ export async function POST(request: NextRequest) {
   const merchantReceives = subtotalWithTax - feeAmount;
   const linkId = generateLinkId();
   const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/${linkId}`;
+  // Normalize source to satisfy DB constraint: allow only 'manual' | 'subscription' | 'pos'
+  const normalizedSource = (() => {
+    const s = String(source || '').toLowerCase();
+    if (!s) return 'manual';
+    if (s === 'dashboard') return 'manual';
+    if (s === 'subscription' || s === 'pos' || s === 'manual') return s;
+    return 'manual';
+  })();
+
   const insert: Record<string, unknown> = {
     merchant_id,
     title,
@@ -121,7 +130,7 @@ export async function POST(request: NextRequest) {
       )
     }
   };
-  if (source) insert.source = source;
+  insert.source = normalizedSource;
   if (subscription_id) insert.subscription_id = subscription_id;
   if (pos_device_id) insert.pos_device_id = pos_device_id;
   const { data: paymentLink, error: insertError } = await supabase
