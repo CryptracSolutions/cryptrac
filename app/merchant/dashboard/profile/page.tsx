@@ -27,6 +27,7 @@ interface MerchantSettings {
   website: string;
   phone_number: string;
   timezone: string;
+  email: string;
   business_address: {
     street?: string;
     city?: string;
@@ -65,6 +66,7 @@ export default function ProfilePage() {
     website: '',
     phone_number: '',
     timezone: 'America/New_York',
+    email: '',
     business_address: {
       street: '',
       city: '',
@@ -105,7 +107,11 @@ export default function ProfilePage() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.settings) {
-            setSettings(prev => ({ ...prev, ...data.settings }));
+            setSettings(prev => ({
+              ...prev,
+              ...data.settings,
+              email: data.settings.email || user.email || ''
+            }));
           }
         }
       } catch (error) {
@@ -253,6 +259,10 @@ export default function ProfilePage() {
           setSettings={setSettings}
           handlePhoneChange={handlePhoneChange}
           handleZipChange={handleZipChange}
+          onEmailChange={(newEmail) => {
+            console.log('Email change requested:', newEmail);
+            // Additional email change logic can be added here if needed
+          }}
         />
         </div>
     );

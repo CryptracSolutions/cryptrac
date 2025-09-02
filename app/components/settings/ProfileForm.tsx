@@ -5,10 +5,13 @@ import {
   Building,
   Phone,
   MapPin,
+  Mail,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
+import { Button } from '@/app/components/ui/button';
 
 // Business types
 const BUSINESS_TYPES = [
@@ -111,6 +114,7 @@ interface MerchantSettings {
   business_description: string;
   phone_number: string;
   timezone: string;
+  email: string;
   business_address: {
     street?: string;
     city?: string;
@@ -140,9 +144,34 @@ interface ProfileFormProps {
   setSettings: React.Dispatch<React.SetStateAction<MerchantSettings>>;
   handlePhoneChange: (value: string) => void;
   handleZipChange: (value: string) => void;
+  onEmailChange?: (newEmail: string) => void;
 }
 
-export default function ProfileForm({ settings, setSettings, handlePhoneChange, handleZipChange }: ProfileFormProps) {
+export default function ProfileForm({ settings, setSettings, handlePhoneChange, handleZipChange, onEmailChange }: ProfileFormProps) {
+  const [showEmailConfirmDialog, setShowEmailConfirmDialog] = React.useState(false);
+  const [pendingEmailChange, setPendingEmailChange] = React.useState<string>('');
+
+  const handleEmailChange = (newEmail: string) => {
+    if (newEmail !== settings.email) {
+      setPendingEmailChange(newEmail);
+      setShowEmailConfirmDialog(true);
+    } else {
+      setSettings((prev: MerchantSettings) => ({ ...prev, email: newEmail }));
+    }
+  };
+
+  const confirmEmailChange = () => {
+    setSettings((prev: MerchantSettings) => ({ ...prev, email: pendingEmailChange }));
+    onEmailChange?.(pendingEmailChange);
+    setShowEmailConfirmDialog(false);
+    setPendingEmailChange('');
+  };
+
+  const cancelEmailChange = () => {
+    setShowEmailConfirmDialog(false);
+    setPendingEmailChange('');
+  };
+
   return (
     <div className="space-y-8">
       <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
@@ -255,8 +284,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
             <div className="space-y-2">
               <label className="font-phonic text-base font-normal text-gray-700">Timezone</label>
-              <Select 
-                value={settings.timezone} 
+              <Select
+                value={settings.timezone}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, timezone: value }))}
               >
                 <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
@@ -271,6 +300,18 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-phonic text-base font-normal text-gray-700">Email Address *</label>
+            <Input
+              value={settings.email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              placeholder="your.email@example.com"
+              type="email"
+              className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+              required
+            />
           </div>
         </CardContent>
       </Card>
@@ -355,6 +396,35 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Change Confirmation Dialog */}
+      <Dialog open={showEmailConfirmDialog} onOpenChange={setShowEmailConfirmDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="font-phonic text-xl font-normal">Confirm Email Change</DialogTitle>
+            <DialogDescription className="font-capsule text-base font-normal">
+              You are about to change your email address from <strong>{settings.email}</strong> to <strong>{pendingEmailChange}</strong>.
+              <br /><br />
+              This will update your login credentials and you will need to verify the new email address. Are you sure you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={cancelEmailChange}
+              className="font-capsule text-base font-normal"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmEmailChange}
+              className="font-capsule text-base font-normal bg-[#7f5efd] hover:bg-[#7c3aed]"
+            >
+              Confirm Change
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

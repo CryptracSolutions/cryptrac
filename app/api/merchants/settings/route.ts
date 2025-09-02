@@ -78,6 +78,7 @@ export async function GET() {
         website: merchant.website || '',
         phone_number: merchant.phone_number || '',
         timezone: merchant.timezone || 'America/New_York',
+        email: merchant.email || '',
         business_address: merchant.business_address || {
           street: '',
           city: '',
@@ -123,6 +124,7 @@ export async function PUT(request: NextRequest) {
       website?: string;
       phone_number?: string;
       timezone?: string;
+      email?: string;
       business_address?: {
         street: string;
         city: string;
@@ -136,7 +138,7 @@ export async function PUT(request: NextRequest) {
       charge_customer_fee?: boolean;
     } = await request.json();
     
-    const { 
+    const {
       business_name,
       business_type,
       industry,
@@ -144,11 +146,12 @@ export async function PUT(request: NextRequest) {
       website,
       phone_number,
       timezone,
+      email,
       business_address,
-      auto_convert_enabled, 
-      preferred_payout_currency, 
-      wallets: rawWallets, 
-      charge_customer_fee 
+      auto_convert_enabled,
+      preferred_payout_currency,
+      wallets: rawWallets,
+      charge_customer_fee
     } = requestData;
     const wallets = { ...(rawWallets || {}) };
 
@@ -186,6 +189,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Validate email format if provided
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address' },
+        { status: 400 }
+      );
+    }
+
     // Validate required fields if auto-conversion is enabled
     if (auto_convert_enabled && !preferred_payout_currency) {
       return NextResponse.json(
@@ -220,6 +231,7 @@ export async function PUT(request: NextRequest) {
       website?: string;
       phone_number?: string;
       timezone?: string;
+      email?: string;
       business_address?: {
         street: string;
         city: string;
@@ -262,6 +274,10 @@ export async function PUT(request: NextRequest) {
 
     if (timezone !== undefined) {
       updateData.timezone = timezone;
+    }
+
+    if (email !== undefined) {
+      updateData.email = email;
     }
 
     if (business_address !== undefined) {
@@ -322,6 +338,19 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Update the auth user's email if it has changed
+    if (email && email !== user.email) {
+      const { error: authUpdateError } = await supabase.auth.updateUser({
+        email: email
+      });
+
+      if (authUpdateError) {
+        console.error('Error updating auth user email:', authUpdateError);
+        // Note: We don't fail the request here as the merchant record was updated successfully
+        // The user will need to confirm the email change through Supabase's email verification process
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Settings updated successfully',
@@ -333,6 +362,7 @@ export async function PUT(request: NextRequest) {
         website: merchant.website || '',
         phone_number: merchant.phone_number || '',
         timezone: merchant.timezone || 'America/New_York',
+        email: merchant.email || '',
         business_address: merchant.business_address || {
           street: '',
           city: '',
