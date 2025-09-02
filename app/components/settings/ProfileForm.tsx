@@ -151,18 +151,20 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
   const [showEmailConfirmDialog, setShowEmailConfirmDialog] = React.useState(false);
   const [pendingEmailChange, setPendingEmailChange] = React.useState<string>('');
 
-  const handleEmailChange = (newEmail: string) => {
-    if (newEmail !== settings.email) {
-      setPendingEmailChange(newEmail);
-      setShowEmailConfirmDialog(true);
-    } else {
-      setSettings((prev: MerchantSettings) => ({ ...prev, email: newEmail }));
-    }
+  const openEmailChangeModal = () => {
+    setPendingEmailChange(settings.email || '');
+    setShowEmailConfirmDialog(true);
   };
 
   const confirmEmailChange = () => {
-    setSettings((prev: MerchantSettings) => ({ ...prev, email: pendingEmailChange }));
-    onEmailChange?.(pendingEmailChange);
+    const trimmed = pendingEmailChange.trim();
+    if (!trimmed || trimmed === settings.email) {
+      // No effective change; just close.
+      setShowEmailConfirmDialog(false);
+      return;
+    }
+    setSettings((prev: MerchantSettings) => ({ ...prev, email: trimmed }));
+    onEmailChange?.(trimmed);
     setShowEmailConfirmDialog(false);
     setPendingEmailChange('');
   };
@@ -304,14 +306,19 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
           <div className="space-y-2">
             <label className="font-phonic text-base font-normal text-gray-700">Email Address *</label>
-            <Input
-              value={settings.email}
-              onChange={(e) => handleEmailChange(e.target.value)}
-              placeholder="your.email@example.com"
-              type="email"
-              className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
-              required
-            />
+            <div className="flex gap-3">
+              <Input
+                value={settings.email}
+                readOnly
+                placeholder="your.email@example.com"
+                type="email"
+                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors bg-gray-50"
+                required
+              />
+              <Button onClick={openEmailChangeModal} className="shrink-0">
+                Change Email
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -399,17 +406,27 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
       {/* Email Change Confirmation Dialog */}
       <Dialog open={showEmailConfirmDialog} onOpenChange={setShowEmailConfirmDialog}>
-        <DialogContent className="sm:max-w-[425px] bg-white border-2 border-gray-200 shadow-2xl">
+        <DialogContent className="sm:max-w-[480px] bg-white border-2 border-gray-200 shadow-2xl">
           <DialogHeader className="space-y-4">
             <div className="flex items-center justify-between">
               <DialogTitle className="font-phonic text-xl font-normal text-gray-900">Confirm Email Change</DialogTitle>
             </div>
             <DialogDescription className="font-capsule text-base font-normal text-gray-700 leading-relaxed">
-              You are about to change your email address from <strong className="text-[#7f5efd]">{settings.email}</strong> to <strong className="text-[#7f5efd]">{pendingEmailChange}</strong>.
-              <br /><br />
-              This will update your login credentials and you will need to verify the new email address. Are you sure you want to continue?
+              Enter your new email address. This updates your login and may require verification.
             </DialogDescription>
           </DialogHeader>
+          <div className="py-2">
+            <label className="font-phonic text-base font-normal text-gray-700">New Email</label>
+            <Input
+              autoFocus
+              value={pendingEmailChange}
+              onChange={(e) => setPendingEmailChange(e.target.value)}
+              placeholder="new.email@example.com"
+              type="email"
+              className="mt-2 h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+              required
+            />
+          </div>
           <DialogFooter className="gap-3 pt-6">
             <Button
               variant="outline"
@@ -420,6 +437,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </Button>
             <Button
               onClick={confirmEmailChange}
+              disabled={!pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
               className="font-capsule text-base font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200"
             >
               Confirm Change
