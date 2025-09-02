@@ -381,6 +381,11 @@ export async function POST(request: Request) {
     // Determine if customer pays fee
     const chargeCustomerFee = paymentLinkData.charge_customer_fee ?? merchant.charge_customer_fee ?? false;
 
+    // Detect POS source where the customer total already includes the gateway fee.
+    // For POS flows we DO NOT want NOWPayments to add their fee on top again
+    // (we've already baked it into the displayed total).
+    const isPOSFlow = String((paymentLinkData as any).source || '').toLowerCase() === 'pos'
+
     // Prepare payment request for NOWPayments
     interface PaymentRequest {
       price_amount: number
@@ -396,8 +401,17 @@ export async function POST(request: Request) {
       is_fee_paid_by_user?: boolean
     }
 
+    // Normalize fiat price precision to 2 decimals to avoid float precision artifacts
+    const fiatSet = new Set(['usd','eur','gbp','aud','cad','chf','jpy','sgd','aed','inr','brl','mxn'])
+    const normalizedPriceAmount = (() => {
+      const amt = parseFloat(price_amount.toString())
+      return fiatSet.has(String(price_currency).toLowerCase())
+        ? Math.round(amt * 100) / 100
+        : amt
+    })()
+
     const paymentRequest: PaymentRequest = {
-      price_amount: parseFloat(price_amount.toString()),
+      price_amount: normalizedPriceAmount,
       price_currency: price_currency.toLowerCase(),
       pay_currency: pay_currency.toLowerCase(),
       order_id: order_id,
@@ -405,7 +419,9 @@ export async function POST(request: Request) {
       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success/${payment_link_id}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`,
-      is_fee_paid_by_user: chargeCustomerFee === true
+      // If this came from the POS flow, the price already includes the gateway fee,
+      // so do NOT ask NOWPayments to add it again.
+      is_fee_paid_by_user: isPOSFlow ? false : chargeCustomerFee === true
     }
 
     // Enhanced auto-forwarding logic with amount validation
@@ -481,6 +497,9 @@ export async function POST(request: Request) {
     console.log('- pay_currency:', paymentRequest.pay_currency)
     console.log('- order_id:', paymentRequest.order_id)
     console.log('- is_fee_paid_by_user:', paymentRequest.is_fee_paid_by_user)
+    if (isPOSFlow) {
+      console.log('ℹ️ POS flow detected: price includes gateway fee; not delegating fee to NOWPayments')
+    }
     console.log('- auto_forwarding_enabled:', autoForwardingConfigured)
     if (autoForwardingConfigured) {
       console.log('- payout_address:', paymentRequest.payout_address?.substring(0, 10) + '...')
@@ -547,7 +566,8 @@ export async function POST(request: Request) {
           if (autoForwardingConfigured && paymentRequest.payout_currency) {
             try {
               const minAmount = await getMinimumAmount(
-                paymentRequest.price_currency,
+                // Provide min for the actual on-chain route (pay -> payout)
+                paymentRequest.pay_currency,
                 paymentRequest.payout_currency
               )
               const suggestedAmount = minAmount / (1 - totalFeePct)
@@ -735,4 +755,3 @@ export async function POST(request: Request) {
     return handleNOWPaymentsError(error, 'Payment creation failed')
   }
 }
-

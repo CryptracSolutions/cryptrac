@@ -713,11 +713,18 @@ export default function SmartTerminalPage() {
                       </div>
                     </div>
                     {/* Address Display */}
-                    <div className="w-full bg-white p-4 rounded-xl border border-gray-200">
-                      <p className="text-xs text-gray-600 mb-2">Wallet Address:</p>
-                      <p className="text-xs font-mono break-all text-gray-800 bg-gray-50 p-3 rounded-lg">
-                        {paymentData.pay_address}
-                      </p>
+                    <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 bg-[#7f5efd] rounded-lg">
+                          <Copy className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg border border-purple-100 shadow-sm">
+                        <p className="text-sm font-mono break-all text-gray-900 leading-relaxed tracking-wide">
+                          {paymentData.pay_address}
+                        </p>
+                      </div>
                     </div>
 
                     {/* Back Button */}
