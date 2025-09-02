@@ -83,45 +83,110 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
   }
 
   try {
-    const response = await fetch(`${NOWPAYMENTS_API_BASE}/available-currencies`, {
-      method: 'GET',
-      headers: {
-        'x-api-key': NOWPAYMENTS_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      signal: AbortSignal.timeout(10000)
-    })
+    // Helper to transform a variety of NOWPayments responses into our shape
+    const normalize = (items: Array<Record<string, unknown>> | string[]): NOWPaymentsCurrency[] => {
+      if (Array.isArray(items) && items.length > 0 && typeof items[0] === 'string') {
+        // Simple list like ["btc","eth",...]
+        return (items as string[]).map((ticker) => ({
+          code: String(ticker).toUpperCase(),
+          name: String(ticker).toUpperCase(),
+          network: 'Unknown',
+          is_available: true,
+          min_amount: 0.00000001,
+          max_amount: 1000000,
+          rate_usd: 0
+        }))
+      }
 
-    if (!response.ok) {
-      throw new Error(`NOWPayments API error: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    
-    if (!data.currencies || !Array.isArray(data.currencies)) {
-      throw new Error('Invalid response format from NOWPayments API')
-    }
-
-    // Transform and cache the data
-    const currencies = (data.currencies as Array<Record<string, unknown>>)
-      .map((currency) => {
+      // Detailed objects
+      return (items as Array<Record<string, unknown>>).map((currency) => {
         const codeValue =
           typeof currency.code === 'string'
             ? currency.code
             : typeof currency.ticker === 'string'
               ? currency.ticker
-              : ''
+              : typeof currency.currency === 'string'
+                ? currency.currency
+                : ''
+
+        // Try to infer network if provided in nested structure
+        const network =
+          typeof currency.network === 'string'
+            ? currency.network
+            : Array.isArray((currency as any).networks) && (currency as any).networks.length > 0
+              ? String((currency as any).networks[0]?.network || (currency as any).networks[0])
+              : 'Unknown'
+
+        // NOWPayments may use other names for min/max; default safely
+        const minAmtRaw = (currency as any).min_amount ?? (currency as any).min_deposit_amount ?? (currency as any).min_trx_amount
+        const maxAmtRaw = (currency as any).max_amount ?? (currency as any).max_deposit_amount ?? (currency as any).max_trx_amount
 
         return {
-          code: codeValue.toUpperCase(),
-          name: String(currency.name ?? currency.code ?? codeValue),
-          network: String(currency.network ?? 'Unknown'),
-          is_available: currency.is_available !== false,
-          min_amount: parseFloat(String(currency.min_amount)) || 0.00000001,
-          max_amount: parseFloat(String(currency.max_amount)) || 1000000,
-          rate_usd: parseFloat(String(currency.rate_usd)) || 0
+          code: String(codeValue).toUpperCase(),
+          name: String((currency as any).name ?? codeValue).trim() || String(codeValue).toUpperCase(),
+          network: String(network),
+          is_available: (currency as any).is_available !== false && (currency as any).is_deprecated !== true,
+          min_amount: parseFloat(String(minAmtRaw)) || 0.00000001,
+          max_amount: parseFloat(String(maxAmtRaw)) || 1000000,
+          rate_usd: parseFloat(String((currency as any).rate_usd)) || 0
         }
-      }) as NOWPaymentsCurrency[]
+      })
+    }
+
+    // Try the detailed coins endpoint first
+    let endpointTried: string | null = null
+    let lastError: unknown = null
+
+    const tryFetch = async (path: string) => {
+      endpointTried = path
+      const response = await fetch(`${NOWPAYMENTS_API_BASE}${path}`, {
+        method: 'GET',
+        headers: {
+          'x-api-key': NOWPAYMENTS_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        signal: AbortSignal.timeout(12000)
+      })
+      return response
+    }
+
+    let response = await tryFetch('/coins')
+
+    if (!response.ok) {
+      // Fallback to /currencies (list of tickers)
+      lastError = new Error(`Primary endpoint failed: ${response.status} ${response.statusText}`)
+      response = await tryFetch('/currencies')
+    }
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new Error(`NOWPayments API error (${endpointTried}): ${response.status} ${response.statusText} ${text?.slice(0, 120)}`)
+    }
+
+    // Parse JSON safely (some outages return HTML)
+    const text = await response.text()
+    let data: any
+    try {
+      data = JSON.parse(text)
+    } catch {
+      // If it looks like HTML, surface a clearer error
+      if (/<!DOCTYPE html>|<html[\s>]/i.test(text)) {
+        throw new Error('NOWPayments service issue: returned HTML instead of JSON')
+      }
+      throw new Error('Invalid JSON response from NOWPayments')
+    }
+
+    // Determine array payload
+    let items: Array<Record<string, unknown>> | string[] | null = null
+    if (Array.isArray(data)) items = data
+    else if (Array.isArray(data?.coins)) items = data.coins
+    else if (Array.isArray(data?.currencies)) items = data.currencies
+
+    if (!items || !Array.isArray(items)) {
+      throw new Error('Invalid response format from NOWPayments API')
+    }
+
+    const currencies = normalize(items)
 
     const filtered = currencies.filter(
       (currency) => currency.is_available && currency.code.length >= 2
@@ -345,4 +410,3 @@ export function clearCurrencyCache(): void {
     timestamp: 0
   }
 }
-
