@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogOverlay } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 
 // Business types
@@ -399,26 +399,34 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
       {/* Email Change Confirmation Dialog */}
       <Dialog open={showEmailConfirmDialog} onOpenChange={setShowEmailConfirmDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="font-phonic text-xl font-normal">Confirm Email Change</DialogTitle>
-            <DialogDescription className="font-capsule text-base font-normal">
-              You are about to change your email address from <strong>{settings.email}</strong> to <strong>{pendingEmailChange}</strong>.
+        <DialogOverlay className="bg-transparent" />
+        <DialogContent className="sm:max-w-[425px] bg-white border-2 border-gray-200 shadow-2xl">
+          <DialogHeader className="space-y-4">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-phonic text-xl font-normal text-gray-900">Confirm Email Change</DialogTitle>
+              <DialogClose asChild>
+                <button className="rounded-full p-1 hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700">
+                  ✕
+                </button>
+              </DialogClose>
+            </div>
+            <DialogDescription className="font-capsule text-base font-normal text-gray-700 leading-relaxed">
+              You are about to change your email address from <strong className="text-[#7f5efd]">{settings.email}</strong> to <strong className="text-[#7f5efd]">{pendingEmailChange}</strong>.
               <br /><br />
               This will update your login credentials and you will need to verify the new email address. Are you sure you want to continue?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-3 pt-6">
             <Button
               variant="outline"
               onClick={cancelEmailChange}
-              className="font-capsule text-base font-normal"
+              className="font-capsule text-base font-normal border-gray-300 hover:bg-gray-50 hover:border-gray-400 px-6 py-2"
             >
               Cancel
             </Button>
             <Button
               onClick={confirmEmailChange}
-              className="font-capsule text-base font-normal bg-[#7f5efd] hover:bg-[#7c3aed]"
+              className="font-capsule text-base font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200"
             >
               Confirm Change
             </Button>
