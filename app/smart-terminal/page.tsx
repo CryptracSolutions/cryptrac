@@ -82,7 +82,7 @@ export default function SmartTerminalPage() {
     { payment_id: string; payment_status: string; pay_address: string; pay_amount: number; pay_currency: string } | null
   >(null);
   const [status, setStatus] = useState('');
-  const [receipt, setReceipt] = useState({ email: '' });
+  const [receipt, setReceipt] = useState({ email: '', sent: false });
   const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
 
@@ -368,23 +368,16 @@ export default function SmartTerminalPage() {
     if (!paymentLink || !receipt.email.trim()) return;
     const data = { email: receipt.email, payment_link_id: paymentLink.id };
     await makeAuthenticatedRequest('/api/receipts/email', { method: 'POST', body: JSON.stringify(data) });
-    setReceipt({ email: '' });
+    setReceipt({ email: '', sent: true });
+    // Reset success message after 3 seconds
+    setTimeout(() => {
+      setReceipt({ email: '', sent: false });
+    }, 3000);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
       <div className="w-full max-w-2xl">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6 text-center">
-          <div className="inline-flex items-center justify-center mb-3">
-            <div className="p-3 bg-[#7f5efd] rounded-2xl shadow-lg">
-              <Store className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h1 className="font-phonic text-3xl sm:text-4xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] bg-clip-text text-transparent">Smart Terminal</h1>
-          <p className="font-phonic text-base sm:text-lg text-gray-600 mt-2">Accept crypto payments at your point of sale</p>
-        </div>
-
         {/* Main Card */}
         <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
@@ -466,7 +459,7 @@ export default function SmartTerminalPage() {
                     </div>
                   )}
                   <div className="flex justify-between items-center font-bold text-lg border-t border-gray-200 pt-2">
-                    <span className="text-gray-700">Total (pre-tip)</span>
+                    <span className="text-gray-700">Total</span>
                     <span className="text-[#7f5efd]">${preTipTotal.toFixed(2)}</span>
                   </div>
                 </div>
@@ -507,7 +500,7 @@ export default function SmartTerminalPage() {
                 <label className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-[#7f5efd] cursor-pointer transition-all duration-200">
                   <input 
                     type="checkbox" 
-                    className="h-4 w-4 text-[#7f5efd] rounded focus:ring-[#7f5efd]" 
+                    className="h-4 w-4 text-[#7f5efd] rounded focus:ring-[#7f5efd] accent-[#7f5efd]" 
                     checked={tax ?? false} 
                     disabled={tax === undefined} 
                     onChange={e=>setTax(e.target.checked)} 
@@ -518,7 +511,7 @@ export default function SmartTerminalPage() {
                 <label className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-[#7f5efd] cursor-pointer transition-all duration-200">
                   <input 
                     type="checkbox" 
-                    className="h-4 w-4 text-[#7f5efd] rounded focus:ring-[#7f5efd]" 
+                    className="h-4 w-4 text-[#7f5efd] rounded focus:ring-[#7f5efd] accent-[#7f5efd]" 
                     checked={chargeFee ?? false} 
                     disabled={chargeFee === undefined} 
                     onChange={e=>setChargeFee(e.target.checked)} 
@@ -537,7 +530,7 @@ export default function SmartTerminalPage() {
                 disabled={!amount}
               >
                 <CreditCard className="h-5 w-5" />
-                Continue to Payment
+                Ready for Payment
               </Button>
             </div>
           )}
@@ -579,7 +572,7 @@ export default function SmartTerminalPage() {
                     </div>
                   )}
                   <div className="flex justify-between items-center font-bold text-base border-t border-purple-100 pt-2">
-                    <span className="text-gray-700">Total (pre-tip)</span>
+                    <span className="text-gray-700">Total</span>
                     <span className="text-[#7f5efd]">${preTipTotal.toFixed(2)}</span>
                   </div>
                 </div>
@@ -661,7 +654,7 @@ export default function SmartTerminalPage() {
                 ) : (
                   <>
                     <Smartphone className="h-5 w-5" />
-                    Generate Payment
+                    Pay Now
                   </>
                 )}
               </Button>
@@ -719,25 +712,17 @@ export default function SmartTerminalPage() {
                         )}
                       </div>
                     </div>
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
-                      <Button 
-                        onClick={() => navigator.clipboard.writeText(paymentData.pay_address)}
-                        className="bg-white border-2 border-purple-200 text-[#7f5efd] hover:bg-purple-50 hover:border-[#7f5efd] font-semibold rounded-lg transition-all duration-200"
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy Address
-                      </Button>
-                      {showAmount && (
-                        <Button 
-                          onClick={() => navigator.clipboard.writeText(String(paymentData.pay_amount))}
-                          className="bg-white border-2 border-purple-200 text-[#7f5efd] hover:bg-purple-50 hover:border-[#7f5efd] font-semibold rounded-lg transition-all duration-200"
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copy Amount
-                        </Button>
-                      )}
-                      {status !== 'confirmed' && (
+                    {/* Address Display */}
+                    <div className="w-full bg-white p-4 rounded-xl border border-gray-200">
+                      <p className="text-xs text-gray-600 mb-2">Wallet Address:</p>
+                      <p className="text-xs font-mono break-all text-gray-800 bg-gray-50 p-3 rounded-lg">
+                        {paymentData.pay_address}
+                      </p>
+                    </div>
+
+                    {/* Back Button */}
+                    {status !== 'confirmed' && (
+                      <div className="flex justify-center">
                         <Button 
                           variant="outline" 
                           onClick={() => { 
@@ -753,8 +738,8 @@ export default function SmartTerminalPage() {
                           <ArrowLeft className="h-4 w-4 mr-2" />
                           Back
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </>
                 );
               })()}
@@ -815,17 +800,31 @@ export default function SmartTerminalPage() {
                       <Input 
                         placeholder="Customer email address" 
                         value={receipt.email} 
-                        onChange={e=>setReceipt({email:e.target.value})} 
+                        onChange={e=>setReceipt({...receipt, email:e.target.value})} 
                         aria-label="receipt email"
                         className="flex-1 h-12 bg-white border-2 border-gray-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200"
                       />
                       <Button 
                         onClick={sendEmailReceipt} 
-                        disabled={!receipt.email.trim()}
-                        className="h-12 px-6 bg-[#7f5efd] hover:bg-[#7c3aed] text-white font-semibold rounded-lg transition-all duration-200"
+                        disabled={!receipt.email.trim() || receipt.sent}
+                        className={cn(
+                          "h-12 px-6 font-semibold rounded-lg transition-all duration-200",
+                          receipt.sent 
+                            ? "bg-green-600 hover:bg-green-700 text-white" 
+                            : "bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                        )}
                       >
-                        <Mail className="h-4 w-4 mr-2" />
-                        Send
+                        {receipt.sent ? (
+                          <>
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Receipt Sent!
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Send
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -842,6 +841,7 @@ export default function SmartTerminalPage() {
                       setStep('amount'); 
                       setTax(merchantSettings?.tax_enabled); 
                       setChargeFee(merchantSettings?.charge_customer_fee);
+                      setReceipt({ email: '', sent: false });
                     }}
                     className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                   >
