@@ -223,9 +223,7 @@ export default function MerchantSettingsPage() {
       console.log('✅ Merchant loaded:', merchant);
 
       const wallets = { ...(merchant.wallets || {}) };
-      if (wallets.ETH && !wallets.ETHBASE) {
-        wallets.ETHBASE = wallets.ETH;
-      }
+
 
       setSettings({
         // Payment settings from database
@@ -640,7 +638,7 @@ export default function MerchantSettingsPage() {
                                   const baseCurrencies = Object.keys(settings.wallets);
                                   const stableCoinAssociations: Record<string, string[]> = {
                                     'SOL': ['USDCSOL', 'USDTSOL'],
-                                    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD', 'ETHBASE', 'USDCBASE'],
+                                    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
                                     'BNB': ['USDTBSC', 'USDCBSC'],
                                     'MATIC': ['USDTMATIC', 'USDCMATIC'],
                                     'TRX': ['USDTTRC20'],

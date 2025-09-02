@@ -120,15 +120,7 @@ export default function CreatePaymentLinkPage() {
       }
 
       const wallets = { ...(merchant.wallets || {}) };
-      if (wallets.ETH && !wallets.ETHBASE) {
-        wallets.ETHBASE = wallets.ETH;
 
-        // Persist the ETHBASE wallet for future requests
-        await supabase
-          .from('merchants')
-          .update({ wallets, updated_at: new Date().toISOString() })
-          .eq('user_id', session.user.id);
-      }
 
       const updatedMerchant = { ...merchant, wallets };
       setMerchantSettings(updatedMerchant);

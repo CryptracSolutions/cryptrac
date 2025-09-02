@@ -62,7 +62,7 @@ function getWalletKeyForCurrency(currency: string, wallets: Record<string, strin
 
 function expandStableCoins(wallets: Record<string, string>): string[] {
   const bases = Object.keys(wallets);
-  if (wallets['ETH'] && !bases.includes('ETHBASE')) bases.push('ETHBASE');
+
   const stable = new Set<string>();
   bases.forEach(base => {
     (BASE_STABLE_MAP[base] || []).forEach(sc => stable.add(sc));

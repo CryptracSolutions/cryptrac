@@ -73,9 +73,7 @@ export async function POST(request: NextRequest) {
 
     // Extract and validate wallet data
     const walletData = { ...(onboardingData.walletConfig?.wallets || {}) };
-    if (walletData.ETH && !walletData.ETHBASE) {
-      walletData.ETHBASE = walletData.ETH;
-    }
+
     console.log('💰 Wallet data to save:', JSON.stringify(walletData, null, 2));
     console.log('💰 Number of wallets to save:', Object.keys(walletData).length);
 

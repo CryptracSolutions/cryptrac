@@ -28,7 +28,7 @@ import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
   SOL: ['USDCSOL', 'USDTSOL'],
-  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD', 'ETHBASE', 'USDCBASE'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
   BNB: ['USDTBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
   TRX: ['USDTTRC20'],

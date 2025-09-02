@@ -151,9 +151,7 @@ export async function PUT(request: NextRequest) {
       charge_customer_fee 
     } = requestData;
     const wallets = { ...(rawWallets || {}) };
-    if (wallets.ETH && !wallets.ETHBASE) {
-      wallets.ETHBASE = wallets.ETH;
-    }
+
 
     // Initialize Supabase client
     const cookieStore = await cookies();

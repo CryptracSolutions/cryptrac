@@ -46,9 +46,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   // Determine base currencies, automatically including ETH on Base if ETH is configured
   const baseCurrencies = React.useMemo(() => {
     const bases = [...configuredCurrencies]
-    if (configuredCurrencies.includes('ETH') && !bases.includes('ETHBASE')) {
-      bases.push('ETHBASE')
-    }
+
     return bases
   }, [configuredCurrencies])
 

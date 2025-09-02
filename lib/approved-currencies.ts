@@ -1,4 +1,4 @@
-// Approved cryptocurrencies list - exactly 144 currencies (includes CRO, EOS, QTUM)
+// Approved cryptocurrencies list - exactly 143 currencies (includes CRO, EOS, QTUM)
 export const APPROVED_CURRENCIES: Record<string, string> = {
   '1INCH': '1inch Network',
   'AAVE': 'Aave',
@@ -15,7 +15,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'BEAM': 'Beam',
   'BERA': 'Berachain',
   'BNBBSC': 'Binance Coin (BSC)',
-  'BNBMAINNET': 'Binance Coin',
   'BUSDBSC': 'Binance USD',
   'BTC': 'Bitcoin',
   'BCH': 'Bitcoin Cash',

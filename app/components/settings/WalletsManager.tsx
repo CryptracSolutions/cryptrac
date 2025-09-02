@@ -33,6 +33,7 @@ const stableCoinAssociations: Record<string, string[]> = {
   SOL: ['USDCSOL', 'USDTSOL'],
   ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
   BNB: ['USDTBSC', 'USDCBSC'],
+  BNBBSC: ['USDTBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
   TRX: ['USDTTRC20', 'TUSDTRC20'],
   TON: ['USDTTON'],
