@@ -10,7 +10,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 
 // Business types
@@ -173,6 +172,19 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
     setShowEmailConfirmDialog(false);
     setPendingEmailChange('');
   };
+
+  // Close on Escape
+  React.useEffect(() => {
+    if (!showEmailConfirmDialog) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEmailChange();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showEmailConfirmDialog]);
 
   return (
     <div className="space-y-8">
@@ -404,47 +416,69 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         </CardContent>
       </Card>
 
-      {/* Email Change Confirmation Dialog */}
-      <Dialog open={showEmailConfirmDialog} onOpenChange={setShowEmailConfirmDialog}>
-        <DialogContent className="sm:max-w-[480px] bg-white border-2 border-gray-200 shadow-2xl">
-          <DialogHeader className="space-y-4">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="font-phonic text-xl font-normal text-gray-900">Confirm Email Change</DialogTitle>
+      {/* Email Change Modal (custom implementation) */}
+      {showEmailConfirmDialog && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={cancelEmailChange}
+            aria-hidden="true"
+          />
+          <div className="fixed left-1/2 top-1/2 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-gray-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="font-phonic text-xl font-normal text-gray-900">Confirm Email Change</h2>
+                <p className="mt-2 font-capsule text-base font-normal text-gray-700">
+                  Enter your new email address. This updates your login and may require verification.
+                </p>
+              </div>
+              <button
+                onClick={cancelEmailChange}
+                aria-label="Close"
+                className="ml-4 rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+              >
+                ✕
+              </button>
             </div>
-            <DialogDescription className="font-capsule text-base font-normal text-gray-700 leading-relaxed">
-              Enter your new email address. This updates your login and may require verification.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <label className="font-phonic text-base font-normal text-gray-700">New Email</label>
-            <Input
-              autoFocus
-              value={pendingEmailChange}
-              onChange={(e) => setPendingEmailChange(e.target.value)}
-              placeholder="new.email@example.com"
-              type="email"
-              className="mt-2 h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
-              required
-            />
+            <form
+              className="mt-5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email) return;
+                confirmEmailChange();
+              }}
+            >
+              <label className="font-phonic text-base font-normal text-gray-700">New Email</label>
+              <Input
+                autoFocus
+                value={pendingEmailChange}
+                onChange={(e) => setPendingEmailChange(e.target.value)}
+                placeholder="new.email@example.com"
+                type="email"
+                className="mt-2 h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                required
+              />
+              <div className="mt-6 flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={cancelEmailChange}
+                  className="font-capsule text-base font-normal border-gray-300 px-6 py-2 hover:border-gray-400 hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
+                  className="font-capsule text-base font-normal bg-[#7f5efd] px-6 py-2 text-white shadow-md transition-all duration-200 hover:bg-[#7c3aed] hover:shadow-lg"
+                >
+                  Confirm Change
+                </Button>
+              </div>
+            </form>
           </div>
-          <DialogFooter className="gap-3 pt-6">
-            <Button
-              variant="outline"
-              onClick={cancelEmailChange}
-              className="font-capsule text-base font-normal border-gray-300 hover:bg-gray-50 hover:border-gray-400 px-6 py-2"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={confirmEmailChange}
-              disabled={!pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
-              className="font-capsule text-base font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              Confirm Change
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }
