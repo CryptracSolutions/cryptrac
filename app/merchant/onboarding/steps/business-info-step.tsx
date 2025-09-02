@@ -6,7 +6,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { ArrowRight, ArrowLeft, Building2, MapPin, Phone } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Building2, MapPin, Phone, Info } from 'lucide-react'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 
 interface BusinessAddress {
@@ -509,11 +509,21 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             </div>
 
             {/* Info Alert */}
-            <Alert className="border-blue-200 bg-blue-50">
-              <AlertDescription className="text-blue-800">
-                <strong>Important:</strong> This information will be used for tax reporting and compliance. 
-                You can update it later in your profile settings.
-              </AlertDescription>
+            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Info className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <AlertDescription className="text-purple-800">
+                    <div className="font-semibold mb-1">Important</div>
+                    <p className="text-sm leading-relaxed">
+                      This information will be used for tax reporting and compliance.
+                      You can update it later in your profile settings.
+                    </p>
+                  </AlertDescription>
+                </div>
+              </div>
             </Alert>
 
             {/* Navigation Buttons */}

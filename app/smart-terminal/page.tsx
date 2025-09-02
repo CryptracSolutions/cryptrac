@@ -7,10 +7,19 @@ import { Input } from '@/app/components/ui/input';
 import { QRCode } from '@/app/components/ui/qr-code';
 import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
+import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority } from '@/lib/crypto-networks';
+import { Label } from '@/app/components/ui/label';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/app/components/ui/dropdown-menu';
 
 interface TerminalDevice {
   id: string;
@@ -84,6 +93,7 @@ export default function SmartTerminalPage() {
   const [status, setStatus] = useState('');
   const [receipt, setReceipt] = useState({ email: '', sent: false });
   const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
   const [error, setError] = useState<string>('');
 
   // Load merchant settings and device
@@ -612,17 +622,101 @@ export default function SmartTerminalPage() {
                   </Button>
                 </div>
               </div>
-              {/* Currency Selection */}
-              <div className="space-y-2">
+              {/* Currency Selection with Network Filter */}
+              <div className="space-y-3">
                 <label className="text-sm font-semibold text-gray-700">Payment Currency</label>
+                
+                {/* Network Filter Dropdown */}
+                {availableCurrencies.length > 0 && (() => {
+                  const groupedCurrencies = groupCurrenciesByNetwork(
+                    availableCurrencies.map(c => ({ code: c, name: getCurrencyDisplayName(c) })),
+                    merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+                  )
+                  const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+                  const selectedNetworkInfo = selectedNetwork !== 'all' ? getNetworkInfo(selectedNetwork) : null
+                  
+                  return (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between h-10 border-purple-200 hover:border-[#7f5efd] hover:bg-purple-50"
+                        >
+                          <span className="flex items-center">
+                            <Filter className="h-4 w-4 mr-2 text-[#7f5efd]" />
+                            {selectedNetwork === 'all' ? 'All Networks' : selectedNetworkInfo?.displayName || 'Select Network'}
+                          </span>
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-full">
+                        <DropdownMenuItem
+                          onClick={() => setSelectedNetwork('all')}
+                          className={cn(
+                            "cursor-pointer",
+                            selectedNetwork === 'all' && "bg-purple-50 text-[#7f5efd]"
+                          )}
+                        >
+                          <Globe className="h-4 w-4 mr-2" />
+                          All Networks
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {availableNetworks.map(networkId => {
+                          const network = getNetworkInfo(networkId)
+                          if (!network) return null
+                          const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                          
+                          return (
+                            <DropdownMenuItem
+                              key={networkId}
+                              onClick={() => setSelectedNetwork(networkId)}
+                              className={cn(
+                                "cursor-pointer justify-between",
+                                selectedNetwork === networkId && "bg-purple-50 text-[#7f5efd]"
+                              )}
+                            >
+                              <span>{network.displayName}</span>
+                              <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
+                            </DropdownMenuItem>
+                          )
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )
+                })()}
+                
+                {/* Currency Selection */}
                 <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
                   <SelectTrigger className="w-full h-12 bg-white border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableCurrencies.map((c:string)=> (
-                      <SelectItem key={c} value={c} className="hover:bg-purple-50">{c}</SelectItem>
-                    ))}
+                    {(() => {
+                      // Filter currencies based on selected network
+                      let filteredCurrencies = availableCurrencies
+                      
+                      if (selectedNetwork !== 'all') {
+                        const groupedCurrencies = groupCurrenciesByNetwork(
+                          availableCurrencies.map(c => ({ code: c, name: getCurrencyDisplayName(c) })),
+                          merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+                        )
+                        const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+                        const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
+                        filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c))
+                      }
+                      
+                      return filteredCurrencies.map((c: string) => {
+                        const displayName = getCurrencyDisplayName(c)
+                        return (
+                          <SelectItem key={c} value={c} className="hover:bg-purple-50">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{c.toUpperCase()}</span>
+                              <span className="text-xs text-gray-500">{displayName}</span>
+                            </div>
+                          </SelectItem>
+                        )
+                      })
+                    })()}
                   </SelectContent>
                 </Select>
               </div>

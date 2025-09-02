@@ -19,6 +19,7 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // BSC (BEP-20) tokens - same as Ethereum format
   BNB: /^0x[a-fA-F0-9]{40}$/,
+  BNBBSC: /^0x[a-fA-F0-9]{40}$/,
   USDTBSC: /^0x[a-fA-F0-9]{40}$/,
   USDCBSC: /^0x[a-fA-F0-9]{40}$/,
   
@@ -276,6 +277,7 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   ETHBASE: { name: 'Ethereum (Base)', network: 'Base', addressType: 'Base address' },
   USDCBASE: { name: 'USD Coin (Base)', network: 'Base', addressType: 'Base address' },
   BNB: { name: 'BNB', network: 'BSC', addressType: 'BSC address' },
+  BNBBSC: { name: 'BNB (BSC)', network: 'BSC', addressType: 'BSC address' },
   USDTBSC: { name: 'Tether (BSC)', network: 'BSC', addressType: 'BSC address' },
   USDCBSC: { name: 'USD Coin (BSC)', network: 'BSC', addressType: 'BSC address' },
   SOL: { name: 'Solana', network: 'Solana', addressType: 'Solana address' },

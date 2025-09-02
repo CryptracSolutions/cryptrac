@@ -9,9 +9,10 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
+import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -226,6 +227,7 @@ export default function PaymentPage() {
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null)
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
+  const [selectedNetwork, setSelectedNetwork] = useState<string>('all')
   const [estimates, setEstimates] = useState<Record<string, EstimateData>>({})
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
@@ -1120,6 +1122,75 @@ export default function PaymentPage() {
               <p className="font-phonic text-base font-normal text-gray-600">Choose your preferred cryptocurrency</p>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Network Filter */}
+              {availableCurrencies.length > 0 && (() => {
+                const groupedCurrencies = groupCurrenciesByNetwork(
+                  availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                  paymentLink.accepted_cryptos
+                )
+                const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+                
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="font-phonic text-sm font-normal text-gray-700 flex items-center">
+                        <Filter className="h-4 w-4 mr-1" />
+                        Filter by Network
+                      </Label>
+                      {selectedNetwork !== 'all' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedNetwork('all')}
+                          className="text-xs text-[#7f5efd] hover:text-[#7c3aed]"
+                        >
+                          Clear filter
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant={selectedNetwork === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedNetwork('all')}
+                        className={`font-phonic text-sm ${
+                          selectedNetwork === 'all'
+                            ? 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'
+                            : 'border-gray-300 hover:border-[#7f5efd] hover:text-[#7f5efd]'
+                        }`}
+                      >
+                        <Globe className="h-3 w-3 mr-1" />
+                        All Networks
+                      </Button>
+                      {availableNetworks.map(networkId => {
+                        const network = getNetworkInfo(networkId)
+                        if (!network) return null
+                        const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                        
+                        return (
+                          <Button
+                            key={networkId}
+                            variant={selectedNetwork === networkId ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setSelectedNetwork(networkId)}
+                            className={`font-phonic text-sm ${
+                              selectedNetwork === networkId
+                                ? 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'
+                                : 'border-gray-300 hover:border-[#7f5efd] hover:text-[#7f5efd]'
+                            }`}
+                          >
+                            {network.displayName}
+                            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
+                              {currencyCount}
+                            </span>
+                          </Button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
+              
               {availableCurrencies.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="relative">
@@ -1129,9 +1200,32 @@ export default function PaymentPage() {
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {availableCurrencies.map((currency) => {
-                    const estimate = estimates[currency.code]
-                    const isSelected = selectedCurrency === currency.code
+                  {(() => {
+                    // Filter currencies based on selected network
+                    let filteredCurrencies = availableCurrencies
+                    
+                    if (selectedNetwork !== 'all') {
+                      const groupedCurrencies = groupCurrenciesByNetwork(
+                        availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                        paymentLink.accepted_cryptos
+                      )
+                      const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+                      const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
+                      filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
+                    }
+                    
+                    if (filteredCurrencies.length === 0) {
+                      return (
+                        <div className="text-center py-8">
+                          <p className="font-phonic text-base text-gray-500">No currencies available for this network</p>
+                        </div>
+                      )
+                    }
+                    
+                    return filteredCurrencies.map((currency) => {
+                      const estimate = estimates[currency.code]
+                      const isSelected = selectedCurrency === currency.code
+                      const displayName = getCurrencyDisplayName(currency.code)
                     
                     return (
                       <div
@@ -1156,7 +1250,7 @@ export default function PaymentPage() {
                             </div>
                             <div>
                               <div className="font-phonic text-base font-medium text-gray-900">{currency.code.toUpperCase()}</div>
-                              <div className="font-phonic text-sm text-gray-500">{currency.name}</div>
+                              <div className="font-phonic text-sm text-gray-500">{displayName}</div>
                             </div>
                           </div>
                           <div className="text-right">
@@ -1172,7 +1266,8 @@ export default function PaymentPage() {
                         </div>
                       </div>
                     )
-                  })}
+                  })
+                  })()}
                 </div>
               )}
               
