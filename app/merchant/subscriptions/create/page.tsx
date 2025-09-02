@@ -268,9 +268,9 @@ export default function CreateSubscriptionPage() {
             {/* Basic Information */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] rounded-lg">
-                    <CreditCard className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                    <CreditCard className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Basic Information</CardTitle>
@@ -308,9 +308,9 @@ export default function CreateSubscriptionPage() {
             {/* Pricing Configuration */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
-                    <DollarSign className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                    <DollarSign className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Pricing Configuration</CardTitle>
@@ -403,9 +403,9 @@ export default function CreateSubscriptionPage() {
             {/* Customer Information */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
-                    <Users className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                    <Users className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Customer Information</CardTitle>
@@ -453,9 +453,9 @@ export default function CreateSubscriptionPage() {
             {/* Payment Settings */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                    <Coins className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                    <Coins className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Settings</CardTitle>
@@ -533,9 +533,9 @@ export default function CreateSubscriptionPage() {
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
-                      <Settings className="h-6 w-6 text-white" />
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                      <Settings className="h-5 w-5 text-white" />
                     </div>
                     <div>
                       <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Advanced Settings</CardTitle>
@@ -620,9 +620,9 @@ export default function CreateSubscriptionPage() {
             {/* Tax Configuration */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
               <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
-                    <Receipt className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                    <Receipt className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Tax Configuration</CardTitle>

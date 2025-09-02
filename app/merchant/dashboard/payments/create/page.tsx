@@ -313,6 +313,7 @@ export default function CreatePaymentLinkPage() {
         accepted_cryptos: form.accepted_cryptos,
         expires_at: form.expires_at || null,
         max_uses: form.max_uses ? parseInt(form.max_uses) : null,
+        source: 'dashboard',
         auto_convert_enabled: form.auto_convert_enabled,
         charge_customer_fee: form.charge_customer_fee,
         tax_enabled: form.tax_enabled,
@@ -966,4 +967,3 @@ export default function CreatePaymentLinkPage() {
       </div>
     );
   }
-

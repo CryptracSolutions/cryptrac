@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       expires_at,
       max_uses,
       redirect_url,
-      source = null,
+      source = 'dashboard',
       subscription_id = null,
       pos_device_id = null,
       metadata = {},
@@ -234,7 +234,8 @@ export async function POST(request: NextRequest) {
         )
       }
     };
-    if (source) payload.source = source;
+    // Mark source so downstream payment creation can apply correct fee delegation
+    payload.source = source || 'dashboard';
     if (subscription_id) payload.subscription_id = subscription_id;
     if (pos_device_id) payload.pos_device_id = pos_device_id;
 
@@ -293,4 +294,3 @@ function generateLinkId(): string {
   }
   return result;
 }
-

@@ -381,10 +381,11 @@ export async function POST(request: Request) {
     // Determine if customer pays fee
     const chargeCustomerFee = paymentLinkData.charge_customer_fee ?? merchant.charge_customer_fee ?? false;
 
-    // Detect POS source where the customer total already includes the gateway fee.
-    // For POS flows we DO NOT want NOWPayments to add their fee on top again
-    // (we've already baked it into the displayed total).
-    const isPOSFlow = String((paymentLinkData as any).source || '').toLowerCase() === 'pos'
+    // Detect link-driven flows where our frontend already computes the customer total
+    // and shows it to the user (including fee if applicable). In these cases we should
+    // NOT ask NOWPayments to add the fee on top again; it will always be deducted from payout.
+    const sourceStr = String((paymentLinkData as any).source || '').toLowerCase()
+    const isLinkFlow = sourceStr === 'pos' || sourceStr === 'dashboard' || sourceStr === 'subscription'
 
     // Prepare payment request for NOWPayments
     interface PaymentRequest {
@@ -419,9 +420,10 @@ export async function POST(request: Request) {
       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success/${payment_link_id}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pay/${payment_link_id}`,
-      // If this came from the POS flow, the price already includes the gateway fee,
-      // so do NOT ask NOWPayments to add it again.
-      is_fee_paid_by_user: isPOSFlow ? false : chargeCustomerFee === true
+      // For link-driven flows (POS, Dashboard-created links, Subscriptions),
+      // the displayed price already reflects our fee logic. Always prevent
+      // NOWPayments from adding fee on top to avoid double-charging customers.
+      is_fee_paid_by_user: isLinkFlow ? false : chargeCustomerFee === true
     }
 
     // Enhanced auto-forwarding logic with amount validation
@@ -497,8 +499,8 @@ export async function POST(request: Request) {
     console.log('- pay_currency:', paymentRequest.pay_currency)
     console.log('- order_id:', paymentRequest.order_id)
     console.log('- is_fee_paid_by_user:', paymentRequest.is_fee_paid_by_user)
-    if (isPOSFlow) {
-      console.log('ℹ️ POS flow detected: price includes gateway fee; not delegating fee to NOWPayments')
+    if (isLinkFlow) {
+      console.log(`ℹ️ Link flow detected (${sourceStr || 'unknown'}): price reflects fee math; not delegating fee to NOWPayments`)
     }
     console.log('- auto_forwarding_enabled:', autoForwardingConfigured)
     if (autoForwardingConfigured) {
