@@ -429,10 +429,11 @@ export default function SmartTerminalPage() {
               <div className="grid grid-cols-3 gap-3">
                 {[1,2,3,4,5,6,7,8,9,'0','.'].map((d: string | number)=> (
                   <Button 
-                    key={d} 
-                    className="h-16 text-lg font-medium" 
-                    aria-label={`digit ${d}`} 
-                    onClick={()=>appendDigit(String(d))}
+                    key={d}
+                    variant="outline"
+                    className="h-16 text-lg font-medium"
+                    aria-label={`digit ${d}`}
+                    onClick={() => appendDigit(String(d))}
                   >
                     {d}
                   </Button>
