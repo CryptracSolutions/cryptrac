@@ -318,16 +318,18 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
           <div className="space-y-2">
             <label className="font-phonic text-base font-normal text-gray-700">Email Address *</label>
-            <div className="flex gap-3">
-              <Input
-                value={settings.email}
-                readOnly
-                placeholder="your.email@example.com"
-                type="email"
-                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors bg-gray-50"
-                required
-              />
-              <Button onClick={openEmailChangeModal} className="shrink-0">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="sm:flex-1 min-w-0">
+                <Input
+                  value={settings.email}
+                  readOnly
+                  placeholder="your.email@example.com"
+                  type="email"
+                  className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors bg-gray-50"
+                  required
+                />
+              </div>
+              <Button type="button" onClick={openEmailChangeModal} className="sm:shrink-0">
                 Change Email
               </Button>
             </div>
@@ -420,11 +422,11 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
       {showEmailConfirmDialog && (
         <div className="fixed inset-0 z-50">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 z-40"
             onClick={cancelEmailChange}
             aria-hidden="true"
           />
-          <div className="fixed left-1/2 top-1/2 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-gray-200 bg-white p-6 shadow-2xl">
+          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-gray-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="font-phonic text-xl font-normal text-gray-900">Confirm Email Change</h2>
