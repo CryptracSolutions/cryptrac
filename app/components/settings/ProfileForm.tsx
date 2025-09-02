@@ -20,23 +20,22 @@ const BUSINESS_TYPES = [
   'Other'
 ];
 
-// Industry options
+// Industry options (aligned with onboarding)
 const INDUSTRIES = [
-  'Retail',
   'E-commerce',
-  'Food & Beverage',
-  'Technology',
-  'Services',
-  'Healthcare',
+  'Freelance',
+  'Retail',
+  'Consulting',
+  'Software/SaaS',
+  'Digital Services',
+  'Content Creation',
   'Education',
-  'Entertainment',
+  'Healthcare',
   'Real Estate',
-  'Manufacturing',
-  'Construction',
-  'Transportation',
+  'Food & Beverage',
+  'Travel & Tourism',
   'Finance',
-  'Agriculture',
-  'Corporation',
+  'Non-profit',
   'Other'
 ];
 

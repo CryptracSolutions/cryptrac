@@ -84,10 +84,8 @@ export async function POST(request: NextRequest) {
                           onboardingData.paymentConfig?.preferredPayoutCurrency || 
                           null;
 
-    // Handle both naming conventions for business type/industry
-    const industry = onboardingData.businessInfo?.businessType || 
-                    onboardingData.businessInfo?.industry || 
-                    '';
+    // Use the actual industry provided during onboarding
+    const industry = onboardingData.businessInfo?.industry || '';
 
     // ADDED: Extract merchant email for notifications
     const merchantEmail = onboardingData.businessInfo?.email || user.email || null;
@@ -295,4 +293,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
