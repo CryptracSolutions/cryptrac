@@ -480,9 +480,10 @@ export default function SmartTerminalPage() {
                 </label>
               </div>
               <Button 
-                onClick={readyForPayment} 
-                className="w-full h-14 text-lg font-medium" 
-                aria-label="ready" 
+                onClick={readyForPayment}
+                variant="default"
+                className="w-full h-14 text-lg font-medium bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                aria-label="ready"
                 disabled={!amount}
               >
                 Ready for payment
@@ -572,9 +573,10 @@ export default function SmartTerminalPage() {
                 </div>
               )}
               <Button 
-                onClick={generate} 
-                className="w-full h-14 text-lg font-medium" 
-                aria-label="pay now" 
+                onClick={generate}
+                variant="default"
+                className="w-full h-14 text-lg font-medium bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                aria-label="pay now"
                 disabled={!tipSelected || loading}
               >
                 {loading ? (
