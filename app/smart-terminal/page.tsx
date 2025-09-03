@@ -120,11 +120,17 @@ export default function SmartTerminalPage() {
   const [paymentData, setPaymentData] = useState<
     { payment_id: string; payment_status: string; pay_address: string; payin_extra_id?: string; pay_amount: number; pay_currency: string } | null
   >(null);
+  const [extraIdConfirmed, setExtraIdConfirmed] = useState<boolean>(false);
   const [status, setStatus] = useState('');
   const [receipt, setReceipt] = useState({ email: '', sent: false });
   const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
   const [error, setError] = useState<string>('');
+
+  // Reset confirmation when a new payment is created/loaded
+  useEffect(() => {
+    setExtraIdConfirmed(false);
+  }, [paymentData?.payment_id, paymentData?.pay_address, paymentData?.payin_extra_id]);
 
   // Load merchant settings and device
   useEffect(() => {
@@ -784,13 +790,14 @@ export default function SmartTerminalPage() {
               </Button>
             </div>
           )}
-          {paymentLink && paymentData && (
-            <div className="flex flex-col items-center space-y-4 sm:space-y-6" aria-live="polite">
-              {(() => {
+              {paymentLink && paymentData && (
+                <div className="flex flex-col items-center space-y-4 sm:space-y-6" aria-live="polite">
+                  {(() => {
                 const uri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
                 const showAmount = uri === paymentData.pay_address;
-                return (
-                  <>
+                const needsExtra = !!(paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency));
+                  return (
+                    <>
                     {/* Payment Status */}
                     <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
                       <div className="flex items-center justify-between">
@@ -817,15 +824,40 @@ export default function SmartTerminalPage() {
                       </div>
                     </div>
 
-                    {/* QR Code */}
-                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
-                      <QRCode value={uri} size={256} />
-                      {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                        <p className="text-xs text-center text-green-600 mt-3">
-                          ✓ {getExtraIdLabel(paymentData.pay_currency)} included
-                        </p>
-                      )}
-                    </div>
+                    {/* Pre-send confirmation for tag/memo */}
+                    {needsExtra && (
+                      <div className="w-full bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <label className="text-sm text-yellow-800 flex-1">
+                            <input
+                              type="checkbox"
+                              className="mr-2 align-middle h-4 w-4 text-yellow-700 border-yellow-300 rounded"
+                              checked={extraIdConfirmed}
+                              onChange={(e) => setExtraIdConfirmed(e.target.checked)}
+                            />
+                            I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} shown below in my wallet before sending
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* QR Code (single) */}
+                    {(!needsExtra || extraIdConfirmed) && (
+                      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+                        <QRCode value={uri} size={256} />
+                        {needsExtra && (
+                          <p className="text-xs text-center text-green-600 mt-3">
+                            ✓ {getExtraIdLabel(paymentData.pay_currency)} included
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {needsExtra && !extraIdConfirmed && (
+                      <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-200 text-center">
+                        <p className="text-sm font-medium text-yellow-800">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
+                      </div>
+                    )}
                     {/* Payment Details */}
                     <div className="w-full bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200">
                       <div className="text-center space-y-2">
@@ -872,6 +904,9 @@ export default function SmartTerminalPage() {
                             </div>
                             <p className="text-xs text-yellow-700">
                               {getExtraIdDescription(paymentData.pay_currency)}
+                            </p>
+                            <p className="text-xs text-yellow-700 mt-1">
+                              Tip: In Trust Wallet and many exchanges, look for a field named “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo” and paste the value above before sending.
                             </p>
                           </div>
                         </div>

@@ -28,6 +28,7 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { isApprovedCurrency, getApprovedDisplayName } from '@/lib/approved-currencies';
 import { requiresExtraId, validateExtraId, getExtraIdLabel, getExtraIdPlaceholder, getExtraIdDescription } from '@/lib/extra-id-validation';
+import DestinationTagModal from '@/app/components/DestinationTagModal';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -131,6 +132,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   const [copiedExtraId, setCopiedExtraId] = useState<string | null>(null);
   const [walletsExpanded, setWalletsExpanded] = useState(false);
   const [newlyAddedWallet, setNewlyAddedWallet] = useState<string | null>(null);
+  const [showDestinationTagModal, setShowDestinationTagModal] = useState(false);
+  const [modalCurrency, setModalCurrency] = useState<string>('');
+  const [shownModals, setShownModals] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize validation status for all currencies
@@ -327,10 +331,18 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           const extra = (settings.wallet_extra_ids?.[currency] || '').trim();
           if (extra) setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
           else setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+
+          // Show modal for XRP/XLM/HBAR when wallet is validated and modal hasn't been shown yet
+          const currenciesWithModal = ['XRP', 'XLM', 'HBAR'];
+          if (currenciesWithModal.includes(currency.toUpperCase()) && !shownModals.has(currency)) {
+            setModalCurrency(currency);
+            setShowDestinationTagModal(true);
+            setShownModals(prev => new Set(Array.from(prev).concat(currency)));
+          }
         }
 
         // Check if this is a new wallet being added
-        const existingWallets = Object.keys(settings.wallets || {}).filter(curr => 
+        const existingWallets = Object.keys(settings.wallets || {}).filter(curr =>
           settings.wallets[curr] && settings.wallets[curr].trim() && curr !== currency
         );
         if (!existingWallets.includes(currency)) {
@@ -675,10 +687,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             value={hiddenAddresses[currency] ? maskAddress(settings.wallets[currency] || '') : settings.wallets[currency] || ''}
                             onChange={(e) => handleWalletInputChange(currency, e.target.value)}
                             className={`border-gray-300 bg-white pr-20 font-mono text-sm ${
-                              requiresExtraId(currency) && (
-                                !!(settings.wallets[currency]?.trim() || settings.wallet_extra_ids?.[currency]?.trim()) &&
-                                !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
-                              ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                              requiresExtraId(currency) && validationStatus[currency] === 'invalid' ? 'border-red-300 focus-visible:ring-red-300' : ''
                             }`}
                             type={hiddenAddresses[currency] ? "password" : "text"}
                             onClick={(e) => e.stopPropagation()}
@@ -727,19 +736,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                                 value={settings.wallet_extra_ids?.[currency] || ''}
                                 onChange={(e) => handleExtraIdInputChange(currency, e.target.value)}
                                 className={`border-gray-300 bg-white pr-12 font-mono text-sm ${
-                                  (
-                                    !!(settings.wallets[currency]?.trim() || settings.wallet_extra_ids?.[currency]?.trim()) &&
-                                    !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
-                                  ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                                  extraIdValidationStatus[currency] === 'idle' || extraIdValidationStatus[currency] === 'checking' ? 'border-[#7f5efd] focus-visible:ring-[#7f5efd]' : ''
                                 }`}
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                {extraIdValidationStatus[currency] === 'valid' && (
-                                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                    Valid
-                                  </span>
-                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -764,19 +765,6 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             <p className="text-xs text-gray-500">
                               {getExtraIdDescription(currency)}
                             </p>
-                            {(
-                              !!(settings.wallets[currency]?.trim() || settings.wallet_extra_ids?.[currency]?.trim()) &&
-                              !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
-                            ) && (
-                              <div className="text-xs">
-                                <p className="font-semibold text-gray-700">
-                                  Include your {getExtraIdLabel(currency).toLowerCase()} only if your wallet or exchange requires it (e.g., Coinbase).
-                                </p>
-                                <p className="text-gray-500 mt-1">
-                                  💡 Personal wallets typically don’t need a {getExtraIdLabel(currency).toLowerCase()}. Exchanges often do.
-                                </p>
-                              </div>
-                            )}
                             {extraIdValidationStatus[currency] && extraIdValidationStatus[currency] !== 'idle' && (
                               <div className="flex items-center gap-2 text-sm">
                                 {extraIdValidationStatus[currency] === 'valid' ? (
@@ -937,10 +925,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                           value={settings.wallets[currency.code] || ''}
                           onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
                           className={`font-mono text-sm ${
-                            requiresExtraId(currency.code) && (
-                              !!(settings.wallets[currency.code]?.trim() || settings.wallet_extra_ids?.[currency.code]?.trim()) &&
-                              !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
-                            ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                            requiresExtraId(currency.code) && validationStatus[currency.code] === 'invalid' ? 'border-red-300 focus-visible:ring-red-300' : ''
                           }`}
                         />
                         
@@ -969,18 +954,10 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                                 value={settings.wallet_extra_ids?.[currency.code] || ''}
                                 onChange={(e) => handleExtraIdInputChange(currency.code, e.target.value)}
                                 className={`pr-12 font-mono text-sm ${
-                                  (
-                                    !!(settings.wallets[currency.code]?.trim() || settings.wallet_extra_ids?.[currency.code]?.trim()) &&
-                                    !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
-                                  ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                                  extraIdValidationStatus[currency.code] === 'idle' || extraIdValidationStatus[currency.code] === 'checking' ? 'border-[#7f5efd] focus-visible:ring-[#7f5efd]' : ''
                                 }`}
                               />
                               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                {extraIdValidationStatus[currency.code] === 'valid' && (
-                                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                    Valid
-                                  </span>
-                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -1004,19 +981,6 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             <p className="text-xs text-gray-500">
                               {getExtraIdDescription(currency.code)}
                             </p>
-                            {(
-                              !!(settings.wallets[currency.code]?.trim() || settings.wallet_extra_ids?.[currency.code]?.trim()) &&
-                              !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
-                            ) && (
-                              <div className="text-xs">
-                                <p className="font-semibold text-gray-700">
-                                  Include your {getExtraIdLabel(currency.code).toLowerCase()} only if your wallet or exchange requires it (e.g., Coinbase).
-                                </p>
-                                <p className="text-gray-500 mt-1">
-                                  💡 Personal wallets typically don’t need a {getExtraIdLabel(currency.code).toLowerCase()}. Exchanges often do.
-                                </p>
-                              </div>
-                            )}
                             {extraIdValidationStatus[currency.code] && extraIdValidationStatus[currency.code] !== 'idle' && (
                               <div className="flex items-center gap-2 text-sm">
                                 {extraIdValidationStatus[currency.code] === 'valid' ? (
@@ -1048,6 +1012,13 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           )}
         </CardContent>
       </Card>
+
+      {/* Destination Tag Modal */}
+      <DestinationTagModal
+        isOpen={showDestinationTagModal}
+        onClose={() => setShowDestinationTagModal(false)}
+        currency={modalCurrency}
+      />
     </div>
   );
 }

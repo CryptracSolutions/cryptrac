@@ -235,6 +235,7 @@ export default function PaymentPage() {
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
+  const [extraIdConfirmed, setExtraIdConfirmed] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [creatingPayment, setCreatingPayment] = useState(false)
   const [error, setError] = useState<string>('')
@@ -918,6 +919,9 @@ export default function PaymentPage() {
           }
         })
         setQrCodeDataUrl(qrDataUrl)
+
+        // Reset confirmation when new payment loads
+        setExtraIdConfirmed(false)
       }
 
     } catch (error) {
@@ -1445,11 +1449,26 @@ export default function PaymentPage() {
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
+                    <div className="flex items-start gap-2">
+                      <input
+                        id="confirm-extra-id"
+                        type="checkbox"
+                        className="mt-1 h-4 w-4 text-yellow-700 border-yellow-300 rounded"
+                        checked={extraIdConfirmed}
+                        onChange={(e) => setExtraIdConfirmed(e.target.checked)}
+                      />
+                      <label htmlFor="confirm-extra-id" className="text-sm text-yellow-800">
+                        I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} above in my wallet before sending
+                      </label>
+                    </div>
+                    <p className="font-phonic text-xs font-normal text-yellow-700 mt-2">
+                      Tip: In Trust Wallet and many exchanges, look for a field named “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo” and paste the value above before sending.
+                    </p>
                   </div>
                 )}
 
-                {/* QR Code */}
-                {qrCodeDataUrl && (
+                {/* QR Code (single) */}
+                {qrCodeDataUrl && (!paymentData.payin_extra_id || !requiresExtraId(paymentData.pay_currency) || extraIdConfirmed) && (
                   <div className="text-center">
                     <Label className="font-phonic text-sm font-normal text-gray-700 mb-4 block">QR Code</Label>
                     <div className="inline-block p-6 bg-white rounded-lg border-2 border-gray-200 shadow-lg">
@@ -1468,6 +1487,17 @@ export default function PaymentPage() {
                         ✓ {getExtraIdLabel(paymentData.pay_currency)} included in QR code
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* If extra required but not confirmed, show reminder instead of QR */}
+                {qrCodeDataUrl && paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && !extraIdConfirmed && (
+                  <div className="text-center">
+                    <div className="inline-block p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
+                      <p className="font-phonic text-sm font-semibold text-yellow-800">
+                        Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -1502,4 +1532,3 @@ export default function PaymentPage() {
     </div>
   )
 }
-
