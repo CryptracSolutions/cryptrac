@@ -22,6 +22,7 @@ interface OnboardingData {
   };
   walletConfig: {
     wallets: Record<string, string>;
+    wallet_extra_ids?: Record<string, string>;
     wallet_generation_method: string;
     walletType: string;
     selectedCurrencies?: string[];
@@ -75,6 +76,8 @@ export async function POST(request: NextRequest) {
     const walletData = { ...(onboardingData.walletConfig?.wallets || {}) };
 
     console.log('💰 Wallet data to save:', JSON.stringify(walletData, null, 2));
+    const walletExtraIds = { ...(onboardingData.walletConfig?.wallet_extra_ids || {}) };
+    console.log('🏷️ Wallet extra IDs to save:', JSON.stringify(walletExtraIds, null, 2));
     console.log('💰 Number of wallets to save:', Object.keys(walletData).length);
 
     // Handle both naming conventions for payout currency
@@ -210,7 +213,7 @@ export async function POST(request: NextRequest) {
     console.log('💰 Saved wallets count:', Object.keys(savedMerchant.wallets || {}).length);
     console.log('📧 Saved merchant email:', savedMerchant.email); // ADDED: Log saved email
 
-    // Create merchant_settings record with default values
+    // Create or update merchant_settings record with default values and wallet_extra_ids
     console.log('⚙️ Creating merchant settings record...');
     const { data: merchantSettings, error: settingsError } = await supabase
       .from('merchant_settings')
@@ -218,6 +221,7 @@ export async function POST(request: NextRequest) {
         merchant_id: savedMerchant.id,
         email_payment_notifications_enabled: true,
         public_receipts_enabled: true,
+        wallet_extra_ids: walletExtraIds,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {

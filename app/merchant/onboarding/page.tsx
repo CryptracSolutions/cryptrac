@@ -41,6 +41,7 @@ interface OnboardingData {
   }
   walletConfig: {
     wallets: Record<string, string>
+    wallet_extra_ids?: Record<string, string>
     wallet_generation_method: string
     walletType: 'generate' | 'existing'
     mnemonic?: string
@@ -179,11 +180,12 @@ export default function OnboardingPage() {
       case 3:
         return (
           <WalletSetupStep
-            onNext={(wallets: Record<string, string>) => {
+            onNext={(wallets: Record<string, string>, walletExtraIds?: Record<string, string>) => {
               handleStepComplete({ 
                 walletConfig: { 
                   ...onboardingData.walletConfig, 
-                  wallets 
+                  wallets,
+                  wallet_extra_ids: walletExtraIds
                 } 
               })
               handleNext()
@@ -259,4 +261,3 @@ export default function OnboardingPage() {
     </div>
   )
 }
-

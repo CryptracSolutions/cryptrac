@@ -241,14 +241,32 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   };
 
   const validateWalletAddress = async (currency: string, address: string) => {
-    if (!address.trim()) {
-      setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+    const trimmed = address.trim();
+    if (!trimmed) {
+      // No address entered yet
+      setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
       return;
     }
 
+    // For currencies requiring an extra ID, do not validate the address
+    // until a non-empty, valid extra ID is provided
+    if (requiresExtraId(currency)) {
+      const extra = settings.wallet_extra_ids?.[currency] || '';
+      const extraTrimmed = extra.trim();
+      if (!extraTrimmed) {
+        setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+        setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+        return;
+      }
+      if (!validateExtraId(currency, extraTrimmed)) {
+        setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+        // Keep address status idle until extra ID is valid
+        setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+        return;
+      }
+    }
+
     setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
-    
-    // Also validate extra ID if needed
     if (requiresExtraId(currency)) {
       setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
     }
@@ -256,14 +274,13 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     try {
       const payload: any = {
         currency,
-        address: address.trim()
+        address: trimmed
       };
-      
-      // Include extra_id if required
+
       if (requiresExtraId(currency)) {
-        payload.extra_id = settings.wallet_extra_ids?.[currency] || '';
+        payload.extra_id = (settings.wallet_extra_ids?.[currency] || '').trim();
       }
-      
+
       const response = await fetch('/api/wallets/validate', {
         method: 'POST',
         headers: {
@@ -275,31 +292,21 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       const result = await response.json();
 
       if (result.validation && result.validation.valid) {
-        setValidationStatus(prev => ({
-          ...prev,
-          [currency]: 'valid'
-        }));
-        
-        // Update extra ID validation status if applicable
+        setValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
         if (requiresExtraId(currency)) {
           setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
         }
-        
+
         // Check if this is a new wallet being added
         const existingWallets = Object.keys(settings.wallets || {}).filter(curr => 
           settings.wallets[curr] && settings.wallets[curr].trim() && curr !== currency
         );
-        
-        // If this wallet wasn't in the existing wallets, mark it as newly added
         if (!existingWallets.includes(currency)) {
           setNewlyAddedWallet(currency);
-          // Start with address hidden for new wallets
           setHiddenAddresses(prev => ({ ...prev, [currency]: true }));
         }
       } else {
         setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
-        
-        // Update extra ID validation status if applicable
         if (requiresExtraId(currency)) {
           setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
         }
@@ -363,14 +370,25 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       }
     }));
 
-    // Validate extra ID
+    // Validate extra ID format and re-run address validation when appropriate
     if (requiresExtraId(currency)) {
-      if (!extraId.trim()) {
+      const trimmed = extraId.trim();
+      if (!trimmed) {
         setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
-      } else if (validateExtraId(currency, extraId)) {
+        setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+        return;
+      }
+
+      if (validateExtraId(currency, trimmed)) {
         setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
+        const addr = settings.wallets[currency] || '';
+        if (addr && addr.trim()) {
+          // Re-validate the wallet address now that extra ID is valid
+          validateWalletAddress(currency, addr);
+        }
       } else {
         setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+        setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
       }
     }
   };
@@ -904,4 +922,3 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     </div>
   );
 }
-
