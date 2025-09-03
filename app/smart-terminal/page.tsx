@@ -77,8 +77,10 @@ function buildPaymentURI(currency: string, address: string, amount: number, extr
       // XRP URI scheme: xrp:address?dt=tag&amount=amount
       uri = `xrp:${address}?dt=${extraId}&amount=${amount}`;
     } else if (upper === 'XLM') {
-      // Stellar URI scheme: web+stellar:pay?destination=address&memo=memo&amount=amount
-      uri = `web+stellar:pay?destination=${address}&memo=${extraId}&amount=${amount}`;
+      // Stellar SEP-0007: stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
+      const memo = String(extraId);
+      const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT';
+      uri = `stellar:pay?destination=${encodeURIComponent(address)}&amount=${encodeURIComponent(String(amount))}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`;
     } else if (upper === 'HBAR') {
       // Hedera URI scheme: hbar:address?memo=memo&amount=amount
       uri = `hbar:${address}?memo=${extraId}&amount=${amount}`;
@@ -826,17 +828,17 @@ export default function SmartTerminalPage() {
 
                     {/* Pre-send confirmation for tag/memo */}
                     {needsExtra && (
-                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3">
+                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
-                          <label className="text-sm text-purple-900 flex-1">
+                          <label className="text-xs text-purple-900 flex-1">
                             <input
                               type="checkbox"
                               className="mr-2 align-middle h-4 w-4 text-[#7f5efd] border-purple-300 rounded"
                               checked={extraIdConfirmed}
                               onChange={(e) => setExtraIdConfirmed(e.target.checked)}
                             />
-                            I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} shown below in my wallet before sending
+                            I’ll include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} before sending
                           </label>
                         </div>
                       </div>
@@ -890,24 +892,20 @@ export default function SmartTerminalPage() {
                     
                     {/* Destination Tag/Memo Warning */}
                     {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3">
+                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-purple-900 mb-2">
+                            <p className="text-xs font-semibold text-purple-900 mb-1">
                               {getExtraIdLabel(paymentData.pay_currency)} Required
                             </p>
-                            <div className="bg-white p-2 rounded-md border border-purple-200 mb-2">
-                              <p className="text-sm font-mono text-gray-900">
+                            <div className="bg-white p-1.5 rounded-md border border-purple-200 mb-1">
+                              <p className="text-xs font-mono text-gray-900">
                                 {paymentData.payin_extra_id}
                               </p>
                             </div>
-                            <p className="text-xs text-purple-900">
-                              {getExtraIdDescription(paymentData.pay_currency)}
-                            </p>
-                            <p className="text-xs text-purple-900 mt-1">
-                              Tip: In Trust Wallet and many exchanges, look for a field named “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo” and paste the value above before sending.
-                            </p>
+                            <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
+                            <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
                           </div>
                         </div>
                       </div>

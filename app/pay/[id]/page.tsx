@@ -894,8 +894,10 @@ export default function PaymentPage() {
             // XRP URI scheme: xrp://address?dt=tag&amount=amount
             qrData = `xrp:${data.payment.pay_address}?dt=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
           } else if (currency === 'XLM') {
-            // Stellar URI scheme: web+stellar:pay?destination=address&memo=memo&amount=amount
-            qrData = `web+stellar:pay?destination=${data.payment.pay_address}&memo=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
+            // Stellar SEP-0007: stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
+            const memo = String(data.payment.payin_extra_id)
+            const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT'
+            qrData = `stellar:pay?destination=${encodeURIComponent(data.payment.pay_address)}&amount=${encodeURIComponent(String(data.payment.pay_amount))}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`
           } else if (currency === 'HBAR') {
             // Hedera URI scheme: hbar://address?memo=memo&amount=amount
             qrData = `hbar:${data.payment.pay_address}?memo=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
@@ -1425,12 +1427,11 @@ export default function PaymentPage() {
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        <Label className="font-phonic text-sm font-semibold text-yellow-800 block">
+                        <Label className="font-phonic text-xs font-semibold text-yellow-900 block">
                           {getExtraIdLabel(paymentData.pay_currency)} Required
                         </Label>
-                        <p className="text-sm text-yellow-700 mt-1">
-                          You must include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} when sending your payment. 
-                          Payments without the correct {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} may be lost.
+                        <p className="text-xs text-yellow-800 mt-1">
+                          Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.
                         </p>
                       </div>
                     </div>
@@ -1438,7 +1439,7 @@ export default function PaymentPage() {
                       <Input
                         value={paymentData.payin_extra_id}
                         readOnly
-                        className="font-mono text-sm bg-white border-yellow-300"
+                        className="font-mono text-xs bg-white border-yellow-300"
                       />
                       <Button
                         variant="outline"
@@ -1461,8 +1462,8 @@ export default function PaymentPage() {
                         I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} above in my wallet before sending
                       </label>
                     </div>
-                    <p className="font-phonic text-xs font-normal text-yellow-700 mt-2">
-                      Tip: In Trust Wallet and many exchanges, look for a field named “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo” and paste the value above before sending.
+                    <p className="font-phonic text-xs font-normal text-yellow-800 mt-1">
+                      Tip: In many wallets (e.g., Trust Wallet), paste this under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.
                     </p>
                   </div>
                 )}
