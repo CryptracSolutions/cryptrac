@@ -766,9 +766,14 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                               !!(settings.wallets[currency]?.trim() || settings.wallet_extra_ids?.[currency]?.trim()) &&
                               !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
                             ) && (
-                              <p className="text-xs font-semibold text-red-600">
-                                {getCurrencyDisplayName(currency)} requires both a wallet address and {getExtraIdLabel(currency)}. Enter both to validate.
-                              </p>
+                              <div className="text-xs">
+                                <p className="font-semibold text-red-600">
+                                  {getCurrencyDisplayName(currency)} requires both a wallet address and {getExtraIdLabel(currency)}. Enter both to validate.
+                                </p>
+                                <p className="text-gray-500 mt-1">
+                                  💡 {getExtraIdLabel(currency)} can be found in your wallet settings or when creating a new address
+                                </p>
+                              </div>
                             )}
                             {extraIdValidationStatus[currency] && extraIdValidationStatus[currency] !== 'idle' && (
                               <div className="flex items-center gap-2 text-sm">
@@ -796,7 +801,12 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getValidationIcon(currency)}
-                            <span className="text-sm font-medium text-gray-600">
+                            <span className={`text-sm font-medium ${
+                              validationStatus[currency] === 'valid' ? 'text-green-600' :
+                              validationStatus[currency] === 'invalid' ? 'text-red-600' :
+                              validationStatus[currency] === 'checking' ? 'text-purple-600' :
+                              'text-gray-600'
+                            }`}>
                               {getValidationMessage(currency)}
                             </span>
                           </div>
@@ -996,9 +1006,14 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                               !!(settings.wallets[currency.code]?.trim() || settings.wallet_extra_ids?.[currency.code]?.trim()) &&
                               !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
                             ) && (
-                              <p className="text-xs font-semibold text-red-600">
-                                {getCurrencyDisplayName(currency.code)} requires both a wallet address and {getExtraIdLabel(currency.code)}. Enter both to validate.
-                              </p>
+                              <div className="text-xs">
+                                <p className="font-semibold text-red-600">
+                                  {getCurrencyDisplayName(currency.code)} requires both a wallet address and {getExtraIdLabel(currency.code)}. Enter both to validate.
+                                </p>
+                                <p className="text-gray-500 mt-1">
+                                  💡 {getExtraIdLabel(currency.code)} can be found in your wallet settings or when creating a new address
+                                </p>
+                              </div>
                             )}
                             {extraIdValidationStatus[currency.code] && extraIdValidationStatus[currency.code] !== 'idle' && (
                               <div className="flex items-center gap-2 text-sm">

@@ -68,24 +68,34 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
 function buildPaymentURI(currency: string, address: string, amount: number, extraId?: string) {
   const upper = currency.toUpperCase();
   
-  // Build base URI
+  // Build URI with proper schemes for better wallet app compatibility
   let uri = '';
-  if (upper === 'BTC') {
-    uri = `bitcoin:${address}?amount=${amount}`;
-  } else if (upper === 'LTC') {
-    uri = `litecoin:${address}?amount=${amount}`;
-  } else if (upper === 'BCH') {
-    uri = `bitcoincash:${address}?amount=${amount}`;
-  } else {
-    uri = address;
-  }
   
-  // Add destination tag/memo if required
   if (extraId && requiresExtraId(currency)) {
+    // Use proper URI schemes for currencies that require destination tags/memos
     if (upper === 'XRP') {
-      uri = uri.includes('?') ? `${uri}&dt=${extraId}` : `${uri}?dt=${extraId}`;
-    } else if (upper === 'XLM' || upper === 'HBAR') {
-      uri = uri.includes('?') ? `${uri}&memo=${extraId}` : `${uri}?memo=${extraId}`;
+      // XRP URI scheme: xrp:address?dt=tag&amount=amount
+      uri = `xrp:${address}?dt=${extraId}&amount=${amount}`;
+    } else if (upper === 'XLM') {
+      // Stellar URI scheme: web+stellar:pay?destination=address&memo=memo&amount=amount
+      uri = `web+stellar:pay?destination=${address}&memo=${extraId}&amount=${amount}`;
+    } else if (upper === 'HBAR') {
+      // Hedera URI scheme: hbar:address?memo=memo&amount=amount
+      uri = `hbar:${address}?memo=${extraId}&amount=${amount}`;
+    }
+  } else {
+    // Standard URI schemes for other currencies
+    if (upper === 'BTC') {
+      uri = `bitcoin:${address}?amount=${amount}`;
+    } else if (upper === 'LTC') {
+      uri = `litecoin:${address}?amount=${amount}`;
+    } else if (upper === 'BCH') {
+      uri = `bitcoincash:${address}?amount=${amount}`;
+    } else if (upper === 'ETH') {
+      uri = `ethereum:${address}?value=${amount * Math.pow(10, 18)}`;
+    } else {
+      // Fallback to address only if no standard URI scheme
+      uri = address;
     }
   }
   

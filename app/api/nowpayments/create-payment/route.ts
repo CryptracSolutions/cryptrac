@@ -91,21 +91,42 @@ function getWalletKeyForCurrency(currency: string, wallets: Record<string, strin
 
 // Function to validate wallet address format (basic validation)
 function isValidWalletAddress(address: string, currency: string): boolean {
-  if (!address || address.length < 10) return false
-  
+  if (!address || typeof address !== 'string') return false
+  const trimmed = address.trim()
+  if (trimmed.length < 10) return false
+
   const currencyUpper = currency.toUpperCase()
-  
-  // Basic format validation
-  if (currencyUpper === 'BTC' && !address.match(/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/)) {
-    return false
+
+  // BTC (P2PKH/P2SH/bech32)
+  if (currencyUpper === 'BTC') {
+    return (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/).test(trimmed) || (/^bc1[a-z0-9]{39,59}$/).test(trimmed)
   }
-  
-  if (['ETH', 'BNB', 'MATIC', 'AVAX'].some(net => NETWORK_WALLET_MAPPING[net]?.includes(currencyUpper))) {
-    if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
-      return false
-    }
+
+  // EVM chains (ETH/BNB/MATIC/AVAX and ERC-20 style tokens mapped to them)
+  if ([
+    'ETH', 'BNB', 'MATIC', 'AVAX'
+  ].some(net => NETWORK_WALLET_MAPPING[net]?.includes(currencyUpper))) {
+    return (/^0x[a-fA-F0-9]{40}$/).test(trimmed)
   }
-  
+
+  // XRP classic address (destination tag handled separately via extra_id)
+  if (NETWORK_WALLET_MAPPING['XRP']?.includes(currencyUpper)) {
+    return (/^r[1-9A-HJ-NP-Za-km-z]{25,34}$/).test(trimmed)
+  }
+
+  // XLM Stellar public key (G... base32, 56 chars) or muxed account (M... base32, 69 chars)
+  if (NETWORK_WALLET_MAPPING['XLM']?.includes(currencyUpper)) {
+    const isClassic = (/^G[A-Z2-7]{55}$/).test(trimmed)
+    const isMuxed = (/^M[A-Z2-7]{68}$/).test(trimmed)
+    return isClassic || isMuxed
+  }
+
+  // HBAR account id (shard.realm.num), e.g. 0.0.12345
+  if (currencyUpper === 'HBAR') {
+    return (/^\d+\.\d+\.\d+$/).test(trimmed)
+  }
+
+  // Default: pass-through for unmodeled coins
   return true
 }
 
@@ -530,7 +551,10 @@ export async function POST(request: Request) {
     }
     console.log('- auto_forwarding_enabled:', autoForwardingConfigured)
     if (autoForwardingConfigured) {
+      console.log('- payout_currency:', paymentRequest.payout_currency)
       console.log('- payout_address:', paymentRequest.payout_address?.substring(0, 10) + '...')
+      const peid = (paymentRequest as any).payout_extra_id
+      if (peid) console.log('- payout_extra_id set')
     }
 
     interface PaymentResponse {

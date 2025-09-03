@@ -886,13 +886,26 @@ export default function PaymentPage() {
       if (data.payment.pay_address) {
         let qrData = data.payment.pay_address
         
-        // Add destination tag/memo to QR code for supported currencies
+        // Add destination tag/memo to QR code for supported currencies using proper URI schemes
         if (data.payment.payin_extra_id && requiresExtraId(data.payment.pay_currency)) {
           const currency = data.payment.pay_currency.toUpperCase()
           if (currency === 'XRP') {
-            qrData = `${data.payment.pay_address}?dt=${data.payment.payin_extra_id}`
-          } else if (currency === 'XLM' || currency === 'HBAR') {
-            qrData = `${data.payment.pay_address}?memo=${data.payment.payin_extra_id}`
+            // XRP URI scheme: xrp://address?dt=tag&amount=amount
+            qrData = `xrp:${data.payment.pay_address}?dt=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
+          } else if (currency === 'XLM') {
+            // Stellar URI scheme: web+stellar:pay?destination=address&memo=memo&amount=amount
+            qrData = `web+stellar:pay?destination=${data.payment.pay_address}&memo=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
+          } else if (currency === 'HBAR') {
+            // Hedera URI scheme: hbar://address?memo=memo&amount=amount
+            qrData = `hbar:${data.payment.pay_address}?memo=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
+          }
+        } else if (data.payment.pay_currency) {
+          // Add amount to QR code for currencies without destination tags
+          const currency = data.payment.pay_currency.toUpperCase()
+          if (currency === 'BTC') {
+            qrData = `bitcoin:${data.payment.pay_address}?amount=${data.payment.pay_amount}`
+          } else if (currency === 'ETH') {
+            qrData = `ethereum:${data.payment.pay_address}?value=${data.payment.pay_amount * Math.pow(10, 18)}`
           }
         }
         
