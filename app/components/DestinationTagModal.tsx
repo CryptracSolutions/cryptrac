@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from '@/app/components/ui/dialog'
 import { Button } from '@/app/components/ui/button'
 import { CheckCircle } from 'lucide-react'
@@ -87,12 +88,14 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
         </div>
 
         <div className="flex justify-center pt-3">
-          <Button
-            onClick={onClose}
-            className="bg-[#7f5efd] hover:bg-[#6b4fd8] text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
-          >
-            I Understand
-          </Button>
+          <DialogClose asChild>
+            <Button
+              onClick={onClose}
+              className="bg-[#7f5efd] hover:bg-[#6b4fd8] text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
+            >
+              I Understand
+            </Button>
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>

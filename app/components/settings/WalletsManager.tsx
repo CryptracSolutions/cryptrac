@@ -1014,11 +1014,13 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       </Card>
 
       {/* Destination Tag Modal */}
-      <DestinationTagModal
-        isOpen={showDestinationTagModal}
-        onClose={() => setShowDestinationTagModal(false)}
-        currency={modalCurrency}
-      />
+      {showDestinationTagModal && (
+        <DestinationTagModal
+          isOpen={showDestinationTagModal}
+          onClose={() => setShowDestinationTagModal(false)}
+          currency={modalCurrency}
+        />
+      )}
     </div>
   );
 }
