@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requiresExtraId, validateExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
 
 // Comprehensive address validation patterns for all supported cryptocurrencies
 // Updated to support multiple address formats for maximum compatibility
@@ -85,9 +86,6 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   
   // Stellar - supports multiple formats
   XLM: /^G[A-Z2-7]{55}$/,
-  
-  // EOS - account name format
-  EOS: /^[a-z1-5\.]{1,12}$/,
   
   // Tezos - supports multiple address types
   XTZ: /^tz[1-3][1-9A-HJ-NP-Za-km-z]{33}$/,
@@ -316,7 +314,6 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   NEAR: { name: 'NEAR Protocol', network: 'NEAR', addressType: 'NEAR address (hex or .near format)' },
   VET: { name: 'VeChain', network: 'VeChain', addressType: 'VeChain address' },
   XLM: { name: 'Stellar', network: 'Stellar', addressType: 'Stellar address' },
-  EOS: { name: 'EOS', network: 'EOS', addressType: 'EOS account name' },
   XTZ: { name: 'Tezos', network: 'Tezos', addressType: 'Tezos address' },
   THETA: { name: 'Theta', network: 'Theta', addressType: 'Theta address' },
   FLOW: { name: 'Flow', network: 'Flow', addressType: 'Flow address' },
@@ -346,9 +343,9 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
 
 export async function POST(request: NextRequest) {
   try {
-    const { currency, address } = await request.json()
+    const { currency, address, extra_id } = await request.json()
 
-    console.log(`🔍 Validating ${currency} address: ${address}`)
+    console.log(`🔍 Validating ${currency} - Address: ${address}, Extra ID: ${extra_id}`)
 
     if (!currency || !address) {
       console.log(`❌ Missing currency or address`)
@@ -379,10 +376,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate the address against the pattern
-    const isValid = pattern.test(trimmedAddress)
+    const addressValid = pattern.test(trimmedAddress)
     const currencyInfo = CURRENCY_INFO[upperCurrency]
+    let addressError = null;
+    
+    if (!addressValid) {
+      addressError = `Invalid ${currencyInfo?.addressType || upperCurrency + ' address'} format`;
+    }
 
-    console.log(`✅ Validation result for ${upperCurrency}: ${isValid ? 'VALID' : 'INVALID'}`)
+    // NEW: Validate extra_id if provided and required
+    let extraIdValid = true;
+    let extraIdError = null;
+
+    if (requiresExtraId(currency)) {
+      if (!extra_id || !extra_id.trim()) {
+        extraIdValid = false;
+        extraIdError = `${getExtraIdLabel(currency)} is required for ${currency}`;
+      } else if (!validateExtraId(currency, extra_id.trim())) {
+        extraIdValid = false;
+        extraIdError = `Invalid ${getExtraIdLabel(currency)} format for ${currency}`;
+      }
+    }
+
+    const isValid = addressValid && extraIdValid;
+
+    console.log(`✅ Validation result - Address: ${addressValid ? 'VALID' : 'INVALID'}, Extra ID: ${extraIdValid ? 'VALID' : 'INVALID'}`)
 
     return NextResponse.json({
       success: true,
@@ -390,9 +408,10 @@ export async function POST(request: NextRequest) {
         valid: isValid,
         currency: upperCurrency,
         address: trimmedAddress,
+        extra_id: extra_id?.trim() || null,
         network: currencyInfo?.network || 'Unknown',
         addressType: currencyInfo?.addressType || 'Address',
-        error: isValid ? null : `Invalid ${currencyInfo?.addressType || upperCurrency + ' address'} format`
+        error: isValid ? null : (addressError || extraIdError)
       }
     })
 

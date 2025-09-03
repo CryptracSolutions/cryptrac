@@ -27,6 +27,7 @@ import { Input } from '@/app/components/ui/input';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { isApprovedCurrency, getApprovedDisplayName } from '@/lib/approved-currencies';
+import { requiresExtraId, validateExtraId, getExtraIdLabel, getExtraIdPlaceholder, getExtraIdDescription } from '@/lib/extra-id-validation';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -108,9 +109,11 @@ type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 interface WalletsManagerProps<T = Record<string, unknown>> {
   settings: T & {
     wallets: Record<string, string>;
+    wallet_extra_ids?: Record<string, string>;
   };
   setSettings: React.Dispatch<React.SetStateAction<T & {
     wallets: Record<string, string>;
+    wallet_extra_ids?: Record<string, string>;
   }>>;
   setShowTrustWalletGuide: (show: boolean) => void;
   focusCurrency?: string;
@@ -118,12 +121,14 @@ interface WalletsManagerProps<T = Record<string, unknown>> {
 
 export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, setShowTrustWalletGuide, focusCurrency }: WalletsManagerProps<T>) {
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
+  const [extraIdValidationStatus, setExtraIdValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [additionalCurrencies, setAdditionalCurrencies] = useState<CurrencyInfo[]>([]);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [expandedStableCoins, setExpandedStableCoins] = useState<Record<string, boolean>>({});
   const [hiddenAddresses, setHiddenAddresses] = useState<Record<string, boolean>>({});
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [copiedExtraId, setCopiedExtraId] = useState<string | null>(null);
   const [walletsExpanded, setWalletsExpanded] = useState(false);
   const [newlyAddedWallet, setNewlyAddedWallet] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -242,17 +247,29 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     }
 
     setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
+    
+    // Also validate extra ID if needed
+    if (requiresExtraId(currency)) {
+      setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
+    }
 
     try {
+      const payload: any = {
+        currency,
+        address: address.trim()
+      };
+      
+      // Include extra_id if required
+      if (requiresExtraId(currency)) {
+        payload.extra_id = settings.wallet_extra_ids?.[currency] || '';
+      }
+      
       const response = await fetch('/api/wallets/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          currency,
-          address: address.trim()
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -262,6 +279,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           ...prev,
           [currency]: 'valid'
         }));
+        
+        // Update extra ID validation status if applicable
+        if (requiresExtraId(currency)) {
+          setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
+        }
         
         // Check if this is a new wallet being added
         const existingWallets = Object.keys(settings.wallets || {}).filter(curr => 
@@ -276,6 +298,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
         }
       } else {
         setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+        
+        // Update extra ID validation status if applicable
+        if (requiresExtraId(currency)) {
+          setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+        }
       }
     } catch (error) {
       console.error('Validation error:', error);
@@ -303,10 +330,18 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     setSettings(prev => {
       const newWallets = { ...prev.wallets };
       delete newWallets[currency];
-      return { ...prev, wallets: newWallets };
+      const newExtraIds = { ...prev.wallet_extra_ids };
+      delete newExtraIds[currency];
+      return { ...prev, wallets: newWallets, wallet_extra_ids: newExtraIds };
     });
 
     setValidationStatus(prev => {
+      const newStatus = { ...prev };
+      delete newStatus[currency];
+      return newStatus;
+    });
+
+    setExtraIdValidationStatus(prev => {
       const newStatus = { ...prev };
       delete newStatus[currency];
       return newStatus;
@@ -317,6 +352,27 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       delete newHidden[currency];
       return newHidden;
     });
+  };
+
+  const handleExtraIdInputChange = (currency: string, extraId: string) => {
+    setSettings(prev => ({
+      ...prev,
+      wallet_extra_ids: {
+        ...prev.wallet_extra_ids,
+        [currency]: extraId
+      }
+    }));
+
+    // Validate extra ID
+    if (requiresExtraId(currency)) {
+      if (!extraId.trim()) {
+        setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+      } else if (validateExtraId(currency, extraId)) {
+        setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
+      } else {
+        setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+      }
+    }
   };
 
   const getValidationIcon = (currency: string) => {
@@ -591,6 +647,68 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                           </div>
                         </div>
                         
+                        {/* Extra ID input for currencies that require it */}
+                        {requiresExtraId(currency) && (
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium text-gray-700">
+                              {getExtraIdLabel(currency)} (Required)
+                            </label>
+                            <div className="relative">
+                              <Input
+                                placeholder={getExtraIdPlaceholder(currency)}
+                                value={settings.wallet_extra_ids?.[currency] || ''}
+                                onChange={(e) => handleExtraIdInputChange(currency, e.target.value)}
+                                className="border-gray-300 bg-white pr-12 font-mono text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const extraId = settings.wallet_extra_ids?.[currency];
+                                    if (extraId) {
+                                      navigator.clipboard.writeText(extraId);
+                                      setCopiedExtraId(currency);
+                                      setTimeout(() => setCopiedExtraId(null), 2000);
+                                    }
+                                  }}
+                                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                                >
+                                  {copiedExtraId === currency ?
+                                    <CheckCircle className="h-4 w-4 text-green-500" /> :
+                                    <Copy className="h-4 w-4 text-gray-500" />
+                                  }
+                                </Button>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {getExtraIdDescription(currency)}
+                            </p>
+                            {extraIdValidationStatus[currency] && extraIdValidationStatus[currency] !== 'idle' && (
+                              <div className="flex items-center gap-2 text-sm">
+                                {extraIdValidationStatus[currency] === 'valid' ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                ) : extraIdValidationStatus[currency] === 'invalid' ? (
+                                  <XCircle className="h-4 w-4 text-red-500" />
+                                ) : (
+                                  <Loader2 className="h-4 w-4 text-purple-500 animate-spin" />
+                                )}
+                                <span className={`font-medium ${
+                                  extraIdValidationStatus[currency] === 'valid' ? 'text-green-600' :
+                                  extraIdValidationStatus[currency] === 'invalid' ? 'text-red-600' :
+                                  'text-purple-600'
+                                }`}>
+                                  {extraIdValidationStatus[currency] === 'valid' ? `Valid ${getExtraIdLabel(currency).toLowerCase()}` :
+                                   extraIdValidationStatus[currency] === 'invalid' ? `Invalid ${getExtraIdLabel(currency).toLowerCase()} format` :
+                                   `Checking ${getExtraIdLabel(currency).toLowerCase()}...`}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getValidationIcon(currency)}
@@ -735,6 +853,44 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                               {getValidationMessage(currency.code)}
                             </span>
                           </div>
+                        )}
+                        
+                        {/* Extra ID input for currencies that require it */}
+                        {requiresExtraId(currency.code) && (
+                          <>
+                            <label className="text-xs font-medium text-gray-700">
+                              {getExtraIdLabel(currency.code)} (Required)
+                            </label>
+                            <Input
+                              placeholder={getExtraIdPlaceholder(currency.code)}
+                              value={settings.wallet_extra_ids?.[currency.code] || ''}
+                              onChange={(e) => handleExtraIdInputChange(currency.code, e.target.value)}
+                              className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-gray-500">
+                              {getExtraIdDescription(currency.code)}
+                            </p>
+                            {extraIdValidationStatus[currency.code] && extraIdValidationStatus[currency.code] !== 'idle' && (
+                              <div className="flex items-center gap-2 text-sm">
+                                {extraIdValidationStatus[currency.code] === 'valid' ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                ) : extraIdValidationStatus[currency.code] === 'invalid' ? (
+                                  <XCircle className="h-4 w-4 text-red-500" />
+                                ) : (
+                                  <Loader2 className="h-4 w-4 text-purple-500 animate-spin" />
+                                )}
+                                <span className={`font-medium ${
+                                  extraIdValidationStatus[currency.code] === 'valid' ? 'text-green-600' :
+                                  extraIdValidationStatus[currency.code] === 'invalid' ? 'text-red-600' :
+                                  'text-purple-600'
+                                }`}>
+                                  {extraIdValidationStatus[currency.code] === 'valid' ? `Valid ${getExtraIdLabel(currency.code).toLowerCase()}` :
+                                   extraIdValidationStatus[currency.code] === 'invalid' ? `Invalid ${getExtraIdLabel(currency.code).toLowerCase()} format` :
+                                   `Checking ${getExtraIdLabel(currency.code).toLowerCase()}...`}
+                                </span>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </CardContent>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createServiceClient } from '@/lib/email-utils';
 import { cookies } from 'next/headers';
+import { validateExtraId } from '@/lib/extra-id-validation';
 
 // GET merchant settings
 export async function GET() {
@@ -69,6 +70,13 @@ export async function GET() {
       );
     }
 
+    // Get wallet_extra_ids from merchant_settings table
+    const { data: merchantSettings } = await supabase
+      .from('merchant_settings')
+      .select('wallet_extra_ids')
+      .eq('merchant_id', merchant.id)
+      .single();
+
     return NextResponse.json({
       success: true,
       settings: {
@@ -90,6 +98,7 @@ export async function GET() {
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency || null,
         wallets: merchant.wallets || {},
+        wallet_extra_ids: merchantSettings?.wallet_extra_ids || {},
         charge_customer_fee: merchant.charge_customer_fee || false,
         payment_config: {
           // Always enable auto_forward for non-custodial compliance
@@ -136,6 +145,7 @@ export async function PUT(request: NextRequest) {
       auto_convert_enabled?: boolean;
       preferred_payout_currency?: string | null;
       wallets?: Record<string, string>;
+      wallet_extra_ids?: Record<string, string>;
       charge_customer_fee?: boolean;
     } = await request.json();
     
@@ -152,6 +162,7 @@ export async function PUT(request: NextRequest) {
       auto_convert_enabled,
       preferred_payout_currency,
       wallets: rawWallets,
+      wallet_extra_ids,
       charge_customer_fee
     } = requestData;
     const wallets = { ...(rawWallets || {}) };
@@ -213,6 +224,20 @@ export async function PUT(request: NextRequest) {
           { error: `Wallet address for ${preferred_payout_currency.toUpperCase()} is required when auto-conversion is enabled` },
           { status: 400 }
         );
+      }
+    }
+
+    // Validate extra_ids before saving
+    if (wallet_extra_ids) {
+      console.log('💾 Validating wallet_extra_ids:', wallet_extra_ids);
+      
+      for (const [currency, extraId] of Object.entries(wallet_extra_ids)) {
+        if (extraId && !validateExtraId(currency, extraId as string)) {
+          return NextResponse.json({
+            success: false,
+            error: `Invalid extra_id for ${currency}: ${extraId}`
+          }, { status: 400 });
+        }
       }
     }
 
@@ -339,6 +364,65 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Update wallet_extra_ids in merchant_settings table if provided
+    let merchantSettings = null;
+    if (wallet_extra_ids !== undefined && merchant) {
+      console.log('💾 Saving wallet_extra_ids to merchant_settings');
+      
+      // First ensure merchant_settings row exists
+      const { data: existingSettings } = await supabase
+        .from('merchant_settings')
+        .select('*')
+        .eq('merchant_id', merchant.id)
+        .single();
+
+      if (existingSettings) {
+        // Update existing row
+        const { data: updatedSettings, error: settingsError } = await supabase
+          .from('merchant_settings')
+          .update({
+            wallet_extra_ids,
+            updated_at: new Date().toISOString()
+          })
+          .eq('merchant_id', merchant.id)
+          .select('*')
+          .single();
+
+        if (settingsError) {
+          console.error('❌ Error updating merchant_settings:', settingsError);
+        } else {
+          merchantSettings = updatedSettings;
+        }
+      } else {
+        // Create new row
+        const { data: newSettings, error: createError } = await supabase
+          .from('merchant_settings')
+          .insert({
+            merchant_id: merchant.id,
+            wallet_extra_ids,
+            email_payment_notifications_enabled: true,
+            public_receipts_enabled: true
+          })
+          .select('*')
+          .single();
+
+        if (createError) {
+          console.error('❌ Error creating merchant_settings:', createError);
+        } else {
+          merchantSettings = newSettings;
+        }
+      }
+    } else if (merchant) {
+      // Retrieve the latest wallet_extra_ids from merchant_settings if not updating them
+      const { data: settings } = await supabase
+        .from('merchant_settings')
+        .select('wallet_extra_ids')
+        .eq('merchant_id', merchant.id)
+        .single();
+      
+      merchantSettings = settings;
+    }
+
     // Update the auth user's email if it has changed
     if (email && email !== user.email) {
       try {
@@ -383,6 +467,7 @@ export async function PUT(request: NextRequest) {
         auto_convert_enabled: merchant.auto_convert_enabled || false,
         preferred_payout_currency: merchant.preferred_payout_currency || null,
         wallets: merchant.wallets || {},
+        wallet_extra_ids: merchantSettings?.wallet_extra_ids || {},
         charge_customer_fee: merchant.charge_customer_fee || false,
         payment_config: {
           // Always enable auto_forward for non-custodial compliance

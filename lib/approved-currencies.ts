@@ -1,4 +1,4 @@
-// Approved cryptocurrencies list - exactly 143 currencies (includes CRO, EOS, QTUM)
+// Approved cryptocurrencies list - exactly 142 currencies (includes CRO, QTUM)
 export const APPROVED_CURRENCIES: Record<string, string> = {
   '1INCH': '1inch Network',
   'AAVE': 'Aave',
@@ -36,7 +36,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'MANA': 'Decentraland',
   'DOGE': 'Dogecoin',
   'ENJ': 'Enjin Coin',
-  'EOS': 'EOS',
   'ETH': 'Ethereum',
   'ETHARB': 'Ethereum',
   'ETHBASE': 'Ethereum',

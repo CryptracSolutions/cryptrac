@@ -8,12 +8,13 @@ import Tooltip from '@/app/components/ui/tooltip'
 import { CheckCircle, HelpCircle } from 'lucide-react'
 
 interface WalletSetupStepProps {
-  onNext: (wallets: Record<string, string>) => void
+  onNext: (wallets: Record<string, string>, walletExtraIds?: Record<string, string>) => void
   onBack: () => void
 }
 
 type MerchantSettings = Record<string, any> & {
   wallets: Record<string, string>
+  wallet_extra_ids?: Record<string, string>
 }
 
 // Recommended currencies for merchants
@@ -43,7 +44,8 @@ const recommendedCurrencies = [
 export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false)
   const [settings, setSettings] = useState<MerchantSettings>({
-    wallets: {}
+    wallets: {},
+    wallet_extra_ids: {}
   } as MerchantSettings)
   const [focusCurrency, setFocusCurrency] = useState<string | undefined>()
 
@@ -59,7 +61,15 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         address && address.trim()
       )
     )
-    onNext(validWallets)
+    
+    // Only pass extra_ids for wallets that are configured
+    const validExtraIds = settings.wallet_extra_ids ? Object.fromEntries(
+      Object.entries(settings.wallet_extra_ids).filter(([currency, extraId]) =>
+        validWallets[currency] && extraId && extraId.trim()
+      )
+    ) : undefined
+    
+    onNext(validWallets, validExtraIds)
   }
 
   const handleCurrencyClick = (currencyCode: string) => {

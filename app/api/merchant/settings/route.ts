@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { validateExtraId } from '@/lib/extra-id-validation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -92,6 +93,8 @@ export async function PATCH(req: Request) {
     email_payment_notifications_enabled?: boolean;
     public_receipts_enabled?: boolean;
     last_seen_payments_at?: string;
+    wallets?: Record<string, string>;
+    wallet_extra_ids?: Record<string, string>;
   };
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
@@ -103,6 +106,24 @@ export async function PATCH(req: Request) {
   }
   if (body.last_seen_payments_at) {
     update.last_seen_payments_at = body.last_seen_payments_at;
+  }
+
+  // Handle wallets update
+  if (body.wallets) {
+    update.wallets = body.wallets;
+  }
+
+  // Handle wallet_extra_ids update with validation
+  if (body.wallet_extra_ids) {
+    // Validate extra_ids before saving
+    for (const [currency, extraId] of Object.entries(body.wallet_extra_ids)) {
+      if (extraId && !validateExtraId(currency, extraId as string)) {
+        return NextResponse.json({
+          error: `Invalid extra_id for ${currency}: ${extraId}`
+        }, { status: 400 });
+      }
+    }
+    update.wallet_extra_ids = body.wallet_extra_ids;
   }
 
   const { data, error } = await service

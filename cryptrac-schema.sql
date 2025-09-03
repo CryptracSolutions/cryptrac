@@ -212,6 +212,34 @@ COMMENT ON FUNCTION "public"."check_scheduler_cron_status"() IS 'Check the statu
 
 
 
+CREATE OR REPLACE FUNCTION "public"."check_wallet_extra_ids_valid"("extra_ids" "jsonb") RETURNS boolean
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    key TEXT;
+BEGIN
+    -- Allow NULL or empty object
+    IF extra_ids IS NULL OR extra_ids = '{}'::jsonb THEN
+        RETURN TRUE;
+    END IF;
+    
+    -- Check each key in the object
+    FOR key IN SELECT jsonb_object_keys(extra_ids)
+    LOOP
+        -- Only allow XRP, XLM, HBAR
+        IF key NOT IN ('XRP', 'XLM', 'HBAR') THEN
+            RETURN FALSE;
+        END IF;
+    END LOOP;
+    
+    RETURN TRUE;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."check_wallet_extra_ids_valid"("extra_ids" "jsonb") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."clean_expired_cache"() RETURNS "void"
     LANGUAGE "plpgsql"
     AS $$
@@ -433,6 +461,22 @@ $$;
 ALTER FUNCTION "public"."get_trust_wallet_currencies"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") RETURNS "text"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    RETURN (
+        SELECT wallet_extra_ids->currency
+        FROM merchant_settings 
+        WHERE merchant_id = merchant_uuid
+    );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."handle_monthly_bonus"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $_$
@@ -589,6 +633,23 @@ $$;
 ALTER FUNCTION "public"."manual_scheduler_trigger"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."remove_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") RETURNS boolean
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    UPDATE merchant_settings 
+    SET wallet_extra_ids = wallet_extra_ids - currency,
+        updated_at = NOW()
+    WHERE merchant_id = merchant_uuid;
+    
+    RETURN FOUND;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."remove_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."run_subscription_scheduler"() RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -668,6 +729,30 @@ CREATE OR REPLACE FUNCTION "public"."set_timestamp_updated_at"() RETURNS "trigge
 
 
 ALTER FUNCTION "public"."set_timestamp_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text", "extra_id" "text") RETURNS boolean
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    -- Validate the extra_id format first
+    IF NOT validate_extra_id(currency, extra_id) THEN
+        RAISE EXCEPTION 'Invalid extra_id format for currency %', currency;
+    END IF;
+    
+    -- Update the wallet_extra_ids JSONB field
+    UPDATE merchant_settings 
+    SET wallet_extra_ids = COALESCE(wallet_extra_ids, '{}'::jsonb) || 
+                          jsonb_build_object(currency, extra_id),
+        updated_at = NOW()
+    WHERE merchant_id = merchant_uuid;
+    
+    RETURN FOUND;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."set_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text", "extra_id" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."trigger_invoice_generation"() RETURNS "void"
@@ -876,6 +961,36 @@ $$;
 ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."validate_extra_id"("currency" "text", "extra_id" "text") RETURNS boolean
+    LANGUAGE "plpgsql"
+    AS $_$
+BEGIN
+    -- Return true if extra_id is valid for the given currency
+    CASE currency
+        WHEN 'XRP' THEN
+            -- XRP destination tag: numeric, 1-10 digits
+            RETURN extra_id ~ '^[0-9]{1,10}$';
+        WHEN 'XLM' THEN
+            -- Stellar memo: any characters, 1-28 length
+            RETURN LENGTH(extra_id) BETWEEN 1 AND 28;
+        WHEN 'HBAR' THEN
+            -- HBAR memo: any characters, 1-100 length
+            RETURN LENGTH(extra_id) BETWEEN 1 AND 100;
+        ELSE
+            -- Unknown currency, return false
+            RETURN FALSE;
+    END CASE;
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."validate_extra_id"("currency" "text", "extra_id" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."validate_extra_id"("currency" "text", "extra_id" "text") IS 'Validates extra_id format for currencies that require destination tags/memos';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) RETURNS boolean
     LANGUAGE "plpgsql"
     AS $$
@@ -896,6 +1011,48 @@ $$;
 
 
 ALTER FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."validate_wallet_extra_ids_trigger"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    currency TEXT;
+    extra_id TEXT;
+BEGIN
+    -- Only validate if wallet_extra_ids has actual data
+    IF NEW.wallet_extra_ids IS NOT NULL AND NEW.wallet_extra_ids != '{}'::jsonb THEN
+        -- Loop through each currency in the JSONB object
+        FOR currency, extra_id IN 
+            SELECT key, value 
+            FROM jsonb_each_text(NEW.wallet_extra_ids)
+        LOOP
+            -- Check if currency is allowed (redundant with constraint, but good for clear error messages)
+            IF currency NOT IN ('XRP', 'XLM', 'HBAR') THEN
+                RAISE EXCEPTION 'Currency "%" is not allowed for extra_ids. Only XRP, XLM, and HBAR are supported.', currency;
+            END IF;
+            
+            -- Validate each extra_id format
+            IF NOT validate_extra_id(currency, extra_id) THEN
+                RAISE EXCEPTION 'Invalid extra_id "%" for currency "%". %', 
+                    extra_id, 
+                    currency,
+                    CASE currency
+                        WHEN 'XRP' THEN 'XRP destination tag must be 1-10 digits.'
+                        WHEN 'XLM' THEN 'Stellar memo must be 1-28 characters.'
+                        WHEN 'HBAR' THEN 'HBAR memo must be 1-100 characters.'
+                        ELSE 'Invalid format.'
+                    END;
+            END IF;
+        END LOOP;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."validate_wallet_extra_ids_trigger"() OWNER TO "postgres";
 
 SET default_tablespace = '';
 
@@ -1046,11 +1203,54 @@ CREATE TABLE IF NOT EXISTS "public"."merchant_settings" (
     "public_receipts_enabled" boolean DEFAULT true NOT NULL,
     "last_seen_payments_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "wallets" "jsonb" DEFAULT '{}'::"jsonb",
+    "wallet_extra_ids" "jsonb" DEFAULT '{}'::"jsonb",
+    "business_name" "text",
+    CONSTRAINT "check_wallet_extra_ids_currencies" CHECK ("public"."check_wallet_extra_ids_valid"("wallet_extra_ids"))
 );
 
 
 ALTER TABLE "public"."merchant_settings" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."merchant_settings"."wallets" IS 'Stores wallet addresses for each supported cryptocurrency';
+
+
+
+COMMENT ON COLUMN "public"."merchant_settings"."wallet_extra_ids" IS 'Stores destination tags/memos for currencies that require them (XRP, XLM, HBAR)';
+
+
+
+CREATE OR REPLACE VIEW "public"."merchant_wallets_with_extra_ids" AS
+ SELECT "merchant_id",
+    "business_name",
+    "email_payment_notifications_enabled",
+    "public_receipts_enabled",
+    "created_at",
+    "updated_at",
+    "wallets",
+    "wallet_extra_ids",
+        CASE
+            WHEN ("wallets" ? 'XRP'::"text") THEN "jsonb_build_object"('address', ("wallets" -> 'XRP'::"text"), 'extra_id', ("wallet_extra_ids" -> 'XRP'::"text"))
+            ELSE NULL::"jsonb"
+        END AS "xrp_wallet_info",
+        CASE
+            WHEN ("wallets" ? 'XLM'::"text") THEN "jsonb_build_object"('address', ("wallets" -> 'XLM'::"text"), 'extra_id', ("wallet_extra_ids" -> 'XLM'::"text"))
+            ELSE NULL::"jsonb"
+        END AS "xlm_wallet_info",
+        CASE
+            WHEN ("wallets" ? 'HBAR'::"text") THEN "jsonb_build_object"('address', ("wallets" -> 'HBAR'::"text"), 'extra_id', ("wallet_extra_ids" -> 'HBAR'::"text"))
+            ELSE NULL::"jsonb"
+        END AS "hbar_wallet_info"
+   FROM "public"."merchant_settings" "ms";
+
+
+ALTER VIEW "public"."merchant_wallets_with_extra_ids" OWNER TO "postgres";
+
+
+COMMENT ON VIEW "public"."merchant_wallets_with_extra_ids" IS 'Provides easy access to wallet addresses and extra_ids for currencies that require them';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."merchants" (
@@ -2037,6 +2237,14 @@ CREATE INDEX "idx_merchant_payments_status" ON "public"."transactions" USING "bt
 
 
 
+CREATE INDEX "idx_merchant_settings_wallet_extra_ids" ON "public"."merchant_settings" USING "gin" ("wallet_extra_ids");
+
+
+
+CREATE INDEX "idx_merchant_settings_wallets" ON "public"."merchant_settings" USING "gin" ("wallets");
+
+
+
 CREATE INDEX "idx_merchants_referred_by_partner" ON "public"."merchants" USING "btree" ("referred_by_partner");
 
 
@@ -2314,6 +2522,10 @@ CREATE OR REPLACE TRIGGER "update_subscriptions_updated_at" BEFORE UPDATE ON "pu
 
 
 CREATE OR REPLACE TRIGGER "update_supported_currencies_updated_at" BEFORE UPDATE ON "public"."supported_currencies" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "validate_wallet_extra_ids_before_update" BEFORE INSERT OR UPDATE ON "public"."merchant_settings" FOR EACH ROW EXECUTE FUNCTION "public"."validate_wallet_extra_ids_trigger"();
 
 
 
@@ -2938,6 +3150,12 @@ GRANT ALL ON FUNCTION "public"."check_scheduler_cron_status"() TO "service_role"
 
 
 
+GRANT ALL ON FUNCTION "public"."check_wallet_extra_ids_valid"("extra_ids" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."check_wallet_extra_ids_valid"("extra_ids" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."check_wallet_extra_ids_valid"("extra_ids" "jsonb") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "anon";
 GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."clean_expired_cache"() TO "service_role";
@@ -2980,6 +3198,12 @@ GRANT ALL ON FUNCTION "public"."get_trust_wallet_currencies"() TO "service_role"
 
 
 
+GRANT ALL ON FUNCTION "public"."get_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_monthly_bonus"() TO "service_role";
@@ -3010,6 +3234,12 @@ GRANT ALL ON FUNCTION "public"."manual_scheduler_trigger"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."remove_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."remove_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."remove_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."run_subscription_scheduler"() TO "anon";
 GRANT ALL ON FUNCTION "public"."run_subscription_scheduler"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."run_subscription_scheduler"() TO "service_role";
@@ -3019,6 +3249,12 @@ GRANT ALL ON FUNCTION "public"."run_subscription_scheduler"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_timestamp_updated_at"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."set_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text", "extra_id" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."set_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text", "extra_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_wallet_extra_id"("merchant_uuid" "uuid", "currency" "text", "extra_id" "text") TO "service_role";
 
 
 
@@ -3058,9 +3294,21 @@ GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."validate_extra_id"("currency" "text", "extra_id" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."validate_extra_id"("currency" "text", "extra_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."validate_extra_id"("currency" "text", "extra_id" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) TO "anon";
 GRANT ALL ON FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."validate_tax_calculation"("p_base_amount" numeric, "p_tax_rates" "jsonb", "p_expected_tax_amount" numeric) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."validate_wallet_extra_ids_trigger"() TO "anon";
+GRANT ALL ON FUNCTION "public"."validate_wallet_extra_ids_trigger"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."validate_wallet_extra_ids_trigger"() TO "service_role";
 
 
 
@@ -3121,6 +3369,12 @@ GRANT ALL ON TABLE "public"."invoice_counters" TO "service_role";
 GRANT ALL ON TABLE "public"."merchant_settings" TO "anon";
 GRANT ALL ON TABLE "public"."merchant_settings" TO "authenticated";
 GRANT ALL ON TABLE "public"."merchant_settings" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."merchant_wallets_with_extra_ids" TO "anon";
+GRANT ALL ON TABLE "public"."merchant_wallets_with_extra_ids" TO "authenticated";
+GRANT ALL ON TABLE "public"."merchant_wallets_with_extra_ids" TO "service_role";
 
 
 
@@ -3321,7 +3575,6 @@ to public
 with check (
   bucket_id = 'w9-uploads' AND auth.uid() = owner
 );
-
 
 
 
