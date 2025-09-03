@@ -46,7 +46,7 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-sm bg-white border-[#7f5efd] shadow-xl">
         <DialogHeader className="text-center pb-3">
           <DialogTitle className="text-lg font-bold text-gray-900">
