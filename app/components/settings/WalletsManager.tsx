@@ -137,8 +137,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   useEffect(() => {
     const initialValidation: Record<string, ValidationStatus> = {};
     const initialHidden: Record<string, boolean> = {};
+    const initialExtraIdValidation: Record<string, ValidationStatus> = {};
 
-    // Initialize for existing wallets (assume they are valid)
+    // Initialize for existing wallets (assume addresses are valid if present)
     if (settings.wallets) {
       Object.keys(settings.wallets).forEach(currency => {
         if (settings.wallets[currency] && settings.wallets[currency].trim()) {
@@ -147,12 +148,25 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
         } else {
           initialValidation[currency] = 'idle';
         }
+
+        // Initialize extra ID validation for currencies that require it
+        if (requiresExtraId(currency)) {
+          const extra = settings.wallet_extra_ids?.[currency] || '';
+          if (!extra) {
+            initialExtraIdValidation[currency] = 'idle';
+          } else if (validateExtraId(currency, extra)) {
+            initialExtraIdValidation[currency] = 'valid';
+          } else {
+            initialExtraIdValidation[currency] = 'invalid';
+          }
+        }
       });
     }
 
     setValidationStatus(initialValidation);
     setHiddenAddresses(initialHidden);
-  }, [settings.wallets]);
+    setExtraIdValidationStatus(prev => ({ ...initialExtraIdValidation, ...prev }));
+  }, [settings.wallets, settings.wallet_extra_ids]);
 
   // Handle focusCurrency prop to automatically focus and search for a currency
   useEffect(() => {
@@ -208,6 +222,24 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                 }
               });
               return newStatus;
+            });
+
+            // Initialize extra ID validation for additional currencies
+            setExtraIdValidationStatus(prev => {
+              const next = { ...prev } as Record<string, ValidationStatus>;
+              processedCurrencies.forEach((currency: CurrencyInfo) => {
+                if (requiresExtraId(currency.code)) {
+                  const extra = settings.wallet_extra_ids?.[currency.code] || '';
+                  if (!extra) {
+                    next[currency.code] = next[currency.code] || 'idle';
+                  } else if (validateExtraId(currency.code, extra)) {
+                    next[currency.code] = 'valid';
+                  } else {
+                    next[currency.code] = 'invalid';
+                  }
+                }
+              });
+              return next;
             });
           }
         }
@@ -318,7 +350,18 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   };
 
   const handleWalletInputChange = async (currency: string, address: string) => {
+    const prevAddress = settings.wallets?.[currency] || '';
+    const wasEmpty = !prevAddress.trim();
+    const nowNonEmpty = !!address.trim();
+
     setSettings(prev => ({ ...prev, wallets: { ...prev.wallets, [currency]: address } }));
+
+    // Auto-open Your Wallets and highlight the newly added currency when
+    // a wallet address transitions from empty -> non-empty
+    if (wasEmpty && nowNonEmpty) {
+      setWalletsExpanded(true);
+      setNewlyAddedWallet(currency);
+    }
     
     if (!address.trim()) {
       setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
@@ -629,7 +672,12 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             placeholder={`${getCurrencyDisplayName(currency)} wallet address`}
                             value={hiddenAddresses[currency] ? maskAddress(settings.wallets[currency] || '') : settings.wallets[currency] || ''}
                             onChange={(e) => handleWalletInputChange(currency, e.target.value)}
-                            className="border-gray-300 bg-white pr-20 font-mono text-sm"
+                            className={`border-gray-300 bg-white pr-20 font-mono text-sm ${
+                              requiresExtraId(currency) && (
+                                !!(settings.wallets[currency]?.trim() || settings.wallet_extra_ids?.[currency]?.trim()) &&
+                                !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
+                              ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                            }`}
                             type={hiddenAddresses[currency] ? "password" : "text"}
                             onClick={(e) => e.stopPropagation()}
                           />
@@ -676,10 +724,20 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                                 placeholder={getExtraIdPlaceholder(currency)}
                                 value={settings.wallet_extra_ids?.[currency] || ''}
                                 onChange={(e) => handleExtraIdInputChange(currency, e.target.value)}
-                                className="border-gray-300 bg-white pr-12 font-mono text-sm"
+                                className={`border-gray-300 bg-white pr-12 font-mono text-sm ${
+                                  (
+                                    !!(settings.wallets[currency]?.trim() || settings.wallet_extra_ids?.[currency]?.trim()) &&
+                                    !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
+                                  ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                                }`}
                                 onClick={(e) => e.stopPropagation()}
                               />
-                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                {extraIdValidationStatus[currency] === 'valid' && (
+                                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                                    Valid
+                                  </span>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -704,6 +762,14 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             <p className="text-xs text-gray-500">
                               {getExtraIdDescription(currency)}
                             </p>
+                            {(
+                              !!(settings.wallets[currency]?.trim() || settings.wallet_extra_ids?.[currency]?.trim()) &&
+                              !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
+                            ) && (
+                              <p className="text-xs font-semibold text-red-600">
+                                {getCurrencyDisplayName(currency)} requires both a wallet address and {getExtraIdLabel(currency)}. Enter both to validate.
+                              </p>
+                            )}
                             {extraIdValidationStatus[currency] && extraIdValidationStatus[currency] !== 'idle' && (
                               <div className="flex items-center gap-2 text-sm">
                                 {extraIdValidationStatus[currency] === 'valid' ? (
@@ -854,10 +920,16 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                       
                       <div className="space-y-2">
                         <Input
-                          placeholder={`Enter ${currency.display_name || currency.name} wallet address`}
+                          placeholder={`Enter ${currency.display_name || currency.name} wallet address`
+                          }
                           value={settings.wallets[currency.code] || ''}
                           onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
-                          className="font-mono text-sm"
+                          className={`font-mono text-sm ${
+                            requiresExtraId(currency.code) && (
+                              !!(settings.wallets[currency.code]?.trim() || settings.wallet_extra_ids?.[currency.code]?.trim()) &&
+                              !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
+                            ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                          }`}
                         />
                         
                         {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
@@ -879,15 +951,55 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             <label className="text-xs font-medium text-gray-700">
                               {getExtraIdLabel(currency.code)} (Required)
                             </label>
-                            <Input
-                              placeholder={getExtraIdPlaceholder(currency.code)}
-                              value={settings.wallet_extra_ids?.[currency.code] || ''}
-                              onChange={(e) => handleExtraIdInputChange(currency.code, e.target.value)}
-                              className="font-mono text-sm"
-                            />
+                            <div className="relative">
+                              <Input
+                                placeholder={getExtraIdPlaceholder(currency.code)}
+                                value={settings.wallet_extra_ids?.[currency.code] || ''}
+                                onChange={(e) => handleExtraIdInputChange(currency.code, e.target.value)}
+                                className={`pr-12 font-mono text-sm ${
+                                  (
+                                    !!(settings.wallets[currency.code]?.trim() || settings.wallet_extra_ids?.[currency.code]?.trim()) &&
+                                    !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
+                                  ) ? 'border-red-300 focus-visible:ring-red-300' : ''
+                                }`}
+                              />
+                              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                {extraIdValidationStatus[currency.code] === 'valid' && (
+                                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                                    Valid
+                                  </span>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    const extraId = settings.wallet_extra_ids?.[currency.code];
+                                    if (extraId) {
+                                      navigator.clipboard.writeText(extraId);
+                                      setCopiedExtraId(currency.code);
+                                      setTimeout(() => setCopiedExtraId(null), 2000);
+                                    }
+                                  }}
+                                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                                >
+                                  {copiedExtraId === currency.code ?
+                                    <CheckCircle className="h-4 w-4 text-green-500" /> :
+                                    <Copy className="h-4 w-4 text-gray-500" />
+                                  }
+                                </Button>
+                              </div>
+                            </div>
                             <p className="text-xs text-gray-500">
                               {getExtraIdDescription(currency.code)}
                             </p>
+                            {(
+                              !!(settings.wallets[currency.code]?.trim() || settings.wallet_extra_ids?.[currency.code]?.trim()) &&
+                              !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
+                            ) && (
+                              <p className="text-xs font-semibold text-red-600">
+                                {getCurrencyDisplayName(currency.code)} requires both a wallet address and {getExtraIdLabel(currency.code)}. Enter both to validate.
+                              </p>
+                            )}
                             {extraIdValidationStatus[currency.code] && extraIdValidationStatus[currency.code] !== 'idle' && (
                               <div className="flex items-center gap-2 text-sm">
                                 {extraIdValidationStatus[currency.code] === 'valid' ? (

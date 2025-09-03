@@ -392,6 +392,7 @@ export async function GET(
       pay_currency: payment.pay_currency,
       pay_amount: payment.pay_amount,
       pay_address: payment.pay_address,
+      payin_extra_id: payment.payin_extra_id, // Include destination tag/memo
       price_amount: payment.amount,
       price_currency: payment.currency,
       payout_currency: payment.currency_received || payment.pay_currency,

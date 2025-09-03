@@ -4,6 +4,7 @@ import PrintButton from '@/components/PrintButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Separator } from '@/app/components/ui/separator';
+import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -68,7 +69,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       total_amount_paid,
       pay_currency,
       amount_received,
-      status
+      status,
+      payin_extra_id
     `)
     .eq('public_receipt_id', receiptId)
     .single();
@@ -294,6 +296,17 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                     <div className="flex justify-between border-b border-gray-100 pb-2">
                       <span className="font-phonic text-sm font-normal text-gray-600">Network</span>
                       <span className="font-phonic text-sm font-medium text-gray-900">{tx.asset} on {tx.network}</span>
+                    </div>
+                  )}
+                  
+                  {tx.payin_extra_id && tx.pay_currency && requiresExtraId(tx.pay_currency) && (
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="font-phonic text-sm font-normal text-gray-600">
+                        {getExtraIdLabel(tx.pay_currency)}
+                      </span>
+                      <span className="font-mono text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded">
+                        {tx.payin_extra_id}
+                      </span>
                     </div>
                   )}
                   

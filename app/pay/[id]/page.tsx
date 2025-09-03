@@ -9,10 +9,11 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
+import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,6 +68,7 @@ interface PaymentData {
   payment_id: string
   payment_status: string
   pay_address: string
+  payin_extra_id?: string
   pay_amount: number
   pay_currency: string
   price_amount: number
@@ -86,6 +88,7 @@ interface PaymentStatus {
   payment_id: string
   payment_status: string
   pay_address: string
+  payin_extra_id?: string
   pay_amount: number
   pay_currency: string
   price_amount: number
@@ -879,9 +882,21 @@ export default function PaymentPage() {
       console.log('✅ Payment created successfully:', data.payment)
       setPaymentData(data.payment)
 
-      // Generate QR code for payment address
+      // Generate QR code for payment address with destination tag if needed
       if (data.payment.pay_address) {
-        const qrDataUrl = await QRCode.toDataURL(data.payment.pay_address, {
+        let qrData = data.payment.pay_address
+        
+        // Add destination tag/memo to QR code for supported currencies
+        if (data.payment.payin_extra_id && requiresExtraId(data.payment.pay_currency)) {
+          const currency = data.payment.pay_currency.toUpperCase()
+          if (currency === 'XRP') {
+            qrData = `${data.payment.pay_address}?dt=${data.payment.payin_extra_id}`
+          } else if (currency === 'XLM' || currency === 'HBAR') {
+            qrData = `${data.payment.pay_address}?memo=${data.payment.payin_extra_id}`
+          }
+        }
+        
+        const qrDataUrl = await QRCode.toDataURL(qrData, {
           width: 256,
           margin: 2,
           color: {
@@ -1386,6 +1401,39 @@ export default function PaymentPage() {
                     </Button>
                   </div>
                 </div>
+                
+                {/* Destination Tag/Memo for currencies that require it */}
+                {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <Label className="font-phonic text-sm font-semibold text-yellow-800 block">
+                          {getExtraIdLabel(paymentData.pay_currency)} Required
+                        </Label>
+                        <p className="text-sm text-yellow-700 mt-1">
+                          You must include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} when sending your payment. 
+                          Payments without the correct {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} may be lost.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        value={paymentData.payin_extra_id}
+                        readOnly
+                        className="font-mono text-sm bg-white border-yellow-300"
+                      />
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => copyToClipboard(paymentData.payin_extra_id, getExtraIdLabel(paymentData.pay_currency))}
+                        className="font-phonic text-base font-normal border-yellow-600 text-yellow-700 hover:bg-yellow-50 shadow-sm"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* QR Code */}
                 {qrCodeDataUrl && (
@@ -1399,7 +1447,14 @@ export default function PaymentPage() {
                         className="w-56 h-56 mx-auto"
                       />
                     </div>
-                    <p className="font-phonic text-sm font-normal text-gray-500 mt-3">Scan with your crypto wallet app</p>
+                    <p className="font-phonic text-sm font-normal text-gray-500 mt-3">
+                      Scan with your crypto wallet app
+                    </p>
+                    {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                      <p className="font-phonic text-xs font-normal text-green-600 mt-2">
+                        ✓ {getExtraIdLabel(paymentData.pay_currency)} included in QR code
+                      </p>
+                    )}
                   </div>
                 )}
 

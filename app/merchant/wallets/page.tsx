@@ -24,6 +24,7 @@ import Tooltip from '@/app/components/ui/tooltip';
 interface MerchantSettings {
   // Wallet settings
   wallets: Record<string, string>;
+  wallet_extra_ids?: Record<string, string>;
   // Other settings (kept for compatibility)
   business_name: string;
   business_type: string;
@@ -89,6 +90,7 @@ export default function WalletsPage() {
   const [settings, setSettings] = useState<MerchantSettings>({
     // Wallet settings
     wallets: {},
+    wallet_extra_ids: {},
     // Other settings (defaults)
     business_name: '',
     business_type: '',

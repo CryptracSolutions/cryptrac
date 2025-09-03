@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -351,6 +352,15 @@ export async function POST(request: Request) {
       )
     }
 
+    // Get merchant's extra_ids from merchant_settings table
+    const { data: merchantSettings } = await supabase
+      .from('merchant_settings')
+      .select('wallet_extra_ids')
+      .eq('merchant_id', paymentLinkData.merchant_id)
+      .single()
+    
+    const wallet_extra_ids = merchantSettings?.wallet_extra_ids || {}
+
     console.log('✅ Payment link found:', {
       id: paymentLinkData.id,
       merchant_id: paymentLinkData.merchant_id
@@ -474,6 +484,22 @@ export async function POST(request: Request) {
 
           paymentRequest.payout_address = walletAddress
           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
+          
+          // Add payout_extra_id if required for this currency
+          if (requiresExtraId(targetPayoutCurrency)) {
+            const extraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+            if (extraId) {
+              (paymentRequest as any).payout_extra_id = extraId
+              console.log(
+                `✅ Added ${getExtraIdLabel(targetPayoutCurrency)} for ${targetPayoutCurrency}: ${extraId}`
+              )
+            } else {
+              console.warn(
+                `⚠️ ${getExtraIdLabel(targetPayoutCurrency)} required for ${targetPayoutCurrency} but not configured`
+              )
+            }
+          }
+          
           autoForwardingConfigured = true
 
           console.log(

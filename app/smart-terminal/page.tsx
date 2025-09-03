@@ -7,7 +7,8 @@ import { Input } from '@/app/components/ui/input';
 import { QRCode } from '@/app/components/ui/qr-code';
 import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown } from 'lucide-react';
+import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, AlertTriangle } from 'lucide-react';
+import { requiresExtraId, getExtraIdLabel, getExtraIdDescription } from '@/lib/extra-id-validation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -64,12 +65,31 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
   return Array.from(stable);
 }
 
-function buildPaymentURI(currency: string, address: string, amount: number) {
+function buildPaymentURI(currency: string, address: string, amount: number, extraId?: string) {
   const upper = currency.toUpperCase();
-  if (upper === 'BTC') return `bitcoin:${address}?amount=${amount}`;
-  if (upper === 'LTC') return `litecoin:${address}?amount=${amount}`;
-  if (upper === 'BCH') return `bitcoincash:${address}?amount=${amount}`;
-  return address;
+  
+  // Build base URI
+  let uri = '';
+  if (upper === 'BTC') {
+    uri = `bitcoin:${address}?amount=${amount}`;
+  } else if (upper === 'LTC') {
+    uri = `litecoin:${address}?amount=${amount}`;
+  } else if (upper === 'BCH') {
+    uri = `bitcoincash:${address}?amount=${amount}`;
+  } else {
+    uri = address;
+  }
+  
+  // Add destination tag/memo if required
+  if (extraId && requiresExtraId(currency)) {
+    if (upper === 'XRP') {
+      uri = uri.includes('?') ? `${uri}&dt=${extraId}` : `${uri}?dt=${extraId}`;
+    } else if (upper === 'XLM' || upper === 'HBAR') {
+      uri = uri.includes('?') ? `${uri}&memo=${extraId}` : `${uri}?memo=${extraId}`;
+    }
+  }
+  
+  return uri;
 }
 
 export default function SmartTerminalPage() {
@@ -88,7 +108,7 @@ export default function SmartTerminalPage() {
   interface PaymentLink { id: string; link_id: string; }
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null);
   const [paymentData, setPaymentData] = useState<
-    { payment_id: string; payment_status: string; pay_address: string; pay_amount: number; pay_currency: string } | null
+    { payment_id: string; payment_status: string; pay_address: string; payin_extra_id?: string; pay_amount: number; pay_currency: string } | null
   >(null);
   const [status, setStatus] = useState('');
   const [receipt, setReceipt] = useState({ email: '', sent: false });
@@ -757,7 +777,7 @@ export default function SmartTerminalPage() {
           {paymentLink && paymentData && (
             <div className="flex flex-col items-center space-y-4 sm:space-y-6" aria-live="polite">
               {(() => {
-                const uri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount);
+                const uri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
                 const showAmount = uri === paymentData.pay_address;
                 return (
                   <>
@@ -790,6 +810,11 @@ export default function SmartTerminalPage() {
                     {/* QR Code */}
                     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
                       <QRCode value={uri} size={256} />
+                      {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                        <p className="text-xs text-center text-green-600 mt-3">
+                          ✓ {getExtraIdLabel(paymentData.pay_currency)} included
+                        </p>
+                      )}
                     </div>
                     {/* Payment Details */}
                     <div className="w-full bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200">
@@ -820,6 +845,28 @@ export default function SmartTerminalPage() {
                         </p>
                       </div>
                     </div>
+                    
+                    {/* Destination Tag/Memo Warning */}
+                    {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                      <div className="w-full bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-yellow-800 mb-2">
+                              {getExtraIdLabel(paymentData.pay_currency)} Required
+                            </p>
+                            <div className="bg-white p-3 rounded-lg border border-yellow-300 mb-2">
+                              <p className="text-sm font-mono text-gray-900">
+                                {paymentData.payin_extra_id}
+                              </p>
+                            </div>
+                            <p className="text-xs text-yellow-700">
+                              {getExtraIdDescription(paymentData.pay_currency)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Back Button */}
                     {status !== 'confirmed' && (

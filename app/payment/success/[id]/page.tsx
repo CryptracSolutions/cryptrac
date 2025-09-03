@@ -8,8 +8,10 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle, Shield, Zap, CreditCard, ArrowRight } from 'lucide-react'
+import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle, Shield, Zap, CreditCard, ArrowRight, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
 
 interface PaymentData {
   id: string
@@ -19,6 +21,7 @@ interface PaymentData {
   pay_currency: string
   pay_amount: number
   pay_address: string
+  payin_extra_id?: string
   price_amount: number
   price_currency: string
   amount_received: number
@@ -364,6 +367,38 @@ export default function PaymentSuccessPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* Destination Tag/Memo Display */}
+              {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2 mb-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                    <div className="flex-1">
+                      <Label className="font-phonic text-sm font-medium text-green-800 mb-1 block">
+                        {getExtraIdLabel(paymentData.pay_currency)} Used
+                      </Label>
+                      <p className="font-phonic text-xs font-normal text-green-700 mb-2">
+                        The {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} was successfully included with your payment
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Input
+                      value={paymentData.payin_extra_id}
+                      readOnly
+                      className="font-mono text-sm bg-white border-green-300"
+                    />
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => copyToClipboard(paymentData.payin_extra_id!)}
+                      className="font-phonic text-base font-normal border-green-600 text-green-700 hover:bg-green-50 shadow-sm"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Transaction Hash */}
               {paymentData.tx_hash && (
