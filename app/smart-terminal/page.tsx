@@ -826,13 +826,13 @@ export default function SmartTerminalPage() {
 
                     {/* Pre-send confirmation for tag/memo */}
                     {needsExtra && (
-                      <div className="w-full bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3">
                         <div className="flex items-start gap-2">
-                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                          <label className="text-sm text-yellow-800 flex-1">
+                          <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                          <label className="text-sm text-purple-900 flex-1">
                             <input
                               type="checkbox"
-                              className="mr-2 align-middle h-4 w-4 text-yellow-700 border-yellow-300 rounded"
+                              className="mr-2 align-middle h-4 w-4 text-[#7f5efd] border-purple-300 rounded"
                               checked={extraIdConfirmed}
                               onChange={(e) => setExtraIdConfirmed(e.target.checked)}
                             />
@@ -854,8 +854,8 @@ export default function SmartTerminalPage() {
                       </div>
                     )}
                     {needsExtra && !extraIdConfirmed && (
-                      <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-200 text-center">
-                        <p className="text-sm font-medium text-yellow-800">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
+                      <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
+                        <p className="text-sm font-medium text-purple-900">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
                       </div>
                     )}
                     {/* Payment Details */}
@@ -890,22 +890,22 @@ export default function SmartTerminalPage() {
                     
                     {/* Destination Tag/Memo Warning */}
                     {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                      <div className="w-full bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3">
                         <div className="flex items-start gap-2">
-                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-yellow-800 mb-2">
+                            <p className="text-sm font-semibold text-purple-900 mb-2">
                               {getExtraIdLabel(paymentData.pay_currency)} Required
                             </p>
-                            <div className="bg-white p-3 rounded-lg border border-yellow-300 mb-2">
+                            <div className="bg-white p-2 rounded-md border border-purple-200 mb-2">
                               <p className="text-sm font-mono text-gray-900">
                                 {paymentData.payin_extra_id}
                               </p>
                             </div>
-                            <p className="text-xs text-yellow-700">
+                            <p className="text-xs text-purple-900">
                               {getExtraIdDescription(paymentData.pay_currency)}
                             </p>
-                            <p className="text-xs text-yellow-700 mt-1">
+                            <p className="text-xs text-purple-900 mt-1">
                               Tip: In Trust Wallet and many exchanges, look for a field named “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo” and paste the value above before sending.
                             </p>
                           </div>

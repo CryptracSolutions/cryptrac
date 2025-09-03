@@ -377,7 +377,8 @@ export async function POST(request: NextRequest) {
         payment_status: paymentJson.payment.payment_status,
         pay_address: paymentJson.payment.pay_address,
         pay_amount: paymentJson.payment.pay_amount,
-        pay_currency: paymentJson.payment.pay_currency
+        pay_currency: paymentJson.payment.pay_currency,
+        payin_extra_id: paymentJson.payment.payin_extra_id
       },
       breakdown: {
         tax_amount: taxAmount,
