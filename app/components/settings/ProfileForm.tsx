@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Button } from '@/app/components/ui/button';
+import toast from 'react-hot-toast';
 
 // Business types
 const BUSINESS_TYPES = [
@@ -149,23 +150,39 @@ interface ProfileFormProps {
 export default function ProfileForm({ settings, setSettings, handlePhoneChange, handleZipChange, onEmailChange }: ProfileFormProps) {
   const [showEmailConfirmDialog, setShowEmailConfirmDialog] = React.useState(false);
   const [pendingEmailChange, setPendingEmailChange] = React.useState<string>('');
+  const [savingEmail, setSavingEmail] = React.useState(false);
 
   const openEmailChangeModal = () => {
     setPendingEmailChange(settings.email || '');
     setShowEmailConfirmDialog(true);
   };
 
-  const confirmEmailChange = () => {
+  const confirmEmailChange = async () => {
     const trimmed = pendingEmailChange.trim();
     if (!trimmed || trimmed === settings.email) {
-      // No effective change; just close.
       setShowEmailConfirmDialog(false);
       return;
     }
-    setSettings((prev: MerchantSettings) => ({ ...prev, email: trimmed }));
-    onEmailChange?.(trimmed);
-    setShowEmailConfirmDialog(false);
-    setPendingEmailChange('');
+    try {
+      setSavingEmail(true);
+      const payload = { ...settings, email: trimmed };
+      const res = await fetch('/api/merchants/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Failed to save email');
+      setSettings((prev: MerchantSettings) => ({ ...prev, email: trimmed }));
+      onEmailChange?.(trimmed);
+      toast.success('Email updated');
+      setShowEmailConfirmDialog(false);
+      setPendingEmailChange('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update email');
+    } finally {
+      setSavingEmail(false);
+    }
   };
 
   const cancelEmailChange = () => {
@@ -333,6 +350,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 Change Email
               </Button>
             </div>
+            <button
+              type="button"
+              onClick={openEmailChangeModal}
+              className="text-left text-sm text-primary-600 hover:text-primary-700 underline underline-offset-2 sm:hidden"
+            >
+              Change email
+            </button>
           </div>
         </CardContent>
       </Card>
@@ -471,10 +495,10 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
+                  disabled={savingEmail || !pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
                   className="font-capsule text-base font-normal bg-[#7f5efd] px-6 py-2 text-white shadow-md transition-all duration-200 hover:bg-[#7c3aed] hover:shadow-lg"
                 >
-                  Confirm Change
+                  {savingEmail ? 'Saving…' : 'Confirm Change'}
                 </Button>
               </div>
             </form>
