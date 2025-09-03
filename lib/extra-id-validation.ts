@@ -35,9 +35,9 @@ export function getExtraIdPlaceholder(currency: string): string {
 
 export function getExtraIdDescription(currency: string): string {
   switch (currency.toUpperCase()) {
-    case 'XRP': return 'Numeric destination tag (1-10 digits) required for XRP payments';
-    case 'XLM': return 'Memo (1-28 characters) required for Stellar payments';
-    case 'HBAR': return 'Memo (1-100 characters) required for Hedera payments';
-    default: return 'Extra ID required for this currency';
+    case 'XRP': return 'Numeric destination tag (1-10 digits). Include only if your wallet or exchange requires it.';
+    case 'XLM': return 'Memo (1-28 characters). Include only if your wallet or exchange requires it.';
+    case 'HBAR': return 'Memo (1-100 characters). Include only if your wallet or exchange requires it.';
+    default: return 'Extra ID (only if required by your wallet)';
   }
 }

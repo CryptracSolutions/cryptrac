@@ -506,7 +506,7 @@ export async function POST(request: Request) {
           paymentRequest.payout_address = walletAddress
           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
           
-          // Add payout_extra_id if required for this currency
+          // Add payout_extra_id if merchant configured one for this currency (optional)
           if (requiresExtraId(targetPayoutCurrency)) {
             const extraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
             if (extraId) {
@@ -516,7 +516,7 @@ export async function POST(request: Request) {
               )
             } else {
               console.warn(
-                `⚠️ ${getExtraIdLabel(targetPayoutCurrency)} required for ${targetPayoutCurrency} but not configured`
+                `ℹ️ No ${getExtraIdLabel(targetPayoutCurrency).toLowerCase()} configured for ${targetPayoutCurrency}; forwarding to address without one.`
               )
             }
           }

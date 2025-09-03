@@ -280,27 +280,25 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       return;
     }
 
-    // For currencies requiring an extra ID, do not validate the address
-    // until a non-empty, valid extra ID is provided
+    // For currencies with optional extra IDs: mark extra ID validation state
+    // but do not block address validation when it's missing.
     if (requiresExtraId(currency)) {
-      const extra = settings.wallet_extra_ids?.[currency] || '';
-      const extraTrimmed = extra.trim();
-      if (!extraTrimmed) {
+      const extra = (settings.wallet_extra_ids?.[currency] || '').trim();
+      if (!extra) {
         setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
-        setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
-        return;
-      }
-      if (!validateExtraId(currency, extraTrimmed)) {
+      } else if (!validateExtraId(currency, extra)) {
         setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
-        // Keep address status idle until extra ID is valid
-        setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
-        return;
       }
     }
 
     setValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
     if (requiresExtraId(currency)) {
-      setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
+      const extra = (settings.wallet_extra_ids?.[currency] || '').trim();
+      if (extra) {
+        setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'checking' }));
+      } else {
+        setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+      }
     }
 
     try {
@@ -326,7 +324,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       if (result.validation && result.validation.valid) {
         setValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
         if (requiresExtraId(currency)) {
-          setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
+          const extra = (settings.wallet_extra_ids?.[currency] || '').trim();
+          if (extra) setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
+          else setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
         }
 
         // Check if this is a new wallet being added
@@ -340,7 +340,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       } else {
         setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
         if (requiresExtraId(currency)) {
-          setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+          const extra = (settings.wallet_extra_ids?.[currency] || '').trim();
+          if (extra) setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
+          else setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
         }
       }
     } catch (error) {
@@ -717,7 +719,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                         {requiresExtraId(currency) && (
                           <div className="space-y-2">
                             <label className="text-xs font-medium text-gray-700">
-                              {getExtraIdLabel(currency)} (Required)
+                              {getExtraIdLabel(currency)} (if required by your wallet)
                             </label>
                             <div className="relative">
                               <Input
@@ -767,11 +769,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                               !(settings.wallets[currency]?.trim() && settings.wallet_extra_ids?.[currency]?.trim())
                             ) && (
                               <div className="text-xs">
-                                <p className="font-semibold text-red-600">
-                                  {getCurrencyDisplayName(currency)} requires both a wallet address and {getExtraIdLabel(currency)}. Enter both to validate.
+                                <p className="font-semibold text-gray-700">
+                                  Include your {getExtraIdLabel(currency).toLowerCase()} only if your wallet or exchange requires it (e.g., Coinbase).
                                 </p>
                                 <p className="text-gray-500 mt-1">
-                                  💡 {getExtraIdLabel(currency)} can be found in your wallet settings or when creating a new address
+                                  💡 Personal wallets typically don’t need a {getExtraIdLabel(currency).toLowerCase()}. Exchanges often do.
                                 </p>
                               </div>
                             )}
@@ -959,7 +961,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                         {requiresExtraId(currency.code) && (
                           <>
                             <label className="text-xs font-medium text-gray-700">
-                              {getExtraIdLabel(currency.code)} (Required)
+                              {getExtraIdLabel(currency.code)} (if required by your wallet)
                             </label>
                             <div className="relative">
                               <Input
@@ -1007,11 +1009,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                               !(settings.wallets[currency.code]?.trim() && settings.wallet_extra_ids?.[currency.code]?.trim())
                             ) && (
                               <div className="text-xs">
-                                <p className="font-semibold text-red-600">
-                                  {getCurrencyDisplayName(currency.code)} requires both a wallet address and {getExtraIdLabel(currency.code)}. Enter both to validate.
+                                <p className="font-semibold text-gray-700">
+                                  Include your {getExtraIdLabel(currency.code).toLowerCase()} only if your wallet or exchange requires it (e.g., Coinbase).
                                 </p>
                                 <p className="text-gray-500 mt-1">
-                                  💡 {getExtraIdLabel(currency.code)} can be found in your wallet settings or when creating a new address
+                                  💡 Personal wallets typically don’t need a {getExtraIdLabel(currency.code).toLowerCase()}. Exchanges often do.
                                 </p>
                               </div>
                             )}

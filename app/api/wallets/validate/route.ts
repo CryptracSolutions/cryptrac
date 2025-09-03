@@ -384,18 +384,18 @@ export async function POST(request: NextRequest) {
       addressError = `Invalid ${currencyInfo?.addressType || upperCurrency + ' address'} format`;
     }
 
-    // NEW: Validate extra_id if provided and required
+    // Validate extra_id format only if provided (optional per NOWPayments)
     let extraIdValid = true;
     let extraIdError = null;
 
     if (requiresExtraId(currency)) {
-      if (!extra_id || !extra_id.trim()) {
-        extraIdValid = false;
-        extraIdError = `${getExtraIdLabel(currency)} is required for ${currency}`;
-      } else if (!validateExtraId(currency, extra_id.trim())) {
-        extraIdValid = false;
-        extraIdError = `Invalid ${getExtraIdLabel(currency)} format for ${currency}`;
+      if (extra_id && extra_id.trim()) {
+        if (!validateExtraId(currency, extra_id.trim())) {
+          extraIdValid = false;
+          extraIdError = `Invalid ${getExtraIdLabel(currency)} format for ${currency}`;
+        }
       }
+      // If not provided, treat as optional and valid
     }
 
     const isValid = addressValid && extraIdValid;
@@ -426,4 +426,3 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
-

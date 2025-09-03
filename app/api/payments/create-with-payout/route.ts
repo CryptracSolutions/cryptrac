@@ -46,12 +46,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate extra_id if required
-    if (requiresExtraId(currency) && !extraId) {
-      return NextResponse.json({
-        success: false,
-        error: `${getExtraIdLabel(currency)} is required for ${currency} but not configured`
-      }, { status: 400 });
+    // Validate extra_id format only if provided (optional per NOWPayments)
+    if (requiresExtraId(currency) && extraId) {
+      if (!validateExtraId(currency, extraId)) {
+        return NextResponse.json({
+          success: false,
+          error: `Invalid ${getExtraIdLabel(currency)} format for ${currency}`
+        }, { status: 400 });
+      }
     }
 
     // Create payment with merchant-specific payout info
