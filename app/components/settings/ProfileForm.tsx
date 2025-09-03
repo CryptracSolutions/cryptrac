@@ -12,6 +12,7 @@ import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Button } from '@/app/components/ui/button';
 import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabase-browser';
 
 // Business types
 const BUSINESS_TYPES = [
@@ -175,6 +176,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
       setSettings((prev: MerchantSettings) => ({ ...prev, email: trimmed }));
       onEmailChange?.(trimmed);
       toast.success('Email updated');
+      // Refresh auth session so header/nav reflects new email
+      try { await supabase.auth.refreshSession(); } catch {}
       setShowEmailConfirmDialog(false);
       setPendingEmailChange('');
     } catch (err) {

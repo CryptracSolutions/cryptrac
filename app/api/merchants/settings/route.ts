@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createServiceClient } from '@/lib/email-utils';
 import { cookies } from 'next/headers';
 
 // GET merchant settings
@@ -340,14 +341,23 @@ export async function PUT(request: NextRequest) {
 
     // Update the auth user's email if it has changed
     if (email && email !== user.email) {
-      const { error: authUpdateError } = await supabase.auth.updateUser({
-        email: email
-      });
-
-      if (authUpdateError) {
-        console.error('Error updating auth user email:', authUpdateError);
-        // Note: We don't fail the request here as the merchant record was updated successfully
-        // The user will need to confirm the email change through Supabase's email verification process
+      try {
+        // Prefer service role admin update for immediate effect without confirmation
+        const admin = createServiceClient();
+        const { error: adminErr } = await admin.auth.admin.updateUserById(user.id, { email });
+        if (adminErr) {
+          console.error('Admin email update failed, falling back to user update:', adminErr);
+          const { error: clientErr } = await supabase.auth.updateUser({ email });
+          if (clientErr) {
+            console.error('Client email update also failed:', clientErr);
+          }
+        }
+      } catch (e) {
+        console.error('Service client not configured or failed; attempting client update:', e);
+        const { error: clientErr } = await supabase.auth.updateUser({ email });
+        if (clientErr) {
+          console.error('Client email update failed:', clientErr);
+        }
       }
     }
 
@@ -396,4 +406,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
