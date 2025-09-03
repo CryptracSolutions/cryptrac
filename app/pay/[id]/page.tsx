@@ -1426,7 +1426,7 @@ export default function PaymentPage() {
                       <Button
                         variant="outline"
                         size="lg"
-                        onClick={() => copyToClipboard(paymentData.payin_extra_id, getExtraIdLabel(paymentData.pay_currency))}
+                        onClick={() => copyToClipboard(paymentData.payin_extra_id!, getExtraIdLabel(paymentData.pay_currency))}
                         className="font-phonic text-base font-normal border-yellow-600 text-yellow-700 hover:bg-yellow-50 shadow-sm"
                       >
                         <Copy className="h-4 w-4" />
