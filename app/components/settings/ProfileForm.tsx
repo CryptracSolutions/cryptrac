@@ -335,8 +335,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
           <div className="space-y-2">
             <label className="font-phonic text-base font-normal text-gray-700">Email Address *</label>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="sm:flex-1 min-w-0">
+            <div className="flex flex-wrap items-start gap-3">
+              <div className="flex-1 min-w-[220px]">
                 <Input
                   value={settings.email}
                   readOnly
@@ -346,17 +346,19 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   required
                 />
               </div>
-              <Button type="button" onClick={openEmailChangeModal} className="sm:shrink-0">
+              <Button type="button" onClick={openEmailChangeModal} className="shrink-0">
                 Change Email
               </Button>
             </div>
-            <button
-              type="button"
-              onClick={openEmailChangeModal}
-              className="text-left text-sm text-primary-600 hover:text-primary-700 underline underline-offset-2 sm:hidden"
-            >
-              Change email
-            </button>
+            <div className="mt-1">
+              <button
+                type="button"
+                onClick={openEmailChangeModal}
+                className="text-sm text-primary-600 hover:text-primary-700 underline underline-offset-2"
+              >
+                Change email
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>
