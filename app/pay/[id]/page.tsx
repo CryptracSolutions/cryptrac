@@ -1306,20 +1306,16 @@ export default function PaymentPage() {
                               {formatStatus(currentStatus.payment_status)}
                             </span>
                           </div>
-                          {currentStatus.tx_hash && (() => {
-                            const explorerUrl = getBlockExplorerUrl(currentStatus.tx_hash, currentStatus.pay_currency)
-                            return explorerUrl ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => window.open(explorerUrl, '_blank')}
-                                className="border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
-                              >
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                View Transaction
-                              </Button>
-                            ) : null
-                          })()}
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-xs font-semibold",
+                            currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'sending' 
+                              ? "bg-green-100 text-green-700" 
+                              : currentStatus.payment_status === 'confirming' 
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-purple-100 text-[#7f5efd]"
+                          )}>
+                            {formatStatus(currentStatus.payment_status).toUpperCase()}
+                          </span>
                         </div>
                         {currentStatus.actually_paid && (
                           <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
@@ -1356,20 +1352,22 @@ export default function PaymentPage() {
                       </div>
 
                       {/* Address */}
-                      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <p className="text-sm text-gray-600">Send to this address</p>
-                            <p className="font-mono text-sm text-gray-900 break-all">{paymentData.pay_address}</p>
+                      <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <p className="text-sm text-gray-600">Send to this address</p>
+                              <p className="font-mono text-sm text-gray-900 break-all">{paymentData.pay_address}</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
+                              className="border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                            className="border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
                         </div>
                       </div>
 
@@ -1421,28 +1419,18 @@ export default function PaymentPage() {
                       )}
 
                       {/* Instructions */}
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
+                      <div className="bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-purple-900 mb-3 flex items-center">
                           <Shield className="h-5 w-5 mr-2" />
                           Payment Instructions
                         </h4>
-                        <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                        <ol className="text-sm text-purple-800 space-y-2 list-decimal list-inside">
                           <li>Send exactly <strong className="text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
                           <li>Do not send any other amount or currency</li>
                           <li>Payment will be confirmed automatically</li>
                           <li>You will be redirected once payment is complete</li>
                         </ol>
                       </div>
-
-                      {/* Monitoring */}
-                      {isMonitoring && (
-                        <div className="text-center">
-                          <div className="flex items-center justify-center space-x-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
-                            <Loader2 className="h-5 w-5 animate-spin text-[#7f5efd]" />
-                            <span>Monitoring payment status (checking every {Math.round(monitoringInterval / 1000)}s)</span>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
