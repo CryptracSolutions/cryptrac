@@ -666,6 +666,10 @@ export async function POST(request: Request) {
       hash,
       tx_hash,
       transaction_hash,
+      // Relationship fields used by NOWPayments when the customer pays
+      // with a different coin than requested (crypto2crypto flow)
+      parent_payment_id,
+      purchase_id,
 
     } = body as {
       payment_id: string
@@ -685,6 +689,8 @@ export async function POST(request: Request) {
       transaction_hash?: string
       payin_extra_id?: string
       payout_extra_id?: string
+      parent_payment_id?: string | number
+      purchase_id?: string | number
     }
 
     console.log('🔍 Processing webhook for payment ID:', payment_id)
@@ -701,25 +707,67 @@ export async function POST(request: Request) {
       }
     )
 
-    // Find the payment record
-    const { data: payment, error: paymentError } = await supabase
+    // Find the payment record, with fallbacks for crypto2crypto flows
+    let paymentLookupReason = 'by nowpayments_payment_id';
+    let { data: payment, error: paymentError } = await supabase
       .from('transactions')
       .select('*')
-      .eq('nowpayments_payment_id', payment_id)
+      .eq('nowpayments_payment_id', String(payment_id))
       .single()
 
     if (paymentError || !payment) {
-      console.error('❌ Payment not found for payment_id:', payment_id, paymentError)
-      return NextResponse.json(
-        { success: false, message: 'Payment not found' },
-        { status: 404 }
-      )
+      console.warn('⚠️ No transaction matched webhook payment_id. Trying parent_payment_id/order_id fallbacks', {
+        payment_id,
+        parent_payment_id,
+      })
+
+      // Fallback 1: match original (parent) NOWPayments payment id
+      if (parent_payment_id) {
+        const res = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('nowpayments_payment_id', String(parent_payment_id))
+          .single()
+        payment = res.data as any
+        paymentError = res.error as any
+        if (payment && !paymentError) {
+          paymentLookupReason = 'by parent_payment_id';
+        }
+      }
+
+      // Fallback 2: match by order_id
+      if ((!payment || paymentError) && body.order_id) {
+        const res = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('order_id', String(body.order_id))
+          .single()
+        payment = res.data as any
+        paymentError = res.error as any
+        if (payment && !paymentError) {
+          paymentLookupReason = 'by order_id';
+        }
+      }
+
+      if (paymentError || !payment) {
+        console.error('❌ Payment not found after fallbacks', {
+          payment_id,
+          parent_payment_id,
+          order_id: (body as any).order_id,
+          error: paymentError
+        })
+        return NextResponse.json(
+          { success: false, message: 'Payment not found' },
+          { status: 404 }
+        )
+      }
     }
 
     console.log('✅ Payment found:', {
       id: payment.id,
       current_status: payment.status,
-      webhook_status: payment_status
+      webhook_status: payment_status,
+      lookup: paymentLookupReason
     })
 
     // Map NOWPayments status to our internal status
@@ -754,6 +802,13 @@ export async function POST(request: Request) {
     const updateData: Record<string, unknown> = {
       status: newStatus,
       updated_at: new Date().toISOString(),
+      // Persist identifiers to help with future investigations
+      payment_data: {
+        ...(payment.payment_data || {}),
+        now_webhook_payment_id: String(payment_id),
+        now_parent_payment_id: parent_payment_id ? String(parent_payment_id) : undefined,
+        now_purchase_id: purchase_id ? String(purchase_id) : undefined,
+      },
     }
 
     // Enhanced transaction hash logging with all possible sources
@@ -1018,4 +1073,3 @@ export async function POST(request: Request) {
     )
   }
 }
-
