@@ -837,18 +837,15 @@ export default function SmartTerminalPage() {
                       </div>
                     )}
                     {/* Payment Details */}
-                    <div className="w-full bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200">
-                      <div className="text-center space-y-2">
-                        <p className="text-sm text-gray-600">Pay with</p>
-                        <p className="text-2xl font-bold text-[#7f5efd]">{paymentData.pay_currency}</p>
-                        {showAmount && (
-                          <div className="mt-3 p-3 bg-purple-50 rounded-lg">
-                            <p className="text-sm text-gray-600 mb-1">Amount to send:</p>
-                            <p className="text-xl font-bold text-[#7f5efd]">
-                              {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency}
-                            </p>
-                          </div>
-                        )}
+                    <div className="w-full bg-gradient-to-r from-purple-50 to-purple-25 p-6 rounded-xl border border-purple-200">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-2">Send exactly</p>
+                        <p className="text-3xl font-bold text-[#7f5efd] mb-1">
+                          {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()}
+                        </p>
+                        <p className="text-xl font-semibold text-[#7f5efd] uppercase">
+                          {paymentData.pay_currency}
+                        </p>
                       </div>
                     </div>
                     {/* Address Display */
@@ -861,16 +858,10 @@ export default function SmartTerminalPage() {
                         </div>
                         <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
                       </div>
-                      <div className="bg-white p-4 rounded-lg border border-purple-100 shadow-sm">
+                      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-sm text-gray-600 mb-1">Send to this address</p>
                         <p className="text-sm font-mono break-all text-gray-900 leading-relaxed tracking-wide">
                           {paymentData.pay_address}
-                        </p>
-                      </div>
-                      {/* Fallback amount display (always visible) */}
-                      <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                        <p className="text-xs text-gray-700 mb-1">If your wallet doesn’t prefill:</p>
-                        <p className="text-base font-semibold text-[#7f5efd]">
-                          Send exactly {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency}
                         </p>
                       </div>
                     </div>

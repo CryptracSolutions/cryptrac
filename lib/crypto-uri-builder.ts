@@ -4,11 +4,20 @@
  * This utility creates standardized payment URIs that can be embedded in QR codes
  * to allow wallets to auto-populate recipient address, amount, and other payment details.
  * 
- * Follows established standards:
+ * Follows established standards for maximum wallet compatibility:
  * - BIP-21 for Bitcoin and Bitcoin-like currencies
- * - EIP-831 for Ethereum and ERC-20 tokens
- * - SEP-0007 for Stellar payments
- * - Custom schemes for other networks following established patterns
+ * - EIP-681 for Ethereum and ERC-20 tokens (compatible with MetaMask, Trust Wallet)
+ * - SEP-0007 for Stellar payments (compatible with Trust Wallet, Stellar wallets)
+ * - Algorand URI scheme with proper micro-algos conversion (compatible with Pera, Trust Wallet)
+ * - Solana URI scheme (compatible with Phantom, Solflare, Trust Wallet)
+ * - Address-only fallback for currencies without standardized URI schemes (Sui)
+ * 
+ * Recent improvements:
+ * - Fixed ETH QR codes to use EIP-681 standard (fixes MetaMask compatibility)
+ * - Fixed XLM QR codes to use simplified SEP-0007 format (fixes Trust Wallet compatibility) 
+ * - Fixed ALGO decimal handling to use proper micro-algos conversion
+ * - Fixed SUI to use address-only fallback (fixes Phantom wallet compatibility)
+ * - Maintained SOL standard format for broad wallet support
  */
 
 export interface CryptoPaymentRequest {
@@ -83,12 +92,11 @@ function buildExtraIdURI(
       break;
       
     case 'XLM':
-      // Stellar SEP-0007: Use canonical "stellar:" scheme for wallet scanners
-      // stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
+      // Stellar SEP-0007: Use simplified format for better wallet compatibility
+      // stellar:address?amount=amount&memo=memo
       scheme = 'stellar';
       const memo = String(extraId);
-      const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT';
-      uri = `${scheme}:pay?destination=${encodeURIComponent(address)}&amount=${encodeURIComponent(amt)}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`;
+      uri = `${scheme}:${address}?amount=${amt}&memo=${encodeURIComponent(memo)}`;
       if (label) uri += `&label=${encodeURIComponent(label)}`;
       if (message) uri += `&message=${encodeURIComponent(message)}`;
       break;
@@ -163,10 +171,10 @@ function buildStandardURI(
       
     // Ethereum and ERC-20 tokens
     case 'ETH':
-      // Trust Wallet deep link for better mobile compatibility
-      // SLIP44 coin id for ETH is 60
-      scheme = 'https';
-      uri = `https://link.trustwallet.com/send?coin=60&address=${address}&amount=${amt}`;
+      // EIP-681 standard for maximum wallet compatibility
+      scheme = 'ethereum';
+      const weiAmount = Math.floor(amount * Math.pow(10, 18)); // Convert ETH to wei
+      uri = `${scheme}:${address}?value=${weiAmount}`;
       break;
       
     // ERC-20 Stablecoins and tokens (use Ethereum scheme with contract address)
@@ -194,6 +202,14 @@ function buildStandardURI(
       const daiContract = '0x6B175474E89094C44Da98b954EedeAC495271d0F';
       const daiAmount = Math.floor(amount * Math.pow(10, 18)); // DAI has 18 decimals
       uri = `${scheme}:${daiContract}/transfer?address=${address}&uint256=${daiAmount}`;
+      break;
+      
+    case 'PYUSD':
+      scheme = 'ethereum';
+      // PayPal USD contract address on Ethereum mainnet
+      const pyusdContract = '0x6c3ea9036406852006290770BEdFcAbA0e23A0e8';
+      const pyusdAmount = Math.floor(amount * Math.pow(10, 6)); // PYUSD has 6 decimals
+      uri = `${scheme}:${pyusdContract}/transfer?address=${address}&uint256=${pyusdAmount}`;
       break;
       
     // Binance Smart Chain
@@ -342,12 +358,12 @@ function buildStandardURI(
       uri = `${scheme}:${usdcBaseContract}/transfer?address=${address}&uint256=${usdcBaseAmount}&chainId=8453`;
       break;
       
-    // Sui (experimental URI support)
+    // Sui (address-only fallback for better compatibility)
     case 'SUI':
-      // Several Sui wallets recognize the sui: scheme with amount in SUI
-      // Fall back to address-only if a wallet doesn't support it
-      scheme = 'sui';
-      uri = `${scheme}:${address}?amount=${amt}`;
+      // Since SUI URI scheme isn't standardized and Phantom doesn't support it,
+      // use address-only fallback for better wallet compatibility
+      scheme = 'address';
+      uri = address;
       break;
       
     // TON
@@ -366,7 +382,10 @@ function buildStandardURI(
     // Algorand
     case 'ALGO':
       scheme = 'algorand';
-      uri = `${scheme}:${address}?amount=${Math.ceil((amount * Math.pow(10, 6)) + Number.EPSILON)}`; // round up to whole micro-algos
+      // Convert ALGO to micro-algos (1 ALGO = 1,000,000 micro-algos)
+      // Use Math.round to avoid floating point precision issues
+      const microAlgos = Math.round(amount * 1000000);
+      uri = `${scheme}:${address}?amount=${microAlgos}`;
       break;
       
     case 'USDCALGO':
@@ -480,7 +499,7 @@ export function validateCryptoURI(uri: string): {
     'bitcoin', 'litecoin', 'dogecoin', 'bitcoincash', 
     'ethereum', 'solana', 'tron', 'avalanche',
     'xrp', 'stellar', 'web+stellar', 'hbar', 'ton', 'algorand', 'near',
-    'cardano', 'polkadot', 'https', 'address', 'sui'
+    'cardano', 'polkadot', 'https', 'address', 'eosio'
   ];
   
   if (!validSchemes.includes(scheme)) {

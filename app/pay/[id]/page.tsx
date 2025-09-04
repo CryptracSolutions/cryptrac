@@ -1374,47 +1374,46 @@ export default function PaymentPage() {
                 {/* Amount */}
                 <div>
                   <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount to Send</Label>
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      value={`${(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} ${paymentData.pay_currency.toUpperCase()}`}
-                      readOnly
-                      className="font-mono text-lg font-semibold bg-gray-50"
-                    />
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => copyToClipboard((Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString(), 'Amount')}
-                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Send exactly</p>
+                        <p className="text-2xl font-bold text-[#7f5efd]">
+                          {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => copyToClipboard(`${(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} ${paymentData.pay_currency.toUpperCase()}`, 'Amount')}
+                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Address */}
                 <div>
                   <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Address</Label>
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      value={paymentData.pay_address}
-                      readOnly
-                      className="font-mono text-sm bg-gray-50"
-                    />
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {/* Fallback amount display under address */}
-                  <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <p className="text-xs text-gray-700 mb-1">If your wallet doesn’t prefill:</p>
-                    <p className="text-base font-semibold text-[#7f5efd]">
-                      Send exactly {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}
-                    </p>
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 mr-3">
+                        <p className="text-sm text-gray-600 mb-1">Send to this address</p>
+                        <p className="font-mono text-sm text-gray-900 break-all leading-relaxed">
+                          {paymentData.pay_address}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
+                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm flex-shrink-0"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 
@@ -1506,7 +1505,7 @@ export default function PaymentPage() {
                     Payment Instructions
                   </h4>
                   <ol className="font-phonic text-sm font-normal text-blue-800 space-y-2 list-decimal list-inside">
-                    <li>Send exactly <strong className="text-blue-900">{(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
+                    <li>Send exactly <strong className="text-[#7f5efd]">{(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
                     <li>Do not send any other amount or currency</li>
                     <li>Payment will be confirmed automatically</li>
                     <li>You will be redirected once payment is complete</li>
