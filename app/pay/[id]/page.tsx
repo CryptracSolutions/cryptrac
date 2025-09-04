@@ -1376,14 +1376,14 @@ export default function PaymentPage() {
                   <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount to Send</Label>
                   <div className="flex items-center space-x-3">
                     <Input
-                      value={`${paymentData.pay_amount} ${paymentData.pay_currency.toUpperCase()}`}
+                      value={`${(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} ${paymentData.pay_currency.toUpperCase()}`}
                       readOnly
                       className="font-mono text-lg font-semibold bg-gray-50"
                     />
                     <Button
                       variant="outline"
                       size="lg"
-                      onClick={() => copyToClipboard(paymentData.pay_amount.toString(), 'Amount')}
+                      onClick={() => copyToClipboard((Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString(), 'Amount')}
                       className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                     >
                       <Copy className="h-4 w-4" />
@@ -1499,7 +1499,7 @@ export default function PaymentPage() {
                     Payment Instructions
                   </h4>
                   <ol className="font-phonic text-sm font-normal text-blue-800 space-y-2 list-decimal list-inside">
-                    <li>Send exactly <strong className="text-blue-900">{paymentData.pay_amount} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
+                    <li>Send exactly <strong className="text-blue-900">{(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
                     <li>Do not send any other amount or currency</li>
                     <li>Payment will be confirmed automatically</li>
                     <li>You will be redirected once payment is complete</li>

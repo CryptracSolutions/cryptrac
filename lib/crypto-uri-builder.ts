@@ -28,6 +28,20 @@ export interface URIResult {
   fallbackAddress: string;
 }
 
+// Utility: round a number UP to a fixed number of decimals
+function roundUp(amount: number, decimals: number): number {
+  const f = Math.pow(10, decimals);
+  return Math.ceil((amount + Number.EPSILON) * f) / f;
+}
+
+// Utility: format with up to `maxDecimals` decimals, trimming trailing zeros
+function formatAmount(amount: number, maxDecimals = 6): string {
+  const rounded = roundUp(amount, maxDecimals);
+  // Use toFixed to ensure we have at most maxDecimals, then trim trailing zeros
+  const fixed = rounded.toFixed(maxDecimals);
+  return fixed.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+}
+
 /**
  * Builds a comprehensive payment URI for the given cryptocurrency and parameters
  */
@@ -57,12 +71,13 @@ function buildExtraIdURI(
 ): URIResult {
   let uri = '';
   let scheme = '';
+  const amt = formatAmount(amount, 6);
   
   switch (currency) {
     case 'XRP':
       // XRP URI scheme: xrp:address?dt=tag&amount=amount
       scheme = 'xrp';
-      uri = `${scheme}:${address}?dt=${extraId}&amount=${amount}`;
+      uri = `${scheme}:${address}?dt=${extraId}&amount=${amt}`;
       if (label) uri += `&label=${encodeURIComponent(label)}`;
       if (message) uri += `&message=${encodeURIComponent(message)}`;
       break;
@@ -72,7 +87,7 @@ function buildExtraIdURI(
       scheme = 'stellar';
       const memo = String(extraId);
       const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT';
-      uri = `${scheme}:pay?destination=${encodeURIComponent(address)}&amount=${encodeURIComponent(String(amount))}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`;
+      uri = `${scheme}:pay?destination=${encodeURIComponent(address)}&amount=${encodeURIComponent(amt)}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`;
       if (label) uri += `&label=${encodeURIComponent(label)}`;
       if (message) uri += `&message=${encodeURIComponent(message)}`;
       break;
@@ -80,7 +95,7 @@ function buildExtraIdURI(
     case 'HBAR':
       // Hedera URI scheme: hbar:address?memo=memo&amount=amount
       scheme = 'hbar';
-      uri = `${scheme}:${address}?memo=${extraId}&amount=${amount}`;
+      uri = `${scheme}:${address}?memo=${extraId}&amount=${amt}`;
       if (label) uri += `&label=${encodeURIComponent(label)}`;
       if (message) uri += `&message=${encodeURIComponent(message)}`;
       break;
@@ -88,7 +103,7 @@ function buildExtraIdURI(
     case 'EOS':
       // EOS URI scheme: eosio:address?memo=memo&amount=amount
       scheme = 'eosio';
-      uri = `${scheme}:${address}?memo=${extraId}&amount=${amount}`;
+      uri = `${scheme}:${address}?memo=${extraId}&amount=${amt}`;
       if (label) uri += `&label=${encodeURIComponent(label)}`;
       if (message) uri += `&message=${encodeURIComponent(message)}`;
       break;
@@ -120,27 +135,29 @@ function buildStandardURI(
 ): URIResult {
   let uri = '';
   let scheme = '';
+  // All decimal-amount schemes should cap to 6 decimals to satisfy wallet limits
+  const amt = formatAmount(amount, 6);
   
   switch (currency) {
     // Bitcoin and Bitcoin forks
     case 'BTC':
       scheme = 'bitcoin';
-      uri = `${scheme}:${address}?amount=${amount}`;
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
       
     case 'LTC':
       scheme = 'litecoin';
-      uri = `${scheme}:${address}?amount=${amount}`;
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
       
     case 'BCH':
       scheme = 'bitcoincash';
-      uri = `${scheme}:${address}?amount=${amount}`;
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
       
     case 'DOGE':
       scheme = 'dogecoin';
-      uri = `${scheme}:${address}?amount=${amount}`;
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
       
     // Ethereum and ERC-20 tokens
@@ -201,21 +218,21 @@ function buildStandardURI(
     // Solana and SPL tokens
     case 'SOL':
       scheme = 'solana';
-      uri = `${scheme}:${address}?amount=${amount}`;
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
       
     case 'USDCSOL':
       scheme = 'solana';
       // USDC SPL token mint address
       const usdcSplMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-      uri = `${scheme}:${address}?amount=${amount}&spl-token=${usdcSplMint}`;
+      uri = `${scheme}:${address}?amount=${amt}&spl-token=${usdcSplMint}`;
       break;
       
     case 'USDTSOL':
       scheme = 'solana';
       // USDT SPL token mint address
       const usdtSplMint = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
-      uri = `${scheme}:${address}?amount=${amount}&spl-token=${usdtSplMint}`;
+      uri = `${scheme}:${address}?amount=${amt}&spl-token=${usdtSplMint}`;
       break;
       
     // Polygon/Matic and Polygon tokens
@@ -246,20 +263,20 @@ function buildStandardURI(
     // Tron and TRC-20 tokens  
     case 'TRX':
       scheme = 'tron';
-      uri = `${scheme}:${address}?amount=${amount}`;
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
       
     case 'USDTTRC20':
       scheme = 'tron';
       // USDT on Tron
       const usdtTronContract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
-      uri = `${scheme}:${usdtTronContract}?address=${address}&amount=${amount}`;
+      uri = `${scheme}:${usdtTronContract}?address=${address}&amount=${amt}`;
       break;
       
     // Avalanche
     case 'AVAX':
       scheme = 'avalanche';
-      uri = `${scheme}:${address}?amount=${amount}`;
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
       
     // Arbitrum
@@ -340,7 +357,7 @@ function buildStandardURI(
     // Algorand
     case 'ALGO':
       scheme = 'algorand';
-      uri = `${scheme}:${address}?amount=${amount * Math.pow(10, 6)}`; // ALGO uses micro-algos
+      uri = `${scheme}:${address}?amount=${Math.ceil((amount * Math.pow(10, 6)) + Number.EPSILON)}`; // round up to whole micro-algos
       break;
       
     case 'USDCALGO':

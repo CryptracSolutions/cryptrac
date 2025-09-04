@@ -845,7 +845,7 @@ export default function SmartTerminalPage() {
                           <div className="mt-3 p-3 bg-purple-50 rounded-lg">
                             <p className="text-sm text-gray-600 mb-1">Amount to send:</p>
                             <p className="text-xl font-bold text-[#7f5efd]">
-                              {paymentData.pay_amount} {paymentData.pay_currency}
+                              {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency}
                             </p>
                           </div>
                         )}
