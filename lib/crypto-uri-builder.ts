@@ -83,8 +83,9 @@ function buildExtraIdURI(
       break;
       
     case 'XLM':
-      // Stellar SEP-0007: stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
-      scheme = 'stellar';
+      // Stellar SEP-0007: Prefer web+stellar for broad wallet compatibility
+      // web+stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
+      scheme = 'web+stellar';
       const memo = String(extraId);
       const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT';
       uri = `${scheme}:pay?destination=${encodeURIComponent(address)}&amount=${encodeURIComponent(amt)}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`;
@@ -341,6 +342,14 @@ function buildStandardURI(
       uri = `${scheme}:${usdcBaseContract}/transfer?address=${address}&uint256=${usdcBaseAmount}&chainId=8453`;
       break;
       
+    // Sui (experimental URI support)
+    case 'SUI':
+      // Several Sui wallets recognize the sui: scheme with amount in SUI
+      // Fall back to address-only if a wallet doesn't support it
+      scheme = 'sui';
+      uri = `${scheme}:${address}?amount=${amt}`;
+      break;
+      
     // TON
     case 'TON':
       scheme = 'ton';
@@ -470,8 +479,8 @@ export function validateCryptoURI(uri: string): {
   const validSchemes = [
     'bitcoin', 'litecoin', 'dogecoin', 'bitcoincash', 
     'ethereum', 'solana', 'tron', 'avalanche',
-    'xrp', 'stellar', 'hbar', 'ton', 'algorand', 'near',
-    'cardano', 'polkadot', 'https', 'address'
+    'xrp', 'stellar', 'web+stellar', 'hbar', 'ton', 'algorand', 'near',
+    'cardano', 'polkadot', 'https', 'address', 'sui'
   ];
   
   if (!validSchemes.includes(scheme)) {
@@ -479,7 +488,7 @@ export function validateCryptoURI(uri: string): {
   }
   
   // Validate URI structure for known schemes
-  if (scheme === 'stellar') {
+  if (scheme === 'stellar' || scheme === 'web+stellar') {
     if (!uri.includes('destination=')) {
       errors.push('Stellar URI missing destination parameter');
     }
@@ -550,11 +559,21 @@ export function parseCryptoURI(uri: string): {
         };
         
       case 'stellar':
+      case 'web+stellar':
         return {
           currency: 'XLM',
           address: url.searchParams.get('destination') || '',
           amount: url.searchParams.get('amount') ? parseFloat(url.searchParams.get('amount')!) : undefined,
           extraId: url.searchParams.get('memo') || undefined,
+          label: url.searchParams.get('label') || undefined,
+          message: url.searchParams.get('message') || undefined
+        };
+      
+      case 'sui':
+        return {
+          currency: 'SUI',
+          address: url.pathname,
+          amount: url.searchParams.get('amount') ? parseFloat(url.searchParams.get('amount')!) : undefined,
           label: url.searchParams.get('label') || undefined,
           message: url.searchParams.get('message') || undefined
         };

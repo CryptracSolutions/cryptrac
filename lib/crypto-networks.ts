@@ -142,6 +142,13 @@ export const NETWORKS: Record<string, CurrencyNetwork> = {
     displayName: 'NEAR',
     nativeCurrency: 'NEAR',
     currencies: ['NEAR']
+  },
+  sui: {
+    id: 'sui',
+    name: 'Sui',
+    displayName: 'Sui',
+    nativeCurrency: 'SUI',
+    currencies: ['SUI']
   }
 }
 
@@ -176,7 +183,7 @@ export function groupCurrenciesByNetwork(
   acceptedCryptos: string[]
 ): Map<string, GroupedCurrency[]> {
   const grouped = new Map<string, GroupedCurrency[]>()
-  
+
   // First, ensure all networks that have accepted cryptos are included
   acceptedCryptos.forEach(crypto => {
     const networkId = getNetworkForCurrency(crypto)
@@ -184,15 +191,24 @@ export function groupCurrenciesByNetwork(
       grouped.set(networkId, [])
     }
   })
-  
+
+  // Also ensure all networks that have available currencies are included
+  // This is important for native networks like SUI that may not be in acceptedCryptos
+  currencies.forEach(currency => {
+    const networkId = getNetworkForCurrency(currency.code)
+    if (networkId && !grouped.has(networkId)) {
+      grouped.set(networkId, [])
+    }
+  })
+
   // Group all currencies by their network
   currencies.forEach(currency => {
     const networkId = getNetworkForCurrency(currency.code)
     if (!networkId) return
-    
+
     const network = NETWORKS[networkId]
     if (!network) return
-    
+
     const groupedCurrency: GroupedCurrency = {
       code: currency.code,
       name: currency.name,
@@ -200,14 +216,14 @@ export function groupCurrenciesByNetwork(
       isNative: network.nativeCurrency === currency.code,
       isStablecoin: isStablecoin(currency.code)
     }
-    
+
     if (!grouped.has(networkId)) {
       grouped.set(networkId, [])
     }
-    
+
     grouped.get(networkId)!.push(groupedCurrency)
   })
-  
+
   // Sort currencies within each network (native first, then stablecoins)
   grouped.forEach(currencies => {
     currencies.sort((a, b) => {
@@ -218,7 +234,7 @@ export function groupCurrenciesByNetwork(
       return a.code.localeCompare(b.code)
     })
   })
-  
+
   return grouped
 }
 
@@ -273,7 +289,8 @@ export function getCurrencyDisplayName(code: string): string {
   if (upper === 'DOT') return 'Polkadot'
   if (upper === 'XLM') return 'Stellar'
   if (upper === 'NEAR') return 'NEAR Protocol'
-  
+  if (upper === 'SUI') return 'Sui'
+
   return code
 }
 
@@ -281,7 +298,7 @@ export function getCurrencyDisplayName(code: string): string {
 export function sortNetworksByPriority(networkIds: string[]): string[] {
   const priority = [
     'ethereum',
-    'bitcoin', 
+    'bitcoin',
     'binance',
     'solana',
     'polygon',
@@ -291,6 +308,7 @@ export function sortNetworksByPriority(networkIds: string[]): string[] {
     'tron',
     'ton',
     'avalanche',
+    'sui',
     'litecoin',
     'cardano',
     'ripple',
