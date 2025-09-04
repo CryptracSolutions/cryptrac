@@ -9,7 +9,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
@@ -1298,30 +1298,29 @@ export default function PaymentPage() {
                   <div className="space-y-4">
                     {/* Payment Status */}
                     {currentStatus && (
-                      <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
+                      <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            {getStatusIcon(currentStatus.payment_status)}
+                            {currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'sending' ? (
+                              <CheckCircle2 className="h-6 w-6 text-green-500 animate-pulse" />
+                            ) : (
+                              <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
+                            )}
                             <span className="font-semibold text-gray-700">
-                              {formatStatus(currentStatus.payment_status)}
+                              {currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'sending' ? 'Payment Confirmed!' : 'Awaiting Payment'}
                             </span>
                           </div>
                           <span className={cn(
                             "px-3 py-1 rounded-full text-xs font-semibold",
-                            currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'sending' 
+                            currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'sending' 
                               ? "bg-green-100 text-green-700" 
                               : currentStatus.payment_status === 'confirming' 
                               ? "bg-yellow-100 text-yellow-700"
                               : "bg-purple-100 text-[#7f5efd]"
                           )}>
-                            {formatStatus(currentStatus.payment_status).toUpperCase()}
+                            {currentStatus.payment_status.toUpperCase()}
                           </span>
                         </div>
-                        {currentStatus.actually_paid && (
-                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-                            <span className="font-semibold">Amount Received:</span> {currentStatus.actually_paid} {currentStatus.pay_currency.toUpperCase()}
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -1353,17 +1352,22 @@ export default function PaymentPage() {
 
                       {/* Address */}
                       <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
+                        </div>
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <p className="text-sm text-gray-600">Send to this address</p>
-                              <p className="font-mono text-sm text-gray-900 break-all">{paymentData.pay_address}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-600 mb-1">Send to this address</p>
+                              <p className="text-sm font-mono break-all text-gray-900 leading-relaxed tracking-wide">
+                                {paymentData.pay_address}
+                              </p>
                             </div>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                              className="border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
+                              className="ml-3 border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
