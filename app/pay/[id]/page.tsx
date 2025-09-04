@@ -1409,6 +1409,13 @@ export default function PaymentPage() {
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
+                  {/* Fallback amount display under address */}
+                  <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <p className="text-xs text-gray-700 mb-1">If your wallet doesn’t prefill:</p>
+                    <p className="text-base font-semibold text-[#7f5efd]">
+                      Send exactly {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}
+                    </p>
+                  </div>
                 </div>
                 
                 {/* Destination Tag/Memo for currencies that require it */}

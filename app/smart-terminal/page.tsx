@@ -851,7 +851,9 @@ export default function SmartTerminalPage() {
                         )}
                       </div>
                     </div>
-                    {/* Address Display */}
+                    {/* Address Display */
+                    // Always show the amount below address as a manual fallback
+                    }
                     <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="p-2 bg-[#7f5efd] rounded-lg">
@@ -862,6 +864,13 @@ export default function SmartTerminalPage() {
                       <div className="bg-white p-4 rounded-lg border border-purple-100 shadow-sm">
                         <p className="text-sm font-mono break-all text-gray-900 leading-relaxed tracking-wide">
                           {paymentData.pay_address}
+                        </p>
+                      </div>
+                      {/* Fallback amount display (always visible) */}
+                      <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <p className="text-xs text-gray-700 mb-1">If your wallet doesn’t prefill:</p>
+                        <p className="text-base font-semibold text-[#7f5efd]">
+                          Send exactly {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency}
                         </p>
                       </div>
                     </div>

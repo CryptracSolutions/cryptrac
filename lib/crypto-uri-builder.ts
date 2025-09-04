@@ -83,9 +83,9 @@ function buildExtraIdURI(
       break;
       
     case 'XLM':
-      // Stellar SEP-0007: Prefer web+stellar for broad wallet compatibility
-      // web+stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
-      scheme = 'web+stellar';
+      // Stellar SEP-0007: Use canonical "stellar:" scheme for wallet scanners
+      // stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
+      scheme = 'stellar';
       const memo = String(extraId);
       const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT';
       uri = `${scheme}:pay?destination=${encodeURIComponent(address)}&amount=${encodeURIComponent(amt)}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`;
@@ -163,10 +163,10 @@ function buildStandardURI(
       
     // Ethereum and ERC-20 tokens
     case 'ETH':
-      scheme = 'ethereum';
-      // Convert amount to Wei for Ethereum URI
-      const weiAmount = Math.floor(amount * Math.pow(10, 18));
-      uri = `${scheme}:${address}?value=${weiAmount}`;
+      // Trust Wallet deep link for better mobile compatibility
+      // SLIP44 coin id for ETH is 60
+      scheme = 'https';
+      uri = `https://link.trustwallet.com/send?coin=60&address=${address}&amount=${amt}`;
       break;
       
     // ERC-20 Stablecoins and tokens (use Ethereum scheme with contract address)
