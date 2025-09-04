@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, AlertTriangle } from 'lucide-react';
 import { requiresExtraId, getExtraIdLabel, getExtraIdDescription } from '@/lib/extra-id-validation';
+import { buildCryptoPaymentURI } from '@/lib/crypto-uri-builder';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -65,43 +66,18 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
   return Array.from(stable);
 }
 
+// Legacy function - now uses centralized URI builder
 function buildPaymentURI(currency: string, address: string, amount: number, extraId?: string) {
-  const upper = currency.toUpperCase();
+  const result = buildCryptoPaymentURI({
+    currency,
+    address,
+    amount,
+    extraId,
+    label: 'Cryptrac Payment',
+    message: 'Payment via Smart Terminal'
+  });
   
-  // Build URI with proper schemes for better wallet app compatibility
-  let uri = '';
-  
-  if (extraId && requiresExtraId(currency)) {
-    // Use proper URI schemes for currencies that require destination tags/memos
-    if (upper === 'XRP') {
-      // XRP URI scheme: xrp:address?dt=tag&amount=amount
-      uri = `xrp:${address}?dt=${extraId}&amount=${amount}`;
-    } else if (upper === 'XLM') {
-      // Stellar SEP-0007: stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
-      const memo = String(extraId);
-      const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT';
-      uri = `stellar:pay?destination=${encodeURIComponent(address)}&amount=${encodeURIComponent(String(amount))}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`;
-    } else if (upper === 'HBAR') {
-      // Hedera URI scheme: hbar:address?memo=memo&amount=amount
-      uri = `hbar:${address}?memo=${extraId}&amount=${amount}`;
-    }
-  } else {
-    // Standard URI schemes for other currencies
-    if (upper === 'BTC') {
-      uri = `bitcoin:${address}?amount=${amount}`;
-    } else if (upper === 'LTC') {
-      uri = `litecoin:${address}?amount=${amount}`;
-    } else if (upper === 'BCH') {
-      uri = `bitcoincash:${address}?amount=${amount}`;
-    } else if (upper === 'ETH') {
-      uri = `ethereum:${address}?value=${amount * Math.pow(10, 18)}`;
-    } else {
-      // Fallback to address only if no standard URI scheme
-      uri = address;
-    }
-  }
-  
-  return uri;
+  return result.uri;
 }
 
 export default function SmartTerminalPage() {

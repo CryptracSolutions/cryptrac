@@ -14,6 +14,7 @@ import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
+import { buildCryptoPaymentURI } from '@/lib/crypto-uri-builder'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -885,32 +886,21 @@ export default function PaymentPage() {
 
       // Generate QR code for payment address with destination tag if needed
       if (data.payment.pay_address) {
-        let qrData = data.payment.pay_address
+        // Use centralized URI builder for comprehensive cryptocurrency support
+        const uriResult = buildCryptoPaymentURI({
+          currency: data.payment.pay_currency,
+          address: data.payment.pay_address,
+          amount: data.payment.pay_amount,
+          extraId: data.payment.payin_extra_id,
+          label: paymentLink?.title || 'Cryptrac Payment',
+          message: paymentLink?.description || 'Cryptocurrency payment'
+        })
         
-        // Add destination tag/memo to QR code for supported currencies using proper URI schemes
-        if (data.payment.payin_extra_id && requiresExtraId(data.payment.pay_currency)) {
-          const currency = data.payment.pay_currency.toUpperCase()
-          if (currency === 'XRP') {
-            // XRP URI scheme: xrp://address?dt=tag&amount=amount
-            qrData = `xrp:${data.payment.pay_address}?dt=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
-          } else if (currency === 'XLM') {
-            // Stellar SEP-0007: stellar:pay?destination=address&amount=amount&memo=...&memo_type=MEMO_ID|MEMO_TEXT
-            const memo = String(data.payment.payin_extra_id)
-            const memoType = /^\d+$/.test(memo) ? 'MEMO_ID' : 'MEMO_TEXT'
-            qrData = `stellar:pay?destination=${encodeURIComponent(data.payment.pay_address)}&amount=${encodeURIComponent(String(data.payment.pay_amount))}&memo=${encodeURIComponent(memo)}&memo_type=${memoType}`
-          } else if (currency === 'HBAR') {
-            // Hedera URI scheme: hbar://address?memo=memo&amount=amount
-            qrData = `hbar:${data.payment.pay_address}?memo=${data.payment.payin_extra_id}&amount=${data.payment.pay_amount}`
-          }
-        } else if (data.payment.pay_currency) {
-          // Add amount to QR code for currencies without destination tags
-          const currency = data.payment.pay_currency.toUpperCase()
-          if (currency === 'BTC') {
-            qrData = `bitcoin:${data.payment.pay_address}?amount=${data.payment.pay_amount}`
-          } else if (currency === 'ETH') {
-            qrData = `ethereum:${data.payment.pay_address}?value=${data.payment.pay_amount * Math.pow(10, 18)}`
-          }
-        }
+        const qrData = uriResult.uri
+        
+        console.log('🔗 Generated payment URI:', qrData)
+        console.log('📋 URI includes amount:', uriResult.includesAmount)
+        console.log('🏷️ URI includes extra ID:', uriResult.includesExtraId)
         
         const qrDataUrl = await QRCode.toDataURL(qrData, {
           width: 256,
