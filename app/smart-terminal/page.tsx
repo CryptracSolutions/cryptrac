@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, AlertTriangle } from 'lucide-react';
 import { requiresExtraId, getExtraIdLabel, getExtraIdDescription } from '@/lib/extra-id-validation';
-import { buildCryptoPaymentURI } from '@/lib/crypto-uri-builder';
+import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -841,7 +841,7 @@ export default function SmartTerminalPage() {
                       <div className="text-center">
                         <p className="text-sm text-gray-600 mb-2">Send exactly</p>
                         <p className="text-3xl font-bold text-[#7f5efd] mb-1">
-                          {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()}
+                          {formatAmountForDisplay(paymentData.pay_amount)}
                         </p>
                         <p className="text-xl font-semibold text-[#7f5efd] uppercase">
                           {paymentData.pay_currency}

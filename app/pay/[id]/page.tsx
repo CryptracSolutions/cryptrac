@@ -9,12 +9,14 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
-import { buildCryptoPaymentURI } from '@/lib/crypto-uri-builder'
+import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1052,479 +1054,402 @@ export default function PaymentPage() {
   const currentStatus = paymentStatus || paymentData
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container-narrow">
-        {/* Trust Indicators Header */}
-        <div className="flex items-center justify-center space-x-6 mb-8 text-sm text-gray-500">
-          <div className="flex items-center space-x-2">
-            <Shield className="h-4 w-4 text-[#7f5efd]" />
-            <span className="font-phonic font-normal">Secure Payment</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Zap className="h-4 w-4 text-[#7f5efd]" />
-            <span className="font-phonic font-normal">Instant Processing</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <CreditCard className="h-4 w-4 text-[#7f5efd]" />
-            <span className="font-phonic font-normal">Non-Custodial</span>
-          </div>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
-            {paymentLink.title}
-          </h1>
-          {paymentLink.description && (
-            <p className="font-phonic text-base font-normal text-gray-600 mb-4">{paymentLink.description}</p>
-          )}
-          {paymentLink.subscription_id && (
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 mb-4">
-              <span className="font-phonic text-sm text-blue-800">Recurring Invoice</span>
-            </div>
-          )}
-          <div className="flex items-center justify-center space-x-2 text-gray-500">
-            <span className="font-phonic text-sm">Powered by</span>
-            <span className="font-phonic text-sm font-medium text-gray-900">{paymentLink.merchant.business_name}</span>
-          </div>
-        </div>
-
-        {/* Payment Amount Card */}
-        <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {feeBreakdown && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-2">
-                  <span className="font-phonic text-base text-gray-600">Base Amount:</span>
-                  <span className="font-phonic text-base font-medium text-gray-900">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
-                </div>
-                
-                {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
-                  <>
-                    {paymentLink.tax_rates.map((rate, index) => (
-                      <div key={index} className="flex justify-between text-sm py-1">
-                        <span className="font-phonic text-sm text-gray-600">{rate.label} ({rate.percentage}%):</span>
-                        <span className="font-phonic text-sm text-gray-700">${(feeBreakdown.baseAmount * (rate.percentage / 100)).toFixed(2)}</span>
-                      </div>
-                    ))}
-                    <div className="flex justify-between items-center py-2 border-t border-gray-100">
-                      <span className="font-phonic text-base font-normal text-gray-600">Tax Total:</span>
-                      <span className="font-phonic text-base font-medium text-gray-900">${feeBreakdown.taxAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="font-phonic text-base font-normal text-gray-600">Subtotal with Tax:</span>
-                      <span className="font-phonic text-base font-medium text-gray-900">${feeBreakdown.subtotalWithTax.toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
-                
-                {feeBreakdown.platformFee > 0 && (
-                  <div className="flex justify-between text-sm py-1">
-                    <span className="font-phonic text-sm text-gray-600">Gateway Fee ({((paymentLink.fee_percentage || 0) * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%):</span>
-                    <span className="font-phonic text-sm text-gray-700">${feeBreakdown.platformFee.toFixed(2)}</span>
-                  </div>
-                )}
-                
-                <Separator className="my-4" />
-                <div className="flex justify-between items-center py-3 bg-[#f5f3ff] rounded-lg px-4">
-                  <span className="font-phonic text-xl font-normal text-gray-900">Total Amount:</span>
-                  <span className="font-phonic text-3xl font-medium text-[#7c3aed]">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
-                </div>
+    <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
+      <div className="w-full max-w-2xl">
+        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
+          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 pt-4">
+            {loading ? (
+              <div className="text-center py-12">
+                <Loader2 className="h-12 w-12 animate-spin text-[#7f5efd] mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Payment Details</h2>
+                <p className="text-base text-gray-600">Please wait while we securely load your payment information...</p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {!paymentData ? (
-          /* Currency Selection */
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-            <CardHeader className="text-center pb-6">
-              <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Select Payment Method</CardTitle>
-              <p className="font-phonic text-base font-normal text-gray-600">Choose your preferred cryptocurrency</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Network Filter */}
-              {availableCurrencies.length > 0 && (() => {
-                const groupedCurrencies = groupCurrenciesByNetwork(
-                  availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                  paymentLink.accepted_cryptos
-                )
-                const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
-                
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="font-phonic text-sm font-normal text-gray-700 flex items-center">
-                        <Filter className="h-4 w-4 mr-1" />
-                        Filter by Network
-                      </Label>
-                      {selectedNetwork !== 'all' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedNetwork('all')}
-                          className="text-xs text-[#7f5efd] hover:text-[#7c3aed]"
-                        >
-                          Clear filter
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant={selectedNetwork === 'all' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setSelectedNetwork('all')}
-                        className={`font-phonic text-sm ${
-                          selectedNetwork === 'all'
-                            ? 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'
-                            : 'border-gray-300 hover:border-[#7f5efd] hover:text-[#7f5efd]'
-                        }`}
-                      >
-                        <Globe className="h-3 w-3 mr-1" />
-                        All Networks
-                      </Button>
-                      {availableNetworks.map(networkId => {
-                        const network = getNetworkInfo(networkId)
-                        if (!network) return null
-                        const currencyCount = groupedCurrencies.get(networkId)?.length || 0
-                        
-                        return (
-                          <Button
-                            key={networkId}
-                            variant={selectedNetwork === networkId ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setSelectedNetwork(networkId)}
-                            className={`font-phonic text-sm ${
-                              selectedNetwork === networkId
-                                ? 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'
-                                : 'border-gray-300 hover:border-[#7f5efd] hover:text-[#7f5efd]'
-                            }`}
-                          >
-                            {network.displayName}
-                            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
-                              {currencyCount}
-                            </span>
-                          </Button>
-                        )
-                      })}
-                    </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                <h1 className="text-2xl font-semibold text-gray-900 mb-4">Payment Error</h1>
+                <p className="text-base text-gray-600 mb-6">{error}</p>
+                <Button onClick={() => window.location.reload()} className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
+            ) : !paymentLink ? (
+              <div className="text-center py-12">
+                <AlertCircle className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                <h1 className="text-2xl font-semibold text-gray-900 mb-4">Payment Link Not Found</h1>
+                <p className="text-base text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
+              </div>
+            ) : (
+              <>
+                {/* Header */}
+                <div className="text-center space-y-2">
+                  <h1 className="text-2xl font-semibold text-gray-900">{paymentLink.title}</h1>
+                  {paymentLink.description && (
+                    <p className="text-base text-gray-600">{paymentLink.description}</p>
+                  )}
+                  {paymentLink.subscription_id && (
+                    <Badge className="bg-blue-100 text-blue-800">Recurring Invoice</Badge>
+                  )}
+                  <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                    <span>Powered by</span>
+                    <span className="font-medium text-gray-900">{paymentLink.merchant.business_name}</span>
                   </div>
-                )
-              })()}
-              
-              {availableCurrencies.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="relative">
-                    <div className="w-12 h-12 border-4 border-[#ede9fe] border-t-[#7f5efd] rounded-full animate-spin mx-auto mb-4"></div>
-                  </div>
-                  <p className="font-phonic text-base font-normal text-gray-600">Loading available currencies...</p>
                 </div>
-              ) : (
-                <div className="grid gap-4">
-                  {(() => {
-                    // Filter currencies based on selected network
-                    let filteredCurrencies = availableCurrencies
+
+                {/* Payment Details */}
+                {feeBreakdown && (
+                  <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Base Amount</span>
+                      <span className="font-medium text-gray-900">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                    </div>
+                    {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
+                      <>
+                        {paymentLink.tax_rates.map((rate, index) => (
+                          <div key={index} className="flex justify-between text-emerald-600">
+                            <span>{rate.label} ({rate.percentage}%)</span>
+                            <span className="font-medium">+${(feeBreakdown.baseAmount * (rate.percentage / 100)).toFixed(2)}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between font-semibold text-emerald-600 border-t border-purple-100 pt-2">
+                          <span>Total Tax</span>
+                          <span>+${feeBreakdown.taxAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between font-semibold border-t border-purple-100 pt-2">
+                          <span className="text-gray-600">Subtotal with Tax</span>
+                          <span className="text-gray-900">${feeBreakdown.subtotalWithTax.toFixed(2)}</span>
+                        </div>
+                      </>
+                    )}
+                    {feeBreakdown.platformFee > 0 && (
+                      <div className="flex justify-between text-blue-600">
+                        <span>Gateway Fee ({((paymentLink.fee_percentage || 0) * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%)</span>
+                        <span className="font-medium">+${feeBreakdown.platformFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-bold text-base border-t border-purple-100 pt-2">
+                      <span className="text-gray-700">Total Amount</span>
+                      <span className="text-[#7f5efd]">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                    </div>
+                  </div>
+                )}
+
+                {!paymentData ? (
+                  /* Currency Selection */
+                  <div className="space-y-4">
+                    <label className="text-sm font-semibold text-gray-700 block text-center">Select Payment Currency</label>
                     
-                    if (selectedNetwork !== 'all') {
+                    {/* Network Filter Dropdown */}
+                    {availableCurrencies.length > 0 && (() => {
                       const groupedCurrencies = groupCurrenciesByNetwork(
                         availableCurrencies.map(c => ({ code: c.code, name: c.name })),
                         paymentLink.accepted_cryptos
                       )
-                      const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
-                      const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
-                      filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
-                    }
-                    
-                    if (filteredCurrencies.length === 0) {
+                      const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+                      const selectedNetworkInfo = selectedNetwork !== 'all' ? getNetworkInfo(selectedNetwork) : null
+                      
                       return (
-                        <div className="text-center py-8">
-                          <p className="font-phonic text-base text-gray-500">No currencies available for this network</p>
-                        </div>
-                      )
-                    }
-                    
-                    return filteredCurrencies.map((currency) => {
-                      const estimate = estimates[currency.code]
-                      const isSelected = selectedCurrency === currency.code
-                      const displayName = getCurrencyDisplayName(currency.code)
-                    
-                    return (
-                      <div
-                        key={currency.code}
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                          isSelected 
-                            ? 'border-[#7f5efd] bg-[#f5f3ff] shadow-md' 
-                            : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                        }`}
-                        onClick={() => setSelectedCurrency(currency.code)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                              isSelected 
-                                ? 'border-[#7f5efd] bg-[#7f5efd]' 
-                                : 'border-gray-300'
-                            }`}>
-                              {isSelected && (
-                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-between h-10 border-purple-200 hover:border-[#7f5efd] hover:bg-purple-50"
+                            >
+                              <span className="flex items-center">
+                                <Filter className="h-4 w-4 mr-2 text-[#7f5efd]" />
+                                {selectedNetwork === 'all' ? 'All Networks' : selectedNetworkInfo?.displayName || 'Select Network'}
+                              </span>
+                              <ChevronDown className="h-4 w-4 opacity-50" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-full">
+                            <DropdownMenuItem
+                              onClick={() => setSelectedNetwork('all')}
+                              className={cn(
+                                "cursor-pointer",
+                                selectedNetwork === 'all' && "bg-purple-50 text-[#7f5efd]"
                               )}
-                            </div>
-                            <div>
-                              <div className="font-phonic text-base font-medium text-gray-900">{currency.code.toUpperCase()}</div>
-                              <div className="font-phonic text-sm text-gray-500">{displayName}</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            {estimate && estimate.estimated_amount && typeof estimate.estimated_amount === 'number' && estimate.estimated_amount !== null ? (
-                              <div className="font-phonic text-lg font-medium text-gray-900">
-                                {estimate.estimated_amount.toFixed(6)}
+                            >
+                              <Globe className="h-4 w-4 mr-2" />
+                              All Networks
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {availableNetworks.map(networkId => {
+                              const network = getNetworkInfo(networkId)
+                              if (!network) return null
+                              const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                              
+                              return (
+                                <DropdownMenuItem
+                                  key={networkId}
+                                  onClick={() => setSelectedNetwork(networkId)}
+                                  className={cn(
+                                    "cursor-pointer justify-between",
+                                    selectedNetwork === networkId && "bg-purple-50 text-[#7f5efd]"
+                                  )}
+                                >
+                                  <span>{network.displayName}</span>
+                                  <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
+                                </DropdownMenuItem>
+                              )
+                            })}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )
+                    })()}
+                    
+                    {availableCurrencies.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-[#7f5efd] mx-auto mb-4" />
+                        <p className="text-base text-gray-600">Loading available currencies...</p>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        {(() => {
+                          let filteredCurrencies = availableCurrencies
+                          
+                          if (selectedNetwork !== 'all') {
+                            const groupedCurrencies = groupCurrenciesByNetwork(
+                              availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                              paymentLink.accepted_cryptos
+                            )
+                            const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+                            const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
+                            filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
+                          }
+                          
+                          if (filteredCurrencies.length === 0) {
+                            return (
+                              <div className="text-center py-8">
+                                <p className="text-base text-gray-500">No currencies available for this network</p>
                               </div>
-                            ) : (
-                              <div className="font-phonic text-base text-gray-400">Calculating...</div>
-                            )}
-                            <div className="font-phonic text-sm text-gray-500">{currency.code.toUpperCase()}</div>
+                            )
+                          }
+                          
+                          return filteredCurrencies.map((currency) => {
+                            const estimate = estimates[currency.code]
+                            const isSelected = selectedCurrency === currency.code
+                            const displayName = getCurrencyDisplayName(currency.code)
+                            
+                            return (
+                              <div
+                                key={currency.code}
+                                className={cn(
+                                  "border-2 rounded-lg p-3 cursor-pointer transition-all duration-200 flex items-center justify-between",
+                                  isSelected 
+                                    ? "border-[#7f5efd] bg-purple-50 shadow-md" 
+                                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                                )}
+                                onClick={() => setSelectedCurrency(currency.code)}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div className={cn(
+                                    "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                                    isSelected ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300"
+                                  )}>
+                                    {isSelected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{currency.code.toUpperCase()}</div>
+                                    <div className="text-xs text-gray-500">{displayName}</div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  {estimate && estimate.estimated_amount ? (
+                                    <div className="font-medium text-gray-900">
+                                      {estimate.estimated_amount.toFixed(6)}
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-gray-400">Calculating...</div>
+                                  )}
+                                  <div className="text-xs text-gray-500">{currency.code.toUpperCase()}</div>
+                                </div>
+                              </div>
+                            )
+                          })
+                        })()}
+                      </div>
+                    )}
+                    
+                    {selectedCurrency && (
+                      <Button 
+                        onClick={createPayment} 
+                        disabled={creatingPayment}
+                        className="w-full h-14 text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                      >
+                        {creatingPayment ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Creating Payment...
+                          </>
+                        ) : (
+                          <>
+                            Continue with {selectedCurrency.toUpperCase()}
+                            <ArrowRight className="h-5 w-5" />
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  /* Payment Display */
+                  <div className="space-y-4">
+                    {/* Payment Status */}
+                    {currentStatus && (
+                      <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(currentStatus.payment_status)}
+                            <span className="font-semibold text-gray-700">
+                              {formatStatus(currentStatus.payment_status)}
+                            </span>
                           </div>
+                          {currentStatus.tx_hash && (() => {
+                            const explorerUrl = getBlockExplorerUrl(currentStatus.tx_hash, currentStatus.pay_currency)
+                            return explorerUrl ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(explorerUrl, '_blank')}
+                                className="border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
+                              >
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                View Transaction
+                              </Button>
+                            ) : null
+                          })()}
+                        </div>
+                        {currentStatus.actually_paid && (
+                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+                            <span className="font-semibold">Amount Received:</span> {currentStatus.actually_paid} {currentStatus.pay_currency.toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* QR Code and Payment Info */}
+                    <div className="space-y-4">
+                      {qrCodeDataUrl && (!paymentData.payin_extra_id || !requiresExtraId(paymentData.pay_currency) || extraIdConfirmed) && (
+                        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-56 h-56 mx-auto mb-3" />
+                          <p className="text-sm text-gray-600">Scan with your crypto wallet app</p>
+                          {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ✓ {getExtraIdLabel(paymentData.pay_currency)} included in QR code
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {qrCodeDataUrl && paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && !extraIdConfirmed && (
+                        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
+                          <p className="text-sm font-medium text-yellow-800">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
+                        </div>
+                      )}
+
+                      {/* Amount */}
+                      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200 text-center">
+                        <p className="text-sm text-gray-600 mb-1">Send exactly</p>
+                        <p className="text-2xl font-bold text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</p>
+                      </div>
+
+                      {/* Address */}
+                      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <p className="text-sm text-gray-600">Send to this address</p>
+                            <p className="font-mono text-sm text-gray-900 break-all">{paymentData.pay_address}</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
+                            className="border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                    )
-                  })
-                  })()}
-                </div>
-              )}
-              
-              {selectedCurrency && (
-                <Button 
-                  onClick={createPayment} 
-                  disabled={creatingPayment}
-                  className="w-full h-14 font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
-                  size="lg"
-                >
-                  {creatingPayment ? (
-                    <>
-                      <Loader2 className="h-5 w-5 mr-3 animate-spin" />
-                      Creating Payment...
-                    </>
-                  ) : (
-                    <>
-                      Continue with {selectedCurrency.toUpperCase()}
-                      <ArrowRight className="h-5 w-5 ml-3" />
-                    </>
-                  )}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          /* Payment Instructions */
-          <div className="space-y-8">
-            {/* Payment Status */}
-            {currentStatus && (
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader>
-                  <CardTitle className="font-phonic text-xl font-normal flex items-center space-x-3">
-                    {getStatusIcon(currentStatus.payment_status)}
-                    <span>Payment Status</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <Badge className={`${getStatusColor(currentStatus.payment_status)} border px-4 py-2 text-sm font-semibold`}>
-                      {formatStatus(currentStatus.payment_status)}
-                    </Badge>
-                    {currentStatus.tx_hash && (
-                      <>
-                        {(() => {
-                          const explorerUrl = getBlockExplorerUrl(currentStatus.tx_hash!, currentStatus.pay_currency)
-                          return explorerUrl ? (
+
+                      {/* Extra ID */}
+                      {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                            <div className="flex-1">
+                              <Label className="text-sm font-semibold text-yellow-900 block">
+                                {getExtraIdLabel(paymentData.pay_currency)} Required
+                              </Label>
+                              <p className="text-sm text-yellow-800 mt-1">
+                                Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Input
+                              value={paymentData.payin_extra_id}
+                              readOnly
+                              className="font-mono text-sm bg-white border-yellow-300"
+                            />
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(explorerUrl, '_blank')}
-                              className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
+                              onClick={() => copyToClipboard(paymentData.payin_extra_id!, getExtraIdLabel(paymentData.pay_currency))}
+                              className="border-yellow-600 text-yellow-700 hover:bg-yellow-50"
                             >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              View Transaction
+                              <Copy className="h-4 w-4" />
                             </Button>
-                          ) : null
-                        })()}
-                      </>
-                    )}
-                  </div>
-                  
-                  {currentStatus.actually_paid && (
-                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="text-sm text-green-800">
-                        <span className="font-semibold">Amount Received:</span> {currentStatus.actually_paid} {currentStatus.pay_currency.toUpperCase()}
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <input
+                              id="confirm-extra-id"
+                              type="checkbox"
+                              className="mt-1 h-4 w-4 text-yellow-700 border-yellow-300 rounded"
+                              checked={extraIdConfirmed}
+                              onChange={(e) => setExtraIdConfirmed(e.target.checked)}
+                            />
+                            <label htmlFor="confirm-extra-id" className="text-sm text-yellow-800">
+                              I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} above in my wallet before sending
+                            </label>
+                          </div>
+                          <p className="text-xs text-yellow-800 mt-1">
+                            Tip: In many wallets (e.g., Trust Wallet), paste this under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Instructions */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
+                          <Shield className="h-5 w-5 mr-2" />
+                          Payment Instructions
+                        </h4>
+                        <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                          <li>Send exactly <strong className="text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
+                          <li>Do not send any other amount or currency</li>
+                          <li>Payment will be confirmed automatically</li>
+                          <li>You will be redirected once payment is complete</li>
+                        </ol>
                       </div>
+
+                      {/* Monitoring */}
+                      {isMonitoring && (
+                        <div className="text-center">
+                          <div className="flex items-center justify-center space-x-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
+                            <Loader2 className="h-5 w-5 animate-spin text-[#7f5efd]" />
+                            <span>Monitoring payment status (checking every {Math.round(monitoringInterval / 1000)}s)</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </div>
+                )}
+              </>
             )}
-
-            {/* Payment Instructions */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader className="text-center">
-                <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Send Payment</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-8">
-                {/* Amount */}
-                <div>
-                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount to Send</Label>
-                  <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Send exactly</p>
-                        <p className="text-2xl font-bold text-[#7f5efd]">
-                          {(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => copyToClipboard(`${(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} ${paymentData.pay_currency.toUpperCase()}`, 'Amount')}
-                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Address */}
-                <div>
-                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Address</Label>
-                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 mr-3">
-                        <p className="text-sm text-gray-600 mb-1">Send to this address</p>
-                        <p className="font-mono text-sm text-gray-900 break-all leading-relaxed">
-                          {paymentData.pay_address}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm flex-shrink-0"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Destination Tag/Memo for currencies that require it */}
-                {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <Label className="font-phonic text-xs font-semibold text-yellow-900 block">
-                          {getExtraIdLabel(paymentData.pay_currency)} Required
-                        </Label>
-                        <p className="text-xs text-yellow-800 mt-1">
-                          Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Input
-                        value={paymentData.payin_extra_id}
-                        readOnly
-                        className="font-mono text-xs bg-white border-yellow-300"
-                      />
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => copyToClipboard(paymentData.payin_extra_id!, getExtraIdLabel(paymentData.pay_currency))}
-                        className="font-phonic text-base font-normal border-yellow-600 text-yellow-700 hover:bg-yellow-50 shadow-sm"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <input
-                        id="confirm-extra-id"
-                        type="checkbox"
-                        className="mt-1 h-4 w-4 text-yellow-700 border-yellow-300 rounded"
-                        checked={extraIdConfirmed}
-                        onChange={(e) => setExtraIdConfirmed(e.target.checked)}
-                      />
-                      <label htmlFor="confirm-extra-id" className="text-sm text-yellow-800">
-                        I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} above in my wallet before sending
-                      </label>
-                    </div>
-                    <p className="font-phonic text-xs font-normal text-yellow-800 mt-1">
-                      Tip: In many wallets (e.g., Trust Wallet), paste this under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.
-                    </p>
-                  </div>
-                )}
-
-                {/* QR Code (single) */}
-                {qrCodeDataUrl && (!paymentData.payin_extra_id || !requiresExtraId(paymentData.pay_currency) || extraIdConfirmed) && (
-                  <div className="text-center">
-                    <Label className="font-phonic text-sm font-normal text-gray-700 mb-4 block">QR Code</Label>
-                    <div className="inline-block p-6 bg-white rounded-lg border-2 border-gray-200 shadow-lg">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={qrCodeDataUrl}
-                        alt="Payment QR Code"
-                        className="w-56 h-56 mx-auto"
-                      />
-                    </div>
-                    <p className="font-phonic text-sm font-normal text-gray-500 mt-3">
-                      Scan with your crypto wallet app
-                    </p>
-                    {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                      <p className="font-phonic text-xs font-normal text-green-600 mt-2">
-                        ✓ {getExtraIdLabel(paymentData.pay_currency)} included in QR code
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* If extra required but not confirmed, show reminder instead of QR */}
-                {qrCodeDataUrl && paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && !extraIdConfirmed && (
-                  <div className="text-center">
-                    <div className="inline-block p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
-                      <p className="font-phonic text-sm font-semibold text-yellow-800">
-                        Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Instructions */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-                  <h4 className="font-phonic font-normal text-blue-900 mb-4 flex items-center">
-                    <Shield className="h-5 w-5 mr-2" />
-                    Payment Instructions
-                  </h4>
-                  <ol className="font-phonic text-sm font-normal text-blue-800 space-y-2 list-decimal list-inside">
-                    <li>Send exactly <strong className="text-[#7f5efd]">{(Math.ceil((paymentData.pay_amount + Number.EPSILON) * 1e6) / 1e6).toString()} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
-                    <li>Do not send any other amount or currency</li>
-                    <li>Payment will be confirmed automatically</li>
-                    <li>You will be redirected once payment is complete</li>
-                  </ol>
-                </div>
-
-                {/* Monitoring Status */}
-                {isMonitoring && (
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
-                      <Loader2 className="h-5 w-5 animate-spin text-[#7f5efd]" />
-                      <span className="font-phonic font-normal">Monitoring payment status (checking every {Math.round(monitoringInterval / 1000)}s)</span>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

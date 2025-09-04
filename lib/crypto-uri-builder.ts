@@ -35,6 +35,8 @@ export interface URIResult {
   includesExtraId: boolean;
   scheme: string;
   fallbackAddress: string;
+  roundedAmount: number; // The 6-decimal rounded amount used in the URI
+  formattedAmount: string; // The formatted amount string for UI display
 }
 
 // Utility: round a number UP to a fixed number of decimals
@@ -43,12 +45,24 @@ function roundUp(amount: number, decimals: number): number {
   return Math.ceil((amount + Number.EPSILON) * f) / f;
 }
 
-// Utility: format with up to `maxDecimals` decimals, trimming trailing zeros
+// Utility: format with up to `maxDecimals` decimals, trimming trailing zeros (for URI schemes)
 function formatAmount(amount: number, maxDecimals = 6): string {
   const rounded = roundUp(amount, maxDecimals);
   // Use toFixed to ensure we have at most maxDecimals, then trim trailing zeros
   const fixed = rounded.toFixed(maxDecimals);
   return fixed.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+}
+
+// Utility: format amount for consistent UI display and NOWPayments compatibility
+// Always rounds up to exactly 6 decimals to prevent partial payment issues
+export function formatAmountForDisplay(amount: number): string {
+  const rounded = roundUp(amount, 6);
+  return rounded.toFixed(6);
+}
+
+// Utility: get the rounded amount as a number (for calculations)
+export function getRoundedAmount(amount: number): number {
+  return roundUp(amount, 6);
 }
 
 /**
@@ -58,13 +72,19 @@ export function buildCryptoPaymentURI(request: CryptoPaymentRequest): URIResult 
   const { currency, address, amount, extraId, label, message } = request;
   const upper = currency.toUpperCase();
   
+  // Calculate consistent rounded amount for all URIs and UI
+  const roundedAmount = getRoundedAmount(amount);
+  const formattedAmount = formatAmountForDisplay(amount);
+  
   // Handle currencies with destination tags/memos first
   if (extraId && requiresExtraId(upper)) {
-    return buildExtraIdURI(upper, address, amount, extraId, label, message);
+    const result = buildExtraIdURI(upper, address, roundedAmount, extraId, label, message);
+    return { ...result, roundedAmount, formattedAmount };
   }
   
   // Handle standard currencies
-  return buildStandardURI(upper, address, amount, label, message);
+  const result = buildStandardURI(upper, address, roundedAmount, label, message);
+  return { ...result, roundedAmount, formattedAmount };
 }
 
 /**
@@ -128,7 +148,9 @@ function buildExtraIdURI(
     includesAmount: uri !== address,
     includesExtraId: uri !== address && uri.includes(extraId),
     scheme,
-    fallbackAddress: address
+    fallbackAddress: address,
+    roundedAmount: amount, // Already rounded when passed in
+    formattedAmount: formatAmountForDisplay(amount)
   };
 }
 
@@ -436,7 +458,9 @@ function buildStandardURI(
     includesAmount: uri !== address,
     includesExtraId: false,
     scheme,
-    fallbackAddress: address
+    fallbackAddress: address,
+    roundedAmount: amount, // Already rounded when passed in
+    formattedAmount: formatAmountForDisplay(amount)
   };
 }
 
