@@ -603,7 +603,6 @@ export default function PaymentPage() {
         'TUSDTRC20': ['TUSDTRC20'],
         'STRKMAINNET': ['STRKMAINNET'],
         // Explicit identities for common USDT variants
-        'USDT': ['USDT'],
         'USDTERC20': ['USDTERC20'],
         'USDTBSC': ['USDTBSC'],
         'USDTTRC20': ['USDTTRC20'],
@@ -613,7 +612,6 @@ export default function PaymentPage() {
         'USDTARB': ['USDTARB'],
         'USDTOP': ['USDTOP'],
         // Explicit identities for common USDC variants
-        'USDC': ['USDC'],
         'USDCERC20': ['USDCERC20'],
         'USDCBSC': ['USDCBSC'],
         'USDCMATIC': ['USDCMATIC'],

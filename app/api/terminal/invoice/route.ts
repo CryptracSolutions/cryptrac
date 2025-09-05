@@ -130,7 +130,6 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'TUSDTRC20': ['TUSDTRC20'],
     'STRKMAINNET': ['STRKMAINNET'],
     // Explicit identities for common USDT variants
-    'USDT': ['USDT'],
     'USDTERC20': ['USDTERC20'],
     'USDTBSC': ['USDTBSC'],
     'USDTTRC20': ['USDTTRC20'],
@@ -140,7 +139,6 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'USDTARB': ['USDTARB'],
     'USDTOP': ['USDTOP'],
     // Explicit identities for common USDC variants
-    'USDC': ['USDC'],
     'USDCERC20': ['USDCERC20'],
     'USDCBSC': ['USDCBSC'],
     'USDCMATIC': ['USDCMATIC'],
@@ -153,7 +151,7 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'CFXMAINNET': ['CFX'],
     'CROMAINNET': ['CRO'],
     'INJMAINNET': ['INJ'],
-    'INJERC20': ['INJ']
+    'INJERC20': ['INJ'],
     
     // Stablecoins - FIXED: Proper mapping for USDT and USDC
     'USDT': ['USDTERC20', 'USDT', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
