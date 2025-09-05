@@ -42,7 +42,7 @@ export function buildWalletSpecificURI(params: {
   if (!override) return null;
 
   const rounded = getRoundedAmount(amount);
-  let uri = override.scheme;
+  let uri: string = override.scheme as string;
   uri = uri.replace('{address}', address)
            .replace('{amount}', rounded.toString())
            .replace('{wei}', BigInt(Math.floor(amount * 1e18)).toString())
