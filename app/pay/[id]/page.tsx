@@ -15,6 +15,7 @@ import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
 import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder'
+import { buildWalletSpecificURI } from '@/lib/wallet-uri-helper'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
@@ -938,8 +939,15 @@ export default function PaymentPage() {
 
       // Generate QR code for payment address with destination tag if needed
       if (data.payment.pay_address) {
-        // Use centralized URI builder for comprehensive cryptocurrency support
-        const uriResult = buildCryptoPaymentURI({
+        // Try wallet-specific override first
+        const walletOverride = buildWalletSpecificURI({
+          currency: data.payment.pay_currency,
+          address: data.payment.pay_address,
+          amount: data.payment.pay_amount,
+          extraId: data.payment.payin_extra_id || undefined
+        })
+
+        const uriResult = walletOverride ? { uri: walletOverride, includesAmount: true, includesExtraId: !!data.payment.payin_extra_id } : buildCryptoPaymentURI({
           currency: data.payment.pay_currency,
           address: data.payment.pay_address,
           amount: data.payment.pay_amount,
