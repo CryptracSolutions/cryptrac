@@ -423,7 +423,6 @@ function derivePatternForCurrency(code: string): RegExp | null {
     case 'SHIB':
     case 'APE':
     case 'SAND':
-    case 'CRO':
     case 'FTM':
     case 'GRT':
     case 'YFI':
@@ -448,7 +447,6 @@ function derivePatternForCurrency(code: string): RegExp | null {
     case 'USDTMATIC':
     case 'USDCMATIC':
     case 'WBTCMATIC':
-    case 'VLX':
     case 'KAIA':
     case 'ZK':
     case 'ZKSYNC':
@@ -485,8 +483,6 @@ function derivePatternForCurrency(code: string): RegExp | null {
       return TRON;
     case 'MYRO':
       return SOLANA;
-    case 'WBTCMATIC':
-      return ETH_LIKE;
     case 'JETTON':
     case 'NOT':
       return TON;
@@ -517,9 +513,9 @@ export async function POST(request: NextRequest) {
     const trimmedAddress = address.trim()
 
     // Check for a direct pattern first; otherwise derive heuristically
-    let pattern = ADDRESS_PATTERNS[upperCurrency]
+    let pattern: RegExp | null = ADDRESS_PATTERNS[upperCurrency] || null
     if (!pattern) {
-      pattern = derivePatternForCurrency(upperCurrency) || null
+      pattern = derivePatternForCurrency(upperCurrency)
     }
     if (!pattern) {
       console.log(`❌ No validation pattern found for currency: ${upperCurrency}`)
