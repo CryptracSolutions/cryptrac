@@ -111,6 +111,9 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   // Zcash - supports multiple formats
   ZEC: /^(t[13][a-km-zA-HJ-NP-Z1-9]{33}|zs[0-9a-z]{76})$/,
   
+  // Ravencoin - Legacy (R...), P2SH (r...), and Bech32 (rvn1...)
+  RVN: /^(R[1-9A-HJ-NP-Za-km-z]{25,34}|r[1-9A-HJ-NP-Za-km-z]{25,34}|rvn1[02-9ac-hj-np-z]{39,59})$/,
+  
   // Dash
   DASH: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,
   
@@ -335,6 +338,7 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   HBAR: { name: 'Hedera', network: 'Hedera', addressType: 'Hedera account ID' },
   XMR: { name: 'Monero', network: 'Monero', addressType: 'Monero address (multiple formats)' },
   ZEC: { name: 'Zcash', network: 'Zcash', addressType: 'Zcash address (transparent or shielded)' },
+  RVN: { name: 'Ravencoin', network: 'Ravencoin', addressType: 'Ravencoin address (Legacy, P2SH, or Bech32)' },
   DASH: { name: 'Dash', network: 'Dash', addressType: 'Dash address' },
   BCH: { name: 'Bitcoin Cash', network: 'Bitcoin Cash', addressType: 'Bitcoin Cash address (multiple formats)' },
   BSV: { name: 'Bitcoin SV', network: 'Bitcoin SV', addressType: 'Bitcoin SV address' },

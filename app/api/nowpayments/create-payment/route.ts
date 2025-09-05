@@ -13,7 +13,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'BTC': ['BTC', 'BITCOIN'],
   
   // Ethereum network (includes ERC-20 tokens)
-  'ETH': ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20', 'DAI', 'PYUSD'],
+  'ETH': ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20', 'DAI', 'PYUSD', 'OCEAN'],
   
   // Binance Smart Chain
   'BNB': ['BNB', 'BSC', 'BINANCE', 'BNBBSC', 'USDTBSC', 'USDCBSC'],
@@ -25,7 +25,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'MATIC': ['MATIC', 'POLYGON', 'USDTMATIC', 'USDCMATIC'],
   
   // Avalanche network
-  'AVAX': ['AVAX', 'AVALANCHE'],
+  'AVAX': ['AVAX', 'AVALANCHE', 'AVAXC'],
   
   // Tron network
   'TRX': ['TRX', 'TRON', 'USDTTRC20'],
@@ -43,7 +43,13 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'XLM': ['XLM', 'STELLAR'],
   'ARB': ['ARB', 'ARBITRUM', 'USDTARB', 'USDCARB'],
   'OP': ['OP', 'OPTIMISM', 'USDTOP', 'USDCOP'],
-  'ETHBASE': ['ETHBASE', 'USDCBASE', 'ETH']
+  'ETHBASE': ['ETHBASE', 'USDCBASE', 'ETH'],
+  // Additional networks
+  'FTM': ['FTM', 'FANTOM', 'FTMMAINNET'],
+  'RUNE': ['RUNE', 'THORCHAIN'],
+  'CFX': ['CFX', 'CONFLUX', 'CFXMAINNET'],
+  'CRO': ['CRO', 'CRONOS', 'CROMAINNET'],
+  'INJ': ['INJ', 'INJMAINNET', 'INJERC20']
 }
 
 // Stable coins that can fall back to a base network wallet if no direct key exists

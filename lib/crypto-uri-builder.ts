@@ -169,26 +169,72 @@ function buildStandardURI(
   // All decimal-amount schemes should cap to 6 decimals to satisfy wallet limits
   const amt = formatAmount(amount, 6);
   
+  // Generic mapping for EVM‐native currencies so we don’t have to hard-code a gigantic switch-case for every single one.
+  // The key is the Cryptrac currency code, the value is the EVM chainId.
+  // If the currency is native to that chain we can build an EIP-681 URI with ?value= and chainId.
+  const EVM_NATIVE_CHAIN_IDS: Record<string, number> = {
+    // Ethereum family
+    'ETH': 1,
+    'ETC': 61,
+    // Binance Smart Chain
+    'BNB': 56,
+    'BNBBSC': 56,
+    // Polygon
+    'MATIC': 137,
+    'MATICMAINNET': 137,
+    // Arbitrum One
+    'ARB': 42161,
+    'ETHARB': 42161,
+    'ZROARB': 42161,
+    // Optimism Mainnet
+    'OP': 10,
+    'ETHOP': 10,
+    'USDTOP': 10,
+    'USDCOP': 10,
+    // Base Mainnet
+    'ETHBASE': 8453,
+    'BASEETH': 8453,
+    // Fantom
+    'FTM': 250,
+    'FTMMAINNET': 250,
+    // Avalanche C-Chain
+    'AVAX': 43114,
+    'AVAXC': 43114,
+    // Cronos
+    'CRO': 25,
+    'CROMAINNET': 25,
+    // zkSync Era
+    'ZKSYNC': 324,
+    // Bera (example of emerging EVM chains)
+    'BERA': 80085
+  };
+
+  // Helper to build EIP-681 formatted URI for EVM natives
+  function buildEvmNativeURI(address: string, amount: number, chainId: number): string {
+    const wei = Math.floor(amount * 1e18);
+    return `ethereum:${address}?value=${wei}&chainId=${chainId}`;
+  }
+
   switch (currency) {
     // Bitcoin and Bitcoin forks
     case 'BTC':
       scheme = 'bitcoin';
-      uri = `${scheme}:${address}?amount=${amt}`;
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'BTC');
       break;
       
     case 'LTC':
       scheme = 'litecoin';
-      uri = `${scheme}:${address}?amount=${amt}`;
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'LTC');
       break;
       
     case 'BCH':
       scheme = 'bitcoincash';
-      uri = `${scheme}:${address}?amount=${amt}`;
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'BCH');
       break;
       
     case 'DOGE':
       scheme = 'dogecoin';
-      uri = `${scheme}:${address}?amount=${amt}`;
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'DOGE');
       break;
       
     // Ethereum and ERC-20 tokens
@@ -237,21 +283,27 @@ function buildStandardURI(
     // Binance Smart Chain
     case 'BNB':
     case 'BNBBSC':
-      // Trust Wallet deep link format for BSC
-      scheme = 'https';
-      uri = `https://link.trustwallet.com/send?coin=20000714&address=${address}&amount=${amount}`;
+      // Use EIP-681 style URI with BSC chainId 56 for broad wallet compatibility (MetaMask, Trust, Coinbase, etc.)
+      // Fallback to plain Ethereum scheme without the optional "@" notation for maximum compatibility
+      scheme = 'ethereum';
+      const bnbWeiAmount = Math.floor(amount * Math.pow(10, 18));
+      uri = `${scheme}:${address}?value=${bnbWeiAmount}&chainId=56`;
       break;
       
     case 'USDTBSC':
-      scheme = 'https';
-      // USDT on BSC via Trust Wallet
-      uri = `https://link.trustwallet.com/send?coin=20000714&address=${address}&amount=${amount}&token=0x55d398326f99059ff775485246999027b3197955`;
+      scheme = 'ethereum';
+      // USDT (BEP-20) contract on BSC mainnet
+      const usdtBscContract = '0x55d398326f99059ff775485246999027b3197955';
+      const usdtBscAmount = Math.floor(amount * Math.pow(10, 6));
+      uri = `${scheme}:${usdtBscContract}/transfer?address=${address}&uint256=${usdtBscAmount}&chainId=56`;
       break;
       
     case 'USDCBSC':
-      scheme = 'https';
-      // USDC on BSC via Trust Wallet  
-      uri = `https://link.trustwallet.com/send?coin=20000714&address=${address}&amount=${amount}&token=0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d`;
+      scheme = 'ethereum';
+      // USDC (BEP-20) contract on BSC mainnet
+      const usdcBscContract = '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d';
+      const usdcBscAmount = Math.floor(amount * Math.pow(10, 6));
+      uri = `${scheme}:${usdcBscContract}/transfer?address=${address}&uint256=${usdcBscAmount}&chainId=56`;
       break;
       
     // Solana and SPL tokens
@@ -368,8 +420,9 @@ function buildStandardURI(
     case 'ETHBASE':
     case 'ETH_BASE':
       scheme = 'ethereum';
-      const baseWeiAmount = Math.floor(amount * Math.pow(10, 18));
-      uri = `${scheme}:${address}?value=${baseWeiAmount}&chainId=8453`;
+      // Some wallets (e.g., Phantom) reject unknown query params; omit chainId for broader support while still encoding correct wei amount
+      const baseWeiAmountSimple = Math.floor(amount * Math.pow(10, 18));
+      uri = `${scheme}:${address}?value=${baseWeiAmountSimple}`;
       break;
       
     case 'USDCBASE':
@@ -391,14 +444,17 @@ function buildStandardURI(
     // TON
     case 'TON':
       scheme = 'ton';
-      uri = `${scheme}://transfer/${address}?amount=${amount * Math.pow(10, 9)}`; // TON uses nano-tons
+      // Use precise integer of nano-TONs to avoid scientific notation issues that break wallet parsing
+      const nanoTons = BigInt(Math.round(amount * 1_000_000_000));
+      uri = `${scheme}://transfer/${address}?amount=${nanoTons.toString()}`;
       break;
-      
+    
     case 'USDTTON':
       scheme = 'ton';
-      // USDT on TON
       const usdtTonContract = 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs';
-      uri = `${scheme}://transfer/${usdtTonContract}?amount=${amount}&destination=${address}`;
+      // TON Jettons generally expect decimal amounts, but encode as int of 10^6 (per USDT spec)
+      const jettonAmount = BigInt(Math.round(amount * 1_000_000));
+      uri = `${scheme}://transfer/${usdtTonContract}?amount=${jettonAmount.toString()}&destination=${address}`;
       break;
       
     // Algorand
@@ -435,10 +491,20 @@ function buildStandardURI(
       uri = `${scheme}:${address}?amount=${amount}`;
       break;
       
-    // Default fallback - return address only
+    // Default fallback - before we give up, see if currency is an EVM native we know the chainId for
     default:
-      scheme = 'address';
-      uri = address;
+      if (currency in EVM_NATIVE_CHAIN_IDS) {
+        scheme = 'ethereum';
+        const cid = EVM_NATIVE_CHAIN_IDS[currency];
+        uri = buildEvmNativeURI(address, amount, cid);
+      } else if (currency in ERC20_TOKENS) {
+        const info = ERC20_TOKENS[currency];
+        scheme = 'ethereum';
+        uri = buildErc20TransferURI(info, address, amount);
+      } else {
+        scheme = 'address';
+        uri = address;
+      }
   }
   
   // Add optional parameters for supported schemes
@@ -631,4 +697,58 @@ export function parseCryptoURI(uri: string): {
       address: uri,
     };
   }
+}
+
+// -----------------------------------------------------------------------------
+// Generic ERC-20 / EVM token support
+// -----------------------------------------------------------------------------
+interface TokenInfo {
+  contract: string;
+  decimals: number;
+  chainId?: number; // omit for mainnet Ethereum (1)
+}
+
+const ERC20_TOKENS: Record<string, TokenInfo> = {
+  // Stablecoins – existing chains already covered but we add for generic handling
+  'USDTARC20': { contract: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals: 6, chainId: 42161 }, // Arbitrum
+  'USDCARC20': { contract: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals: 6, chainId: 42161 }, // Arbitrum
+  'USDTCELO':  { contract: '0x85F17Cf997934a597031b2E18a9aB6ebD4B9f6a4', decimals: 18, chainId: 42220 }, // Celo
+  'BUSDBSC':   { contract: '0xe9e7cea3dedca5984780bafc599bd69add087d56', decimals: 18, chainId: 56 },   // BUSD on BSC
+  // Example additional tokens from 142-currency list:
+  'SHIB':      { contract: '0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE', decimals: 18, chainId: 1 },  // SHIB ETH
+  'LINK':      { contract: '0x514910771AF9Ca656af840dff83E8264EcF986CA', decimals: 18, chainId: 1 },  // LINK ETH
+  'UNI':       { contract: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', decimals: 18, chainId: 1 },  // UNI ETH
+  // Add more as needed
+};
+
+function buildErc20TransferURI(token: TokenInfo, recipient: string, amount: number): string {
+  const base = 'ethereum:';
+  const scaled = BigInt(Math.floor(amount * Math.pow(10, token.decimals)));
+  const chainPart = token.chainId ? `&chainId=${token.chainId}` : '';
+  return `${base}${token.contract}/transfer?address=${recipient}&uint256=${scaled.toString()}${chainPart}`;
+}
+
+// -----------------------------------------------------------------------------
+// BIP-21–like helper for UTXO coins that follow `scheme:address?amount=` pattern
+// -----------------------------------------------------------------------------
+// Coin-specific preferred decimal precision (mostly for UTXO coins)
+const DECIMAL_PRECISION: Record<string, number> = {
+  'BTC': 8,
+  'LTC': 8,
+  'BCH': 8,
+  'DOGE': 8,
+  'DASH': 8,
+  'ZEC': 8,
+  'RVN': 8,
+  'KAS': 8,
+};
+
+function formatAmountCoin(amount: number, currency: string): string {
+  const dec = DECIMAL_PRECISION[currency] ?? 6;
+  return formatAmount(amount, dec);
+}
+
+function buildBip21LikeURI(scheme: string, address: string, amount: number, param: string = 'amount', currencyHint?: string): string {
+  const amt = formatAmountCoin(amount, currencyHint || scheme.toUpperCase());
+  return `${scheme}:${address}?${param}=${amt}`;
 }

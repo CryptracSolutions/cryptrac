@@ -69,8 +69,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       total_amount_paid,
       pay_currency,
       amount_received,
-      status,
-      payin_extra_id
+      status
     `)
     .eq('public_receipt_id', receiptId)
     .single();
@@ -299,16 +298,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                     </div>
                   )}
                   
-                  {tx.payin_extra_id && tx.pay_currency && requiresExtraId(tx.pay_currency) && (
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="font-phonic text-sm font-normal text-gray-600">
-                        {getExtraIdLabel(tx.pay_currency)}
-                      </span>
-                      <span className="font-mono text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded">
-                        {tx.payin_extra_id}
-                      </span>
-                    </div>
-                  )}
+                  {/* Note: payin_extra_id is not stored in transactions; omit display */}
                   
                   {tx.tx_hash && (
                     <div className="flex justify-between border-b border-gray-100 pb-2">
@@ -347,4 +337,3 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
     </div>
   );
 }
-

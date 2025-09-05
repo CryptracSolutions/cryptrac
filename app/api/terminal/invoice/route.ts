@@ -4,11 +4,12 @@ import { fetchAvailableCurrencies } from '@/lib/nowpayments-dynamic';
 
 const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   BTC: ['BTC', 'BITCOIN'],
-  ETH: ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20', 'DAI', 'PYUSD'],
+  // ETH network and common ERC-20 tokens
+  ETH: ['ETH', 'ETHEREUM', 'USDT', 'USDTERC20', 'USDC', 'USDCERC20', 'DAI', 'PYUSD', 'OCEAN'],
   BNB: ['BNB', 'BSC', 'BINANCE', 'BNBBSC', 'USDTBSC', 'USDCBSC'],
   SOL: ['SOL', 'SOLANA', 'USDTSOL', 'USDCSOL'],
   MATIC: ['MATIC', 'POLYGON', 'USDTMATIC', 'USDCMATIC'],
-  AVAX: ['AVAX', 'AVALANCHE'],
+  AVAX: ['AVAX', 'AVALANCHE', 'AVAXC'],
   TRX: ['TRX', 'TRON', 'USDTTRC20'],
   TON: ['TON', 'USDTTON'],
   LTC: ['LTC', 'LITECOIN'],
@@ -20,7 +21,13 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   XLM: ['XLM', 'STELLAR'],
   ARB: ['ARB', 'ARBITRUM', 'USDTARB', 'USDCARB'],
   OP: ['OP', 'OPTIMISM', 'USDTOP', 'USDCOP'],
-  ETHBASE: ['ETHBASE', 'USDCBASE', 'ETH']
+  ETHBASE: ['ETHBASE', 'USDCBASE', 'ETH'],
+  // Additional networks
+  FTM: ['FTM', 'FANTOM', 'FTMMAINNET'],
+  RUNE: ['RUNE', 'THORCHAIN'],
+  CFX: ['CFX', 'CONFLUX', 'CFXMAINNET'],
+  CRO: ['CRO', 'CRONOS', 'CROMAINNET'],
+  INJ: ['INJ', 'INJMAINNET', 'INJERC20']
 };
 
 const STABLE_FALLBACK: Record<string, string> = {
@@ -95,6 +102,58 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'ARB': ['ARB', 'ARBITRUM'],
     'OP': ['OP', 'OPTIMISM'],
     'ETHBASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
+    // Additional networks
+    'FTM': ['FTM', 'FANTOM', 'FTMMAINNET'],
+    'RUNE': ['RUNE', 'THORCHAIN'],
+    'CFX': ['CFX', 'CFXMAINNET', 'CONFLUX'],
+    'CRO': ['CRO', 'CRONOS', 'CROMAINNET'],
+    'INJ': ['INJ', 'INJMAINNET', 'INJERC20'],
+    // Common ERC-20 tokens
+    'OCEAN': ['OCEAN', 'OCEANERC20'],
+    'GALA': ['GALA', 'GALAERC20'],
+
+    // Network-suffixed stablecoin variants and aliases
+    'USDTARC20': ['USDTARB', 'USDTARC20'],
+    'USDCARC20': ['USDCARB', 'USDCARC20'],
+    'OPUSDCE': ['USDCOP', 'OPUSDCE'],
+    'MATICUSDCE': ['USDCMATIC', 'MATICUSDCE'],
+    'MATICMAINNET': ['MATIC'],
+    'USDTCELO': ['USDTCELO'],
+    'ZROARB': ['ZROARB'],
+    'ZROERC20': ['ZROERC20'],
+    'AVAXC': ['AVAXC', 'AVAX'],
+    'BNBBSC': ['BNBBSC'],
+    'BUSDBSC': ['BUSDBSC'],
+    'ETHARB': ['ETHARB'],
+    'BRETTBASE': ['BRETTBASE'],
+    'WBTCMATIC': ['WBTCMATIC'],
+    'TUSDTRC20': ['TUSDTRC20'],
+    'STRKMAINNET': ['STRKMAINNET'],
+    // Explicit identities for common USDT variants
+    'USDT': ['USDT'],
+    'USDTERC20': ['USDTERC20'],
+    'USDTBSC': ['USDTBSC'],
+    'USDTTRC20': ['USDTTRC20'],
+    'USDTMATIC': ['USDTMATIC'],
+    'USDTSOL': ['USDTSOL'],
+    'USDTTON': ['USDTTON'],
+    'USDTARB': ['USDTARB'],
+    'USDTOP': ['USDTOP'],
+    // Explicit identities for common USDC variants
+    'USDC': ['USDC'],
+    'USDCERC20': ['USDCERC20'],
+    'USDCBSC': ['USDCBSC'],
+    'USDCMATIC': ['USDCMATIC'],
+    'USDCSOL': ['USDCSOL'],
+    'USDCALGO': ['USDCALGO'],
+    'USDCARB': ['USDCARB'],
+    'USDCOP': ['USDCOP'],
+    'USDCBASE': ['USDCBASE'],
+    'FTMMAINNET': ['FTM'],
+    'CFXMAINNET': ['CFX'],
+    'CROMAINNET': ['CRO'],
+    'INJMAINNET': ['INJ'],
+    'INJERC20': ['INJ']
     
     // Stablecoins - FIXED: Proper mapping for USDT and USDC
     'USDT': ['USDTERC20', 'USDT', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
@@ -236,10 +295,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Terminal device not found' }, { status: 404 });
     }
     const wallets = merchant.wallets || {};
-    const walletKey = getWalletKeyForCurrency(pay_currency, wallets);
-    if (!walletKey) {
-      return NextResponse.json({ error: 'Unsupported currency' }, { status: 400 });
-    }
     
     // Expand stablecoins like payment links do
     const stableCoins = expandStableCoins(wallets);
