@@ -60,6 +60,9 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   USDCMATIC: /^0x[a-fA-F0-9]{40}$/,
   USDTMATIC: /^0x[a-fA-F0-9]{40}$/,
   
+  // Aptos - 32-byte hex addresses
+  APT: /^0x[a-fA-F0-9]{64}$/,
+  
   // Ethereum ecosystem tokens
   LINK: /^0x[a-fA-F0-9]{40}$/,
   UNI: /^0x[a-fA-F0-9]{40}$/,
@@ -183,6 +186,9 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   // Legacy BNB format
   BNB_LEGACY: /^bnb[0-9a-z]{39}$/,
   
+  // THORChain (RUNE) - bech32 (thor1...)
+  RUNE: /^thor1[0-9a-z]{38,59}$/,
+  
   // Additional popular cryptocurrencies with comprehensive patterns
   SHIB: /^0x[a-fA-F0-9]{40}$/,
   APE: /^0x[a-fA-F0-9]{40}$/,
@@ -211,6 +217,10 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   OP: /^0x[a-fA-F0-9]{40}$/,
   USDTOP: /^0x[a-fA-F0-9]{40}$/,
   USDCOP: /^0x[a-fA-F0-9]{40}$/,
+  
+  // zkSync Era (ETH on zkSync)
+  ZKSYNC: /^0x[a-fA-F0-9]{40}$/,
+  ZK: /^0x[a-fA-F0-9]{40}$/,
   
   // Network-based fallback patterns
   ethereum: /^0x[a-fA-F0-9]{40}$/,
@@ -297,6 +307,7 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   MATIC: { name: 'Polygon', network: 'Polygon', addressType: 'Polygon address' },
   USDCMATIC: { name: 'USD Coin (Polygon)', network: 'Polygon', addressType: 'Polygon address' },
   USDTMATIC: { name: 'Tether (Polygon)', network: 'Polygon', addressType: 'Polygon address' },
+  APT: { name: 'Aptos', network: 'Aptos', addressType: 'Aptos account address (0x + 64 hex)' },
   LINK: { name: 'Chainlink', network: 'Ethereum', addressType: 'Ethereum address' },
   UNI: { name: 'Uniswap', network: 'Ethereum', addressType: 'Ethereum address' },
   AAVE: { name: 'Aave', network: 'Ethereum', addressType: 'Ethereum address' },
@@ -308,6 +319,9 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   OP: { name: 'Optimism', network: 'Optimism', addressType: 'Optimism address' },
   USDTOP: { name: 'Tether (Optimism)', network: 'Optimism', addressType: 'Optimism address' },
   USDCOP: { name: 'USD Coin (Optimism)', network: 'Optimism', addressType: 'Optimism address' },
+  ZKSYNC: { name: 'Ethereum (zkSync Era)', network: 'zkSync Era', addressType: 'Ethereum address' },
+  ZK: { name: 'zkSync', network: 'zkSync Era', addressType: 'Ethereum address' },
+  RUNE: { name: 'THORChain (RUNE)', network: 'THORChain', addressType: 'THORChain address (thor1...)' },
   ATOM: { name: 'Cosmos', network: 'Cosmos', addressType: 'Cosmos address' },
   FIL: { name: 'Filecoin', network: 'Filecoin', addressType: 'Filecoin address' },
   ICP: { name: 'Internet Computer', network: 'Internet Computer', addressType: 'ICP principal address' },
@@ -341,6 +355,147 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   ARK: { name: 'Ark', network: 'Ark', addressType: 'Ark address' }
 }
 
+// Heuristic fallback to derive validation patterns for approved currencies
+function derivePatternForCurrency(code: string): RegExp | null {
+  const u = code.toUpperCase();
+  const ETH_LIKE = /^0x[a-fA-F0-9]{40}$/;
+  const SOLANA = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  const TRON = /^T[A-Za-z1-9]{33}$/;
+  const TON = /^(0:[a-fA-F0-9]{64}|[A-Za-z0-9\-_]{48}|UQ[A-Za-z0-9\-_]{46})$/;
+  const ALGO = /^[A-Z2-7]{58}$/;
+
+  // Common suffix/prefix heuristics
+  if (u.endsWith('BSC') || u.includes('ERC20') || u.includes('ARB') || u.includes('BASE') ||
+      u.includes('OP') || u.includes('MATIC') || u.includes('ARC20') || u.includes('CELO')) {
+    return ETH_LIKE;
+  }
+  if (u.includes('TRC20')) return TRON;
+  if (u.includes('SOL')) return SOLANA;
+  if (u.includes('TON')) return TON;
+  if (u.includes('ALGO')) return ALGO;
+
+  // Specific chains/tokens
+  switch (u) {
+    case 'XDC':
+      return /^(0x|xdc)[a-fA-F0-9]{40}$/;
+    case 'ONE':
+      return /^one1[0-9a-z]{38}$/;
+    case 'STX':
+      return /^S[PM][A-Za-z0-9]{33,38}$/;
+    case 'INJ':
+    case 'INJMAINNET':
+      return /^inj[0-9a-z]{39}$/;
+    case 'INJERC20':
+      return ETH_LIKE;
+    case 'IOTX':
+      return /^io1[0-9a-z]{38,59}$/;
+    case 'KAS':
+      return /^(kaspa:)?q[a-z0-9]{60,62}$/;
+    case 'VLX':
+      return ETH_LIKE;
+    case 'CFX':
+    case 'CFXMAINNET':
+      return /^(cfx:[a-z0-9:]+|0x[a-fA-F0-9]{40})$/;
+    case 'CRO':
+    case 'CROMAINNET':
+      return ETH_LIKE;
+    case 'PLS':
+      return ETH_LIKE;
+    case 'OKB':
+    case 'OMG':
+    case 'AAVE':
+    case 'LINK':
+    case 'KNC':
+    case 'BAT':
+    case 'ENJ':
+    case 'MANA':
+    case 'SNT':
+    case 'ZRX':
+    case 'RLC':
+    case 'LRC':
+    case 'POLY':
+    case 'CVC':
+    case 'MCO':
+    case 'MTL':
+    case 'REP':
+    case 'KCS':
+    case 'BNT':
+    case 'SHIB':
+    case 'APE':
+    case 'SAND':
+    case 'CRO':
+    case 'FTM':
+    case 'GRT':
+    case 'YFI':
+    case 'OCEAN':
+    case 'OKT':
+    case 'ZROERC20':
+    case 'ZROARB':
+    case 'GALAERC20':
+    case 'ETHARB':
+    case 'BRETTBASE':
+    case 'OPUSDCE':
+    case 'MATICUSDCE':
+    case 'USDTARC20':
+    case 'USDTERC20':
+    case 'USDTCELO':
+    case 'USDCARC20':
+    case 'USDCBASE':
+    case 'USDTOP':
+    case 'USDCOP':
+    case 'USDTBSC':
+    case 'USDCBSC':
+    case 'USDTMATIC':
+    case 'USDCMATIC':
+    case 'WBTCMATIC':
+    case 'VLX':
+    case 'KAIA':
+    case 'ZK':
+    case 'ZKSYNC':
+    case 'FTMMAINNET':
+    case 'MATICMAINNET':
+    case 'BUSDBSC':
+    case 'FRONT':
+    case 'FUN':
+    case 'JASMY':
+    case 'OKBMAINNET':
+    case 'ZBCERC20':
+      return ETH_LIKE;
+    case 'SEI':
+      return /^sei1[0-9a-z]{38}$/;
+    case 'LUNC':
+      return /^terra[0-9a-z]{39}$/;
+    case 'XDCNETWORK':
+      return /^(0x|xdc)[a-fA-F0-9]{40}$/;
+    case 'TRUMP':
+    case 'PEPE':
+    case '1INCH':
+    case 'AXS':
+    case 'ARV':
+    case 'BERA':
+    case 'BAZED':
+    case 'VERSE':
+    case 'VELO':
+    case 'XYO':
+    case 'OKBCHAIN':
+      return ETH_LIKE;
+    case 'ZBC':
+      return SOLANA;
+    case 'LGCY':
+      return TRON;
+    case 'MYRO':
+      return SOLANA;
+    case 'WBTCMATIC':
+      return ETH_LIKE;
+    case 'JETTON':
+    case 'NOT':
+      return TON;
+    default:
+      // Last resort: assume EVM for unknown ERC-20 style tokens
+      return ETH_LIKE;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { currency, address, extra_id } = await request.json()
@@ -361,9 +516,11 @@ export async function POST(request: NextRequest) {
     const upperCurrency = currency.toUpperCase()
     const trimmedAddress = address.trim()
 
-    // Check if we have a validation pattern for this currency
-    const pattern = ADDRESS_PATTERNS[upperCurrency]
-
+    // Check for a direct pattern first; otherwise derive heuristically
+    let pattern = ADDRESS_PATTERNS[upperCurrency]
+    if (!pattern) {
+      pattern = derivePatternForCurrency(upperCurrency) || null
+    }
     if (!pattern) {
       console.log(`❌ No validation pattern found for currency: ${upperCurrency}`)
       return NextResponse.json({

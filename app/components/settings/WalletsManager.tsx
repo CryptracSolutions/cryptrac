@@ -143,11 +143,12 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     const initialHidden: Record<string, boolean> = {};
     const initialExtraIdValidation: Record<string, ValidationStatus> = {};
 
-    // Initialize for existing wallets (assume addresses are valid if present)
+    // Initialize for existing wallets (do NOT auto-mark as valid)
     if (settings.wallets) {
       Object.keys(settings.wallets).forEach(currency => {
         if (settings.wallets[currency] && settings.wallets[currency].trim()) {
-          initialValidation[currency] = 'valid';
+          // Default to idle; validation will be triggered on input change
+          initialValidation[currency] = 'idle';
           initialHidden[currency] = true; // Start with addresses hidden
         } else {
           initialValidation[currency] = 'idle';
@@ -167,8 +168,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       });
     }
 
-    setValidationStatus(initialValidation);
-    setHiddenAddresses(initialHidden);
+    // Preserve any existing validation states to avoid flipping statuses
+    setValidationStatus(prev => ({ ...initialValidation, ...prev }));
+    setHiddenAddresses(prev => ({ ...initialHidden, ...prev }));
     setExtraIdValidationStatus(prev => ({ ...initialExtraIdValidation, ...prev }));
   }, [settings.wallets, settings.wallet_extra_ids]);
 
@@ -217,12 +219,8 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
               const newStatus = { ...prev };
               processedCurrencies.forEach((currency: CurrencyInfo) => {
                 if (!newStatus[currency.code]) {
-                  // Check if this currency has an existing wallet
-                  if (settings.wallets && settings.wallets[currency.code] && settings.wallets[currency.code].trim()) {
-                    newStatus[currency.code] = 'valid';
-                  } else {
-                    newStatus[currency.code] = 'idle';
-                  }
+                  // If an address exists, do not assume validity; start as idle
+                  newStatus[currency.code] = 'idle';
                 }
               });
               return newStatus;
