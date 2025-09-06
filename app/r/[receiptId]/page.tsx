@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 import PrintButton from '@/components/PrintButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -134,17 +133,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
           <CardContent className="p-8">
             {/* Header */}
             <div className="text-center space-y-4 mb-8">
-              {merchant?.logo_url && (
-                <div className="flex justify-center">
-                  <Image 
-                    src={merchant.logo_url} 
-                    alt={merchant.business_name || 'Merchant'} 
-                    width={80} 
-                    height={80}
-                    className="rounded-lg shadow-sm"
-                  />
-                </div>
-              )}
+              
               <div>
                 <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
                   {merchant?.business_name || 'Business Name Not Available'}

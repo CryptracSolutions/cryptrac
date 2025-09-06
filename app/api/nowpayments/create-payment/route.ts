@@ -359,7 +359,6 @@ export async function POST(request: Request) {
         merchants!inner(
           id,
           business_name,
-          logo_url,
           auto_convert_enabled,
           charge_customer_fee,
           wallets,
@@ -743,10 +742,6 @@ export async function POST(request: Request) {
       merchant_receives: merchantReceives,
       // Auto-forwarding info - store in payment_data JSONB field
       // Store merchant info required for public receipts
-      receipt_metadata: {
-        business_name: merchant?.business_name || null,
-        logo_url: merchant?.logo_url || null,
-      },
       payment_data: {
         auto_forwarding_enabled: autoForwardingConfigured,
         payout_address: autoForwardingConfigured ? paymentRequest.payout_address : null,
