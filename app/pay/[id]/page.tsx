@@ -16,12 +16,11 @@ import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortN
 import { buildCurrencyMapping } from '@/lib/currency-mapping'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
 import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder'
-import { buildBestURI, detectWalletHint } from '@/lib/wallet-uri-helper'
+import { formatAddressForQR } from '@/lib/simple-address-formatter'
 import { trackURIGeneration } from '@/lib/uri-analytics'
-import { validateURI } from '@/lib/uri-validation'
 import { loadDynamicConfig } from '@/lib/wallet-uri-config'
 import type { DynamicConfig } from '@/lib/wallet-uri-config'
-import { buildTestableURI, getOrCreateClientId } from '@/lib/ab-testing'
+import { getOrCreateClientId } from '@/lib/ab-testing'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { cn } from '@/lib/utils'
@@ -707,53 +706,22 @@ export default function PaymentPage() {
 
       // Generate QR code for payment address with destination tag if needed
       if (data.payment.pay_address) {
-        // Build the best-available URI (wallet-specific -> standard -> address)
-        // Phase 3: pick strategy via A/B testing with dynamic config
-        const built = buildTestableURI({
-          currency: data.payment.pay_currency,
-          address: data.payment.pay_address,
-          amount: data.payment.pay_amount,
-          extraId: data.payment.payin_extra_id || undefined,
-          userId: clientId,
-          config: dynamicConfig || undefined,
-          strategyOverride: searchParams?.get('uri_strategy') || undefined,
-        })
-        let best = { uri: built.uri, quality: 80, source: 'standard', guaranteesAmount: true, guaranteesExtraId: !!data.payment.payin_extra_id }
-        try { localStorage.setItem('cryptrac_uri_strategy', (built as any).strategy || '') } catch {}
-
-        // Proactive validation: if issues, fall back to standard URI
-        try {
-          const validation = await validateURI(best.uri, {
-            currency: data.payment.pay_currency,
-            address: data.payment.pay_address,
-            amount: data.payment.pay_amount,
-            extraId: data.payment.payin_extra_id || undefined,
-          })
-          if (!validation.isValid || !validation.addressDetected || !validation.amountDetected) {
-            console.warn('URI validation failed; falling back to standard URI', validation.issues)
-            const standard = buildCryptoPaymentURI({
-              currency: data.payment.pay_currency,
-              address: data.payment.pay_address,
-              amount: data.payment.pay_amount,
-              extraId: data.payment.payin_extra_id || undefined,
-              label: paymentLink?.title || 'Cryptrac Payment',
-              message: paymentLink?.description || 'Cryptocurrency payment',
-            })
-            best = { uri: standard.uri, quality: standard.includesAmount ? 70 : 40, source: 'standard', guaranteesAmount: standard.includesAmount, guaranteesExtraId: standard.includesExtraId }
-          }
-        } catch {}
-
-        const qrData = best.uri
+        // Simple: address-only QR content (append extraId for special currencies)
+        const { qrContent } = formatAddressForQR(
+          data.payment.pay_currency,
+          data.payment.pay_address,
+          data.payment.payin_extra_id || undefined
+        )
+        const qrData = qrContent
         
         console.log('🔗 Generated payment URI:', qrData)
         // Lightweight analytics (non-blocking)
         try {
-          const wallet = detectWalletHint()
           trackURIGeneration({
             currency: data.payment.pay_currency,
-            walletDetected: wallet,
-            uriType: (built as any).strategy || best.source,
-            uri: best.uri,
+            walletDetected: '',
+            uriType: 'address-only',
+            uri: qrData,
           })
         } catch {}
         

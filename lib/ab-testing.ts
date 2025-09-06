@@ -1,5 +1,4 @@
 import { buildCryptoPaymentURI } from './crypto-uri-builder'
-import { buildWalletSpecificURI, buildBestURI, buildPlatformOptimizedURI } from './wallet-uri-helper'
 import type { DynamicConfig } from './wallet-uri-config'
 
 export interface ABVariant { name: string; weight: number; strategy: 'standard' | 'wallet-specific' | 'multi-fallback' | 'platform-optimized' }
@@ -79,30 +78,6 @@ export function buildTestableURI(params: {
   config?: DynamicConfig;
   strategyOverride?: string;
 }): { uri: string; strategy: ABVariant['strategy'] } {
-  const strategy = (params.strategyOverride as ABVariant['strategy']) || getURIStrategy(params.userId);
-  const config = params.config;
-  if (config?.fallbackBehavior === 'standard-only') {
-    return { uri: buildCryptoPaymentURI(params).uri, strategy: 'standard' };
-  }
-
-  switch (strategy) {
-    case 'standard': {
-      return { uri: buildCryptoPaymentURI(params).uri, strategy };
-    }
-    case 'wallet-specific': {
-      const w = buildWalletSpecificURI(params);
-      return { uri: w || buildCryptoPaymentURI(params).uri, strategy };
-    }
-    case 'multi-fallback': {
-      const c = buildBestURI(params);
-      return { uri: c.uri, strategy };
-    }
-    case 'platform-optimized': {
-      return { uri: buildPlatformOptimizedURI(params), strategy };
-    }
-    default: {
-      const c = buildBestURI(params);
-      return { uri: c.uri, strategy: 'multi-fallback' };
-    }
-  }
+  // Simplified: always address-only
+  return { uri: buildCryptoPaymentURI(params).uri, strategy: 'standard' }
 }

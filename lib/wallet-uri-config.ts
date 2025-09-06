@@ -36,8 +36,7 @@ export async function loadDynamicConfig(): Promise<DynamicConfig> {
   }
 }
 
-import { buildCryptoPaymentURI, getRoundedAmount } from './crypto-uri-builder';
-import { detectWalletHint, buildWalletSpecificURI } from './wallet-uri-helper';
+import { buildCryptoPaymentURI } from './crypto-uri-builder';
 
 export function buildConfigurableURI(params: {
   currency: string;
@@ -55,34 +54,6 @@ export function buildConfigurableURI(params: {
     return buildCryptoPaymentURI(params).uri;
   }
 
-  const wallet = detectWalletHint();
-  const walletCfg = wallet ? config.walletOverrides[wallet] : undefined;
-  // 1) If customSchemes provided for this wallet and currency, use it
-  if (wallet && walletCfg?.enabled && walletCfg.customSchemes) {
-    const tmpl = walletCfg.customSchemes[params.currency] || walletCfg.customSchemes['*'];
-    if (tmpl) {
-      const rounded = getRoundedAmount(params.amount);
-      const wei = (() => { try { return BigInt(Math.floor(params.amount * 1e18)).toString(); } catch { return ''; } })();
-      let uri = tmpl
-        .replace(/\{address\}/g, params.address)
-        .replace(/\{amount\}/g, String(rounded))
-        .replace(/\{wei\}/g, wei)
-        .replace(/\{microalgos\}/g, (params.amount * 1e6).toFixed(0))
-        .replace(/\{nanoton\}/g, (params.amount * 1e9).toFixed(0));
-      if (params.extraId) uri = uri.replace(/\{extraId\}/g, params.extraId);
-      return uri;
-    }
-  }
-  if (wallet && walletCfg?.enabled) {
-    const uri = buildWalletSpecificURI({
-      currency: params.currency,
-      address: params.address,
-      amount: params.amount,
-      extraId: params.extraId,
-      walletHint: wallet,
-    });
-    if (uri) return uri;
-  }
-
-  return buildCryptoPaymentURI(params).uri;
+  // Simplified: always return address-only URI
+  return buildCryptoPaymentURI(params).uri
 }

@@ -11,10 +11,9 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, AlertTriangle } from 'lucide-react';
 import { requiresExtraId, getExtraIdLabel, getExtraIdDescription } from '@/lib/extra-id-validation';
 import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder';
-import { buildBestURI, detectWalletHint } from '@/lib/wallet-uri-helper';
+import { formatAddressForQR } from '@/lib/simple-address-formatter';
 import { trackURIGeneration } from '@/lib/uri-analytics';
-import { validateURI } from '@/lib/uri-validation';
-import { buildTestableURI, getOrCreateClientId } from '@/lib/ab-testing';
+import { getOrCreateClientId } from '@/lib/ab-testing';
 import { loadDynamicConfig } from '@/lib/wallet-uri-config';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
@@ -87,12 +86,11 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
 
 // Centralized wallet-specific URI builder (with fallback)
 function buildPaymentURI(currency: string, address: string, amount: number, extraId?: string) {
-  const best = buildBestURI({ currency, address, amount, extraId });
+  const { qrContent } = formatAddressForQR(currency, address, extraId);
   try {
-    const wallet = detectWalletHint();
-    trackURIGeneration({ currency, walletDetected: wallet, uriType: best.source, uri: best.uri });
+    trackURIGeneration({ currency, walletDetected: '', uriType: 'address-only', uri: qrContent });
   } catch {}
-  return best.uri;
+  return qrContent;
 }
 
 function SmartTerminalPageContent() {
@@ -130,54 +128,10 @@ function SmartTerminalPageContent() {
     setValidatedUri(null);
   }, [paymentData?.payment_id, paymentData?.pay_address, paymentData?.payin_extra_id]);
 
-  // Load config + client ID for A/B and overrides
+  // Load client ID only (kept for analytics uniqueness)
   useEffect(() => {
-    (async () => {
-      try { setClientId(getOrCreateClientId()); } catch {}
-      try { setDynamicConfig(await loadDynamicConfig()); } catch {}
-    })();
+    try { setClientId(getOrCreateClientId()); } catch {}
   }, []);
-
-  // Proactive validation and fallback to standard URI
-  useEffect(() => {
-    (async () => {
-      if (!paymentData) return;
-      try {
-        const override = searchParams?.get('uri_strategy') || undefined;
-        const built = buildTestableURI({
-          currency: paymentData.pay_currency,
-          address: paymentData.pay_address,
-          amount: paymentData.pay_amount,
-          extraId: paymentData.payin_extra_id,
-          userId: clientId,
-          config: dynamicConfig || undefined,
-          strategyOverride: override,
-        });
-        try { localStorage.setItem('cryptrac_uri_strategy', (built as any).strategy || '') } catch {}
-        const res = await validateURI(built.uri, {
-          currency: paymentData.pay_currency,
-          address: paymentData.pay_address,
-          amount: paymentData.pay_amount,
-          extraId: paymentData.payin_extra_id,
-        });
-        if (!res.isValid || !res.addressDetected || !res.amountDetected) {
-          const std = buildCryptoPaymentURI({
-            currency: paymentData.pay_currency,
-            address: paymentData.pay_address,
-            amount: paymentData.pay_amount,
-            extraId: paymentData.payin_extra_id,
-            label: 'Cryptrac Payment',
-            message: 'Payment via Smart Terminal',
-          });
-          setValidatedUri(std.uri);
-        } else {
-          setValidatedUri(built.uri);
-        }
-      } catch {
-        setValidatedUri(null);
-      }
-    })();
-  }, [paymentData?.payment_id, paymentData?.pay_address, paymentData?.pay_amount, paymentData?.payin_extra_id]);
 
   // Load merchant settings and device
   useEffect(() => {
@@ -817,7 +771,7 @@ function SmartTerminalPageContent() {
                 <div className="flex flex-col items-center space-y-4 sm:space-y-6" aria-live="polite">
                   {(() => {
                 const baseUri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
-                const uri = validatedUri || baseUri;
+                const uri = baseUri;
                 const showAmount = uri === paymentData.pay_address;
                 const needsExtra = !!(paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency));
                   return (
@@ -869,7 +823,7 @@ function SmartTerminalPageContent() {
                     {/* QR Code (single) */}
                     {(!needsExtra || extraIdConfirmed) && (
                       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
-                        <QRCode value={uri} size={256} />
+                        <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={256} />
                         {needsExtra && (
                           <p className="text-xs text-center text-green-600 mt-3">
                             ✓ {getExtraIdLabel(paymentData.pay_currency)} included
@@ -883,9 +837,9 @@ function SmartTerminalPageContent() {
                       </div>
                     )}
                     {/* Payment Details */}
-                    <div className="w-full bg-gradient-to-r from-purple-50 to-purple-25 p-6 rounded-xl border border-purple-200">
+                    <div className="w-full bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-xl border border-purple-200">
                       <div className="text-center">
-                        <p className="text-sm text-gray-600 mb-2">Send exactly</p>
+                        <p className="text-xs text-gray-600 mb-1">Send exactly</p>
                         <p className="text-3xl font-bold text-[#7f5efd] mb-1">
                           {formatAmountForDisplay(paymentData.pay_amount)}
                         </p>
@@ -897,16 +851,16 @@ function SmartTerminalPageContent() {
                     {/* Address Display */
                     // Always show the amount below address as a manual fallback
                     }
-                    <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="p-2 bg-[#7f5efd] rounded-lg">
-                          <Copy className="h-4 w-4 text-white" />
+                    <div className="w-full bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="p-1.5 bg-[#7f5efd] rounded-lg">
+                          <Copy className="h-3 w-3 text-white" />
                         </div>
-                        <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
+                        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
                       </div>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <p className="text-sm text-gray-600 mb-1">Send to this address</p>
-                        <p className="text-sm font-mono break-all text-gray-900 leading-relaxed tracking-wide">
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-xs text-gray-600 mb-1">Send to this address</p>
+                        <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold">
                           {paymentData.pay_address}
                         </p>
                       </div>
