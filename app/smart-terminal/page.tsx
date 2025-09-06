@@ -642,61 +642,49 @@ function SmartTerminalPageContent() {
             </div>
           )}
           {step === 'customer' && !paymentLink && (
-            <div className="w-full space-y-4 sm:space-y-6">
+            <div className="w-full space-y-3">
               {/* Order Summary */}
-              <div className="bg-gradient-to-br from-purple-50 to-white p-4 sm:p-5 rounded-xl border border-purple-100" aria-live="polite">
-                <div className="flex items-center gap-2 mb-3">
-                  <ShoppingBag className="h-5 w-5 text-[#7f5efd]" />
-                  <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
+              <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100" aria-live="polite">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
+                  <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
                 </div>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-1 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
                   </div>
-                  {tax && merchantSettings?.tax_rates && merchantSettings.tax_rates.map((rate, index) => (
-                    <div key={index} className="flex justify-between items-center text-emerald-600">
-                      <span>{rate.label} ({rate.percentage}%)</span>
-                      <span className="font-medium">+${((baseAmount * rate.percentage) / 100).toFixed(2)}</span>
-                    </div>
-                  ))}
-                  {tax && (
-                    <div className="flex justify-between items-center font-semibold text-emerald-600 border-t border-purple-100 pt-2">
-                      <span>Total Tax</span>
-                      <span>+${taxAmount.toFixed(2)}</span>
+                  {tax && taxAmount > 0 && (
+                    <div className="flex justify-between items-center text-emerald-600">
+                      <span>Tax</span>
+                      <span className="font-medium">+${taxAmount.toFixed(2)}</span>
                     </div>
                   )}
-                  {tax && (
-                    <div className="flex justify-between items-center font-semibold border-t border-purple-100 pt-2">
-                      <span className="text-gray-600">Subtotal with Tax</span>
-                      <span className="text-gray-900">${preview.subtotal_with_tax.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {chargeFee && (
+                  {chargeFee && gatewayFee > 0 && (
                     <div className="flex justify-between items-center text-blue-600">
-                      <span>Gateway fee ({merchantSettings?.auto_convert_enabled ? '1.0' : '0.5'}%)</span>
+                      <span>Gateway fee</span>
                       <span className="font-medium">+${gatewayFee.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center font-bold text-base border-t border-purple-100 pt-2">
+                  <div className="flex justify-between items-center font-bold border-t border-purple-100 pt-1">
                     <span className="text-gray-700">Total</span>
                     <span className="text-[#7f5efd]">${preTipTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
               {/* Tip Selection */}
-              <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200">
-                <p className="text-sm font-semibold text-gray-700 mb-3 text-center">Add a tip?</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+              <div className="bg-white p-3 rounded-xl border border-gray-200">
+                <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Add a tip?</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {(device?.tip_presets || defaultTips).map((p: number) => (
                     <Button 
                       key={p} 
                       variant={tipPercent === p ? 'default' : 'outline'} 
                       className={cn(
-                        "h-12 sm:h-14 font-semibold rounded-lg transition-all duration-200",
+                        "h-10 font-semibold rounded-lg transition-all duration-200",
                         tipPercent === p 
                           ? "bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white shadow-lg" 
-                          : "bg-white border-2 border-purple-200 text-[#7f5efd] hover:bg-purple-50 hover:border-[#7f5efd]"
+                          : "bg-white border border-purple-200 text-[#7f5efd] hover:bg-purple-50 hover:border-[#7f5efd]"
                       )}
                       onClick={() => {setTipPercent(p); setTipSelected(true);}} 
                       aria-label={`tip ${p}%`}
@@ -707,10 +695,10 @@ function SmartTerminalPageContent() {
                   <Button 
                     variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'} 
                     className={cn(
-                      "h-12 sm:h-14 font-semibold rounded-lg transition-all duration-200",
+                      "h-10 font-semibold rounded-lg transition-all duration-200",
                       tipPercent === 0 && tipSelected
                         ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg" 
-                        : "bg-white border-2 border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
+                        : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
                     )}
                     onClick={() => {setTipPercent(0); setTipSelected(true);}} 
                     aria-label="no tip"
@@ -719,89 +707,40 @@ function SmartTerminalPageContent() {
                   </Button>
                 </div>
               </div>
-              {/* Currency Selection with Network Filter */}
-              <div className="space-y-3">
+              {/* Currency Selection */}
+              <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Payment Currency</label>
-                
-                {/* Network Filter Dropdown */}
-                {availableCurrencies.length > 0 && (() => {
-                  const groupedCurrencies = groupCurrenciesByNetwork(
-                    availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                    merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
-                  )
-                  const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
-                  return (
-                    <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                      <SelectTrigger className="w-full h-12 bg-white border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
-                        <SelectValue placeholder="All Networks" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Networks</SelectItem>
-                        {availableNetworks.map(networkId => {
-                          const network = getNetworkInfo(networkId)
-                          if (!network) return null
-                          const currencyCount = groupedCurrencies.get(networkId)?.length || 0
-                          return (
-                            <SelectItem key={networkId} value={networkId}>
-                              {network.displayName} <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
-                            </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
-                  )
-                })()}
-                
-                {/* Currency Selection */}
                 <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
-                  <SelectTrigger className="w-full h-12 bg-white border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
+                  <SelectTrigger className="w-full h-10 bg-white border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(() => {
-                      // Filter currencies based on selected network
-                      let filteredCurrencies = availableCurrencies
-                      
-                      if (selectedNetwork !== 'all') {
-                        const groupedCurrencies = groupCurrenciesByNetwork(
-                          availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                          merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
-                        )
-                        const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
-                        const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
-                        filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
-                      }
-                      
-                      return filteredCurrencies.map((c) => {
-                        const displayName = c.name || getCurrencyDisplayName(c.code)
-                        const isAvailable = c.enabled
-                        return (
-                          <SelectItem
-                            key={c.code}
-                            value={c.code}
-                            disabled={!isAvailable}
-                            className={cn("hover:bg-purple-50", !isAvailable && "opacity-50 cursor-not-allowed")}
-                            title={!isAvailable ? 'Temporarily unavailable' : undefined}
-                          >
-                            <div className="flex flex-col">
-                              <span className="font-medium">{c.code.toUpperCase()}</span>
-                              <span className="text-xs text-gray-500">{displayName}</span>
-                            </div>
-                          </SelectItem>
-                        )
-                      })
-                    })()}
+                    {availableCurrencies.map((c) => {
+                      const displayName = c.name || getCurrencyDisplayName(c.code)
+                      const isAvailable = c.enabled
+                      return (
+                        <SelectItem
+                          key={c.code}
+                          value={c.code}
+                          disabled={!isAvailable}
+                          className={cn("hover:bg-purple-50", !isAvailable && "opacity-50 cursor-not-allowed")}
+                          title={!isAvailable ? 'Temporarily unavailable' : undefined}
+                        >
+                          <span className="font-medium">{c.code.toUpperCase()}</span>
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
               </div>
               {/* Final Total Display */}
               {tipSelected && (
-                <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-4 rounded-xl text-white">
+                <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 rounded-xl text-white">
                   <div className="text-center">
-                    <p className="text-sm opacity-90 mb-1">Final Total</p>
-                    <p className="text-3xl font-bold">${finalTotal.toFixed(2)}</p>
+                    <p className="text-xs opacity-90 mb-1">Final Total</p>
+                    <p className="text-2xl font-bold">${finalTotal.toFixed(2)}</p>
                     {tipPercent !== null && tipPercent > 0 && (
-                      <p className="text-sm opacity-90 mt-1">Includes ${tipAmount.toFixed(2)} tip</p>
+                      <p className="text-xs opacity-90 mt-1">Includes ${tipAmount.toFixed(2)} tip</p>
                     )}
                   </div>
                 </div>
@@ -972,41 +911,6 @@ function SmartTerminalPageContent() {
                 );
               })()}
 
-              {/* Invoice Breakdown */}
-              <div className="w-full bg-white p-4 rounded-xl border border-gray-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Receipt className="h-5 w-5 text-[#7f5efd]" />
-                  <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Invoice Details</span>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium text-gray-900">${baseAmount.toFixed(2)}</span>
-                  </div>
-                  {invoiceBreakdown?.tax_amount ? (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Tax</span>
-                      <span className="font-medium text-gray-900">${invoiceBreakdown.tax_amount.toFixed(2)}</span>
-                    </div>
-                  ) : null}
-                  {invoiceBreakdown?.gateway_fee ? (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Gateway fee</span>
-                      <span className="font-medium text-gray-900">${invoiceBreakdown.gateway_fee.toFixed(2)}</span>
-                    </div>
-                  ) : null}
-                  {invoiceBreakdown?.tip_amount ? (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Tip</span>
-                      <span className="font-medium text-gray-900">${invoiceBreakdown.tip_amount.toFixed(2)}</span>
-                    </div>
-                  ) : null}
-                  <div className="flex justify-between items-center font-bold text-base border-t border-gray-200 pt-2">
-                    <span className="text-gray-700">Total</span>
-                    <span className="text-[#7f5efd]">${(invoiceBreakdown?.final_total || finalTotal).toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
               {/* Success Actions */}
               {status === 'confirmed' && (
                 <div className="space-y-4 w-full">
