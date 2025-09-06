@@ -131,8 +131,8 @@ export function detectAllWallets(): WalletInfo[] {
       name: 'Coinbase Wallet',
       detected: true,
       priority: 4,
-      supportedChains: ['bitcoin', 'ethereum', 'base', 'polygon', 'arbitrum', 'optimism'],
-      preferredScheme: 'proprietary'
+      supportedChains: ['bitcoin', 'ethereum', 'base', 'bsc', 'polygon', 'arbitrum', 'optimism'],
+      preferredScheme: 'standard'
     });
   }
 
@@ -148,10 +148,10 @@ export function detectAllWallets(): WalletInfo[] {
 
   // UA-based mobile wallet and exchange app detection (best-effort)
   if (ua.includes('coinbase')) {
-    wallets.push({ name: 'Coinbase Wallet', detected: true, priority: 4, supportedChains: ['bitcoin', 'ethereum', 'base', 'polygon', 'arbitrum', 'optimism'], preferredScheme: 'proprietary' });
+    wallets.push({ name: 'Coinbase Wallet', detected: true, priority: 4, supportedChains: ['bitcoin', 'ethereum', 'base', 'bsc', 'polygon', 'arbitrum', 'optimism'], preferredScheme: 'standard' });
   }
   if (ua.includes('base wallet')) {
-    wallets.push({ name: 'Coinbase Wallet', detected: true, priority: 4, supportedChains: ['bitcoin', 'ethereum', 'base', 'polygon', 'arbitrum', 'optimism'], preferredScheme: 'proprietary' });
+    wallets.push({ name: 'Coinbase Wallet', detected: true, priority: 4, supportedChains: ['bitcoin', 'ethereum', 'base', 'bsc', 'polygon', 'arbitrum', 'optimism'], preferredScheme: 'standard' });
   }
   if (ua.includes('binance')) {
     wallets.push({ name: 'Binance App', detected: true, priority: 6, supportedChains: ['bitcoin', 'ethereum', 'bsc', 'tron'], preferredScheme: 'proprietary' });
@@ -202,10 +202,22 @@ function getCurrencyChain(currency: string): string {
 }
 
 export function getBestWalletForCurrency(currency: string): string {
+  const activeWallet = detectWalletHint();
   const wallets = detectAllWallets();
   const chain = getCurrencyChain(currency);
-  const compatible = wallets.find(w => w.detected && w.supportedChains.includes(chain));
-  return compatible?.name || detectWalletHint() || '';
+
+  // Priority 1: active wallet if it supports this chain
+  if (activeWallet) {
+    const activeWalletInfo = wallets.find(w => w.name === activeWallet && w.supportedChains.includes(chain));
+    if (activeWalletInfo) {
+      return activeWallet;
+    }
+  }
+
+  // Priority 2: any compatible wallet, prefer non-MetaMask
+  const compatible = wallets.filter(w => w.detected && w.supportedChains.includes(chain));
+  const nonMetaMask = compatible.find(w => w.name !== 'MetaMask');
+  return nonMetaMask?.name || compatible[0]?.name || activeWallet || '';
 }
 
 export function buildWalletSpecificURI(params: {
@@ -278,21 +290,22 @@ export function buildBestURI(params: {
   amount: number;
   extraId?: string;
 }): URICandidate {
-  const candidates: URICandidate[] = [];
   const platform = detectPlatform();
 
   // 1) Primary wallet-specific based on best wallet for the currency
   const walletHint = getBestWalletForCurrency(params.currency);
   const primaryWalletURI = buildWalletSpecificURI({ ...params, walletHint });
   if (primaryWalletURI) {
-    candidates.push(scoreCandidate(primaryWalletURI, 'wallet-specific', params, platform));
+    // When an active/compatible wallet is present, prefer its scheme explicitly to avoid cross-app redirects
+    return scoreCandidate(primaryWalletURI, 'wallet-specific', params, platform);
   }
 
   // 2) Alternative wallet schemes for other detected wallets
+  const candidates: URICandidate[] = [];
   const allWallets = detectAllWallets();
   for (const w of allWallets) {
     const alt = buildWalletSpecificURI({ ...params, walletHint: w.name });
-    if (alt && alt !== primaryWalletURI) {
+    if (alt) {
       candidates.push(scoreCandidate(alt, 'wallet-specific', params, platform));
     }
   }

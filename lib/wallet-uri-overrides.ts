@@ -229,6 +229,16 @@ export const WALLET_URI_OVERRIDES =
           "wallet": "Trust Wallet",
           "scheme": "trust://send?asset=c714&address={address}&amount={amount}",
           "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+        },
+        {
+          "wallet": "Coinbase Wallet",
+          "scheme": "ethereum:{address}?value={wei}&chainId=56",
+          "notes": "Base wallet (Coinbase Wallet) supports standard EIP-681 with BSC chain ID"
+        },
+        {
+          "wallet": "Base Wallet",
+          "scheme": "ethereum:{address}?value={wei}&chainId=56",
+          "notes": "Base wallet alias - supports standard EIP-681 with BSC chain ID"
         }
       ],
       "requires_extra_id": false,
@@ -616,13 +626,18 @@ export const WALLET_URI_OVERRIDES =
         },
         {
           "wallet": "Phantom",
-          "scheme": "ethereum:{address}?value={wei}",
-          "notes": "Phantom supports standard EIP-681 for Ethereum, not proprietary scheme."
+          "scheme": "https://phantom.app/ul/v1/send?recipient={address}&amount={amount}&cluster=mainnet-beta&token=ethereum",
+          "notes": "Phantom universal link for ETH payments"
         },
         {
           "wallet": "Coinbase Wallet",
           "scheme": "ethereum:{address}?value={wei}",
           "notes": "Coinbase Wallet supports standard EIP-681 URIs"
+        },
+        {
+          "wallet": "Base Wallet",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Base Wallet alias for Coinbase Wallet"
         },
         {
           "wallet": "OKX Wallet",
