@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, BookOpen, Calendar, User, Clock, Search, Tag, TrendingUp, Zap, Shield, Globe, Lightbulb, Award } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Calendar, User, Clock, Search, Tag, TrendingUp, Zap, Lightbulb, Award } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";

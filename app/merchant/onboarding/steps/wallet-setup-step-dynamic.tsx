@@ -138,7 +138,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       <WalletsManager
         settings={settings}
         setSettings={setSettings}
-        setShowTrustWalletGuide={setShowTrustWalletGuide}
         focusCurrency={focusCurrency}
       />
 

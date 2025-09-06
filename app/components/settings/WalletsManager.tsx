@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Wallet,
   Info,
-  HelpCircle,
   Trash2,
   Loader2,
   CheckCircle,
@@ -116,11 +115,10 @@ interface WalletsManagerProps<T = Record<string, unknown>> {
     wallets: Record<string, string>;
     wallet_extra_ids?: Record<string, string>;
   }>>;
-  setShowTrustWalletGuide: (show: boolean) => void;
   focusCurrency?: string;
 }
 
-export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, setShowTrustWalletGuide, focusCurrency }: WalletsManagerProps<T>) {
+export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, focusCurrency }: WalletsManagerProps<T>) {
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [extraIdValidationStatus, setExtraIdValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -304,7 +302,13 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     }
 
     try {
-      const payload: any = {
+      interface ValidationPayload {
+        currency: string;
+        address: string;
+        extra_id?: string;
+      }
+      
+      const payload: ValidationPayload = {
         currency,
         address: trimmed
       };

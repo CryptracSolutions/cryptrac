@@ -12,6 +12,7 @@ import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle, Shield, Za
 import toast from 'react-hot-toast'
 
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
+import { trackPaymentSuccess } from '@/lib/uri-analytics'
 
 interface PaymentData {
   id: string
@@ -95,6 +96,15 @@ export default function PaymentSuccessPage() {
 
       console.log('✅ Payment data loaded:', data.payment)
       setPaymentData(data.payment)
+
+      try {
+        // Attribute A/B variant and client on success view
+        const clientId = localStorage.getItem('cryptrac_client_id') || 'anon'
+        const strategy = localStorage.getItem('cryptrac_uri_strategy') || undefined
+        if (data.payment?.id) {
+          trackPaymentSuccess(data.payment.id, { clientId, strategy, variant: strategy })
+        }
+      } catch {}
 
       // Pre-fill email if already provided
       if (data.payment.customer_email) {
@@ -625,4 +635,3 @@ export default function PaymentSuccessPage() {
     </div>
   )
 }
-

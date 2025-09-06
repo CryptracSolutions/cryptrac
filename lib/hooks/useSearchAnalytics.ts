@@ -1,6 +1,20 @@
 import { useCallback } from 'react'
 import { SearchAnalytics } from '@/types/search'
 
+interface QueryMetric {
+  query: string;
+  count: number;
+  clicks: number;
+  lastUsed: number;
+}
+
+interface SearchMetrics {
+  totalSearches: number;
+  successfulSearches: number;
+  topQueries: QueryMetric[];
+  lastSearchTime: number | null;
+}
+
 /**
  * Hook for tracking search analytics
  */
@@ -93,7 +107,7 @@ export function updateSearchMetrics(query: string, resultsCount: number, clicked
     metrics.lastSearchTime = Date.now()
 
     // Update top queries
-    const existingQuery = metrics.topQueries.find((q: any) => q.query === query)
+    const existingQuery = metrics.topQueries.find((q: QueryMetric) => q.query === query)
     if (existingQuery) {
       existingQuery.count++
       if (clicked) existingQuery.clicks = (existingQuery.clicks || 0) + 1
@@ -108,7 +122,7 @@ export function updateSearchMetrics(query: string, resultsCount: number, clicked
 
     // Keep only top 10 queries
     metrics.topQueries = metrics.topQueries
-      .sort((a: any, b: any) => b.count - a.count)
+      .sort((a: QueryMetric, b: QueryMetric) => b.count - a.count)
       .slice(0, 10)
 
     localStorage.setItem('cryptrac_search_metrics', JSON.stringify(metrics))

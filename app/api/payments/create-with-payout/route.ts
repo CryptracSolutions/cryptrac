@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Get merchant's extra_ids from merchant_settings table
-    const { data: merchantSettings, error: settingsError } = await supabase
+    const { data: merchantSettings } = await supabase
       .from('merchant_settings')
       .select('wallet_extra_ids')
       .eq('merchant_id', merchantId)
@@ -57,7 +57,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payment with merchant-specific payout info
-    const paymentPayload: any = {
+    interface PaymentPayload {
+      price_amount: number;
+      price_currency: string;
+      pay_currency: string;
+      order_id: string;
+      payout_address: string;
+      ipn_callback_url: string;
+      payout_extra_id?: string;
+    }
+    
+    const paymentPayload: PaymentPayload = {
       price_amount: amount,
       price_currency: 'usd',
       pay_currency: currency.toLowerCase(),

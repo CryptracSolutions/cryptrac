@@ -13,7 +13,6 @@ import {
   Shield,
   Bell,
   HelpCircle,
-  ChevronLeft,
   ChevronRight,
   Calculator,
   Zap,
@@ -22,9 +21,7 @@ import {
   User
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/app/components/ui/button"
 import { Logo } from "@/app/components/ui/logo"
-import { Badge } from "@/app/components/ui/badge"
 
 interface SidebarProps {
   userRole?: string
@@ -34,7 +31,7 @@ interface SidebarProps {
 }
 
 const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
-  ({ userRole = "merchant", className, collapsed = false, onToggleCollapse }, ref) => {
+  ({ userRole = "merchant", className, collapsed = false }, ref) => {
     const pathname = usePathname()
     const [quickActionsExpanded, setQuickActionsExpanded] = React.useState(false)
     

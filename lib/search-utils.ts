@@ -336,13 +336,19 @@ export function getSearchHistory() {
   }
 }
 
+interface SearchHistoryEntry {
+  query: string;
+  timestamp: number;
+  resultClicked?: string;
+}
+
 /**
  * Get recent search queries
  */
 export function getRecentSearches(): string[] {
   return getSearchHistory()
     .slice(0, 5)
-    .map((entry: any) => entry.query)
+    .map((entry: SearchHistoryEntry) => entry.query)
     .filter((query: string, index: number, arr: string[]) => arr.indexOf(query) === index)
 }
 

@@ -22,7 +22,7 @@ export async function createServerClient() {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
-          } catch (error) {
+          } catch {
             console.log('Cannot set cookies in read-only context - this is expected behavior');
           }
         },

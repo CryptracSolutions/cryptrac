@@ -309,7 +309,6 @@ export default function WalletsPage() {
         <WalletsManager
           settings={settings}
           setSettings={setSettings}
-          setShowTrustWalletGuide={setShowTrustWalletGuide}
           focusCurrency={focusCurrency}
         />
       </div>

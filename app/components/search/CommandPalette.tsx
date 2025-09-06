@@ -148,7 +148,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         }
       }, 200)
     }
-  }, [])
+  }, [trackSearchQuery])
 
   React.useEffect(() => {
     doSearch(query)

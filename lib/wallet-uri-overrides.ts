@@ -1,4 +1,4 @@
-export const WALLET_URI_OVERRIDES = /* eslint-disable */
+export const WALLET_URI_OVERRIDES =
 // Wallet-specific URI overrides to guarantee address + amount auto-fill
 // Generated from external AI mapping, 142 currencies supported
 // Each object structure: { default_uri: string; overrides: {wallet:string;scheme:string;notes:string}[]; requires_extra_id:boolean; extra_id_label:string|null }
@@ -553,6 +553,11 @@ export const WALLET_URI_OVERRIDES = /* eslint-disable */
           "wallet": "Trust Wallet",
           "scheme": "trust://send?asset=c60&address={address}&amount={amount}",
           "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+        },
+        {
+          "wallet": "Phantom",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Phantom supports standard EIP-681 for Ethereum, not proprietary scheme."
         }
       ],
       "requires_extra_id": false,
@@ -586,6 +591,23 @@ export const WALLET_URI_OVERRIDES = /* eslint-disable */
         {
           "wallet": "Trust Wallet",
           "scheme": "trust://send?asset=c8453&address={address}&amount={amount}",
+          "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+        }
+      ],
+      "requires_extra_id": false,
+      "extra_id_label": null
+    },
+    "ZK": {
+      "default_uri": "ethereum:{address}?value={wei}&chainId=324",
+      "overrides": [
+        {
+          "wallet": "MetaMask",
+          "scheme": "https://metamask.app.link/send/{address}@324?value={wei}",
+          "notes": "MetaMask requires its proprietary scheme with chain ID for zkSync Era. See https://metamask.github.io/metamask-deeplinks/"
+        },
+        {
+          "wallet": "Trust Wallet",
+          "scheme": "trust://send?asset=c324&address={address}&amount={amount}",
           "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
         }
       ],
@@ -2087,4 +2109,3 @@ export const WALLET_URI_OVERRIDES = /* eslint-disable */
       "extra_id_label": null
     }
 } as const;
-

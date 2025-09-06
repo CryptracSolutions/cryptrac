@@ -421,7 +421,7 @@ export async function POST(request: Request) {
     // Detect link-driven flows where our frontend already computes the customer total
     // and shows it to the user (including fee if applicable). In these cases we should
     // NOT ask NOWPayments to add the fee on top again; it will always be deducted from payout.
-    const sourceStr = String((paymentLinkData as any).source || '').toLowerCase()
+    const sourceStr = String((paymentLinkData as Record<string, unknown>).source || '').toLowerCase()
     const isLinkFlow = sourceStr === 'pos' || sourceStr === 'subscription' || sourceStr === 'dashboard' || sourceStr === 'manual'
 
     // Prepare payment request for NOWPayments
@@ -437,6 +437,8 @@ export async function POST(request: Request) {
       payout_address?: string
       payout_currency?: string
       is_fee_paid_by_user?: boolean
+      payout_extra_id?: string
+      source?: string
     }
 
     // Normalize fiat price precision to 2 decimals to avoid float precision artifacts
@@ -516,7 +518,7 @@ export async function POST(request: Request) {
           if (requiresExtraId(targetPayoutCurrency)) {
             const extraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
             if (extraId) {
-              (paymentRequest as any).payout_extra_id = extraId
+              paymentRequest.payout_extra_id = extraId
               console.log(
                 `✅ Added ${getExtraIdLabel(targetPayoutCurrency)} for ${targetPayoutCurrency}: ${extraId}`
               )
@@ -559,7 +561,7 @@ export async function POST(request: Request) {
     if (autoForwardingConfigured) {
       console.log('- payout_currency:', paymentRequest.payout_currency)
       console.log('- payout_address:', paymentRequest.payout_address?.substring(0, 10) + '...')
-      const peid = (paymentRequest as any).payout_extra_id
+      const peid = paymentRequest.payout_extra_id
       if (peid) console.log('- payout_extra_id set')
     }
 

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { buildCryptoPaymentURI } from '@/lib/crypto-uri-builder'
+import { buildBestURI } from '@/lib/wallet-uri-helper'
+import { validateURI } from '@/lib/uri-validation'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
 
 export const runtime = 'nodejs'
@@ -42,37 +44,66 @@ export async function GET(request: Request) {
     const wallets: AddressBook = merchant.wallets || {}
     const currencies = (codes.length > 0 ? codes : Object.keys(wallets)).sort()
 
-    const results = currencies.map((code) => {
+    const results = await Promise.all(currencies.map(async (code) => {
       const address = wallets[code] || ''
       const upper = code.toUpperCase()
 
       const extraIdNeeded = requiresExtraId(upper)
       const extra = extraIdNeeded ? '123456' : undefined
 
-      const { uri, includesAmount, includesExtraId, scheme } = buildCryptoPaymentURI({
+      // Build best candidate first
+      const best = buildBestURI({
         currency: upper,
         address: address || 'ADDRESS',
         amount,
         extraId: extra,
-        label: 'Cryptrac Payment',
-        message: 'URI Check'
       })
+
+      // Validate and fall back to standard if invalid
+      let chosen = best.uri
+      let chosenSource = best.source
+      let chosenQuality = best.quality
+      const validation = await validateURI(chosen, {
+        currency: upper,
+        address: address || 'ADDRESS',
+        amount,
+        extraId: extra,
+      })
+      if (!validation.isValid || !validation.addressDetected || !validation.amountDetected) {
+        const std = buildCryptoPaymentURI({
+          currency: upper,
+          address: address || 'ADDRESS',
+          amount,
+          extraId: extra,
+          label: 'Cryptrac Payment',
+          message: 'URI Check',
+        })
+        chosen = std.uri
+        chosenSource = 'standard'
+        chosenQuality = std.includesAmount ? 70 : 40
+      }
+
+      const includesAmountFlag = !/^(?:[^:]+:)?$/.test(chosen) && !/^\w+$/.test(chosen)
+        ? true
+        : chosen.includes('amount') || chosen.includes('value=') || false
+      const includesExtraIdFlag = extraIdNeeded ? chosen.includes(String(extra)) : false
 
       const issues: string[] = []
       if (!address) issues.push('No wallet configured; using placeholder')
-      if (!includesAmount) issues.push('Amount not embedded in URI')
-      if (extraIdNeeded && !includesExtraId) issues.push(`${getExtraIdLabel(upper)} not embedded in URI`)
+      if (!includesAmountFlag) issues.push('Amount not embedded in URI')
+      if (extraIdNeeded && !includesExtraIdFlag) issues.push(`${getExtraIdLabel(upper)} not embedded in URI`)
 
       return {
         code: upper,
-        scheme,
-        uri,
-        includesAmount,
-        includesExtraId,
+        source: chosenSource,
+        quality: chosenQuality,
+        uri: chosen,
+        includesAmount: includesAmountFlag,
+        includesExtraId: includesExtraIdFlag,
         needsExtraId: extraIdNeeded,
         issues,
       }
-    })
+    }))
 
     return NextResponse.json({
       success: true,
@@ -87,4 +118,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
-

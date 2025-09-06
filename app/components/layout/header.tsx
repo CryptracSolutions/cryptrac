@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, X, LogOut, User, Settings, ChevronDown } from "lucide-react"
+import { Menu, X, LogOut, ChevronDown } from "lucide-react"
 import { GlobalSearch } from "@/app/components/search/GlobalSearch"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -121,18 +121,6 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     
     const displayBusinessName = businessName || localUser?.user_metadata?.business_name || 'Account'
     
-    const getDashboardLink = (role?: string) => {
-      switch (role) {
-        case 'admin':
-          return '/admin'
-        case 'rep':
-          return '/rep/dashboard'
-        case 'partner':
-          return '/partner/dashboard'
-        default:
-          return '/merchant/dashboard'
-      }
-    }
     
     const navigation = localUser ? [] : [
       { name: 'Features', href: '/#features' },

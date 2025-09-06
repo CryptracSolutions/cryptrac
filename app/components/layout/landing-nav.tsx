@@ -43,7 +43,7 @@ export function LandingNav() {
         return
       }
 
-      const role = (user.user_metadata as any)?.role
+      const role = (user.user_metadata as Record<string, unknown>)?.role
 
       // Non-merchant roles can access their dashboards
       if (role && role !== 'merchant') {
@@ -67,14 +67,14 @@ export function LandingNav() {
 
         const completed = !!(merchant?.onboarding_completed || merchant?.onboarded)
         setCanAccessDashboard(completed)
-      } catch (_e) {
+      } catch {
         setCanAccessDashboard(false)
       }
     }
 
     evaluateAccess()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       evaluateAccess()
     })
 

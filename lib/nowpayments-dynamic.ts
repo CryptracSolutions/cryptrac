@@ -2,6 +2,23 @@
 const NOWPAYMENTS_API_BASE = 'https://api.nowpayments.io/v1'
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY
 
+interface RawNOWPaymentsCurrency {
+  code?: unknown;
+  currency?: unknown;
+  name?: unknown;
+  network?: unknown;
+  networks?: unknown;
+  min_amount?: unknown;
+  max_amount?: unknown;
+  min_deposit_amount?: unknown;
+  max_deposit_amount?: unknown;
+  min_trx_amount?: unknown;
+  max_trx_amount?: unknown;
+  is_available?: unknown;
+  is_deprecated?: unknown;
+  rate_usd?: unknown;
+}
+
 // Cache for currency data
 let currencyCache: {
   data: NOWPaymentsCurrency[] | null
@@ -135,7 +152,7 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
 
     // Try the detailed coins endpoint first
     let endpointTried: string | null = null
-    let lastError: unknown = null
+    let lastError: Error
 
     const tryFetch = async (path: string) => {
       endpointTried = path

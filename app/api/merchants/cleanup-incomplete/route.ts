@@ -1,13 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 /**
  * Cleans up incomplete merchant onboarding data
  * This endpoint can be called to remove any orphaned merchant records
  * where onboarding was never completed
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(

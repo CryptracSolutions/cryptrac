@@ -5,7 +5,6 @@ import {
   Building,
   Phone,
   MapPin,
-  Mail,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';

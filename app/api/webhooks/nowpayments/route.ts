@@ -96,6 +96,11 @@ function validateWebhookPayload(body: Record<string, unknown>): { isValid: boole
 interface NOWPaymentsWebhookBody extends Record<string, unknown> {
   event_id?: string
   payment_id?: string
+  order_id?: string
+  payment_status?: string
+  pay_amount?: string | number
+  price_amount?: string | number
+  parent_payment_id?: string
 }
 
 // FIXED: Enhanced function to send customer email receipts with proper logging
@@ -728,8 +733,8 @@ export async function POST(request: Request) {
           .select('*')
           .eq('nowpayments_payment_id', String(parent_payment_id))
           .single()
-        payment = res.data as any
-        paymentError = res.error as any
+        payment = res.data as Record<string, unknown> | null
+        paymentError = res.error
         if (payment && !paymentError) {
           paymentLookupReason = 'by parent_payment_id';
         }
@@ -742,8 +747,8 @@ export async function POST(request: Request) {
           .select('*')
           .eq('order_id', String(body.order_id))
           .single()
-        payment = res.data as any
-        paymentError = res.error as any
+        payment = res.data as Record<string, unknown> | null
+        paymentError = res.error
         if (payment && !paymentError) {
           paymentLookupReason = 'by order_id';
         }
@@ -753,7 +758,7 @@ export async function POST(request: Request) {
         console.error('❌ Payment not found after fallbacks', {
           payment_id,
           parent_payment_id,
-          order_id: (body as any).order_id,
+          order_id: body.order_id,
           error: paymentError
         })
         return NextResponse.json(

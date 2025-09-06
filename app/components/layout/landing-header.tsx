@@ -37,7 +37,7 @@ export function Header() {
         return;
       }
 
-      const role = (user.user_metadata as any)?.role;
+      const role = (user.user_metadata as Record<string, unknown>)?.role;
       if (role && role !== 'merchant') {
         setCanAccessDashboard(true);
         return;
@@ -56,7 +56,7 @@ export function Header() {
         }
         const completed = !!(merchant?.onboarding_completed || merchant?.onboarded);
         setCanAccessDashboard(completed);
-      } catch (_e) {
+      } catch {
         setCanAccessDashboard(false);
       }
     };

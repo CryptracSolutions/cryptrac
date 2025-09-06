@@ -158,6 +158,21 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
     }
   }, [query, doSearch, isOpen])
 
+  // Handle result click
+  const handleResultClick = React.useCallback((result: SearchResult) => {
+    saveSearchHistory(query, result.id)
+    
+    // Track click analytics
+    const totalResults = flatResults.length
+    trackSearchClick(query, result.id, totalResults)
+    updateSearchMetrics(query, totalResults, true)
+    
+    router.push(result.href)
+    setIsOpen(false)
+    setQuery("")
+    inputRef.current?.blur()
+  }, [query, router, flatResults.length, trackSearchClick])
+
   // Handle keyboard navigation
   const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
     if (!isOpen) return
@@ -183,22 +198,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
         inputRef.current?.blur()
         break
     }
-  }, [flatResults, selectedIndex, isOpen])
-
-  // Handle result click
-  const handleResultClick = React.useCallback((result: SearchResult) => {
-    saveSearchHistory(query, result.id)
-    
-    // Track click analytics
-    const totalResults = flatResults.length
-    trackSearchClick(query, result.id, totalResults)
-    updateSearchMetrics(query, totalResults, true)
-    
-    router.push(result.href)
-    setIsOpen(false)
-    setQuery("")
-    inputRef.current?.blur()
-  }, [query, router, flatResults.length, trackSearchClick])
+  }, [flatResults, selectedIndex, isOpen, handleResultClick])
 
   // Handle recent search click
   const handleRecentClick = React.useCallback((recentQuery: string) => {

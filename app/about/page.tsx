@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, Users, Target, Zap, Shield, Globe, Lightbulb, Heart, Award, TrendingUp, Clock, Phone, Mail, MapPin, FileText, Building, Rocket, Star } from "lucide-react";
+import { ArrowLeft, ChevronRight, Users, Target, Zap, Shield, Globe, Lightbulb, Heart, Award, TrendingUp, Clock, Phone, Mail, Building, Rocket, Star } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
@@ -12,9 +12,8 @@ import { Badge } from "@/app/components/ui/badge";
 export default function AboutPage() {
   const [activeSection, setActiveSection] = useState<string>("");
   const foundedYear = "2024";
-  const currentYear = new Date().getFullYear();
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: "introduction", title: "About Cryptrac", icon: Building },
     { id: "mission", title: "Our Mission", icon: Target },
     { id: "vision", title: "Our Vision", icon: Lightbulb },
@@ -26,7 +25,7 @@ export default function AboutPage() {
     { id: "achievements", title: "Achievements", icon: Award },
     { id: "future", title: "Looking Forward", icon: TrendingUp },
     { id: "contact", title: "Get in Touch", icon: Phone }
-  ];
+  ], []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,7 +46,7 @@ export default function AboutPage() {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -232,7 +231,7 @@ export default function AboutPage() {
                   <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30 mb-6">
                     <CardHeader>
                       <CardTitle className="font-phonic text-2xl font-normal text-gray-900 text-center">
-                        "Making Cryptocurrency Payments as Simple as Traditional Payments"
+&quot;Making Cryptocurrency Payments as Simple as Traditional Payments&quot;
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="text-center">
@@ -372,7 +371,7 @@ export default function AboutPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
-                          Security isn't just a feature—it's the foundation of everything we build. We implement multiple layers of protection to ensure your funds and data are always safe.
+                          Security isn&apos;t just a feature&mdash;it&apos;s the foundation of everything we build. We implement multiple layers of protection to ensure your funds and data are always safe.
                         </p>
                       </CardContent>
                     </Card>
@@ -414,7 +413,7 @@ export default function AboutPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-purple-800">
-                          We continuously explore new technologies and approaches to improve cryptocurrency payments and expand what's possible in digital commerce.
+                          We continuously explore new technologies and approaches to improve cryptocurrency payments and expand what&apos;s possible in digital commerce.
                         </p>
                       </CardContent>
                     </Card>
@@ -527,7 +526,7 @@ export default function AboutPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-blue-800">
-                          Since our founding in {foundedYear}, we've focused on building a platform that grows with our users' needs. We've expanded from supporting a single cryptocurrency to handling multiple blockchains, added advanced features like subscription billing and smart terminals, and continuously improved our security and user experience based on community feedback.
+                          Since our founding in {foundedYear}, we&apos;ve focused on building a platform that grows with our users&apos; needs. We&apos;ve expanded from supporting a single cryptocurrency to handling multiple blockchains, added advanced features like subscription billing and smart terminals, and continuously improved our security and user experience based on community feedback.
                         </p>
                       </CardContent>
                     </Card>
@@ -603,7 +602,7 @@ export default function AboutPage() {
 
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6">
                     <p className="font-phonic text-sm font-normal text-amber-900">
-                      <strong>Continuous Innovation:</strong> We continuously evaluate and adopt new technologies that can improve our platform's capabilities, security, and user experience.
+                      <strong>Continuous Innovation:</strong> We continuously evaluate and adopt new technologies that can improve our platform&apos;s capabilities, security, and user experience.
                     </p>
                   </div>
                 </section>
@@ -618,7 +617,7 @@ export default function AboutPage() {
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
-                    Security is not just a feature at Cryptrac—it's the cornerstone of our entire platform. We implement industry-leading security practices to ensure that your funds and data are protected at every level.
+                    Security is not just a feature at Cryptrac&mdash;it&apos;s the cornerstone of our entire platform. We implement industry-leading security practices to ensure that your funds and data are protected at every level.
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-6">
@@ -775,7 +774,7 @@ export default function AboutPage() {
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
-                    Since our launch, we've reached several important milestones that reflect our growth and the trust our users place in our platform.
+                    Since our launch, we&apos;ve reached several important milestones that reflect our growth and the trust our users place in our platform.
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-6">
@@ -834,7 +833,7 @@ export default function AboutPage() {
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
                     <p className="font-phonic text-sm font-normal text-blue-900">
-                      <strong>Looking Ahead:</strong> These achievements represent just the beginning of our journey. We're committed to continuous improvement and setting new standards for cryptocurrency payment processing.
+                      <strong>Looking Ahead:</strong> These achievements represent just the beginning of our journey. We&apos;re committed to continuous improvement and setting new standards for cryptocurrency payment processing.
                     </p>
                   </div>
                 </section>
@@ -849,7 +848,7 @@ export default function AboutPage() {
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
-                    The future of cryptocurrency payments is bright, and we're excited to be at the forefront of this transformation. Our roadmap includes several exciting developments that will further enhance the platform and expand our capabilities.
+                    The future of cryptocurrency payments is bright, and we&apos;re excited to be at the forefront of this transformation. Our roadmap includes several exciting developments that will further enhance the platform and expand our capabilities.
                   </p>
 
                   <div className="space-y-6">
@@ -907,7 +906,7 @@ export default function AboutPage() {
                   </div>
 
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mt-6">
-                    We're committed to staying at the cutting edge of cryptocurrency payment technology while never losing sight of our core mission: making digital payments simple, secure, and accessible for everyone.
+                    We&apos;re committed to staying at the cutting edge of cryptocurrency payment technology while never losing sight of our core mission: making digital payments simple, secure, and accessible for everyone.
                   </p>
                 </section>
 
@@ -921,7 +920,7 @@ export default function AboutPage() {
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
-                    We love hearing from our community, whether you're an existing user, considering Cryptrac for your business, or just curious about cryptocurrency payments. Don't hesitate to reach out!
+                    We love hearing from our community, whether you&apos;re an existing user, considering Cryptrac for your business, or just curious about cryptocurrency payments. Don&apos;t hesitate to reach out!
                   </p>
                   
                   <Card className="border-[#7f5efd]/20 bg-gradient-to-br from-[#f5f3ff] to-white">
@@ -988,7 +987,7 @@ export default function AboutPage() {
                       Join the Future of Payments
                     </h3>
                     <p className="font-capsule text-base font-normal text-gray-700 mb-6">
-                      At Cryptrac, we're not just processing payments—we're building the infrastructure for the next generation of global commerce. Join thousands of businesses already using cryptocurrency to expand their reach and reduce costs.
+                      At Cryptrac, we&apos;re not just processing payments&mdash;we&apos;re building the infrastructure for the next generation of global commerce. Join thousands of businesses already using cryptocurrency to expand their reach and reduce costs.
                     </p>
                     <div className="flex items-center justify-center gap-6 font-phonic text-sm font-normal text-gray-500">
                       <div className="flex items-center gap-2">

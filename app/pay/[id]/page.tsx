@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
@@ -15,7 +15,12 @@ import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
 import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder'
-import { buildWalletSpecificURI } from '@/lib/wallet-uri-helper'
+import { buildBestURI, detectWalletHint } from '@/lib/wallet-uri-helper'
+import { trackURIGeneration } from '@/lib/uri-analytics'
+import { validateURI } from '@/lib/uri-validation'
+import { loadDynamicConfig } from '@/lib/wallet-uri-config'
+import type { DynamicConfig } from '@/lib/wallet-uri-config'
+import { buildTestableURI, getOrCreateClientId } from '@/lib/ab-testing'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
@@ -228,6 +233,7 @@ const getBlockExplorerUrl = (txHash: string, currency: string): string | null =>
 export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const id = params?.id as string
   
   // State management
@@ -243,6 +249,8 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true)
   const [creatingPayment, setCreatingPayment] = useState(false)
   const [error, setError] = useState<string>('')
+  const [dynamicConfig, setDynamicConfig] = useState<DynamicConfig | null>(null)
+  const [clientId, setClientId] = useState<string>('anon')
   
   // Status monitoring state
   const [isMonitoring, setIsMonitoring] = useState(false)
@@ -251,6 +259,14 @@ export default function PaymentPage() {
   const visibilityRef = useRef<boolean>(true)
   const consecutiveFailures = useRef<number>(0)
   const monitoringStartTime = useRef<number>(Date.now())
+
+  useEffect(() => {
+    // Phase 3: load dynamic config and client id for A/B test bucketing
+    (async () => {
+      try { setDynamicConfig(await loadDynamicConfig()) } catch {}
+      try { setClientId(getOrCreateClientId()) } catch {}
+    })()
+  }, [])
   
   // Currency backend mapping for payment processing
   const [currencyBackendMapping, setCurrencyBackendMapping] = useState<Record<string, string>>({})
@@ -939,28 +955,55 @@ export default function PaymentPage() {
 
       // Generate QR code for payment address with destination tag if needed
       if (data.payment.pay_address) {
-        // Try wallet-specific override first
-        const walletOverride = buildWalletSpecificURI({
+        // Build the best-available URI (wallet-specific -> standard -> address)
+        // Phase 3: pick strategy via A/B testing with dynamic config
+        const built = buildTestableURI({
           currency: data.payment.pay_currency,
           address: data.payment.pay_address,
           amount: data.payment.pay_amount,
-          extraId: data.payment.payin_extra_id || undefined
+          extraId: data.payment.payin_extra_id || undefined,
+          userId: clientId,
+          config: dynamicConfig || undefined,
+          strategyOverride: searchParams?.get('uri_strategy') || undefined,
         })
+        let best = { uri: built.uri, quality: 80, source: 'standard', guaranteesAmount: true, guaranteesExtraId: !!data.payment.payin_extra_id }
+        try { localStorage.setItem('cryptrac_uri_strategy', (built as any).strategy || '') } catch {}
 
-        const uriResult = walletOverride ? { uri: walletOverride, includesAmount: true, includesExtraId: !!data.payment.payin_extra_id } : buildCryptoPaymentURI({
-          currency: data.payment.pay_currency,
-          address: data.payment.pay_address,
-          amount: data.payment.pay_amount,
-          extraId: data.payment.payin_extra_id,
-          label: paymentLink?.title || 'Cryptrac Payment',
-          message: paymentLink?.description || 'Cryptocurrency payment'
-        })
-        
-        const qrData = uriResult.uri
+        // Proactive validation: if issues, fall back to standard URI
+        try {
+          const validation = await validateURI(best.uri, {
+            currency: data.payment.pay_currency,
+            address: data.payment.pay_address,
+            amount: data.payment.pay_amount,
+            extraId: data.payment.payin_extra_id || undefined,
+          })
+          if (!validation.isValid || !validation.addressDetected || !validation.amountDetected) {
+            console.warn('URI validation failed; falling back to standard URI', validation.issues)
+            const standard = buildCryptoPaymentURI({
+              currency: data.payment.pay_currency,
+              address: data.payment.pay_address,
+              amount: data.payment.pay_amount,
+              extraId: data.payment.payin_extra_id || undefined,
+              label: paymentLink?.title || 'Cryptrac Payment',
+              message: paymentLink?.description || 'Cryptocurrency payment',
+            })
+            best = { uri: standard.uri, quality: standard.includesAmount ? 70 : 40, source: 'standard', guaranteesAmount: standard.includesAmount, guaranteesExtraId: standard.includesExtraId }
+          }
+        } catch {}
+
+        const qrData = best.uri
         
         console.log('🔗 Generated payment URI:', qrData)
-        console.log('📋 URI includes amount:', uriResult.includesAmount)
-        console.log('🏷️ URI includes extra ID:', uriResult.includesExtraId)
+        // Lightweight analytics (non-blocking)
+        try {
+          const wallet = detectWalletHint()
+          trackURIGeneration({
+            currency: data.payment.pay_currency,
+            walletDetected: wallet,
+            uriType: (built as any).strategy || best.source,
+            uri: best.uri,
+          })
+        } catch {}
         
         const qrDataUrl = await QRCode.toDataURL(qrData, {
           width: 256,

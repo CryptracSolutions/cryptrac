@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -10,6 +11,11 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, AlertTriangle } from 'lucide-react';
 import { requiresExtraId, getExtraIdLabel, getExtraIdDescription } from '@/lib/extra-id-validation';
 import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder';
+import { buildBestURI, detectWalletHint } from '@/lib/wallet-uri-helper';
+import { trackURIGeneration } from '@/lib/uri-analytics';
+import { validateURI } from '@/lib/uri-validation';
+import { buildTestableURI, getOrCreateClientId } from '@/lib/ab-testing';
+import { loadDynamicConfig } from '@/lib/wallet-uri-config';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -66,21 +72,18 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
   return Array.from(stable);
 }
 
-// Legacy function - now uses centralized URI builder
+// Centralized wallet-specific URI builder (with fallback)
 function buildPaymentURI(currency: string, address: string, amount: number, extraId?: string) {
-  const result = buildCryptoPaymentURI({
-    currency,
-    address,
-    amount,
-    extraId,
-    label: 'Cryptrac Payment',
-    message: 'Payment via Smart Terminal'
-  });
-  
-  return result.uri;
+  const best = buildBestURI({ currency, address, amount, extraId });
+  try {
+    const wallet = detectWalletHint();
+    trackURIGeneration({ currency, walletDetected: wallet, uriType: best.source, uri: best.uri });
+  } catch {}
+  return best.uri;
 }
 
-export default function SmartTerminalPage() {
+function SmartTerminalPageContent() {
+  const searchParams = useSearchParams();
   const [device, setDevice] = useState<TerminalDevice | null>(null);
   const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
   const [amount, setAmount] = useState('');
@@ -104,11 +107,64 @@ export default function SmartTerminalPage() {
   const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
   const [error, setError] = useState<string>('');
+  const [validatedUri, setValidatedUri] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string>('anon');
+  const [dynamicConfig, setDynamicConfig] = useState<any>(null);
 
   // Reset confirmation when a new payment is created/loaded
   useEffect(() => {
     setExtraIdConfirmed(false);
+    setValidatedUri(null);
   }, [paymentData?.payment_id, paymentData?.pay_address, paymentData?.payin_extra_id]);
+
+  // Load config + client ID for A/B and overrides
+  useEffect(() => {
+    (async () => {
+      try { setClientId(getOrCreateClientId()); } catch {}
+      try { setDynamicConfig(await loadDynamicConfig()); } catch {}
+    })();
+  }, []);
+
+  // Proactive validation and fallback to standard URI
+  useEffect(() => {
+    (async () => {
+      if (!paymentData) return;
+      try {
+        const override = searchParams?.get('uri_strategy') || undefined;
+        const built = buildTestableURI({
+          currency: paymentData.pay_currency,
+          address: paymentData.pay_address,
+          amount: paymentData.pay_amount,
+          extraId: paymentData.payin_extra_id,
+          userId: clientId,
+          config: dynamicConfig || undefined,
+          strategyOverride: override,
+        });
+        try { localStorage.setItem('cryptrac_uri_strategy', (built as any).strategy || '') } catch {}
+        const res = await validateURI(built.uri, {
+          currency: paymentData.pay_currency,
+          address: paymentData.pay_address,
+          amount: paymentData.pay_amount,
+          extraId: paymentData.payin_extra_id,
+        });
+        if (!res.isValid || !res.addressDetected || !res.amountDetected) {
+          const std = buildCryptoPaymentURI({
+            currency: paymentData.pay_currency,
+            address: paymentData.pay_address,
+            amount: paymentData.pay_amount,
+            extraId: paymentData.payin_extra_id,
+            label: 'Cryptrac Payment',
+            message: 'Payment via Smart Terminal',
+          });
+          setValidatedUri(std.uri);
+        } else {
+          setValidatedUri(built.uri);
+        }
+      } catch {
+        setValidatedUri(null);
+      }
+    })();
+  }, [paymentData?.payment_id, paymentData?.pay_address, paymentData?.pay_amount, paymentData?.payin_extra_id]);
 
   // Load merchant settings and device
   useEffect(() => {
@@ -771,7 +827,8 @@ export default function SmartTerminalPage() {
               {paymentLink && paymentData && (
                 <div className="flex flex-col items-center space-y-4 sm:space-y-6" aria-live="polite">
                   {(() => {
-                const uri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
+                const baseUri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
+                const uri = validatedUri || baseUri;
                 const showAmount = uri === paymentData.pay_address;
                 const needsExtra = !!(paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency));
                   return (
@@ -1023,6 +1080,14 @@ export default function SmartTerminalPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SmartTerminalPage() {
+  return (
+    <Suspense fallback={null}>
+      <SmartTerminalPageContent />
+    </Suspense>
   );
 }
 

@@ -76,7 +76,7 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
               <CheckCircle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  Personal wallets typically don't need a {getExtraIdLabel(currency)}. Exchanges often do.
+                  Personal wallets typically don&apos;t need a {getExtraIdLabel(currency)}. Exchanges often do.
                 </p>
               </div>
             </div>
