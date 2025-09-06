@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority } from '@/lib/crypto-networks';
+import { buildCurrencyMapping } from '@/lib/currency-mapping';
 import { Label } from '@/app/components/ui/label';
 import {
   DropdownMenu,
@@ -44,6 +45,14 @@ interface MerchantSettings {
   tax_enabled: boolean;
   tax_rates: Array<{ label: string; percentage: number }>;
   wallets: Record<string, string>;
+}
+
+interface CurrencyInfo {
+  code: string;
+  name: string;
+  enabled: boolean;
+  min_amount?: number;
+  max_amount?: number;
 }
 
 const defaultTips = [10, 15, 20];
@@ -107,7 +116,7 @@ function SmartTerminalPageContent() {
   const [extraIdConfirmed, setExtraIdConfirmed] = useState<boolean>(false);
   const [status, setStatus] = useState('');
   const [receipt, setReceipt] = useState({ email: '', sent: false });
-  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
+  const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
   const [error, setError] = useState<string>('');
   const [validatedUri, setValidatedUri] = useState<string | null>(null);
@@ -241,12 +250,28 @@ function SmartTerminalPageContent() {
             : Object.keys(merchant.wallets || {});
           
           const stableCoins = expandStableCoins(merchant.wallets || {});
-          const allCurrencies = Array.from(new Set([...deviceCryptos, ...stableCoins]));
-          setAvailableCurrencies(allCurrencies);
-          
-          // Set default crypto to first available
-          if (allCurrencies.length > 0) {
-            setCrypto(allCurrencies[0]);
+          const allCodes: string[] = Array.from(new Set([...(deviceCryptos as string[]), ...stableCoins]));
+
+          // Fetch NOWPayments currencies and build rich mapping via shared helper
+          try {
+            const resNP = await fetch('/api/nowpayments/currencies');
+            const np = await resNP.json();
+            const npCurrencies: Array<{ code: string; name: string; enabled: boolean; min_amount?: number; max_amount?: number }>
+              = Array.isArray(np?.currencies) ? np.currencies : [];
+
+            const { customerCurrencies } = buildCurrencyMapping({
+              acceptedCryptos: allCodes,
+              npCurrencies,
+            })
+
+            setAvailableCurrencies(customerCurrencies);
+            const firstEnabled = customerCurrencies.find(c => c.enabled)?.code;
+            if (firstEnabled) setCrypto(firstEnabled);
+            else if (customerCurrencies[0]) setCrypto(customerCurrencies[0].code);
+          } catch {
+            const fallbackList: CurrencyInfo[] = allCodes.map(c => ({ code: c.toUpperCase(), name: getCurrencyDisplayName(c), enabled: true }));
+            setAvailableCurrencies(fallbackList);
+            if (fallbackList[0]) setCrypto(fallbackList[0].code);
           }
         } catch (deviceError) {
           console.error('Error loading terminal device:', deviceError);
@@ -264,12 +289,10 @@ function SmartTerminalPageContent() {
                 setTax(merchant.tax_enabled);
                 
                 const stableCoins = expandStableCoins(merchant.wallets || {});
-                const allCurrencies = Array.from(new Set([...Object.keys(merchant.wallets || {}), ...stableCoins]));
-                setAvailableCurrencies(allCurrencies);
-                
-                if (allCurrencies.length > 0) {
-                  setCrypto(allCurrencies[0]);
-                }
+                const allCodes = Array.from(new Set([...Object.keys(merchant.wallets || {}), ...stableCoins]));
+                const fallbackList: CurrencyInfo[] = allCodes.map(c => ({ code: c, name: getCurrencyDisplayName(c), enabled: true }));
+                setAvailableCurrencies(fallbackList);
+                if (fallbackList[0]) setCrypto(fallbackList[0].code);
                 return; // Successfully created device
               }
             }
@@ -702,7 +725,7 @@ function SmartTerminalPageContent() {
                 {/* Network Filter Dropdown */}
                 {availableCurrencies.length > 0 && (() => {
                   const groupedCurrencies = groupCurrenciesByNetwork(
-                    availableCurrencies.map(c => ({ code: c, name: getCurrencyDisplayName(c) })),
+                    availableCurrencies.map(c => ({ code: c.code, name: c.name })),
                     merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
                   )
                   const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
@@ -740,20 +763,27 @@ function SmartTerminalPageContent() {
                       
                       if (selectedNetwork !== 'all') {
                         const groupedCurrencies = groupCurrenciesByNetwork(
-                          availableCurrencies.map(c => ({ code: c, name: getCurrencyDisplayName(c) })),
+                          availableCurrencies.map(c => ({ code: c.code, name: c.name })),
                           merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
                         )
                         const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
                         const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
-                        filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c))
+                        filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
                       }
                       
-                      return filteredCurrencies.map((c: string) => {
-                        const displayName = getCurrencyDisplayName(c)
+                      return filteredCurrencies.map((c) => {
+                        const displayName = c.name || getCurrencyDisplayName(c.code)
+                        const isAvailable = c.enabled
                         return (
-                          <SelectItem key={c} value={c} className="hover:bg-purple-50">
+                          <SelectItem
+                            key={c.code}
+                            value={c.code}
+                            disabled={!isAvailable}
+                            className={cn("hover:bg-purple-50", !isAvailable && "opacity-50 cursor-not-allowed")}
+                            title={!isAvailable ? 'Temporarily unavailable' : undefined}
+                          >
                             <div className="flex flex-col">
-                              <span className="font-medium">{c.toUpperCase()}</span>
+                              <span className="font-medium">{c.code.toUpperCase()}</span>
                               <span className="text-xs text-gray-500">{displayName}</span>
                             </div>
                           </SelectItem>

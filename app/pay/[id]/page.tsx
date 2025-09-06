@@ -567,274 +567,16 @@ export default function PaymentPage() {
       console.log(`📊 Loaded ${data.currencies.length} total currencies from NOWPayments`)
       console.log('✅ Payment link accepts:', acceptedCryptos)
 
-      // Comprehensive alternative mapping for all currencies
-      const currencyAlternatives: Record<string, string[]> = {
-        // Major cryptocurrencies
-        'BTC': ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
-        'ETH': ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP', 'ETHBASE', 'BASEETH', 'ETH_BASE'],
-        'BNB': ['BNB', 'BNBBSC', 'BSC', 'BNB_BSC', 'BINANCE', 'BNBCHAIN'],
-        'SOL': ['SOL', 'SOLANA', 'SOLSPL'],
-        'ADA': ['ADA', 'CARDANO'],
-        'DOT': ['DOT', 'POLKADOT'],
-        'MATIC': ['MATIC', 'POLYGON', 'MATICMATIC'],
-        'AVAX': ['AVAX', 'AVALANCHE', 'AVAXC'],
-        'TRX': ['TRX', 'TRON'],
-        'LTC': ['LTC', 'LITECOIN'],
-        'XRP': ['XRP', 'RIPPLE'],
-        'TON': ['TON', 'TONCOIN'],
-        'NEAR': ['NEAR', 'NEARPROTOCOL'],
-        'ALGO': ['ALGO', 'ALGORAND'],
-        'XLM': ['XLM', 'STELLAR'],
-        'ARB': ['ARB', 'ARBITRUM'],
-        'OP': ['OP', 'OPTIMISM'],
-        'ETHBASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
-        // zkSync
-        'ZK': ['ZK', 'ZKSYNC', 'ZKERC20'],
-        // Additional networks
-        'FTM': ['FTM', 'FANTOM', 'FTMMAINNET'],
-        'RUNE': ['RUNE', 'THORCHAIN'],
-        'CFX': ['CFX', 'CFXMAINNET', 'CONFLUX'],
-        'CRO': ['CRO', 'CRONOS', 'CROMAINNET'],
-        'INJ': ['INJ', 'INJMAINNET', 'INJERC20'],
-        // Common ERC-20 tokens
-        'OCEAN': ['OCEAN', 'OCEANERC20'],
-        'GALA': ['GALA', 'GALAERC20'],
-
-        // Network-suffixed stablecoin variants and aliases
-        // Avalanche C-Chain stablecoins (no alias to Arbitrum)
-        'USDTARC20': ['USDTARC20'],
-        'USDCARC20': ['USDCARC20'],
-        'OPUSDCE': ['USDCOP', 'OPUSDCE'],
-        'MATICUSDCE': ['USDCMATIC', 'MATICUSDCE'],
-        'MATICMAINNET': ['MATIC'],
-        'USDTCELO': ['USDTCELO'],
-        'ZROARB': ['ZROARB'],
-        'ZROERC20': ['ZROERC20'],
-        'FTMMAINNET': ['FTM'],
-        'CFXMAINNET': ['CFX'],
-        'CROMAINNET': ['CRO'],
-        'INJMAINNET': ['INJ'],
-        'INJERC20': ['INJ'],
-        'AVAXC': ['AVAXC', 'AVAX'],
-        'BNBBSC': ['BNBBSC'],
-        'BUSDBSC': ['BUSDBSC'],
-        'ETHARB': ['ETHARB'],
-        'BRETTBASE': ['BRETTBASE'],
-        'WBTCMATIC': ['WBTCMATIC'],
-        'TUSDTRC20': ['TUSDTRC20'],
-        'STRKMAINNET': ['STRKMAINNET'],
-        // Explicit identities for common USDT variants
-        'USDTERC20': ['USDTERC20'],
-        'USDTBSC': ['USDTBSC'],
-        'USDTTRC20': ['USDTTRC20'],
-        'USDTMATIC': ['USDTMATIC'],
-        'USDTSOL': ['USDTSOL'],
-        'USDTTON': ['USDTTON'],
-        'USDTARB': ['USDTARB'],
-        'USDTOP': ['USDTOP'],
-        // Explicit identities for common USDC variants
-        'USDCERC20': ['USDCERC20'],
-        'USDCBSC': ['USDCBSC'],
-        'USDCMATIC': ['USDCMATIC'],
-        'USDCSOL': ['USDCSOL'],
-        'USDCALGO': ['USDCALGO'],
-        'USDCARB': ['USDCARB'],
-        'USDCOP': ['USDCOP'],
-        'USDCBASE': ['USDCBASE'],
-        
-        // Stablecoins
-        'USDT': ['USDT', 'USDTERC20', 'USDTBSC', 'USDTTRC20', 'USDTMATIC', 'USDTSOL', 'USDTTON', 'USDTARB', 'USDTOP'],
-        'USDC': ['USDC', 'USDCERC20', 'USDCBSC', 'USDCMATIC', 'USDCSOL', 'USDCALGO', 'USDCARB', 'USDCOP', 'USDCBASE'],
-        'DAI': ['DAI', 'DAIERC20'],
-        'PYUSD': ['PYUSD', 'PYUSDERC20']
-      }
-
-      // Dynamic network patterns for comprehensive detection
-      const networkPatterns = [
-        'BSC', 'ERC20', 'TRC20', 'SOL', 'MATIC', 'ARB', 'OP', 'BASE', 'AVAX', 'TON', 'ALGO', 'NEAR'
-      ]
-
-      console.log('🔍 Step 1: Creating backend mappings for primary currencies...')
-      
-      // Step 1: Create backend mappings for all accepted currencies
-      const backendMappings: Record<string, string> = {}
-      
-      for (const acceptedCrypto of acceptedCryptos) {
-        console.log(`🔍 Finding backend mapping for: ${acceptedCrypto}`)
-        
-        // Try predefined alternatives first
-        const alternatives = currencyAlternatives[acceptedCrypto.toUpperCase()] || []
-        let backendCurrency = null
-        
-        // Check predefined alternatives
-        for (const alt of alternatives) {
-          const found = data.currencies.find((c: CurrencyInfo) => 
-            c.code.toUpperCase() === alt.toUpperCase() && c.enabled
-          )
-          if (found) {
-            backendCurrency = found.code
-            break
-          }
-        }
-        
-        // If no predefined alternative found, try dynamic patterns
-        if (!backendCurrency) {
-          const baseCode = acceptedCrypto.toUpperCase()
-          for (const pattern of networkPatterns) {
-            const dynamicCode = `${baseCode}${pattern}`
-            const found = data.currencies.find((c: CurrencyInfo) => 
-              c.code.toUpperCase() === dynamicCode && c.enabled
-            )
-            if (found) {
-              backendCurrency = found.code
-              break
-            }
-          }
-        }
-        
-        // Fallback to exact match
-        if (!backendCurrency) {
-          const exactMatch = data.currencies.find((c: CurrencyInfo) => 
-            c.code.toUpperCase() === acceptedCrypto.toUpperCase() && c.enabled
-          )
-          if (exactMatch) {
-            backendCurrency = exactMatch.code
-          }
-        }
-        
-        if (backendCurrency) {
-          backendMappings[acceptedCrypto] = backendCurrency
-          console.log(`✅ Backend mapping: ${acceptedCrypto} → ${backendCurrency}`)
-        } else {
-          console.warn(`⚠️ No backend mapping found for: ${acceptedCrypto}`)
-        }
-      }
-      
-      // Store backend mappings globally
-      setCurrencyBackendMapping(backendMappings)
-      
-      console.log('🔍 Step 2: Creating clean customer-facing currency list...')
-      
-      // Step 2: Create clean customer-facing currency list
-      const customerCurrencies: CurrencyInfo[] = []
-      
-      // Add primary currencies (clean display names)
-      for (const acceptedCrypto of acceptedCryptos) {
-        if (backendMappings[acceptedCrypto]) {
-          // Find the actual currency info from NOWPayments
-          const backendCode = backendMappings[acceptedCrypto]
-          const currencyInfo = data.currencies.find((c: CurrencyInfo) => 
-            c.code === backendCode && c.enabled
-          )
-          
-          if (currencyInfo) {
-            // Create clean customer-facing currency
-            customerCurrencies.push({
-              code: acceptedCrypto, // Display the clean code (BNB, not BNBBSC)
-              name: currencyInfo.name,
-              enabled: true,
-              min_amount: currencyInfo.min_amount,
-              max_amount: currencyInfo.max_amount
-            })
-            console.log(`✅ Added primary currency: ${acceptedCrypto} (backend: ${backendCode})`)
-          }
-        }
-      }
-      
-      // Add supported stablecoins for each network
-      const stablecoinMapping: Record<string, string[]> = {
-        'BNB': ['USDTBSC', 'USDCBSC'],
-        'ETH': ['USDTERC20', 'USDC', 'DAI', 'PYUSD'],
-        'SOL': ['USDTSOL', 'USDCSOL'],
-        'TRX': ['USDTTRC20'],
-        'TON': ['USDTTON'],
-        'MATIC': ['USDTMATIC', 'USDCMATIC'],
-        'ARB': ['USDTARB', 'USDCARB'],
-        'OP': ['USDTOP', 'USDCOP'],
-        'ETHBASE': ['USDCBASE'],
-        'ALGO': ['USDCALGO'],
-        // Avalanche C-Chain support
-        'AVAX': ['USDTARC20', 'USDCARC20'],
-        'AVAXC': ['USDTARC20', 'USDCARC20']
-      }
-      
-      for (const acceptedCrypto of acceptedCryptos) {
-        const stablecoins = stablecoinMapping[acceptedCrypto] || []
-        console.log(`🔍 Researching stable coins for: ${acceptedCrypto}`)
-        
-        for (const stablecoin of stablecoins) {
-          const stablecoinInfo = data.currencies.find((c: CurrencyInfo) => 
-            c.code.toUpperCase() === stablecoin.toUpperCase() && c.enabled
-          )
-          
-          if (stablecoinInfo) {
-            if (
-              stablecoin.toUpperCase().includes('USDT') ||
-              stablecoin.toUpperCase().includes('USDC') ||
-              ['DAI', 'PYUSD'].includes(stablecoin.toUpperCase())
-            ) {
-              customerCurrencies.push({
-                code: stablecoinInfo.code,
-                name: stablecoinInfo.name,
-                enabled: true,
-                min_amount: stablecoinInfo.min_amount,
-                max_amount: stablecoinInfo.max_amount
-              })
-
-              backendMappings[stablecoinInfo.code] = stablecoinInfo.code
-
-              console.log(`✅ Added stable coin: ${stablecoinInfo.code} (for ${acceptedCrypto})`)
-            }
-          }
-        }
-      }
-      
-      // Sort currencies: Primary currencies first, then stablecoins
-      const sortedCurrencies = customerCurrencies.sort((a: CurrencyInfo, b: CurrencyInfo) => {
-        const aPrimary = acceptedCryptos.includes(a.code)
-        const bPrimary = acceptedCryptos.includes(b.code)
-        const aStablecoin =
-          a.code.toUpperCase().includes('USDT') ||
-          a.code.toUpperCase().includes('USDC') ||
-          ['DAI', 'PYUSD'].includes(a.code.toUpperCase())
-        const bStablecoin =
-          b.code.toUpperCase().includes('USDT') ||
-          b.code.toUpperCase().includes('USDC') ||
-          ['DAI', 'PYUSD'].includes(b.code.toUpperCase())
-        
-        // Primary currencies first
-        if (aPrimary && !bPrimary) return -1
-        if (!aPrimary && bPrimary) return 1
-        
-        // Among primary currencies, sort by priority
-        if (aPrimary && bPrimary) {
-          const priorityOrder = ['BTC', 'ETH', 'BNB', 'SOL', 'MATIC', 'TRX', 'TON', 'AVAX', 'NEAR']
-          const aIndex = priorityOrder.indexOf(a.code.toUpperCase())
-          const bIndex = priorityOrder.indexOf(b.code.toUpperCase())
-          
-          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
-          if (aIndex !== -1) return -1
-          if (bIndex !== -1) return 1
-          return a.code.localeCompare(b.code)
-        }
-        
-        // Stablecoins last, sorted alphabetically
-        if (aStablecoin && bStablecoin) {
-          return a.code.localeCompare(b.code)
-        }
-        
-        return a.code.localeCompare(b.code)
+      const { customerCurrencies, backendMappings } = buildCurrencyMapping({
+        acceptedCryptos,
+        npCurrencies: data.currencies,
       })
 
-      console.log(`✅ Created ${sortedCurrencies.length} customer-facing currencies`)
-      console.log('📋 Backend mappings:', backendMappings)
-      console.log('🎯 Final customer-facing currencies:', sortedCurrencies.map((c: CurrencyInfo) => c.code))
-      
-      // Update state
-      setAvailableCurrencies(sortedCurrencies)
+      setAvailableCurrencies(customerCurrencies)
       setCurrencyBackendMapping(backendMappings)
-      
-      console.log('🔧 Backend mapping stored for payment processing')
+      console.log(`✅ Created ${customerCurrencies.length} customer-facing currencies`)
+      console.log('📋 Backend mappings:', backendMappings)
+      console.log('🎯 Final customer-facing currencies:', customerCurrencies.map((c: CurrencyInfo) => c.code))
 
     } catch (error) {
       console.error('Error loading currencies:', error)
@@ -852,8 +594,10 @@ export default function PaymentPage() {
     const newEstimates: Record<string, EstimateData> = {}
     const batchSize = 3
 
-    for (let i = 0; i < availableCurrencies.length; i += batchSize) {
-      const batch = availableCurrencies.slice(i, i + batchSize)
+    // Skip currencies that aren’t available via NOWPayments
+    const activeCurrencies = availableCurrencies.filter(c => c.enabled)
+    for (let i = 0; i < activeCurrencies.length; i += batchSize) {
+      const batch = activeCurrencies.slice(i, i + batchSize)
 
       const results = await Promise.all(
         batch.map(async (currency) => {
@@ -1310,6 +1054,7 @@ export default function PaymentPage() {
                           return filteredCurrencies.map((currency) => {
                             const estimate = estimates[currency.code]
                             const isSelected = selectedCurrency === currency.code
+                            const isDisabled = !currency.enabled
                             const displayName = getCurrencyDisplayName(currency.code)
                             
                             return (
@@ -1317,11 +1062,16 @@ export default function PaymentPage() {
                                 key={currency.code}
                                 className={cn(
                                   "border-2 rounded-lg p-3 cursor-pointer transition-all duration-200 flex items-center justify-between",
-                                  isSelected 
-                                    ? "border-[#7f5efd] bg-purple-50 shadow-md" 
-                                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                                  isSelected
+                                    ? "border-[#7f5efd] bg-purple-50 shadow-md"
+                                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm",
+                                  isDisabled && "opacity-50 cursor-not-allowed hover:shadow-none hover:border-gray-200"
                                 )}
-                                onClick={() => setSelectedCurrency(currency.code)}
+                                onClick={() => {
+                                  if (isDisabled) return
+                                  setSelectedCurrency(currency.code)
+                                }}
+                                title={isDisabled ? 'Temporarily unavailable' : undefined}
                               >
                                 <div className="flex items-center space-x-3">
                                   <div className={cn(

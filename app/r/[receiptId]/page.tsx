@@ -69,7 +69,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       total_amount_paid,
       pay_currency,
       amount_received,
-      status
+      status,
+      receipt_metadata
     `)
     .eq('public_receipt_id', receiptId)
     .single();
@@ -79,12 +80,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
     return <ReceiptNotAvailable />;
   }
 
-  // FIXED: Separate queries for merchant and payment link data to avoid JOIN failures
-  const { data: merchant } = await supabase
-    .from('merchants')
-    .select('business_name, logo_url')
-    .eq('id', tx.merchant_id)
-    .single();
+  // Use embedded receipt metadata for merchant info
+  const merchant = tx.receipt_metadata as { business_name?: string; logo_url?: string } | null;
 
   // Only query payment link if payment_link_id exists
   let paymentLink = null;
