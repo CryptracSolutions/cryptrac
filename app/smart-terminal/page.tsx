@@ -530,42 +530,24 @@ function SmartTerminalPageContent() {
               </div>
               {/* Price Breakdown */}
               {(baseAmount > 0 || tax || chargeFee) && (
-                <div className="bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200 text-sm space-y-2" aria-live="polite">
+                <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200 text-sm space-y-1" aria-live="polite">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
                   </div>
-                  {tax && merchantSettings?.tax_rates && merchantSettings.tax_rates.map((rate, index) => (
-                    <div key={index} className="flex justify-between items-center text-emerald-600">
-                      <span className="flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {rate.label} ({rate.percentage}%)
-                      </span>
-                      <span className="font-medium">+${((baseAmount * rate.percentage) / 100).toFixed(2)}</span>
-                    </div>
-                  ))}
-                  {tax && (
-                    <div className="flex justify-between items-center font-semibold text-emerald-600 border-t border-gray-200 pt-2">
-                      <span>Total Tax</span>
-                      <span>+${taxAmount.toFixed(2)}</span>
+                  {tax && taxAmount > 0 && (
+                    <div className="flex justify-between items-center text-[#7f5efd]">
+                      <span>Tax</span>
+                      <span className="font-medium">+${taxAmount.toFixed(2)}</span>
                     </div>
                   )}
-                  {tax && (
-                    <div className="flex justify-between items-center font-semibold border-t border-gray-200 pt-2">
-                      <span className="text-gray-600">Subtotal with Tax</span>
-                      <span className="text-gray-900">${preview.subtotal_with_tax.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {chargeFee && (
-                    <div className="flex justify-between items-center text-blue-600">
-                      <span className="flex items-center gap-1">
-                        <Zap className="h-3 w-3" />
-                        Gateway fee ({merchantSettings?.auto_convert_enabled ? '1.0' : '0.5'}%)
-                      </span>
+                  {chargeFee && gatewayFee > 0 && (
+                    <div className="flex justify-between items-center text-[#7f5efd]">
+                      <span>Gateway fee</span>
                       <span className="font-medium">+${gatewayFee.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center font-bold text-lg border-t border-gray-200 pt-2">
+                  <div className="flex justify-between items-center font-bold border-t border-gray-200 pt-1">
                     <span className="text-gray-700">Total</span>
                     <span className="text-[#7f5efd]">${preTipTotal.toFixed(2)}</span>
                   </div>
@@ -604,27 +586,45 @@ function SmartTerminalPageContent() {
 
               {/* Options */}
               <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-                <label className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-[#7f5efd] cursor-pointer transition-all duration-200">
+                <label className={cn(
+                  "flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all duration-200",
+                  tax ? "bg-[#7f5efd] border-[#7f5efd] text-white" : "bg-white border-purple-200 hover:border-[#7f5efd] text-gray-700"
+                )}>
+                  <div className={cn(
+                    "h-4 w-4 rounded-full border-2 flex items-center justify-center",
+                    tax ? "border-white" : "border-[#7f5efd]"
+                  )}>
+                    {tax && <div className="h-2 w-2 rounded-full bg-white"></div>}
+                  </div>
                   <input 
                     type="checkbox" 
-                    className="h-4 w-4 text-[#7f5efd] rounded focus:ring-[#7f5efd] accent-[#7f5efd]" 
+                    className="sr-only" 
                     checked={tax ?? false} 
                     disabled={tax === undefined} 
                     onChange={e=>setTax(e.target.checked)} 
                     aria-label="Add tax"
                   />
-                  <span className="text-sm font-medium text-gray-700">Add tax</span>
+                  <span className="text-sm font-medium">Add tax</span>
                 </label>
-                <label className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-[#7f5efd] cursor-pointer transition-all duration-200">
+                <label className={cn(
+                  "flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all duration-200",
+                  chargeFee ? "bg-[#7f5efd] border-[#7f5efd] text-white" : "bg-white border-purple-200 hover:border-[#7f5efd] text-gray-700"
+                )}>
+                  <div className={cn(
+                    "h-4 w-4 rounded-full border-2 flex items-center justify-center",
+                    chargeFee ? "border-white" : "border-[#7f5efd]"
+                  )}>
+                    {chargeFee && <div className="h-2 w-2 rounded-full bg-white"></div>}
+                  </div>
                   <input 
                     type="checkbox" 
-                    className="h-4 w-4 text-[#7f5efd] rounded focus:ring-[#7f5efd] accent-[#7f5efd]" 
+                    className="sr-only" 
                     checked={chargeFee ?? false} 
                     disabled={chargeFee === undefined} 
                     onChange={e=>setChargeFee(e.target.checked)} 
                     aria-label="Charge customer fee" 
                   />
-                  <span className="text-sm font-medium text-gray-700">Customer pays fee</span>
+                  <span className="text-sm font-medium">Customer pays fee</span>
                 </label>
               </div>
 
@@ -655,13 +655,13 @@ function SmartTerminalPageContent() {
                     <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
                   </div>
                   {tax && taxAmount > 0 && (
-                    <div className="flex justify-between items-center text-emerald-600">
+                    <div className="flex justify-between items-center text-[#7f5efd]">
                       <span>Tax</span>
                       <span className="font-medium">+${taxAmount.toFixed(2)}</span>
                     </div>
                   )}
                   {chargeFee && gatewayFee > 0 && (
-                    <div className="flex justify-between items-center text-blue-600">
+                    <div className="flex justify-between items-center text-[#7f5efd]">
                       <span>Gateway fee</span>
                       <span className="font-medium">+${gatewayFee.toFixed(2)}</span>
                     </div>
@@ -710,26 +710,72 @@ function SmartTerminalPageContent() {
               {/* Currency Selection */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Payment Currency</label>
+                
+                {/* Network Filter */}
+                {availableCurrencies.length > 0 && (() => {
+                  const groupedCurrencies = groupCurrenciesByNetwork(
+                    availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                    merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+                  )
+                  const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+                  return (
+                    <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
+                      <SelectTrigger className="w-full h-10 bg-white border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
+                        <SelectValue placeholder="All Networks" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Networks</SelectItem>
+                        {availableNetworks.map(networkId => {
+                          const network = getNetworkInfo(networkId)
+                          if (!network) return null
+                          const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                          return (
+                            <SelectItem key={networkId} value={networkId}>
+                              {network.displayName} <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                  )
+                })()}
+                
+                {/* Currency Selection */}
                 <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
                   <SelectTrigger className="w-full h-10 bg-white border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableCurrencies.map((c) => {
-                      const displayName = c.name || getCurrencyDisplayName(c.code)
-                      const isAvailable = c.enabled
-                      return (
-                        <SelectItem
-                          key={c.code}
-                          value={c.code}
-                          disabled={!isAvailable}
-                          className={cn("hover:bg-purple-50", !isAvailable && "opacity-50 cursor-not-allowed")}
-                          title={!isAvailable ? 'Temporarily unavailable' : undefined}
-                        >
-                          <span className="font-medium">{c.code.toUpperCase()}</span>
-                        </SelectItem>
-                      )
-                    })}
+                    {(() => {
+                      // Filter currencies based on selected network
+                      let filteredCurrencies = availableCurrencies
+                      
+                      if (selectedNetwork !== 'all') {
+                        const groupedCurrencies = groupCurrenciesByNetwork(
+                          availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                          merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+                        )
+                        const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+                        const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
+                        filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
+                      }
+                      
+                      return filteredCurrencies.map((c) => {
+                        const displayName = c.name || getCurrencyDisplayName(c.code)
+                        const isAvailable = c.enabled
+                        return (
+                          <SelectItem
+                            key={c.code}
+                            value={c.code}
+                            disabled={!isAvailable}
+                            className={cn("hover:bg-purple-50", !isAvailable && "opacity-50 cursor-not-allowed")}
+                            title={!isAvailable ? 'Temporarily unavailable' : undefined}
+                          >
+                            <span className="font-medium">{c.code.toUpperCase()}</span>
+                          </SelectItem>
+                        )
+                      })
+                    })()}
                   </SelectContent>
                 </Select>
               </div>
