@@ -16,10 +16,10 @@ export interface CustomerCurrency {
 
 // Network-suffixed stablecoins supported per base currency
 const DEFAULT_STABLE_MAP: Record<string, string[]> = {
-  BNB: ['USDTBSC', 'USDCBSC'],
+  BNB: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
   ETH: ['USDTERC20', 'USDC', 'DAI', 'PYUSD'],
   SOL: ['USDTSOL', 'USDCSOL'],
-  TRX: ['USDTTRC20'],
+  TRX: ['USDTTRC20', 'TUSDTRC20'],
   TON: ['USDTTON'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
   ARB: ['USDTARB', 'USDCARB'],

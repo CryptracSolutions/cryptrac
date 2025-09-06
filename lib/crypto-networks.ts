@@ -22,7 +22,7 @@ export const NETWORKS: Record<string, CurrencyNetwork> = {
     name: 'Ethereum',
     displayName: 'Ethereum',
     nativeCurrency: 'ETH',
-    currencies: ['ETH', 'USDT', 'USDTERC20', 'USDC', 'DAI', 'PYUSD']
+    currencies: ['ETH', 'USDTERC20', 'USDC', 'DAI', 'PYUSD']
   },
   bitcoin: {
     id: 'bitcoin',
@@ -36,7 +36,7 @@ export const NETWORKS: Record<string, CurrencyNetwork> = {
     name: 'BNB Smart Chain',
     displayName: 'BNB Chain',
     nativeCurrency: 'BNB',
-    currencies: ['BNB', 'BNBBSC', 'USDTBSC', 'USDCBSC']
+    currencies: ['BNB', 'BNBBSC', 'USDTBSC', 'BUSDBSC', 'USDCBSC']
   },
   solana: {
     id: 'solana',
@@ -57,7 +57,7 @@ export const NETWORKS: Record<string, CurrencyNetwork> = {
     name: 'TRON',
     displayName: 'TRON',
     nativeCurrency: 'TRX',
-    currencies: ['TRX', 'USDTTRC20']
+    currencies: ['TRX', 'USDTTRC20', 'TUSDTRC20']
   },
   ton: {
     id: 'ton',

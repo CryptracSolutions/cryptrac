@@ -740,8 +740,11 @@ export async function POST(request: Request) {
       cryptrac_fee: cryptracFee,
       gateway_fee: 0,
       merchant_receives: merchantReceives,
+      // Include merchant info required for public receipts (name only)
+      receipt_metadata: {
+        business_name: merchant?.business_name || null
+      },
       // Auto-forwarding info - store in payment_data JSONB field
-      // Store merchant info required for public receipts
       payment_data: {
         auto_forwarding_enabled: autoForwardingConfigured,
         payout_address: autoForwardingConfigured ? paymentRequest.payout_address : null,

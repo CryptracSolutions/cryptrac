@@ -4,9 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 const BASE_STABLE_MAP: Record<string, string[]> = {
   SOL: ['USDCSOL', 'USDTSOL'],
   ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
-  BNB: ['USDTBSC', 'USDCBSC'],
+  BNB: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
-  TRX: ['USDTTRC20'],
+  TRX: ['USDTTRC20', 'TUSDTRC20'],
   TON: ['USDTTON'],
   ARB: ['USDTARB', 'USDCARB'],
   // Avalanche C-Chain support

@@ -150,7 +150,7 @@ const getBlockExplorerUrl = (txHash: string, currency: string): string | null =>
   }
   
   // BSC and BEP-20 tokens
-  if (['BNB', 'BNBBSC', 'BSC', 'USDTBSC', 'USDCBSC'].includes(currency_upper)) {
+  if (['BNB', 'BNBBSC', 'BSC', 'USDTBSC', 'USDCBSC', 'BUSDBSC'].includes(currency_upper)) {
     return `https://bscscan.com/tx/${txHash}`
   }
   
@@ -165,7 +165,7 @@ const getBlockExplorerUrl = (txHash: string, currency: string): string | null =>
   }
   
   // Tron and TRC-20 tokens
-  if (['TRX', 'USDTTRC20'].includes(currency_upper)) {
+  if (['TRX', 'USDTTRC20', 'TUSDTRC20'].includes(currency_upper)) {
     return `https://tronscan.org/#/transaction/${txHash}`
   }
   

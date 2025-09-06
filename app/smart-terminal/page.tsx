@@ -61,9 +61,9 @@ const defaultTips = [10, 15, 20];
 const BASE_STABLE_MAP: Record<string, string[]> = {
   SOL: ['USDCSOL', 'USDTSOL'],
   ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
-  BNB: ['USDTBSC', 'USDCBSC'],
+  BNB: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
-  TRX: ['USDTTRC20'],
+  TRX: ['USDTTRC20', 'TUSDTRC20'],
   TON: ['USDTTON'],
   ARB: ['USDTARB', 'USDCARB'],
   OP: ['USDTOP', 'USDCOP'],
