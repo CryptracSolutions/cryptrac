@@ -42,7 +42,8 @@ const STABLE_FALLBACK: Record<string, string> = {
 const BASE_STABLE_MAP: Record<string, string[]> = {
   SOL: ['USDCSOL', 'USDTSOL'],
   ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
-  BNB: ['USDTBSC', 'USDCBSC'],
+  BNB: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
+  BNBBSC: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
   MATIC: ['USDTMATIC', 'USDCMATIC'],
   TRX: ['USDTTRC20'],
   TON: ['USDTTON'],

@@ -17,6 +17,7 @@ export interface CustomerCurrency {
 // Network-suffixed stablecoins supported per base currency
 const DEFAULT_STABLE_MAP: Record<string, string[]> = {
   BNB: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
+  BNBBSC: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
   ETH: ['USDTERC20', 'USDC', 'DAI', 'PYUSD'],
   SOL: ['USDTSOL', 'USDCSOL'],
   TRX: ['USDTTRC20', 'TUSDTRC20'],
@@ -33,6 +34,8 @@ const DEFAULT_STABLE_MAP: Record<string, string[]> = {
 
 // Comprehensive alias mapping for display codes → NOWPayments codes
 const CURRENCY_ALIASES: Record<string, string[]> = {
+  // Direct alias for USDC to prefer ERC20 first
+  USDC: ['USDCERC20', 'USDC'],
   // Major cryptocurrencies
   BTC: ['BTC', 'BITCOIN', 'BTCLN', 'BTCSEGWIT'],
   ETH: ['ETH', 'ETHEREUM', 'ETHBSC', 'ETHMATIC', 'ETHARB', 'ETHOP', 'ETHBASE', 'BASEETH', 'ETH_BASE'],
@@ -105,7 +108,7 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   INJERC20: ['INJ'],
 }
 
-const NETWORK_PATTERNS = ['BSC', 'ERC20', 'TRC20', 'SOL', 'MATIC', 'ARB', 'OP', 'BASE', 'AVAX', 'TON', 'ALGO', 'NEAR']
+const NETWORK_PATTERNS = ['ERC20', 'BSC', 'TRC20', 'SOL', 'MATIC', 'ARB', 'OP', 'BASE', 'AVAX', 'TON', 'ALGO', 'NEAR']
 
 export function buildCurrencyMapping(params: {
   acceptedCryptos: string[]
