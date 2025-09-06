@@ -601,8 +601,9 @@ export default function PaymentPage() {
         'GALA': ['GALA', 'GALAERC20'],
 
         // Network-suffixed stablecoin variants and aliases
-        'USDTARC20': ['USDTARB', 'USDTARC20'],
-        'USDCARC20': ['USDCARB', 'USDCARC20'],
+        // Avalanche C-Chain stablecoins (no alias to Arbitrum)
+        'USDTARC20': ['USDTARC20'],
+        'USDCARC20': ['USDCARC20'],
         'OPUSDCE': ['USDCOP', 'OPUSDCE'],
         'MATICUSDCE': ['USDCMATIC', 'MATICUSDCE'],
         'MATICMAINNET': ['MATIC'],

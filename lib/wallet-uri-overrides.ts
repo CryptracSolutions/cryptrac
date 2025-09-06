@@ -1521,17 +1521,17 @@ export const WALLET_URI_OVERRIDES =
       "extra_id_label": null
     },
     "USDTARC20": {
-      "default_uri": "ethereum:0xdac17f958d2ee523a2206206994597c13d831ec7/transfer?address={address}&uint256={amount}",
+      "default_uri": "ethereum:0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7/transfer?address={address}&uint256={amount}&chainId=43114",
       "overrides": [
         {
           "wallet": "MetaMask",
-          "scheme": "metamask://send/0xdac17f958d2ee523a2206206994597c13d831ec7/transfer?address={address}&uint256={amount}",
-          "notes": "MetaMask requires its proprietary scheme for reliable amount auto-population. See https://metamask.github.io/metamask-deeplinks/"
+          "scheme": "https://metamask.app.link/send/0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7@43114/transfer?address={address}&uint256={amount}",
+          "notes": "MetaMask deeplink with Avalanche chainId for C-Chain USDT."
         },
         {
           "wallet": "Trust Wallet",
-          "scheme": "trust://send?asset=c60_t0xdac17f958d2ee523a2206206994597c13d831ec7&address={address}&amount={amount}",
-          "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+          "scheme": "trust://send?asset=c43114_t0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7&address={address}&amount={amount}",
+          "notes": "Trust Wallet UAI format for Avalanche C-Chain tokens."
         }
       ],
       "requires_extra_id": false,
@@ -1850,17 +1850,17 @@ export const WALLET_URI_OVERRIDES =
       "extra_id_label": null
     },
     "USDCARC20": {
-      "default_uri": "ethereum:0xa0b86a33e6441e8c8c7014b37c88df4bf2b0b80c/transfer?address={address}&uint256={amount}",
+      "default_uri": "ethereum:0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E/transfer?address={address}&uint256={amount}&chainId=43114",
       "overrides": [
         {
           "wallet": "MetaMask",
-          "scheme": "metamask://send/0xa0b86a33e6441e8c8c7014b37c88df4bf2b0b80c/transfer?address={address}&uint256={amount}",
-          "notes": "MetaMask requires its proprietary scheme for reliable amount auto-population. See https://metamask.github.io/metamask-deeplinks/"
+          "scheme": "https://metamask.app.link/send/0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E@43114/transfer?address={address}&uint256={amount}",
+          "notes": "MetaMask deeplink with Avalanche chainId for C-Chain USDC."
         },
         {
           "wallet": "Trust Wallet",
-          "scheme": "trust://send?asset=c60_t0xa0b86a33e6441e8c8c7014b37c88df4bf2b0b80c&address={address}&amount={amount}",
-          "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+          "scheme": "trust://send?asset=c43114_t0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E&address={address}&amount={amount}",
+          "notes": "Trust Wallet UAI format for Avalanche C-Chain tokens."
         }
       ],
       "requires_extra_id": false,

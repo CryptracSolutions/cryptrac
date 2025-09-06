@@ -9,6 +9,9 @@ const BASE_STABLE_MAP: Record<string, string[]> = {
   TRX: ['USDTTRC20'],
   TON: ['USDTTON'],
   ARB: ['USDTARB', 'USDCARB'],
+  // Avalanche C-Chain support
+  AVAX: ['USDTARC20', 'USDCARC20'],
+  AVAXC: ['USDTARC20', 'USDCARC20'],
   OP: ['USDTOP', 'USDCOP'],
   ETHBASE: ['USDCBASE'],
   ALGO: ['USDCALGO']

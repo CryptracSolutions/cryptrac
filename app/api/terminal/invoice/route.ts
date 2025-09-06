@@ -9,7 +9,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   BNB: ['BNB', 'BSC', 'BINANCE', 'BNBBSC', 'USDTBSC', 'USDCBSC'],
   SOL: ['SOL', 'SOLANA', 'USDTSOL', 'USDCSOL'],
   MATIC: ['MATIC', 'POLYGON', 'USDTMATIC', 'USDCMATIC'],
-  AVAX: ['AVAX', 'AVALANCHE', 'AVAXC'],
+  AVAX: ['AVAX', 'AVALANCHE', 'AVAXC', 'USDTARC20', 'USDCARC20'],
   TRX: ['TRX', 'TRON', 'USDTTRC20'],
   TON: ['TON', 'USDTTON'],
   LTC: ['LTC', 'LITECOIN'],
@@ -47,6 +47,9 @@ const BASE_STABLE_MAP: Record<string, string[]> = {
   TRX: ['USDTTRC20'],
   TON: ['USDTTON'],
   ARB: ['USDTARB', 'USDCARB'],
+  // Avalanche C-Chain stablecoins
+  AVAX: ['USDTARC20', 'USDCARC20'],
+  AVAXC: ['USDTARC20', 'USDCARC20'],
   OP: ['USDTOP', 'USDCOP'],
   ETHBASE: ['USDCBASE'],
   ALGO: ['USDCALGO']
@@ -116,8 +119,9 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'GALA': ['GALA', 'GALAERC20'],
 
     // Network-suffixed stablecoin variants and aliases
-    'USDTARC20': ['USDTARB', 'USDTARC20'],
-    'USDCARC20': ['USDCARB', 'USDCARC20'],
+    // Avalanche C-chain stablecoins (do not alias to Arbitrum)
+    'USDTARC20': ['USDTARC20'],
+    'USDCARC20': ['USDCARC20'],
     'OPUSDCE': ['USDCOP', 'OPUSDCE'],
     'MATICUSDCE': ['USDCMATIC', 'MATICUSDCE'],
     'MATICMAINNET': ['MATIC'],

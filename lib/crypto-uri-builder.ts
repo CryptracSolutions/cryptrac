@@ -710,8 +710,9 @@ interface TokenInfo {
 
 const ERC20_TOKENS: Record<string, TokenInfo> = {
   // Stablecoins – existing chains already covered but we add for generic handling
-  'USDTARC20': { contract: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals: 6, chainId: 42161 }, // Arbitrum
-  'USDCARC20': { contract: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals: 6, chainId: 42161 }, // Arbitrum
+  // Avalanche C-Chain stablecoins
+  'USDTARC20': { contract: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7', decimals: 6, chainId: 43114 }, // Avalanche C-Chain
+  'USDCARC20': { contract: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', decimals: 6, chainId: 43114 }, // Avalanche C-Chain
   'USDTCELO':  { contract: '0x85F17Cf997934a597031b2E18a9aB6ebD4B9f6a4', decimals: 18, chainId: 42220 }, // Celo
   'BUSDBSC':   { contract: '0xe9e7cea3dedca5984780bafc599bd69add087d56', decimals: 18, chainId: 56 },   // BUSD on BSC
   // Example additional tokens from 142-currency list:
