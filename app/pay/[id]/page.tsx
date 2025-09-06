@@ -13,6 +13,7 @@ import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, CheckCircle2, Cl
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
+import { buildCurrencyMapping } from '@/lib/currency-mapping'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
 import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder'
 import { buildBestURI, detectWalletHint } from '@/lib/wallet-uri-helper'
