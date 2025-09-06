@@ -90,9 +90,9 @@ export const NETWORKS: Record<string, CurrencyNetwork> = {
   avalanche: {
     id: 'avalanche',
     name: 'Avalanche',
-    displayName: 'Avalanche',
-    nativeCurrency: 'AVAX',
-    currencies: ['AVAX']
+    displayName: 'Avalanche (C-Chain)',
+    nativeCurrency: 'AVAXC',
+    currencies: ['AVAX', 'AVAXC', 'USDCARC20', 'USDTARC20']
   },
   algorand: {
     id: 'algorand',
@@ -279,6 +279,7 @@ export function getCurrencyDisplayName(code: string): string {
   if (upper === 'TRX') return 'TRON'
   if (upper === 'TON') return 'Toncoin'
   if (upper === 'AVAX') return 'Avalanche'
+  if (upper === 'AVAXC') return 'Avalanche (C-Chain)'
   if (upper === 'ARB') return 'Arbitrum'
   if (upper === 'OP') return 'Optimism'
   if (upper === 'ETHBASE') return 'Ethereum (Base)'

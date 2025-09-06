@@ -59,7 +59,10 @@ const BASE_STABLE_MAP: Record<string, string[]> = {
   ARB: ['USDTARB', 'USDCARB'],
   OP: ['USDTOP', 'USDCOP'],
   ETHBASE: ['USDCBASE'],
-  ALGO: ['USDCALGO']
+  ALGO: ['USDCALGO'],
+  // Avalanche C-Chain support
+  AVAX: ['USDTARC20', 'USDCARC20'],
+  AVAXC: ['USDTARC20', 'USDCARC20']
 };
 
 function expandStableCoins(wallets: Record<string, string>): string[] {
@@ -703,55 +706,25 @@ function SmartTerminalPageContent() {
                     merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
                   )
                   const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
-                  const selectedNetworkInfo = selectedNetwork !== 'all' ? getNetworkInfo(selectedNetwork) : null
-                  
                   return (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-between h-10 border-purple-200 hover:border-[#7f5efd] hover:bg-purple-50"
-                        >
-                          <span className="flex items-center">
-                            <Filter className="h-4 w-4 mr-2 text-[#7f5efd]" />
-                            {selectedNetwork === 'all' ? 'All Networks' : selectedNetworkInfo?.displayName || 'Select Network'}
-                          </span>
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-full">
-                        <DropdownMenuItem
-                          onClick={() => setSelectedNetwork('all')}
-                          className={cn(
-                            "cursor-pointer",
-                            selectedNetwork === 'all' && "bg-purple-50 text-[#7f5efd]"
-                          )}
-                        >
-                          <Globe className="h-4 w-4 mr-2" />
-                          All Networks
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                    <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
+                      <SelectTrigger className="w-full h-12 bg-white border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
+                        <SelectValue placeholder="All Networks" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Networks</SelectItem>
                         {availableNetworks.map(networkId => {
                           const network = getNetworkInfo(networkId)
                           if (!network) return null
                           const currencyCount = groupedCurrencies.get(networkId)?.length || 0
-                          
                           return (
-                            <DropdownMenuItem
-                              key={networkId}
-                              onClick={() => setSelectedNetwork(networkId)}
-                              className={cn(
-                                "cursor-pointer justify-between",
-                                selectedNetwork === networkId && "bg-purple-50 text-[#7f5efd]"
-                              )}
-                            >
-                              <span>{network.displayName}</span>
-                              <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
-                            </DropdownMenuItem>
+                            <SelectItem key={networkId} value={networkId}>
+                              {network.displayName} <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
+                            </SelectItem>
                           )
                         })}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      </SelectContent>
+                    </Select>
                   )
                 })()}
                 

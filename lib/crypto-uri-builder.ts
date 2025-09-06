@@ -443,18 +443,18 @@ function buildStandardURI(
       
     // TON
     case 'TON':
-      scheme = 'ton';
-      // Use precise integer of nano-TONs to avoid scientific notation issues that break wallet parsing
-      const nanoTons = BigInt(Math.round(amount * 1_000_000_000));
-      uri = `${scheme}://transfer/${address}?amount=${nanoTons.toString()}`;
+      // Use `toncoin:` with a decimal amount for broader wallet QR scanning compatibility.
+      // Many mobile wallets expect a human-readable TON amount rather than nanotons in this scheme.
+      scheme = 'toncoin';
+      uri = `${scheme}:${address}?amount=${amt}`;
       break;
     
     case 'USDTTON':
+      // TON Jetton (USDT on TON): prefer decimal amount to improve QR scanning compatibility
+      // Use standard ton://transfer with recipient in path and jetton contract as query param
       scheme = 'ton';
       const usdtTonContract = 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs';
-      // TON Jettons generally expect decimal amounts, but encode as int of 10^6 (per USDT spec)
-      const jettonAmount = BigInt(Math.round(amount * 1_000_000));
-      uri = `${scheme}://transfer/${usdtTonContract}?amount=${jettonAmount.toString()}&destination=${address}`;
+      uri = `${scheme}://transfer/${address}?amount=${amt}&jetton=${usdtTonContract}`;
       break;
       
     // Algorand

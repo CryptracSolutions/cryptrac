@@ -22,6 +22,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   ARB: ['ARB', 'ARBITRUM', 'USDTARB', 'USDCARB'],
   OP: ['OP', 'OPTIMISM', 'USDTOP', 'USDCOP'],
   ETHBASE: ['ETHBASE', 'USDCBASE', 'ETH'],
+  ZK: ['ZK', 'ZKSYNC'],
   // Additional networks
   FTM: ['FTM', 'FANTOM', 'FTMMAINNET'],
   RUNE: ['RUNE', 'THORCHAIN'],
@@ -102,6 +103,8 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'ARB': ['ARB', 'ARBITRUM'],
     'OP': ['OP', 'OPTIMISM'],
     'ETHBASE': ['ETHBASE', 'BASE', 'BASECHAIN', 'BASEETH', 'ETH_BASE'],
+    // zkSync
+    'ZK': ['ZK', 'ZKSYNC', 'ZKERC20'],
     // Additional networks
     'FTM': ['FTM', 'FANTOM', 'FTMMAINNET'],
     'RUNE': ['RUNE', 'THORCHAIN'],
