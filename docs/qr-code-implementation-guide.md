@@ -18,7 +18,9 @@ This guide explains how the QR code URI generation system is structured, how to 
   - Static mapping of wallet-specific deeplinks per currency.
   - Updated Phantom overrides for Solana to use Solana Pay (`solana:`) instead of deprecated `phantom://`.
   - Trust Wallet links use `https://link.trustwallet.com` where provided for mobile-friendly fallback.
-  - Coinbase Wallet (aka Base Wallet): currently standards-first (BIP-21/EIP-681). Universal links can be added when verified.
+  - Coinbase Wallet (aka Base Wallet): standards-first (BIP-21/EIP-681) for direct payments.
+  - OKX Wallet: wraps standards using `okx://wallet/dapp/url?dappUrl={STANDARD_URI_ENCODED}`.
+  - Hardware: Ledger Live (`ledgerlive://send?...`), Trezor Suite uses standards.
 
 - QR Rendering: `app/components/ui/qr-code.tsx`
   - Generates a QR image from the chosen URI (uses QR Server API).
@@ -46,8 +48,10 @@ Wallet overrides are used when a wallet is detected and a known best scheme exis
 - MetaMask: Prefer official `https://metamask.app.link/send/...` formats for native and ERC‑20.
 - Trust Wallet: Prefer `https://link.trustwallet.com/send?asset=...` with UAI format when available.
 - Phantom: Use Solana Pay (`solana:`) for SOL and SPL transfers (universal links are primarily for swap/connect flows).
-- Coinbase Wallet: No special EIP‑681 override currently; rely on standard and fallback (BIP‑21 for BTC, EIP‑681 for ETH). Detection supports "Coinbase Wallet" and "Base Wallet".
-- OKX Wallet: Use standard schemes unless a confirmed payment deeplink is provided.
+- Coinbase Wallet: Rely on standard URIs (BIP‑21 for BTC, EIP‑681 for ETH). Detection supports "Coinbase Wallet" and "Base Wallet".
+ - OKX Wallet: Wrapper deep link `okx://wallet/dapp/url?dappUrl={STANDARD_URI_ENCODED}` opens payment flows.
+ - Ledger Live: `ledgerlive://send?currency=bitcoin|ethereum&address=...&amount=...`.
+ - Trezor Suite: Standard BIP‑21/EIP‑681 URIs.
 
 Notes:
 - When no wallet hint is available, the system falls back to standards.
@@ -110,6 +114,13 @@ import { QRCode } from '@/app/components/ui/qr-code';
 - File: `lib/wallet-uri-overrides.ts`
 - Add/modify the `overrides` array for a currency code, with `wallet`, `scheme`, and a short `notes` string.
 - Prefer official universal links (https) when the vendor documents them; otherwise use scheme URIs.
+ - Supported placeholders in `scheme` strings:
+   - `{address}`, `{amount}`, `{wei}`, `{microalgos}`, `{nanoton}`, `{extraId}`
+   - `{STANDARD_URI}`: standards-built URI for the currency
+   - `{STANDARD_URI_ENCODED}`: URL-encoded `{STANDARD_URI}`
+   - `{DEFAULT_URI}`: entry’s `default_uri` with placeholders filled
+   - `{DEFAULT_URI_ENCODED}`: URL-encoded `{DEFAULT_URI}`
+   - `{encodedPaymentUrl}`: alias of `{DEFAULT_URI_ENCODED}` for backward compatibility
 
 ## Error Handling
 
@@ -141,5 +152,6 @@ import { QRCode } from '@/app/components/ui/qr-code';
 
 ## Notes on Exchange Apps
 
-- Exchange deposit QR codes typically present addresses (no amounts) and are app‑controlled.
-- Binance Pay, Kraken, Gemini, KuCoin, Bybit, Gate.io, Bitget often require proprietary payloads/APIs. Use address‑only or standards as fallback until official deep links are verified and added.
+ - Exchange deposit QR codes typically present addresses (no amounts) and are app‑controlled.
+ - Binance Pay requires API integration (order create → returns qrcodeLink/deeplink/universalUrl). For now, Binance App scanning uses standard URIs.
+ - Kraken, Gemini, KuCoin, Bybit, Gate.io, Bitget apps generally scan standard URIs; overrides include those for convenience.

@@ -258,6 +258,66 @@ export const WALLET_URI_OVERRIDES =
           "wallet": "Trust Wallet",
           "scheme": "trust://send?asset=c0&address={address}&amount={amount}",
           "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+        },
+        {
+          "wallet": "Coinbase Wallet",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Coinbase Wallet supports standard BIP-21 URIs"
+        },
+        {
+          "wallet": "OKX Wallet",
+          "scheme": "okx://wallet/dapp/url?dappUrl={STANDARD_URI_ENCODED}",
+          "notes": "OKX Wallet deep link wrapping standard BIP-21 URI"
+        },
+        {
+          "wallet": "Ledger Live",
+          "scheme": "ledgerlive://send?currency=bitcoin&address={address}&amount={amount}",
+          "notes": "Ledger Live deep link for Bitcoin payments"
+        },
+        {
+          "wallet": "Trezor Suite",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Trezor Suite supports standard BIP-21 URIs natively"
+        },
+        {
+          "wallet": "Binance App",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Binance app scanners accept standard BIP-21 in many contexts"
+        },
+        {
+          "wallet": "Binance Pay",
+          "scheme": "BINANCE_PAY_API",
+          "notes": "Requires Binance Pay API integration (order create → qrcodeLink/deeplink/universalUrl)"
+        },
+        {
+          "wallet": "Kraken App",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Kraken mobile app supports standard BIP-21 URIs"
+        },
+        {
+          "wallet": "Gemini App",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Gemini mobile app supports standard BIP-21 URIs"
+        },
+        {
+          "wallet": "KuCoin App",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "KuCoin mobile app supports standard BIP-21 URIs"
+        },
+        {
+          "wallet": "Bybit App",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Bybit mobile app supports standard BIP-21 URIs"
+        },
+        {
+          "wallet": "Gate.io App",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Gate.io mobile app supports standard BIP-21 URIs"
+        },
+        {
+          "wallet": "Bitget App",
+          "scheme": "bitcoin:{address}?amount={amount}",
+          "notes": "Bitget mobile app supports standard BIP-21 URIs"
         }
       ],
       "requires_extra_id": false,
@@ -558,6 +618,66 @@ export const WALLET_URI_OVERRIDES =
           "wallet": "Phantom",
           "scheme": "ethereum:{address}?value={wei}",
           "notes": "Phantom supports standard EIP-681 for Ethereum, not proprietary scheme."
+        },
+        {
+          "wallet": "Coinbase Wallet",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Coinbase Wallet supports standard EIP-681 URIs"
+        },
+        {
+          "wallet": "OKX Wallet",
+          "scheme": "okx://wallet/dapp/url?dappUrl={STANDARD_URI_ENCODED}",
+          "notes": "OKX Wallet deep link wrapping standard EIP-681 URI"
+        },
+        {
+          "wallet": "Ledger Live",
+          "scheme": "ledgerlive://send?currency=ethereum&address={address}&amount={amount}",
+          "notes": "Ledger Live deep link for Ethereum payments"
+        },
+        {
+          "wallet": "Trezor Suite",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Trezor Suite supports standard EIP-681 URIs natively"
+        },
+        {
+          "wallet": "Binance App",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Binance app scanners accept EIP-681 for ETH in many contexts"
+        },
+        {
+          "wallet": "Binance Pay",
+          "scheme": "BINANCE_PAY_API",
+          "notes": "Requires Binance Pay API integration (order create → qrcodeLink/deeplink/universalUrl)"
+        },
+        {
+          "wallet": "Kraken App",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Kraken mobile app supports standard EIP-681 URIs"
+        },
+        {
+          "wallet": "Gemini App",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Gemini mobile app supports standard EIP-681 URIs"
+        },
+        {
+          "wallet": "KuCoin App",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "KuCoin mobile app supports standard EIP-681 URIs"
+        },
+        {
+          "wallet": "Bybit App",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Bybit mobile app supports standard EIP-681 URIs"
+        },
+        {
+          "wallet": "Gate.io App",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Gate.io mobile app supports standard EIP-681 URIs"
+        },
+        {
+          "wallet": "Bitget App",
+          "scheme": "ethereum:{address}?value={wei}",
+          "notes": "Bitget mobile app supports standard EIP-681 URIs"
         }
       ],
       "requires_extra_id": false,
@@ -1175,8 +1295,8 @@ export const WALLET_URI_OVERRIDES =
         },
         {
           "wallet": "OKX Wallet",
-          "scheme": "okx://wallet/dapp/url?dappUrl={encodedPaymentUrl}",
-          "notes": "OKX Wallet uses dApp integration for payments. See https://web3.okx.com/build/docs/waas/app-universal-link"
+          "scheme": "okx://wallet/dapp/url?dappUrl={DEFAULT_URI_ENCODED}",
+          "notes": "OKX Wallet deep link wrapping the token's standard payment URI"
         }
       ],
       "requires_extra_id": false,

@@ -69,5 +69,13 @@ async function testWalletCompatibility(uri: string): Promise<Record<string, bool
   compatibility['Coinbase Wallet'] = /^(https:\/\/go\.cb-w\.com|ethereum:|bitcoin:)/.test(uri);
   compatibility['Ledger Live'] = /^(ledgerlive:|bitcoin:|ethereum:)/.test(uri);
   compatibility['Trezor Suite'] = /^(https:\/\/suite\.trezor\.io|bitcoin:|ethereum:)/.test(uri);
+  compatibility['OKX Wallet'] = /^(okx:\/\/wallet\/dapp\/url|https:\/\/web3\.okx\.com\/download|bitcoin:|ethereum:|solana:)/.test(uri);
+  compatibility['Binance App'] = /^(bitcoin:|ethereum:|solana:|tron:)/.test(uri);
+  compatibility['Kraken App'] = /^(bitcoin:|ethereum:)/.test(uri);
+  compatibility['Gemini App'] = /^(bitcoin:|ethereum:)/.test(uri);
+  compatibility['KuCoin App'] = /^(bitcoin:|ethereum:)/.test(uri);
+  compatibility['Bybit App'] = /^(bitcoin:|ethereum:)/.test(uri);
+  compatibility['Gate.io App'] = /^(bitcoin:|ethereum:)/.test(uri);
+  compatibility['Bitget App'] = /^(bitcoin:|ethereum:)/.test(uri);
   return compatibility;
 }
