@@ -27,6 +27,9 @@ export interface CryptoPaymentRequest {
   extraId?: string; // Destination tag, memo, etc.
   label?: string; // Optional label for the payment
   message?: string; // Optional message/description
+  // Solana Pay extras (optional; ignored by other chains)
+  reference?: string | string[]; // One or more Base58 references for tracking
+  memo?: string; // Optional memo (recorded on-chain)
 }
 
 export interface URIResult {
@@ -83,7 +86,7 @@ export function buildCryptoPaymentURI(request: CryptoPaymentRequest): URIResult 
   }
   
   // Handle standard currencies
-  const result = buildStandardURI(upper, address, roundedAmount, label, message);
+  const result = buildStandardURI(upper, address, roundedAmount, label, message, request);
   return { ...result, roundedAmount, formattedAmount };
 }
 
@@ -162,7 +165,8 @@ function buildStandardURI(
   address: string,
   amount: number,
   label?: string,
-  message?: string
+  message?: string,
+  fullRequest?: Partial<CryptoPaymentRequest>
 ): URIResult {
   let uri = '';
   let scheme = '';
@@ -236,6 +240,26 @@ function buildStandardURI(
       scheme = 'dogecoin';
       uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'DOGE');
       break;
+
+    case 'DASH':
+      scheme = 'dash';
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'DASH');
+      break;
+
+    case 'ZEC':
+      scheme = 'zcash';
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'ZEC');
+      break;
+
+    case 'RVN':
+      scheme = 'ravencoin';
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'RVN');
+      break;
+
+    case 'KAS':
+      scheme = 'kaspa';
+      uri = buildBip21LikeURI(scheme, address, amount, 'amount', 'KAS');
+      break;
       
     // Ethereum and ERC-20 tokens
     case 'ETH':
@@ -258,8 +282,8 @@ function buildStandardURI(
     case 'USDC':
     case 'USDCERC20':
       scheme = 'ethereum';
-      // USDC contract address on Ethereum mainnet  
-      const usdcContract = '0xA0b86a33E6417a90ce6b8a82e7C2Ebd9f2F77F78';
+      // USDC contract address on Ethereum mainnet (correct mainnet address)
+      const usdcContract = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
       const usdcAmount = Math.floor(amount * Math.pow(10, 6)); // USDC has 6 decimals
       uri = `${scheme}:${usdcContract}/transfer?address=${address}&uint256=${usdcAmount}`;
       break;
@@ -308,22 +332,47 @@ function buildStandardURI(
       
     // Solana and SPL tokens
     case 'SOL':
+      // Use Solana Pay transfer format for best compatibility
       scheme = 'solana';
-      uri = `${scheme}:${address}?amount=${amt}`;
+      uri = buildSolanaPayURI({
+        recipient: address,
+        amount: amt,
+        label,
+        message,
+        memo: fullRequest?.memo,
+        // no spl-token for native SOL
+        reference: fullRequest?.reference,
+      });
       break;
       
     case 'USDCSOL':
+      // Solana Pay for SPL-USDC
       scheme = 'solana';
-      // USDC SPL token mint address
       const usdcSplMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-      uri = `${scheme}:${address}?amount=${amt}&spl-token=${usdcSplMint}`;
+      uri = buildSolanaPayURI({
+        recipient: address,
+        amount: amt,
+        splToken: usdcSplMint,
+        label,
+        message,
+        memo: fullRequest?.memo,
+        reference: fullRequest?.reference,
+      });
       break;
       
     case 'USDTSOL':
+      // Solana Pay for SPL-USDT
       scheme = 'solana';
-      // USDT SPL token mint address
       const usdtSplMint = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
-      uri = `${scheme}:${address}?amount=${amt}&spl-token=${usdtSplMint}`;
+      uri = buildSolanaPayURI({
+        recipient: address,
+        amount: amt,
+        splToken: usdtSplMint,
+        label,
+        message,
+        memo: fullRequest?.memo,
+        reference: fullRequest?.reference,
+      });
       break;
       
     // Polygon/Matic and Polygon tokens
@@ -490,6 +539,12 @@ function buildStandardURI(
       scheme = 'polkadot';
       uri = `${scheme}:${address}?amount=${amount}`;
       break;
+
+    // Tron native (simple scheme)
+    case 'TRX':
+      scheme = 'tron';
+      uri = `${scheme}:${address}?amount=${amt}`;
+      break;
       
     // Default fallback - before we give up, see if currency is an EVM native we know the chainId for
     default:
@@ -508,7 +563,7 @@ function buildStandardURI(
   }
   
   // Add optional parameters for supported schemes
-  if (scheme !== 'address' && scheme !== 'https') {
+  if (scheme !== 'address' && scheme !== 'https' && scheme !== 'solana') {
     if (label) {
       uri += uri.includes('?') ? '&' : '?';
       uri += `label=${encodeURIComponent(label)}`;
@@ -517,6 +572,7 @@ function buildStandardURI(
       uri += uri.includes('?') ? '&' : '?';
       uri += `message=${encodeURIComponent(message)}`;
     }
+    // For other schemes, we don't handle memo/reference here
   }
   
   return {
@@ -752,4 +808,34 @@ function formatAmountCoin(amount: number, currency: string): string {
 function buildBip21LikeURI(scheme: string, address: string, amount: number, param: string = 'amount', currencyHint?: string): string {
   const amt = formatAmountCoin(amount, currencyHint || scheme.toUpperCase());
   return `${scheme}:${address}?${param}=${amt}`;
+}
+
+// -----------------------------------------------------------------------------
+// Solana Pay helper
+// -----------------------------------------------------------------------------
+function buildSolanaPayURI(params: {
+  recipient: string;
+  amount?: string | number; // as user units string already capped, or number
+  splToken?: string;
+  reference?: string | string[];
+  label?: string;
+  message?: string;
+  memo?: string;
+}): string {
+  let uri = `solana:${params.recipient}`;
+  const qs = new URLSearchParams();
+  if (params.amount !== undefined && params.amount !== null && params.amount !== '') {
+    qs.append('amount', String(params.amount));
+  }
+  if (params.splToken) qs.append('spl-token', params.splToken);
+  if (params.reference) {
+    const refs = Array.isArray(params.reference) ? params.reference : [params.reference];
+    for (const r of refs) qs.append('reference', r);
+  }
+  if (params.label) qs.append('label', params.label);
+  if (params.message) qs.append('message', params.message);
+  if (params.memo) qs.append('memo', params.memo);
+  const q = qs.toString();
+  if (q) uri += `?${q}`;
+  return uri;
 }

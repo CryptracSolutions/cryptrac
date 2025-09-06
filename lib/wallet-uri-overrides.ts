@@ -1361,13 +1361,13 @@ export const WALLET_URI_OVERRIDES =
       "overrides": [
         {
           "wallet": "Phantom",
-          "scheme": "phantom://v1/send?receiver={address}&amount={amount}",
-          "notes": "Phantom requires its proprietary scheme for reliable amount auto-population. See https://docs.phantom.app/integrating/deeplinks-ios-and-android/send-transactions"
+          "scheme": "solana:{address}?amount={amount}",
+          "notes": "Phantom supports Solana Pay URIs (solana:) for transfers; universal links are not required for simple sends."
         },
         {
           "wallet": "Trust Wallet",
-          "scheme": "trust://send?asset=c501&address={address}&amount={amount}",
-          "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+          "scheme": "https://link.trustwallet.com/send?asset=c501&address={address}&amount={amount}",
+          "notes": "Trust Wallet universal link with UAI for Solana (c501)."
         }
       ],
       "requires_extra_id": false,
@@ -1627,13 +1627,13 @@ export const WALLET_URI_OVERRIDES =
       "overrides": [
         {
           "wallet": "Phantom",
-          "scheme": "phantom://v1/send?receiver={address}&amount={amount}&token=Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-          "notes": "Phantom requires its proprietary scheme for reliable amount auto-population. See https://docs.phantom.app/integrating/deeplinks-ios-and-android/send-transactions"
+          "scheme": "solana:{address}?amount={amount}&spl-token=Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+          "notes": "Phantom supports Solana Pay URIs with spl-token parameter."
         },
         {
           "wallet": "Trust Wallet",
-          "scheme": "trust://send?asset=c501_tEs9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB&address={address}&amount={amount}",
-          "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+          "scheme": "https://link.trustwallet.com/send?asset=c501_tEs9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB&address={address}&amount={amount}",
+          "notes": "Trust Wallet universal link for USDT (SPL) using UAI."
         }
       ],
       "requires_extra_id": false,
@@ -1939,13 +1939,13 @@ export const WALLET_URI_OVERRIDES =
       "overrides": [
         {
           "wallet": "Phantom",
-          "scheme": "phantom://v1/send?receiver={address}&amount={amount}&token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-          "notes": "Phantom requires its proprietary scheme for reliable amount auto-population. See https://docs.phantom.app/integrating/deeplinks-ios-and-android/send-transactions"
+          "scheme": "solana:{address}?amount={amount}&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "notes": "Phantom supports Solana Pay URIs with spl-token parameter."
         },
         {
           "wallet": "Trust Wallet",
-          "scheme": "trust://send?asset=c501_tEPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&address={address}&amount={amount}",
-          "notes": "Trust Wallet uses the trust:// scheme and UAI format for assets. See https://developer.trustwallet.com/developer/develop-for-trust/deeplinking"
+          "scheme": "https://link.trustwallet.com/send?asset=c501_tEPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&address={address}&amount={amount}",
+          "notes": "Trust Wallet universal link for USDC (SPL) using UAI."
         }
       ],
       "requires_extra_id": false,
