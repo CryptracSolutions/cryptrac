@@ -18,6 +18,7 @@ This guide explains how the QR code URI generation system is structured, how to 
   - Static mapping of wallet-specific deeplinks per currency.
   - Updated Phantom overrides for Solana to use Solana Pay (`solana:`) instead of deprecated `phantom://`.
   - Trust Wallet links use `https://link.trustwallet.com` where provided for mobile-friendly fallback.
+  - Coinbase Wallet (aka Base Wallet): currently standards-first (BIP-21/EIP-681). Universal links can be added when verified.
 
 - QR Rendering: `app/components/ui/qr-code.tsx`
   - Generates a QR image from the chosen URI (uses QR Server API).
@@ -45,7 +46,7 @@ Wallet overrides are used when a wallet is detected and a known best scheme exis
 - MetaMask: Prefer official `https://metamask.app.link/send/...` formats for native and ERC‑20.
 - Trust Wallet: Prefer `https://link.trustwallet.com/send?asset=...` with UAI format when available.
 - Phantom: Use Solana Pay (`solana:`) for SOL and SPL transfers (universal links are primarily for swap/connect flows).
-- Coinbase Wallet: No special EIP‑681 override, rely on standard and fallback; use BIP‑21 for BTC.
+- Coinbase Wallet: No special EIP‑681 override currently; rely on standard and fallback (BIP‑21 for BTC, EIP‑681 for ETH). Detection supports "Coinbase Wallet" and "Base Wallet".
 - OKX Wallet: Use standard schemes unless a confirmed payment deeplink is provided.
 
 Notes:
@@ -141,5 +142,4 @@ import { QRCode } from '@/app/components/ui/qr-code';
 ## Notes on Exchange Apps
 
 - Exchange deposit QR codes typically present addresses (no amounts) and are app‑controlled.
-- For Binance Pay or proprietary formats, integration usually requires their APIs; use address‑only or standard schemes as fallback in Cryptrac until deeper integrations are approved.
-
+- Binance Pay, Kraken, Gemini, KuCoin, Bybit, Gate.io, Bitget often require proprietary payloads/APIs. Use address‑only or standards as fallback until official deep links are verified and added.

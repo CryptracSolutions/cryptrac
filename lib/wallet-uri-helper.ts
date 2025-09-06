@@ -62,7 +62,7 @@ export function detectWalletHint(): string {
     if (ua.includes('metamask')) return 'MetaMask';
     if (ua.includes('trust')) return 'Trust Wallet';
     if (ua.includes('okx')) return 'OKX Wallet';
-    if (ua.includes('coinbase')) return 'Coinbase Wallet';
+    if (ua.includes('coinbase') || ua.includes('base wallet')) return 'Coinbase Wallet';
   }
   
   return '';
@@ -121,7 +121,7 @@ export function detectAllWallets(): WalletInfo[] {
       name: 'Coinbase Wallet',
       detected: true,
       priority: 4,
-      supportedChains: ['ethereum', 'base', 'polygon', 'arbitrum', 'optimism'],
+      supportedChains: ['bitcoin', 'ethereum', 'base', 'polygon', 'arbitrum', 'optimism'],
       preferredScheme: 'proprietary'
     });
   }

@@ -64,8 +64,10 @@ export async function validateURI(
 async function testWalletCompatibility(uri: string): Promise<Record<string, boolean>> {
   const compatibility: Record<string, boolean> = {};
   compatibility['MetaMask'] = /^(ethereum:|metamask:|https:\/\/metamask\.app\.link)/.test(uri);
-  compatibility['Trust Wallet'] = /^(trust:|bitcoin:|ethereum:|solana:|tron:)/.test(uri);
-  compatibility['Phantom'] = /^(phantom:|solana:|ethereum:)/.test(uri);
-  compatibility['Coinbase Wallet'] = /^(https:\/\/cb\.wallet\.link|ethereum:)/.test(uri);
+  compatibility['Trust Wallet'] = /^(https:\/\/link\.trustwallet\.com|trust:|bitcoin:|ethereum:|solana:|tron:)/.test(uri);
+  compatibility['Phantom'] = /^(solana:|ethereum:)/.test(uri); // prefer standards; deprecated phantom:// excluded
+  compatibility['Coinbase Wallet'] = /^(https:\/\/go\.cb-w\.com|ethereum:|bitcoin:)/.test(uri);
+  compatibility['Ledger Live'] = /^(ledgerlive:|bitcoin:|ethereum:)/.test(uri);
+  compatibility['Trezor Suite'] = /^(https:\/\/suite\.trezor\.io|bitcoin:|ethereum:)/.test(uri);
   return compatibility;
 }

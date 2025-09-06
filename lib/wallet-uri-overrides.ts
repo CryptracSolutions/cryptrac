@@ -1066,8 +1066,8 @@ export const WALLET_URI_OVERRIDES =
       "overrides": [
         {
           "wallet": "Phantom",
-          "scheme": "phantom://v1/send?receiver={address}&amount={amount}&token=HhJpBhRRn4g56VsyLuT8DL5Bv31HkXqsrahTTUCZeZg4",
-          "notes": "Phantom requires its proprietary scheme for reliable amount auto-population. See https://docs.phantom.app/integrating/deeplinks-ios-and-android/send-transactions"
+          "scheme": "solana:{address}?amount={amount}&spl-token=HhJpBhRRn4g56VsyLuT8DL5Bv31HkXqsrahTTUCZeZg4",
+          "notes": "Phantom supports Solana Pay URIs with spl-token parameter."
         },
         {
           "wallet": "Trust Wallet",
@@ -1148,8 +1148,8 @@ export const WALLET_URI_OVERRIDES =
       "overrides": [
         {
           "wallet": "Phantom",
-          "scheme": "phantom://v1/send?receiver={address}&amount={amount}&token=HaP8r3ksG76PhQLTqR8FYBeNiQpejcFbQmiHbg787Ut1",
-          "notes": "Phantom requires its proprietary scheme for reliable amount auto-population. See https://docs.phantom.app/integrating/deeplinks-ios-and-android/send-transactions"
+          "scheme": "solana:{address}?amount={amount}&spl-token=HaP8r3ksG76PhQLTqR8FYBeNiQpejcFbQmiHbg787Ut1",
+          "notes": "Phantom supports Solana Pay URIs with spl-token parameter."
         },
         {
           "wallet": "Trust Wallet",

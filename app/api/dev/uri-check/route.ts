@@ -92,6 +92,7 @@ export async function GET(request: Request) {
       if (!address) issues.push('No wallet configured; using placeholder')
       if (!includesAmountFlag) issues.push('Amount not embedded in URI')
       if (extraIdNeeded && !includesExtraIdFlag) issues.push(`${getExtraIdLabel(upper)} not embedded in URI`)
+      if (/^phantom:\/\//i.test(chosen)) issues.push('Deprecated Phantom scheme found; should use Solana Pay (solana:)')
 
       return {
         code: upper,
