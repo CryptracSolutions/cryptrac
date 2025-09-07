@@ -506,20 +506,6 @@ function SmartTerminalPageContent() {
         `}</style>
       )}
       
-      {/* Dashboard Button - Top Left Corner of Page (only on initial page) */}
-      {step === 'amount' && !paymentLink && (
-        <div className="absolute top-4 left-4 z-20">
-          <Link href="/merchant/dashboard">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 text-xs font-semibold bg-white border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-200 shadow-sm"
-            >
-              Dashboard
-            </Button>
-          </Link>
-        </div>
-      )}
 
       <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
         <div className="w-full max-w-2xl landscape:max-w-6xl">
@@ -527,6 +513,17 @@ function SmartTerminalPageContent() {
         <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
           <CardHeader className="pb-0">
+            {/* Dashboard Button - Top Left of Card (only on initial page) */}
+            {step === 'amount' && !paymentLink && (
+              <div className="flex justify-start mb-2">
+                <Link href="/merchant/dashboard">
+                  <button className="text-[#7f5efd] hover:text-[#9b7cff] transition-colors duration-200 p-1 rounded-md hover:bg-purple-50">
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                </Link>
+              </div>
+            )}
+
             {/* Status Bar */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
