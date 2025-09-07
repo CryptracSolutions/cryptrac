@@ -506,21 +506,23 @@ function SmartTerminalPageContent() {
         `}</style>
       )}
       
-      <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
-        <div className="w-full max-w-2xl landscape:max-w-6xl relative">
-          {/* Dashboard Button - Top Left Corner */}
-          <div className="absolute top-0 left-0 z-10">
-            <Link href="/merchant/dashboard">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs font-semibold bg-white border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-200 shadow-sm"
-              >
-                Dashboard
-              </Button>
-            </Link>
-          </div>
+      {/* Dashboard Button - Top Left Corner of Page (only on initial page) */}
+      {step === 'amount' && !paymentLink && (
+        <div className="absolute top-4 left-4 z-20">
+          <Link href="/merchant/dashboard">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 text-xs font-semibold bg-white border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-200 shadow-sm"
+            >
+              Dashboard
+            </Button>
+          </Link>
+        </div>
+      )}
 
+      <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
+        <div className="w-full max-w-2xl landscape:max-w-6xl">
         {/* Main Card */}
         <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
