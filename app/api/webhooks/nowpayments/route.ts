@@ -739,6 +739,8 @@ export async function POST(request: Request) {
     }
 
     console.log('🔍 Processing webhook for payment ID:', payment_id)
+    console.log('🔍 Webhook order_id:', body.order_id)
+    console.log('🔍 Payment ID type and value:', typeof payment_id, payment_id)
 
     // Create Supabase client
     const supabase = createServerClient(
@@ -754,11 +756,20 @@ export async function POST(request: Request) {
 
     // Find the payment record, with fallbacks for crypto2crypto flows
     let paymentLookupReason = 'by nowpayments_payment_id';
+    console.log('🔍 Searching for transaction with nowpayments_payment_id:', String(payment_id))
+    
     let { data: payment, error: paymentError } = await supabase
       .from('transactions')
       .select('*')
       .eq('nowpayments_payment_id', String(payment_id))
       .single()
+    
+    console.log('🔍 Payment lookup result:', { 
+      found: !!payment, 
+      error: paymentError?.message,
+      payment_id: payment?.id,
+      nowpayments_id: payment?.nowpayments_payment_id 
+    })
 
     if (paymentError || !payment) {
       console.warn('⚠️ No transaction matched webhook payment_id. Trying parent_payment_id/order_id fallbacks', {
@@ -782,6 +793,7 @@ export async function POST(request: Request) {
 
       // Fallback 2: match by order_id
       if ((!payment || paymentError) && body.order_id) {
+        console.log('🔍 Trying order_id fallback with:', String(body.order_id))
         const res = await supabase
           .from('transactions')
           .select('*')
@@ -789,6 +801,12 @@ export async function POST(request: Request) {
           .single()
         payment = res.data as Record<string, unknown> | null
         paymentError = res.error
+        console.log('🔍 Order ID lookup result:', { 
+          found: !!payment, 
+          error: paymentError?.message,
+          payment_id: payment?.id,
+          order_id: payment?.order_id 
+        })
         if (payment && !paymentError) {
           paymentLookupReason = 'by order_id';
         }
