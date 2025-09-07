@@ -844,31 +844,19 @@ function SmartTerminalPageContent() {
                     <>
                     {/* Payment Status */}
                     <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {status === 'confirmed' ? (
-                            <CheckCircle2 className="h-6 w-6 text-green-500 animate-pulse" />
-                          ) : (
+                      {status !== 'confirmed' ? (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
                             <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
-                          )}
-                          <span className="font-semibold text-gray-700">
-                            {status === 'confirmed' ? 'Payment Confirmed!' : 'Awaiting Payment'}
+                            <span className="font-semibold text-gray-700">Awaiting Payment</span>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-[#7f5efd]">
+                            {status.toUpperCase()}
                           </span>
                         </div>
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-xs font-semibold",
-                          status === 'confirmed' 
-                            ? "bg-green-100 text-green-700" 
-                            : status === 'confirming' 
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-purple-100 text-[#7f5efd]"
-                        )}>
-                          {status.toUpperCase()}
-                        </span>
-                      </div>
-                      {status === 'confirmed' && (
-                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {/* Left: Payment Successful */}
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {/* Left: Payment Confirmed */}
                           <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
                             <div className="flex items-center gap-2 justify-center md:justify-start">
                               <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -939,7 +927,20 @@ function SmartTerminalPageContent() {
 
                     {/* QR Code (single) */}
                     {(!needsExtra || extraIdConfirmed) && (
-                      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+                      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 relative">
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm"
+                          onClick={() => {
+                            setPaymentLink(null);
+                            setPaymentData(null);
+                            setInvoiceBreakdown(null);
+                            setStatus('');
+                            setExtraIdConfirmed(false);
+                          }}
+                        >
+                          Change Currency
+                        </button>
                         <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={256} hideDetails />
                         {needsExtra && (
                           <p className="text-xs text-center text-green-600 mt-3">
