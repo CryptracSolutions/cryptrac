@@ -299,11 +299,8 @@ export default function PaymentSuccessPage() {
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="relative mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <CheckCircle className="h-12 w-12 text-green-600" />
-            </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#7f5efd] rounded-full flex items-center justify-center">
-              <CheckCircle className="h-5 w-5 text-white" />
+            <div className="w-24 h-24 bg-gradient-to-br from-[#ede9fe] to-[#ddd6fe] rounded-full flex items-center justify-center mx-auto shadow-lg">
+              <CheckCircle className="h-12 w-12 text-[#7f5efd]" />
             </div>
           </div>
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Confirmed!</h1>
@@ -337,18 +334,18 @@ export default function PaymentSuccessPage() {
           <CardContent className="space-y-6">
             {/* Payment Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
+              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
                 <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount Paid</Label>
-                <p className="font-phonic text-3xl font-medium text-green-600 mb-2">
+                <p className="font-phonic text-3xl font-medium text-[#7f5efd] mb-2">
                   {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
                 </p>
                 <p className="font-phonic text-sm font-normal text-gray-600">
                   ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
                 </p>
               </div>
-              <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
                 <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Method</Label>
-                <p className="font-phonic text-2xl font-normal text-blue-600 mb-2">{paymentData.pay_currency.toUpperCase()}</p>
+                <p className="font-phonic text-2xl font-normal text-[#7f5efd] mb-2">{paymentData.pay_currency.toUpperCase()}</p>
                 <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-semibold">
                   {paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
                 </Badge>
@@ -361,11 +358,11 @@ export default function PaymentSuccessPage() {
             <div className="space-y-4">
               <div>
                 <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Order ID</Label>
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-stretch">
                   <Input
                     value={paymentData.order_id}
                     readOnly
-                    className="font-mono text-sm bg-gray-50"
+                    className="font-mono text-sm bg-gray-50 w-full flex-1"
                   />
                   <Button
                     variant="outline"
@@ -414,11 +411,11 @@ export default function PaymentSuccessPage() {
               {paymentData.tx_hash && (
                 <div>
                   <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Transaction Hash</Label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 items-stretch">
                     <Input
                       value={paymentData.tx_hash}
                       readOnly
-                      className="font-mono text-sm bg-gray-50"
+                      className="font-mono text-sm bg-gray-50 w-full flex-1"
                     />
                     <Button
                       variant="outline"
@@ -447,42 +444,7 @@ export default function PaymentSuccessPage() {
                 </div>
               )}
 
-              {/* Payin Hash */}
-              {paymentData.payin_hash && (
-                <div>
-                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payin Hash (Customer Transaction)</Label>
-                  <div className="flex gap-3">
-                    <Input
-                      value={paymentData.payin_hash}
-                      readOnly
-                      className="font-mono text-sm bg-gray-50"
-                    />
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => copyToClipboard(paymentData.payin_hash!)}
-                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    {getBlockExplorerUrl(paymentData.payin_hash, paymentData.pay_currency) && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => {
-                          const explorerUrl = getBlockExplorerUrl(paymentData.payin_hash!, paymentData.pay_currency)
-                          if (explorerUrl) {
-                            window.open(explorerUrl, '_blank')
-                          }
-                        }}
-                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
+              
 
               {/* Payout Hash */}
               {paymentData.payout_hash && (

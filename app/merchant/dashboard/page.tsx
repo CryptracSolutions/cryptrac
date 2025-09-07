@@ -86,6 +86,7 @@ interface RecentTransaction {
   pay_currency: string;
   status: string;
   created_at: string;
+  payment_link_id: string;
   payment_link_title: string;
 }
 
@@ -130,6 +131,7 @@ export default function MerchantDashboard() {
           pay_currency,
           status,
           created_at,
+          payment_link_id,
           payment_links!inner(title)
         `)
         .eq('merchant_id', merchantId)
@@ -144,6 +146,7 @@ export default function MerchantDashboard() {
         pay_currency: t.pay_currency || t.currency || 'USD',
         status: t.status || 'confirmed',
         created_at: t.created_at,
+        payment_link_id: t.payment_link_id,
         payment_link_title: (t as any).payment_links?.title || 'Payment',
       })));
     } catch (err) {
@@ -167,6 +170,7 @@ export default function MerchantDashboard() {
           pay_currency,
           status,
           created_at,
+          payment_link_id,
           payment_links!inner(title)
         `, { count: 'exact' })
         .eq('merchant_id', merchantId)
@@ -189,6 +193,7 @@ export default function MerchantDashboard() {
           pay_currency: t.pay_currency || t.currency || 'USD',
           status: t.status || 'confirmed',
           created_at: t.created_at,
+          payment_link_id: t.payment_link_id,
           payment_link_title: (t as any).payment_links?.title || 'Payment',
         }))
       );
@@ -543,7 +548,7 @@ export default function MerchantDashboard() {
                   {recentTransactions.map(tx => (
                     <div 
                       key={tx.id} 
-                      onClick={() => router.push(`/merchant/dashboard/payments/${tx.id}`)}
+                      onClick={() => router.push(`/merchant/dashboard/payments/${tx.payment_link_id}`)}
                       className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
                     >
                       <div className="flex items-center gap-4 flex-1">
