@@ -783,14 +783,14 @@ function SmartTerminalPageContent() {
                   
                   return (
                     <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                      <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]">
+                      <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
                         <SelectValue placeholder="All Networks" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
                         <SelectItem value="all" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
                           <div className="flex items-center gap-2">
                             <Globe className="h-4 w-4 text-white" />
-                            <span className="font-medium text-white">All Networks</span>
+                            <span className="font-bold text-white">All Networks</span>
                           </div>
                         </SelectItem>
                         {availableNetworks.map(networkId => {
@@ -802,9 +802,9 @@ function SmartTerminalPageContent() {
                               <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-2">
                                   {getNetworkIcon(networkId)}
-                                  <span className="font-medium text-white">{network.displayName}</span>
+                                  <span className="font-bold text-white">{network.displayName}</span>
                                 </div>
-                                <span className="text-xs text-white/60 bg-white/10 px-1.5 py-0.5 rounded">
+                                <span className="text-xs text-white/60 bg-white/10 px-1.5 py-0.5 rounded ml-4">
                                   {currencyCount}
                                 </span>
                               </div>
@@ -822,7 +822,7 @@ function SmartTerminalPageContent() {
                   Currency
                 </label>
                 <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
-                  <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]">
+                  <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
