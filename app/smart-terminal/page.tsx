@@ -9,7 +9,7 @@ import { Input } from '@/app/components/ui/input';
 import { QRCode } from '@/app/components/ui/qr-code';
 import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, AlertTriangle } from 'lucide-react';
+import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, AlertTriangle, Bitcoin, Coins, Network } from 'lucide-react';
 import { requiresExtraId, getExtraIdLabel, getExtraIdDescription } from '@/lib/extra-id-validation';
 import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder';
 import { formatAddressForQR } from '@/lib/simple-address-formatter';
@@ -746,7 +746,10 @@ function SmartTerminalPageContent() {
               </div>
               {/* Currency Selection - right column continued */}
               <div className="space-y-2 landscape:col-span-1">
-                <label className="text-sm font-semibold text-gray-700">Network</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Network className="h-4 w-4 text-[#7f5efd]" />
+                  Network
+                </label>
                 
                 {/* Network Filter */}
                 {availableCurrencies.length > 0 && (() => {
@@ -755,20 +758,52 @@ function SmartTerminalPageContent() {
                     merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
                   )
                   const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+                  
+                  const getNetworkIcon = (networkId: string) => {
+                    switch (networkId) {
+                      case 'bitcoin': return <Bitcoin className="h-4 w-4 text-orange-500" />
+                      case 'ethereum': return <Coins className="h-4 w-4 text-blue-500" />
+                      case 'binance': return <Coins className="h-4 w-4 text-yellow-500" />
+                      case 'solana': return <Zap className="h-4 w-4 text-purple-500" />
+                      case 'polygon': return <Network className="h-4 w-4 text-purple-600" />
+                      case 'tron': return <Coins className="h-4 w-4 text-red-500" />
+                      case 'ton': return <Network className="h-4 w-4 text-blue-600" />
+                      case 'arbitrum': return <Network className="h-4 w-4 text-blue-400" />
+                      case 'optimism': return <Network className="h-4 w-4 text-red-400" />
+                      case 'base': return <Network className="h-4 w-4 text-blue-500" />
+                      case 'avalanche': return <Network className="h-4 w-4 text-red-600" />
+                      case 'algorand': return <Network className="h-4 w-4 text-gray-600" />
+                      default: return <Network className="h-4 w-4 text-gray-500" />
+                    }
+                  }
+                  
                   return (
                     <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                      <SelectTrigger className="w-full h-10 bg-white border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
+                      <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]">
                         <SelectValue placeholder="All Networks" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Networks</SelectItem>
+                      <SelectContent className="rounded-xl border-purple-200 shadow-lg">
+                        <SelectItem value="all" className="hover:bg-purple-50 rounded-lg transition-colors duration-200">
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-[#7f5efd]" />
+                            <span className="font-medium">All Networks</span>
+                          </div>
+                        </SelectItem>
                         {availableNetworks.map(networkId => {
                           const network = getNetworkInfo(networkId)
                           if (!network) return null
                           const currencyCount = groupedCurrencies.get(networkId)?.length || 0
                           return (
-                            <SelectItem key={networkId} value={networkId}>
-                              {network.displayName} <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
+                            <SelectItem key={networkId} value={networkId} className="hover:bg-purple-50 rounded-lg transition-colors duration-200">
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                  {getNetworkIcon(networkId)}
+                                  <span className="font-medium">{network.displayName}</span>
+                                </div>
+                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                  {currencyCount}
+                                </span>
+                              </div>
                             </SelectItem>
                           )
                         })}
@@ -778,12 +813,15 @@ function SmartTerminalPageContent() {
                 })()}
                 
                 {/* Currency Selection */}
-                <label className="text-sm font-semibold text-gray-700">Currency</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-[#7f5efd]" />
+                  Currency
+                </label>
                 <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
-                  <SelectTrigger className="w-full h-10 bg-white border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
+                  <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl border-purple-200 shadow-lg">
                     {(() => {
                       // Filter currencies based on selected network
                       let filteredCurrencies = availableCurrencies
@@ -798,6 +836,16 @@ function SmartTerminalPageContent() {
                         filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
                       }
                       
+                      const getCurrencyIcon = (currencyCode: string) => {
+                        const code = currencyCode.toUpperCase()
+                        if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-orange-500" />
+                        if (code.includes('USD') || code.includes('DAI')) return <DollarSign className="h-4 w-4 text-green-500" />
+                        if (code === 'ETH' || code.includes('ETH')) return <Coins className="h-4 w-4 text-blue-500" />
+                        if (code === 'SOL') return <Zap className="h-4 w-4 text-purple-500" />
+                        if (code === 'BNB' || code.includes('BNB')) return <Coins className="h-4 w-4 text-yellow-500" />
+                        return <Coins className="h-4 w-4 text-gray-500" />
+                      }
+                      
                       return filteredCurrencies.map((c) => {
                         const displayName = c.name || getCurrencyDisplayName(c.code)
                         const isAvailable = c.enabled
@@ -806,10 +854,29 @@ function SmartTerminalPageContent() {
                             key={c.code}
                             value={c.code}
                             disabled={!isAvailable}
-                            className={cn("hover:bg-purple-50", !isAvailable && "opacity-50 cursor-not-allowed")}
+                            className={cn(
+                              "hover:bg-purple-50 rounded-lg transition-colors duration-200",
+                              !isAvailable && "opacity-50 cursor-not-allowed"
+                            )}
                             title={!isAvailable ? 'Temporarily unavailable' : undefined}
                           >
-                            <span className="font-medium">{c.code.toUpperCase()}</span>
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                {getCurrencyIcon(c.code)}
+                                <span className="font-bold text-gray-900">{c.code.toUpperCase()}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {isAvailable ? (
+                                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                                    Available
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                                    Unavailable
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </SelectItem>
                         )
                       })
