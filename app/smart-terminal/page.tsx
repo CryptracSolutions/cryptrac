@@ -482,7 +482,7 @@ function SmartTerminalPageContent() {
         <style jsx global>{`
           ::-webkit-scrollbar { display: none; }
           html { -ms-overflow-style: none; scrollbar-width: none; }
-          body { overflow: hidden; }
+          body { overflow: auto; } /* Allow scrolling for receipt entry and buttons */
           
           /* Hide browser UI in fullscreen */
           :fullscreen {
@@ -517,19 +517,11 @@ function SmartTerminalPageContent() {
                   {merchantSettings ? (isLocked ? 'Customer Mode - Locked' : 'Terminal Active') : 'Loading...'}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
-                {isLocked && (
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-                    <span className="text-xs text-orange-600 font-medium">LOCKED</span>
-                  </div>
-                )}
-                {device && (
-                  <div className="text-xs text-gray-500">
-                    Device ID: {device.id.slice(0, 8)}
-                  </div>
-                )}
-              </div>
+              {device && (
+                <div className="text-xs text-gray-500">
+                  Device ID: {device.id.slice(0, 8)}
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">

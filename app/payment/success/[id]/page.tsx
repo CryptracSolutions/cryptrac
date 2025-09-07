@@ -356,13 +356,13 @@ export default function PaymentSuccessPage() {
 
             {/* Transaction Details */}
             <div className="space-y-4">
-              <div>
-                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Order ID</Label>
-                <div className="flex gap-3 items-stretch">
+              <div className="text-center">
+                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block text-center">Order ID</Label>
+                <div className="flex gap-3 items-stretch justify-center">
                   <Input
                     value={paymentData.order_id}
                     readOnly
-                    className="font-mono text-sm bg-gray-50 w-full flex-1"
+                    className="font-mono text-sm bg-gray-50 w-full flex-1 max-w-3xl text-center"
                   />
                   <Button
                     variant="outline"
@@ -409,13 +409,13 @@ export default function PaymentSuccessPage() {
 
               {/* Transaction Hash */}
               {paymentData.tx_hash && (
-                <div>
-                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Transaction Hash</Label>
-                  <div className="flex gap-3 items-stretch">
+                <div className="text-center">
+                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block text-center">Transaction Hash</Label>
+                  <div className="flex gap-3 items-stretch justify-center">
                     <Input
                       value={paymentData.tx_hash}
                       readOnly
-                      className="font-mono text-sm bg-gray-50 w-full flex-1"
+                      className="font-mono text-sm bg-gray-50 w-full flex-1 max-w-3xl text-center"
                     />
                     <Button
                       variant="outline"
@@ -496,16 +496,15 @@ export default function PaymentSuccessPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Email Receipt */}
-            <div>
-              <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Email Receipt</Label>
-              <div className="flex gap-3">
+            <div className="text-center">
+              <div className="flex gap-3 justify-center">
                 <Input
                   type="email"
                   placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={emailReceiptSent}
-                  className="flex-1"
+                  className="w-full max-w-md"
                 />
                 <Button
                   onClick={sendEmailReceipt}
@@ -534,7 +533,7 @@ export default function PaymentSuccessPage() {
                 </div>
               )}
             </div>
-
+            
             <div className="text-center">
               <p className="font-phonic text-sm font-normal text-gray-500">
                 Receipts include complete transaction details for your records
@@ -575,24 +574,7 @@ export default function PaymentSuccessPage() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <div className="text-center">
-                      <div className="bg-gradient-to-r from-[#f5f3ff] to-purple-50 rounded-lg p-8 border border-[#ede9fe]">
-            <h3 className="font-phonic text-xl font-normal text-gray-900 mb-3">Thank you for using Cryptrac!</h3>
-            <p className="font-phonic text-base font-normal text-gray-600 mb-6">
-              Your payment has been processed securely and efficiently using cryptocurrency technology.
-            </p>
-            <Button 
-              onClick={() => window.location.href = '/'} 
-              variant="outline" 
-              size="lg"
-              className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
-            >
-              Return Home
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        </div>
+        {/* Footer removed as requested */}
       </div>
     </div>
   )
