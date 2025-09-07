@@ -515,10 +515,10 @@ function SmartTerminalPageContent() {
           <CardHeader className="pb-0">
             {/* Dashboard Button - Top Left of Card (only on initial page) */}
             {step === 'amount' && !paymentLink && (
-              <div className="flex justify-start mb-2">
+              <div className="flex justify-start mb-1">
                 <Link href="/merchant/dashboard">
-                  <button className="text-[#7f5efd] hover:text-[#9b7cff] transition-colors duration-200 p-1 rounded-md hover:bg-purple-50">
-                    <ArrowLeft className="h-4 w-4" />
+                  <button className="text-[#7f5efd] hover:text-[#9b7cff] transition-colors duration-200 p-1.5 rounded-md hover:bg-purple-50">
+                    <ArrowLeft className="h-5 w-5" />
                   </button>
                 </Link>
               </div>
