@@ -761,19 +761,23 @@ function SmartTerminalPageContent() {
                   
                   const getNetworkIcon = (networkId: string) => {
                     switch (networkId) {
-                      case 'bitcoin': return <Bitcoin className="h-4 w-4 text-orange-500" />
-                      case 'ethereum': return <Coins className="h-4 w-4 text-blue-500" />
-                      case 'binance': return <Coins className="h-4 w-4 text-yellow-500" />
-                      case 'solana': return <Zap className="h-4 w-4 text-purple-500" />
-                      case 'polygon': return <Network className="h-4 w-4 text-purple-600" />
-                      case 'tron': return <Coins className="h-4 w-4 text-red-500" />
-                      case 'ton': return <Network className="h-4 w-4 text-blue-600" />
-                      case 'arbitrum': return <Network className="h-4 w-4 text-blue-400" />
-                      case 'optimism': return <Network className="h-4 w-4 text-red-400" />
-                      case 'base': return <Network className="h-4 w-4 text-blue-500" />
-                      case 'avalanche': return <Network className="h-4 w-4 text-red-600" />
-                      case 'algorand': return <Network className="h-4 w-4 text-gray-600" />
-                      default: return <Network className="h-4 w-4 text-gray-500" />
+                      case 'bitcoin': return <Bitcoin className="h-4 w-4 text-white" />
+                      case 'ethereum': return <Zap className="h-4 w-4 text-white" />
+                      case 'binance': return <TrendingUp className="h-4 w-4 text-white" />
+                      case 'solana': return <Zap className="h-4 w-4 text-white" />
+                      case 'polygon': return <Network className="h-4 w-4 text-white" />
+                      case 'tron': return <Globe className="h-4 w-4 text-white" />
+                      case 'ton': return <Smartphone className="h-4 w-4 text-white" />
+                      case 'arbitrum': return <TrendingUp className="h-4 w-4 text-white" />
+                      case 'optimism': return <CheckCircle2 className="h-4 w-4 text-white" />
+                      case 'base': return <DollarSign className="h-4 w-4 text-white" />
+                      case 'avalanche': return <Network className="h-4 w-4 text-white" />
+                      case 'algorand': return <Coins className="h-4 w-4 text-white" />
+                      case 'litecoin': return <Coins className="h-4 w-4 text-white" />
+                      case 'cardano': return <Coins className="h-4 w-4 text-white" />
+                      case 'polkadot': return <Network className="h-4 w-4 text-white" />
+                      case 'chainlink': return <Globe className="h-4 w-4 text-white" />
+                      default: return <Network className="h-4 w-4 text-white" />
                     }
                   }
                   
@@ -782,11 +786,11 @@ function SmartTerminalPageContent() {
                       <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]">
                         <SelectValue placeholder="All Networks" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-purple-200 shadow-lg">
-                        <SelectItem value="all" className="hover:bg-purple-50 rounded-lg transition-colors duration-200">
+                      <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
+                        <SelectItem value="all" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
                           <div className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-[#7f5efd]" />
-                            <span className="font-medium">All Networks</span>
+                            <Globe className="h-4 w-4 text-white" />
+                            <span className="font-medium text-white">All Networks</span>
                           </div>
                         </SelectItem>
                         {availableNetworks.map(networkId => {
@@ -794,13 +798,13 @@ function SmartTerminalPageContent() {
                           if (!network) return null
                           const currencyCount = groupedCurrencies.get(networkId)?.length || 0
                           return (
-                            <SelectItem key={networkId} value={networkId} className="hover:bg-purple-50 rounded-lg transition-colors duration-200">
+                            <SelectItem key={networkId} value={networkId} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
                               <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-2">
                                   {getNetworkIcon(networkId)}
-                                  <span className="font-medium">{network.displayName}</span>
+                                  <span className="font-medium text-white">{network.displayName}</span>
                                 </div>
-                                <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                <span className="text-xs text-white/60 bg-white/10 px-1.5 py-0.5 rounded">
                                   {currencyCount}
                                 </span>
                               </div>
@@ -821,7 +825,7 @@ function SmartTerminalPageContent() {
                   <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-purple-200 shadow-lg">
+                  <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
                     {(() => {
                       // Filter currencies based on selected network
                       let filteredCurrencies = availableCurrencies
@@ -838,12 +842,30 @@ function SmartTerminalPageContent() {
                       
                       const getCurrencyIcon = (currencyCode: string) => {
                         const code = currencyCode.toUpperCase()
-                        if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-orange-500" />
-                        if (code.includes('USD') || code.includes('DAI')) return <DollarSign className="h-4 w-4 text-green-500" />
-                        if (code === 'ETH' || code.includes('ETH')) return <Coins className="h-4 w-4 text-blue-500" />
-                        if (code === 'SOL') return <Zap className="h-4 w-4 text-purple-500" />
-                        if (code === 'BNB' || code.includes('BNB')) return <Coins className="h-4 w-4 text-yellow-500" />
-                        return <Coins className="h-4 w-4 text-gray-500" />
+                        // Bitcoin
+                        if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-white" />
+                        // Stablecoins
+                        if (code.includes('USDT')) return <DollarSign className="h-4 w-4 text-white" />
+                        if (code.includes('USDC')) return <DollarSign className="h-4 w-4 text-white" />
+                        if (code.includes('DAI')) return <DollarSign className="h-4 w-4 text-white" />
+                        if (code.includes('PYUSD')) return <DollarSign className="h-4 w-4 text-white" />
+                        if (code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-white" />
+                        // Major cryptocurrencies
+                        if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-white" />
+                        if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-white" />
+                        if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-white" />
+                        if (code === 'MATIC') return <Network className="h-4 w-4 text-white" />
+                        if (code === 'TRX') return <Globe className="h-4 w-4 text-white" />
+                        if (code === 'TON') return <Smartphone className="h-4 w-4 text-white" />
+                        if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-white" />
+                        if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-white" />
+                        if (code === 'AVAX') return <Network className="h-4 w-4 text-white" />
+                        if (code === 'ALGO') return <Coins className="h-4 w-4 text-white" />
+                        if (code === 'LTC') return <Coins className="h-4 w-4 text-white" />
+                        if (code === 'ADA') return <Coins className="h-4 w-4 text-white" />
+                        if (code === 'DOT') return <Network className="h-4 w-4 text-white" />
+                        if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
+                        return <Coins className="h-4 w-4 text-white" />
                       }
                       
                       return filteredCurrencies.map((c) => {
@@ -855,27 +877,15 @@ function SmartTerminalPageContent() {
                             value={c.code}
                             disabled={!isAvailable}
                             className={cn(
-                              "hover:bg-purple-50 rounded-lg transition-colors duration-200",
+                              "hover:bg-white/10 rounded-lg transition-colors duration-200",
                               !isAvailable && "opacity-50 cursor-not-allowed"
                             )}
                             title={!isAvailable ? 'Temporarily unavailable' : undefined}
                           >
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center gap-2">
-                                {getCurrencyIcon(c.code)}
-                                <span className="font-bold text-gray-900">{c.code.toUpperCase()}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isAvailable ? (
-                                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                                    Available
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
-                                    Unavailable
-                                  </span>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-2">
+                              {getCurrencyIcon(c.code)}
+                              <span className="font-bold text-white">{c.code.toUpperCase()}</span>
+                              <span className="text-sm text-white/80">{displayName}</span>
                             </div>
                           </SelectItem>
                         )
