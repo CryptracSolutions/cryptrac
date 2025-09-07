@@ -103,6 +103,8 @@ export async function GET(
           let mappedStatus = nowPaymentsData.payment_status;
           if (nowPaymentsData.payment_status === 'sending') {
             mappedStatus = 'confirming';
+          } else if (nowPaymentsData.payment_status === 'partially_paid') {
+            mappedStatus = 'confirming';
           }
 
           // Check if status has changed

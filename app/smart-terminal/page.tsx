@@ -834,25 +834,6 @@ function SmartTerminalPageContent() {
                               {status.toUpperCase()}
                             </span>
                           </div>
-                          
-                          {/* Connection Status for POS */}
-                          <div className="mt-2 pt-2 border-t border-purple-100 flex items-center gap-2">
-                            <div className={cn(
-                              "w-2 h-2 rounded-full",
-                              connectionStatus.connected 
-                                ? "bg-green-500 animate-pulse" 
-                                : connectionStatus.reconnecting 
-                                ? "bg-yellow-500 animate-spin" 
-                                : "bg-red-500"
-                            )} />
-                            <span className="text-xs text-gray-600">
-                              {connectionStatus.connected 
-                                ? `Live updates (${connectionStatus.method})` 
-                                : connectionStatus.reconnecting 
-                                ? 'Reconnecting...' 
-                                : 'Offline mode'}
-                            </span>
-                          </div>
                           {/* Change Currency button (compact) */}
                           <div className="mt-2 flex justify-end">
                             <button

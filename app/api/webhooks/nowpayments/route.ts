@@ -113,7 +113,7 @@ function validateWebhookPayload(body: Record<string, unknown>): { isValid: boole
   }
   
   // Validate payment_status is a known value
-  const validStatuses = ['waiting', 'confirming', 'confirmed', 'finished', 'failed', 'refunded', 'expired', 'sending']
+  const validStatuses = ['waiting', 'confirming', 'confirmed', 'finished', 'failed', 'refunded', 'expired', 'sending', 'partially_paid']
   if (body.payment_status && !validStatuses.includes(body.payment_status as string)) {
     errors.push(`Invalid payment_status: ${body.payment_status}`)
   }
@@ -828,6 +828,9 @@ export async function POST(request: Request) {
         break
       case 'waiting':
         newStatus = 'pending'
+        break
+      case 'partially_paid':
+        newStatus = 'confirming' // Treat partial payment as confirming
         break
       case 'failed':
         newStatus = 'failed'

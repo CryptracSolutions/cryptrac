@@ -270,6 +270,7 @@ export default function PaymentPage() {
         // Redirect to success page
         router.push(`/payment/success/${paymentLink?.id}?payment_id=${status.payment_id}`)
       }
+      // Note: 'partially_paid' is mapped to 'confirming' on the backend, so no redirect needed
     },
     fallbackToPolling: true,
     pollingInterval: 3000 // Faster polling as fallback
@@ -581,6 +582,7 @@ export default function PaymentPage() {
       case 'waiting':
         return <Clock className="h-4 w-4 text-yellow-500" />
       case 'confirming':
+      case 'partially_paid':
         return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
       case 'confirmed':
       case 'sending':
@@ -600,6 +602,7 @@ export default function PaymentPage() {
       case 'waiting':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
       case 'confirming':
+      case 'partially_paid':
         return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'confirmed':
       case 'sending':
@@ -620,6 +623,8 @@ export default function PaymentPage() {
         return 'Waiting for Payment'
       case 'confirming':
         return 'Confirming Payment'
+      case 'partially_paid':
+        return 'Partial Payment Received'
       case 'confirmed':
         return 'Payment Confirmed'
       case 'sending':
@@ -925,38 +930,12 @@ export default function PaymentPage() {
                             "px-3 py-1 rounded-full text-xs font-semibold",
                             currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'sending' 
                               ? "bg-green-100 text-green-700" 
-                              : currentStatus.payment_status === 'confirming' 
+                              : currentStatus.payment_status === 'confirming' || currentStatus.payment_status === 'partially_paid'
                               ? "bg-yellow-100 text-yellow-700"
                               : "bg-purple-100 text-[#7f5efd]"
                           )}>
                             {currentStatus.payment_status.toUpperCase()}
                           </span>
-                        </div>
-                        
-                        {/* Connection Status Indicator */}
-                        <div className="mt-3 pt-3 border-t border-purple-100 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={cn(
-                              "w-2 h-2 rounded-full",
-                              connectionStatus.connected 
-                                ? "bg-green-500 animate-pulse" 
-                                : connectionStatus.reconnecting 
-                                ? "bg-yellow-500 animate-spin" 
-                                : "bg-red-500"
-                            )} />
-                            <span className="text-xs text-gray-600">
-                              {connectionStatus.connected 
-                                ? `Live updates (${connectionStatus.method})` 
-                                : connectionStatus.reconnecting 
-                                ? 'Reconnecting...' 
-                                : 'Connection lost'}
-                            </span>
-                          </div>
-                          {connectionStatus.lastUpdate && (
-                            <span className="text-xs text-gray-500">
-                              Updated {new Date(connectionStatus.lastUpdate).toLocaleTimeString()}
-                            </span>
-                          )}
                         </div>
                       </div>
                     )}
