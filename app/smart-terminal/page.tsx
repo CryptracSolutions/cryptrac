@@ -866,6 +866,57 @@ function SmartTerminalPageContent() {
                           {status.toUpperCase()}
                         </span>
                       </div>
+                      {status === 'confirmed' && (
+                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {/* Left: Payment Successful */}
+                          <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                            <div className="flex items-center gap-2 justify-center md:justify-start">
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              <div className="text-center md:text-left">
+                                <p className="font-semibold text-green-800 leading-tight">Payment Confirmed</p>
+                                <p className="text-xs text-green-600">Transaction has been confirmed</p>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Right: Send Receipt */}
+                          <div className="bg-white p-3 rounded-lg border border-gray-200">
+                            <div className="flex gap-2 justify-center md:justify-end">
+                              <Input 
+                                placeholder="Customer email address" 
+                                value={receipt.email} 
+                                onChange={e=>setReceipt({...receipt, email:e.target.value})} 
+                                aria-label="receipt email"
+                                className="h-10 bg-white border-2 border-gray-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs"
+                              />
+                              <Button 
+                                onClick={sendEmailReceipt} 
+                                disabled={!receipt.email.trim() || receipt.sent}
+                                className={cn(
+                                  "h-10 px-4 font-semibold rounded-lg transition-all duration-200",
+                                  receipt.sent 
+                                    ? "bg-green-600 hover:bg-green-700 text-white" 
+                                    : "bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                                )}
+                              >
+                                {receipt.sent ? (
+                                  <>
+                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    Sent
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Send
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                            {receipt.sent && (
+                              <p className="mt-2 text-center text-xs text-green-700">Receipt sent to {receipt.email}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Pre-send confirmation for tag/memo */}
@@ -977,48 +1028,6 @@ function SmartTerminalPageContent() {
               {/* Success Actions */}
               {status === 'confirmed' && (
                 <div className="space-y-4 w-full">
-                  {/* Success Message */}
-                  <div className="bg-green-50 border border-green-200 p-4 rounded-xl text-center">
-                    <CheckCircle2 className="h-6 w-6 text-green-600 mx-auto" />
-                    <p className="font-semibold text-green-800 mt-2">Payment Successful!</p>
-                    <p className="text-sm text-green-600">Transaction has been confirmed</p>
-                  </div>
-
-                  {/* Receipt Email */}
-                  <div className="bg-white p-4 rounded-xl border border-gray-200 text-center">
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block text-center">Send Receipt</label>
-                    <div className="flex gap-2 justify-center">
-                      <Input 
-                        placeholder="Customer email address" 
-                        value={receipt.email} 
-                        onChange={e=>setReceipt({...receipt, email:e.target.value})} 
-                        aria-label="receipt email"
-                        className="h-12 bg-white border-2 border-gray-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-md"
-                      />
-                      <Button 
-                        onClick={sendEmailReceipt} 
-                        disabled={!receipt.email.trim() || receipt.sent}
-                        className={cn(
-                          "h-12 px-6 font-semibold rounded-lg transition-all duration-200",
-                          receipt.sent 
-                            ? "bg-green-600 hover:bg-green-700 text-white" 
-                            : "bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
-                        )}
-                      >
-                        {receipt.sent ? (
-                          <>
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Receipt Sent!
-                          </>
-                        ) : (
-                          <>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Send
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
                   {/* New Sale Button */}
                   <Button 
                     onClick={()=>{
