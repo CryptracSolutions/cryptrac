@@ -378,6 +378,14 @@ export function useRealTimePaymentStatus({
     return disconnect
   }, [enabled, paymentId]) // Remove function dependencies
 
+  // Perform an immediate status fetch to avoid waiting solely on realtime
+  useEffect(() => {
+    if (enabled && paymentId) {
+      // Fire and forget; errors handled inside pollPaymentStatus
+      pollPaymentStatus()
+    }
+  }, [enabled, paymentId, pollPaymentStatus])
+
   // Cleanup on unmount
   useEffect(() => {
     return disconnect
