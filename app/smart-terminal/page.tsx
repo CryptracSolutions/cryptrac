@@ -552,7 +552,7 @@ function SmartTerminalPageContent() {
               </div>
               {/* Price Breakdown - positioned in sidebar for landscape */}
               <div className="landscape:col-span-1 landscape:space-y-4">
-                {(baseAmount > 0 || tax || chargeFee) && (
+                {baseAmount > 0 && (
                   <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200 text-sm space-y-1" aria-live="polite">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Subtotal</span>

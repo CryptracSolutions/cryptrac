@@ -10,31 +10,25 @@ async function broadcastPaymentUpdate(
   try {
     console.log(`📡 Broadcasting real-time update for payment: ${paymentId}`)
 
-    const channel = supabase.channel(`payment-${paymentId}`)
-    const subStatus = await channel.subscribe((status: string) => {
-      console.log(`📡 Server channel subscribe status for ${paymentId}:`, status)
-    })
-
-    if (subStatus !== 'SUBSCRIBED') {
-      console.warn('⚠️ Failed to subscribe to channel before broadcast:', subStatus)
-    }
-
-    const { error: channelError } = await channel.send({
-      type: 'broadcast',
-      event: 'payment_status_update',
-      payload: {
-        payment_id: paymentId,
-        status: updateData.status,
-        tx_hash: updateData.tx_hash,
-        payin_hash: updateData.payin_hash,
-        payout_hash: updateData.payout_hash,
-        amount_received: updateData.amount_received,
-        currency_received: updateData.currency_received,
-        merchant_receives: updateData.merchant_receives,
-        payout_currency: updateData.payout_currency,
-        timestamp: new Date().toISOString()
-      }
-    })
+    // Use HTTP broadcast API; no server-side subscribe needed
+    const { error: channelError } = await supabase
+      .channel(`payment-${paymentId}`)
+      .send({
+        type: 'broadcast',
+        event: 'payment_status_update',
+        payload: {
+          payment_id: paymentId,
+          status: updateData.status,
+          tx_hash: updateData.tx_hash,
+          payin_hash: updateData.payin_hash,
+          payout_hash: updateData.payout_hash,
+          amount_received: updateData.amount_received,
+          currency_received: updateData.currency_received,
+          merchant_receives: updateData.merchant_receives,
+          payout_currency: updateData.payout_currency,
+          timestamp: new Date().toISOString()
+        }
+      })
 
     if (channelError) {
       console.warn('⚠️ Error broadcasting payment update:', channelError)
@@ -42,11 +36,6 @@ async function broadcastPaymentUpdate(
       console.log('✅ Real-time broadcast sent successfully')
     }
 
-    try {
-      await channel.unsubscribe()
-    } catch (unsubErr) {
-      console.warn('⚠️ Error unsubscribing server broadcast channel:', unsubErr)
-    }
   } catch (error) {
     console.error('❌ Error in broadcastPaymentUpdate:', error)
   }

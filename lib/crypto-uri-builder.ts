@@ -20,8 +20,18 @@ export interface URIResult {
   formattedAmount: string
 }
 
+// Round UP to avoid underpayment due to wallet truncation
+function ceilToDecimals(value: number, decimals: number): number {
+  if (!Number.isFinite(value)) return 0
+  const factor = Math.pow(10, decimals)
+  // Add a tiny epsilon to protect against floating point artifacts that could round down
+  return Math.ceil((value + Number.EPSILON) * factor) / factor
+}
+
 export function formatAmountForDisplay(amount: number): string {
-  return Number.isFinite(amount) ? amount.toFixed(6) : '0.000000'
+  if (!Number.isFinite(amount)) return '0.00000'
+  const roundedUp = ceilToDecimals(amount, 5)
+  return roundedUp.toFixed(5)
 }
 
 export function buildCryptoPaymentURI(request: CryptoPaymentRequest): URIResult {
@@ -35,8 +45,7 @@ export function buildCryptoPaymentURI(request: CryptoPaymentRequest): URIResult 
     includesExtraId: !!(needsExtraId && extraId),
     scheme: 'address',
     fallbackAddress: address,
-    roundedAmount: amount,
+    roundedAmount: ceilToDecimals(amount, 5),
     formattedAmount: formatAmountForDisplay(amount),
   }
 }
-
