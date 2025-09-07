@@ -9,7 +9,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown, ShoppingBag } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
@@ -921,38 +921,32 @@ export default function PaymentPage() {
 
                 {/* Payment Details */}
                 {feeBreakdown && (
-                  <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100 space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Base Amount</span>
-                      <span className="font-medium text-gray-900">${feeBreakdown.baseAmount.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                  <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100" aria-live="polite">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
+                      <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
                     </div>
-                    {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
-                      <>
-                        {paymentLink.tax_rates.map((rate, index) => (
-                          <div key={index} className="flex justify-between text-emerald-600">
-                            <span>{rate.label} ({rate.percentage}%)</span>
-                            <span className="font-medium">+${(feeBreakdown.baseAmount * (rate.percentage / 100)).toFixed(2)}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between font-semibold text-emerald-600 border-t border-purple-100 pt-2">
-                          <span>Total Tax</span>
-                          <span>+${feeBreakdown.taxAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-semibold border-t border-purple-100 pt-2">
-                          <span className="text-gray-600">Subtotal with Tax</span>
-                          <span className="text-gray-900">${feeBreakdown.subtotalWithTax.toFixed(2)}</span>
-                        </div>
-                      </>
-                    )}
-                    {feeBreakdown.platformFee > 0 && (
-                      <div className="flex justify-between text-blue-600">
-                        <span>Gateway Fee ({((paymentLink.fee_percentage || 0) * 100).toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })}%)</span>
-                        <span className="font-medium">+${feeBreakdown.platformFee.toFixed(2)}</span>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-semibold text-gray-900">${feeBreakdown.baseAmount.toFixed(2)}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between font-bold text-base border-t border-purple-100 pt-2">
-                      <span className="text-gray-700">Total Amount</span>
-                      <span className="text-[#7f5efd]">${feeBreakdown.customerTotal.toFixed(2)} {paymentLink.currency.toUpperCase()}</span>
+                      {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
+                        <div className="flex justify-between items-center text-[#7f5efd]">
+                          <span>Tax</span>
+                          <span className="font-medium">+${feeBreakdown.taxAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {feeBreakdown.platformFee > 0 && (
+                        <div className="flex justify-between items-center text-[#7f5efd]">
+                          <span>Gateway fee</span>
+                          <span className="font-medium">+${feeBreakdown.platformFee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center font-bold border-t border-purple-100 pt-1">
+                        <span className="text-gray-700">Total</span>
+                        <span className="text-[#7f5efd]">${feeBreakdown.customerTotal.toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1128,7 +1122,6 @@ export default function PaymentPage() {
                         <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-56 h-56 mx-auto mb-3" />
-                          <p className="text-sm text-gray-600">Scan with your crypto wallet app</p>
                           {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
                             <p className="text-xs text-green-600 mt-1">
                               ✓ {getExtraIdLabel(paymentData.pay_currency)} included in QR code

@@ -83,7 +83,10 @@ interface RecentTransaction {
   id: string;
   amount: number;
   currency: string;
+  pay_currency: string;
+  status: string;
   created_at: string;
+  payment_link_title: string;
 }
 
 export default function MerchantDashboard() {
@@ -120,13 +123,29 @@ export default function MerchantDashboard() {
 
       const { data: txs } = await supabase
         .from('transactions')
-        .select('id, amount, currency, created_at')
+        .select(`
+          id, 
+          amount, 
+          currency, 
+          pay_currency,
+          status,
+          created_at,
+          payment_links!inner(title)
+        `)
         .eq('merchant_id', merchantId)
         .eq('status', 'confirmed')
         .gt('created_at', lastSeen)
         .order('created_at', { ascending: false });
 
-      setNewPayments(txs || []);
+      setNewPayments((txs || []).map(t => ({
+        id: t.id,
+        amount: Number(t.amount || 0),
+        currency: t.currency || 'USD',
+        pay_currency: t.pay_currency || t.currency || 'USD',
+        status: t.status || 'confirmed',
+        created_at: t.created_at,
+        payment_link_title: (t as any).payment_links?.title || 'Payment',
+      })));
     } catch (err) {
       console.error('Failed to fetch new payments:', err);
     }
@@ -141,7 +160,15 @@ export default function MerchantDashboard() {
 
       const { data: transactions, count: paymentsCount } = await supabase
         .from('transactions')
-        .select('id, amount, currency, created_at', { count: 'exact' })
+        .select(`
+          id, 
+          amount, 
+          currency, 
+          pay_currency,
+          status,
+          created_at,
+          payment_links!inner(title)
+        `, { count: 'exact' })
         .eq('merchant_id', merchantId)
         .in('status', ['confirmed', 'finished'])
         .order('created_at', { ascending: false });
@@ -159,7 +186,10 @@ export default function MerchantDashboard() {
           id: t.id,
           amount: Number(t.amount || 0),
           currency: t.currency || 'USD',
+          pay_currency: t.pay_currency || t.currency || 'USD',
+          status: t.status || 'confirmed',
           created_at: t.created_at,
+          payment_link_title: (t as any).payment_links?.title || 'Payment',
         }))
       );
 
@@ -327,38 +357,33 @@ export default function MerchantDashboard() {
           
         </div>
 
-        {/* Enhanced New Payments Alert */}
+        {/* Compact New Payments Notification */}
         {newPayments.length > 0 && (
-          <Alert className="border-green-200 bg-green-50 shadow-lg">
-            <AlertDescription>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                  <span className="font-phonic text-base font-medium text-green-900">
-                    You have {newPayments.length} new payment{newPayments.length > 1 ? 's' : ''}!
+          <div className="relative">
+            <div className="flex items-center justify-between p-4 bg-[#7f5efd]/5 border border-[#7f5efd]/20 rounded-xl shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-[#7f5efd] rounded-full">
+                  <span className="font-phonic text-sm font-medium text-white">
+                    {newPayments.length}
                   </span>
                 </div>
-                <Button size="sm" variant="default" onClick={markPaymentsSeen}>
-                  Mark as seen
+                <div>
+                  <p className="font-phonic text-sm font-medium text-gray-900">
+                    New payment{newPayments.length > 1 ? 's' : ''} received
+                  </p>
+                  <p className="font-phonic text-xs text-gray-600">
+                    ${newPayments.reduce((sum, p) => sum + p.amount, 0).toFixed(2)} total
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="ghost" onClick={markPaymentsSeen} className="text-[#7f5efd] hover:bg-[#7f5efd]/10">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Mark seen
                 </Button>
               </div>
-              <ul className="mt-4 space-y-2">
-                {newPayments.map(p => (
-                  <li key={p.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="h-5 w-5 text-green-600" />
-                      <span className="font-phonic font-medium text-green-900">
-                        {formatCurrency(p.amount, p.currency)}
-                      </span>
-                    </div>
-                    <span className="font-phonic text-sm text-green-700">
-                      {new Date(p.created_at).toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
+            </div>
+          </div>
         )}
 
         {/* Enhanced Trial Banner */}
@@ -440,7 +465,7 @@ export default function MerchantDashboard() {
             <CardContent className="space-y-4">
               <Button 
                 onClick={() => router.push('/merchant/dashboard/payments/create')}
-                className="w-full justify-start h-auto p-6"
+                className="w-full justify-start h-auto p-6 hover:bg-gray-50 transition-colors"
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
@@ -456,7 +481,7 @@ export default function MerchantDashboard() {
 
               <Button
                 onClick={() => router.push('/smart-terminal')}
-                className="w-full justify-start h-auto p-6"
+                className="w-full justify-start h-auto p-6 hover:bg-gray-50 transition-colors"
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
@@ -472,7 +497,7 @@ export default function MerchantDashboard() {
 
               <Button
                 onClick={() => router.push('/merchant/subscriptions/create')}
-                className="w-full justify-start h-auto p-6"
+                className="w-full justify-start h-auto p-6 hover:bg-gray-50 transition-colors"
                 variant="outline"
               >
                 <div className="flex items-center gap-4">
@@ -516,17 +541,38 @@ export default function MerchantDashboard() {
               ) : (
                 <div className="space-y-4">
                   {recentTransactions.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                    <div 
+                      key={tx.id} 
+                      onClick={() => router.push(`/merchant/dashboard/payments/${tx.id}`)}
+                      className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg group-hover:bg-[#7f5efd]/20 transition-colors">
                           <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                         </div>
-                        <div>
-                          <p className="font-phonic text-lg font-medium">{formatCurrency(tx.amount, tx.currency)}</p>
-                          <p className="font-phonic text-sm text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-phonic text-lg font-medium">{formatCurrency(tx.amount, tx.currency)}</p>
+                            {tx.pay_currency !== tx.currency && (
+                              <span className="font-phonic text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                paid in {tx.pay_currency}
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-phonic text-sm font-medium text-gray-700 mb-0.5">{tx.payment_link_title}</p>
+                          <p className="font-phonic text-xs text-gray-500">
+                            {new Date(tx.created_at).toLocaleDateString()} at {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
                         </div>
                       </div>
-                      <span className="font-phonic text-sm font-normal text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{tx.currency}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-phonic text-sm font-normal text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{tx.currency}</span>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
