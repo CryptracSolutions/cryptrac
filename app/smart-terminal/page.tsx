@@ -901,14 +901,11 @@ function SmartTerminalPageContent() {
                                 ) : (
                                   <>
                                     <Mail className="h-4 w-4 mr-2" />
-                                    Send
+                                    Email Receipt
                                   </>
                                 )}
                               </Button>
                             </div>
-                            {receipt.sent && (
-                              <p className="mt-2 text-center text-xs text-green-700">Receipt sent to {receipt.email}</p>
-                            )}
                           </div>
                         </div>
                       )}

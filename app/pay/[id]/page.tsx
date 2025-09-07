@@ -287,7 +287,7 @@ export default function PaymentPage() {
       });
     },
     fallbackToPolling: true,
-    pollingInterval: 3000 // Faster polling as fallback
+    pollingInterval: 2000 // Match Smart Terminal POS polling cadence
   })
 
   useEffect(() => {
@@ -929,32 +929,37 @@ export default function PaymentPage() {
                   /* Payment Display */
                   <div className="space-y-4">
                     {/* Payment Status */}
-                    {currentStatus && (
-                      <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'sending' ? (
-                              <CheckCircle2 className="h-6 w-6 text-green-500 animate-pulse" />
-                            ) : (
-                              <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
-                            )}
-                            <span className="font-semibold text-gray-700">
-                              {currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'sending' ? 'Payment Confirmed!' : 'Awaiting Payment'}
-                            </span>
-                          </div>
-                          <span className={cn(
-                            "px-3 py-1 rounded-full text-xs font-semibold",
-                            currentStatus.payment_status === 'confirmed' || currentStatus.payment_status === 'finished' || currentStatus.payment_status === 'sending' 
-                              ? "bg-green-100 text-green-700" 
-                              : currentStatus.payment_status === 'confirming' || currentStatus.payment_status === 'partially_paid'
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-purple-100 text-[#7f5efd]"
-                          )}>
-                            {currentStatus.payment_status.toUpperCase()}
-                          </span>
+                    {currentStatus && (() => {
+                      const status = currentStatus.payment_status
+                      const isConfirmed = status === 'confirmed' || status === 'finished' || status === 'sending'
+                      return (
+                        <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
+                          {!isConfirmed ? (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
+                                  <span className="font-semibold text-gray-700">Awaiting Payment</span>
+                                </div>
+                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-[#7f5efd]">
+                                  {status.toUpperCase()}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                              <div className="flex items-center gap-2 justify-center md:justify-start">
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                <div className="text-center md:text-left">
+                                  <p className="font-semibold text-green-800 leading-tight">Payment Confirmed</p>
+                                  <p className="text-xs text-green-600">Transaction has been confirmed</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    )}
+                      )
+                    })()}
 
                     {/* QR Code and Payment Info */}
                     <div className="space-y-4">
@@ -980,6 +985,24 @@ export default function PaymentPage() {
                         <p className="text-sm text-gray-600 mb-1">Send exactly</p>
                         <p className="text-2xl font-bold text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</p>
                       </div>
+
+                      {/* Change Currency button (compact) */}
+                      {(!['confirmed', 'finished', 'sending'].includes(currentStatus.payment_status)) && (
+                        <div className="flex justify-center">
+                          <button
+                            type="button"
+                            className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm transition-colors"
+                            onClick={() => {
+                              setPaymentData(null as any)
+                              setPaymentStatus(null)
+                              setQrCodeDataUrl('')
+                              setExtraIdConfirmed(false)
+                            }}
+                          >
+                            Change Currency
+                          </button>
+                        </div>
+                      )}
 
                       {/* Address */}
                       <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
