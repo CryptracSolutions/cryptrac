@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -506,7 +507,20 @@ function SmartTerminalPageContent() {
       )}
       
       <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
-        <div className="w-full max-w-2xl landscape:max-w-6xl">
+        <div className="w-full max-w-2xl landscape:max-w-6xl relative">
+          {/* Dashboard Button - Top Left Corner */}
+          <div className="absolute top-0 left-0 z-10">
+            <Link href="/merchant/dashboard">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs font-semibold bg-white border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-200 shadow-sm"
+              >
+                Dashboard
+              </Button>
+            </Link>
+          </div>
+
         {/* Main Card */}
         <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
@@ -660,7 +674,7 @@ function SmartTerminalPageContent() {
                 aria-label="ready"
                 disabled={!amount}
               >
-                <CreditCard className="h-5 w-5" />
+                <DollarSign className="h-5 w-5" />
                 Ready for Payment
               </Button>
             </div>
@@ -881,7 +895,7 @@ function SmartTerminalPageContent() {
                                 value={receipt.email} 
                                 onChange={e=>setReceipt({...receipt, email:e.target.value})} 
                                 aria-label="receipt email"
-                                className="h-10 bg-white border-2 border-gray-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs"
+                                className="h-10 bg-white border-2 border-transparent hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs"
                               />
                               <Button 
                                 onClick={sendEmailReceipt} 

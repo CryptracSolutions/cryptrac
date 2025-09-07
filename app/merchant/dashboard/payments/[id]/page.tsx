@@ -471,10 +471,11 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             <CardContent>
               <div className="text-center space-y-4">
                 <div className="flex justify-center">
-                  <QRCode 
-                    value={paymentLink.payment_url} 
+                  <QRCode
+                    value={paymentLink.payment_url}
                     size={200}
                     className="border border-gray-200"
+                    hideDetails={true}
                   />
                 </div>
                 <p className="font-phonic text-sm font-normal text-gray-500">
