@@ -60,6 +60,10 @@ export function useRealTimePaymentStatus({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const reconnectAttemptsRef = useRef(0)
   const maxReconnectAttempts = 10
+  
+  // Stable refs to prevent stale closures
+  const connectSSERef = useRef<(() => void) | null>(null)
+  const startPollingRef = useRef<(() => void) | null>(null)
 
   // Initialize Supabase client
   if (!supabaseRef.current) {
@@ -141,17 +145,19 @@ export function useRealTimePaymentStatus({
         const data = JSON.parse(event.data)
         
         if (data.type === 'payment_status_update' && data.payment_id === paymentId) {
+          // Use current payment status from ref to avoid stale closure
+          const currentStatus = paymentStatus
           updatePaymentStatus({
             payment_id: data.payment_id,
             payment_status: data.status,
-            pay_address: paymentStatus?.pay_address || '',
-            pay_amount: paymentStatus?.pay_amount || 0,
-            pay_currency: paymentStatus?.pay_currency || '',
-            price_amount: paymentStatus?.price_amount || 0,
-            price_currency: paymentStatus?.price_currency || 'USD',
-            order_id: paymentStatus?.order_id || '',
-            order_description: paymentStatus?.order_description || '',
-            created_at: paymentStatus?.created_at || '',
+            pay_address: currentStatus?.pay_address || '',
+            pay_amount: currentStatus?.pay_amount || 0,
+            pay_currency: currentStatus?.pay_currency || '',
+            price_amount: currentStatus?.price_amount || 0,
+            price_currency: currentStatus?.price_currency || 'USD',
+            order_id: currentStatus?.order_id || '',
+            order_description: currentStatus?.order_description || '',
+            created_at: currentStatus?.created_at || '',
             updated_at: data.timestamp,
             tx_hash: data.tx_hash,
             actually_paid: data.amount_received,
@@ -180,16 +186,16 @@ export function useRealTimePaymentStatus({
         setConnectionStatus(prev => ({ ...prev, reconnecting: true }))
         
         reconnectTimeoutRef.current = setTimeout(() => {
-          connectSSE()
+          if (paymentId) connectSSE()
         }, Math.pow(2, reconnectAttemptsRef.current) * 1000) // Exponential backoff
       } else if (fallbackToPolling) {
         console.log('🔄 Falling back to polling after SSE failures')
-        startPolling()
+        if (paymentId && startPollingRef.current) startPollingRef.current()
       }
     }
 
     eventSourceRef.current = eventSource
-  }, [paymentId, updatePaymentStatus, paymentStatus, fallbackToPolling])
+  }, [paymentId, updatePaymentStatus, fallbackToPolling]) // Remove paymentStatus dependency
 
   // Supabase real-time connection
   const connectRealTime = useCallback(() => {
@@ -238,18 +244,20 @@ export function useRealTimePaymentStatus({
           console.log(`📨 Broadcast received for payment ${paymentId}`)
           const broadcastData = payload.payload
           if (broadcastData.payment_id === paymentId) {
+            // Use current status to avoid stale closure
+            const currentStatus = paymentStatus
             updatePaymentStatus({
               payment_id: broadcastData.payment_id,
               payment_status: broadcastData.status,
-              pay_address: paymentStatus?.pay_address || '',
-              payin_extra_id: paymentStatus?.payin_extra_id,
-              pay_amount: paymentStatus?.pay_amount || 0,
-              pay_currency: paymentStatus?.pay_currency || '',
-              price_amount: paymentStatus?.price_amount || 0,
-              price_currency: paymentStatus?.price_currency || 'USD',
-              order_id: paymentStatus?.order_id || '',
-              order_description: paymentStatus?.order_description || '',
-              created_at: paymentStatus?.created_at || '',
+              pay_address: currentStatus?.pay_address || '',
+              payin_extra_id: currentStatus?.payin_extra_id,
+              pay_amount: currentStatus?.pay_amount || 0,
+              pay_currency: currentStatus?.pay_currency || '',
+              price_amount: currentStatus?.price_amount || 0,
+              price_currency: currentStatus?.price_currency || 'USD',
+              order_id: currentStatus?.order_id || '',
+              order_description: currentStatus?.order_description || '',
+              created_at: currentStatus?.created_at || '',
               updated_at: broadcastData.timestamp,
               tx_hash: broadcastData.tx_hash,
               actually_paid: broadcastData.amount_received,
@@ -285,17 +293,20 @@ export function useRealTimePaymentStatus({
             setConnectionStatus(prev => ({ ...prev, reconnecting: true }))
             
             reconnectTimeoutRef.current = setTimeout(() => {
-              connectRealTime()
+              if (paymentId && supabaseRef.current) connectRealTime()
             }, Math.pow(2, reconnectAttemptsRef.current) * 1000)
           } else {
             console.log('🔄 Falling back to SSE after real-time failures')
-            connectSSE()
+            // Use timeout to avoid circular dependency
+            setTimeout(() => {
+              if (paymentId && connectSSERef.current) connectSSERef.current()
+            }, 100)
           }
         }
       })
 
     subscriptionRef.current = channel
-  }, [paymentId, updatePaymentStatus, paymentStatus, connectSSE])
+  }, [paymentId, updatePaymentStatus]) // Remove circular dependencies
 
   // Start polling
   const startPolling = useCallback(() => {
@@ -310,6 +321,10 @@ export function useRealTimePaymentStatus({
     // Set up interval
     pollingIntervalRef.current = setInterval(pollPaymentStatus, pollingInterval)
   }, [paymentId, pollPaymentStatus, pollingInterval])
+
+  // Update function refs to avoid stale closures
+  connectSSERef.current = connectSSE
+  startPollingRef.current = startPolling
 
   // Stop all connections
   const disconnect = useCallback(() => {
@@ -361,12 +376,12 @@ export function useRealTimePaymentStatus({
     connectRealTime()
 
     return disconnect
-  }, [enabled, paymentId, connectRealTime, disconnect])
+  }, [enabled, paymentId]) // Remove function dependencies
 
   // Cleanup on unmount
   useEffect(() => {
     return disconnect
-  }, [disconnect])
+  }, [])
 
   return {
     paymentStatus,
