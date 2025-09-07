@@ -301,25 +301,42 @@ function SmartTerminalPageContent() {
 
   useEffect(() => {
     const amt = parseFloat(amount || '0');
-    if (!merchantSettings || !amt) {
-      setPreview({ tax_amount: 0, subtotal_with_tax: amt, gateway_fee: 0, pre_tip_total: amt });
-      return;
-    }
-    (async () => {
-      const body: Record<string, unknown> = { amount: amt };
-      if (typeof tax === 'boolean') body.tax_enabled = tax;
-      if (typeof chargeFee === 'boolean') body.charge_customer_fee = chargeFee;
-      const res = await makeAuthenticatedRequest('/api/terminal/preview', { method: 'POST', body: JSON.stringify(body) });
-      const json = await res.json();
-      if (!json.error) {
-        setPreview({
-          tax_amount: json.tax_amount,
-          subtotal_with_tax: json.subtotal_with_tax,
-          gateway_fee: json.gateway_fee,
-          pre_tip_total: json.pre_tip_total
-        });
+
+    // Calculate preview instantly using local merchant settings
+    if (merchantSettings && amt > 0) {
+      let tax_amount = 0;
+      let gateway_fee = 0;
+
+      // Calculate tax if enabled
+      if (tax && merchantSettings.tax_enabled && merchantSettings.tax_rates?.length > 0) {
+        // Sum all tax rates
+        const totalTaxRate = merchantSettings.tax_rates.reduce((sum, rate) => sum + rate.percentage, 0);
+        tax_amount = (amt * totalTaxRate) / 100;
       }
-    })();
+
+      const subtotal_with_tax = amt + tax_amount;
+
+      // Calculate gateway fee if customer pays fee
+      if (chargeFee && merchantSettings.charge_customer_fee) {
+        // Use the same fee calculation as the API: 0.5% base + 0.5% for auto-convert = 1% max
+        const baseFeePercentage = 0.005; // 0.5%
+        const autoConvertFeePercentage = merchantSettings.auto_convert_enabled ? 0.005 : 0; // 0.5% if auto-convert enabled
+        const totalFeePercentage = baseFeePercentage + autoConvertFeePercentage; // 0.5% or 1.0%
+        gateway_fee = subtotal_with_tax * totalFeePercentage;
+      }
+
+      const pre_tip_total = subtotal_with_tax + gateway_fee;
+
+      setPreview({
+        tax_amount,
+        subtotal_with_tax,
+        gateway_fee,
+        pre_tip_total
+      });
+    } else {
+      // Default values when no amount or merchant settings
+      setPreview({ tax_amount: 0, subtotal_with_tax: amt, gateway_fee: 0, pre_tip_total: amt });
+    }
   }, [amount, tax, chargeFee, merchantSettings]);
 
   // Real-time payment status monitoring for smart terminal
@@ -327,19 +344,26 @@ function SmartTerminalPageContent() {
     paymentId: paymentData?.payment_id || null,
     enabled: !!paymentData?.payment_id,
     onStatusChange: (updatedStatus) => {
-      console.log(`🔄 Smart terminal status update: ${updatedStatus.payment_status}`)
+      console.log(`🔄 Smart terminal status update received:`, updatedStatus)
+      console.log(`📱 Current status state:`, status)
       
       const newStatus = updatedStatus.payment_status
+      console.log(`🎯 New status from real-time: ${newStatus}`)
+      
       setStatus(prev => {
+        console.log(`📊 Status state change: ${prev} → ${newStatus}`)
         if (newStatus !== prev) {
+          console.log(`✅ Status actually changing: ${prev} → ${newStatus}`)
           if (newStatus === 'confirmed') {
             console.log('🎉 Payment confirmed in smart terminal!')
             playBeep();
             if (navigator.vibrate) navigator.vibrate(200);
           }
           return newStatus;
+        } else {
+          console.log(`⚠️ Status unchanged: ${prev}`)
+          return prev;
         }
-        return prev;
       });
     },
     fallbackToPolling: true,
@@ -431,6 +455,8 @@ function SmartTerminalPageContent() {
         setPaymentLink(json.payment_link);
         setPaymentData(json.now);
         setInvoiceBreakdown(json.breakdown);
+        console.log(`🆕 Setting initial status from payment creation:`, json.now.payment_status || 'pending');
+        console.log(`🔍 Full payment data:`, json.now);
         setStatus(json.now.payment_status || 'pending');
       } else {
         throw new Error('Invalid response from payment creation API');
@@ -834,22 +860,6 @@ function SmartTerminalPageContent() {
                               {status.toUpperCase()}
                             </span>
                           </div>
-                          {/* Change Currency button (compact) */}
-                          <div className="mt-2 flex justify-end">
-                            <button
-                              type="button"
-                              className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm"
-                              onClick={() => {
-                                setPaymentLink(null);
-                                setPaymentData(null);
-                                setInvoiceBreakdown(null);
-                                setStatus('');
-                                setExtraIdConfirmed(false);
-                              }}
-                            >
-                              Change Currency
-                            </button>
-                          </div>
                         </>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -936,6 +946,25 @@ function SmartTerminalPageContent() {
                     {needsExtra && !extraIdConfirmed && (
                       <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
                         <p className="text-sm font-medium text-purple-900">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
+                      </div>
+                    )}
+
+                    {/* Change Currency button (compact) - positioned below QR code */}
+                    {status !== 'confirmed' && (
+                      <div className="flex justify-center">
+                        <button
+                          type="button"
+                          className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm transition-colors"
+                          onClick={() => {
+                            setPaymentLink(null);
+                            setPaymentData(null);
+                            setInvoiceBreakdown(null);
+                            setStatus('');
+                            setExtraIdConfirmed(false);
+                          }}
+                        >
+                          Change Currency
+                        </button>
                       </div>
                     )}
                     {/* Payment Details */}

@@ -258,19 +258,33 @@ export default function PaymentPage() {
   const { paymentStatus: realtimeStatus, connectionStatus } = useRealTimePaymentStatus({
     paymentId: paymentData?.payment_id || null,
     enabled: !!paymentData?.payment_id,
-    onStatusChange: (status) => {
-      console.log(`🔄 Real-time status update: ${status.payment_status}`)
-      setPaymentStatus(status)
+    onStatusChange: (updatedStatus) => {
+      console.log(`🔄 Pay page status update received:`, updatedStatus)
+      console.log(`📱 Current status state:`, paymentStatus)
       
-      // Handle payment completion
-      if (status.payment_status === 'finished' || 
-          status.payment_status === 'confirmed' ||
-          status.payment_status === 'sending') {
-        console.log('✅ Payment completed via real-time update')
-        // Redirect to success page
-        router.push(`/payment/success/${paymentLink?.id}?payment_id=${status.payment_id}`)
-      }
-      // Note: 'partially_paid' is mapped to 'confirming' on the backend, so no redirect needed
+      const newStatus = updatedStatus.payment_status
+      console.log(`🎯 New status from real-time: ${newStatus}`)
+      
+      setPaymentStatus(prev => {
+        console.log(`📊 Status state change: ${prev?.payment_status} → ${newStatus}`)
+        if (!prev || newStatus !== prev.payment_status) {
+          console.log(`✅ Status actually changing: ${prev?.payment_status} → ${newStatus}`)
+          
+          // Handle payment completion
+          if (newStatus === 'finished' || 
+              newStatus === 'confirmed' ||
+              newStatus === 'sending') {
+            console.log('✅ Payment completed via real-time update')
+            // Redirect to success page
+            router.push(`/payment/success/${paymentLink?.id}?payment_id=${updatedStatus.payment_id}`)
+          }
+          
+          return updatedStatus;
+        } else {
+          console.log(`⚠️ Status unchanged: ${prev?.payment_status}`)
+          return prev;
+        }
+      });
     },
     fallbackToPolling: true,
     pollingInterval: 3000 // Faster polling as fallback
@@ -522,6 +536,8 @@ export default function PaymentPage() {
       }
 
       console.log('✅ Payment created successfully:', data.payment)
+      console.log(`🆕 Setting initial status from payment creation:`, data.payment.payment_status || 'pending');
+      console.log(`🔍 Full payment data:`, data.payment);
       setPaymentData(data.payment)
 
       // Generate QR code for payment address with destination tag if needed
