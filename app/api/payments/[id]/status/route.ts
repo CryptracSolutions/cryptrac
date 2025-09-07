@@ -1,6 +1,45 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Function to trigger real-time notifications for payment status updates
+async function broadcastPaymentUpdate(
+  supabase: any,
+  paymentId: string,
+  updateData: Record<string, unknown>
+) {
+  try {
+    console.log(`📡 Broadcasting real-time update for payment: ${paymentId}`)
+    
+    // Trigger a real-time notification by sending a message to the payment channel
+    const { error: channelError } = await supabase
+      .channel(`payment-${paymentId}`)
+      .send({
+        type: 'broadcast',
+        event: 'payment_status_update',
+        payload: {
+          payment_id: paymentId,
+          status: updateData.status,
+          tx_hash: updateData.tx_hash,
+          payin_hash: updateData.payin_hash,
+          payout_hash: updateData.payout_hash,
+          amount_received: updateData.amount_received,
+          currency_received: updateData.currency_received,
+          merchant_receives: updateData.merchant_receives,
+          payout_currency: updateData.payout_currency,
+          timestamp: new Date().toISOString()
+        }
+      })
+
+    if (channelError) {
+      console.warn('⚠️ Error broadcasting payment update:', channelError)
+    } else {
+      console.log('✅ Real-time broadcast sent successfully')
+    }
+  } catch (error) {
+    console.error('❌ Error in broadcastPaymentUpdate:', error)
+  }
+}
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -131,6 +170,9 @@ export async function GET(
               console.log('✅ Payment updated successfully');
               // Update the payment object with new data
               Object.assign(payment, updateData);
+              
+              // Broadcast real-time update to connected clients
+              await broadcastPaymentUpdate(supabase, id, updateData);
               if (mappedStatus === 'confirmed') {
                 try {
                   const { data: link } = await supabase

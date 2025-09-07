@@ -24,6 +24,7 @@ import { getOrCreateClientId } from '@/lib/ab-testing'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -253,13 +254,26 @@ export default function PaymentPage() {
   const [dynamicConfig, setDynamicConfig] = useState<DynamicConfig | null>(null)
   const [clientId, setClientId] = useState<string>('anon')
   
-  // Status monitoring state
-  const [isMonitoring, setIsMonitoring] = useState(false)
-  const [monitoringInterval, setMonitoringInterval] = useState(5000) // Start with 5 seconds
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const visibilityRef = useRef<boolean>(true)
-  const consecutiveFailures = useRef<number>(0)
-  const monitoringStartTime = useRef<number>(Date.now())
+  // Real-time payment status monitoring
+  const { paymentStatus: realtimeStatus, connectionStatus } = useRealTimePaymentStatus({
+    paymentId: paymentData?.payment_id || null,
+    enabled: !!paymentData?.payment_id,
+    onStatusChange: (status) => {
+      console.log(`🔄 Real-time status update: ${status.payment_status}`)
+      setPaymentStatus(status)
+      
+      // Handle payment completion
+      if (status.payment_status === 'finished' || 
+          status.payment_status === 'confirmed' ||
+          status.payment_status === 'sending') {
+        console.log('✅ Payment completed via real-time update')
+        // Redirect to success page
+        router.push(`/payment/success/${paymentLink?.id}?payment_id=${status.payment_id}`)
+      }
+    },
+    fallbackToPolling: true,
+    pollingInterval: 3000 // Faster polling as fallback
+  })
 
   useEffect(() => {
     // Phase 3: load dynamic config and client id for A/B test bucketing
@@ -306,202 +320,7 @@ export default function PaymentPage() {
     }
   }
 
-  // FIXED: Payment Status Monitoring Function
-  const checkPaymentStatusOptimized = async () => {
-    if (!paymentData?.payment_id || !visibilityRef.current) {
-      return
-    }
 
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-      
-      // FIXED: Use correct endpoint - /api/payments/[id]/status instead of /api/nowpayments/payment-status
-      const response = await fetch(`/api/payments/${paymentData.payment_id}/status`, {
-        signal: controller.signal,
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      })
-      
-      clearTimeout(timeoutId)
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-      
-      const data = await response.json()
-      
-      if (data.success && data.payment) {
-        const currentStatus = data.payment
-        setPaymentStatus(currentStatus)
-        
-        console.log(`🔄 Payment status: ${currentStatus.payment_status}`)
-        
-        // Handle status changes
-        if (currentStatus.payment_status === 'finished' || 
-            currentStatus.payment_status === 'confirmed' ||
-            currentStatus.payment_status === 'sending') {
-          
-          console.log('✅ Payment completed, stopping monitoring')
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
-          }
-          
-          // Redirect to success page
-          router.push(`/payment/success/${paymentLink?.id}?payment_id=${paymentData.payment_id}`)
-          return
-        }
-        
-        // Adaptive interval based on status and time elapsed
-        const timeElapsed = Date.now() - monitoringStartTime.current
-        let newInterval = 5000 // Default 5 seconds
-        
-        if (currentStatus.payment_status === 'waiting') {
-          if (timeElapsed < 60000) newInterval = 3000      // First minute: 3s
-          else if (timeElapsed < 300000) newInterval = 5000 // Next 4 minutes: 5s
-          else if (timeElapsed < 600000) newInterval = 10000 // Next 5 minutes: 10s
-          else newInterval = 15000                          // After 10 minutes: 15s
-        } else if (currentStatus.payment_status === 'confirming') {
-          newInterval = 2000 // More frequent for confirming status
-        }
-        
-        // Update interval if it changed
-        if (newInterval !== monitoringInterval) {
-          setMonitoringInterval(newInterval)
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = setInterval(checkPaymentStatusOptimized, newInterval)
-          }
-        }
-        
-        // Reset consecutive failures on success
-        consecutiveFailures.current = 0
-        
-      } else {
-        console.warn('⚠️ Invalid payment status response:', data)
-      }
-      
-    } catch (error) {
-      console.error('❌ Error checking payment status:', error)
-      
-      // Increment consecutive failures
-      consecutiveFailures.current++
-      
-      // Exponential backoff for failures
-      if (consecutiveFailures.current >= 3) {
-        const backoffInterval = Math.min(30000, 5000 * Math.pow(2, consecutiveFailures.current - 3))
-        console.log(`⚠️ ${consecutiveFailures.current} consecutive failures, backing off to ${backoffInterval}ms`)
-        
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
-          if (consecutiveFailures.current < 10) { // Stop after 10 failures
-            intervalRef.current = setInterval(checkPaymentStatusOptimized, backoffInterval)
-          } else {
-            console.error('❌ Too many consecutive failures, stopping status monitoring')
-            intervalRef.current = null
-          }
-        }
-      }
-    }
-  }
-
-  // Start monitoring payment status
-  const startStatusMonitoring = () => {
-    if (isMonitoring || !paymentData?.payment_id) return
-    
-    console.log('🔄 Starting optimized payment status monitoring...')
-    setIsMonitoring(true)
-    setMonitoringInterval(5000) // Start with 5 seconds
-    consecutiveFailures.current = 0
-    monitoringStartTime.current = Date.now()
-    
-    // Initial check
-    checkPaymentStatusOptimized()
-    
-    // Set up interval
-    intervalRef.current = setInterval(checkPaymentStatusOptimized, 5000)
-  }
-
-  // Stop monitoring
-  const stopStatusMonitoring = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-    setIsMonitoring(false)
-    console.log('⏹️ Stopped payment status monitoring')
-  }
-
-  // Page visibility handling
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const isVisible = !document.hidden
-      visibilityRef.current = isVisible
-      
-      if (isVisible && isMonitoring && paymentData?.payment_id) {
-        console.log('👁️ Page visible - resuming status monitoring')
-        // Resume monitoring when page becomes visible
-        if (!intervalRef.current) {
-          intervalRef.current = setInterval(checkPaymentStatusOptimized, monitoringInterval)
-        }
-      } else if (!isVisible && intervalRef.current) {
-        console.log('🙈 Page hidden - pausing status monitoring')
-        // Pause monitoring when page is hidden
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-    }, [isMonitoring, paymentData?.payment_id, monitoringInterval]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Connection monitoring
-  useEffect(() => {
-    const handleOnline = () => {
-      console.log('🌐 Connection restored - resuming monitoring')
-      if (isMonitoring && paymentData?.payment_id && visibilityRef.current && !intervalRef.current) {
-        intervalRef.current = setInterval(checkPaymentStatusOptimized, monitoringInterval)
-      }
-    }
-
-    const handleOffline = () => {
-      console.log('📡 Connection lost - pausing monitoring')
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-    
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-    }, [isMonitoring, paymentData?.payment_id, monitoringInterval]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Cleanup on unmount
-    useEffect(() => {
-      return () => {
-        stopStatusMonitoring()
-      }
-    }, []);
-
-  // Start monitoring when payment is created
-    useEffect(() => {
-      if (paymentData && !isMonitoring) {
-        startStatusMonitoring()
-      }
-    }, [paymentData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadPaymentLink = async () => {
     try {
@@ -1112,6 +931,32 @@ export default function PaymentPage() {
                           )}>
                             {currentStatus.payment_status.toUpperCase()}
                           </span>
+                        </div>
+                        
+                        {/* Connection Status Indicator */}
+                        <div className="mt-3 pt-3 border-t border-purple-100 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "w-2 h-2 rounded-full",
+                              connectionStatus.connected 
+                                ? "bg-green-500 animate-pulse" 
+                                : connectionStatus.reconnecting 
+                                ? "bg-yellow-500 animate-spin" 
+                                : "bg-red-500"
+                            )} />
+                            <span className="text-xs text-gray-600">
+                              {connectionStatus.connected 
+                                ? `Live updates (${connectionStatus.method})` 
+                                : connectionStatus.reconnecting 
+                                ? 'Reconnecting...' 
+                                : 'Connection lost'}
+                            </span>
+                          </div>
+                          {connectionStatus.lastUpdate && (
+                            <span className="text-xs text-gray-500">
+                              Updated {new Date(connectionStatus.lastUpdate).toLocaleTimeString()}
+                            </span>
+                          )}
                         </div>
                       </div>
                     )}

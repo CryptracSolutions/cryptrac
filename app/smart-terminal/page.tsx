@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority } from '@/lib/crypto-networks';
 import { buildCurrencyMapping } from '@/lib/currency-mapping';
 import { Label } from '@/app/components/ui/label';
+import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,8 +101,8 @@ function SmartTerminalPageContent() {
   const [amount, setAmount] = useState('');
   const [tipPercent, setTipPercent] = useState<number | null>(null);
   const [tipSelected, setTipSelected] = useState(false);
-  const [tax, setTax] = useState<boolean | undefined>(undefined);
-  const [chargeFee, setChargeFee] = useState<boolean | undefined>(undefined);
+  const [tax, setTax] = useState<boolean>(false);
+  const [chargeFee, setChargeFee] = useState<boolean>(false);
   const [crypto, setCrypto] = useState('BTC');
   const [step, setStep] = useState<'amount' | 'customer'>('amount');
   const [preview, setPreview] = useState({ tax_amount: 0, subtotal_with_tax: 0, gateway_fee: 0, pre_tip_total: 0 });
@@ -229,8 +230,8 @@ function SmartTerminalPageContent() {
 
           // Set default values based on merchant settings
           if (json.data?.accepted_cryptos?.length) setCrypto(json.data.accepted_cryptos[0]);
-          setChargeFee(merchant.charge_customer_fee);
-          setTax(merchant.tax_enabled);
+          setChargeFee(Boolean(merchant.charge_customer_fee));
+          setTax(Boolean(merchant.tax_enabled));
 
           // Expand accepted cryptocurrencies to include stablecoins
           const deviceCryptos = json.data?.accepted_cryptos && json.data.accepted_cryptos.length
@@ -273,8 +274,8 @@ function SmartTerminalPageContent() {
               if (createJson.success && createJson.data) {
                 localStorage.setItem('terminal_device_id', createJson.data.id);
                 setDevice(createJson.data);
-                setChargeFee(merchant.charge_customer_fee);
-                setTax(merchant.tax_enabled);
+                setChargeFee(Boolean(merchant.charge_customer_fee));
+                setTax(Boolean(merchant.tax_enabled));
                 
                 const stableCoins = expandStableCoins(merchant.wallets || {});
                 const allCodes = Array.from(new Set([...Object.keys(merchant.wallets || {}), ...stableCoins]));
@@ -321,51 +322,29 @@ function SmartTerminalPageContent() {
     })();
   }, [amount, tax, chargeFee, merchantSettings]);
 
-  useEffect(() => {
-    if (paymentLink && paymentData) {
-      const channel = supabase
-        .channel('pos-' + paymentLink.id)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'transactions', filter: `payment_link_id=eq.${paymentLink.id}` }, payload => {
-          setStatus(prev => {
-            if (payload.new.status !== prev) {
-              if (payload.new.status === 'confirmed') {
-                playBeep();
-                if (navigator.vibrate) navigator.vibrate(200);
-                supabase.removeChannel(channel);
-                clearInterval(interval);
-              }
-              return payload.new.status;
-            }
-            return prev;
-          });
-        })
-        .subscribe();
-      const interval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/payments/${paymentData.payment_id}/status`);
-          const json = await res.json();
-          const newStatus = json.payment?.payment_status;
-          if (newStatus) {
-            setStatus(prev => {
-              if (newStatus !== prev) {
-                if (newStatus === 'confirmed') {
-                  playBeep();
-                  if (navigator.vibrate) navigator.vibrate(200);
-                  supabase.removeChannel(channel);
-                  clearInterval(interval);
-                }
-                return newStatus;
-              }
-              return prev;
-            });
+  // Real-time payment status monitoring for smart terminal
+  const { paymentStatus: realtimePaymentStatus, connectionStatus } = useRealTimePaymentStatus({
+    paymentId: paymentData?.payment_id || null,
+    enabled: !!paymentData?.payment_id,
+    onStatusChange: (updatedStatus) => {
+      console.log(`🔄 Smart terminal status update: ${updatedStatus.payment_status}`)
+      
+      const newStatus = updatedStatus.payment_status
+      setStatus(prev => {
+        if (newStatus !== prev) {
+          if (newStatus === 'confirmed') {
+            console.log('🎉 Payment confirmed in smart terminal!')
+            playBeep();
+            if (navigator.vibrate) navigator.vibrate(200);
           }
-        } catch (e) {
-          console.error('status check failed', e);
+          return newStatus;
         }
-      }, 3000);
-      return () => { supabase.removeChannel(channel); clearInterval(interval); };
-    }
-  }, [paymentLink, paymentData]);
+        return prev;
+      });
+    },
+    fallbackToPolling: true,
+    pollingInterval: 2000 // Faster polling for POS environment
+  });
 
   const appendDigit = (d: string) => {
     setAmount(prev => (prev + d).replace(/^0+(\d)/, '$1'));
@@ -618,8 +597,8 @@ function SmartTerminalPageContent() {
                   <input 
                     type="checkbox" 
                     className="sr-only" 
-                    checked={tax ?? false} 
-                    disabled={tax === undefined} 
+                    checked={tax} 
+                    disabled={false} 
                     onChange={e=>setTax(e.target.checked)} 
                     aria-label="Add tax"
                   />
@@ -845,15 +824,52 @@ function SmartTerminalPageContent() {
                     {/* Payment Status */}
                     <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
                       {status !== 'confirmed' ? (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
-                            <span className="font-semibold text-gray-700">Awaiting Payment</span>
+                        <>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
+                              <span className="font-semibold text-gray-700">Awaiting Payment</span>
+                            </div>
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-[#7f5efd]">
+                              {status.toUpperCase()}
+                            </span>
                           </div>
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-[#7f5efd]">
-                            {status.toUpperCase()}
-                          </span>
-                        </div>
+                          
+                          {/* Connection Status for POS */}
+                          <div className="mt-2 pt-2 border-t border-purple-100 flex items-center gap-2">
+                            <div className={cn(
+                              "w-2 h-2 rounded-full",
+                              connectionStatus.connected 
+                                ? "bg-green-500 animate-pulse" 
+                                : connectionStatus.reconnecting 
+                                ? "bg-yellow-500 animate-spin" 
+                                : "bg-red-500"
+                            )} />
+                            <span className="text-xs text-gray-600">
+                              {connectionStatus.connected 
+                                ? `Live updates (${connectionStatus.method})` 
+                                : connectionStatus.reconnecting 
+                                ? 'Reconnecting...' 
+                                : 'Offline mode'}
+                            </span>
+                          </div>
+                          {/* Change Currency button (compact) */}
+                          <div className="mt-2 flex justify-end">
+                            <button
+                              type="button"
+                              className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm"
+                              onClick={() => {
+                                setPaymentLink(null);
+                                setPaymentData(null);
+                                setInvoiceBreakdown(null);
+                                setStatus('');
+                                setExtraIdConfirmed(false);
+                              }}
+                            >
+                              Change Currency
+                            </button>
+                          </div>
+                        </>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {/* Left: Payment Confirmed */}
@@ -927,20 +943,7 @@ function SmartTerminalPageContent() {
 
                     {/* QR Code (single) */}
                     {(!needsExtra || extraIdConfirmed) && (
-                      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 relative">
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm"
-                          onClick={() => {
-                            setPaymentLink(null);
-                            setPaymentData(null);
-                            setInvoiceBreakdown(null);
-                            setStatus('');
-                            setExtraIdConfirmed(false);
-                          }}
-                        >
-                          Change Currency
-                        </button>
+                      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
                         <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={256} hideDetails />
                         {needsExtra && (
                           <p className="text-xs text-center text-green-600 mt-3">
@@ -1040,8 +1043,8 @@ function SmartTerminalPageContent() {
                       setTipPercent(null); 
                       setTipSelected(false); 
                       setStep('amount'); 
-                      setTax(merchantSettings?.tax_enabled); 
-                      setChargeFee(merchantSettings?.charge_customer_fee);
+                      setTax(Boolean(merchantSettings?.tax_enabled)); 
+                      setChargeFee(Boolean(merchantSettings?.charge_customer_fee));
                       setReceipt({ email: '', sent: false });
                       setIsLocked(false);
                       

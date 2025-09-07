@@ -12,6 +12,7 @@ export function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [canAccessDashboard, setCanAccessDashboard] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -34,12 +35,14 @@ export function Header() {
 
       if (!user) {
         setCanAccessDashboard(false);
+        setIsAuthChecked(true);
         return;
       }
 
       const role = (user.user_metadata as Record<string, unknown>)?.role;
       if (role && role !== 'merchant') {
         setCanAccessDashboard(true);
+        setIsAuthChecked(true);
         return;
       }
 
@@ -52,12 +55,15 @@ export function Header() {
 
         if (error) {
           setCanAccessDashboard(false);
+          setIsAuthChecked(true);
           return;
         }
         const completed = !!(merchant?.onboarding_completed || merchant?.onboarded);
         setCanAccessDashboard(completed);
+        setIsAuthChecked(true);
       } catch {
         setCanAccessDashboard(false);
+        setIsAuthChecked(true);
       }
     };
 
@@ -170,43 +176,44 @@ export function Header() {
         
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center space-x-3">
-          {isLoggedIn ? (
-            canAccessDashboard ? (
-              <Button 
-                size="sm" 
-                className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-                asChild
-              >
-                <Link href="/merchant/dashboard">Dashboard</Link>
-              </Button>
+          {isAuthChecked && (
+            isLoggedIn ? (
+              canAccessDashboard ? (
+                <Button 
+                  size="sm" 
+                  className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                  asChild
+                >
+                  <Link href="/merchant/dashboard">Dashboard</Link>
+                </Button>
+              ) : (
+                <Button 
+                  size="sm" 
+                  className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                  asChild
+                >
+                  <Link href="/merchant/onboarding">Continue Onboarding</Link>
+                </Button>
+              )
             ) : (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
-                asChild
-              >
-                <Link href="/merchant/onboarding">Continue Onboarding</Link>
-              </Button>
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
+                  asChild
+                >
+                  <Link href="/login">Log in</Link>
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                  asChild
+                >
+                  <Link href="/signup">Get Started</Link>
+                </Button>
+              </>
             )
-          ) : (
-            <>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
-                asChild
-              >
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button 
-                size="sm" 
-                className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-                asChild
-              >
-                <Link href="/signup">Get Started</Link>
-              </Button>
-            </>
           )}
         </div>
         
@@ -307,43 +314,44 @@ export function Header() {
           
           {/* Mobile Buttons */}
           <div className="mt-6 space-y-3">
-            {isLoggedIn ? (
-              canAccessDashboard ? (
-                <Button 
-                  size="sm" 
-                  className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-                  asChild
-                >
-                  <Link href="/merchant/dashboard" onClick={closeMobileMenu}>Dashboard</Link>
-                </Button>
+            {isAuthChecked && (
+              isLoggedIn ? (
+                canAccessDashboard ? (
+                  <Button 
+                    size="sm" 
+                    className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                    asChild
+                  >
+                    <Link href="/merchant/dashboard" onClick={closeMobileMenu}>Dashboard</Link>
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                    asChild
+                  >
+                    <Link href="/merchant/onboarding" onClick={closeMobileMenu}>Continue Onboarding</Link>
+                  </Button>
+                )
               ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
-                  asChild
-                >
-                  <Link href="/merchant/onboarding" onClick={closeMobileMenu}>Continue Onboarding</Link>
-                </Button>
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
+                    asChild
+                  >
+                    <Link href="/login" onClick={closeMobileMenu}>Log in</Link>
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
+                    asChild
+                  >
+                    <Link href="/signup" onClick={closeMobileMenu}>Get Started</Link>
+                  </Button>
+                </>
               )
-            ) : (
-              <>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-[#f5f3ff]" 
-                  asChild
-                >
-                  <Link href="/login" onClick={closeMobileMenu}>Log in</Link>
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" 
-                  asChild
-                >
-                  <Link href="/signup" onClick={closeMobileMenu}>Get Started</Link>
-                </Button>
-              </>
             )}
           </div>
         </div>

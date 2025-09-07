@@ -3,6 +3,46 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { env } from '@/lib/env'
 
+// Function to trigger real-time notifications for payment status updates
+async function broadcastPaymentUpdate(
+  supabase: any,
+  paymentId: string,
+  updateData: Record<string, unknown>
+) {
+  try {
+    console.log(`📡 Broadcasting real-time update for payment: ${paymentId}`)
+    
+    // Trigger a real-time notification by sending a message to the payment channel
+    // This supplements the automatic database update notifications
+    const { error: channelError } = await supabase
+      .channel(`payment-${paymentId}`)
+      .send({
+        type: 'broadcast',
+        event: 'payment_status_update',
+        payload: {
+          payment_id: paymentId,
+          status: updateData.status,
+          tx_hash: updateData.tx_hash,
+          payin_hash: updateData.payin_hash,
+          payout_hash: updateData.payout_hash,
+          amount_received: updateData.amount_received,
+          currency_received: updateData.currency_received,
+          merchant_receives: updateData.merchant_receives,
+          payout_currency: updateData.payout_currency,
+          timestamp: new Date().toISOString()
+        }
+      })
+
+    if (channelError) {
+      console.warn('⚠️ Error broadcasting payment update:', channelError)
+    } else {
+      console.log('✅ Real-time broadcast sent successfully')
+    }
+  } catch (error) {
+    console.error('❌ Error in broadcastPaymentUpdate:', error)
+  }
+}
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -984,6 +1024,9 @@ export async function POST(request: Request) {
       hash_source: capturedHashes.source,
       processing_time_ms: Date.now() - startTime
     })
+
+    // Broadcast real-time update to connected clients
+    await broadcastPaymentUpdate(supabase, payment_id, updateData)
 
     // If payment is confirmed, trigger post-confirmation actions
     if (newStatus === 'confirmed' && payment.status !== 'confirmed') {
