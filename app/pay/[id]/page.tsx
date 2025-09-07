@@ -987,7 +987,7 @@ export default function PaymentPage() {
                       </div>
 
                       {/* Change Currency button (compact) */}
-                      {(!['confirmed', 'finished', 'sending'].includes(currentStatus.payment_status)) && (
+                      {(currentStatus && !['confirmed', 'finished', 'sending'].includes(currentStatus.payment_status)) && (
                         <div className="flex justify-center">
                           <button
                             type="button"
