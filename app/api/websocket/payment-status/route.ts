@@ -15,7 +15,8 @@ const connections = new Map<string, {
 // Cleanup inactive connections every 30 seconds
 setInterval(() => {
   const now = Date.now()
-  for (const [id, conn] of connections.entries()) {
+  const entries = Array.from(connections.entries())
+  for (const [id, conn] of entries) {
     if (now - conn.lastActivity > 300000) { // 5 minutes
       try {
         conn.ws.close()
@@ -29,7 +30,7 @@ setInterval(() => {
 }, 30000)
 
 // Broadcast payment status update to all connected clients watching this payment
-export function broadcastPaymentStatusUpdate(paymentId: string, statusData: any) {
+function broadcastPaymentStatusUpdate(paymentId: string, statusData: any) {
   const message = JSON.stringify({
     type: 'payment_status_update',
     payment_id: paymentId,
@@ -38,7 +39,8 @@ export function broadcastPaymentStatusUpdate(paymentId: string, statusData: any)
   })
 
   let broadcastCount = 0
-  for (const [id, conn] of connections.entries()) {
+  const entries = Array.from(connections.entries())
+  for (const [id, conn] of entries) {
     if (conn.paymentId === paymentId) {
       try {
         if (conn.ws.readyState === WebSocket.OPEN) {
