@@ -554,7 +554,7 @@ function SmartTerminalPageContent() {
           {step === 'amount' && !paymentLink && (
             <div className="w-full space-y-4 sm:space-y-6 landscape:grid landscape:grid-cols-3 landscape:gap-6 landscape:space-y-0">
               {/* Amount Display - spans 2 columns in landscape */}
-              <div className="bg-gradient-to-br from-purple-50 to-white p-6 sm:p-8 rounded-2xl border border-purple-100 landscape:col-span-2">
+              <div className="bg-gradient-to-br from-purple-50 to-white p-6 sm:p-8 rounded-2xl border border-purple-100 landscape:col-span-2 h-full flex flex-col justify-center min-h-[140px]">
                 <div className="flex items-center justify-center mb-2">
                   <DollarSign className="h-5 w-5 text-[#7f5efd] mr-1" />
                   <span className="text-sm text-gray-500 uppercase tracking-wider">Amount</span>
@@ -566,7 +566,7 @@ function SmartTerminalPageContent() {
               {/* Price Breakdown - positioned in sidebar for landscape */}
               <div className="landscape:col-span-1 landscape:space-y-4">
                 {baseAmount > 0 && (
-                  <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200 text-sm space-y-1" aria-live="polite">
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8 rounded-2xl border border-gray-200 text-sm space-y-2 h-full flex flex-col justify-center min-h-[140px]" aria-live="polite">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Subtotal</span>
                       <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
@@ -800,7 +800,7 @@ function SmartTerminalPageContent() {
                                   {getNetworkIcon(networkId)}
                                   <span className="font-medium">{network.displayName}</span>
                                 </div>
-                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                                   {currencyCount}
                                 </span>
                               </div>

@@ -3550,7 +3550,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-
 -- Create buckets
 select storage.create_bucket('w9-uploads', public := false);
 select storage.create_bucket('promo-kits', public := true);
@@ -3575,6 +3574,7 @@ to public
 with check (
   bucket_id = 'w9-uploads' AND auth.uid() = owner
 );
+
 
 
 
