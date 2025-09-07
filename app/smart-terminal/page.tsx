@@ -121,6 +121,7 @@ function SmartTerminalPageContent() {
   const [validatedUri, setValidatedUri] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string>('anon');
   const [dynamicConfig, setDynamicConfig] = useState<any>(null);
+  const [isLocked, setIsLocked] = useState(false);
 
   // Reset confirmation when a new payment is created/loaded
   useEffect(() => {
@@ -132,6 +133,38 @@ function SmartTerminalPageContent() {
   useEffect(() => {
     try { setClientId(getOrCreateClientId()); } catch {}
   }, []);
+
+  // Handle keyboard events to prevent escape from locked mode
+  useEffect(() => {
+    if (isLocked) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Prevent escape key and function keys when locked
+        if (e.key === 'Escape' || e.key.startsWith('F') || e.metaKey || e.ctrlKey) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      };
+      
+      const handleFullscreenChange = () => {
+        // If user exits fullscreen while locked, request it again
+        if (isLocked && !document.fullscreenElement) {
+          setTimeout(() => {
+            if (document.documentElement.requestFullscreen) {
+              document.documentElement.requestFullscreen().catch(console.warn);
+            }
+          }, 100);
+        }
+      };
+      
+      document.addEventListener('keydown', handleKeyDown, true);
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown, true);
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      };
+    }
+  }, [isLocked]);
 
   // Load merchant settings and device
   useEffect(() => {
@@ -352,6 +385,12 @@ function SmartTerminalPageContent() {
     setStep('customer');
     setTipPercent(null);
     setTipSelected(false);
+    setIsLocked(true);
+    
+    // Request fullscreen for kiosk mode
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(console.warn);
+    }
   };
 
   const generate = async () => {
@@ -437,8 +476,32 @@ function SmartTerminalPageContent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
-      <div className="w-full max-w-2xl">
+    <>
+      {/* Fullscreen CSS for kiosk mode */}
+      {isLocked && (
+        <style jsx global>{`
+          ::-webkit-scrollbar { display: none; }
+          html { -ms-overflow-style: none; scrollbar-width: none; }
+          body { overflow: hidden; }
+          
+          /* Hide browser UI in fullscreen */
+          :fullscreen {
+            background: linear-gradient(135deg, #faf5ff 0%, #ffffff 50%, #faf5ff 100%);
+          }
+          
+          /* Rotation lock preference for tablets */
+          @media screen and (orientation: landscape) and (max-height: 900px) {
+            html {
+              transform-origin: center;
+              user-select: none;
+              -webkit-user-select: none;
+            }
+          }
+        `}</style>
+      )}
+      
+      <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
+        <div className="w-full max-w-2xl landscape:max-w-6xl">
         {/* Main Card */}
         <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
@@ -451,14 +514,22 @@ function SmartTerminalPageContent() {
                   merchantSettings ? "bg-green-500 animate-pulse" : "bg-gray-300"
                 )} />
                 <span className="text-xs text-gray-600">
-                  {merchantSettings ? 'Terminal Active' : 'Loading...'}
+                  {merchantSettings ? (isLocked ? 'Customer Mode - Locked' : 'Terminal Active') : 'Loading...'}
                 </span>
               </div>
-              {device && (
-                <div className="text-xs text-gray-500">
-                  Device ID: {device.id.slice(0, 8)}
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                {isLocked && (
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                    <span className="text-xs text-orange-600 font-medium">LOCKED</span>
+                  </div>
+                )}
+                {device && (
+                  <div className="text-xs text-gray-500">
+                    Device ID: {device.id.slice(0, 8)}
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
@@ -471,9 +542,9 @@ function SmartTerminalPageContent() {
             </Alert>
           )}
           {step === 'amount' && !paymentLink && (
-            <div className="w-full space-y-4 sm:space-y-6">
-              {/* Amount Display */}
-              <div className="bg-gradient-to-br from-purple-50 to-white p-6 sm:p-8 rounded-2xl border border-purple-100">
+            <div className="w-full space-y-4 sm:space-y-6 landscape:grid landscape:grid-cols-3 landscape:gap-6 landscape:space-y-0">
+              {/* Amount Display - spans 2 columns in landscape */}
+              <div className="bg-gradient-to-br from-purple-50 to-white p-6 sm:p-8 rounded-2xl border border-purple-100 landscape:col-span-2">
                 <div className="flex items-center justify-center mb-2">
                   <DollarSign className="h-5 w-5 text-[#7f5efd] mr-1" />
                   <span className="text-sm text-gray-500 uppercase tracking-wider">Amount</span>
@@ -482,33 +553,35 @@ function SmartTerminalPageContent() {
                   ${amount || '0.00'}
                 </div>
               </div>
-              {/* Price Breakdown */}
-              {(baseAmount > 0 || tax || chargeFee) && (
-                <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200 text-sm space-y-1" aria-live="polite">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
-                  </div>
-                  {tax && taxAmount > 0 && (
-                    <div className="flex justify-between items-center text-[#7f5efd]">
-                      <span>Tax</span>
-                      <span className="font-medium">+${taxAmount.toFixed(2)}</span>
+              {/* Price Breakdown - positioned in sidebar for landscape */}
+              <div className="landscape:col-span-1 landscape:space-y-4">
+                {(baseAmount > 0 || tax || chargeFee) && (
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200 text-sm space-y-1" aria-live="polite">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
                     </div>
-                  )}
-                  {chargeFee && gatewayFee > 0 && (
-                    <div className="flex justify-between items-center text-[#7f5efd]">
-                      <span>Gateway fee</span>
-                      <span className="font-medium">+${gatewayFee.toFixed(2)}</span>
+                    {tax && taxAmount > 0 && (
+                      <div className="flex justify-between items-center text-[#7f5efd]">
+                        <span>Tax</span>
+                        <span className="font-medium">+${taxAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {chargeFee && gatewayFee > 0 && (
+                      <div className="flex justify-between items-center text-[#7f5efd]">
+                        <span>Gateway fee</span>
+                        <span className="font-medium">+${gatewayFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center font-bold border-t border-gray-200 pt-1">
+                      <span className="text-gray-700">Total</span>
+                      <span className="text-[#7f5efd]">${preTipTotal.toFixed(2)}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between items-center font-bold border-t border-gray-200 pt-1">
-                    <span className="text-gray-700">Total</span>
-                    <span className="text-[#7f5efd]">${preTipTotal.toFixed(2)}</span>
                   </div>
-                </div>
-              )}
-              {/* Number Pad */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                )}
+              </div>
+              {/* Number Pad - spans full width in landscape */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 landscape:col-span-3">
                 {[1,2,3,4,5,6,7,8,9,'0','.'].map((d: string | number)=> (
                   <Button 
                     key={d}
@@ -538,8 +611,8 @@ function SmartTerminalPageContent() {
                 </Button>
               </div>
 
-              {/* Options */}
-              <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              {/* Options - spans full width in landscape */}
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 landscape:col-span-3">
                 <label className={cn(
                   "flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all duration-200",
                   tax ? "bg-[#7f5efd] border-[#7f5efd] text-white" : "bg-white border-purple-200 hover:border-[#7f5efd] text-gray-700"
@@ -582,11 +655,11 @@ function SmartTerminalPageContent() {
                 </label>
               </div>
 
-              {/* Continue Button */}
+              {/* Continue Button - spans full width in landscape */}
               <Button 
                 onClick={readyForPayment}
                 variant="default"
-                className="w-full h-14 sm:h-16 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full h-14 sm:h-16 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-3"
                 aria-label="ready"
                 disabled={!amount}
               >
@@ -596,9 +669,9 @@ function SmartTerminalPageContent() {
             </div>
           )}
           {step === 'customer' && !paymentLink && (
-            <div className="w-full space-y-3">
-              {/* Order Summary */}
-              <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100" aria-live="polite">
+            <div className="w-full space-y-3 landscape:grid landscape:grid-cols-2 landscape:gap-6 landscape:space-y-0">
+              {/* Order Summary - left column in landscape */}
+              <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100 landscape:col-span-1" aria-live="polite">
                 <div className="flex items-center gap-2 mb-2">
                   <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
                   <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
@@ -626,8 +699,8 @@ function SmartTerminalPageContent() {
                   </div>
                 </div>
               </div>
-              {/* Tip Selection */}
-              <div className="bg-white p-3 rounded-xl border border-gray-200">
+              {/* Tip Selection - right column in landscape */}
+              <div className="bg-white p-3 rounded-xl border border-gray-200 landscape:col-span-1 landscape:space-y-4">
                 <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Add a tip?</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {(device?.tip_presets || defaultTips).map((p: number) => (
@@ -661,9 +734,9 @@ function SmartTerminalPageContent() {
                   </Button>
                 </div>
               </div>
-              {/* Currency Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Payment Currency</label>
+              {/* Currency Selection - right column continued */}
+              <div className="space-y-2 landscape:col-span-1">
+                <label className="text-sm font-semibold text-gray-700">Network</label>
                 
                 {/* Network Filter */}
                 {availableCurrencies.length > 0 && (() => {
@@ -695,6 +768,7 @@ function SmartTerminalPageContent() {
                 })()}
                 
                 {/* Currency Selection */}
+                <label className="text-sm font-semibold text-gray-700">Currency</label>
                 <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
                   <SelectTrigger className="w-full h-10 bg-white border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
                     <SelectValue />
@@ -733,9 +807,9 @@ function SmartTerminalPageContent() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Final Total Display */}
+              {/* Final Total Display - spans both columns in landscape */}
               {tipSelected && (
-                <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 rounded-xl text-white">
+                <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 rounded-xl text-white landscape:col-span-2">
                   <div className="text-center">
                     <p className="text-xs opacity-90 mb-1">Final Total</p>
                     <p className="text-2xl font-bold">${finalTotal.toFixed(2)}</p>
@@ -745,11 +819,11 @@ function SmartTerminalPageContent() {
                   </div>
                 </div>
               )}
-              {/* Generate Payment Button */}
+              {/* Generate Payment Button - spans both columns in landscape */}
               <Button 
                 onClick={generate}
                 variant="default"
-                className="w-full h-14 sm:h-16 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full h-14 sm:h-16 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-2"
                 aria-label="pay now"
                 disabled={!tipSelected || loading}
               >
@@ -823,7 +897,7 @@ function SmartTerminalPageContent() {
                     {/* QR Code (single) */}
                     {(!needsExtra || extraIdConfirmed) && (
                       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
-                        <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={256} />
+                        <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={256} hideDetails />
                         {needsExtra && (
                           <p className="text-xs text-center text-green-600 mt-3">
                             ✓ {getExtraIdLabel(paymentData.pay_currency)} included
@@ -852,13 +926,10 @@ function SmartTerminalPageContent() {
                     // Always show the amount below address as a manual fallback
                     }
                     <div className="w-full bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-[#7f5efd] rounded-lg">
-                          <Copy className="h-3 w-3 text-white" />
-                        </div>
+                      <div className="mb-2 text-center">
                         <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
                       </div>
-                      <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm text-center">
                         <p className="text-xs text-gray-600 mb-1">Send to this address</p>
                         <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold">
                           {paymentData.pay_address}
@@ -887,8 +958,8 @@ function SmartTerminalPageContent() {
                       </div>
                     )}
 
-                    {/* Back Button */}
-                    {status !== 'confirmed' && (
+                    {/* Back Button - Hidden when locked */}
+                    {status !== 'confirmed' && !isLocked && (
                       <div className="flex justify-center">
                         <Button 
                           variant="outline" 
@@ -915,26 +986,22 @@ function SmartTerminalPageContent() {
               {status === 'confirmed' && (
                 <div className="space-y-4 w-full">
                   {/* Success Message */}
-                  <div className="bg-green-50 border border-green-200 p-4 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-6 w-6 text-green-600" />
-                      <div>
-                        <p className="font-semibold text-green-800">Payment Successful!</p>
-                        <p className="text-sm text-green-600">Transaction has been confirmed</p>
-                      </div>
-                    </div>
+                  <div className="bg-green-50 border border-green-200 p-4 rounded-xl text-center">
+                    <CheckCircle2 className="h-6 w-6 text-green-600 mx-auto" />
+                    <p className="font-semibold text-green-800 mt-2">Payment Successful!</p>
+                    <p className="text-sm text-green-600">Transaction has been confirmed</p>
                   </div>
 
                   {/* Receipt Email */}
-                  <div className="bg-white p-4 rounded-xl border border-gray-200">
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Send Receipt</label>
-                    <div className="flex gap-2">
+                  <div className="bg-white p-4 rounded-xl border border-gray-200 text-center">
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block text-center">Send Receipt</label>
+                    <div className="flex gap-2 justify-center">
                       <Input 
                         placeholder="Customer email address" 
                         value={receipt.email} 
                         onChange={e=>setReceipt({...receipt, email:e.target.value})} 
                         aria-label="receipt email"
-                        className="flex-1 h-12 bg-white border-2 border-gray-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200"
+                        className="h-12 bg-white border-2 border-gray-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-md"
                       />
                       <Button 
                         onClick={sendEmailReceipt} 
@@ -974,6 +1041,12 @@ function SmartTerminalPageContent() {
                       setTax(merchantSettings?.tax_enabled); 
                       setChargeFee(merchantSettings?.charge_customer_fee);
                       setReceipt({ email: '', sent: false });
+                      setIsLocked(false);
+                      
+                      // Exit fullscreen
+                      if (document.fullscreenElement && document.exitFullscreen) {
+                        document.exitFullscreen().catch(console.warn);
+                      }
                     }}
                     className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                   >
@@ -988,6 +1061,7 @@ function SmartTerminalPageContent() {
         </Card>
       </div>
     </div>
+    </>
   );
 }
 
