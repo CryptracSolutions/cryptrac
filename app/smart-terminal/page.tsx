@@ -316,8 +316,8 @@ function SmartTerminalPageContent() {
 
       const subtotal_with_tax = amt + tax_amount;
 
-      // Calculate gateway fee if customer pays fee
-      if (chargeFee && merchantSettings.charge_customer_fee) {
+      // Calculate gateway fee if customer pays fee (customer can override merchant setting)
+      if (chargeFee) {
         // Use the same fee calculation as the API: 0.5% base + 0.5% for auto-convert = 1% max
         const baseFeePercentage = 0.005; // 0.5%
         const autoConvertFeePercentage = merchantSettings.auto_convert_enabled ? 0.005 : 0; // 0.5% if auto-convert enabled

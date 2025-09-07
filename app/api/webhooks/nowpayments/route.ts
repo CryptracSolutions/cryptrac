@@ -839,10 +839,10 @@ export async function POST(request: Request) {
     switch (payment_status) {
       case 'finished':
       case 'confirmed':
+      case 'sending': // Sending occurs after confirmation; treat as confirmed for merchant
         newStatus = 'confirmed'
         break
       case 'confirming':
-      case 'sending':
         newStatus = 'confirming'
         break
       case 'waiting':
@@ -863,6 +863,30 @@ export async function POST(request: Request) {
       default:
         console.warn('⚠️ Unknown payment status:', payment_status)
         newStatus = payment_status
+    }
+
+    // Prevent status regression (monotonic progression)
+    const rank: Record<string, number> = {
+      pending: 0,
+      waiting: 0,
+      confirming: 1,
+      partially_paid: 1,
+      confirmed: 2,
+      sending: 2,
+      finished: 2,
+      // Terminal states retain precedence; do not force downgrade
+      failed: 0,
+      refunded: 0,
+      expired: 0,
+    }
+
+    const currentStatus = String(payment.status || 'pending')
+    const currentRank = rank[currentStatus] ?? -1
+    const newRank = rank[newStatus] ?? -1
+
+    if (newRank < currentRank) {
+      console.warn(`⚠️ Ignoring status regression ${currentStatus} → ${newStatus}; keeping ${currentStatus}`)
+      newStatus = currentStatus
     }
 
     // Prepare update data

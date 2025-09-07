@@ -103,7 +103,8 @@ export async function GET(
           // Map NOWPayments status to our status
           let mappedStatus = nowPaymentsData.payment_status;
           if (nowPaymentsData.payment_status === 'sending') {
-            mappedStatus = 'confirming';
+            // Treat sending as confirmed (post-confirm payout phase)
+            mappedStatus = 'confirmed';
           } else if (nowPaymentsData.payment_status === 'partially_paid') {
             mappedStatus = 'confirming';
           }
@@ -113,8 +114,18 @@ export async function GET(
             console.log(`📈 Status changed: ${payment.status} → ${mappedStatus}`);
 
             // Prepare update data
+            // Prevent regression after confirmation
+            let effectiveStatus = mappedStatus as string
+            const rank: Record<string, number> = { waiting: 0, pending: 0, confirming: 1, partially_paid: 1, confirmed: 2, sending: 2, finished: 2 }
+            const currentRank = rank[payment.status] ?? -1
+            const newRank = rank[mappedStatus] ?? -1
+            if (newRank < currentRank) {
+              console.warn(`⚠️ Ignoring status regression ${payment.status} → ${mappedStatus}; keeping ${payment.status}`)
+              effectiveStatus = payment.status
+            }
+
             const updateData: Record<string, unknown> = {
-              status: mappedStatus,
+              status: effectiveStatus,
               updated_at: new Date().toISOString()
             };
 
