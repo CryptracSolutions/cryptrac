@@ -63,6 +63,7 @@ export interface MerchantNotificationData {
   amount_received?: number;
   receiptUrl?: string;
   dashboardUrl?: string;
+  merchant_timezone?: string;
 }
 
 export interface SubscriptionEmailData {
@@ -82,6 +83,7 @@ export interface SubscriptionEmailData {
   payout_hash?: string;
   pay_currency?: string;
   amount_received?: number;
+  merchant_timezone?: string;
   order_id?: string;
   transaction_id?: string;
   created_at?: string;
@@ -98,6 +100,7 @@ export interface InvoiceEmailData {
   dueDate?: string;
   isPastDue?: boolean;
   daysPastDue?: number;
+  merchant_timezone?: string;
 }
 
 export type EmailTemplate = {

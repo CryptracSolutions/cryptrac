@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createClient } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-browser';
 
 interface TimezoneContextType {
   timezone: string;
@@ -14,7 +14,6 @@ const TimezoneContext = createContext<TimezoneContextType | undefined>(undefined
 export const TimezoneProvider = ({ children }: { children: ReactNode }) => {
   const [timezone, setTimezone] = useState('America/New_York'); // Default timezone
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     const fetchMerchantTimezone = async () => {

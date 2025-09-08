@@ -246,7 +246,7 @@ async function sendCustomerReceipts(
     const paymentUrl = `${appOrigin}/r/${payment.public_receipt_id}`;
 
     // Generate email template
-    const emailTemplate = generateReceiptEmailTemplate(receiptData, merchant.business_name || 'Cryptrac', paymentUrl);
+    const emailTemplate = generateReceiptEmailTemplate(receiptData, merchant.business_name || 'Cryptrac', paymentUrl, merchant.timezone || 'America/New_York');
 
     // Send email via SendGrid
     let emailStatus = 'queued';
@@ -331,7 +331,8 @@ async function sendCustomerReceipts(
 function generateReceiptEmailTemplate(
   receiptData: Record<string, unknown>,
   merchantName: string,
-  paymentUrl: string
+  paymentUrl: string,
+  timezone: string = 'America/New_York'
 ): { subject: string; html: string; text: string } {
   const {
     amount,
@@ -463,7 +464,7 @@ function generateReceiptEmailTemplate(
             <div class="detail-row">
                 <span>Date:</span>
                 <span>${new Date().toLocaleString('en-US', { 
-                  timeZone: merchant?.timezone || 'America/New_York',
+                  timeZone: timezone,
                   year: 'numeric', 
                   month: 'long', 
                   day: 'numeric',

@@ -83,6 +83,15 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   // Use embedded receipt metadata for merchant info
   const merchant = tx.receipt_metadata as { business_name?: string; logo_url?: string } | null;
 
+  // Get merchant timezone for date formatting
+  const { data: merchantData } = await supabase
+    .from('merchants')
+    .select('timezone')
+    .eq('id', tx.merchant_id)
+    .single();
+
+  const merchantTimezone = merchantData?.timezone || 'America/New_York';
+
   // Only query payment link if payment_link_id exists
   let paymentLink = null;
   if (tx.payment_link_id) {
@@ -246,7 +255,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   <div className="flex justify-between border-b border-gray-100 pb-2">
                     <span className="font-phonic text-sm font-normal text-gray-600">Payment Date</span>
                     <span className="font-phonic text-sm font-medium text-gray-900">
-                      {formatFullDateTime(tx.created_at, merchant?.timezone || 'America/New_York')}
+                      {formatFullDateTime(tx.created_at, merchantTimezone)}
                     </span>
                   </div>
                   
