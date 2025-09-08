@@ -66,6 +66,8 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   // Common ERC-20 tokens
   OCEAN: ['OCEAN', 'OCEANERC20'],
   GALA: ['GALA', 'GALAERC20'],
+  // Ensure DAI always resolves to the Ethereum ERC-20 variant first
+  DAI: ['DAIERC20', 'DAI'],
 
   // Network-suffixed stablecoin variants and aliases
   // Avalanche C-Chain stablecoins (no alias to Arbitrum)
