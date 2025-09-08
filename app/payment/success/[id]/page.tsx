@@ -152,7 +152,6 @@ export default function PaymentSuccessPage() {
 
       console.log('✅ Email receipt sent successfully')
       setEmailReceiptSent(true)
-      toast.success('Email receipt sent successfully!')
 
       // Update payment record with customer email
       await updateCustomerContact('email', email.trim())
@@ -326,7 +325,6 @@ export default function PaymentSuccessPage() {
         {/* Payment Summary */}
         <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Summary</CardTitle>
             <p className="font-phonic text-base font-normal text-gray-600">
               Payment to <span className="font-phonic font-medium text-gray-900">{paymentData.payment_link.merchant.business_name}</span>
             </p>
@@ -335,6 +333,13 @@ export default function PaymentSuccessPage() {
             {/* Payment Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
+                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Method</Label>
+                <p className="font-phonic text-2xl font-normal text-[#7f5efd] mb-2">{paymentData.pay_currency.toUpperCase()}</p>
+                <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-semibold">
+                  {paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
+                </Badge>
+              </div>
+              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
                 <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount Paid</Label>
                 <p className="font-phonic text-3xl font-medium text-[#7f5efd] mb-2">
                   {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
@@ -342,13 +347,6 @@ export default function PaymentSuccessPage() {
                 <p className="font-phonic text-sm font-normal text-gray-600">
                   ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
                 </p>
-              </div>
-              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
-                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Method</Label>
-                <p className="font-phonic text-2xl font-normal text-[#7f5efd] mb-2">{paymentData.pay_currency.toUpperCase()}</p>
-                <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-semibold">
-                  {paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
-                </Badge>
               </div>
             </div>
 
@@ -362,7 +360,7 @@ export default function PaymentSuccessPage() {
                   <Input
                     value={paymentData.order_id}
                     readOnly
-                    className="font-mono text-sm bg-gray-50 w-full flex-1 max-w-3xl text-center"
+                    className="font-mono text-sm bg-gray-50 w-full flex-1 min-w-[400px] text-center"
                   />
                   <Button
                     variant="outline"
@@ -393,7 +391,7 @@ export default function PaymentSuccessPage() {
                     <Input
                       value={paymentData.payin_extra_id}
                       readOnly
-                      className="font-mono text-sm bg-white border-green-300"
+                      className="font-mono text-sm bg-white border-green-300 w-full flex-1 min-w-[400px]"
                     />
                     <Button
                       variant="outline"
@@ -415,7 +413,7 @@ export default function PaymentSuccessPage() {
                     <Input
                       value={paymentData.tx_hash}
                       readOnly
-                      className="font-mono text-sm bg-gray-50 w-full flex-1 max-w-3xl text-center"
+                      className="font-mono text-sm bg-gray-50 w-full flex-1 min-w-[500px] text-center"
                     />
                     <Button
                       variant="outline"
@@ -454,7 +452,7 @@ export default function PaymentSuccessPage() {
                     <Input
                       value={paymentData.payout_hash}
                       readOnly
-                      className="font-mono text-sm bg-gray-50"
+                      className="font-mono text-sm bg-gray-50 w-full flex-1 min-w-[500px]"
                     />
                     <Button
                       variant="outline"
@@ -490,9 +488,6 @@ export default function PaymentSuccessPage() {
         <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
           <CardHeader className="text-center pb-6">
             <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Get Your Receipt</CardTitle>
-            <p className="font-phonic text-base font-normal text-gray-600">
-              Receive a detailed receipt for your records
-            </p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Email Receipt */}

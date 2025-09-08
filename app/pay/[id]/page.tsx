@@ -9,7 +9,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown, ShoppingBag } from 'lucide-react'
+import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown, ShoppingBag, Bitcoin, Coins, Network, TrendingUp, Smartphone, DollarSign } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
@@ -124,14 +124,6 @@ interface FeeBreakdown {
   merchantReceives: number
 }
 
-interface EstimateData {
-  currency_from: string
-  currency_to: string
-  amount_from: number
-  estimated_amount: number
-  fee_amount: number
-  fee_percentage: number
-}
 
 // Block explorer URLs for different networks
 const getBlockExplorerUrl = (txHash: string, currency: string): string | null => {
@@ -243,7 +235,6 @@ export default function PaymentPage() {
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([])
   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
   const [selectedNetwork, setSelectedNetwork] = useState<string>('all')
-  const [estimates, setEstimates] = useState<Record<string, EstimateData>>({})
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
@@ -297,6 +288,14 @@ export default function PaymentPage() {
       try { setClientId(getOrCreateClientId()) } catch {}
     })()
   }, [])
+
+  // Ensure DAI on Ethereum: if the ETH network is selected and the current
+  // currency is an Arbitrum-specific DAI code, normalize to plain DAI.
+  useEffect(() => {
+    if (selectedNetwork === 'ethereum' && selectedCurrency.toUpperCase() === 'DAIARB') {
+      setSelectedCurrency('DAI')
+    }
+  }, [selectedNetwork, selectedCurrency])
   
   // Currency backend mapping for payment processing
   const [currencyBackendMapping, setCurrencyBackendMapping] = useState<Record<string, string>>({})
@@ -418,82 +417,6 @@ export default function PaymentPage() {
     }
   }
 
-  // Load currency estimates in small parallel batches for better performance
-  const loadEstimates = async () => {
-    if (!paymentLink || availableCurrencies.length === 0) return
-
-    console.log('📊 Loading payment estimates...')
-
-    const amount = feeBreakdown ? feeBreakdown.customerTotal : paymentLink.amount
-    const newEstimates: Record<string, EstimateData> = {}
-    const batchSize = 3
-
-    // Skip currencies that aren’t available via NOWPayments
-    const activeCurrencies = availableCurrencies.filter(c => c.enabled)
-    for (let i = 0; i < activeCurrencies.length; i += batchSize) {
-      const batch = activeCurrencies.slice(i, i + batchSize)
-
-      const results = await Promise.all(
-        batch.map(async (currency) => {
-          const backendCurrency = currencyBackendMapping[currency.code] || currency.code
-          try {
-            const response = await fetch('/api/nowpayments/estimate', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                amount,
-                currency_from: paymentLink.currency.toLowerCase(),
-                currency_to: backendCurrency.toLowerCase(),
-              }),
-            })
-
-            if (response.ok) {
-              const data = await response.json()
-              if (data.success && data.estimate) {
-                console.log(`✅ Estimate loaded for ${currency.code}: ${data.estimate.estimated_amount}`)
-                return {
-                  code: currency.code,
-                  estimate: {
-                    currency_from: paymentLink.currency,
-                    currency_to: currency.code,
-                    amount_from: amount,
-                    estimated_amount: data.estimate.estimated_amount,
-                    fee_amount: data.estimate.fee_amount || 0,
-                    fee_percentage: data.estimate.fee_percentage || 0,
-                  } as EstimateData,
-                }
-              } else {
-                console.warn(`⚠️ Failed to get estimate for ${currency.code}:`, data.error)
-              }
-            } else {
-              console.warn(`⚠️ HTTP ${response.status} for ${currency.code}`)
-            }
-          } catch (error) {
-            console.error(`❌ Error loading estimate for ${currency.code}:`, error)
-          }
-          return null
-        })
-      )
-
-      results.forEach((result) => {
-        if (result) {
-          newEstimates[result.code] = result.estimate
-        }
-      })
-    }
-
-    setEstimates(newEstimates)
-    console.log(`✅ Loaded ${Object.keys(newEstimates).length} estimates`)
-  }
-
-  // Load estimates when currencies are available
-  useEffect(() => {
-    if (paymentLink && availableCurrencies.length > 0) {
-      loadEstimates()
-    }
-    }, [paymentLink, availableCurrencies]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const createPayment = async () => {
     if (!selectedCurrency || !paymentLink) return
@@ -794,116 +717,263 @@ export default function PaymentPage() {
                 {!paymentData ? (
                   /* Currency Selection */
                   <div className="space-y-4">
-                    <label className="text-sm font-semibold text-gray-700 block text-center">Select Payment Currency</label>
+                    {/* Network Selection */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Network className="h-4 w-4 text-[#7f5efd]" />
+                        Network
+                      </label>
+                      
+                      {/* Network Filter */}
+                      {availableCurrencies.length > 0 && (() => {
+                        const groupedCurrencies = groupCurrenciesByNetwork(
+                          availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                          paymentLink.accepted_cryptos
+                        )
+                        const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+                        
+                        const getNetworkIcon = (networkId: string) => {
+                          switch (networkId) {
+                            case 'bitcoin': return <Bitcoin className="h-4 w-4 text-white" />
+                            case 'ethereum': return <Zap className="h-4 w-4 text-white" />
+                            case 'binance': return <TrendingUp className="h-4 w-4 text-white" />
+                            case 'solana': return <Zap className="h-4 w-4 text-white" />
+                            case 'polygon': return <Network className="h-4 w-4 text-white" />
+                            case 'tron': return <Globe className="h-4 w-4 text-white" />
+                            case 'ton': return <Smartphone className="h-4 w-4 text-white" />
+                            case 'arbitrum': return <TrendingUp className="h-4 w-4 text-white" />
+                            case 'optimism': return <CheckCircle2 className="h-4 w-4 text-white" />
+                            case 'base': return <DollarSign className="h-4 w-4 text-white" />
+                            case 'avalanche': return <Network className="h-4 w-4 text-white" />
+                            case 'algorand': return <Coins className="h-4 w-4 text-white" />
+                            case 'litecoin': return <Coins className="h-4 w-4 text-white" />
+                            case 'cardano': return <Coins className="h-4 w-4 text-white" />
+                            case 'polkadot': return <Network className="h-4 w-4 text-white" />
+                            case 'chainlink': return <Globe className="h-4 w-4 text-white" />
+                            default: return <Network className="h-4 w-4 text-white" />
+                          }
+                        }
+                        
+                        return (
+                          <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
+                            <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
+                              <div className="flex items-center gap-2">
+                                {(() => {
+                                  const iconClass = "h-4 w-4 text-[#7f5efd]"
+                                  switch (selectedNetwork) {
+                                    case 'all':
+                                      return <Globe className={iconClass} />
+                                    case 'bitcoin':
+                                      return <Bitcoin className={iconClass} />
+                                    case 'ethereum':
+                                      return <Zap className={iconClass} />
+                                    case 'binance':
+                                      return <TrendingUp className={iconClass} />
+                                    case 'solana':
+                                      return <Zap className={iconClass} />
+                                    case 'polygon':
+                                      return <Network className={iconClass} />
+                                    case 'tron':
+                                      return <Globe className={iconClass} />
+                                    case 'ton':
+                                      return <Smartphone className={iconClass} />
+                                    case 'arbitrum':
+                                      return <TrendingUp className={iconClass} />
+                                    case 'optimism':
+                                      return <CheckCircle2 className={iconClass} />
+                                    case 'base':
+                                      return <DollarSign className={iconClass} />
+                                    case 'avalanche':
+                                      return <Network className={iconClass} />
+                                    case 'algorand':
+                                      return <Coins className={iconClass} />
+                                    case 'litecoin':
+                                      return <Coins className={iconClass} />
+                                    case 'cardano':
+                                      return <Coins className={iconClass} />
+                                    case 'polkadot':
+                                      return <Network className={iconClass} />
+                                    case 'chainlink':
+                                      return <Globe className={iconClass} />
+                                    default:
+                                      return <Network className={iconClass} />
+                                  }
+                                })()}
+                                <span className="font-semibold">
+                                  {selectedNetwork === 'all'
+                                    ? 'All Networks'
+                                    : (getNetworkInfo(selectedNetwork)?.displayName || 'Network')}
+                                </span>
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
+                              <SelectItem value="all" textValue="All Networks" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-4 w-4 text-white" />
+                                  <span className="font-bold text-white">All Networks</span>
+                                </div>
+                              </SelectItem>
+                              {availableNetworks.map(networkId => {
+                                const network = getNetworkInfo(networkId)
+                                if (!network) return null
+                                const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                                return (
+                                  <SelectItem key={networkId} value={networkId} textValue={network.displayName} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                                    <div className="flex items-center justify-between w-full">
+                                      <div className="flex items-center gap-2">
+                                        {getNetworkIcon(networkId)}
+                                        <span className="font-bold text-white">{network.displayName}</span>
+                                      </div>
+                                      <span className="text-sm font-bold text-white bg-white/20 px-2 py-0.5 rounded-md ml-4">
+                                        {currencyCount}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                )
+                              })}
+                            </SelectContent>
+                          </Select>
+                        )
+                      })()}
+                    </div>
                     
-                    {/* Network Filter Dropdown */}
-                    {availableCurrencies.length > 0 && (() => {
-                      const groupedCurrencies = groupCurrenciesByNetwork(
-                        availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                        paymentLink.accepted_cryptos
-                      )
-                      const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
-
-                      return (
-                        <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                          <SelectTrigger className="w-full h-12 bg-white border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200">
-                            <SelectValue placeholder="All Networks" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Networks</SelectItem>
-                            {availableNetworks.map(networkId => {
-                              const network = getNetworkInfo(networkId)
-                              if (!network) return null
-                              const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                    {/* Currency Selection */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Coins className="h-4 w-4 text-[#7f5efd]" />
+                        Currency
+                      </label>
+                      {availableCurrencies.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-[#7f5efd] mx-auto mb-4" />
+                          <p className="text-base text-gray-600">Loading available currencies...</p>
+                        </div>
+                      ) : (
+                        <Select value={selectedCurrency} onValueChange={(value) => setSelectedCurrency(value)}>
+                          <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
+                            {selectedCurrency ? (() => {
+                              const current = availableCurrencies.find(c => c.code === selectedCurrency)
+                              const displayName = current?.name || getCurrencyDisplayName(selectedCurrency)
+                              const getCurrencyIconLocal = (currencyCode: string) => {
+                                const code = currencyCode.toUpperCase()
+                                if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-[#7f5efd]" />
+                                if (code.includes('USDT') || code.includes('USDC') || code.includes('DAI') || code.includes('PYUSD') || code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'MATIC') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'TRX') return <Globe className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'TON') return <Smartphone className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'AVAX') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'ALGO') return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'LTC') return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'ADA') return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'DOT') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                                if (code === 'LINK') return <Globe className="h-4 w-4 text-[#7f5efd]" />
+                                return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                              }
                               return (
-                                <SelectItem key={networkId} value={networkId}>
-                                  {network.displayName} <span className="ml-2 text-xs text-gray-500">({currencyCount})</span>
-                                </SelectItem>
+                                <div className="flex items-center gap-2">
+                                  {getCurrencyIconLocal(selectedCurrency)}
+                                  <span className="font-bold">{selectedCurrency.toUpperCase()}</span>
+                                  <span className="text-gray-600">{displayName}</span>
+                                </div>
                               )
-                            })}
+                            })() : (
+                              <span className="text-gray-500">Select a currency</span>
+                            )}
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
+                            {(() => {
+                              // Filter currencies based on selected network
+                              let filteredCurrencies = availableCurrencies
+                              
+                              if (selectedNetwork !== 'all') {
+                                const groupedCurrencies = groupCurrenciesByNetwork(
+                                  availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                                  paymentLink.accepted_cryptos
+                                )
+                                const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+                                const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
+                                filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
+                              }
+
+                              // Swap: when Ethereum network is selected, show DAI (ETH)
+                              // instead of any Arbitrum-specific DAI code that may leak in
+                              if (selectedNetwork === 'ethereum') {
+                                filteredCurrencies = filteredCurrencies.map(c =>
+                                  c.code.toUpperCase() === 'DAIARB'
+                                    ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
+                                    : c
+                                )
+                                // Deduplicate if both DAI and DAIARB were present
+                                const seen = new Set<string>()
+                                filteredCurrencies = filteredCurrencies.filter(c => {
+                                  const key = c.code.toUpperCase()
+                                  if (seen.has(key)) return false
+                                  seen.add(key)
+                                  return true
+                                })
+                              }
+                              
+                              const getCurrencyIcon = (currencyCode: string) => {
+                                const code = currencyCode.toUpperCase()
+                                // Bitcoin
+                                if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-white" />
+                                // Stablecoins
+                                if (code.includes('USDT')) return <DollarSign className="h-4 w-4 text-white" />
+                                if (code.includes('USDC')) return <DollarSign className="h-4 w-4 text-white" />
+                                if (code.includes('DAI')) return <DollarSign className="h-4 w-4 text-white" />
+                                if (code.includes('PYUSD')) return <DollarSign className="h-4 w-4 text-white" />
+                                if (code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-white" />
+                                // Major cryptocurrencies
+                                if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-white" />
+                                if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-white" />
+                                if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-white" />
+                                if (code === 'MATIC') return <Network className="h-4 w-4 text-white" />
+                                if (code === 'TRX') return <Globe className="h-4 w-4 text-white" />
+                                if (code === 'TON') return <Smartphone className="h-4 w-4 text-white" />
+                                if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-white" />
+                                if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-white" />
+                                if (code === 'AVAX') return <Network className="h-4 w-4 text-white" />
+                                if (code === 'ALGO') return <Coins className="h-4 w-4 text-white" />
+                                if (code === 'LTC') return <Coins className="h-4 w-4 text-white" />
+                                if (code === 'ADA') return <Coins className="h-4 w-4 text-white" />
+                                if (code === 'DOT') return <Network className="h-4 w-4 text-white" />
+                                if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
+                                return <Coins className="h-4 w-4 text-white" />
+                              }
+                              
+                              return filteredCurrencies.map((c) => {
+                                const displayName = c.name || getCurrencyDisplayName(c.code)
+                                const isAvailable = c.enabled
+                                return (
+                                  <SelectItem
+                                    key={c.code}
+                                    value={c.code}
+                                    textValue={`${c.code.toUpperCase()} ${displayName}`}
+                                    disabled={!isAvailable}
+                                    className={cn(
+                                      "hover:bg-white/10 rounded-lg transition-colors duration-200",
+                                      !isAvailable && "opacity-50 cursor-not-allowed"
+                                    )}
+                                    title={!isAvailable ? 'Temporarily unavailable' : undefined}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {getCurrencyIcon(c.code)}
+                                      <span className="font-bold text-white">{c.code.toUpperCase()}</span>
+                                      <span className="text-sm text-white/80">{displayName}</span>
+                                    </div>
+                                  </SelectItem>
+                                )
+                              })
+                            })()}
                           </SelectContent>
                         </Select>
-                      )
-                    })()}
-                    
-                    {availableCurrencies.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#7f5efd] mx-auto mb-4" />
-                        <p className="text-base text-gray-600">Loading available currencies...</p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-3">
-                        {(() => {
-                          let filteredCurrencies = availableCurrencies
-                          
-                          if (selectedNetwork !== 'all') {
-                            const groupedCurrencies = groupCurrenciesByNetwork(
-                              availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                              paymentLink.accepted_cryptos
-                            )
-                            const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
-                            const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
-                            filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
-                          }
-                          
-                          if (filteredCurrencies.length === 0) {
-                            return (
-                              <div className="text-center py-8">
-                                <p className="text-base text-gray-500">No currencies available for this network</p>
-                              </div>
-                            )
-                          }
-                          
-                          return filteredCurrencies.map((currency) => {
-                            const estimate = estimates[currency.code]
-                            const isSelected = selectedCurrency === currency.code
-                            const isDisabled = !currency.enabled
-                            const displayName = getCurrencyDisplayName(currency.code)
-                            
-                            return (
-                              <div
-                                key={currency.code}
-                                className={cn(
-                                  "border-2 rounded-lg p-3 cursor-pointer transition-all duration-200 flex items-center justify-between",
-                                  isSelected
-                                    ? "border-[#7f5efd] bg-purple-50 shadow-md"
-                                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm",
-                                  isDisabled && "opacity-50 cursor-not-allowed hover:shadow-none hover:border-gray-200"
-                                )}
-                                onClick={() => {
-                                  if (isDisabled) return
-                                  setSelectedCurrency(currency.code)
-                                }}
-                                title={isDisabled ? 'Temporarily unavailable' : undefined}
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className={cn(
-                                    "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                                    isSelected ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300"
-                                  )}>
-                                    {isSelected && <div className="w-2 h-2 rounded-full bg-white"></div>}
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-gray-900">{currency.code.toUpperCase()}</div>
-                                    <div className="text-xs text-gray-500">{displayName}</div>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  {estimate && estimate.estimated_amount ? (
-                                    <div className="font-medium text-gray-900">
-                                      {estimate.estimated_amount.toFixed(6)}
-                                    </div>
-                                  ) : (
-                                    <div className="text-sm text-gray-400">Calculating...</div>
-                                  )}
-                                  <div className="text-xs text-gray-500">{currency.code.toUpperCase()}</div>
-                                </div>
-                              </div>
-                            )
-                          })
-                        })()}
-                      </div>
-                    )}
+                      )}
+                    </div>
                     
                     {selectedCurrency && (
                       <Button 
