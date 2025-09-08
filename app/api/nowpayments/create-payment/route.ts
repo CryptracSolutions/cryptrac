@@ -764,7 +764,6 @@ export async function POST(request: Request) {
 
         // If HBAR payout validation failed, try alternate address representation and retry once
         const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
-        const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
         if (
           autoForwardingConfigured &&
           paymentRequest.payout_currency === 'hbar' &&

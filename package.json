@@ -46,6 +46,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "secp256k1": "^5.0.1",
     "server-only": "^0.0.1",
     "sonner": "^2.0.6",
