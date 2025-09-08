@@ -1093,27 +1093,24 @@ export default function PaymentPage() {
                       </div>
 
                       {/* Address */}
-                      <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
+                      <div className="w-full bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-200">
+                        <div className="mb-2 text-center">
+                          <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
                         </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-600 mb-1">Send to this address</p>
-                              <p className="text-sm font-mono break-all text-gray-900 leading-relaxed tracking-wide">
-                                {paymentData.pay_address}
-                              </p>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                              className="ml-3 border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
+                        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm text-center relative">
+                          <p className="text-xs text-gray-600 mb-1">Send to this address</p>
+                          <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold">
+                            {paymentData.pay_address}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
+                            className="absolute right-2 top-2 border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
+                            aria-label="Copy address"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
 
@@ -1126,11 +1123,16 @@ export default function PaymentPage() {
                               <p className="text-xs font-semibold text-purple-900 mb-1">
                                 {getExtraIdLabel(paymentData.pay_currency)} Required
                               </p>
-                              <div className="bg-white p-1.5 rounded-md border border-purple-200 mb-1">
-                                <p className="text-xs font-mono text-gray-900">
-                                  {paymentData.payin_extra_id}
-                                </p>
-                              </div>
+                              {(() => {
+                                const highlight = ['XLM','HBAR','XRP'].includes(paymentData.pay_currency.toUpperCase())
+                                return (
+                                  <div className={"bg-white p-1.5 rounded-md border border-purple-200 mb-1" + (highlight ? " text-center" : "") }>
+                                    <p className={"text-xs font-mono " + (highlight ? "text-[#7f5efd] font-semibold" : "text-gray-900") }>
+                                      {paymentData.payin_extra_id}
+                                    </p>
+                                  </div>
+                                )
+                              })()}
                               <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
                               <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
                             </div>

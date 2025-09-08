@@ -1194,11 +1194,16 @@ function SmartTerminalPageContent() {
                             <p className="text-xs font-semibold text-purple-900 mb-1">
                               {getExtraIdLabel(paymentData.pay_currency)} Required
                             </p>
-                            <div className="bg-white p-1.5 rounded-md border border-purple-200 mb-1">
-                              <p className="text-xs font-mono text-gray-900">
-                                {paymentData.payin_extra_id}
-                              </p>
-                            </div>
+                            {(() => {
+                              const highlight = ['XLM','HBAR','XRP'].includes(paymentData.pay_currency.toUpperCase());
+                              return (
+                                <div className={"bg-white p-1.5 rounded-md border border-purple-200 mb-1" + (highlight ? " text-center" : "") }>
+                                  <p className={"text-xs font-mono " + (highlight ? "text-[#7f5efd] font-semibold" : "text-gray-900") }>
+                                    {paymentData.payin_extra_id}
+                                  </p>
+                                </div>
+                              );
+                            })()}
                             <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
                             <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
                           </div>
