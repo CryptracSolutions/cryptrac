@@ -1086,6 +1086,23 @@ export default function PaymentPage() {
                         </div>
                       )}
 
+                      {/* Destination Tag/Memo Warning (centered, above amount) */}
+                      {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                          <AlertTriangle className="h-4 w-4 text-[#7f5efd] mx-auto mb-1" />
+                          <p className="text-xs font-semibold text-purple-900 mb-1">
+                            {getExtraIdLabel(paymentData.pay_currency)} Required
+                          </p>
+                          <div className="bg-white p-1.5 rounded-md border border-purple-200 mb-1">
+                            <p className="text-sm font-mono text-[#7f5efd] font-semibold break-all">
+                              {paymentData.payin_extra_id}
+                            </p>
+                          </div>
+                          <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
+                          <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
+                        </div>
+                      )}
+
                       {/* Amount */}
                       <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200 text-center">
                         <p className="text-sm text-gray-600 mb-1">Send exactly</p>
@@ -1114,31 +1131,7 @@ export default function PaymentPage() {
                         </div>
                       </div>
 
-                      {/* Destination Tag/Memo Warning (Smart Terminal style) */}
-                      {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
-                          <div className="flex items-start gap-2">
-                            <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
-                            <div className="flex-1">
-                              <p className="text-xs font-semibold text-purple-900 mb-1">
-                                {getExtraIdLabel(paymentData.pay_currency)} Required
-                              </p>
-                              {(() => {
-                                const highlight = ['XLM','HBAR','XRP'].includes(paymentData.pay_currency.toUpperCase())
-                                return (
-                                  <div className={"bg-white p-1.5 rounded-md border border-purple-200 mb-1" + (highlight ? " text-center" : "") }>
-                                    <p className={"text-xs font-mono " + (highlight ? "text-[#7f5efd] font-semibold" : "text-gray-900") }>
-                                      {paymentData.payin_extra_id}
-                                    </p>
-                                  </div>
-                                )
-                              })()}
-                              <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
-                              <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      {/* Destination Tag/Memo Warning moved above */}
 
 
                       {/* Instructions */}
