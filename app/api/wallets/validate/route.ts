@@ -102,8 +102,8 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   // Elrond/MultiversX - erd format
   EGLD: /^erd[0-9a-z]{59}$/,
   
-  // Hedera - account ID format
-  HBAR: /^0\.0\.[0-9]+$/,
+  // Hedera - account ID (0.0.x) or EVM alias (0x...)
+  HBAR: /^(0\.0\.[0-9]+|0x[a-fA-F0-9]{40})$/,
   
   // Monero - supports multiple formats
   XMR: /^(4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}|8[0-9AB][1-9A-HJ-NP-Za-km-z]{93})$/,
@@ -253,7 +253,7 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   theta: /^0x[a-fA-F0-9]{40}$/,
   flow: /^0x[a-fA-F0-9]{16}$/,
   elrond: /^erd[0-9a-z]{59}$/,
-  hedera: /^0\.0\.[0-9]+$/,
+  hedera: /^(0\.0\.[0-9]+|0x[a-fA-F0-9]{40})$/,
   monero: /^(4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}|8[0-9AB][1-9A-HJ-NP-Za-km-z]{93})$/,
   zcash: /^(t[13][a-km-zA-HJ-NP-Z1-9]{33}|zs[0-9a-z]{76})$/,
   dash: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,

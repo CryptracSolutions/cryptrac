@@ -7,6 +7,9 @@ export const dynamic = 'force-dynamic';
 
 const NOWPAYMENTS_BASE_URL = 'https://api.nowpayments.io/v1';
 
+// Optional: Hedera Mirror Node (for converting between 0.0.x and EVM alias)
+const HEDERA_MIRROR_NODE_URL = process.env.HEDERA_MIRROR_NODE_URL || 'https://mainnet-public.mirrornode.hedera.com'
+
 // Enhanced network-to-wallet mapping with proper validation
 const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   // Bitcoin network
@@ -127,9 +130,9 @@ function isValidWalletAddress(address: string, currency: string): boolean {
     return isClassic || isMuxed
   }
 
-  // HBAR account id (shard.realm.num), e.g. 0.0.12345
+  // HBAR: accept Hedera account ID (shard.realm.num) or EVM alias (0x...)
   if (currencyUpper === 'HBAR') {
-    return (/^\d+\.\d+\.\d+$/).test(trimmed)
+    return (/^\d+\.\d+\.\d+$/).test(trimmed) || (/^0x[a-fA-F0-9]{40}$/).test(trimmed)
   }
 
   // Default: pass-through for unmodeled coins
@@ -180,6 +183,40 @@ function handleNOWPaymentsError(error: unknown, context: string): NextResponse {
   }
 
   return NextResponse.json(response, { status: statusCode, headers })
+}
+
+// Try to resolve the alternate representation for a Hedera account address
+// - If given 0.0.x → return 0xEVM alias
+// - If given 0x... → return 0.0.x account ID
+async function resolveHederaAlternateAddress(address: string): Promise<string | null> {
+  try {
+    const trimmed = address.trim()
+    const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+    const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
+    if (!isAccountId && !isEvm) return null
+
+    const target = encodeURIComponent(trimmed)
+    const url = `${HEDERA_MIRROR_NODE_URL}/api/v1/accounts/${target}`
+    const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(8000) })
+    if (!res.ok) return null
+    const data = await res.json().catch(() => null)
+    if (!data) return null
+
+    // Mirror node returns either `account` and/or `evm_address`
+    const accountId = typeof data.account === 'string' ? data.account : null
+    const evmAddr = typeof data.evm_address === 'string' ? data.evm_address : null
+
+    if (isAccountId && evmAddr) {
+      // Ensure 0x prefix
+      return evmAddr.startsWith('0x') ? evmAddr : `0x${evmAddr}`
+    }
+    if (isEvm && accountId) {
+      return accountId
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 // Function to get minimum amount for a currency pair
@@ -511,12 +548,16 @@ export async function POST(request: Request) {
             )
           }
 
-          paymentRequest.payout_address = walletAddress
+          // Normalize address before sending to NOWPayments
+          paymentRequest.payout_address = walletAddress.trim()
           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
           
           // Add payout_extra_id if merchant configured one for this currency (optional)
+          // For HBAR (Hedera), many exchanges (e.g., Coinbase) require a memo for crediting.
+          // We include it if provided by the merchant.
           if (requiresExtraId(targetPayoutCurrency)) {
-            const extraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+            const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+            const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
             if (extraId) {
               paymentRequest.payout_extra_id = extraId
               console.log(
@@ -618,59 +659,101 @@ export async function POST(request: Request) {
         } catch {
           errorData = { message: errorText }
         }
-        
-        // Handle specific NOWPayments errors
-        if (errorData.code === 'BAD_REQUEST' && errorData.message?.includes('amountTo is too small')) {
-          // Try to get minimum amount information for better error message
-          let minAmountInfo = ''
-          if (autoForwardingConfigured && paymentRequest.payout_currency) {
-            try {
-              const minAmount = await getMinimumAmount(
-                // Provide min for the actual on-chain route (pay -> payout)
-                paymentRequest.pay_currency,
-                paymentRequest.payout_currency
-              )
-              const suggestedAmount = minAmount / (1 - totalFeePct)
-              minAmountInfo = ` The minimum payout amount for ${paymentRequest.payout_currency.toUpperCase()} is ${minAmount}. Please increase the payment amount to at least $${Math.ceil(suggestedAmount * 100) / 100}.`
-            } catch (error) {
-              console.warn('Could not fetch minimum amount for error message:', error)
+
+        // If HBAR payout validation failed, try alternate address representation and retry once
+        if (
+          autoForwardingConfigured &&
+          paymentRequest.payout_currency === 'hbar' &&
+          typeof paymentRequest.payout_address === 'string' &&
+          (errorData?.code === 'BAD_CREATE_PAYMENT_REQUEST' || String(errorData?.message || '').toLowerCase().includes('validate address'))
+        ) {
+          try {
+            const alt = await resolveHederaAlternateAddress(paymentRequest.payout_address)
+            if (alt && alt.toLowerCase() !== paymentRequest.payout_address.toLowerCase()) {
+              console.log('🔁 Retrying NOWPayments with alternate HBAR address format:', alt.substring(0, 10) + '...')
+              const retryReq = { ...paymentRequest, payout_address: alt }
+              const retryRes = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
+                method: 'POST',
+                headers: {
+                  'x-api-key': NOWPAYMENTS_API_KEY,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(retryReq),
+              })
+              const retryText = await retryRes.text()
+              if (retryText.trim().startsWith('<')) {
+                throw new Error(`NOWPayments service temporarily unavailable - please try again later`)
+              }
+              if (retryRes.ok) {
+                paymentResponse = JSON.parse(retryText) as PaymentResponse
+                // Also reflect the address used
+                paymentRequest.payout_address = alt
+                console.log('✅ Retry succeeded with alternate HBAR address format')
+              } else {
+                console.error('❌ Retry with alternate HBAR address failed:', retryRes.status, retryText)
+              }
             }
+          } catch (e) {
+            console.warn('⚠️ Could not resolve alternate HBAR address:', e)
+          }
+        }
+
+        // If still no success after optional retry, proceed with error handling
+        if (!paymentResponse) {
+          
+          // Handle specific NOWPayments errors
+          if (errorData.code === 'BAD_REQUEST' && errorData.message?.includes('amountTo is too small')) {
+            // Try to get minimum amount information for better error message
+            let minAmountInfo = ''
+            if (autoForwardingConfigured && paymentRequest.payout_currency) {
+              try {
+                const minAmount = await getMinimumAmount(
+                  // Provide min for the actual on-chain route (pay -> payout)
+                  paymentRequest.pay_currency,
+                  paymentRequest.payout_currency
+                )
+                const suggestedAmount = minAmount / (1 - totalFeePct)
+                minAmountInfo = ` The minimum payout amount for ${paymentRequest.payout_currency.toUpperCase()} is ${minAmount}. Please increase the payment amount to at least $${Math.ceil(suggestedAmount * 100) / 100}.`
+              } catch (error) {
+                console.warn('Could not fetch minimum amount for error message:', error)
+              }
+            }
+            
+            return NextResponse.json(
+              { 
+                success: false, 
+                error: 'Payment amount too small for processing after fees. Please try a larger amount.',
+                details: `The payout amount after fees is below the minimum threshold for auto-forwarding to your wallet.${minAmountInfo}`,
+                code: 'AMOUNT_TOO_SMALL'
+              },
+              { status: 400 }
+            )
           }
           
-          return NextResponse.json(
-            { 
-              success: false, 
-              error: 'Payment amount too small for processing after fees. Please try a larger amount.',
-              details: `The payout amount after fees is below the minimum threshold for auto-forwarding to your wallet.${minAmountInfo}`,
-              code: 'AMOUNT_TOO_SMALL'
-            },
-            { status: 400 }
-          )
-        }
-        
-        // If auto-forwarding failed, don't retry without it - fail the payment
-        if (autoForwardingConfigured && (
-          errorData.code === 'BAD_CREATE_PAYMENT_REQUEST' ||
-          errorData.message?.includes('payout_extra_id') ||
-          errorData.message?.includes('payout_address')
-        )) {
-          return NextResponse.json(
-            { 
-              success: false, 
-              error: 'Auto-forwarding configuration failed. Please check your wallet address.',
-              details: errorData.message || 'Auto-forwarding is required but failed to configure'
-            },
-            { status: 400 }
-          )
-        } else {
-          return NextResponse.json(
-            { 
-              success: false, 
-              error: 'Payment creation failed',
-              details: errorData.message || 'Unknown error from payment provider'
-            },
-            { status: response.status }
-          )
+          // If auto-forwarding failed, don't retry without it - fail the payment
+          if (autoForwardingConfigured && (
+            errorData.code === 'BAD_CREATE_PAYMENT_REQUEST' ||
+            errorData.message?.includes('payout_extra_id') ||
+            errorData.message?.includes('payout_address')
+          )) {
+            return NextResponse.json(
+              { 
+                success: false, 
+                error: 'Auto-forwarding configuration failed. Please check your wallet address.',
+                details: errorData.message || 'Auto-forwarding is required but failed to configure'
+              },
+              { status: 400 }
+            )
+          } else {
+            return NextResponse.json(
+              { 
+                success: false, 
+                error: 'Payment creation failed',
+                details: errorData.message || 'Unknown error from payment provider'
+              },
+              { status: response.status }
+            )
+          }
         }
       } else {
         paymentResponse = responseData as PaymentResponse
