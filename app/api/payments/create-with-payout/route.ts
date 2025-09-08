@@ -179,6 +179,16 @@ export async function POST(request: NextRequest) {
         } catch (e) {
           console.warn('⚠️ HBAR alternate-format retry failed:', e)
         }
+
+        // Optional: final retry without memo if provider rejects extra_id for HBAR
+        if (!nowPaymentsResponse.ok && process.env.HBAR_PAYOUT_ALLOW_NO_MEMO === 'true' && paymentPayload.payout_extra_id) {
+          const { payout_extra_id, ...noMemoPayload } = paymentPayload as any
+          console.warn('⚠️ Retrying HBAR payout without memo due to validation error (HBAR_PAYOUT_ALLOW_NO_MEMO=true)')
+          nowPaymentsResponse = await fetch('https://api.nowpayments.io/v1/payment', {
+            method: 'POST', headers: { 'x-api-key': process.env.NOWPAYMENTS_API_KEY!, 'Content-Type': 'application/json' }, body: JSON.stringify(noMemoPayload)
+          })
+          responseText = await nowPaymentsResponse.text()
+        }
       }
     }
 
