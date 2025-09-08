@@ -568,33 +568,68 @@ export async function POST(request: Request) {
             )
           }
 
-          // Normalize address before sending to NOWPayments
-          if (targetPayoutCurrency.toUpperCase() === 'HBAR') {
-            const norm = await normalizeHederaPayoutAddress(walletAddress)
-            paymentRequest.payout_address = norm.normalized
-            if (norm.converted) {
-              console.log(`🔄 Converted HBAR payout address ${norm.from === 'account' ? '0.0.x → 0x' : ''} for provider compatibility`)
+          const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
+
+          if (targetPayoutCurrency.toUpperCase() === 'HBAR' && hbarStrategy === 'strict_account_id') {
+            // Strict mode: require 0.0.x and memo; do not convert
+            const trimmed = walletAddress.trim()
+            const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+            const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+            const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
+
+            console.log('🔍 HBAR Address Debug:')
+            console.log(`   Original: "${walletAddress}"`)
+            console.log(`   Trimmed: "${trimmed}"`)
+            console.log(`   Length: ${trimmed.length}`)
+            console.log(`   Regex 0.0.x match: ${isAccountId}`)
+
+            if (!isAccountId) {
+              return NextResponse.json({
+                success: false,
+                error: 'HBAR auto-forwarding requires 0.0.x address format',
+                details: `Address "${walletAddress}" is not in required 0.0.x format for HBAR auto-forwarding`,
+                code: 'HBAR_INVALID_ADDRESS_FORMAT'
+              }, { status: 400 })
             }
+            if (!extraId) {
+              return NextResponse.json({
+                success: false,
+                error: 'HBAR auto-forwarding memo required',
+                details: 'Please configure a memo/destination tag for HBAR in merchant settings',
+                code: 'HBAR_MEMO_REQUIRED'
+              }, { status: 400 })
+            }
+
+            paymentRequest.payout_address = trimmed
+            paymentRequest.payout_currency = 'hbar'
+            paymentRequest.payout_extra_id = extraId
+            console.log(`🔧 HBAR auto-forwarding configured (strict): address ${trimmed}, memo ${extraId}`)
           } else {
-            paymentRequest.payout_address = walletAddress.trim()
+            // Default: normalize for provider compatibility
+            if (targetPayoutCurrency.toUpperCase() === 'HBAR') {
+              const norm = await normalizeHederaPayoutAddress(walletAddress)
+              paymentRequest.payout_address = norm.normalized
+              if (norm.converted) {
+                console.log(`🔄 Converted HBAR payout address ${norm.from === 'account' ? '0.0.x → 0x' : ''} for provider compatibility`)
+              }
+            } else {
+              paymentRequest.payout_address = walletAddress.trim()
+            }
           }
           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
           
           // Add payout_extra_id if merchant configured one for this currency (optional)
-          // For HBAR (Hedera), many exchanges (e.g., Coinbase) require a memo for crediting.
-          // We include it if provided by the merchant.
           if (requiresExtraId(targetPayoutCurrency)) {
-            const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
-            const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
-            if (extraId) {
-              paymentRequest.payout_extra_id = extraId
-              console.log(
-                `✅ Added ${getExtraIdLabel(targetPayoutCurrency)} for ${targetPayoutCurrency}: ${extraId}`
-              )
-            } else {
-              console.warn(
-                `ℹ️ No ${getExtraIdLabel(targetPayoutCurrency).toLowerCase()} configured for ${targetPayoutCurrency}; forwarding to address without one.`
-              )
+            // In strict mode, extra_id for HBAR already enforced above
+            if (!(targetPayoutCurrency.toUpperCase() === 'HBAR' && hbarStrategy === 'strict_account_id')) {
+              const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+              const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
+              if (extraId) {
+                paymentRequest.payout_extra_id = extraId
+                console.log(`✅ Added ${getExtraIdLabel(targetPayoutCurrency)} for ${targetPayoutCurrency}: ${extraId}`)
+              } else {
+                console.warn(`ℹ️ No ${getExtraIdLabel(targetPayoutCurrency).toLowerCase()} configured for ${targetPayoutCurrency}; forwarding to address without one.`)
+              }
             }
           }
           
@@ -689,12 +724,13 @@ export async function POST(request: Request) {
         }
 
         // If HBAR payout validation failed, try alternate address representation and retry once
+        const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
         if (
           autoForwardingConfigured &&
           paymentRequest.payout_currency === 'hbar' &&
           typeof paymentRequest.payout_address === 'string' &&
           (errorData?.code === 'BAD_CREATE_PAYMENT_REQUEST' || String(errorData?.message || '').toLowerCase().includes('validate address'))
-        ) {
+        && hbarStrategy !== 'strict_account_id') {
           // Phase 1: resolve alternate address (0.0.x <-> 0x)
           let alternate: string | null = null
           try {

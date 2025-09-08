@@ -86,12 +86,42 @@ export async function POST(request: NextRequest) {
       return { normalized: trimmed, converted: false }
     }
 
+    const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
+
     let payoutAddressToUse = walletAddress
     if (currency.toUpperCase() === 'HBAR') {
-      const norm = await normalizeHBAR(walletAddress)
-      payoutAddressToUse = norm.normalized
-      if (norm.converted) {
-        console.log('🔄 Converted HBAR payout address 0.0.x → 0x for provider compatibility')
+      if (hbarStrategy === 'strict_account_id') {
+        const trimmed = walletAddress.trim()
+        const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+        const memo = typeof extraId === 'string' ? extraId.trim() : ''
+        console.log('🔍 HBAR Address Debug (create-with-payout):')
+        console.log(`   Original: "${walletAddress}"`)
+        console.log(`   Trimmed: "${trimmed}"`)
+        console.log(`   Length: ${trimmed.length}`)
+        console.log(`   Regex 0.0.x match: ${isAccountId}`)
+        if (!isAccountId) {
+          return NextResponse.json({
+            success: false,
+            error: 'HBAR auto-forwarding requires 0.0.x address format',
+            details: `Address "${walletAddress}" is not in required 0.0.x format for HBAR auto-forwarding`,
+            code: 'HBAR_INVALID_ADDRESS_FORMAT'
+          }, { status: 400 })
+        }
+        if (!memo) {
+          return NextResponse.json({
+            success: false,
+            error: 'HBAR auto-forwarding memo required',
+            details: 'Please configure a memo/destination tag for HBAR in merchant settings',
+            code: 'HBAR_MEMO_REQUIRED'
+          }, { status: 400 })
+        }
+        payoutAddressToUse = trimmed
+      } else {
+        const norm = await normalizeHBAR(walletAddress)
+        payoutAddressToUse = norm.normalized
+        if (norm.converted) {
+          console.log('🔄 Converted HBAR payout address 0.0.x → 0x for provider compatibility')
+        }
       }
     }
 
@@ -126,7 +156,7 @@ export async function POST(request: NextRequest) {
       try { errorData = JSON.parse(responseText) } catch { errorData = { message: responseText } }
       const isHBAR = currency.toUpperCase() === 'HBAR'
       const validateErr = String(errorData?.message || '').toLowerCase().includes('validate address') || errorData?.code === 'BAD_CREATE_PAYMENT_REQUEST'
-      if (isHBAR && validateErr) {
+      if (isHBAR && validateErr && hbarStrategy !== 'strict_account_id') {
         try {
           // Resolve alternate and retry
           const mirror = process.env.HEDERA_MIRROR_NODE_URL || 'https://mainnet-public.mirrornode.hedera.com'
