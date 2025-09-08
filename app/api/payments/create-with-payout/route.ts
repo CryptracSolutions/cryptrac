@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Normalize Hedera (HBAR) payout address: prefer EVM alias for provider compatibility
-    async function normalizeHBAR(address: string): Promise<{ normalized: string, converted: boolean }> {
+    const normalizeHBAR = async (address: string): Promise<{ normalized: string; converted: boolean }> => {
       const trimmed = String(address || '').trim()
       const isAccount = /^\d+\.\d+\.\d+$/.test(trimmed)
       const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
