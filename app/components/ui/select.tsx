@@ -114,32 +114,52 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName
 
 type SelectItemProps = React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & {
   // Text used for rendering the selected value in the trigger and for typeahead
+  // When provided, this will be used as the plain string shown in the trigger
+  // so that styled children (e.g. with `text-white`) don't bleed into the trigger.
   textValue?: string
 }
 
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   SelectItemProps
->(({ className, children, textValue, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm outline-none",
-      "focus:bg-primary focus:text-primary-foreground hover:bg-gray-100 dark:hover:bg-gray-700",
-      "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
+>(({ className, children, textValue, ...props }, ref) => {
+  // We want the trigger to display a clean, unstyled string even when the
+  // dropdown items use rich markup (icons, colored text, etc.). Radix's Select
+  // shows the contents of <ItemText> in the trigger, so we inject a visually
+  // hidden plain string there and render the rich children alongside it.
+  const plainLabel =
+    typeof textValue === "string"
+      ? textValue
+      : typeof children === "string"
+        ? children
+        : undefined
 
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-  </SelectPrimitive.Item>
-))
+  return (
+    <SelectPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex w-full cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm outline-none",
+        "focus:bg-primary focus:text-primary-foreground hover:bg-gray-100 dark:hover:bg-gray-700",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        className
+      )}
+      // Pass textValue through for typeahead semantics
+      textValue={textValue}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <Check className="h-4 w-4" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+
+      {plainLabel !== undefined && (
+        <SelectPrimitive.ItemText className="sr-only">{plainLabel}</SelectPrimitive.ItemText>
+      )}
+      {children}
+    </SelectPrimitive.Item>
+  )
+})
 SelectItem.displayName = SelectPrimitive.Item.displayName
 
 const SelectSeparator = React.forwardRef<
@@ -166,4 +186,3 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
 }
-
