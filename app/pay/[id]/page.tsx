@@ -1039,9 +1039,9 @@ export default function PaymentPage() {
                           <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-56 h-56 mx-auto mb-3" />
                         </div>
                       )}
-                      {/* Show Extra ID section for XRP, XLM, HBAR when not confirmed, or for other currencies when confirmed */}
+                      {/* Show Extra ID section for XRP, XLM, HBAR always, or for other currencies when confirmed */}
                       {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                        (['XRP', 'XLM', 'HBAR'].includes(paymentData.pay_currency.toUpperCase()) && !extraIdConfirmed) ||
+                        ['XRP', 'XLM', 'HBAR'].includes(paymentData.pay_currency.toUpperCase()) ||
                         (!['XRP', 'XLM', 'HBAR'].includes(paymentData.pay_currency.toUpperCase()) && extraIdConfirmed)
                       ) && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
@@ -1075,7 +1075,7 @@ export default function PaymentPage() {
                             <input
                               id="confirm-extra-id"
                               type="checkbox"
-                              className="mt-1 h-4 w-4 text-[#7f5efd] border-[#7f5efd] rounded focus:ring-[#7f5efd] focus:ring-2"
+                              className="mt-1 h-4 w-4 text-[#7f5efd] border-[#7f5efd] rounded focus:ring-[#7f5efd] focus:ring-2 checked:bg-[#7f5efd] checked:border-[#7f5efd]"
                               checked={extraIdConfirmed}
                               onChange={(e) => setExtraIdConfirmed(e.target.checked)}
                             />
@@ -1089,13 +1089,7 @@ export default function PaymentPage() {
                         </div>
                       )}
 
-                      {/* Amount */}
-                      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200 text-center">
-                        <p className="text-sm text-gray-600 mb-1">Send exactly</p>
-                        <p className="text-2xl font-bold text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</p>
-                      </div>
-
-                      {/* Change Currency button (compact) */}
+                      {/* Change Currency button (compact) - positioned below QR code */}
                       {(currentStatus && !['confirmed', 'finished', 'sending'].includes(currentStatus.payment_status)) && (
                         <div className="flex justify-center">
                           <button
@@ -1112,6 +1106,12 @@ export default function PaymentPage() {
                           </button>
                         </div>
                       )}
+
+                      {/* Amount */}
+                      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200 text-center">
+                        <p className="text-sm text-gray-600 mb-1">Send exactly</p>
+                        <p className="text-2xl font-bold text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</p>
+                      </div>
 
                       {/* Address */}
                       <div className="w-full bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border-2 border-purple-200">
@@ -1138,52 +1138,6 @@ export default function PaymentPage() {
                         </div>
                       </div>
 
-                      {/* Extra ID - Show for all currencies when confirmed */}
-                      {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && extraIdConfirmed && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
-                          <div className="flex items-start gap-2">
-                            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                            <div className="flex-1">
-                              <Label className="text-sm font-semibold text-yellow-900 block">
-                                {getExtraIdLabel(paymentData.pay_currency)} Required
-                              </Label>
-                              <p className="text-sm text-yellow-800 mt-1">
-                                Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <Input
-                              value={paymentData.payin_extra_id}
-                              readOnly
-                              className="font-mono text-sm bg-white border-yellow-300"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => copyToClipboard(paymentData.payin_extra_id!, getExtraIdLabel(paymentData.pay_currency))}
-                              className="border-yellow-600 text-yellow-700 hover:bg-yellow-50"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <input
-                              id="confirm-extra-id-confirmed"
-                              type="checkbox"
-                              className="mt-1 h-4 w-4 text-[#7f5efd] border-[#7f5efd] rounded focus:ring-[#7f5efd] focus:ring-2"
-                              checked={extraIdConfirmed}
-                              onChange={(e) => setExtraIdConfirmed(e.target.checked)}
-                            />
-                            <label htmlFor="confirm-extra-id-confirmed" className="text-sm text-yellow-800">
-                              I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} above in my wallet before sending
-                            </label>
-                          </div>
-                          <p className="text-xs text-yellow-800 mt-1">
-                            Tip: In many wallets (e.g., Trust Wallet), paste this under "{getExtraIdLabel(paymentData.pay_currency)}" or "Memo".
-                          </p>
-                        </div>
-                      )}
 
                       {/* Instructions */}
                       <div className="bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4">
