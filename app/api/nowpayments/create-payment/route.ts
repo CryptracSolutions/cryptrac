@@ -219,6 +219,26 @@ async function resolveHederaAlternateAddress(address: string): Promise<string | 
   }
 }
 
+// Normalize Hedera payout address to the most widely-accepted format for providers (prefer EVM alias)
+async function normalizeHederaPayoutAddress(address: string): Promise<{ normalized: string, converted: boolean, from: 'account' | 'evm' | 'unknown' }> {
+  const trimmed = String(address || '').trim()
+  const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+  const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
+  if (!isAccountId && !isEvm) return { normalized: trimmed, converted: false, from: 'unknown' }
+
+  if (isAccountId) {
+    const alt = await resolveHederaAlternateAddress(trimmed)
+    if (alt && /^0x[a-fA-F0-9]{40}$/.test(alt)) {
+      return { normalized: alt, converted: true, from: 'account' }
+    }
+    return { normalized: trimmed, converted: false, from: 'account' }
+  }
+
+  // Already EVM; ensure prefix and return
+  const evm = trimmed.startsWith('0x') ? trimmed : `0x${trimmed}`
+  return { normalized: evm, converted: false, from: 'evm' }
+}
+
 // Function to get minimum amount for a currency pair
 async function getMinimumAmount(currencyFrom: string, currencyTo: string): Promise<number> {
   const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY!
@@ -549,7 +569,15 @@ export async function POST(request: Request) {
           }
 
           // Normalize address before sending to NOWPayments
-          paymentRequest.payout_address = walletAddress.trim()
+          if (targetPayoutCurrency.toUpperCase() === 'HBAR') {
+            const norm = await normalizeHederaPayoutAddress(walletAddress)
+            paymentRequest.payout_address = norm.normalized
+            if (norm.converted) {
+              console.log(`🔄 Converted HBAR payout address ${norm.from === 'account' ? '0.0.x → 0x' : ''} for provider compatibility`)
+            }
+          } else {
+            paymentRequest.payout_address = walletAddress.trim()
+          }
           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
           
           // Add payout_extra_id if merchant configured one for this currency (optional)
@@ -667,34 +695,38 @@ export async function POST(request: Request) {
           typeof paymentRequest.payout_address === 'string' &&
           (errorData?.code === 'BAD_CREATE_PAYMENT_REQUEST' || String(errorData?.message || '').toLowerCase().includes('validate address'))
         ) {
+          // Phase 1: resolve alternate address (0.0.x <-> 0x)
+          let alternate: string | null = null
           try {
-            const alt = await resolveHederaAlternateAddress(paymentRequest.payout_address)
-            if (alt && alt.toLowerCase() !== paymentRequest.payout_address.toLowerCase()) {
-              console.log('🔁 Retrying NOWPayments with alternate HBAR address format:', alt.substring(0, 10) + '...')
-              const retryReq = { ...paymentRequest, payout_address: alt }
-              const retryRes = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
-                method: 'POST',
-                headers: {
-                  'x-api-key': NOWPAYMENTS_API_KEY,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(retryReq),
-              })
-              const retryText = await retryRes.text()
-              if (retryText.trim().startsWith('<')) {
-                throw new Error(`NOWPayments service temporarily unavailable - please try again later`)
-              }
-              if (retryRes.ok) {
-                paymentResponse = JSON.parse(retryText) as PaymentResponse
-                // Also reflect the address used
-                paymentRequest.payout_address = alt
-                console.log('✅ Retry succeeded with alternate HBAR address format')
-              } else {
-                console.error('❌ Retry with alternate HBAR address failed:', retryRes.status, retryText)
-              }
-            }
+            alternate = await resolveHederaAlternateAddress(paymentRequest.payout_address)
           } catch (e) {
-            console.warn('⚠️ Could not resolve alternate HBAR address:', e)
+            console.warn('⚠️ Failed resolving alternate HBAR format:', e)
+          }
+
+          // Phase 2: retry with alternate if available
+          if (alternate && alternate.toLowerCase() !== paymentRequest.payout_address.toLowerCase()) {
+            console.log('🔁 Retrying NOWPayments with alternate HBAR address format:', alternate.substring(0, 10) + '...')
+            const retryReq = { ...paymentRequest, payout_address: alternate }
+            const retryRes = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
+              method: 'POST',
+              headers: {
+                'x-api-key': NOWPAYMENTS_API_KEY,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(retryReq),
+            })
+            const retryText = await retryRes.text()
+            if (retryText.trim().startsWith('<')) {
+              console.error('❌ Alternate-format retry failed due to provider HTML outage')
+            } else if (retryRes.ok) {
+              paymentResponse = JSON.parse(retryText) as PaymentResponse
+              paymentRequest.payout_address = alternate
+              console.log('✅ Retry succeeded with alternate HBAR address format')
+            } else {
+              console.error('❌ Alternate-format retry failed:', retryRes.status, retryText)
+            }
+          } else {
+            console.warn('ℹ️ No alternate HBAR address format available for retry')
           }
         }
 
