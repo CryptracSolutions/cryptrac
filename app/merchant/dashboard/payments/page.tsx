@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTimezone } from '@/lib/contexts/TimezoneContext';
+import { formatDateTime } from '@/lib/utils/date-utils';
 
 export const dynamic = 'force-dynamic';
 import { Button } from '@/app/components/ui/button';
@@ -119,6 +121,7 @@ export default function PaymentsPage() {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const router = useRouter();
+  const { timezone } = useTimezone();
 
   const fetchPaymentLinks = useCallback(async () => {
     try {
@@ -257,13 +260,7 @@ export default function PaymentsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatDateTime(dateString, timezone);
   };
 
   const getStatusBadge = (status: string, link?: PaymentLink) => {

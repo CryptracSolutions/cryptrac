@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTimezone } from '@/lib/contexts/TimezoneContext';
+import { formatDateShort } from '@/lib/utils/date-utils';
 import {
   ArrowLeft,
   DollarSign,
@@ -76,6 +78,7 @@ const FIAT_CURRENCIES = [
 
 export default function CreatePaymentLinkPage() {
   const router = useRouter();
+  const { timezone } = useTimezone();
   const [loading, setLoading] = useState(true);
   const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
   const [availableCryptos, setAvailableCryptos] = useState<string[]>([]);
@@ -835,7 +838,7 @@ export default function CreatePaymentLinkPage() {
                           {form.expires_at && (
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Expires: {new Date(form.expires_at).toLocaleDateString()}
+                              Expires: {formatDateShort(form.expires_at, timezone)}
                             </div>
                           )}
                           {form.max_uses && (

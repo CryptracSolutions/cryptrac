@@ -184,7 +184,7 @@ async function sendCustomerReceipts(
     // Get merchant details for email branding
     const { data: merchant } = await supabase
       .from('merchants')
-      .select('id, business_name')
+      .select('id, business_name, timezone')
       .eq('id', payment.merchant_id)
       .single();
 
@@ -462,12 +462,14 @@ function generateReceiptEmailTemplate(
             </div>
             <div class="detail-row">
                 <span>Date:</span>
-                <span>${new Date().toLocaleDateString('en-US', { 
+                <span>${new Date().toLocaleString('en-US', { 
+                  timeZone: merchant?.timezone || 'America/New_York',
                   year: 'numeric', 
                   month: 'long', 
                   day: 'numeric',
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
+                  timeZoneName: 'short'
                 })}</span>
             </div>
             <div class="detail-row">

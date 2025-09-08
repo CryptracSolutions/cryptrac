@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Badge } from '@/app/components/ui/badge';
 import { Separator } from '@/app/components/ui/separator';
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
+import { formatFullDateTime } from '@/lib/utils/date-utils';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -245,13 +246,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   <div className="flex justify-between border-b border-gray-100 pb-2">
                     <span className="font-phonic text-sm font-normal text-gray-600">Payment Date</span>
                     <span className="font-phonic text-sm font-medium text-gray-900">
-                      {new Date(tx.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {formatFullDateTime(tx.created_at, merchant?.timezone || 'America/New_York')}
                     </span>
                   </div>
                   

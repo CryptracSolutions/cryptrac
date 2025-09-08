@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useTimezone } from '@/lib/contexts/TimezoneContext';
+import { formatDateShort, formatDateTime, formatFullDateTime, formatDate } from '@/lib/utils/date-utils';
 import Link from 'next/link';
 import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Badge } from '@/app/components/ui/badge';
@@ -67,13 +69,12 @@ interface Customer {
 }
 
 // FIXED: Helper function to format date without timezone conversion issues
-function formatDateOnly(dateString: string): string {
-  // Parse as local date to avoid timezone conversion
-  const [year, month, day] = dateString.split('-');
-  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  return date.toLocaleDateString('en-US', {
+// Helper function to format date (will use timezone from the component that calls it)
+function formatDateOnly(dateString: string, timezone: string): string {
+  return formatDate(dateString, {
+    timeZone: timezone,
     year: 'numeric',
-    month: 'long', 
+    month: 'long',
     day: 'numeric'
   });
 }
@@ -131,6 +132,7 @@ function calculateUpcomingCycles(subscription: Subscription, requestedCount?: nu
 export default function SubscriptionDetailPage() {
   const params = useParams();
   const id = String(params?.id);
+  const { timezone } = useTimezone();
   const [sub, setSub] = useState<Subscription | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -366,12 +368,7 @@ export default function SubscriptionDetailPage() {
           </p>
           {sub.next_billing_at && (
             <p className="font-capsule text-base font-normal text-gray-600 mb-1">
-              Next billing: {sub.next_billing_at ? new Date(sub.next_billing_at).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }) : 'Not scheduled'}
+              Next billing: {sub.next_billing_at ? formatFullDateTime(sub.next_billing_at, timezone) : 'Not scheduled'}
             </p>
           )}
           <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
@@ -474,7 +471,7 @@ export default function SubscriptionDetailPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">
-                      {formatDateOnly(cycle.date)}
+                      {formatDateOnly(cycle.date, timezone)}
                     </span>
                     {index === 0 && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Next</span>}
                     {cycle.hasOverride && (
@@ -526,7 +523,7 @@ export default function SubscriptionDetailPage() {
         <div className="mb-4">
           <h3 className="font-phonic text-base font-normal mb-2">Standard Generation</h3>
           <p className="font-phonic text-sm font-normal text-gray-600 mb-3">
-            Generate an invoice for the next scheduled billing cycle ({sub?.next_billing_at ? formatDateOnly(sub.next_billing_at.split('T')[0]) : 'Not scheduled'}).
+            Generate an invoice for the next scheduled billing cycle ({sub?.next_billing_at ? formatDateOnly(sub.next_billing_at.split('T')[0], timezone) : 'Not scheduled'}).
             This will advance your subscription&apos;s billing schedule.
           </p>
           <Button onClick={() => {setTargetCycleDate(''); generateInvoice();}} className="mb-4">
@@ -577,7 +574,7 @@ export default function SubscriptionDetailPage() {
               
               {targetCycleDate && (
                 <div className="p-3 bg-white border border-amber-300 rounded">
-                  <h5 className="font-medium text-amber-800 mb-2">Preview for {formatDateOnly(targetCycleDate)}:</h5>
+                  <h5 className="font-medium text-amber-800 mb-2">Preview for {formatDateOnly(targetCycleDate, timezone)}:</h5>
                   <div className="text-sm space-y-1">
                     <div>
                       <span className="font-medium">Invoice Amount:</span> 
@@ -602,7 +599,7 @@ export default function SubscriptionDetailPage() {
                 className="w-full"
               >
                 {targetCycleDate 
-                  ? `Generate Invoice for ${formatDateOnly(targetCycleDate)} ($${getTargetCycleAmount()} ${sub?.currency})`
+                  ? `Generate Invoice for ${formatDateOnly(targetCycleDate, timezone)} ($${getTargetCycleAmount()} ${sub?.currency})`
                   : 'Select a target date first'
                 }
               </Button>
@@ -782,9 +779,9 @@ export default function SubscriptionDetailPage() {
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
                       {/* FIXED: Use proper date formatting without timezone conversion */}
-                      <span>From {formatDateOnly(override.effective_from)}</span>
+                      <span>From {formatDateOnly(override.effective_from, timezone)}</span>
                       {override.effective_until && (
-                        <span> to {formatDateOnly(override.effective_until)}</span>
+                        <span> to {formatDateOnly(override.effective_until, timezone)}</span>
                       )}
                     </div>
                     {override.note && (
@@ -792,7 +789,7 @@ export default function SubscriptionDetailPage() {
                     )}
                   </div>
                   <span className="text-xs text-gray-400">
-                    Created {new Date(override.created_at).toLocaleDateString()}
+                    Created {formatDateShort(override.created_at, timezone)}
                   </span>
                 </div>
               ))}
@@ -819,8 +816,8 @@ export default function SubscriptionDetailPage() {
                     ${invoice.amount} {invoice.currency}
                   </div>
                   <div className="text-sm text-gray-600">
-                    Cycle: {new Date(invoice.cycle_start_at).toLocaleDateString()} | 
-                    Due: {new Date(invoice.due_date).toLocaleDateString()}
+                    Cycle: {formatDateShort(invoice.cycle_start_at, timezone)} | 
+                    Due: {formatDateShort(invoice.due_date, timezone)}
                   </div>
                 </div>
                 <div className="text-right">
@@ -832,7 +829,7 @@ export default function SubscriptionDetailPage() {
                     {invoice.status}
                   </Badge>
                   <div className="text-xs text-gray-500 mt-1">
-                    {new Date(invoice.created_at).toLocaleDateString()}
+                    {formatDateShort(invoice.created_at, timezone)}
                   </div>
                 </div>
               </div>

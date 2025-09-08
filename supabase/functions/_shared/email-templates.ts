@@ -1,6 +1,35 @@
 // Shared Email Templates and Utilities for Cryptrac
 // This eliminates code duplication across email endpoints
 
+// Helper function to format dates with timezone
+function formatEmailDate(dateString: string | undefined, timezone: string = 'America/New_York'): string {
+  if (!dateString) {
+    dateString = new Date().toISOString();
+  }
+  
+  try {
+    return new Date(dateString).toLocaleString('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+  } catch (error) {
+    // Fallback if timezone is invalid
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+  }
+}
+
 export interface ReceiptData {
   amount: number;
   currency: string;
@@ -20,6 +49,7 @@ export interface ReceiptData {
 export interface MerchantData {
   business_name: string;
   logo_url?: string;
+  timezone?: string;
 }
 
 export interface MerchantNotificationData {
@@ -289,24 +319,9 @@ export function generateUnifiedReceiptTemplate(
     receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
   }
 
-  // Format date with proper timezone handling
-  const formattedDate = created_at ? 
-    new Date(created_at).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    }) : 
-    new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
+  // Format date with merchant's timezone
+  const timezone = merchantData.timezone || 'America/New_York';
+  const formattedDate = formatEmailDate(created_at, timezone);
 
   // Status display
   const displayStatus = status === 'confirmed' ? 'Confirmed' : 

@@ -2,6 +2,8 @@
 
 import React, { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTimezone } from '@/lib/contexts/TimezoneContext';
+import { formatFullDateTime } from '@/lib/utils/date-utils';
 import { 
   ArrowLeft, 
   Copy, 
@@ -80,6 +82,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
+  const { timezone } = useTimezone();
 
   useEffect(() => {
     const fetchPaymentLink = async () => {
@@ -152,13 +155,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatFullDateTime(dateString, timezone);
   };
 
   const getStatusIcon = (status: string) => {

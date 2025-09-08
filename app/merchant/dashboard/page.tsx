@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
+import { useTimezone } from '@/lib/contexts/TimezoneContext';
+import { formatDateTime, formatDateShort } from '@/lib/utils/date-utils';
 import {
   DollarSign,
   CreditCard,
@@ -100,6 +102,7 @@ export default function MerchantDashboard() {
   const [trialCountdown, setTrialCountdown] = useState('');
   const [newPayments, setNewPayments] = useState<RecentTransaction[]>([]);
   const router = useRouter();
+  const { timezone } = useTimezone();
 
   const formatCurrency = (amount: number, currency: string) => {
     try {
@@ -397,7 +400,7 @@ export default function MerchantDashboard() {
             <Clock className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800 flex items-center justify-between">
               <span className="font-phonic text-sm">
-                <strong>Free Trial:</strong> Ends {new Date(trialEnd).toLocaleDateString()} ({trialCountdown})
+                <strong>Free Trial:</strong> Ends {formatDateShort(trialEnd, timezone)} ({trialCountdown})
               </span>
               <Link href="/merchant/settings" className="font-phonic text-xs text-orange-700 underline hover:text-orange-900 ml-4">
                 Manage Plan
@@ -566,7 +569,7 @@ export default function MerchantDashboard() {
                           </div>
                           <p className="font-phonic text-sm font-medium text-gray-700 mb-0.5">{tx.payment_link_title}</p>
                           <p className="font-phonic text-xs text-gray-500">
-                            {new Date(tx.created_at).toLocaleDateString()} at {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {formatDateTime(tx.created_at, timezone)}
                           </p>
                         </div>
                       </div>

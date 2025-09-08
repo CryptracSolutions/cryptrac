@@ -1,6 +1,35 @@
 // Shared Email Templates and Utilities for Cryptrac
 // This eliminates code duplication across email endpoints
 
+// Helper function to format dates with timezone
+function formatEmailDate(dateString: string | undefined, timezone: string = 'America/New_York'): string {
+  if (!dateString) {
+    dateString = new Date().toISOString();
+  }
+  
+  try {
+    return new Date(dateString).toLocaleString('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+  } catch (error) {
+    // Fallback if timezone is invalid
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+  }
+}
+
 export interface ReceiptData {
   amount: number;
   currency: string;
@@ -20,6 +49,7 @@ export interface ReceiptData {
 export interface MerchantData {
   business_name: string;
   logo_url?: string;
+  timezone?: string;
 }
 
 export interface MerchantNotificationData {
@@ -288,24 +318,9 @@ export function generateUnifiedReceiptTemplate(
     receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
   }
 
-  // Format date with proper timezone handling
-  const formattedDate = created_at ? 
-    new Date(created_at).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    }) : 
-    new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
+  // Format date with merchant's timezone
+  const timezone = merchantData.timezone || 'America/New_York';
+  const formattedDate = formatEmailDate(created_at, timezone);
 
   // Status display
   const displayStatus = status === 'confirmed' ? 'Confirmed' : 
@@ -438,15 +453,9 @@ export function generateMerchantNotificationEmail(data: MerchantNotificationData
     receivedAmountText = ` (${formattedReceived} ${pay_currency.toUpperCase()})`;
   }
 
-  // Format current time with proper timezone handling
-  const currentTime = new Date().toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short'
-  });
+  // Format current time with merchant's timezone
+  const timezone = data.merchant_timezone || 'America/New_York';
+  const currentTime = formatEmailDate(undefined, timezone);
 
   const subject = `Payment received • ${formattedAmount}`;
 
@@ -548,9 +557,7 @@ export function generateSubscriptionWelcomeEmail(data: SubscriptionEmailData): E
             ${nextBillingDate ? `
             <div class="detail-row">
                 <span class="detail-label">Next Billing:</span>
-                <span class="detail-value">${new Date(nextBillingDate).toLocaleDateString('en-US', { 
-                  year: 'numeric', month: 'long', day: 'numeric' 
-                })}</span>
+                <span class="detail-value">${formatEmailDate(nextBillingDate, data.merchant_timezone || 'America/New_York')}</span>
             </div>
             ` : ''}
         </div>
@@ -569,7 +576,7 @@ Hello${customerName ? ` ${customerName}` : ''},
 Welcome to your new subscription!
 
 Subscription: ${subscriptionTitle}
-${formattedAmount ? `Amount: ${formattedAmount}\n` : ''}${maxCycles ? `Duration: ${maxCycles} billing cycle${maxCycles !== 1 ? 's' : ''}\n` : ''}${nextBillingDate ? `Next Billing: ${new Date(nextBillingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` : ''}
+${formattedAmount ? `Amount: ${formattedAmount}\n` : ''}${maxCycles ? `Duration: ${maxCycles} billing cycle${maxCycles !== 1 ? 's' : ''}\n` : ''}${nextBillingDate ? `Next Billing: ${formatEmailDate(nextBillingDate, data.merchant_timezone || 'America/New_York')}\n` : ''}
 
 Thank you for subscribing! You'll receive invoices before each billing cycle.
 
@@ -590,9 +597,7 @@ export function generateSubscriptionInvoiceEmail(data: InvoiceEmailData): EmailT
   }).format(amount);
 
   const formattedDueDate = dueDate ? 
-    new Date(dueDate).toLocaleDateString('en-US', { 
-      year: 'numeric', month: 'long', day: 'numeric' 
-    }) : '';
+    formatEmailDate(dueDate, data.merchant_timezone || 'America/New_York') : '';
 
   const subject = `Invoice for ${subscriptionTitle} - ${formattedAmount}`;
 

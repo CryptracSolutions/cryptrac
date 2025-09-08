@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ToasterWrapper from './components/ToasterWrapper'; // Import wrapper (client-safe)
+import { TimezoneProvider } from '@/lib/contexts/TimezoneContext';
 
 export const metadata: Metadata = {
   title: {
@@ -43,8 +44,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased">
-        <ToasterWrapper /> {/* Wrapper handles dynamic/ssr */}
-        {children}
+        <TimezoneProvider>
+          <ToasterWrapper /> {/* Wrapper handles dynamic/ssr */}
+          {children}
+        </TimezoneProvider>
       </body>
     </html>
   );

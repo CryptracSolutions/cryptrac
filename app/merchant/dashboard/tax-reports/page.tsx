@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
+import { useTimezone } from '@/lib/contexts/TimezoneContext'
+import { formatDateShort } from '@/lib/utils/date-utils'
 
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation'
@@ -85,6 +87,7 @@ interface TaxReportData {
 
 export default function TaxReportsPage() {
   const router = useRouter()
+  const { timezone } = useTimezone()
 
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -481,7 +484,7 @@ export default function TaxReportsPage() {
                         {reportData.transactions.map((transaction) => (
                           <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
                             <td className="py-3 px-4 text-sm text-gray-600">
-                              {new Date(transaction.created_at).toLocaleDateString()}
+                              {formatDateShort(transaction.created_at, timezone)}
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-900 font-medium">
                               {transaction.product_description}

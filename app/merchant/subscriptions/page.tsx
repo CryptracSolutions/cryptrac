@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTimezone } from '@/lib/contexts/TimezoneContext';
+import { formatDateShort } from '@/lib/utils/date-utils';
 import Link from 'next/link';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
@@ -65,6 +67,7 @@ export default function MerchantSubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const { timezone } = useTimezone();
 
   useEffect(() => {
     (async () => {
@@ -381,7 +384,7 @@ export default function MerchantSubscriptionsPage() {
                               <Clock className="h-4 w-4 text-gray-500" />
                               <span className="text-sm text-gray-600">
                                 {subscription.next_billing_at 
-                                  ? new Date(subscription.next_billing_at).toLocaleDateString()
+                                  ? formatDateShort(subscription.next_billing_at, timezone)
                                   : 'No next billing'
                                 }
                               </span>

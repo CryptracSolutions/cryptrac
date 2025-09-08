@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTimezone } from '@/lib/contexts/TimezoneContext';
 
 export const dynamic = 'force-dynamic';
 import {
@@ -53,6 +54,7 @@ interface MerchantSettings {
 }
 
 export default function ProfilePage() {
+  const { timezone: currentTimezone, updateTimezone } = useTimezone();
   const [, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -145,6 +147,11 @@ export default function ProfilePage() {
 
       setSuccess(true);
               toast.success('Saved');
+      
+      // Update the timezone context if it changed
+      if (settings.timezone !== currentTimezone) {
+        await updateTimezone(settings.timezone);
+      }
       
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
