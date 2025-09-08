@@ -1011,7 +1011,7 @@ function SmartTerminalPageContent() {
                 </div>
               )}
               {/* Generate Payment Button - spans both columns in landscape */}
-              <Button 
+              <Button
                 onClick={generate}
                 variant="default"
                 className="w-full h-14 sm:h-16 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-2"
@@ -1025,8 +1025,8 @@ function SmartTerminalPageContent() {
                   </>
                 ) : (
                   <>
-                    <Smartphone className="h-5 w-5" />
-                    Pay Now
+                    Pay with {crypto.toUpperCase()}
+                    <ArrowRight className="h-5 w-5" />
                   </>
                 )}
               </Button>

@@ -988,7 +988,7 @@ export default function PaymentPage() {
                           </>
                         ) : (
                           <>
-                            Continue with {selectedCurrency.toUpperCase()}
+                            Pay with {selectedCurrency.toUpperCase()}
                             <ArrowRight className="h-5 w-5" />
                           </>
                         )}
