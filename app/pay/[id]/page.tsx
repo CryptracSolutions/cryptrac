@@ -636,6 +636,7 @@ export default function PaymentPage() {
   }
 
   const currentStatus = paymentStatus || paymentData
+  const needsExtra = !!(paymentData?.payin_extra_id && requiresExtraId(paymentData.pay_currency))
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
@@ -1027,53 +1028,21 @@ export default function PaymentPage() {
                               </div>
                             </div>
                           )}
-                          {/* Extra ID card placed directly under status card for XRP/XLM/HBAR, always shown there */}
-                          {paymentData?.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                            ['XRP', 'XLM', 'HBAR'].includes(paymentData.pay_currency.toUpperCase()) ||
-                            (!['XRP', 'XLM', 'HBAR'].includes(paymentData.pay_currency.toUpperCase()) && extraIdConfirmed)
-                          ) && (
-                            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
+                          {/* Pre-send confirmation for tag/memo (Smart Terminal style) */}
+                          {needsExtra && (
+                            <div className="mt-3 w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
                               <div className="flex items-start gap-2">
-                                <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                                <div className="flex-1">
-                                  <Label className="text-sm font-semibold text-yellow-900 block">
-                                    {getExtraIdLabel(paymentData.pay_currency)} Required
-                                  </Label>
-                                  <p className="text-sm text-yellow-800 mt-1">
-                                    Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-3">
-                                <Input
-                                  value={paymentData.payin_extra_id}
-                                  readOnly
-                                  className="font-mono text-sm bg-white border-yellow-300"
-                                />
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => copyToClipboard(paymentData.payin_extra_id!, getExtraIdLabel(paymentData.pay_currency))}
-                                  className="border-yellow-600 text-yellow-700 hover:bg-yellow-50"
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <input
-                                  id="confirm-extra-id"
-                                  type="checkbox"
-                                  className="mt-1 h-4 w-4 text-[#7f5efd] border-[#7f5efd] rounded focus:ring-[#7f5efd] focus:ring-2 checked:bg-[#7f5efd] checked:border-[#7f5efd]"
-                                  checked={extraIdConfirmed}
-                                  onChange={(e) => setExtraIdConfirmed(e.target.checked)}
-                                />
-                                <label htmlFor="confirm-extra-id" className="text-sm text-yellow-800">
-                                  I will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} above in my wallet before sending
+                                <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                                <label className="text-xs text-purple-900 flex-1">
+                                  <input
+                                    type="checkbox"
+                                    className="mr-2 align-middle h-4 w-4 text-[#7f5efd] border-purple-300 rounded"
+                                    checked={extraIdConfirmed}
+                                    onChange={(e) => setExtraIdConfirmed(e.target.checked)}
+                                  />
+                                  I’ll include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} before sending
                                 </label>
                               </div>
-                              <p className="text-xs text-yellow-800 mt-1">
-                                Tip: In many wallets (e.g., Trust Wallet), paste this under "{getExtraIdLabel(paymentData.pay_currency)}" or "Memo".
-                              </p>
                             </div>
                           )}
                         </div>
@@ -1082,10 +1051,20 @@ export default function PaymentPage() {
 
                     {/* QR Code and Payment Info */}
                     <div className="space-y-4">
-                      {qrCodeDataUrl && (!paymentData.payin_extra_id || !requiresExtraId(paymentData.pay_currency) || extraIdConfirmed) && (
+                      {qrCodeDataUrl && (!needsExtra || extraIdConfirmed) && (
                         <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-56 h-56 mx-auto mb-3" />
+                          {needsExtra && (
+                            <p className="text-xs text-center text-green-600 mt-1">
+                              ✓ {getExtraIdLabel(paymentData.pay_currency)} included
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {needsExtra && !extraIdConfirmed && (
+                        <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
+                          <p className="text-sm font-medium text-purple-900">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
                         </div>
                       )}
 
@@ -1137,6 +1116,27 @@ export default function PaymentPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Destination Tag/Memo Warning (Smart Terminal style) */}
+                      {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-xs font-semibold text-purple-900 mb-1">
+                                {getExtraIdLabel(paymentData.pay_currency)} Required
+                              </p>
+                              <div className="bg-white p-1.5 rounded-md border border-purple-200 mb-1">
+                                <p className="text-xs font-mono text-gray-900">
+                                  {paymentData.payin_extra_id}
+                                </p>
+                              </div>
+                              <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
+                              <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
 
                       {/* Instructions */}
