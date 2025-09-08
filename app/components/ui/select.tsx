@@ -154,7 +154,9 @@ const SelectItem = React.forwardRef<
       </span>
 
       {plainLabel !== undefined && (
-        <SelectPrimitive.ItemText className="sr-only">{plainLabel}</SelectPrimitive.ItemText>
+        // Hide the plain text label from visual rendering inside the menu while
+        // still letting Radix use it for the trigger and typeahead.
+        <SelectPrimitive.ItemText className="hidden">{plainLabel}</SelectPrimitive.ItemText>
       )}
       {children}
     </SelectPrimitive.Item>

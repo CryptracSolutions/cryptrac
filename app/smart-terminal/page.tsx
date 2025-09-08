@@ -784,7 +784,54 @@ function SmartTerminalPageContent() {
                   return (
                     <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
                       <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
-                        <SelectValue placeholder="All Networks" />
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const iconClass = "h-4 w-4 text-[#7f5efd]"
+                            switch (selectedNetwork) {
+                              case 'all':
+                                return <Globe className={iconClass} />
+                              case 'bitcoin':
+                                return <Bitcoin className={iconClass} />
+                              case 'ethereum':
+                                return <Zap className={iconClass} />
+                              case 'binance':
+                                return <TrendingUp className={iconClass} />
+                              case 'solana':
+                                return <Zap className={iconClass} />
+                              case 'polygon':
+                                return <Network className={iconClass} />
+                              case 'tron':
+                                return <Globe className={iconClass} />
+                              case 'ton':
+                                return <Smartphone className={iconClass} />
+                              case 'arbitrum':
+                                return <TrendingUp className={iconClass} />
+                              case 'optimism':
+                                return <CheckCircle2 className={iconClass} />
+                              case 'base':
+                                return <DollarSign className={iconClass} />
+                              case 'avalanche':
+                                return <Network className={iconClass} />
+                              case 'algorand':
+                                return <Coins className={iconClass} />
+                              case 'litecoin':
+                                return <Coins className={iconClass} />
+                              case 'cardano':
+                                return <Coins className={iconClass} />
+                              case 'polkadot':
+                                return <Network className={iconClass} />
+                              case 'chainlink':
+                                return <Globe className={iconClass} />
+                              default:
+                                return <Network className={iconClass} />
+                            }
+                          })()}
+                          <span className="font-semibold">
+                            {selectedNetwork === 'all'
+                              ? 'All Networks'
+                              : (getNetworkInfo(selectedNetwork)?.displayName || 'Network')}
+                          </span>
+                        </div>
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
                         <SelectItem value="all" textValue="All Networks" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
@@ -804,7 +851,7 @@ function SmartTerminalPageContent() {
                                   {getNetworkIcon(networkId)}
                                   <span className="font-bold text-white">{network.displayName}</span>
                                 </div>
-                                <span className="text-xs text-white/60 bg-white/10 px-1.5 py-0.5 rounded ml-4">
+                                <span className="text-sm font-bold text-white bg-white/20 px-2 py-0.5 rounded-md ml-4">
                                   {currencyCount}
                                 </span>
                               </div>
@@ -823,7 +870,37 @@ function SmartTerminalPageContent() {
                 </label>
                 <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
                   <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
-                    <SelectValue />
+                    {(() => {
+                      const current = availableCurrencies.find(c => c.code === crypto)
+                      const displayName = current?.name || getCurrencyDisplayName(crypto)
+                      const getCurrencyIconLocal = (currencyCode: string) => {
+                        const code = currencyCode.toUpperCase()
+                        if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-[#7f5efd]" />
+                        if (code.includes('USDT') || code.includes('USDC') || code.includes('DAI') || code.includes('PYUSD') || code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'MATIC') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'TRX') return <Globe className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'TON') return <Smartphone className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'AVAX') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'ALGO') return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'LTC') return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'ADA') return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'DOT') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                        if (code === 'LINK') return <Globe className="h-4 w-4 text-[#7f5efd]" />
+                        return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                      }
+                      return (
+                        <div className="flex items-center gap-2">
+                          {getCurrencyIconLocal(crypto)}
+                          <span className="font-bold">{crypto.toUpperCase()}</span>
+                          <span className="text-gray-600">{displayName}</span>
+                        </div>
+                      )
+                    })()}
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
                     {(() => {
