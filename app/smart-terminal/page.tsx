@@ -340,6 +340,14 @@ function SmartTerminalPageContent() {
     }
   }, [amount, tax, chargeFee, merchantSettings]);
 
+  // Ensure DAI on Ethereum: if the ETH network is selected and the current
+  // currency is an Arbitrum-specific DAI code, normalize to plain DAI.
+  useEffect(() => {
+    if (selectedNetwork === 'ethereum' && crypto.toUpperCase() === 'DAIARB') {
+      setCrypto('DAI')
+    }
+  }, [selectedNetwork, crypto])
+
   // Real-time payment status monitoring for smart terminal
   const { paymentStatus: realtimePaymentStatus, connectionStatus } = useRealTimePaymentStatus({
     paymentId: paymentData?.payment_id || null,
@@ -915,6 +923,24 @@ function SmartTerminalPageContent() {
                         const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
                         const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
                         filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
+                      }
+
+                      // Swap: when Ethereum network is selected, show DAI (ETH)
+                      // instead of any Arbitrum-specific DAI code that may leak in
+                      if (selectedNetwork === 'ethereum') {
+                        filteredCurrencies = filteredCurrencies.map(c =>
+                          c.code.toUpperCase() === 'DAIARB'
+                            ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
+                            : c
+                        )
+                        // Deduplicate if both DAI and DAIARB were present
+                        const seen = new Set<string>()
+                        filteredCurrencies = filteredCurrencies.filter(c => {
+                          const key = c.code.toUpperCase()
+                          if (seen.has(key)) return false
+                          seen.add(key)
+                          return true
+                        })
                       }
                       
                       const getCurrencyIcon = (currencyCode: string) => {

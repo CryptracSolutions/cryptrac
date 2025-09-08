@@ -127,13 +127,11 @@ const SelectItem = React.forwardRef<
   // dropdown items use rich markup (icons, colored text, etc.). Radix's Select
   // shows the contents of <ItemText> in the trigger, so we inject a visually
   // hidden plain string there and render the rich children alongside it.
-  const plainLabel =
-    typeof textValue === "string"
-      ? textValue
-      : typeof children === "string"
-        ? children
-        : undefined
-
+  // Render the rich children markup directly. The `textValue` prop (when
+  // provided) already supplies a clean, plain-text label for Radix to use
+  // for the trigger and type-ahead, so we don’t need to inject an extra
+  // hidden <ItemText>. This prevents the same label from showing up twice
+  // inside the dropdown list.
   return (
     <SelectPrimitive.Item
       ref={ref}
@@ -153,11 +151,11 @@ const SelectItem = React.forwardRef<
         </SelectPrimitive.ItemIndicator>
       </span>
 
-      {plainLabel !== undefined && (
-        // Hide the plain text label from visual rendering inside the menu while
-        // still letting Radix use it for the trigger and typeahead.
-        <SelectPrimitive.ItemText className="hidden">{plainLabel}</SelectPrimitive.ItemText>
-      )}
+      {/* Render the rich children markup directly. The `textValue` prop (when
+         provided) already supplies a clean, plain-text label for Radix to use
+         for the trigger and type-ahead, so we don’t need to inject an extra
+         hidden <ItemText>. This prevents the same label from showing up twice
+         inside the dropdown list. */}
       {children}
     </SelectPrimitive.Item>
   )
