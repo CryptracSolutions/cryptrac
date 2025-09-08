@@ -1028,23 +1028,7 @@ export default function PaymentPage() {
                               </div>
                             </div>
                           )}
-                          {/* Pre-send confirmation for tag/memo (Smart Terminal style) */}
-                          {needsExtra && (
-                            <div className="mt-3 w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
-                              <div className="flex items-start gap-2">
-                                <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
-                                <label className="text-xs text-purple-900 flex-1">
-                                  <input
-                                    type="checkbox"
-                                    className="mr-2 align-middle h-4 w-4 text-[#7f5efd] border-purple-300 rounded"
-                                    checked={extraIdConfirmed}
-                                    onChange={(e) => setExtraIdConfirmed(e.target.checked)}
-                                  />
-                                  I’ll include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} before sending
-                                </label>
-                              </div>
-                            </div>
-                          )}
+                          {/* Pre-send confirmation removed per design */}
                         </div>
                       )
                     })()}
@@ -1055,16 +1039,22 @@ export default function PaymentPage() {
                         <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-56 h-56 mx-auto mb-3" />
-                          {needsExtra && (
-                            <p className="text-xs text-center text-green-600 mt-1">
-                              ✓ {getExtraIdLabel(paymentData.pay_currency)} included
-                            </p>
-                          )}
                         </div>
                       )}
                       {needsExtra && !extraIdConfirmed && (
                         <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
-                          <p className="text-sm font-medium text-purple-900">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
+                          <div className="flex items-center justify-center gap-2">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-[#7f5efd] border-purple-300 rounded accent-[#7f5efd] focus:ring-[#7f5efd]"
+                              checked={extraIdConfirmed}
+                              onChange={(e) => setExtraIdConfirmed(e.target.checked)}
+                              aria-label={`Confirm including ${getExtraIdLabel(paymentData.pay_currency).toLowerCase()}`}
+                            />
+                            <label className="text-sm font-medium text-purple-900 select-none" onClick={() => setExtraIdConfirmed(v => !v)}>
+                              Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.
+                            </label>
+                          </div>
                         </div>
                       )}
 
@@ -1134,19 +1124,7 @@ export default function PaymentPage() {
                       {/* Destination Tag/Memo Warning moved above */}
 
 
-                      {/* Instructions */}
-                      <div className="bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-purple-900 mb-3 flex items-center">
-                          <Shield className="h-5 w-5 mr-2" />
-                          Payment Instructions
-                        </h4>
-                        <ol className="text-sm text-purple-800 space-y-2 list-decimal list-inside">
-                          <li>Send exactly <strong className="text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</strong> to the address above</li>
-                          <li>Do not send any other amount or currency</li>
-                          <li>Payment will be confirmed automatically</li>
-                          <li>You will be redirected once payment is complete</li>
-                        </ol>
-                      </div>
+                      {/* Instructions removed per request */}
                     </div>
                   </div>
                 )}

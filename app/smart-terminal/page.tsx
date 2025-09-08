@@ -1105,38 +1105,28 @@ function SmartTerminalPageContent() {
                       )}
                     </div>
 
-                    {/* Pre-send confirmation for tag/memo */}
-                    {needsExtra && (
-                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
-                        <div className="flex items-start gap-2">
-                          <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
-                          <label className="text-xs text-purple-900 flex-1">
-                            <input
-                              type="checkbox"
-                              className="mr-2 align-middle h-4 w-4 text-[#7f5efd] border-purple-300 rounded"
-                              checked={extraIdConfirmed}
-                              onChange={(e) => setExtraIdConfirmed(e.target.checked)}
-                            />
-                            I’ll include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} before sending
-                          </label>
-                        </div>
-                      </div>
-                    )}
+                    {/* Pre-send confirmation removed per design */}
 
                     {/* QR Code (single) */}
                     {(!needsExtra || extraIdConfirmed) && (
                       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
                         <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={256} hideDetails />
-                        {needsExtra && (
-                          <p className="text-xs text-center text-green-600 mt-3">
-                            ✓ {getExtraIdLabel(paymentData.pay_currency)} included
-                          </p>
-                        )}
                       </div>
                     )}
                     {needsExtra && !extraIdConfirmed && (
                       <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
-                        <p className="text-sm font-medium text-purple-900">Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.</p>
+                        <div className="flex items-center justify-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-[#7f5efd] border-purple-300 rounded accent-[#7f5efd] focus:ring-[#7f5efd]"
+                            checked={extraIdConfirmed}
+                            onChange={(e) => setExtraIdConfirmed(e.target.checked)}
+                            aria-label={`Confirm including ${getExtraIdLabel(paymentData.pay_currency).toLowerCase()}`}
+                          />
+                          <label className="text-sm font-medium text-purple-900 select-none" onClick={() => setExtraIdConfirmed(v => !v)}>
+                            Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.
+                          </label>
+                        </div>
                       </div>
                     )}
 
@@ -1179,11 +1169,8 @@ function SmartTerminalPageContent() {
                     <div className="w-full bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-xl border border-purple-200">
                       <div className="text-center">
                         <p className="text-xs text-gray-600 mb-1">Send exactly</p>
-                        <p className="text-3xl font-bold text-[#7f5efd] mb-1">
-                          {formatAmountForDisplay(paymentData.pay_amount)}
-                        </p>
-                        <p className="text-xl font-semibold text-[#7f5efd] uppercase">
-                          {paymentData.pay_currency}
+                        <p className="text-2xl font-bold text-[#7f5efd]">
+                          {formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}
                         </p>
                       </div>
                     </div>
@@ -1202,31 +1189,7 @@ function SmartTerminalPageContent() {
                       </div>
                     </div>
                     
-                    {/* Destination Tag/Memo Warning */}
-                    {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                      <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-2">
-                        <div className="flex items-start gap-2">
-                          <AlertTriangle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-xs font-semibold text-purple-900 mb-1">
-                              {getExtraIdLabel(paymentData.pay_currency)} Required
-                            </p>
-                            {(() => {
-                              const highlight = ['XLM','HBAR','XRP'].includes(paymentData.pay_currency.toUpperCase());
-                              return (
-                                <div className={"bg-white p-1.5 rounded-md border border-purple-200 mb-1" + (highlight ? " text-center" : "") }>
-                                  <p className={"text-xs font-mono " + (highlight ? "text-[#7f5efd] font-semibold" : "text-gray-900") }>
-                                    {paymentData.payin_extra_id}
-                                  </p>
-                                </div>
-                              );
-                            })()}
-                            <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
-                            <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    
 
                     {/* Back Button - Hidden when locked */}
                     {status !== 'confirmed' && !isLocked && (
