@@ -1,0 +1,637 @@
+From 8c4394a96f23f45b6c7c6c71763d6b6c55b7bd53 Mon Sep 17 00:00:00 2001
+From: CryptracSolutions <209516750+CryptracSolutions@users.noreply.github.com>
+Date: Mon, 8 Sep 2025 20:07:53 -0400
+Subject: [PATCH 1/3] Remove HBAR support from frontend components and
+ configuration files
+
+- Remove HBAR from approved currencies (142 -> 141 currencies)
+- Remove HBAR from extra ID validation and requirements
+- Remove HBAR from crypto URI builder and address formatter
+- Remove HBAR from wallet validation patterns
+- Remove HBAR from destination tag modal
+- Remove HBAR from wallets manager and onboarding flows
+- Remove HBAR from merchant wallet configuration pages
+---
+ app/api/wallets/validate/route.ts                         | 5 -----
+ app/components/DestinationTagModal.tsx                    | 3 ---
+ app/components/settings/WalletsManager.tsx                | 4 ++--
+ .../onboarding/steps/wallet-setup-step-dynamic.tsx        | 1 -
+ app/merchant/wallets/page.tsx                             | 1 -
+ lib/approved-currencies.ts                                | 3 +--
+ lib/crypto-uri-builder.ts                                 | 2 +-
+ lib/extra-id-validation.ts                                | 8 ++------
+ lib/simple-address-formatter.ts                           | 1 -
+ 9 files changed, 6 insertions(+), 22 deletions(-)
+
+diff --git a/app/api/wallets/validate/route.ts b/app/api/wallets/validate/route.ts
+index f323bbd..437f9f4 100644
+--- a/app/api/wallets/validate/route.ts
++++ b/app/api/wallets/validate/route.ts
+@@ -102,9 +102,6 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
+   // Elrond/MultiversX - erd format
+   EGLD: /^erd[0-9a-z]{59}$/,
+   
+-  // Hedera - account ID (0.0.x) or EVM alias (0x...)
+-  HBAR: /^(0\.0\.[0-9]+|0x[a-fA-F0-9]{40})$/,
+-  
+   // Monero - supports multiple formats
+   XMR: /^(4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}|8[0-9AB][1-9A-HJ-NP-Za-km-z]{93})$/,
+   
+@@ -253,7 +250,6 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
+   theta: /^0x[a-fA-F0-9]{40}$/,
+   flow: /^0x[a-fA-F0-9]{16}$/,
+   elrond: /^erd[0-9a-z]{59}$/,
+-  hedera: /^(0\.0\.[0-9]+|0x[a-fA-F0-9]{40})$/,
+   monero: /^(4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}|8[0-9AB][1-9A-HJ-NP-Za-km-z]{93})$/,
+   zcash: /^(t[13][a-km-zA-HJ-NP-Z1-9]{33}|zs[0-9a-z]{76})$/,
+   dash: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,
+@@ -335,7 +331,6 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
+   THETA: { name: 'Theta', network: 'Theta', addressType: 'Theta address' },
+   FLOW: { name: 'Flow', network: 'Flow', addressType: 'Flow address' },
+   EGLD: { name: 'Elrond', network: 'Elrond', addressType: 'Elrond address' },
+-  HBAR: { name: 'Hedera', network: 'Hedera', addressType: 'Hedera account ID' },
+   XMR: { name: 'Monero', network: 'Monero', addressType: 'Monero address (multiple formats)' },
+   ZEC: { name: 'Zcash', network: 'Zcash', addressType: 'Zcash address (transparent or shielded)' },
+   RVN: { name: 'Ravencoin', network: 'Ravencoin', addressType: 'Ravencoin address (Legacy, P2SH, or Bech32)' },
+diff --git a/app/components/DestinationTagModal.tsx b/app/components/DestinationTagModal.tsx
+index cdc9b4a..a4da07e 100644
+--- a/app/components/DestinationTagModal.tsx
++++ b/app/components/DestinationTagModal.tsx
+@@ -23,7 +23,6 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
+     switch (currency.toUpperCase()) {
+       case 'XRP': return 'About Destination Tags'
+       case 'XLM': return 'About Memos'
+-      case 'HBAR': return 'About Memos'
+       default: return 'About Extra IDs'
+     }
+   }
+@@ -32,7 +31,6 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
+     switch (currency.toUpperCase()) {
+       case 'XRP': return 'destination tag'
+       case 'XLM': return 'memo'
+-      case 'HBAR': return 'memo'
+       default: return 'extra ID'
+     }
+   }
+@@ -41,7 +39,6 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
+     switch (currency.toUpperCase()) {
+       case 'XRP': return 'Numeric destination tag (1-10 digits)'
+       case 'XLM': return 'Memo (1-28 characters)'
+-      case 'HBAR': return 'Memo (1-100 characters)'
+       default: return 'Extra ID'
+     }
+   }
+diff --git a/app/components/settings/WalletsManager.tsx b/app/components/settings/WalletsManager.tsx
+index 75ee1a5..5bc7bbd 100644
+--- a/app/components/settings/WalletsManager.tsx
++++ b/app/components/settings/WalletsManager.tsx
+@@ -334,8 +334,8 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings,
+           if (extra) setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
+           else setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+ 
+-          // Show modal for XRP/XLM/HBAR when wallet is validated and modal hasn't been shown yet
+-          const currenciesWithModal = ['XRP', 'XLM', 'HBAR'];
++          // Show modal for XRP/XLM when wallet is validated and modal hasn't been shown yet
++          const currenciesWithModal = ['XRP', 'XLM'];
+           if (currenciesWithModal.includes(currency.toUpperCase()) && !shownModals.has(currency)) {
+             setModalCurrency(currency);
+             setShowDestinationTagModal(true);
+diff --git a/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx b/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx
+index 0db17ee..fe2699d 100644
+--- a/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx
++++ b/app/merchant/onboarding/steps/wallet-setup-step-dynamic.tsx
+@@ -30,7 +30,6 @@ const recommendedCurrencies = [
+   { code: 'ADA', name: 'Cardano' },
+   { code: 'CRO', name: 'Crypto.com Coin' },
+   { code: 'DOGE', name: 'Dogecoin' },
+-  { code: 'HBAR', name: 'Hedera Hashgraph' },
+   { code: 'HYPE', name: 'Hyperliquid' },
+   { code: 'LTC', name: 'Litecoin' },
+   { code: 'DOT', name: 'Polkadot' },
+diff --git a/app/merchant/wallets/page.tsx b/app/merchant/wallets/page.tsx
+index 6982a8c..981c96a 100644
+--- a/app/merchant/wallets/page.tsx
++++ b/app/merchant/wallets/page.tsx
+@@ -68,7 +68,6 @@ const recommendedCurrencies = [
+   { code: 'ADA', name: 'Cardano' },
+   { code: 'CRO', name: 'Crypto.com Coin' },
+   { code: 'DOGE', name: 'Dogecoin' },
+-  { code: 'HBAR', name: 'Hedera Hashgraph' },
+   { code: 'HYPE', name: 'Hyperliquid' },
+   { code: 'LTC', name: 'Litecoin' },
+   { code: 'DOT', name: 'Polkadot' },
+diff --git a/lib/approved-currencies.ts b/lib/approved-currencies.ts
+index 49911bb..3f95b0a 100644
+--- a/lib/approved-currencies.ts
++++ b/lib/approved-currencies.ts
+@@ -1,4 +1,4 @@
+-// Approved cryptocurrencies list - exactly 142 currencies (includes CRO, QTUM)
++// Approved cryptocurrencies list - exactly 141 currencies (includes CRO, QTUM)
+ export const APPROVED_CURRENCIES: Record<string, string> = {
+   '1INCH': '1inch Network',
+   'AAVE': 'Aave',
+@@ -50,7 +50,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
+   'FUN': 'FUNToken',
+   'GALAERC20': 'GALAERC20',
+   'ONE': 'Harmony',
+-  'HBAR': 'Hedera Hashgraph',
+   'HEX': 'Hex',
+   'HYPE': 'Hyperliquid',
+   'ILV': 'Illuvium',
+diff --git a/lib/crypto-uri-builder.ts b/lib/crypto-uri-builder.ts
+index be925cd..a95408c 100644
+--- a/lib/crypto-uri-builder.ts
++++ b/lib/crypto-uri-builder.ts
+@@ -37,7 +37,7 @@ export function formatAmountForDisplay(amount: number): string {
+ export function buildCryptoPaymentURI(request: CryptoPaymentRequest): URIResult {
+   const { currency, address, extraId, amount } = request
+   const upper = (currency || '').toUpperCase()
+-  const needsExtraId = ['XRP', 'XLM', 'HBAR', 'EOS'].includes(upper)
++  const needsExtraId = ['XRP', 'XLM', 'EOS'].includes(upper)
+   const uri = needsExtraId && extraId ? `${address}:${extraId}` : address
+   return {
+     uri,
+diff --git a/lib/extra-id-validation.ts b/lib/extra-id-validation.ts
+index 57c7cf7..ad4a7e1 100644
+--- a/lib/extra-id-validation.ts
++++ b/lib/extra-id-validation.ts
+@@ -1,10 +1,9 @@
+ export const EXTRA_ID_PATTERNS = {
+   XRP: /^[0-9]{1,10}$/,
+-  XLM: /^.{1,28}$/,
+-  HBAR: /^.{1,100}$/
++  XLM: /^.{1,28}$/
+ };
+ 
+-export const CURRENCIES_REQUIRING_EXTRA_ID = ['XRP', 'XLM', 'HBAR'];
++export const CURRENCIES_REQUIRING_EXTRA_ID = ['XRP', 'XLM'];
+ 
+ export function requiresExtraId(currency: string): boolean {
+   return CURRENCIES_REQUIRING_EXTRA_ID.includes(currency.toUpperCase());
+@@ -19,7 +18,6 @@ export function getExtraIdLabel(currency: string): string {
+   switch (currency.toUpperCase()) {
+     case 'XRP': return 'Destination Tag';
+     case 'XLM': return 'Memo';
+-    case 'HBAR': return 'Memo';
+     default: return 'Extra ID';
+   }
+ }
+@@ -28,7 +26,6 @@ export function getExtraIdPlaceholder(currency: string): string {
+   switch (currency.toUpperCase()) {
+     case 'XRP': return 'Enter destination tag (e.g., 123456789)';
+     case 'XLM': return 'Enter memo (e.g., cryptrac_merchant_001)';
+-    case 'HBAR': return 'Enter memo (e.g., cryptrac_hbar_001)';
+     default: return 'Enter extra ID';
+   }
+ }
+@@ -37,7 +34,6 @@ export function getExtraIdDescription(currency: string): string {
+   switch (currency.toUpperCase()) {
+     case 'XRP': return 'Numeric destination tag (1-10 digits). Include only if your wallet or exchange requires it.';
+     case 'XLM': return 'Memo (1-28 characters). Include only if your wallet or exchange requires it.';
+-    case 'HBAR': return 'Memo (1-100 characters). Include only if your wallet or exchange requires it.';
+     default: return 'Extra ID (only if required by your wallet)';
+   }
+ }
+diff --git a/lib/simple-address-formatter.ts b/lib/simple-address-formatter.ts
+index 3f960b3..b277c33 100644
+--- a/lib/simple-address-formatter.ts
++++ b/lib/simple-address-formatter.ts
+@@ -11,7 +11,6 @@ export interface AddressFormatResult {
+ const EXTRA_ID_CURRENCIES: Record<string, string> = {
+   XRP: 'Destination Tag',
+   XLM: 'Memo',
+-  HBAR: 'Memo',
+   EOS: 'Memo',
+ }
+ 
+-- 
+2.34.1
+
+
+From 90e946b1d0e7d0f7373fb3ce7c4b3dc0d58a6ffc Mon Sep 17 00:00:00 2001
+From: CryptracSolutions <209516750+CryptracSolutions@users.noreply.github.com>
+Date: Mon, 8 Sep 2025 20:10:32 -0400
+Subject: [PATCH 2/3] Remove HBAR support from NOWPayments create-payment API
+ route
+
+- Remove Hedera Mirror Node integration and functions
+- Remove HBAR-specific address validation and normalization
+- Remove HBAR auto-forwarding logic and retry mechanisms
+- Remove HBAR account verification and alternate format handling
+- Simplify payment creation to standard flow for all currencies
+---
+ app/api/nowpayments/create-payment/route.ts | 220 +-------------------
+ 1 file changed, 5 insertions(+), 215 deletions(-)
+
+diff --git a/app/api/nowpayments/create-payment/route.ts b/app/api/nowpayments/create-payment/route.ts
+index f90ca49..af7eb88 100644
+--- a/app/api/nowpayments/create-payment/route.ts
++++ b/app/api/nowpayments/create-payment/route.ts
+@@ -7,9 +7,6 @@ export const dynamic = 'force-dynamic';
+ 
+ const NOWPAYMENTS_BASE_URL = 'https://api.nowpayments.io/v1';
+ 
+-// Optional: Hedera Mirror Node (for converting between 0.0.x and EVM alias)
+-const HEDERA_MIRROR_NODE_URL = process.env.HEDERA_MIRROR_NODE_URL || 'https://mainnet-public.mirrornode.hedera.com'
+-
+ // Enhanced network-to-wallet mapping with proper validation
+ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
+   // Bitcoin network
+@@ -130,11 +127,6 @@ function isValidWalletAddress(address: string, currency: string): boolean {
+     return isClassic || isMuxed
+   }
+ 
+-  // HBAR: accept Hedera account ID (shard.realm.num) or EVM alias (0x...)
+-  if (currencyUpper === 'HBAR') {
+-    return (/^\d+\.\d+\.\d+$/).test(trimmed) || (/^0x[a-fA-F0-9]{40}$/).test(trimmed)
+-  }
+-
+   // Default: pass-through for unmodeled coins
+   return true
+ }
+@@ -185,79 +177,6 @@ function handleNOWPaymentsError(error: unknown, context: string): NextResponse {
+   return NextResponse.json(response, { status: statusCode, headers })
+ }
+ 
+-// Try to resolve the alternate representation for a Hedera account address
+-// - If given 0.0.x → return 0xEVM alias
+-// - If given 0x... → return 0.0.x account ID
+-async function resolveHederaAlternateAddress(address: string): Promise<string | null> {
+-  try {
+-    const trimmed = address.trim()
+-    const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+-    const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
+-    if (!isAccountId && !isEvm) return null
+-
+-    const target = encodeURIComponent(trimmed)
+-    const url = `${HEDERA_MIRROR_NODE_URL}/api/v1/accounts/${target}`
+-    const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(8000) })
+-    if (!res.ok) return null
+-    const data = await res.json().catch(() => null)
+-    if (!data) return null
+-
+-    // Mirror node returns either `account` and/or `evm_address`
+-    const accountId = typeof data.account === 'string' ? data.account : null
+-    const evmAddr = typeof data.evm_address === 'string' ? data.evm_address : null
+-
+-    if (isAccountId && evmAddr) {
+-      // Ensure 0x prefix
+-      return evmAddr.startsWith('0x') ? evmAddr : `0x${evmAddr}`
+-    }
+-    if (isEvm && accountId) {
+-      return accountId
+-    }
+-    return null
+-  } catch {
+-    return null
+-  }
+-}
+-
+-// Normalize Hedera payout address to the most widely-accepted format for providers (prefer EVM alias)
+-async function normalizeHederaPayoutAddress(address: string): Promise<{ normalized: string, converted: boolean, from: 'account' | 'evm' | 'unknown' }> {
+-  const trimmed = String(address || '').trim()
+-  const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+-  const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
+-  if (!isAccountId && !isEvm) return { normalized: trimmed, converted: false, from: 'unknown' }
+-
+-  if (isAccountId) {
+-    const alt = await resolveHederaAlternateAddress(trimmed)
+-    if (alt && /^0x[a-fA-F0-9]{40}$/.test(alt)) {
+-      return { normalized: alt, converted: true, from: 'account' }
+-    }
+-    return { normalized: trimmed, converted: false, from: 'account' }
+-  }
+-
+-  // Already EVM; ensure prefix and return
+-  const evm = trimmed.startsWith('0x') ? trimmed : `0x${trimmed}`
+-  return { normalized: evm, converted: false, from: 'evm' }
+-}
+-
+-// Verify that a Hedera address (either 0.0.x or 0x...) corresponds to a real account
+-async function verifyHederaAccount(address: string): Promise<{ ok: boolean; accountId?: string; evmAddress?: string; deleted?: boolean }> {
+-  try {
+-    const trimmed = String(address || '').trim()
+-    const target = encodeURIComponent(trimmed)
+-    const url = `${HEDERA_MIRROR_NODE_URL}/api/v1/accounts/${target}`
+-    const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(8000) })
+-    if (!res.ok) return { ok: false }
+-    const data = await res.json().catch(() => null)
+-    if (!data) return { ok: false }
+-    const accountId = typeof data.account === 'string' ? data.account : undefined
+-    const evm = typeof data.evm_address === 'string' ? (data.evm_address.startsWith('0x') ? data.evm_address : `0x${data.evm_address}`) : undefined
+-    const deleted = data.deleted === true
+-    return { ok: !!accountId || !!evm, accountId, evmAddress: evm, deleted }
+-  } catch {
+-    return { ok: false }
+-  }
+-}
+-
+ // Function to get minimum amount for a currency pair
+ async function getMinimumAmount(currencyFrom: string, currencyTo: string): Promise<number> {
+   const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY!
+@@ -587,89 +506,19 @@ export async function POST(request: Request) {
+             )
+           }
+ 
+-          const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
+-
+-          if (targetPayoutCurrency.toUpperCase() === 'HBAR' && hbarStrategy === 'strict_account_id') {
+-            // Strict mode: require 0.0.x and memo; do not convert
+-            const trimmed = walletAddress.trim()
+-            const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+-            const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+-            const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
+-
+-            console.log('🔍 HBAR Address Debug:')
+-            console.log(`   Original: "${walletAddress}"`)
+-            console.log(`   Trimmed: "${trimmed}"`)
+-            console.log(`   Length: ${trimmed.length}`)
+-            console.log(`   Regex 0.0.x match: ${isAccountId}`)
+-
+-            if (!isAccountId) {
+-              return NextResponse.json({
+-                success: false,
+-                error: 'HBAR auto-forwarding requires 0.0.x address format',
+-                details: `Address "${walletAddress}" is not in required 0.0.x format for HBAR auto-forwarding`,
+-                code: 'HBAR_INVALID_ADDRESS_FORMAT'
+-              }, { status: 400 })
+-            }
+-            if (!extraId) {
+-              return NextResponse.json({
+-                success: false,
+-                error: 'HBAR auto-forwarding memo required',
+-                details: 'Please configure a memo/destination tag for HBAR in merchant settings',
+-                code: 'HBAR_MEMO_REQUIRED'
+-              }, { status: 400 })
+-            }
+-
+-            // Preflight: verify account exists
+-            const verify = await verifyHederaAccount(trimmed)
+-            if (!verify.ok || verify.deleted) {
+-              return NextResponse.json({
+-                success: false,
+-                error: 'HBAR account not found or not active',
+-                details: `Mirror node could not verify the Hedera account ${trimmed}`,
+-                code: 'HBAR_ACCOUNT_INVALID'
+-              }, { status: 400 })
+-            }
+-            paymentRequest.payout_address = trimmed
+-            paymentRequest.payout_currency = 'hbar'
+-            paymentRequest.payout_extra_id = extraId
+-            console.log(`🔧 HBAR auto-forwarding configured (strict): address ${trimmed}, memo ${extraId}`)
+-          } else {
+-            // Default: normalize for provider compatibility
+-            if (targetPayoutCurrency.toUpperCase() === 'HBAR') {
+-              const norm = await normalizeHederaPayoutAddress(walletAddress)
+-              // Preflight: verify account exists using normalized form
+-              const verify = await verifyHederaAccount(norm.normalized)
+-              if (!verify.ok || verify.deleted) {
+-                return NextResponse.json({
+-                  success: false,
+-                  error: 'HBAR account not found or not active',
+-                  details: `Mirror node could not verify the Hedera account ${norm.normalized}`,
+-                  code: 'HBAR_ACCOUNT_INVALID'
+-                }, { status: 400 })
+-              }
+-              paymentRequest.payout_address = norm.normalized
+-              if (norm.converted) {
+-                console.log(`🔄 Converted HBAR payout address ${norm.from === 'account' ? '0.0.x → 0x' : ''} for provider compatibility`)
+-              }
+-            } else {
+-              paymentRequest.payout_address = walletAddress.trim()
+-            }
+-          }
++          paymentRequest.payout_address = walletAddress.trim()
+           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
+           
+           // Add payout_extra_id if merchant configured one for this currency (optional)
+           if (requiresExtraId(targetPayoutCurrency)) {
+-            // In strict mode, extra_id for HBAR already enforced above
+-            if (!(targetPayoutCurrency.toUpperCase() === 'HBAR' && hbarStrategy === 'strict_account_id')) {
+-              const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+-              const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
+-              if (extraId) {
++            const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
++            const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
++            if (extraId) {
+                 paymentRequest.payout_extra_id = extraId
+                 console.log(`✅ Added ${getExtraIdLabel(targetPayoutCurrency)} for ${targetPayoutCurrency}: ${extraId}`)
+               } else {
+                 console.warn(`ℹ️ No ${getExtraIdLabel(targetPayoutCurrency).toLowerCase()} configured for ${targetPayoutCurrency}; forwarding to address without one.`)
+               }
+-            }
+           }
+           
+           autoForwardingConfigured = true
+@@ -762,66 +611,7 @@ export async function POST(request: Request) {
+           errorData = { message: errorText }
+         }
+ 
+-        // If HBAR payout validation failed, try alternate address representation and retry once
+-        const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
+-        if (
+-          autoForwardingConfigured &&
+-          paymentRequest.payout_currency === 'hbar' &&
+-          typeof paymentRequest.payout_address === 'string' &&
+-          (errorData?.code === 'BAD_CREATE_PAYMENT_REQUEST' || String(errorData?.message || '').toLowerCase().includes('validate address'))
+-        && hbarStrategy !== 'strict_account_id') {
+-          // Phase 1: resolve alternate address (0.0.x <-> 0x)
+-          let alternate: string | null = null
+-          try {
+-            alternate = await resolveHederaAlternateAddress(paymentRequest.payout_address)
+-          } catch (e) {
+-            console.warn('⚠️ Failed resolving alternate HBAR format:', e)
+-          }
+-
+-          // Phase 2: retry with alternate if available
+-          if (alternate && alternate.toLowerCase() !== paymentRequest.payout_address.toLowerCase()) {
+-            console.log('🔁 Retrying NOWPayments with alternate HBAR address format:', alternate.substring(0, 10) + '...')
+-            const retryReq = { ...paymentRequest, payout_address: alternate }
+-            const retryRes = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
+-              method: 'POST',
+-              headers: {
+-                'x-api-key': NOWPAYMENTS_API_KEY,
+-                'Content-Type': 'application/json',
+-              },
+-              body: JSON.stringify(retryReq),
+-            })
+-            const retryText = await retryRes.text()
+-            if (retryText.trim().startsWith('<')) {
+-              console.error('❌ Alternate-format retry failed due to provider HTML outage')
+-            } else if (retryRes.ok) {
+-              paymentResponse = JSON.parse(retryText) as PaymentResponse
+-              paymentRequest.payout_address = alternate
+-              console.log('✅ Retry succeeded with alternate HBAR address format')
+-            } else {
+-              console.error('❌ Alternate-format retry failed:', retryRes.status, retryText)
+-            }
+-          } else {
+-            console.warn('ℹ️ No alternate HBAR address format available for retry')
+-          }
+-
+-          // Optional: final retry without memo if provider rejects extra_id for HBAR
+-          if (!paymentResponse && process.env.HBAR_PAYOUT_ALLOW_NO_MEMO === 'true' && paymentRequest.payout_extra_id) {
+-            console.warn('⚠️ Retrying HBAR payout without memo due to validation error (HBAR_PAYOUT_ALLOW_NO_MEMO=true)')
+-            const { payout_extra_id, ...noMemoReq } = paymentRequest as any
+-            const retryRes2 = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
+-              method: 'POST', headers: { 'x-api-key': NOWPAYMENTS_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(noMemoReq)
+-            })
+-            const retryText2 = await retryRes2.text()
+-            if (!retryText2.trim().startsWith('<') && retryRes2.ok) {
+-              paymentResponse = JSON.parse(retryText2) as PaymentResponse
+-              console.log('✅ Retry without memo succeeded for HBAR payout')
+-            } else {
+-              console.error('❌ Retry without memo failed:', retryRes2.status, retryText2)
+-            }
+-          }
+-        }
+-
+-        // If still no success after optional retry, proceed with error handling
++        // If still no success, proceed with error handling
+         if (!paymentResponse) {
+           
+           // Handle specific NOWPayments errors
+-- 
+2.34.1
+
+
+From 327222d2ba91146da1741204fc5699d39dd86f5d Mon Sep 17 00:00:00 2001
+From: CryptracSolutions <209516750+CryptracSolutions@users.noreply.github.com>
+Date: Mon, 8 Sep 2025 20:11:37 -0400
+Subject: [PATCH 3/3] Remove HBAR support from create-with-payout API route
+
+- Remove HBAR normalization and address conversion logic
+- Remove HBAR-specific validation and retry mechanisms
+- Simplify payment creation to standard flow for all currencies
+- Complete removal of all HBAR/Hedera references from codebase
+---
+ app/api/payments/create-with-payout/route.ts | 101 +------------------
+ 1 file changed, 1 insertion(+), 100 deletions(-)
+
+diff --git a/app/api/payments/create-with-payout/route.ts b/app/api/payments/create-with-payout/route.ts
+index ead53f9..2bea4f2 100644
+--- a/app/api/payments/create-with-payout/route.ts
++++ b/app/api/payments/create-with-payout/route.ts
+@@ -67,70 +67,12 @@ export async function POST(request: NextRequest) {
+       payout_extra_id?: string;
+     }
+     
+-    // Normalize Hedera (HBAR) payout address: prefer EVM alias for provider compatibility
+-    const normalizeHBAR = async (address: string): Promise<{ normalized: string; converted: boolean }> => {
+-      const trimmed = String(address || '').trim()
+-      const isAccount = /^\d+\.\d+\.\d+$/.test(trimmed)
+-      const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
+-      if (isEvm) return { normalized: trimmed, converted: false }
+-      if (!isAccount) return { normalized: trimmed, converted: false }
+-      try {
+-        const mirror = process.env.HEDERA_MIRROR_NODE_URL || 'https://mainnet-public.mirrornode.hedera.com'
+-        const res = await fetch(`${mirror}/api/v1/accounts/${encodeURIComponent(trimmed)}`)
+-        if (res.ok) {
+-          const data = await res.json().catch(() => null)
+-          const evm = data?.evm_address ? (String(data.evm_address).startsWith('0x') ? data.evm_address : `0x${data.evm_address}`) : null
+-          if (evm && /^0x[a-fA-F0-9]{40}$/.test(evm)) return { normalized: evm, converted: true }
+-        }
+-      } catch {}
+-      return { normalized: trimmed, converted: false }
+-    }
+-
+-    const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
+-
+-    let payoutAddressToUse = walletAddress
+-    if (currency.toUpperCase() === 'HBAR') {
+-      if (hbarStrategy === 'strict_account_id') {
+-        const trimmed = walletAddress.trim()
+-        const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
+-        const memo = typeof extraId === 'string' ? extraId.trim() : ''
+-        console.log('🔍 HBAR Address Debug (create-with-payout):')
+-        console.log(`   Original: "${walletAddress}"`)
+-        console.log(`   Trimmed: "${trimmed}"`)
+-        console.log(`   Length: ${trimmed.length}`)
+-        console.log(`   Regex 0.0.x match: ${isAccountId}`)
+-        if (!isAccountId) {
+-          return NextResponse.json({
+-            success: false,
+-            error: 'HBAR auto-forwarding requires 0.0.x address format',
+-            details: `Address "${walletAddress}" is not in required 0.0.x format for HBAR auto-forwarding`,
+-            code: 'HBAR_INVALID_ADDRESS_FORMAT'
+-          }, { status: 400 })
+-        }
+-        if (!memo) {
+-          return NextResponse.json({
+-            success: false,
+-            error: 'HBAR auto-forwarding memo required',
+-            details: 'Please configure a memo/destination tag for HBAR in merchant settings',
+-            code: 'HBAR_MEMO_REQUIRED'
+-          }, { status: 400 })
+-        }
+-        payoutAddressToUse = trimmed
+-      } else {
+-        const norm = await normalizeHBAR(walletAddress)
+-        payoutAddressToUse = norm.normalized
+-        if (norm.converted) {
+-          console.log('🔄 Converted HBAR payout address 0.0.x → 0x for provider compatibility')
+-        }
+-      }
+-    }
+-
+     const paymentPayload: PaymentPayload = {
+       price_amount: amount,
+       price_currency: 'usd',
+       pay_currency: currency.toLowerCase(),
+       order_id: orderId,
+-      payout_address: payoutAddressToUse, // Merchant's wallet address (normalized if HBAR)
++      payout_address: walletAddress.trim(), // Merchant's wallet address
+       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL}/api/webhooks/nowpayments`
+     };
+ 
+@@ -150,47 +92,6 @@ export async function POST(request: NextRequest) {
+       body: JSON.stringify(paymentPayload)
+     });
+     let responseText = await nowPaymentsResponse.text()
+-    // Retry once with alternate HBAR format if validation fails
+-    if (!nowPaymentsResponse.ok) {
+-      let errorData: any
+-      try { errorData = JSON.parse(responseText) } catch { errorData = { message: responseText } }
+-      const isHBAR = currency.toUpperCase() === 'HBAR'
+-      const validateErr = String(errorData?.message || '').toLowerCase().includes('validate address') || errorData?.code === 'BAD_CREATE_PAYMENT_REQUEST'
+-      if (isHBAR && validateErr && hbarStrategy !== 'strict_account_id') {
+-        try {
+-          // Resolve alternate and retry
+-          const mirror = process.env.HEDERA_MIRROR_NODE_URL || 'https://mainnet-public.mirrornode.hedera.com'
+-          const target = encodeURIComponent(payoutAddressToUse)
+-          const res = await fetch(`${mirror}/api/v1/accounts/${target}`)
+-          if (res.ok) {
+-            const data = await res.json().catch(() => null)
+-            const accountId = data?.account
+-            const evm = data?.evm_address ? (String(data.evm_address).startsWith('0x') ? data.evm_address : `0x${data.evm_address}`) : null
+-            const alternate = /^0x/i.test(payoutAddressToUse) ? accountId : evm
+-            if (alternate && alternate.toLowerCase() !== payoutAddressToUse.toLowerCase()) {
+-              const retryPayload = { ...paymentPayload, payout_address: alternate }
+-              console.log('🔁 Retrying NOWPayments with alternate HBAR format:', String(alternate).substring(0, 10) + '...')
+-              nowPaymentsResponse = await fetch('https://api.nowpayments.io/v1/payment', {
+-                method: 'POST', headers: { 'x-api-key': process.env.NOWPAYMENTS_API_KEY!, 'Content-Type': 'application/json' }, body: JSON.stringify(retryPayload)
+-              })
+-              responseText = await nowPaymentsResponse.text()
+-            }
+-          }
+-        } catch (e) {
+-          console.warn('⚠️ HBAR alternate-format retry failed:', e)
+-        }
+-
+-        // Optional: final retry without memo if provider rejects extra_id for HBAR
+-        if (!nowPaymentsResponse.ok && process.env.HBAR_PAYOUT_ALLOW_NO_MEMO === 'true' && paymentPayload.payout_extra_id) {
+-          const { payout_extra_id, ...noMemoPayload } = paymentPayload as any
+-          console.warn('⚠️ Retrying HBAR payout without memo due to validation error (HBAR_PAYOUT_ALLOW_NO_MEMO=true)')
+-          nowPaymentsResponse = await fetch('https://api.nowpayments.io/v1/payment', {
+-            method: 'POST', headers: { 'x-api-key': process.env.NOWPAYMENTS_API_KEY!, 'Content-Type': 'application/json' }, body: JSON.stringify(noMemoPayload)
+-          })
+-          responseText = await nowPaymentsResponse.text()
+-        }
+-      }
+-    }
+ 
+     if (responseText.trim().startsWith('<')) {
+       console.error('❌ NOWPayments service returned HTML (outage)')
+-- 
+2.34.1
+

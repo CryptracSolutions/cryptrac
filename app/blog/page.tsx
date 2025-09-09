@@ -9,99 +9,25 @@ import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
 import { Badge } from "@/app/components/ui/badge";
 import { Input } from "@/app/components/ui/input";
+import { getAllBlogPosts, getFeaturedBlogPosts, searchBlogPosts, getBlogPostsByCategory } from "@/lib/blog-posts";
 
 export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Sample blog posts data
-  const blogPosts = [
-    {
-      id: 1,
-      title: "Getting Started with Cryptocurrency Payments: A Merchant's Guide",
-      excerpt: "Learn the basics of accepting cryptocurrency payments for your business, including setup, security considerations, and best practices for success.",
-      author: "Cryptrac Team",
-      date: "2025-01-15",
-      readTime: "8 min read",
-      category: "Getting Started",
-      tags: ["Bitcoin", "Payments", "Setup", "Merchants"],
-      featured: true,
-      image: "/blog/crypto-payments-guide.jpg"
-    },
-    {
-      id: 2,
-      title: "The Future of Stablecoins in E-commerce",
-      excerpt: "Explore how stablecoins like USDT, USDC, and DAI are transforming online commerce by combining cryptocurrency benefits with price stability.",
-      author: "Sarah Chen",
-      date: "2025-01-10",
-      readTime: "6 min read",
-      category: "Industry Insights",
-      tags: ["Stablecoins", "E-commerce", "USDT", "USDC"],
-      featured: false,
-      image: "/blog/stablecoins-ecommerce.jpg"
-    },
-    {
-      id: 3,
-      title: "Security Best Practices for Cryptocurrency Merchants",
-      excerpt: "Comprehensive guide to securing your cryptocurrency payment setup, from wallet management to transaction monitoring and fraud prevention.",
-      author: "Michael Rodriguez",
-      date: "2025-01-05",
-      readTime: "10 min read",
-      category: "Security",
-      tags: ["Security", "Wallets", "Best Practices", "Fraud Prevention"],
-      featured: true,
-      image: "/blog/security-best-practices.jpg"
-    },
-    {
-      id: 4,
-      title: "Understanding Transaction Fees in Different Blockchains",
-      excerpt: "Compare transaction costs across Bitcoin, Ethereum, Solana, and other networks to optimize your payment processing strategy.",
-      author: "Alex Thompson",
-      date: "2025-01-01",
-      readTime: "7 min read",
-      category: "Technical",
-      tags: ["Transaction Fees", "Bitcoin", "Ethereum", "Solana"],
-      featured: false,
-      image: "/blog/transaction-fees.jpg"
-    },
-    {
-      id: 5,
-      title: "Cryptrac's 2024 Year in Review: Growth and Innovation",
-      excerpt: "Reflecting on our achievements this year, from new features and partnerships to the thousands of merchants who joined our platform.",
-      author: "Cryptrac Team",
-      date: "2024-12-28",
-      readTime: "5 min read",
-      category: "Company News",
-      tags: ["Year Review", "Growth", "Innovation", "Milestones"],
-      featured: false,
-      image: "/blog/2024-year-review.jpg"
-    },
-    {
-      id: 6,
-      title: "Smart Terminal: Bringing Cryptocurrency to Point-of-Sale",
-      excerpt: "Discover how our Smart Terminal feature enables brick-and-mortar businesses to accept cryptocurrency payments in person.",
-      author: "Jennifer Park",
-      date: "2024-12-20",
-      readTime: "9 min read",
-      category: "Product Updates",
-      tags: ["Smart Terminal", "Point of Sale", "In-Person Payments", "Hardware"],
-      featured: false,
-      image: "/blog/smart-terminal.jpg"
-    }
-  ];
-
-  const categories = ["All", "Getting Started", "Industry Insights", "Security", "Technical", "Company News", "Product Updates"];
+  // Get blog posts data from centralized source
+  const allBlogPosts = getAllBlogPosts();
+  
+  const categories = ["All", "Getting Started", "Industry Insights", "Security", "Technical", "Company News", "Product Updates", "Tax & Compliance", "Business Strategy", "Customer Experience", "International Business", "Industry Comparison"];
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const filteredPosts = blogPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredPosts = searchTerm 
+    ? searchBlogPosts(searchTerm).filter(post => 
+        selectedCategory === "All" || post.category === selectedCategory
+      )
+    : getBlogPostsByCategory(selectedCategory);
 
-  const featuredPosts = blogPosts.filter(post => post.featured);
-  const recentPosts = blogPosts.slice(0, 3);
+  const featuredPosts = getFeaturedBlogPosts();
+  const recentPosts = allBlogPosts.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-white">
@@ -235,9 +161,11 @@ export default function BlogPage() {
                             </Badge>
                           ))}
                         </div>
-                        <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-[#7f5efd] hover:text-[#6547e8] p-0">
-                          Read Article
-                          <ChevronRight className="h-4 w-4 ml-1" />
+                        <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-[#7f5efd] hover:text-[#6547e8] p-0" asChild>
+                          <Link href={`/blog/${post.slug}`}>
+                            Read Article
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Link>
                         </Button>
                       </CardContent>
                     </Card>
@@ -310,9 +238,11 @@ export default function BlogPage() {
                                 </Badge>
                               ))}
                             </div>
-                            <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-[#7f5efd] hover:text-[#6547e8] p-0">
-                              Read Full Article
-                              <ChevronRight className="h-4 w-4 ml-1" />
+                            <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-[#7f5efd] hover:text-[#6547e8] p-0" asChild>
+                              <Link href={`/blog/${post.slug}`}>
+                                Read Full Article
+                                <ChevronRight className="h-4 w-4 ml-1" />
+                              </Link>
                             </Button>
                           </div>
                         </div>
@@ -337,18 +267,20 @@ export default function BlogPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {recentPosts.map((post) => (
-                    <div key={post.id} className="pb-4 border-b border-gray-200 last:border-b-0">
-                      <h4 className="font-phonic text-sm font-normal text-gray-900 mb-2 line-clamp-2">
-                        {post.title}
-                      </h4>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(post.date).toLocaleDateString()}
+                    <Link key={post.id} href={`/blog/${post.slug}`}>
+                      <div className="pb-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 p-2 rounded transition-colors">
+                        <h4 className="font-phonic text-sm font-normal text-gray-900 mb-2 line-clamp-2">
+                          {post.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(post.date).toLocaleDateString()}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {post.category}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {post.category}
-                      </Badge>
-                    </div>
+                    </Link>
                   ))}
                 </CardContent>
               </Card>
