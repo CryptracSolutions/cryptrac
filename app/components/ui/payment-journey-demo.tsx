@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bitcoin, Zap, Network, CheckCircle, ArrowRight, DollarSign, Copy, Globe, ShoppingBag, Play, Pause, ChevronLeft, ChevronRight, Mail } from "lucide-react";
+import { Bitcoin, Zap, Network, CheckCircle, ArrowRight, DollarSign, Copy, Globe, ShoppingBag, Play, Pause, ChevronLeft, ChevronRight, Mail, Clock } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 
@@ -153,8 +153,8 @@ function CurrencySelectionStage() {
             <span className="font-semibold text-gray-900">$299.99</span>
           </div>
           <div className="flex justify-between items-center text-[#7f5efd]">
-            <span>Tax (8%)</span>
-            <span className="font-medium">+$24.00</span>
+            <span>Tax (6%)</span>
+            <span className="font-medium">+$18.00</span>
           </div>
           <div className="flex justify-between items-center text-[#7f5efd]">
             <span>Gateway fee (0.5%)</span>
@@ -162,7 +162,7 @@ function CurrencySelectionStage() {
           </div>
           <div className="flex justify-between items-center font-bold border-t border-purple-100 pt-1">
             <span className="text-gray-700">Total</span>
-            <span className="text-[#7f5efd]">$325.49</span>
+            <span className="text-[#7f5efd]">$319.49</span>
           </div>
         </div>
       </div>
@@ -211,7 +211,7 @@ function QRCodeStage() {
       {/* Status */}
       <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
         <div className="flex items-center justify-center gap-2">
-          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+          <Clock className="h-5 w-5 text-[#7f5efd] animate-spin" />
           <span className="text-sm font-medium text-gray-700">Awaiting Payment</span>
         </div>
       </div>
@@ -219,190 +219,247 @@ function QRCodeStage() {
       {/* QR Code */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
         <div className="w-32 h-32 bg-white rounded-lg mx-auto flex items-center justify-center">
-          <svg className="w-28 h-28" viewBox="0 0 210 210" fill="none">
-            <rect width="210" height="210" fill="white"/>
+          <svg className="w-28 h-28" viewBox="0 0 250 250" fill="none">
+            <rect width="250" height="250" fill="white"/>
             
-            {/* More realistic QR Code Pattern with higher density */}
-            {/* Corner position detection patterns */}
-            <rect x="0" y="0" width="70" height="70" fill="black"/>
-            <rect x="10" y="10" width="50" height="50" fill="white"/>
-            <rect x="20" y="20" width="30" height="30" fill="black"/>
+            {/* Ultra realistic QR Code with proper module size (5x5 per module) */}
+            {/* Position detection patterns (corner squares) */}
+            <rect x="0" y="0" width="35" height="35" fill="black"/>
+            <rect x="5" y="5" width="25" height="25" fill="white"/>
+            <rect x="10" y="10" width="15" height="15" fill="black"/>
             
-            <rect x="140" y="0" width="70" height="70" fill="black"/>
-            <rect x="150" y="10" width="50" height="50" fill="white"/>
-            <rect x="160" y="20" width="30" height="30" fill="black"/>
+            <rect x="215" y="0" width="35" height="35" fill="black"/>
+            <rect x="220" y="5" width="25" height="25" fill="white"/>
+            <rect x="225" y="10" width="15" height="15" fill="black"/>
             
-            <rect x="0" y="140" width="70" height="70" fill="black"/>
-            <rect x="10" y="150" width="50" height="50" fill="white"/>
-            <rect x="20" y="160" width="30" height="30" fill="black"/>
+            <rect x="0" y="215" width="35" height="35" fill="black"/>
+            <rect x="5" y="220" width="25" height="25" fill="white"/>
+            <rect x="10" y="225" width="15" height="15" fill="black"/>
             
-            {/* Timing patterns */}
-            <rect x="80" y="60" width="10" height="10" fill="black"/>
-            <rect x="100" y="60" width="10" height="10" fill="black"/>
-            <rect x="120" y="60" width="10" height="10" fill="black"/>
-            <rect x="60" y="80" width="10" height="10" fill="black"/>
-            <rect x="60" y="100" width="10" height="10" fill="black"/>
-            <rect x="60" y="120" width="10" height="10" fill="black"/>
+            {/* Separators around position detection patterns */}
+            <rect x="0" y="35" width="40" height="5" fill="white"/>
+            <rect x="35" y="0" width="5" height="40" fill="white"/>
+            <rect x="210" y="35" width="40" height="5" fill="white"/>
+            <rect x="210" y="0" width="5" height="40" fill="white"/>
+            <rect x="0" y="210" width="40" height="5" fill="white"/>
+            <rect x="35" y="210" width="5" height="40" fill="white"/>
             
-            {/* Dense data patterns across entire QR code */}
-            <rect x="80" y="0" width="10" height="10" fill="black"/>
-            <rect x="90" y="0" width="10" height="10" fill="black"/>
-            <rect x="110" y="0" width="10" height="10" fill="black"/>
-            <rect x="120" y="0" width="10" height="10" fill="black"/>
-            <rect x="130" y="0" width="10" height="10" fill="black"/>
+            {/* Timing patterns (alternating black/white modules) */}
+            <rect x="40" y="30" width="5" height="5" fill="black"/>
+            <rect x="50" y="30" width="5" height="5" fill="black"/>
+            <rect x="60" y="30" width="5" height="5" fill="black"/>
+            <rect x="70" y="30" width="5" height="5" fill="black"/>
+            <rect x="80" y="30" width="5" height="5" fill="black"/>
+            <rect x="90" y="30" width="5" height="5" fill="black"/>
+            <rect x="100" y="30" width="5" height="5" fill="black"/>
+            <rect x="110" y="30" width="5" height="5" fill="black"/>
+            <rect x="120" y="30" width="5" height="5" fill="black"/>
+            <rect x="130" y="30" width="5" height="5" fill="black"/>
+            <rect x="140" y="30" width="5" height="5" fill="black"/>
+            <rect x="150" y="30" width="5" height="5" fill="black"/>
+            <rect x="160" y="30" width="5" height="5" fill="black"/>
+            <rect x="170" y="30" width="5" height="5" fill="black"/>
+            <rect x="180" y="30" width="5" height="5" fill="black"/>
+            <rect x="190" y="30" width="5" height="5" fill="black"/>
+            <rect x="200" y="30" width="5" height="5" fill="black"/>
             
-            <rect x="80" y="10" width="10" height="10" fill="black"/>
-            <rect x="100" y="10" width="10" height="10" fill="black"/>
-            <rect x="130" y="10" width="10" height="10" fill="black"/>
+            <rect x="30" y="40" width="5" height="5" fill="black"/>
+            <rect x="30" y="50" width="5" height="5" fill="black"/>
+            <rect x="30" y="60" width="5" height="5" fill="black"/>
+            <rect x="30" y="70" width="5" height="5" fill="black"/>
+            <rect x="30" y="80" width="5" height="5" fill="black"/>
+            <rect x="30" y="90" width="5" height="5" fill="black"/>
+            <rect x="30" y="100" width="5" height="5" fill="black"/>
+            <rect x="30" y="110" width="5" height="5" fill="black"/>
+            <rect x="30" y="120" width="5" height="5" fill="black"/>
+            <rect x="30" y="130" width="5" height="5" fill="black"/>
+            <rect x="30" y="140" width="5" height="5" fill="black"/>
+            <rect x="30" y="150" width="5" height="5" fill="black"/>
+            <rect x="30" y="160" width="5" height="5" fill="black"/>
+            <rect x="30" y="170" width="5" height="5" fill="black"/>
+            <rect x="30" y="180" width="5" height="5" fill="black"/>
+            <rect x="30" y="190" width="5" height="5" fill="black"/>
+            <rect x="30" y="200" width="5" height="5" fill="black"/>
             
-            <rect x="90" y="20" width="10" height="10" fill="black"/>
-            <rect x="110" y="20" width="10" height="10" fill="black"/>
-            <rect x="120" y="20" width="10" height="10" fill="black"/>
+            {/* Alignment pattern (center) */}
+            <rect x="115" y="115" width="20" height="20" fill="black"/>
+            <rect x="120" y="120" width="10" height="10" fill="white"/>
+            <rect x="122.5" y="122.5" width="5" height="5" fill="black"/>
             
-            <rect x="80" y="30" width="10" height="10" fill="black"/>
-            <rect x="100" y="30" width="10" height="10" fill="black"/>
-            <rect x="110" y="30" width="10" height="10" fill="black"/>
-            <rect x="130" y="30" width="10" height="10" fill="black"/>
+            {/* Dense data patterns - Top section */}
+            <rect x="40" y="0" width="5" height="5" fill="black"/>
+            <rect x="50" y="0" width="5" height="5" fill="black"/>
+            <rect x="60" y="0" width="5" height="5" fill="black"/>
+            <rect x="75" y="0" width="5" height="5" fill="black"/>
+            <rect x="85" y="0" width="5" height="5" fill="black"/>
+            <rect x="95" y="0" width="5" height="5" fill="black"/>
+            <rect x="105" y="0" width="5" height="5" fill="black"/>
+            <rect x="115" y="0" width="5" height="5" fill="black"/>
+            <rect x="125" y="0" width="5" height="5" fill="black"/>
+            <rect x="135" y="0" width="5" height="5" fill="black"/>
+            <rect x="150" y="0" width="5" height="5" fill="black"/>
+            <rect x="160" y="0" width="5" height="5" fill="black"/>
+            <rect x="170" y="0" width="5" height="5" fill="black"/>
+            <rect x="185" y="0" width="5" height="5" fill="black"/>
+            <rect x="195" y="0" width="5" height="5" fill="black"/>
+            <rect x="205" y="0" width="5" height="5" fill="black"/>
             
-            <rect x="90" y="40" width="10" height="10" fill="black"/>
-            <rect x="120" y="40" width="10" height="10" fill="black"/>
-            <rect x="130" y="40" width="10" height="10" fill="black"/>
+            <rect x="45" y="5" width="5" height="5" fill="black"/>
+            <rect x="55" y="5" width="5" height="5" fill="black"/>
+            <rect x="70" y="5" width="5" height="5" fill="black"/>
+            <rect x="90" y="5" width="5" height="5" fill="black"/>
+            <rect x="100" y="5" width="5" height="5" fill="black"/>
+            <rect x="120" y="5" width="5" height="5" fill="black"/>
+            <rect x="130" y="5" width="5" height="5" fill="black"/>
+            <rect x="145" y="5" width="5" height="5" fill="black"/>
+            <rect x="155" y="5" width="5" height="5" fill="black"/>
+            <rect x="175" y="5" width="5" height="5" fill="black"/>
+            <rect x="190" y="5" width="5" height="5" fill="black"/>
+            <rect x="200" y="5" width="5" height="5" fill="black"/>
             
-            <rect x="80" y="50" width="10" height="10" fill="black"/>
-            <rect x="110" y="50" width="10" height="10" fill="black"/>
-            <rect x="130" y="50" width="10" height="10" fill="black"/>
+            {/* Left section data patterns */}
+            <rect x="0" y="40" width="5" height="5" fill="black"/>
+            <rect x="10" y="40" width="5" height="5" fill="black"/>
+            <rect x="20" y="40" width="5" height="5" fill="black"/>
+            <rect x="0" y="50" width="5" height="5" fill="black"/>
+            <rect x="15" y="50" width="5" height="5" fill="black"/>
+            <rect x="25" y="50" width="5" height="5" fill="black"/>
+            <rect x="5" y="60" width="5" height="5" fill="black"/>
+            <rect x="20" y="60" width="5" height="5" fill="black"/>
+            <rect x="0" y="70" width="5" height="5" fill="black"/>
+            <rect x="10" y="70" width="5" height="5" fill="black"/>
+            <rect x="25" y="70" width="5" height="5" fill="black"/>
+            <rect x="15" y="80" width="5" height="5" fill="black"/>
+            <rect x="5" y="90" width="5" height="5" fill="black"/>
+            <rect x="20" y="90" width="5" height="5" fill="black"/>
+            <rect x="0" y="100" width="5" height="5" fill="black"/>
+            <rect x="25" y="100" width="5" height="5" fill="black"/>
+            <rect x="10" y="110" width="5" height="5" fill="black"/>
+            <rect x="15" y="120" width="5" height="5" fill="black"/>
+            <rect x="5" y="130" width="5" height="5" fill="black"/>
+            <rect x="25" y="130" width="5" height="5" fill="black"/>
+            <rect x="0" y="140" width="5" height="5" fill="black"/>
+            <rect x="20" y="140" width="5" height="5" fill="black"/>
+            <rect x="10" y="150" width="5" height="5" fill="black"/>
+            <rect x="0" y="160" width="5" height="5" fill="black"/>
+            <rect x="25" y="160" width="5" height="5" fill="black"/>
+            <rect x="15" y="170" width="5" height="5" fill="black"/>
+            <rect x="5" y="180" width="5" height="5" fill="black"/>
+            <rect x="20" y="180" width="5" height="5" fill="black"/>
+            <rect x="10" y="190" width="5" height="5" fill="black"/>
+            <rect x="0" y="200" width="5" height="5" fill="black"/>
+            <rect x="25" y="200" width="5" height="5" fill="black"/>
             
-            {/* Left side data */}
-            <rect x="0" y="80" width="10" height="10" fill="black"/>
-            <rect x="20" y="80" width="10" height="10" fill="black"/>
-            <rect x="40" y="80" width="10" height="10" fill="black"/>
-            <rect x="50" y="80" width="10" height="10" fill="black"/>
+            {/* Center area data patterns */}
+            <rect x="40" y="40" width="5" height="5" fill="black"/>
+            <rect x="55" y="40" width="5" height="5" fill="black"/>
+            <rect x="70" y="40" width="5" height="5" fill="black"/>
+            <rect x="85" y="40" width="5" height="5" fill="black"/>
+            <rect x="100" y="40" width="5" height="5" fill="black"/>
+            <rect x="140" y="40" width="5" height="5" fill="black"/>
+            <rect x="155" y="40" width="5" height="5" fill="black"/>
+            <rect x="170" y="40" width="5" height="5" fill="black"/>
+            <rect x="185" y="40" width="5" height="5" fill="black"/>
+            <rect x="200" y="40" width="5" height="5" fill="black"/>
             
-            <rect x="10" y="90" width="10" height="10" fill="black"/>
-            <rect x="30" y="90" width="10" height="10" fill="black"/>
-            <rect x="40" y="90" width="10" height="10" fill="black"/>
+            <rect x="45" y="50" width="5" height="5" fill="black"/>
+            <rect x="60" y="50" width="5" height="5" fill="black"/>
+            <rect x="75" y="50" width="5" height="5" fill="black"/>
+            <rect x="95" y="50" width="5" height="5" fill="black"/>
+            <rect x="145" y="50" width="5" height="5" fill="black"/>
+            <rect x="160" y="50" width="5" height="5" fill="black"/>
+            <rect x="180" y="50" width="5" height="5" fill="black"/>
+            <rect x="195" y="50" width="5" height="5" fill="black"/>
             
-            <rect x="0" y="100" width="10" height="10" fill="black"/>
-            <rect x="30" y="100" width="10" height="10" fill="black"/>
-            <rect x="50" y="100" width="10" height="10" fill="black"/>
+            <rect x="40" y="60" width="5" height="5" fill="black"/>
+            <rect x="65" y="60" width="5" height="5" fill="black"/>
+            <rect x="80" y="60" width="5" height="5" fill="black"/>
+            <rect x="90" y="60" width="5" height="5" fill="black"/>
+            <rect x="105" y="60" width="5" height="5" fill="black"/>
+            <rect x="140" y="60" width="5" height="5" fill="black"/>
+            <rect x="165" y="60" width="5" height="5" fill="black"/>
+            <rect x="175" y="60" width="5" height="5" fill="black"/>
+            <rect x="190" y="60" width="5" height="5" fill="black"/>
+            <rect x="205" y="60" width="5" height="5" fill="black"/>
             
-            <rect x="10" y="110" width="10" height="10" fill="black"/>
-            <rect x="20" y="110" width="10" height="10" fill="black"/>
-            <rect x="40" y="110" width="10" height="10" fill="black"/>
+            {/* More dense patterns in middle and right sections */}
+            <rect x="50" y="70" width="5" height="5" fill="black"/>
+            <rect x="70" y="70" width="5" height="5" fill="black"/>
+            <rect x="85" y="70" width="5" height="5" fill="black"/>
+            <rect x="100" y="70" width="5" height="5" fill="black"/>
+            <rect x="150" y="70" width="5" height="5" fill="black"/>
+            <rect x="165" y="70" width="5" height="5" fill="black"/>
+            <rect x="180" y="70" width="5" height="5" fill="black"/>
+            <rect x="195" y="70" width="5" height="5" fill="black"/>
             
-            <rect x="0" y="120" width="10" height="10" fill="black"/>
-            <rect x="30" y="120" width="10" height="10" fill="black"/>
-            <rect x="50" y="120" width="10" height="10" fill="black"/>
+            {/* Bottom section patterns */}
+            <rect x="40" y="160" width="5" height="5" fill="black"/>
+            <rect x="55" y="160" width="5" height="5" fill="black"/>
+            <rect x="70" y="160" width="5" height="5" fill="black"/>
+            <rect x="85" y="160" width="5" height="5" fill="black"/>
+            <rect x="100" y="160" width="5" height="5" fill="black"/>
+            <rect x="140" y="160" width="5" height="5" fill="black"/>
+            <rect x="155" y="160" width="5" height="5" fill="black"/>
+            <rect x="170" y="160" width="5" height="5" fill="black"/>
+            <rect x="185" y="160" width="5" height="5" fill="black"/>
+            <rect x="200" y="160" width="5" height="5" fill="black"/>
             
-            <rect x="20" y="130" width="10" height="10" fill="black"/>
-            <rect x="40" y="130" width="10" height="10" fill="black"/>
-            <rect x="50" y="130" width="10" height="10" fill="black"/>
+            <rect x="45" y="170" width="5" height="5" fill="black"/>
+            <rect x="60" y="170" width="5" height="5" fill="black"/>
+            <rect x="80" y="170" width="5" height="5" fill="black"/>
+            <rect x="95" y="170" width="5" height="5" fill="black"/>
+            <rect x="145" y="170" width="5" height="5" fill="black"/>
+            <rect x="160" y="170" width="5" height="5" fill="black"/>
+            <rect x="175" y="170" width="5" height="5" fill="black"/>
+            <rect x="190" y="170" width="5" height="5" fill="black"/>
+            <rect x="205" y="170" width="5" height="5" fill="black"/>
             
-            {/* Center dense patterns */}
-            <rect x="80" y="80" width="10" height="10" fill="black"/>
-            <rect x="90" y="80" width="10" height="10" fill="black"/>
-            <rect x="110" y="80" width="10" height="10" fill="black"/>
-            <rect x="120" y="80" width="10" height="10" fill="black"/>
-            <rect x="130" y="80" width="10" height="10" fill="black"/>
+            <rect x="50" y="180" width="5" height="5" fill="black"/>
+            <rect x="65" y="180" width="5" height="5" fill="black"/>
+            <rect x="75" y="180" width="5" height="5" fill="black"/>
+            <rect x="90" y="180" width="5" height="5" fill="black"/>
+            <rect x="105" y="180" width="5" height="5" fill="black"/>
+            <rect x="150" y="180" width="5" height="5" fill="black"/>
+            <rect x="165" y="180" width="5" height="5" fill="black"/>
+            <rect x="180" y="180" width="5" height="5" fill="black"/>
+            <rect x="200" y="180" width="5" height="5" fill="black"/>
             
-            <rect x="80" y="90" width="10" height="10" fill="black"/>
-            <rect x="100" y="90" width="10" height="10" fill="black"/>
-            <rect x="120" y="90" width="10" height="10" fill="black"/>
+            <rect x="40" y="190" width="5" height="5" fill="black"/>
+            <rect x="70" y="190" width="5" height="5" fill="black"/>
+            <rect x="85" y="190" width="5" height="5" fill="black"/>
+            <rect x="100" y="190" width="5" height="5" fill="black"/>
+            <rect x="140" y="190" width="5" height="5" fill="black"/>
+            <rect x="170" y="190" width="5" height="5" fill="black"/>
+            <rect x="185" y="190" width="5" height="5" fill="black"/>
             
-            <rect x="90" y="100" width="10" height="10" fill="black"/>
-            <rect x="110" y="100" width="10" height="10" fill="black"/>
-            <rect x="130" y="100" width="10" height="10" fill="black"/>
+            <rect x="55" y="200" width="5" height="5" fill="black"/>
+            <rect x="80" y="200" width="5" height="5" fill="black"/>
+            <rect x="95" y="200" width="5" height="5" fill="black"/>
+            <rect x="155" y="200" width="5" height="5" fill="black"/>
+            <rect x="175" y="200" width="5" height="5" fill="black"/>
+            <rect x="195" y="200" width="5" height="5" fill="black"/>
             
-            <rect x="80" y="110" width="10" height="10" fill="black"/>
-            <rect x="100" y="110" width="10" height="10" fill="black"/>
-            <rect x="120" y="110" width="10" height="10" fill="black"/>
-            <rect x="130" y="110" width="10" height="10" fill="black"/>
+            {/* Format information patterns */}
+            <rect x="40" y="35" width="5" height="5" fill="black"/>
+            <rect x="35" y="40" width="5" height="5" fill="black"/>
+            <rect x="210" y="35" width="5" height="5" fill="black"/>
+            <rect x="215" y="40" width="5" height="5" fill="black"/>
+            <rect x="35" y="210" width="5" height="5" fill="black"/>
+            <rect x="40" y="215" width="5" height="5" fill="black"/>
             
-            <rect x="90" y="120" width="10" height="10" fill="black"/>
-            <rect x="110" y="120" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="130" width="10" height="10" fill="black"/>
-            <rect x="100" y="130" width="10" height="10" fill="black"/>
-            <rect x="130" y="130" width="10" height="10" fill="black"/>
-            
-            {/* Right side data */}
-            <rect x="140" y="80" width="10" height="10" fill="black"/>
-            <rect x="150" y="80" width="10" height="10" fill="black"/>
-            <rect x="170" y="80" width="10" height="10" fill="black"/>
-            <rect x="180" y="80" width="10" height="10" fill="black"/>
-            <rect x="200" y="80" width="10" height="10" fill="black"/>
-            
-            <rect x="160" y="90" width="10" height="10" fill="black"/>
-            <rect x="180" y="90" width="10" height="10" fill="black"/>
-            <rect x="190" y="90" width="10" height="10" fill="black"/>
-            
-            <rect x="140" y="100" width="10" height="10" fill="black"/>
-            <rect x="170" y="100" width="10" height="10" fill="black"/>
-            <rect x="200" y="100" width="10" height="10" fill="black"/>
-            
-            <rect x="150" y="110" width="10" height="10" fill="black"/>
-            <rect x="160" y="110" width="10" height="10" fill="black"/>
-            <rect x="180" y="110" width="10" height="10" fill="black"/>
-            <rect x="190" y="110" width="10" height="10" fill="black"/>
-            
-            <rect x="140" y="120" width="10" height="10" fill="black"/>
-            <rect x="170" y="120" width="10" height="10" fill="black"/>
-            <rect x="180" y="120" width="10" height="10" fill="black"/>
-            
-            <rect x="150" y="130" width="10" height="10" fill="black"/>
-            <rect x="160" y="130" width="10" height="10" fill="black"/>
-            <rect x="190" y="130" width="10" height="10" fill="black"/>
-            <rect x="200" y="130" width="10" height="10" fill="black"/>
-            
-            {/* Bottom data patterns */}
-            <rect x="80" y="160" width="10" height="10" fill="black"/>
-            <rect x="90" y="160" width="10" height="10" fill="black"/>
-            <rect x="110" y="160" width="10" height="10" fill="black"/>
-            <rect x="120" y="160" width="10" height="10" fill="black"/>
-            <rect x="130" y="160" width="10" height="10" fill="black"/>
-            <rect x="140" y="160" width="10" height="10" fill="black"/>
-            <rect x="150" y="160" width="10" height="10" fill="black"/>
-            <rect x="170" y="160" width="10" height="10" fill="black"/>
-            <rect x="180" y="160" width="10" height="10" fill="black"/>
-            <rect x="190" y="160" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="170" width="10" height="10" fill="black"/>
-            <rect x="100" y="170" width="10" height="10" fill="black"/>
-            <rect x="120" y="170" width="10" height="10" fill="black"/>
-            <rect x="140" y="170" width="10" height="10" fill="black"/>
-            <rect x="160" y="170" width="10" height="10" fill="black"/>
-            <rect x="200" y="170" width="10" height="10" fill="black"/>
-            
-            <rect x="90" y="180" width="10" height="10" fill="black"/>
-            <rect x="110" y="180" width="10" height="10" fill="black"/>
-            <rect x="130" y="180" width="10" height="10" fill="black"/>
-            <rect x="150" y="180" width="10" height="10" fill="black"/>
-            <rect x="170" y="180" width="10" height="10" fill="black"/>
-            <rect x="180" y="180" width="10" height="10" fill="black"/>
-            <rect x="190" y="180" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="190" width="10" height="10" fill="black"/>
-            <rect x="100" y="190" width="10" height="10" fill="black"/>
-            <rect x="120" y="190" width="10" height="10" fill="black"/>
-            <rect x="130" y="190" width="10" height="10" fill="black"/>
-            <rect x="140" y="190" width="10" height="10" fill="black"/>
-            <rect x="160" y="190" width="10" height="10" fill="black"/>
-            <rect x="180" y="190" width="10" height="10" fill="black"/>
-            <rect x="200" y="190" width="10" height="10" fill="black"/>
-            
-            <rect x="90" y="200" width="10" height="10" fill="black"/>
-            <rect x="110" y="200" width="10" height="10" fill="black"/>
-            <rect x="140" y="200" width="10" height="10" fill="black"/>
-            <rect x="150" y="200" width="10" height="10" fill="black"/>
-            <rect x="170" y="200" width="10" height="10" fill="black"/>
-            <rect x="190" y="200" width="10" height="10" fill="black"/>
-            
-            {/* Additional random patterns for realism */}
-            <rect x="30" y="80" width="10" height="10" fill="black"/>
-            <rect x="10" y="100" width="10" height="10" fill="black"/>
-            <rect x="50" y="110" width="10" height="10" fill="black"/>
-            <rect x="30" y="120" width="10" height="10" fill="black"/>
-            <rect x="10" y="130" width="10" height="10" fill="black"/>
+            {/* Additional scattered data for ultra-realism */}
+            <rect x="110" y="45" width="5" height="5" fill="black"/>
+            <rect x="125" y="55" width="5" height="5" fill="black"/>
+            <rect x="115" y="65" width="5" height="5" fill="black"/>
+            <rect x="135" y="75" width="5" height="5" fill="black"/>
+            <rect x="105" y="85" width="5" height="5" fill="black"/>
+            <rect x="145" y="95" width="5" height="5" fill="black"/>
+            <rect x="155" y="105" width="5" height="5" fill="black"/>
+            <rect x="95" y="155" width="5" height="5" fill="black"/>
+            <rect x="135" y="165" width="5" height="5" fill="black"/>
+            <rect x="115" y="175" width="5" height="5" fill="black"/>
+            <rect x="125" y="185" width="5" height="5" fill="black"/>
+            <rect x="110" y="195" width="5" height="5" fill="black"/>
           </svg>
         </div>
         <div className="text-center mt-2">
@@ -413,15 +470,15 @@ function QRCodeStage() {
       {/* Amount */}
       <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-3 rounded-lg border border-purple-200 text-center">
         <p className="text-xs text-gray-600 mb-1">Send exactly</p>
-        <p className="text-lg font-bold text-[#7f5efd]">0.00762 BTC</p>
+        <p className="text-lg font-bold text-[#7f5efd]">0.00748 BTC</p>
       </div>
 
-      {/* Address (shortened) */}
-      <div className="bg-white p-3 rounded-lg border border-gray-200 relative">
+      {/* Address - Full Address with Gradient */}
+      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-3 rounded-lg border border-purple-200 relative">
         <div className="text-center">
-          <p className="text-xs text-gray-600 mb-1">Bitcoin Address</p>
-          <p className="text-xs font-mono text-[#7f5efd] font-medium">
-            bc1qxy2k...h9w8r5t
+          <p className="text-xs text-gray-600 mb-1">Wallet Address</p>
+          <p className="text-xs font-mono text-[#7f5efd] font-medium break-all leading-relaxed">
+            bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh9w8r5t
           </p>
         </div>
         <button className="absolute right-2 top-2 p-1 text-[#7f5efd] hover:bg-purple-50 rounded">
@@ -460,11 +517,11 @@ function SuccessStage() {
       <div className="bg-gradient-to-br from-purple-50 to-[#f8f7ff] border border-purple-200 rounded-lg p-4 space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-600">Amount</span>
-          <span className="font-medium text-gray-900">0.00762 BTC</span>
+          <span className="font-medium text-gray-900">0.00748 BTC</span>
         </div>
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-600">USD Value</span>
-          <span className="font-medium text-gray-900">$325.49</span>
+          <span className="font-medium text-gray-900">$319.49</span>
         </div>
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-600">Status</span>
@@ -472,7 +529,9 @@ function SuccessStage() {
         </div>
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-600">Transaction Hash</span>
-          <span className="font-mono text-xs text-gray-500">a1b2c3d...x9y8z7</span>
+          <span className="font-mono text-xs text-gray-500 break-all leading-relaxed">
+            a1b2c3d4e5f6789abcdef123456789abcdef0987654321fedcba
+          </span>
         </div>
       </div>
 
