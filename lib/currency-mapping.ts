@@ -14,6 +14,8 @@ export interface CustomerCurrency {
   max_amount?: number
 }
 
+import { isApprovedCurrency } from './approved-currencies'
+
 // Network-suffixed stablecoins supported per base currency
 const DEFAULT_STABLE_MAP: Record<string, string[]> = {
   BNB: ['USDTBSC', 'BUSDBSC', 'USDCBSC'],
@@ -75,7 +77,6 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   USDCARC20: ['USDCARC20'],
   OPUSDCE: ['USDCOP', 'OPUSDCE'],
   MATICUSDCE: ['USDCMATIC', 'MATICUSDCE'],
-  MATICMAINNET: ['MATIC'],
   USDTCELO: ['USDTCELO'],
   ZROARB: ['ZROARB'],
   ZROERC20: ['ZROERC20'],
@@ -104,8 +105,6 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   USDCOP: ['USDCOP'],
   USDCBASE: ['USDCBASE'],
   FTMMAINNET: ['FTM'],
-  CFXMAINNET: ['CFX'],
-  CROMAINNET: ['CRO'],
   INJMAINNET: ['INJ'],
   INJERC20: ['INJ'],
 }
@@ -118,7 +117,14 @@ export function buildCurrencyMapping(params: {
   stableMap?: Record<string, string[]>
 }) {
   const stableMap = params.stableMap || DEFAULT_STABLE_MAP
-  const upperAccepted = Array.from(new Set(params.acceptedCryptos.map(c => c.toUpperCase())))
+  // Filter accepted currencies to only those approved for the platform
+  const upperAccepted = Array.from(
+    new Set(
+      (params.acceptedCryptos || [])
+        .map(c => (c || '').toUpperCase())
+        .filter(code => isApprovedCurrency(code))
+    )
+  )
 
   // Expand with network stables
   const expanded: string[] = []
@@ -181,4 +187,3 @@ export function buildCurrencyMapping(params: {
 
   return { customerCurrencies, backendMappings }
 }
-

@@ -1,4 +1,4 @@
-// Approved cryptocurrencies list - exactly 141 currencies (includes CRO, QTUM)
+// Approved cryptocurrencies list - exactly 137 currencies (includes CRO, QTUM)
 export const APPROVED_CURRENCIES: Record<string, string> = {
   '1INCH': '1inch Network',
   'AAVE': 'Aave',
@@ -26,11 +26,9 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'CSWAP': 'ChainSwap',
   'CHZ': 'Chiliz',
   'CFX': 'Conflux',
-  'CFXMAINNET': 'Conflux',
   'ATOM': 'Cosmos',
   'COTI': 'COTI',
   'CRO': 'Crypto.com Coin',
-  'CROMAINNET': 'Cronos',
   'DAI': 'DAI',
   'DASH': 'Dash',
   'MANA': 'Decentraland',
@@ -55,7 +53,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'ILV': 'Illuvium',
   'INJERC20': 'Injective',
   'INJMAINNET': 'Injective Protocol',
-  'INJ': 'Injective Protocol',
   'IOTA': 'IOTA',
   'IOTX': 'IOTX',
   'JASMY': 'JasmyCoin',
@@ -81,7 +78,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'PYUSD': 'PayPal USD',
   'PEPE': 'Pepe',
   'DOT': 'Polkadot',
-  'MATICMAINNET': 'Polygon',
   'PLS': 'Pulsechain',
   'QTUM': 'QTUM',
   'RVN': 'Ravencoin',

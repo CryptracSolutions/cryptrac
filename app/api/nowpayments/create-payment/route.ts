@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
+import { isApprovedCurrency } from '@/lib/approved-currencies';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -341,6 +342,17 @@ export async function POST(request: Request) {
         { 
           success: false, 
           error: 'Missing required fields' 
+        },
+        { status: 400 }
+      )
+    }
+
+    // Enforce platform-approved currencies only
+    if (!isApprovedCurrency(String(pay_currency).toUpperCase())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Unsupported currency: ${String(pay_currency).toUpperCase()}`
         },
         { status: 400 }
       )

@@ -517,9 +517,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   };
 
   // Get existing wallets
-  const existingWallets = Object.keys(settings.wallets || {}).filter(currency => 
-    settings.wallets[currency] && settings.wallets[currency].trim()
-  );
+  const existingWallets = Object.keys(settings.wallets || {})
+    .filter(currency => settings.wallets[currency] && settings.wallets[currency].trim())
+    .filter(currency => isApprovedCurrency(currency));
 
   const filteredCurrencies = additionalCurrencies.filter(currency => {
     // First check if currency is approved

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchAvailableCurrencies } from '@/lib/nowpayments-dynamic';
+import { isApprovedCurrency } from '@/lib/approved-currencies';
 
 const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   BTC: ['BTC', 'BITCOIN'],
@@ -283,6 +284,10 @@ export async function POST(request: NextRequest) {
     if (!amount || !pay_currency || !pos_device_id) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    // Reject unapproved currencies
+    if (!isApprovedCurrency(String(pay_currency).toUpperCase())) {
+      return NextResponse.json({ error: `Unsupported currency: ${String(pay_currency).toUpperCase()}` }, { status: 400 });
+    }
     const amountNum = parseFloat(amount);
     const tipNum = parseFloat(tip_amount) || 0;
     if (isNaN(amountNum) || amountNum <= 0) {
@@ -304,12 +309,13 @@ export async function POST(request: NextRequest) {
     
     // Expand stablecoins like payment links do
     const stableCoins = expandStableCoins(wallets);
-    const deviceCryptos = device.accepted_cryptos && device.accepted_cryptos.length
+    const deviceCryptos = (device.accepted_cryptos && device.accepted_cryptos.length
       ? device.accepted_cryptos
-      : Object.keys(wallets);
+      : Object.keys(wallets))
+      .filter((c: string) => isApprovedCurrency(c));
     
     // Create comprehensive accepted currencies list including stablecoins
-    const acceptedCryptos = Array.from(new Set([...deviceCryptos, ...stableCoins]));
+    const acceptedCryptos = Array.from(new Set([...deviceCryptos, ...stableCoins])).filter(c => isApprovedCurrency(c));
     
     const allowed = new Set(acceptedCryptos);
     if (!allowed.has(pay_currency)) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requiresExtraId, validateExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
+import { isApprovedCurrency } from '@/lib/approved-currencies';
 
 // Comprehensive address validation patterns for all supported cryptocurrencies
 // Updated to support multiple address formats for maximum compatibility
@@ -509,6 +510,17 @@ export async function POST(request: NextRequest) {
     }
 
     const upperCurrency = currency.toUpperCase()
+    // Block validation for currencies that are not approved
+    if (!isApprovedCurrency(upperCurrency)) {
+      console.log(`❌ Validation blocked for unapproved currency: ${upperCurrency}`)
+      return NextResponse.json({
+        success: true,
+        validation: {
+          valid: false,
+          error: `Validation not supported for ${upperCurrency}`
+        }
+      })
+    }
     const trimmedAddress = address.trim()
 
     // Check for a direct pattern first; otherwise derive heuristically
