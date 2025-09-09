@@ -1,5 +1,7 @@
+"use client";
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Network } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Network, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
@@ -7,6 +9,9 @@ import { CryptoIcon } from "@/app/components/ui/crypto-icon";
 import { LandingNav } from "@/app/components/layout/landing-nav";
 
 export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
   const features = [
     {
       icon: Shield,
@@ -39,6 +44,25 @@ export default function Home() {
       description: "Support for Bitcoin, Ethereum, Litecoin, and many more cryptocurrencies."
     }
   ];
+
+  const CARDS_PER_VIEW = 3;
+  const maxSlide = Math.max(0, features.length - CARDS_PER_VIEW);
+
+  const nextSlide = () => {
+    if (currentSlide < maxSlide) {
+      setCurrentSlide(prev => prev + 1);
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1);
+    }
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(Math.max(0, Math.min(maxSlide, index)));
+  };
 
   const supportedCryptos = [
     { symbol: "BTC", name: "Bitcoin" },
@@ -272,7 +296,7 @@ export default function Home() {
             </div>
             
             {/* Stats Section */}
-            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-3xl mx-auto">
               <div className="text-center">
                 <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">140+</div>
                 <div className="font-phonic text-sm text-gray-600">Cryptocurrencies</div>
@@ -332,7 +356,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section with Sliding Carousel */}
       <section id="features" className="py-12 bg-slate-50">
         <div className="container-wide">
           <div className="text-center mb-20">
@@ -343,22 +367,71 @@ export default function Home() {
               Built for businesses of all sizes. From freelancers to enterprises, Cryptrac makes crypto payments simple.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-                              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader className="text-center pb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:shadow-xl transition-all duration-200">
-                    <feature.icon className="h-8 w-8 text-white" />
+          
+          {/* Carousel Container */}
+          <div className="relative">
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevSlide}
+              disabled={currentSlide === 0}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <ChevronLeft className="h-6 w-6 text-gray-600" />
+            </button>
+            
+            <button
+              onClick={nextSlide}
+              disabled={currentSlide >= maxSlide}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <ChevronRight className="h-6 w-6 text-gray-600" />
+            </button>
+
+            {/* Cards Container */}
+            <div className="overflow-hidden mx-16">
+              <div 
+                ref={carouselRef}
+                className="flex transition-transform duration-500 ease-out"
+                style={{
+                  transform: `translateX(-${currentSlide * (100 / CARDS_PER_VIEW)}%)`
+                }}
+              >
+                {features.map((feature, index) => (
+                  <div key={index} className="w-1/3 flex-shrink-0 px-4">
+                    <Card className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white h-full">
+                      <CardHeader className="text-center pb-4">
+                        <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg">
+                          <feature.icon className="h-8 w-8 text-white" />
+                        </div>
+                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">
+                          {feature.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-center px-6 pb-6">
+                        <CardDescription className="font-phonic text-base font-normal text-gray-600">
+                          {feature.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <CardTitle className="font-phonic text-2xl font-normal text-gray-900">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center px-6 pb-6">
-                  <CardDescription className="font-phonic text-base font-normal text-gray-600">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+                ))}
+              </div>
+            </div>
+
+            {/* Slide Indicators */}
+            <div className="flex justify-center mt-8 space-x-2">
+              {Array.from({ length: maxSlide + 1 }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === currentSlide 
+                      ? 'bg-[#7f5efd] w-6' 
+                      : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
