@@ -508,13 +508,16 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   };
 
   const handleWalletCardClick = (currency: string, event: React.MouseEvent) => {
-    // Don't toggle if clicking on interactive elements
     const target = event.target as HTMLElement;
+    
+    // Don't toggle if clicking on interactive elements
     if (target.closest('button') || target.closest('input')) {
       return;
     }
     
+    // If clicking on a currency with stable coins, toggle them
     if (hasStableCoins(currency)) {
+      event.stopPropagation();
       toggleStableCoins(currency);
     }
   };
@@ -577,7 +580,16 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
 
       {/* Enhanced Configured Wallets Section - Collapsible */}
       {hasExistingWallets && (
-        <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200" onClick={() => setWalletsExpanded(!walletsExpanded)} style={{ cursor: 'pointer' }}>
+        <Card 
+          className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200"
+          onClick={(e) => {
+            // Only collapse if clicking on the card background
+            if (e.target === e.currentTarget) {
+              setWalletsExpanded(!walletsExpanded);
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <CardHeader 
             className="pb-6"
           >
@@ -617,11 +629,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                     className={`bg-white border-gray-200 shadow-soft hover:shadow-medium hover:border-purple-300 transition-all duration-200 ${hasStableCoins(currency) ? 'cursor-pointer' : ''} ${
                       newlyAddedWallet === currency ? 'ring-2 ring-purple-500 ring-opacity-50 animate-pulse' : ''
                     }`}
-                    onClick={(e) => {
-                      if (hasStableCoins(currency)) {
-                        toggleStableCoins(currency);
-                      }
-                    }}
+                    onClick={(e) => handleWalletCardClick(currency, e)}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">

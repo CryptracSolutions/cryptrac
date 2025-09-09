@@ -808,7 +808,7 @@ export default function PaymentPage() {
                               </div>
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
-                              <SelectItem value="all" textValue="All Networks" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                              <SelectItem value="all" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
                                 <div className="flex items-center gap-2">
                                   <Globe className="h-4 w-4 text-white" />
                                   <span className="font-bold text-white">All Networks</span>
@@ -819,7 +819,7 @@ export default function PaymentPage() {
                                 if (!network) return null
                                 const currencyCount = groupedCurrencies.get(networkId)?.length || 0
                                 return (
-                                  <SelectItem key={networkId} value={networkId} textValue={network.displayName} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                                  <SelectItem key={networkId} value={networkId} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
                                     <div className="flex items-center justify-between w-full">
                                       <div className="flex items-center gap-2">
                                         {getNetworkIcon(networkId)}
@@ -954,7 +954,6 @@ export default function PaymentPage() {
                                   <SelectItem
                                     key={c.code}
                                     value={c.code}
-                                    textValue={`${c.code.toUpperCase()} ${displayName}`}
                                     disabled={!isAvailable}
                                     className={cn(
                                       "hover:bg-white/10 rounded-lg transition-colors duration-200",
