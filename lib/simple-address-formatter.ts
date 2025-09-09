@@ -11,7 +11,6 @@ export interface AddressFormatResult {
 const EXTRA_ID_CURRENCIES: Record<string, string> = {
   XRP: 'Destination Tag',
   XLM: 'Memo',
-  HBAR: 'Memo',
   EOS: 'Memo',
 }
 

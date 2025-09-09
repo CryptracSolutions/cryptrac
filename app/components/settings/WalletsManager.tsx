@@ -334,8 +334,8 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           if (extra) setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'valid' }));
           else setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
 
-          // Show modal for XRP/XLM/HBAR when wallet is validated and modal hasn't been shown yet
-          const currenciesWithModal = ['XRP', 'XLM', 'HBAR'];
+          // Show modal for XRP/XLM when wallet is validated and modal hasn't been shown yet
+          const currenciesWithModal = ['XRP', 'XLM'];
           if (currenciesWithModal.includes(currency.toUpperCase()) && !shownModals.has(currency)) {
             setModalCurrency(currency);
             setShowDestinationTagModal(true);

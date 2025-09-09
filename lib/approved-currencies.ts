@@ -1,4 +1,4 @@
-// Approved cryptocurrencies list - exactly 142 currencies (includes CRO, QTUM)
+// Approved cryptocurrencies list - exactly 141 currencies (includes CRO, QTUM)
 export const APPROVED_CURRENCIES: Record<string, string> = {
   '1INCH': '1inch Network',
   'AAVE': 'Aave',
@@ -50,7 +50,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'FUN': 'FUNToken',
   'GALAERC20': 'GALAERC20',
   'ONE': 'Harmony',
-  'HBAR': 'Hedera Hashgraph',
   'HEX': 'Hex',
   'HYPE': 'Hyperliquid',
   'ILV': 'Illuvium',

@@ -23,7 +23,6 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
     switch (currency.toUpperCase()) {
       case 'XRP': return 'About Destination Tags'
       case 'XLM': return 'About Memos'
-      case 'HBAR': return 'About Memos'
       default: return 'About Extra IDs'
     }
   }
@@ -32,7 +31,6 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
     switch (currency.toUpperCase()) {
       case 'XRP': return 'destination tag'
       case 'XLM': return 'memo'
-      case 'HBAR': return 'memo'
       default: return 'extra ID'
     }
   }
@@ -41,7 +39,6 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
     switch (currency.toUpperCase()) {
       case 'XRP': return 'Numeric destination tag (1-10 digits)'
       case 'XLM': return 'Memo (1-28 characters)'
-      case 'HBAR': return 'Memo (1-100 characters)'
       default: return 'Extra ID'
     }
   }

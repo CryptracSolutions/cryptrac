@@ -102,9 +102,6 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   // Elrond/MultiversX - erd format
   EGLD: /^erd[0-9a-z]{59}$/,
   
-  // Hedera - account ID (0.0.x) or EVM alias (0x...)
-  HBAR: /^(0\.0\.[0-9]+|0x[a-fA-F0-9]{40})$/,
-  
   // Monero - supports multiple formats
   XMR: /^(4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}|8[0-9AB][1-9A-HJ-NP-Za-km-z]{93})$/,
   
@@ -253,7 +250,6 @@ const ADDRESS_PATTERNS: Record<string, RegExp> = {
   theta: /^0x[a-fA-F0-9]{40}$/,
   flow: /^0x[a-fA-F0-9]{16}$/,
   elrond: /^erd[0-9a-z]{59}$/,
-  hedera: /^(0\.0\.[0-9]+|0x[a-fA-F0-9]{40})$/,
   monero: /^(4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}|8[0-9AB][1-9A-HJ-NP-Za-km-z]{93})$/,
   zcash: /^(t[13][a-km-zA-HJ-NP-Z1-9]{33}|zs[0-9a-z]{76})$/,
   dash: /^X[1-9A-HJ-NP-Za-km-z]{33}$/,
@@ -335,7 +331,6 @@ const CURRENCY_INFO: Record<string, { name: string; network: string; addressType
   THETA: { name: 'Theta', network: 'Theta', addressType: 'Theta address' },
   FLOW: { name: 'Flow', network: 'Flow', addressType: 'Flow address' },
   EGLD: { name: 'Elrond', network: 'Elrond', addressType: 'Elrond address' },
-  HBAR: { name: 'Hedera', network: 'Hedera', addressType: 'Hedera account ID' },
   XMR: { name: 'Monero', network: 'Monero', addressType: 'Monero address (multiple formats)' },
   ZEC: { name: 'Zcash', network: 'Zcash', addressType: 'Zcash address (transparent or shielded)' },
   RVN: { name: 'Ravencoin', network: 'Ravencoin', addressType: 'Ravencoin address (Legacy, P2SH, or Bech32)' },

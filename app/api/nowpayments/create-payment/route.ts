@@ -7,9 +7,6 @@ export const dynamic = 'force-dynamic';
 
 const NOWPAYMENTS_BASE_URL = 'https://api.nowpayments.io/v1';
 
-// Optional: Hedera Mirror Node (for converting between 0.0.x and EVM alias)
-const HEDERA_MIRROR_NODE_URL = process.env.HEDERA_MIRROR_NODE_URL || 'https://mainnet-public.mirrornode.hedera.com'
-
 // Enhanced network-to-wallet mapping with proper validation
 const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   // Bitcoin network
@@ -130,11 +127,6 @@ function isValidWalletAddress(address: string, currency: string): boolean {
     return isClassic || isMuxed
   }
 
-  // HBAR: accept Hedera account ID (shard.realm.num) or EVM alias (0x...)
-  if (currencyUpper === 'HBAR') {
-    return (/^\d+\.\d+\.\d+$/).test(trimmed) || (/^0x[a-fA-F0-9]{40}$/).test(trimmed)
-  }
-
   // Default: pass-through for unmodeled coins
   return true
 }
@@ -183,79 +175,6 @@ function handleNOWPaymentsError(error: unknown, context: string): NextResponse {
   }
 
   return NextResponse.json(response, { status: statusCode, headers })
-}
-
-// Try to resolve the alternate representation for a Hedera account address
-// - If given 0.0.x → return 0xEVM alias
-// - If given 0x... → return 0.0.x account ID
-async function resolveHederaAlternateAddress(address: string): Promise<string | null> {
-  try {
-    const trimmed = address.trim()
-    const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
-    const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
-    if (!isAccountId && !isEvm) return null
-
-    const target = encodeURIComponent(trimmed)
-    const url = `${HEDERA_MIRROR_NODE_URL}/api/v1/accounts/${target}`
-    const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(8000) })
-    if (!res.ok) return null
-    const data = await res.json().catch(() => null)
-    if (!data) return null
-
-    // Mirror node returns either `account` and/or `evm_address`
-    const accountId = typeof data.account === 'string' ? data.account : null
-    const evmAddr = typeof data.evm_address === 'string' ? data.evm_address : null
-
-    if (isAccountId && evmAddr) {
-      // Ensure 0x prefix
-      return evmAddr.startsWith('0x') ? evmAddr : `0x${evmAddr}`
-    }
-    if (isEvm && accountId) {
-      return accountId
-    }
-    return null
-  } catch {
-    return null
-  }
-}
-
-// Normalize Hedera payout address to the most widely-accepted format for providers (prefer EVM alias)
-async function normalizeHederaPayoutAddress(address: string): Promise<{ normalized: string, converted: boolean, from: 'account' | 'evm' | 'unknown' }> {
-  const trimmed = String(address || '').trim()
-  const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
-  const isEvm = /^0x[a-fA-F0-9]{40}$/.test(trimmed)
-  if (!isAccountId && !isEvm) return { normalized: trimmed, converted: false, from: 'unknown' }
-
-  if (isAccountId) {
-    const alt = await resolveHederaAlternateAddress(trimmed)
-    if (alt && /^0x[a-fA-F0-9]{40}$/.test(alt)) {
-      return { normalized: alt, converted: true, from: 'account' }
-    }
-    return { normalized: trimmed, converted: false, from: 'account' }
-  }
-
-  // Already EVM; ensure prefix and return
-  const evm = trimmed.startsWith('0x') ? trimmed : `0x${trimmed}`
-  return { normalized: evm, converted: false, from: 'evm' }
-}
-
-// Verify that a Hedera address (either 0.0.x or 0x...) corresponds to a real account
-async function verifyHederaAccount(address: string): Promise<{ ok: boolean; accountId?: string; evmAddress?: string; deleted?: boolean }> {
-  try {
-    const trimmed = String(address || '').trim()
-    const target = encodeURIComponent(trimmed)
-    const url = `${HEDERA_MIRROR_NODE_URL}/api/v1/accounts/${target}`
-    const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(8000) })
-    if (!res.ok) return { ok: false }
-    const data = await res.json().catch(() => null)
-    if (!data) return { ok: false }
-    const accountId = typeof data.account === 'string' ? data.account : undefined
-    const evm = typeof data.evm_address === 'string' ? (data.evm_address.startsWith('0x') ? data.evm_address : `0x${data.evm_address}`) : undefined
-    const deleted = data.deleted === true
-    return { ok: !!accountId || !!evm, accountId, evmAddress: evm, deleted }
-  } catch {
-    return { ok: false }
-  }
 }
 
 // Function to get minimum amount for a currency pair
@@ -587,89 +506,19 @@ export async function POST(request: Request) {
             )
           }
 
-          const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
-
-          if (targetPayoutCurrency.toUpperCase() === 'HBAR' && hbarStrategy === 'strict_account_id') {
-            // Strict mode: require 0.0.x and memo; do not convert
-            const trimmed = walletAddress.trim()
-            const isAccountId = /^\d+\.\d+\.\d+$/.test(trimmed)
-            const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
-            const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
-
-            console.log('🔍 HBAR Address Debug:')
-            console.log(`   Original: "${walletAddress}"`)
-            console.log(`   Trimmed: "${trimmed}"`)
-            console.log(`   Length: ${trimmed.length}`)
-            console.log(`   Regex 0.0.x match: ${isAccountId}`)
-
-            if (!isAccountId) {
-              return NextResponse.json({
-                success: false,
-                error: 'HBAR auto-forwarding requires 0.0.x address format',
-                details: `Address "${walletAddress}" is not in required 0.0.x format for HBAR auto-forwarding`,
-                code: 'HBAR_INVALID_ADDRESS_FORMAT'
-              }, { status: 400 })
-            }
-            if (!extraId) {
-              return NextResponse.json({
-                success: false,
-                error: 'HBAR auto-forwarding memo required',
-                details: 'Please configure a memo/destination tag for HBAR in merchant settings',
-                code: 'HBAR_MEMO_REQUIRED'
-              }, { status: 400 })
-            }
-
-            // Preflight: verify account exists
-            const verify = await verifyHederaAccount(trimmed)
-            if (!verify.ok || verify.deleted) {
-              return NextResponse.json({
-                success: false,
-                error: 'HBAR account not found or not active',
-                details: `Mirror node could not verify the Hedera account ${trimmed}`,
-                code: 'HBAR_ACCOUNT_INVALID'
-              }, { status: 400 })
-            }
-            paymentRequest.payout_address = trimmed
-            paymentRequest.payout_currency = 'hbar'
-            paymentRequest.payout_extra_id = extraId
-            console.log(`🔧 HBAR auto-forwarding configured (strict): address ${trimmed}, memo ${extraId}`)
-          } else {
-            // Default: normalize for provider compatibility
-            if (targetPayoutCurrency.toUpperCase() === 'HBAR') {
-              const norm = await normalizeHederaPayoutAddress(walletAddress)
-              // Preflight: verify account exists using normalized form
-              const verify = await verifyHederaAccount(norm.normalized)
-              if (!verify.ok || verify.deleted) {
-                return NextResponse.json({
-                  success: false,
-                  error: 'HBAR account not found or not active',
-                  details: `Mirror node could not verify the Hedera account ${norm.normalized}`,
-                  code: 'HBAR_ACCOUNT_INVALID'
-                }, { status: 400 })
-              }
-              paymentRequest.payout_address = norm.normalized
-              if (norm.converted) {
-                console.log(`🔄 Converted HBAR payout address ${norm.from === 'account' ? '0.0.x → 0x' : ''} for provider compatibility`)
-              }
-            } else {
-              paymentRequest.payout_address = walletAddress.trim()
-            }
-          }
+          paymentRequest.payout_address = walletAddress.trim()
           paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
           
           // Add payout_extra_id if merchant configured one for this currency (optional)
           if (requiresExtraId(targetPayoutCurrency)) {
-            // In strict mode, extra_id for HBAR already enforced above
-            if (!(targetPayoutCurrency.toUpperCase() === 'HBAR' && hbarStrategy === 'strict_account_id')) {
-              const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
-              const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
-              if (extraId) {
+            const rawExtraId = wallet_extra_ids[targetPayoutCurrency.toUpperCase()]
+            const extraId = typeof rawExtraId === 'string' ? rawExtraId.trim() : ''
+            if (extraId) {
                 paymentRequest.payout_extra_id = extraId
                 console.log(`✅ Added ${getExtraIdLabel(targetPayoutCurrency)} for ${targetPayoutCurrency}: ${extraId}`)
               } else {
                 console.warn(`ℹ️ No ${getExtraIdLabel(targetPayoutCurrency).toLowerCase()} configured for ${targetPayoutCurrency}; forwarding to address without one.`)
               }
-            }
           }
           
           autoForwardingConfigured = true
@@ -762,66 +611,7 @@ export async function POST(request: Request) {
           errorData = { message: errorText }
         }
 
-        // If HBAR payout validation failed, try alternate address representation and retry once
-        const hbarStrategy = String(process.env.HBAR_PAYOUT_STRATEGY || 'alias_first').toLowerCase()
-        if (
-          autoForwardingConfigured &&
-          paymentRequest.payout_currency === 'hbar' &&
-          typeof paymentRequest.payout_address === 'string' &&
-          (errorData?.code === 'BAD_CREATE_PAYMENT_REQUEST' || String(errorData?.message || '').toLowerCase().includes('validate address'))
-        && hbarStrategy !== 'strict_account_id') {
-          // Phase 1: resolve alternate address (0.0.x <-> 0x)
-          let alternate: string | null = null
-          try {
-            alternate = await resolveHederaAlternateAddress(paymentRequest.payout_address)
-          } catch (e) {
-            console.warn('⚠️ Failed resolving alternate HBAR format:', e)
-          }
-
-          // Phase 2: retry with alternate if available
-          if (alternate && alternate.toLowerCase() !== paymentRequest.payout_address.toLowerCase()) {
-            console.log('🔁 Retrying NOWPayments with alternate HBAR address format:', alternate.substring(0, 10) + '...')
-            const retryReq = { ...paymentRequest, payout_address: alternate }
-            const retryRes = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
-              method: 'POST',
-              headers: {
-                'x-api-key': NOWPAYMENTS_API_KEY,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(retryReq),
-            })
-            const retryText = await retryRes.text()
-            if (retryText.trim().startsWith('<')) {
-              console.error('❌ Alternate-format retry failed due to provider HTML outage')
-            } else if (retryRes.ok) {
-              paymentResponse = JSON.parse(retryText) as PaymentResponse
-              paymentRequest.payout_address = alternate
-              console.log('✅ Retry succeeded with alternate HBAR address format')
-            } else {
-              console.error('❌ Alternate-format retry failed:', retryRes.status, retryText)
-            }
-          } else {
-            console.warn('ℹ️ No alternate HBAR address format available for retry')
-          }
-
-          // Optional: final retry without memo if provider rejects extra_id for HBAR
-          if (!paymentResponse && process.env.HBAR_PAYOUT_ALLOW_NO_MEMO === 'true' && paymentRequest.payout_extra_id) {
-            console.warn('⚠️ Retrying HBAR payout without memo due to validation error (HBAR_PAYOUT_ALLOW_NO_MEMO=true)')
-            const { payout_extra_id, ...noMemoReq } = paymentRequest as any
-            const retryRes2 = await fetch(`${NOWPAYMENTS_BASE_URL}/payment`, {
-              method: 'POST', headers: { 'x-api-key': NOWPAYMENTS_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(noMemoReq)
-            })
-            const retryText2 = await retryRes2.text()
-            if (!retryText2.trim().startsWith('<') && retryRes2.ok) {
-              paymentResponse = JSON.parse(retryText2) as PaymentResponse
-              console.log('✅ Retry without memo succeeded for HBAR payout')
-            } else {
-              console.error('❌ Retry without memo failed:', retryRes2.status, retryText2)
-            }
-          }
-        }
-
-        // If still no success after optional retry, proceed with error handling
+        // If still no success, proceed with error handling
         if (!paymentResponse) {
           
           // Handle specific NOWPayments errors

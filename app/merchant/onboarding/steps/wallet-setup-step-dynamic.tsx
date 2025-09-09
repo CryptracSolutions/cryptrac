@@ -30,7 +30,6 @@ const recommendedCurrencies = [
   { code: 'ADA', name: 'Cardano' },
   { code: 'CRO', name: 'Crypto.com Coin' },
   { code: 'DOGE', name: 'Dogecoin' },
-  { code: 'HBAR', name: 'Hedera Hashgraph' },
   { code: 'HYPE', name: 'Hyperliquid' },
   { code: 'LTC', name: 'Litecoin' },
   { code: 'DOT', name: 'Polkadot' },

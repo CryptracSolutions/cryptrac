@@ -37,7 +37,7 @@ export function formatAmountForDisplay(amount: number): string {
 export function buildCryptoPaymentURI(request: CryptoPaymentRequest): URIResult {
   const { currency, address, extraId, amount } = request
   const upper = (currency || '').toUpperCase()
-  const needsExtraId = ['XRP', 'XLM', 'HBAR', 'EOS'].includes(upper)
+  const needsExtraId = ['XRP', 'XLM', 'EOS'].includes(upper)
   const uri = needsExtraId && extraId ? `${address}:${extraId}` : address
   return {
     uri,
