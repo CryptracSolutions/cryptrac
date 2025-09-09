@@ -1,5 +1,3 @@
-import { APPROVED_CURRENCIES } from './approved-currencies'
-
 export interface AddressFormatResult {
   qrContent: string
   displayAddress: string
@@ -23,8 +21,10 @@ export function formatAddressForQR(
   const needsExtraId = upperCurrency in EXTRA_ID_CURRENCIES
   const extraIdLabel = EXTRA_ID_CURRENCIES[upperCurrency]
 
-  // For currencies that need extra IDs, append with colon separator
-  const qrContent = needsExtraId && extraId ? `${address}:${extraId}` : address
+  // For maximum wallet compatibility, always encode ONLY the address in the QR.
+  // Extra IDs (destination tags, memos, etc.) are displayed separately for the user
+  // to copy/paste when required by their wallet or exchange.
+  const qrContent = address
 
   return {
     qrContent,
@@ -38,4 +38,3 @@ export function formatAddressForQR(
 export function isValidAddress(address: string): boolean {
   return !!address && address.length > 10 && !/\s/.test(address)
 }
-

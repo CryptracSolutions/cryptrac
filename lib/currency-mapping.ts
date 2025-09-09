@@ -46,7 +46,8 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   ADA: ['ADA', 'CARDANO'],
   DOT: ['DOT', 'POLKADOT'],
   MATIC: ['MATIC', 'POLYGON', 'MATICMATIC'],
-  AVAX: ['AVAX', 'AVALANCHE', 'AVAXC'],
+  // Prefer C-Chain ticker for NOWPayments
+  AVAX: ['AVAXC', 'AVAX', 'AVALANCHE'],
   TRX: ['TRX', 'TRON'],
   LTC: ['LTC', 'LITECOIN'],
   XRP: ['XRP', 'RIPPLE'],

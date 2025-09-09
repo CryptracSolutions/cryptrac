@@ -807,7 +807,11 @@ export default function PaymentPage() {
                                 </span>
                               </div>
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
+                            <SelectContent 
+                              position="popper"
+                              sideOffset={5}
+                              className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
+                            >
                               <SelectItem value="all" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
                                 <div className="flex items-center gap-2">
                                   <Globe className="h-4 w-4 text-white" />
@@ -886,7 +890,11 @@ export default function PaymentPage() {
                               <span className="text-gray-500">Select a currency</span>
                             )}
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
+                          <SelectContent 
+                            position="popper"
+                            sideOffset={5}
+                            className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
+                          >
                             {(() => {
                               // Filter currencies based on selected network
                               let filteredCurrencies = availableCurrencies

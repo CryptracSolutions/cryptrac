@@ -688,13 +688,13 @@ function SmartTerminalPageContent() {
           )}
           {step === 'customer' && !paymentLink && (
             <div className="w-full space-y-3 landscape:grid landscape:grid-cols-2 landscape:gap-6 landscape:space-y-0">
-              {/* Order Summary - left column in landscape */}
-              <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100 landscape:col-span-1" aria-live="polite">
+              {/* Order Summary - left column */}
+              <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100 landscape:col-span-1 landscape:h-full landscape:flex landscape:flex-col">
                 <div className="flex items-center gap-2 mb-2">
                   <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
                   <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
                 </div>
-                <div className="space-y-1 text-sm">
+                <div className="space-y-1 text-sm flex-grow">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
@@ -717,318 +717,336 @@ function SmartTerminalPageContent() {
                   </div>
                 </div>
               </div>
-              {/* Tip Selection - right column in landscape */}
-              <div className="bg-white p-3 rounded-xl border border-gray-200 landscape:col-span-1 landscape:space-y-4">
-                <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Add a tip?</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(device?.tip_presets || defaultTips).map((p: number) => (
-                    <Button 
-                      key={p} 
-                      variant={tipPercent === p ? 'default' : 'outline'} 
-                      className={cn(
-                        "h-10 font-semibold rounded-lg transition-all duration-200",
-                        tipPercent === p 
-                          ? "bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white shadow-lg" 
-                          : "bg-white border border-purple-200 text-[#7f5efd] hover:bg-purple-50 hover:border-[#7f5efd]"
-                      )}
-                      onClick={() => {setTipPercent(p); setTipSelected(true);}} 
-                      aria-label={`tip ${p}%`}
-                    >
-                      {p}%
-                    </Button>
-                  ))}
-                  <Button 
-                    variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'} 
-                    className={cn(
-                      "h-10 font-semibold rounded-lg transition-all duration-200",
-                      tipPercent === 0 && tipSelected
-                        ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg" 
-                        : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
-                    )}
-                    onClick={() => {setTipPercent(0); setTipSelected(true);}} 
-                    aria-label="no tip"
-                  >
-                    No Tip
-                  </Button>
-                </div>
-              </div>
-              {/* Currency Selection - right column continued */}
-              <div className="space-y-2 landscape:col-span-1">
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Network className="h-4 w-4 text-[#7f5efd]" />
-                  Network
-                </label>
-                
-                {/* Network Filter */}
-                {availableCurrencies.length > 0 && (() => {
-                  const groupedCurrencies = groupCurrenciesByNetwork(
-                    availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                    merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
-                  )
-                  const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
-                  
-                  const getNetworkIcon = (networkId: string) => {
-                    switch (networkId) {
-                      case 'bitcoin': return <Bitcoin className="h-4 w-4 text-white" />
-                      case 'ethereum': return <Zap className="h-4 w-4 text-white" />
-                      case 'binance': return <TrendingUp className="h-4 w-4 text-white" />
-                      case 'solana': return <Zap className="h-4 w-4 text-white" />
-                      case 'polygon': return <Network className="h-4 w-4 text-white" />
-                      case 'tron': return <Globe className="h-4 w-4 text-white" />
-                      case 'ton': return <Smartphone className="h-4 w-4 text-white" />
-                      case 'arbitrum': return <TrendingUp className="h-4 w-4 text-white" />
-                      case 'optimism': return <CheckCircle2 className="h-4 w-4 text-white" />
-                      case 'base': return <DollarSign className="h-4 w-4 text-white" />
-                      case 'avalanche': return <Network className="h-4 w-4 text-white" />
-                      case 'algorand': return <Coins className="h-4 w-4 text-white" />
-                      case 'litecoin': return <Coins className="h-4 w-4 text-white" />
-                      case 'cardano': return <Coins className="h-4 w-4 text-white" />
-                      case 'polkadot': return <Network className="h-4 w-4 text-white" />
-                      case 'chainlink': return <Globe className="h-4 w-4 text-white" />
-                      default: return <Network className="h-4 w-4 text-white" />
-                    }
-                  }
-                  
-                  return (
-                    <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                      <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const iconClass = "h-4 w-4 text-[#7f5efd]"
-                            switch (selectedNetwork) {
-                              case 'all':
-                                return <Globe className={iconClass} />
-                              case 'bitcoin':
-                                return <Bitcoin className={iconClass} />
-                              case 'ethereum':
-                                return <Zap className={iconClass} />
-                              case 'binance':
-                                return <TrendingUp className={iconClass} />
-                              case 'solana':
-                                return <Zap className={iconClass} />
-                              case 'polygon':
-                                return <Network className={iconClass} />
-                              case 'tron':
-                                return <Globe className={iconClass} />
-                              case 'ton':
-                                return <Smartphone className={iconClass} />
-                              case 'arbitrum':
-                                return <TrendingUp className={iconClass} />
-                              case 'optimism':
-                                return <CheckCircle2 className={iconClass} />
-                              case 'base':
-                                return <DollarSign className={iconClass} />
-                              case 'avalanche':
-                                return <Network className={iconClass} />
-                              case 'algorand':
-                                return <Coins className={iconClass} />
-                              case 'litecoin':
-                                return <Coins className={iconClass} />
-                              case 'cardano':
-                                return <Coins className={iconClass} />
-                              case 'polkadot':
-                                return <Network className={iconClass} />
-                              case 'chainlink':
-                                return <Globe className={iconClass} />
-                              default:
-                                return <Network className={iconClass} />
-                            }
-                          })()}
-                          <span className="font-semibold">
-                            {selectedNetwork === 'all'
-                              ? 'All Networks'
-                              : (getNetworkInfo(selectedNetwork)?.displayName || 'Network')}
-                          </span>
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
-                        <SelectItem value="all" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
-                          <div className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-white" />
-                            <span className="font-bold text-white">All Networks</span>
-                          </div>
-                        </SelectItem>
-                        {availableNetworks.map(networkId => {
-                          const network = getNetworkInfo(networkId)
-                          if (!network) return null
-                          const currencyCount = groupedCurrencies.get(networkId)?.length || 0
-                          return (
-                            <SelectItem key={networkId} value={networkId} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
-                              <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-2">
-                                  {getNetworkIcon(networkId)}
-                                  <span className="font-bold text-white">{network.displayName}</span>
-                                </div>
-                                <span className="text-sm font-bold text-white bg-white/20 px-2 py-0.5 rounded-md ml-4">
-                                  {currencyCount}
-                                </span>
+
+              {/* Right Column */}
+              <div className="landscape:col-span-1 landscape:space-y-4">
+                {/* Network and Currency Selection */}
+                <div className="space-y-4">
+                  {/* Network Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Network className="h-4 w-4 text-[#7f5efd]" />
+                      Network
+                    </label>
+                    {/* Network Filter */}
+                    {availableCurrencies.length > 0 && (() => {
+                      const groupedCurrencies = groupCurrenciesByNetwork(
+                        availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                        merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+                      )
+                      const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+                      
+                      const getNetworkIcon = (networkId: string) => {
+                        switch (networkId) {
+                          case 'bitcoin': return <Bitcoin className="h-4 w-4 text-white" />
+                          case 'ethereum': return <Zap className="h-4 w-4 text-white" />
+                          case 'binance': return <TrendingUp className="h-4 w-4 text-white" />
+                          case 'solana': return <Zap className="h-4 w-4 text-white" />
+                          case 'polygon': return <Network className="h-4 w-4 text-white" />
+                          case 'tron': return <Globe className="h-4 w-4 text-white" />
+                          case 'ton': return <Smartphone className="h-4 w-4 text-white" />
+                          case 'arbitrum': return <TrendingUp className="h-4 w-4 text-white" />
+                          case 'optimism': return <CheckCircle2 className="h-4 w-4 text-white" />
+                          case 'base': return <DollarSign className="h-4 w-4 text-white" />
+                          case 'avalanche': return <Network className="h-4 w-4 text-white" />
+                          case 'algorand': return <Coins className="h-4 w-4 text-white" />
+                          case 'litecoin': return <Coins className="h-4 w-4 text-white" />
+                          case 'cardano': return <Coins className="h-4 w-4 text-white" />
+                          case 'polkadot': return <Network className="h-4 w-4 text-white" />
+                          case 'chainlink': return <Globe className="h-4 w-4 text-white" />
+                          default: return <Network className="h-4 w-4 text-white" />
+                        }
+                      }
+                      
+                      return (
+                        <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
+                          <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const iconClass = "h-4 w-4 text-[#7f5efd]"
+                                switch (selectedNetwork) {
+                                  case 'all':
+                                    return <Globe className={iconClass} />
+                                  case 'bitcoin':
+                                    return <Bitcoin className={iconClass} />
+                                  case 'ethereum':
+                                    return <Zap className={iconClass} />
+                                  case 'binance':
+                                    return <TrendingUp className={iconClass} />
+                                  case 'solana':
+                                    return <Zap className={iconClass} />
+                                  case 'polygon':
+                                    return <Network className={iconClass} />
+                                  case 'tron':
+                                    return <Globe className={iconClass} />
+                                  case 'ton':
+                                    return <Smartphone className={iconClass} />
+                                  case 'arbitrum':
+                                    return <TrendingUp className={iconClass} />
+                                  case 'optimism':
+                                    return <CheckCircle2 className={iconClass} />
+                                  case 'base':
+                                    return <DollarSign className={iconClass} />
+                                  case 'avalanche':
+                                    return <Network className={iconClass} />
+                                  case 'algorand':
+                                    return <Coins className={iconClass} />
+                                  case 'litecoin':
+                                    return <Coins className={iconClass} />
+                                  case 'cardano':
+                                    return <Coins className={iconClass} />
+                                  case 'polkadot':
+                                    return <Network className={iconClass} />
+                                  case 'chainlink':
+                                    return <Globe className={iconClass} />
+                                  default:
+                                    return <Network className={iconClass} />
+                                }
+                              })()}
+                              <span className="font-semibold">
+                                {selectedNetwork === 'all'
+                                  ? 'All Networks'
+                                  : (getNetworkInfo(selectedNetwork)?.displayName || 'Network')}
+                              </span>
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent 
+                            position="popper"
+                            sideOffset={5}
+                            className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
+                          >
+                            <SelectItem value="all" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                              <div className="flex items-center gap-2">
+                                <Globe className="h-4 w-4 text-white" />
+                                <span className="font-bold text-white">All Networks</span>
                               </div>
                             </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
-                  )
-                })()}
-                
-                {/* Currency Selection */}
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Coins className="h-4 w-4 text-[#7f5efd]" />
-                  Currency
-                </label>
-                <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
-                  <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
-                    {(() => {
-                      const current = availableCurrencies.find(c => c.code === crypto)
-                      const displayName = current?.name || getCurrencyDisplayName(crypto)
-                      const getCurrencyIconLocal = (currencyCode: string) => {
-                        const code = currencyCode.toUpperCase()
-                        if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-[#7f5efd]" />
-                        if (code.includes('USDT') || code.includes('USDC') || code.includes('DAI') || code.includes('PYUSD') || code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'MATIC') return <Network className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'TRX') return <Globe className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'TON') return <Smartphone className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'AVAX') return <Network className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'ALGO') return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'LTC') return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'ADA') return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'DOT') return <Network className="h-4 w-4 text-[#7f5efd]" />
-                        if (code === 'LINK') return <Globe className="h-4 w-4 text-[#7f5efd]" />
-                        return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                      }
-                      return (
-                        <div className="flex items-center gap-2">
-                          {getCurrencyIconLocal(crypto)}
-                          <span className="font-bold">{crypto.toUpperCase()}</span>
-                          <span className="text-gray-600">{displayName}</span>
-                        </div>
+                            {availableNetworks.map(networkId => {
+                              const network = getNetworkInfo(networkId)
+                              if (!network) return null
+                              const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                              return (
+                                <SelectItem key={networkId} value={networkId} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-2">
+                                      {getNetworkIcon(networkId)}
+                                      <span className="font-bold text-white">{network.displayName}</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-white bg-white/20 px-2 py-0.5 rounded-md ml-4">
+                                      {currencyCount}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              )
+                            })}
+                          </SelectContent>
+                        </Select>
                       )
                     })()}
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm">
-                    {(() => {
-                      // Filter currencies based on selected network
-                      let filteredCurrencies = availableCurrencies
-                      
-                      if (selectedNetwork !== 'all') {
-                        const groupedCurrencies = groupCurrenciesByNetwork(
-                          availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                          merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
-                        )
-                        const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
-                        const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
-                        filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
-                      }
+                    
+                    {/* Currency Selection */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Coins className="h-4 w-4 text-[#7f5efd]" />
+                        Currency
+                      </label>
+                      <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
+                        <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
+                          {(() => {
+                            const current = availableCurrencies.find(c => c.code === crypto)
+                            const displayName = current?.name || getCurrencyDisplayName(crypto)
+                            const getCurrencyIconLocal = (currencyCode: string) => {
+                              const code = currencyCode.toUpperCase()
+                              if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-[#7f5efd]" />
+                              if (code.includes('USDT') || code.includes('USDC') || code.includes('DAI') || code.includes('PYUSD') || code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'MATIC') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'TRX') return <Globe className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'TON') return <Smartphone className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'AVAX') return <Network className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'ALGO') return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                              if (code === 'LTC') return <Coins className="h-4 w-4 text-white" />
+                              if (code === 'ADA') return <Coins className="h-4 w-4 text-white" />
+                              if (code === 'DOT') return <Network className="h-4 w-4 text-white" />
+                              if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
+                              return <Coins className="h-4 w-4 text-[#7f5efd]" />
+                            }
+                            return (
+                              <div className="flex items-center gap-2">
+                                {getCurrencyIconLocal(crypto)}
+                                <span className="font-bold">{crypto.toUpperCase()}</span>
+                                <span className="text-gray-600">{displayName}</span>
+                              </div>
+                            )
+                          })()}
+                        </SelectTrigger>
+                        <SelectContent 
+                          position="popper"
+                          sideOffset={5}
+                          className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
+                        >
+                          {(() => {
+                            // Filter currencies based on selected network
+                            let filteredCurrencies = availableCurrencies
+                            
+                            if (selectedNetwork !== 'all') {
+                              const groupedCurrencies = groupCurrenciesByNetwork(
+                                availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                                merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+                              )
+                              const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+                              const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
+                              filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
+                            }
 
-                      // Swap: when Ethereum network is selected, show DAI (ETH)
-                      // instead of any Arbitrum-specific DAI code that may leak in
-                      if (selectedNetwork === 'ethereum') {
-                        filteredCurrencies = filteredCurrencies.map(c =>
-                          c.code.toUpperCase() === 'DAIARB'
-                            ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
-                            : c
-                        )
-                        // Deduplicate if both DAI and DAIARB were present
-                        const seen = new Set<string>()
-                        filteredCurrencies = filteredCurrencies.filter(c => {
-                          const key = c.code.toUpperCase()
-                          if (seen.has(key)) return false
-                          seen.add(key)
-                          return true
-                        })
-                      }
-                      
-                      const getCurrencyIcon = (currencyCode: string) => {
-                        const code = currencyCode.toUpperCase()
-                        // Bitcoin
-                        if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-white" />
-                        // Stablecoins
-                        if (code.includes('USDT')) return <DollarSign className="h-4 w-4 text-white" />
-                        if (code.includes('USDC')) return <DollarSign className="h-4 w-4 text-white" />
-                        if (code.includes('DAI')) return <DollarSign className="h-4 w-4 text-white" />
-                        if (code.includes('PYUSD')) return <DollarSign className="h-4 w-4 text-white" />
-                        if (code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-white" />
-                        // Major cryptocurrencies
-                        if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-white" />
-                        if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-white" />
-                        if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-white" />
-                        if (code === 'MATIC') return <Network className="h-4 w-4 text-white" />
-                        if (code === 'TRX') return <Globe className="h-4 w-4 text-white" />
-                        if (code === 'TON') return <Smartphone className="h-4 w-4 text-white" />
-                        if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-white" />
-                        if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-white" />
-                        if (code === 'AVAX') return <Network className="h-4 w-4 text-white" />
-                        if (code === 'ALGO') return <Coins className="h-4 w-4 text-white" />
-                        if (code === 'LTC') return <Coins className="h-4 w-4 text-white" />
-                        if (code === 'ADA') return <Coins className="h-4 w-4 text-white" />
-                        if (code === 'DOT') return <Network className="h-4 w-4 text-white" />
-                        if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
-                        return <Coins className="h-4 w-4 text-white" />
-                      }
-                      
-                      return filteredCurrencies.map((c) => {
-                        const displayName = c.name || getCurrencyDisplayName(c.code)
-                        const isAvailable = c.enabled
-                        return (
-                          <SelectItem
-                            key={c.code}
-                            value={c.code}
-                            disabled={!isAvailable}
-                            className={cn(
-                              "hover:bg-white/10 rounded-lg transition-colors duration-200",
-                              !isAvailable && "opacity-50 cursor-not-allowed"
-                            )}
-                            title={!isAvailable ? 'Temporarily unavailable' : undefined}
-                          >
-                            <div className="flex items-center gap-2">
-                              {getCurrencyIcon(c.code)}
-                              <span className="font-bold text-white">{c.code.toUpperCase()}</span>
-                              <span className="text-sm text-white/80">{displayName}</span>
-                            </div>
-                          </SelectItem>
-                        )
-                      })
-                    })()}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Final Total Display - spans both columns in landscape */}
-              {tipSelected && (
-                <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 rounded-xl text-white landscape:col-span-2">
-                  <div className="text-center">
-                    <p className="text-xs opacity-90 mb-1">Final Total</p>
-                    <p className="text-2xl font-bold">${finalTotal.toFixed(2)}</p>
-                    {tipPercent !== null && tipPercent > 0 && (
-                      <p className="text-xs opacity-90 mt-1">Includes ${tipAmount.toFixed(2)} tip</p>
-                    )}
+                            // Swap: when Ethereum network is selected, show DAI (ETH)
+                            // instead of any Arbitrum-specific DAI code that may leak in
+                            if (selectedNetwork === 'ethereum') {
+                              filteredCurrencies = filteredCurrencies.map(c =>
+                                c.code.toUpperCase() === 'DAIARB'
+                                  ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
+                                  : c
+                              )
+                              // Deduplicate if both DAI and DAIARB were present
+                              const seen = new Set<string>()
+                              filteredCurrencies = filteredCurrencies.filter(c => {
+                                const key = c.code.toUpperCase()
+                                if (seen.has(key)) return false
+                                seen.add(key)
+                                return true
+                              })
+                            }
+                            
+                            const getCurrencyIcon = (currencyCode: string) => {
+                              const code = currencyCode.toUpperCase()
+                              // Bitcoin
+                              if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-white" />
+                              // Stablecoins
+                              if (code.includes('USDT')) return <DollarSign className="h-4 w-4 text-white" />
+                              if (code.includes('USDC')) return <DollarSign className="h-4 w-4 text-white" />
+                              if (code.includes('DAI')) return <DollarSign className="h-4 w-4 text-white" />
+                              if (code.includes('PYUSD')) return <DollarSign className="h-4 w-4 text-white" />
+                              if (code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-white" />
+                              // Major cryptocurrencies
+                              if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-white" />
+                              if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-white" />
+                              if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-white" />
+                              if (code === 'MATIC') return <Network className="h-4 w-4 text-white" />
+                              if (code === 'TRX') return <Globe className="h-4 w-4 text-white" />
+                              if (code === 'TON') return <Smartphone className="h-4 w-4 text-white" />
+                              if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-white" />
+                              if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-white" />
+                              if (code === 'AVAX') return <Network className="h-4 w-4 text-white" />
+                              if (code === 'ALGO') return <Coins className="h-4 w-4 text-white" />
+                              if (code === 'LTC') return <Coins className="h-4 w-4 text-white" />
+                              if (code === 'ADA') return <Coins className="h-4 w-4 text-white" />
+                              if (code === 'DOT') return <Network className="h-4 w-4 text-white" />
+                              if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
+                              return <Coins className="h-4 w-4 text-white" />
+                            }
+                            
+                            return filteredCurrencies.map((c) => {
+                              const displayName = c.name || getCurrencyDisplayName(c.code)
+                              const isAvailable = c.enabled
+                              return (
+                                <SelectItem
+                                  key={c.code}
+                                  value={c.code}
+                                  disabled={!isAvailable}
+                                  className={cn(
+                                    "hover:bg-white/10 rounded-lg transition-colors duration-200",
+                                    !isAvailable && "opacity-50 cursor-not-allowed"
+                                  )}
+                                  title={!isAvailable ? 'Temporarily unavailable' : undefined}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {getCurrencyIcon(c.code)}
+                                    <span className="font-bold text-white">{c.code.toUpperCase()}</span>
+                                    <span className="text-sm text-white/80">{displayName}</span>
+                                  </div>
+                                </SelectItem>
+                              )
+                            })
+                          })()}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Tip Selection */}
+                  <div className="bg-white p-3 rounded-xl border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Add a tip?</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {(device?.tip_presets || defaultTips).map((p: number) => (
+                        <Button 
+                          key={p} 
+                          variant={tipPercent === p ? 'default' : 'outline'} 
+                          className={cn(
+                            "h-10 font-semibold rounded-lg transition-all duration-200",
+                            tipPercent === p 
+                              ? "bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white shadow-lg" 
+                              : "bg-white border border-purple-200 text-[#7f5efd] hover:bg-purple-50 hover:border-[#7f5efd]"
+                          )}
+                          onClick={() => {setTipPercent(p); setTipSelected(true);}} 
+                          aria-label={`tip ${p}%`}
+                        >
+                          {p}%
+                        </Button>
+                      ))}
+                      <Button 
+                        variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'} 
+                        className={cn(
+                          "h-10 font-semibold rounded-lg transition-all duration-200",
+                          tipPercent === 0 && tipSelected
+                            ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg" 
+                            : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
+                        )}
+                        onClick={() => {setTipPercent(0); setTipSelected(true);}} 
+                        aria-label="no tip"
+                      >
+                        No Tip
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              )}
-              {/* Generate Payment Button - spans both columns in landscape */}
-              <Button
-                onClick={generate}
-                variant="default"
-                className="w-full h-14 sm:h-16 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-2"
-                aria-label="pay now"
-                disabled={!tipSelected || loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Generating Payment...
-                  </>
-                ) : (
-                  <>
-                    Pay with {crypto.toUpperCase()}
-                    <ArrowRight className="h-5 w-5" />
-                  </>
+
+                {/* Final Total Display - spans both columns in landscape */}
+                {tipSelected && (
+                  <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 rounded-xl text-white landscape:col-span-2">
+                    <div className="text-center">
+                      <p className="text-xs opacity-90 mb-1">Final Total</p>
+                      <p className="text-2xl font-bold">${finalTotal.toFixed(2)}</p>
+                      {tipPercent !== null && tipPercent > 0 && (
+                        <p className="text-xs opacity-90 mt-1">Includes ${tipAmount.toFixed(2)} tip</p>
+                      )}
+                    </div>
+                  </div>
                 )}
-              </Button>
+                {/* Generate Payment Button - spans both columns in landscape */}
+                <Button
+                  onClick={generate}
+                  variant="default"
+                  className="w-full h-14 sm:h-16 text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-2"
+                  aria-label="pay now"
+                  disabled={!tipSelected || loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Generating Payment...
+                    </>
+                  ) : (
+                    <>
+                      Pay with {crypto.toUpperCase()}
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           )}
               {paymentLink && paymentData && (
@@ -1173,9 +1191,8 @@ function SmartTerminalPageContent() {
                         </p>
                       </div>
                     </div>
-                    {/* Address Display */
-                    // Always show the amount below address as a manual fallback
-                    }
+                    {/* Address Display */}
+                    {/* Always show the amount below address as a manual fallback */}
                     <div className="w-full bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-200">
                       <div className="mb-2 text-center">
                         <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>

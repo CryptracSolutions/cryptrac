@@ -457,10 +457,17 @@ export async function POST(request: Request) {
         : amt
     })()
 
+    // Normalize tickers for NOWPayments (e.g., Avalanche C-Chain uses 'avaxc')
+    const normalizeTicker = (code: string) => {
+      const lower = String(code || '').toLowerCase()
+      if (lower === 'avax') return 'avaxc'
+      return lower
+    }
+
     const paymentRequest: PaymentRequest = {
       price_amount: normalizedPriceAmount,
       price_currency: price_currency.toLowerCase(),
-      pay_currency: pay_currency.toLowerCase(),
+      pay_currency: normalizeTicker(pay_currency),
       order_id: order_id,
       order_description: order_description || `Payment for ${merchant.business_name}`,
       ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nowpayments`,
@@ -519,7 +526,7 @@ export async function POST(request: Request) {
           }
 
           paymentRequest.payout_address = walletAddress.trim()
-          paymentRequest.payout_currency = targetPayoutCurrency.toLowerCase()
+          paymentRequest.payout_currency = normalizeTicker(targetPayoutCurrency)
           
           // Add payout_extra_id if merchant configured one for this currency (optional)
           if (requiresExtraId(targetPayoutCurrency)) {

@@ -38,11 +38,12 @@ export function buildCryptoPaymentURI(request: CryptoPaymentRequest): URIResult 
   const { currency, address, extraId, amount } = request
   const upper = (currency || '').toUpperCase()
   const needsExtraId = ['XRP', 'XLM', 'EOS'].includes(upper)
-  const uri = needsExtraId && extraId ? `${address}:${extraId}` : address
+  // Always return address-only for broad wallet compatibility
+  const uri = address
   return {
     uri,
     includesAmount: false,
-    includesExtraId: !!(needsExtraId && extraId),
+    includesExtraId: false,
     scheme: 'address',
     fallbackAddress: address,
     roundedAmount: ceilToDecimals(amount, 5),
