@@ -122,8 +122,8 @@ export default function Home() {
       {/* Header */}
       <LandingNav />
 
-      {/* Hero Section */}
-      <section id="hero" className="relative overflow-hidden py-8 sm:py-12">
+      {/* Hero Section - Left Aligned */}
+      <section id="hero" className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
         {/* Base Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-[#f8f7ff]"></div>
         
@@ -241,73 +241,166 @@ export default function Home() {
         </div>
         
         <div className="container-wide relative z-10">
-          <div className="mx-auto max-w-5xl text-center">
+          {/* Two-Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[600px]">
             
-            {/* Enhanced Heading */}
-            <div className="relative mb-4">
-              <h1 className="font-martina text-5xl sm:text-6xl lg:text-7xl font-normal text-gray-900 leading-tight">
-                Get Paid in{" "}
-                <span className="relative inline-block">
-                  <span className="font-martina text-[#7f5efd] font-semibold">Crypto</span>
-                  {/* Subtle underline decoration */}
-                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] opacity-20 rounded-full"></div>
-                </span>
-              </h1>
-            </div>
-            
-            {/* Enhanced Subheading */}
-            <p className="font-capsule text-lg sm:text-xl font-normal text-gray-600 max-w-3xl mx-auto mb-6 leading-relaxed">
-              Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all major cryptos.
-            </p>
-            
-            {/* Call-to-Action Buttons */}
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 shadow-xl bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl" asChild>
-                <Link href="/signup">
-                  Start Free 30-Day Trial
-                  <ArrowRight className="ml-3 h-6 w-6" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 border-2 border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-300" asChild>
-                <Link href="#pricing">View Pricing</Link>
-              </Button>
-            </div>
-            
-            {/* Trial Info */}
-            <div className="font-phonic text-sm text-gray-500 mt-4 flex items-center justify-center gap-2">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              30-day free trial • $19/month • Cancel anytime
+            {/* Left Column - Content */}
+            <div className="text-left">
+              {/* Enhanced Heading */}
+              <div className="relative mb-6">
+                <h1 className="font-martina text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-normal text-gray-900 leading-tight">
+                  Get Paid in{" "}
+                  <span className="relative inline-block">
+                    <span className="font-martina text-[#7f5efd] font-semibold">Crypto</span>
+                    {/* Subtle underline decoration */}
+                    <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] opacity-20 rounded-full"></div>
+                  </span>
+                </h1>
+              </div>
+              
+              {/* Enhanced Subheading */}
+              <p className="font-capsule text-lg sm:text-xl lg:text-2xl font-normal text-gray-600 mb-8 leading-relaxed max-w-2xl">
+                Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all major cryptos.
+              </p>
+              
+              {/* Call-to-Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-start gap-4 mb-6">
+                <Button size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 shadow-xl bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl" asChild>
+                  <Link href="/signup">
+                    Start Free 30-Day Trial
+                    <ArrowRight className="ml-3 h-6 w-6" />
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 border-2 border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-300" asChild>
+                  <Link href="#pricing">View Pricing</Link>
+                </Button>
+              </div>
+              
+              {/* Trial Info */}
+              <div className="font-phonic text-sm text-gray-500 mb-8 flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                30-day free trial • $19/month • Cancel anytime
+              </div>
+
+              {/* Trust Indicators - Vertical Stack */}
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#f5f3ff] rounded-lg flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-[#7f5efd]" />
+                  </div>
+                  <span className="font-phonic font-medium text-gray-700">Secure & Non-Custodial</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#f5f3ff] rounded-lg flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-[#7f5efd]" />
+                  </div>
+                  <span className="font-phonic font-medium text-gray-700">Instant Setup</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#f5f3ff] rounded-lg flex items-center justify-center">
+                    <Globe className="h-5 w-5 text-[#7f5efd]" />
+                  </div>
+                  <span className="font-phonic font-medium text-gray-700">Global Support</span>
+                </div>
+              </div>
+              
+              {/* Stats - Horizontal Layout */}
+              <div className="grid grid-cols-3 gap-6 max-w-md">
+                <div>
+                  <div className="font-phonic text-2xl sm:text-3xl font-semibold text-[#7f5efd] mb-1">140+</div>
+                  <div className="font-phonic text-sm text-gray-600">Cryptocurrencies</div>
+                </div>
+                <div>
+                  <div className="font-phonic text-2xl sm:text-3xl font-semibold text-[#7f5efd] mb-1">0.5%</div>
+                  <div className="font-phonic text-sm text-gray-600">Gateway Fees</div>
+                </div>
+                <div>
+                  <div className="font-phonic text-2xl sm:text-3xl font-semibold text-[#7f5efd] mb-1">$19</div>
+                  <div className="font-phonic text-sm text-gray-600">Per Month</div>
+                </div>
+              </div>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-600">
-              <div className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic font-medium">Secure & Non-Custodial</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Zap className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic font-medium">Instant Setup</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Globe className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic font-medium">Global Support</span>
-              </div>
-            </div>
-            
-            {/* Stats Section */}
-            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-3xl mx-auto">
-              <div className="text-center">
-                <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">140+</div>
-                <div className="font-phonic text-sm text-gray-600">Cryptocurrencies</div>
-              </div>
-              <div className="text-center">
-                <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">0.5%</div>
-                <div className="font-phonic text-sm text-gray-600">Gateway Fees</div>
-              </div>
-              <div className="text-center">
-                <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">$19</div>
-                <div className="font-phonic text-sm text-gray-600">Per Month</div>
+            {/* Right Column - Visual Element */}
+            <div className="relative flex items-center justify-center">
+              {/* Main Dashboard Mockup */}
+              <div className="relative w-full max-w-lg">
+                {/* Floating Payment Card */}
+                <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center">
+                        <Bitcoin className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-phonic text-sm font-medium text-gray-900">Payment Link</div>
+                        <div className="font-phonic text-xs text-gray-500">cryptrac.com/pay/abc123</div>
+                      </div>
+                    </div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  </div>
+                  
+                  <div className="space-y-3 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-phonic text-sm text-gray-600">Amount</span>
+                      <span className="font-phonic text-sm font-medium text-gray-900">$299.99</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-phonic text-sm text-gray-600">Currency</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                        <span className="font-phonic text-sm font-medium text-gray-900">Bitcoin</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                    <div className="w-24 h-24 bg-white rounded-lg mx-auto flex items-center justify-center">
+                      <div className="w-20 h-20 bg-black rounded-sm opacity-80"></div>
+                    </div>
+                    <div className="text-center mt-2">
+                      <div className="font-phonic text-xs text-gray-500">Scan QR Code</div>
+                    </div>
+                  </div>
+                  
+                  <button className="w-full bg-[#7f5efd] text-white rounded-lg py-2 font-phonic text-sm font-medium hover:bg-[#7c3aed] transition-colors">
+                    Copy Payment Link
+                  </button>
+                </div>
+
+                {/* Background Analytics Card */}
+                <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg border border-gray-100 p-4 w-48 transform -rotate-6 z-[-1]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart3 className="h-4 w-4 text-[#7f5efd]" />
+                    <span className="font-phonic text-xs font-medium text-gray-900">Analytics</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-phonic text-xs text-gray-500">Today</span>
+                      <span className="font-phonic text-xs font-medium text-gray-900">$2,847</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-phonic text-xs text-gray-500">This Week</span>
+                      <span className="font-phonic text-xs font-medium text-gray-900">$18,291</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
+                      <div className="bg-[#7f5efd] h-1 rounded-full w-3/4"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Crypto Icons */}
+                <div className="absolute -bottom-8 -left-8 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center animate-bounce">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
+                </div>
+                
+                <div className="absolute -top-8 -left-12 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center animate-pulse">
+                  <div className="w-5 h-5 bg-purple-500 rounded-full"></div>
+                </div>
+                
+                <div className="absolute top-1/2 -right-12 w-14 h-14 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center animate-bounce" style={{ animationDelay: '1s' }}>
+                  <div className="w-7 h-7 bg-green-500 rounded-full"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -376,7 +469,7 @@ export default function Home() {
               disabled={currentSlide === 0}
               className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              <ChevronLeft className="h-6 w-6 text-gray-600" />
+              <ChevronLeft className="h-6 w-6 text-[#7f5efd]" />
             </button>
             
             <button
@@ -384,7 +477,7 @@ export default function Home() {
               disabled={currentSlide >= maxSlide}
               className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              <ChevronRight className="h-6 w-6 text-gray-600" />
+              <ChevronRight className="h-6 w-6 text-[#7f5efd]" />
             </button>
 
             {/* Cards Container */}
@@ -398,7 +491,7 @@ export default function Home() {
               >
                 {features.map((feature, index) => (
                   <div key={index} className="w-1/3 flex-shrink-0 px-4">
-                    <Card className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white h-full">
+                    <Card className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg bg-white h-full">
                       <CardHeader className="text-center pb-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg">
                           <feature.icon className="h-8 w-8 text-white" />
