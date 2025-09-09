@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app
 import { Logo } from "@/app/components/ui/logo";
 import { CryptoIcon } from "@/app/components/ui/crypto-icon";
 import { LandingNav } from "@/app/components/layout/landing-nav";
+import { PaymentJourneyDemo } from "@/app/components/ui/payment-journey-demo";
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -321,163 +322,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Column - Visual Element */}
+            {/* Right Column - Payment Journey Demo */}
             <div className="relative flex items-center justify-center">
-              {/* Main Dashboard Mockup */}
-              <div className="relative w-full max-w-lg">
-                {/* Floating Payment Card */}
-                <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center">
-                        <Bitcoin className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-phonic text-sm font-medium text-gray-900">Payment Link</div>
-                        <div className="font-phonic text-xs text-gray-500">cryptrac.com/pay/abc123</div>
-                      </div>
-                    </div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                  </div>
-                  
-                  <div className="space-y-3 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-phonic text-sm text-gray-600">Subtotal</span>
-                      <span className="font-phonic text-sm font-medium text-gray-900">$299.99</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-phonic text-sm text-gray-600">Gateway Fee (0.5%)</span>
-                      <span className="font-phonic text-sm font-medium text-gray-900">$1.50</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-phonic text-sm text-gray-600">Tax</span>
-                      <span className="font-phonic text-sm font-medium text-gray-900">$24.00</span>
-                    </div>
-                    <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
-                      <span className="font-phonic text-sm font-semibold text-gray-900">Total</span>
-                      <span className="font-phonic text-sm font-semibold text-gray-900">$325.49</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-phonic text-sm text-gray-600">Currency</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                        <span className="font-phonic text-sm font-medium text-gray-900">Bitcoin</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                    <div className="w-24 h-24 bg-white rounded-lg mx-auto flex items-center justify-center overflow-hidden">
-                      <svg className="w-20 h-20" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        {/* QR Code Pattern */}
-                        <rect width="200" height="200" fill="white"/>
-                        
-                        {/* Corner squares */}
-                        <rect x="10" y="10" width="60" height="60" fill="black"/>
-                        <rect x="20" y="20" width="40" height="40" fill="white"/>
-                        <rect x="30" y="30" width="20" height="20" fill="black"/>
-                        
-                        <rect x="130" y="10" width="60" height="60" fill="black"/>
-                        <rect x="140" y="20" width="40" height="40" fill="white"/>
-                        <rect x="150" y="30" width="20" height="20" fill="black"/>
-                        
-                        <rect x="10" y="130" width="60" height="60" fill="black"/>
-                        <rect x="20" y="140" width="40" height="40" fill="white"/>
-                        <rect x="30" y="150" width="20" height="20" fill="black"/>
-                        
-                        {/* Data patterns */}
-                        <rect x="90" y="10" width="10" height="10" fill="black"/>
-                        <rect x="110" y="10" width="10" height="10" fill="black"/>
-                        <rect x="90" y="20" width="10" height="10" fill="black"/>
-                        <rect x="100" y="30" width="10" height="10" fill="black"/>
-                        <rect x="110" y="30" width="10" height="10" fill="black"/>
-                        
-                        <rect x="10" y="90" width="10" height="10" fill="black"/>
-                        <rect x="30" y="90" width="10" height="10" fill="black"/>
-                        <rect x="50" y="90" width="10" height="10" fill="black"/>
-                        <rect x="10" y="100" width="10" height="10" fill="black"/>
-                        <rect x="20" y="100" width="10" height="10" fill="black"/>
-                        <rect x="40" y="100" width="10" height="10" fill="black"/>
-                        <rect x="60" y="100" width="10" height="10" fill="black"/>
-                        
-                        <rect x="90" y="90" width="10" height="10" fill="black"/>
-                        <rect x="100" y="90" width="10" height="10" fill="black"/>
-                        <rect x="110" y="90" width="10" height="10" fill="black"/>
-                        <rect x="90" y="100" width="10" height="10" fill="black"/>
-                        <rect x="110" y="100" width="10" height="10" fill="black"/>
-                        <rect x="90" y="110" width="10" height="10" fill="black"/>
-                        <rect x="100" y="110" width="10" height="10" fill="black"/>
-                        <rect x="110" y="110" width="10" height="10" fill="black"/>
-                        
-                        <rect x="130" y="90" width="10" height="10" fill="black"/>
-                        <rect x="150" y="90" width="10" height="10" fill="black"/>
-                        <rect x="170" y="90" width="10" height="10" fill="black"/>
-                        <rect x="130" y="100" width="10" height="10" fill="black"/>
-                        <rect x="160" y="100" width="10" height="10" fill="black"/>
-                        <rect x="180" y="100" width="10" height="10" fill="black"/>
-                        
-                        <rect x="90" y="130" width="10" height="10" fill="black"/>
-                        <rect x="110" y="130" width="10" height="10" fill="black"/>
-                        <rect x="130" y="130" width="10" height="10" fill="black"/>
-                        <rect x="150" y="130" width="10" height="10" fill="black"/>
-                        <rect x="170" y="130" width="10" height="10" fill="black"/>
-                        <rect x="90" y="140" width="10" height="10" fill="black"/>
-                        <rect x="100" y="140" width="10" height="10" fill="black"/>
-                        <rect x="120" y="140" width="10" height="10" fill="black"/>
-                        <rect x="140" y="140" width="10" height="10" fill="black"/>
-                        <rect x="160" y="140" width="10" height="10" fill="black"/>
-                        <rect x="180" y="140" width="10" height="10" fill="black"/>
-                        
-                        <rect x="90" y="160" width="10" height="10" fill="black"/>
-                        <rect x="110" y="160" width="10" height="10" fill="black"/>
-                        <rect x="130" y="160" width="10" height="10" fill="black"/>
-                        <rect x="150" y="160" width="10" height="10" fill="black"/>
-                        <rect x="170" y="160" width="10" height="10" fill="black"/>
-                        <rect x="100" y="170" width="10" height="10" fill="black"/>
-                        <rect x="120" y="170" width="10" height="10" fill="black"/>
-                        <rect x="140" y="170" width="10" height="10" fill="black"/>
-                        <rect x="160" y="170" width="10" height="10" fill="black"/>
-                        <rect x="180" y="170" width="10" height="10" fill="black"/>
-                        
-                        <rect x="90" y="180" width="10" height="10" fill="black"/>
-                        <rect x="110" y="180" width="10" height="10" fill="black"/>
-                        <rect x="130" y="180" width="10" height="10" fill="black"/>
-                        <rect x="150" y="180" width="10" height="10" fill="black"/>
-                        <rect x="170" y="180" width="10" height="10" fill="black"/>
-                      </svg>
-                    </div>
-                    <div className="text-center mt-2">
-                      <div className="font-phonic text-xs text-gray-500">Scan QR Code</div>
-                    </div>
-                  </div>
-                  
-                  <button className="w-full bg-[#7f5efd] text-white rounded-lg py-2 font-phonic text-sm font-medium hover:bg-[#7c3aed] transition-colors">
-                    Pay in BTC
-                  </button>
-                </div>
-
-                {/* Background Analytics Card */}
-                <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg border border-gray-100 p-4 w-48 transform -rotate-6 z-[-1]">
-                  <div className="flex items-center gap-2 mb-3">
-                    <BarChart3 className="h-4 w-4 text-[#7f5efd]" />
-                    <span className="font-phonic text-xs font-medium text-gray-900">Analytics</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="font-phonic text-xs text-gray-500">Today</span>
-                      <span className="font-phonic text-xs font-medium text-gray-900">$2,847</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-phonic text-xs text-gray-500">This Week</span>
-                      <span className="font-phonic text-xs font-medium text-gray-900">$18,291</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
-                      <div className="bg-[#7f5efd] h-1 rounded-full w-3/4"></div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
+              <PaymentJourneyDemo />
             </div>
           </div>
         </div>
@@ -567,7 +414,7 @@ export default function Home() {
               >
                 {features.map((feature, index) => (
                   <div key={index} className="w-1/3 flex-shrink-0 px-4">
-                    <Card className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg bg-white h-full">
+                    <Card interactive={false} className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg bg-white h-full">
                       <CardHeader className="text-center pb-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg">
                           <feature.icon className="h-8 w-8 text-white" />
@@ -954,4 +801,3 @@ export default function Home() {
 }
 
 export const dynamic = 'force-dynamic';
-
