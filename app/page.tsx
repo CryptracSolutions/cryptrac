@@ -268,10 +268,10 @@ export default function Home() {
             <div className="text-left">
               {/* Enhanced Heading */}
               <div className="relative mb-6">
-                <h1 className="font-martina text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-normal text-gray-900 leading-tight">
+                <h1 className="font-phonic text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold text-gray-900 leading-tight">
                   Get Paid in{" "}
                   <span className="relative inline-block">
-                    <span className="font-martina text-[#7f5efd] font-semibold">Crypto</span>
+                    <span className="font-phonic text-[#7f5efd] font-bold">Crypto</span>
                     {/* Subtle underline decoration */}
                     <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] opacity-20 rounded-full"></div>
                   </span>
@@ -296,11 +296,6 @@ export default function Home() {
                 </Button>
               </div>
               
-              {/* Trial Info */}
-              <div className="font-phonic text-sm text-gray-500 mb-8 flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                30-day free trial • $19/month • Cancel anytime
-              </div>
 
               {/* Trust Indicators - Vertical Stack */}
               <div className="space-y-4 mb-8">
