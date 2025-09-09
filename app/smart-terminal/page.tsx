@@ -517,17 +517,17 @@ function SmartTerminalPageContent() {
       
 
       <div className="flex flex-col items-center justify-center min-h-screen p-1 sm:p-2 bg-gradient-to-br from-purple-50 via-white to-purple-50">
-        <div className="w-full max-w-2xl landscape:max-w-5xl">
+        <div className="w-full max-w-2xl landscape:max-w-5xl h-full flex flex-col justify-center">
         {/* Main Card */}
-        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
+        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden relative min-h-[90vh] sm:min-h-[85vh] flex flex-col">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
           <CardHeader className="pb-0 px-3 sm:px-4 pt-2 sm:pt-3">
             {/* Dashboard Button - Top Left of Card (only on initial page) */}
             {step === 'amount' && !paymentLink && (
-              <div className="flex justify-start -mt-4">
+              <div className="absolute top-3 left-3 z-10">
                 <Link href="/merchant/dashboard">
-                  <button className="text-[#7f5efd] hover:text-[#9b7cff] transition-colors duration-200 p-1.5 rounded-md hover:bg-purple-50">
-                    <ArrowLeft className="h-5 w-11 stroke-[3]" />
+                  <button className="text-[#7f5efd] hover:text-[#9b7cff] transition-colors duration-200 p-1 rounded-md hover:bg-purple-50">
+                    <ArrowLeft className="h-4 w-4" />
                   </button>
                 </Link>
               </div>
@@ -551,7 +551,7 @@ function SmartTerminalPageContent() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-4 pb-3 sm:pb-4">
+          <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-4 pb-3 sm:pb-4 flex-1 flex flex-col justify-center">
           {error && (
             <Alert className="border-red-200 bg-red-50">
               <AlertCircle className="h-4 w-4 text-red-600" />
@@ -576,33 +576,28 @@ function SmartTerminalPageContent() {
               <div className="landscape:col-span-2 landscape:space-y-2">
                 {baseAmount > 0 && (
                   <div className="bg-gradient-to-br from-gray-50 to-white p-2 sm:p-3 rounded-xl border border-gray-200 text-xs sm:text-sm space-y-1" aria-live="polite">
-                    <button 
-                      onClick={() => setPriceBreakdownExpanded(!priceBreakdownExpanded)}
-                      className="w-full flex justify-between items-center hover:bg-gray-50 rounded-lg transition-colors p-1 -m-1"
-                    >
-                      <span className="text-gray-700 font-semibold">Total: ${preTipTotal.toFixed(2)}</span>
-                      {priceBreakdownExpanded ? <ChevronUp className="h-3 w-3 text-gray-500" /> : <ChevronDown className="h-3 w-3 text-gray-500" />}
-                    </button>
-                    {priceBreakdownExpanded && (
-                      <div className="space-y-1 pt-1 border-t border-gray-100">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Subtotal</span>
-                          <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
-                        </div>
-                        {tax && taxAmount > 0 && (
-                          <div className="flex justify-between items-center text-[#7f5efd]">
-                            <span>Tax</span>
-                            <span className="font-medium">+${taxAmount.toFixed(2)}</span>
-                          </div>
-                        )}
-                        {chargeFee && gatewayFee > 0 && (
-                          <div className="flex justify-between items-center text-[#7f5efd]">
-                            <span>Gateway fee</span>
-                            <span className="font-medium">+${gatewayFee.toFixed(2)}</span>
-                          </div>
-                        )}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-semibold text-gray-900">${baseAmount.toFixed(2)}</span>
                       </div>
-                    )}
+                      {tax && taxAmount > 0 && (
+                        <div className="flex justify-between items-center text-[#7f5efd]">
+                          <span>Tax</span>
+                          <span className="font-medium">+${taxAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {chargeFee && gatewayFee > 0 && (
+                        <div className="flex justify-between items-center text-[#7f5efd]">
+                          <span>Gateway fee</span>
+                          <span className="font-medium">+${gatewayFee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center font-bold border-t border-gray-200 pt-1">
+                        <span className="text-gray-700">Total</span>
+                        <span className="text-[#7f5efd]">${preTipTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -639,13 +634,10 @@ function SmartTerminalPageContent() {
 
               {/* Options - spans full width in landscape */}
               <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 landscape:col-span-5">
-                <label className={cn(
-                  "flex items-center space-x-1 px-3 py-1.5 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                  tax ? "bg-[#7f5efd] border-[#7f5efd] text-white" : "bg-white border-purple-200 hover:border-[#7f5efd] text-gray-700"
-                )}>
+                <label className="flex items-center space-x-2 cursor-pointer">
                   <div className={cn(
-                    "h-4 w-4 rounded-full border-2 flex items-center justify-center",
-                    tax ? "border-white" : "border-[#7f5efd]"
+                    "h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                    tax ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300 bg-white hover:border-[#7f5efd]"
                   )}>
                     {tax && <div className="h-2 w-2 rounded-full bg-white"></div>}
                   </div>
@@ -657,15 +649,12 @@ function SmartTerminalPageContent() {
                     onChange={e=>setTax(e.target.checked)} 
                     aria-label="Add tax"
                   />
-                  <span className="text-sm font-medium">Add tax</span>
+                  <span className="text-sm font-medium text-gray-700">Add tax</span>
                 </label>
-                <label className={cn(
-                  "flex items-center space-x-1 px-3 py-1.5 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                  chargeFee ? "bg-[#7f5efd] border-[#7f5efd] text-white" : "bg-white border-purple-200 hover:border-[#7f5efd] text-gray-700"
-                )}>
+                <label className="flex items-center space-x-2 cursor-pointer">
                   <div className={cn(
-                    "h-4 w-4 rounded-full border-2 flex items-center justify-center",
-                    chargeFee ? "border-white" : "border-[#7f5efd]"
+                    "h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                    chargeFee ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300 bg-white hover:border-[#7f5efd]"
                   )}>
                     {chargeFee && <div className="h-2 w-2 rounded-full bg-white"></div>}
                   </div>
@@ -677,7 +666,7 @@ function SmartTerminalPageContent() {
                     onChange={e=>setChargeFee(e.target.checked)} 
                     aria-label="Charge customer fee" 
                   />
-                  <span className="text-sm font-medium">Customer pays fee</span>
+                  <span className="text-sm font-medium text-gray-700">Customer pays fee</span>
                 </label>
               </div>
 
@@ -696,6 +685,7 @@ function SmartTerminalPageContent() {
           )}
           {step === 'customer' && !paymentLink && (
             <div className="w-full space-y-2 landscape:grid landscape:grid-cols-2 landscape:gap-3 landscape:space-y-0">
+              <div className="landscape:col-span-2 landscape:grid landscape:grid-cols-2 landscape:gap-3 space-y-2 landscape:space-y-0">
               {/* Order Summary - left column */}
               <div className="bg-gradient-to-br from-purple-50 to-white p-2 rounded-lg border border-purple-100 landscape:col-span-1">
                 <div className="flex items-center gap-1 mb-1">
@@ -727,7 +717,7 @@ function SmartTerminalPageContent() {
               </div>
 
               {/* Right Column */}
-              <div className="landscape:col-span-1 landscape:space-y-2">
+              <div className="landscape:col-span-1 landscape:space-y-2 space-y-2">
                 {/* Network and Currency Selection */}
                 <div className="space-y-2">
                   {/* Network Selection */}
@@ -1022,9 +1012,48 @@ function SmartTerminalPageContent() {
                   </div>
                 </div>
 
-                {/* Final Total Display - spans full width */}
+                {/* Mobile-only final total and pay button */}
+                <div className="block landscape:hidden space-y-2">
+                  {/* Final Total Display */}
+                  {tipSelected && (
+                    <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-2 rounded-lg text-white w-full">
+                      <div className="text-center">
+                        <p className="text-[10px] opacity-90">Final Total</p>
+                        <p className="font-bold" style={{fontSize: 'clamp(1.25rem, 4vw, 1.75rem)'}}>${finalTotal.toFixed(2)}</p>
+                        {tipPercent !== null && tipPercent > 0 && (
+                          <p className="text-[10px] opacity-90 mt-0.5">Includes ${tipAmount.toFixed(2)} tip</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {/* Generate Payment Button */}
+                  <Button
+                    onClick={generate}
+                    variant="default"
+                    className="w-full h-10 sm:h-12 text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                    aria-label="pay now"
+                    disabled={!tipSelected || loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Generating Payment...
+                      </>
+                    ) : (
+                      <>
+                        Pay with {crypto.toUpperCase()}
+                        <ArrowRight className="h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Bottom row for final total and pay button in landscape */}
+              <div className="landscape:col-span-2 space-y-2">
+                {/* Final Total Display - spans full width in landscape */}
                 {tipSelected && (
-                  <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-2 rounded-lg text-white landscape:col-span-2">
+                  <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-2 rounded-lg text-white w-full">
                     <div className="text-center">
                       <p className="text-[10px] opacity-90">Final Total</p>
                       <p className="font-bold" style={{fontSize: 'clamp(1.25rem, 4vw, 1.75rem)'}}>${finalTotal.toFixed(2)}</p>
@@ -1034,11 +1063,11 @@ function SmartTerminalPageContent() {
                     </div>
                   </div>
                 )}
-                {/* Generate Payment Button - spans full width */}
+                {/* Generate Payment Button - spans full width in landscape */}
                 <Button
                   onClick={generate}
                   variant="default"
-                  className="w-full h-10 sm:h-12 text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-2"
+                  className="w-full h-10 sm:h-12 text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                   aria-label="pay now"
                   disabled={!tipSelected || loading}
                 >
@@ -1207,7 +1236,7 @@ function SmartTerminalPageContent() {
                       </div>
                       <div className="bg-white p-1.5 rounded-md border border-gray-200 shadow-sm text-center">
                         <p className="text-[9px] text-gray-600 mb-0.5">Send to</p>
-                        <p className="text-[10px] sm:text-[11px] font-mono break-all text-[#7f5efd] leading-relaxed font-semibold">
+                        <p className="text-[10px] sm:text-[11px] font-mono break-all text-[#7f5efd] leading-relaxed font-bold">
                           {paymentData.pay_address}
                         </p>
                       </div>

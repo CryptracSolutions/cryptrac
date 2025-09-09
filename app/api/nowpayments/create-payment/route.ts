@@ -347,8 +347,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // Enforce platform-approved currencies only
-    if (!isApprovedCurrency(String(pay_currency).toUpperCase())) {
+    // Enforce platform-approved currencies for customer-selected codes.
+    // Allow certain backend NOWPayments codes used for approved currencies (e.g., AVAXC for AVAX C-Chain).
+    const payUpper = String(pay_currency).toUpperCase()
+    const isBackendAllowed = (payUpper === 'AVAXC' && isApprovedCurrency('AVAX'))
+    if (!isApprovedCurrency(payUpper) && !isBackendAllowed) {
       return NextResponse.json(
         {
           success: false,
