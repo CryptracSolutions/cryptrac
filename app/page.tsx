@@ -99,48 +99,109 @@ export default function Home() {
       <LandingNav />
 
       {/* Hero Section */}
-      <section id="hero" className="relative overflow-hidden bg-gray-50 py-20 sm:py-32">
+      <section id="hero" className="relative overflow-hidden py-24 sm:py-36">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-[#f8f7ff]"></div>
+        
+        {/* Subtle Pattern Overlay */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `radial-gradient(circle at 25% 25%, #7f5efd 2px, transparent 2px), radial-gradient(circle at 75% 75%, #7f5efd 1px, transparent 1px)`,
+          backgroundSize: '50px 50px, 25px 25px'
+        }}></div>
+        
+        {/* Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Large Floating Circles */}
+          <div className="absolute top-20 left-1/4 w-32 h-32 bg-[#7f5efd] rounded-full opacity-[0.03] animate-float-1-enhanced"></div>
+          <div className="absolute top-40 right-1/3 w-24 h-24 bg-[#a78bfa] rounded-full opacity-[0.04] animate-float-2-enhanced"></div>
+          <div className="absolute bottom-32 left-1/3 w-20 h-20 bg-[#7f5efd] rounded-full opacity-[0.05] animate-float-3-enhanced"></div>
+          <div className="absolute top-1/3 right-1/4 w-16 h-16 bg-[#c4b5fd] rounded-full opacity-[0.04] animate-float-4-enhanced"></div>
+          
+          {/* Subtle Lines */}
+          <div className="absolute top-1/4 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#7f5efd] to-transparent opacity-20 animate-slide-right"></div>
+          <div className="absolute bottom-1/4 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#a78bfa] to-transparent opacity-15 animate-slide-left"></div>
+          
+          {/* Small Particles */}
+          <div className="absolute top-1/3 left-1/5 w-2 h-2 bg-[#7f5efd] rounded-full opacity-40 animate-float-1"></div>
+          <div className="absolute top-1/2 right-1/5 w-1.5 h-1.5 bg-[#a78bfa] rounded-full opacity-50 animate-float-2"></div>
+          <div className="absolute bottom-1/3 left-2/3 w-2.5 h-2.5 bg-[#c4b5fd] rounded-full opacity-35 animate-float-3"></div>
+          <div className="absolute top-2/3 left-1/6 w-1 h-1 bg-[#7f5efd] rounded-full opacity-45 animate-float-4"></div>
+        </div>
+        
         <div className="container-wide relative z-10">
-          <div className="mx-auto max-w-4xl text-center">
-
-            <h1 className="font-martina text-5xl sm:text-6xl font-normal text-gray-900 mb-8">
-              Get Paid in{" "}
-              <span className="font-martina text-[#7f5efd] font-semibold text-5xl sm:text-6xl">Crypto</span>
-            </h1>
-            <p className="font-capsule text-lg font-normal text-gray-600 max-w-3xl mx-auto mb-10">
+          <div className="mx-auto max-w-5xl text-center">
+            
+            {/* Enhanced Heading */}
+            <div className="relative mb-8">
+              <h1 className="font-martina text-6xl sm:text-7xl lg:text-8xl font-normal text-gray-900 leading-tight">
+                Get Paid in{" "}
+                <span className="relative inline-block">
+                  <span className="font-martina text-[#7f5efd] font-semibold">Crypto</span>
+                  {/* Subtle underline decoration */}
+                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] opacity-20 rounded-full"></div>
+                </span>
+              </h1>
+            </div>
+            
+            {/* Enhanced Subheading */}
+            <p className="font-capsule text-xl sm:text-2xl font-normal text-gray-600 max-w-4xl mx-auto mb-12 leading-relaxed">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all major cryptos.
             </p>
             
-
-
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+            {/* Call-to-Action Buttons */}
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+              <Button size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 shadow-xl bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl" asChild>
                 <Link href="/signup">
                   Start Free 30-Day Trial
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-3 h-6 w-6" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="font-phonic text-base font-normal px-8 py-3 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
+              <Button variant="outline" size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 border-2 border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-300" asChild>
                 <Link href="#pricing">View Pricing</Link>
               </Button>
             </div>
-            <div className="font-phonic text-xs text-gray-500 mt-6">
+            
+            {/* Trial Info */}
+            <div className="font-phonic text-sm text-gray-500 mt-8 flex items-center justify-center gap-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
               30-day free trial • $19/month • Cancel anytime
             </div>
 
-            {/* Trust Indicators */}
-            <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
-                <Shield className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic font-normal">Secure & Non-Custodial</span>
+            {/* Enhanced Trust Indicators */}
+            <div className="mt-20 flex flex-col lg:flex-row items-center justify-center gap-6 text-sm text-gray-600">
+              <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-lg border border-[#ede9fe] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="w-10 h-10 bg-[#f5f3ff] rounded-full flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-[#7f5efd]" />
+                </div>
+                <span className="font-phonic font-medium">Secure & Non-Custodial</span>
               </div>
-              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
-                <Zap className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic font-normal">Instant Setup</span>
+              <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-lg border border-[#ede9fe] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="w-10 h-10 bg-[#f5f3ff] rounded-full flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-[#7f5efd]" />
+                </div>
+                <span className="font-phonic font-medium">Instant Setup</span>
               </div>
-              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
-                <Globe className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic font-normal">Global Support</span>
+              <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-lg border border-[#ede9fe] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="w-10 h-10 bg-[#f5f3ff] rounded-full flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-[#7f5efd]" />
+                </div>
+                <span className="font-phonic font-medium">Global Support</span>
+              </div>
+            </div>
+            
+            {/* Stats Section */}
+            <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
+              <div className="text-center">
+                <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">140+</div>
+                <div className="font-phonic text-sm text-gray-600">Cryptocurrencies</div>
+              </div>
+              <div className="text-center">
+                <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">0.5%</div>
+                <div className="font-phonic text-sm text-gray-600">Gateway Fees</div>
+              </div>
+              <div className="text-center">
+                <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">$19</div>
+                <div className="font-phonic text-sm text-gray-600">Per Month</div>
               </div>
             </div>
           </div>

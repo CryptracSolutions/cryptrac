@@ -151,11 +151,11 @@ const SelectItem = React.forwardRef<
         </SelectPrimitive.ItemIndicator>
       </span>
 
-      {/* Render the rich children markup directly. The `textValue` prop (when
-         provided) already supplies a clean, plain-text label for Radix to use
-         for the trigger and type-ahead, so we don’t need to inject an extra
-         hidden <ItemText>. This prevents the same label from showing up twice
-         inside the dropdown list. */}
+      {/* Provide a clean text label for the trigger while keeping rich children visible in the list */}
+      <SelectPrimitive.ItemText className="sr-only">
+        {textValue ?? (typeof children === 'string' ? children : '')}
+      </SelectPrimitive.ItemText>
+
       {children}
     </SelectPrimitive.Item>
   )
