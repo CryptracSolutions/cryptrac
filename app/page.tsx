@@ -99,41 +99,129 @@ export default function Home() {
       <LandingNav />
 
       {/* Hero Section */}
-      <section id="hero" className="relative overflow-hidden py-24 sm:py-36">
-        {/* Gradient Background */}
+      <section id="hero" className="relative overflow-hidden py-8 sm:py-12">
+        {/* Base Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-[#f8f7ff]"></div>
         
-        {/* Subtle Pattern Overlay */}
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, #7f5efd 2px, transparent 2px), radial-gradient(circle at 75% 75%, #7f5efd 1px, transparent 1px)`,
-          backgroundSize: '50px 50px, 25px 25px'
-        }}></div>
-        
-        {/* Floating Elements */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Large Floating Circles */}
-          <div className="absolute top-20 left-1/4 w-32 h-32 bg-[#7f5efd] rounded-full opacity-[0.03] animate-float-1-enhanced"></div>
-          <div className="absolute top-40 right-1/3 w-24 h-24 bg-[#a78bfa] rounded-full opacity-[0.04] animate-float-2-enhanced"></div>
-          <div className="absolute bottom-32 left-1/3 w-20 h-20 bg-[#7f5efd] rounded-full opacity-[0.05] animate-float-3-enhanced"></div>
-          <div className="absolute top-1/3 right-1/4 w-16 h-16 bg-[#c4b5fd] rounded-full opacity-[0.04] animate-float-4-enhanced"></div>
-          
-          {/* Subtle Lines */}
-          <div className="absolute top-1/4 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#7f5efd] to-transparent opacity-20 animate-slide-right"></div>
-          <div className="absolute bottom-1/4 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#a78bfa] to-transparent opacity-15 animate-slide-left"></div>
-          
-          {/* Small Particles */}
-          <div className="absolute top-1/3 left-1/5 w-2 h-2 bg-[#7f5efd] rounded-full opacity-40 animate-float-1"></div>
-          <div className="absolute top-1/2 right-1/5 w-1.5 h-1.5 bg-[#a78bfa] rounded-full opacity-50 animate-float-2"></div>
-          <div className="absolute bottom-1/3 left-2/3 w-2.5 h-2.5 bg-[#c4b5fd] rounded-full opacity-35 animate-float-3"></div>
-          <div className="absolute top-2/3 left-1/6 w-1 h-1 bg-[#7f5efd] rounded-full opacity-45 animate-float-4"></div>
+        {/* Flowing Wave Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <svg
+            className="absolute -left-[10%] -right-[10%] -top-[10%] -bottom-[10%] w-[120%] h-[120%]"
+            viewBox="0 0 1400 900"
+            preserveAspectRatio="xMidYMid slice"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              {/* Purple Wave Gradient */}
+              <linearGradient id="purpleWave" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#7f5efd" stopOpacity="0.2" />
+              </linearGradient>
+              
+              {/* Cyan Wave Gradient */}
+              <linearGradient id="cyanWave" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.2" />
+              </linearGradient>
+              
+              {/* Light Purple Overlay */}
+              <linearGradient id="lightPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.4" />
+                <stop offset="50%" stopColor="#c7d2fe" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#a5b4fc" stopOpacity="0.2" />
+              </linearGradient>
+            </defs>
+            
+            {/* Main Purple Wave - Extended */}
+            <path
+              d="M-200,450 C100,350 300,550 600,450 C900,350 1200,550 1600,450 L1600,900 L-200,900 Z"
+              fill="url(#purpleWave)"
+              className="animate-wave-1-enhanced"
+            />
+            
+            {/* Secondary Purple Wave - Extended */}
+            <path
+              d="M-200,500 C200,400 500,600 900,500 C1200,400 1400,600 1600,500 L1600,900 L-200,900 Z"
+              fill="url(#purpleWave)"
+              className="animate-wave-2-enhanced"
+              opacity="0.6"
+            />
+            
+            {/* Cyan Wave - Extended */}
+            <path
+              d="M-200,350 C150,250 450,450 750,350 C1050,250 1300,450 1600,350 L1600,900 L-200,900 Z"
+              fill="url(#cyanWave)"
+              className="animate-wave-3-enhanced"
+            />
+            
+            {/* Light Purple Overlay Wave - Extended */}
+            <path
+              d="M-200,300 C100,200 400,400 700,300 C1000,200 1300,400 1600,300 L1600,900 L-200,900 Z"
+              fill="url(#lightPurple)"
+              className="animate-wave-1-enhanced"
+              opacity="0.7"
+            />
+            
+            {/* Top Flowing Curves - Extended */}
+            <path
+              d="M-200,250 Q200,150 700,250 T1600,250 L1600,0 L-200,0 Z"
+              fill="url(#cyanWave)"
+              className="animate-wave-2-enhanced"
+              opacity="0.3"
+            />
+            
+            <path
+              d="M-200,200 Q300,100 900,200 T1600,200 L1600,0 L-200,0 Z"
+              fill="url(#purpleWave)"
+              className="animate-wave-3-enhanced"
+              opacity="0.4"
+            />
+            
+            {/* Bottom Flowing Curves - Extended */}
+            <path
+              d="M-200,600 Q400,500 800,600 T1600,600 L1600,900 L-200,900 Z"
+              fill="url(#lightPurple)"
+              className="animate-wave-1-enhanced"
+              opacity="0.3"
+            />
+            
+            {/* Flowing Lines - Extended */}
+            <path
+              d="M-200,370 Q200,270 700,370 T1600,370"
+              stroke="url(#purpleWave)"
+              strokeWidth="2"
+              fill="none"
+              className="animate-wave-1-enhanced"
+              opacity="0.5"
+            />
+            
+            <path
+              d="M-200,430 Q300,330 800,430 T1600,430"
+              stroke="url(#cyanWave)"
+              strokeWidth="1.5"
+              fill="none"
+              className="animate-wave-2-enhanced"
+              opacity="0.4"
+            />
+            
+            {/* Additional seamless waves */}
+            <path
+              d="M-200,550 Q500,450 1000,550 T1600,550 L1600,900 L-200,900 Z"
+              fill="url(#purpleWave)"
+              className="animate-wave-3-enhanced"
+              opacity="0.2"
+            />
+          </svg>
         </div>
         
         <div className="container-wide relative z-10">
           <div className="mx-auto max-w-5xl text-center">
             
             {/* Enhanced Heading */}
-            <div className="relative mb-8">
-              <h1 className="font-martina text-6xl sm:text-7xl lg:text-8xl font-normal text-gray-900 leading-tight">
+            <div className="relative mb-4">
+              <h1 className="font-martina text-5xl sm:text-6xl lg:text-7xl font-normal text-gray-900 leading-tight">
                 Get Paid in{" "}
                 <span className="relative inline-block">
                   <span className="font-martina text-[#7f5efd] font-semibold">Crypto</span>
@@ -144,12 +232,12 @@ export default function Home() {
             </div>
             
             {/* Enhanced Subheading */}
-            <p className="font-capsule text-xl sm:text-2xl font-normal text-gray-600 max-w-4xl mx-auto mb-12 leading-relaxed">
+            <p className="font-capsule text-lg sm:text-xl font-normal text-gray-600 max-w-3xl mx-auto mb-6 leading-relaxed">
               Modern Payments to Grow your Revenue. Non-custodial gateway for Bitcoin, Ethereum, Solana and all major cryptos.
             </p>
             
             {/* Call-to-Action Buttons */}
-            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 shadow-xl bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl" asChild>
                 <Link href="/signup">
                   Start Free 30-Day Trial
@@ -162,35 +250,29 @@ export default function Home() {
             </div>
             
             {/* Trial Info */}
-            <div className="font-phonic text-sm text-gray-500 mt-8 flex items-center justify-center gap-2">
+            <div className="font-phonic text-sm text-gray-500 mt-4 flex items-center justify-center gap-2">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
               30-day free trial • $19/month • Cancel anytime
             </div>
 
-            {/* Enhanced Trust Indicators */}
-            <div className="mt-20 flex flex-col lg:flex-row items-center justify-center gap-6 text-sm text-gray-600">
-              <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-lg border border-[#ede9fe] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div className="w-10 h-10 bg-[#f5f3ff] rounded-full flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-[#7f5efd]" />
-                </div>
+            {/* Trust Indicators */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-600">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-4 w-4 text-[#7f5efd]" />
                 <span className="font-phonic font-medium">Secure & Non-Custodial</span>
               </div>
-              <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-lg border border-[#ede9fe] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div className="w-10 h-10 bg-[#f5f3ff] rounded-full flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-[#7f5efd]" />
-                </div>
+              <div className="flex items-center space-x-2">
+                <Zap className="h-4 w-4 text-[#7f5efd]" />
                 <span className="font-phonic font-medium">Instant Setup</span>
               </div>
-              <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-lg border border-[#ede9fe] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div className="w-10 h-10 bg-[#f5f3ff] rounded-full flex items-center justify-center">
-                  <Globe className="h-5 w-5 text-[#7f5efd]" />
-                </div>
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-[#7f5efd]" />
                 <span className="font-phonic font-medium">Global Support</span>
               </div>
             </div>
             
             {/* Stats Section */}
-            <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
               <div className="text-center">
                 <div className="font-phonic text-3xl font-semibold text-[#7f5efd] mb-2">140+</div>
                 <div className="font-phonic text-sm text-gray-600">Cryptocurrencies</div>
@@ -209,7 +291,7 @@ export default function Home() {
       </section>
 
       {/* Supported Cryptocurrencies */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-12 bg-slate-50">
         <div className="container-wide">
           <div className="text-center mb-12">
             <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
@@ -241,7 +323,7 @@ export default function Home() {
           {/* Call to Action */}
           <div className="text-center">
             <p className="font-phonic text-base text-gray-600 mb-4">
-              <span className="font-medium text-[#7f5efd]">140+ cryptocurrencies</span> supported and counting
+              <span className="font-medium text-[#7f5efd]"></span>
             </p>
             <Button variant="outline" size="sm" className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
               <Link href="/supported-cryptocurrencies">View All Supported Cryptocurrencies</Link>
@@ -251,7 +333,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-gray-50">
+      <section id="features" className="py-12 bg-slate-50">
         <div className="container-wide">
           <div className="text-center mb-20">
             <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6">
@@ -264,13 +346,13 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
                               <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader className="text-center pb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-200">
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:shadow-xl transition-all duration-200">
                     <feature.icon className="h-8 w-8 text-white" />
                   </div>
                   <CardTitle className="font-phonic text-2xl font-normal text-gray-900">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="text-center">
+                <CardContent className="text-center px-6 pb-6">
                   <CardDescription className="font-phonic text-base font-normal text-gray-600">
                     {feature.description}
                   </CardDescription>
@@ -282,7 +364,7 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 bg-gray-50">
+      <section id="pricing" className="py-12 bg-slate-50">
         <div className="container-wide">
           <div className="text-center mb-20">
             <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6">
@@ -336,7 +418,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-24 bg-gray-50">
+      <section id="faq" className="py-12 bg-slate-50">
         <div className="container-wide">
           <div className="text-center mb-20">
             <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-6">
@@ -502,7 +584,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
+      <section className="py-12 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
         <div className="container-wide text-center relative">
           <h2 className="font-phonic text-3xl font-normal text-white mb-6">

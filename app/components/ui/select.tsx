@@ -132,6 +132,9 @@ const SelectItem = React.forwardRef<
   // for the trigger and type-ahead, so we don’t need to inject an extra
   // hidden <ItemText>. This prevents the same label from showing up twice
   // inside the dropdown list.
+  const isPlainTextChild =
+    typeof children === "string" || typeof children === "number"
+
   return (
     <SelectPrimitive.Item
       ref={ref}
@@ -142,7 +145,7 @@ const SelectItem = React.forwardRef<
         className
       )}
       // Pass textValue through for typeahead semantics
-      textValue={textValue}
+      textValue={textValue ?? (isPlainTextChild ? String(children) : undefined)}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -150,13 +153,18 @@ const SelectItem = React.forwardRef<
           <Check className="h-4 w-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
-
-      {/* Provide a clean text label for the trigger while keeping rich children visible in the list */}
-      <SelectPrimitive.ItemText className="sr-only">
-        {textValue ?? (typeof children === 'string' ? children : '')}
-      </SelectPrimitive.ItemText>
-
-      {children}
+      {isPlainTextChild ? (
+        // For simple string/number children, render them as the visible ItemText
+        <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      ) : (
+        // For rich markup children, provide a hidden plain label for the trigger
+        <>
+          <SelectPrimitive.ItemText className="sr-only">
+            {textValue ?? ""}
+          </SelectPrimitive.ItemText>
+          {children}
+        </>
+      )}
     </SelectPrimitive.Item>
   )
 })
