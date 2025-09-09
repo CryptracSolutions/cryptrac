@@ -792,13 +792,13 @@ function SmartTerminalPageContent() {
                                   case 'algorand':
                                     return <Coins className={iconClass} />
                                   case 'litecoin':
-                                    return <Coins className={iconClass} />
+                                    return <Coins className="h-4 w-4 text-white" />
                                   case 'cardano':
-                                    return <Coins className={iconClass} />
+                                    return <Coins className="h-4 w-4 text-white" />
                                   case 'polkadot':
-                                    return <Network className={iconClass} />
+                                    return <Network className="h-4 w-4 text-white" />
                                   case 'chainlink':
-                                    return <Globe className={iconClass} />
+                                    return <Globe className="h-4 w-4 text-white" />
                                   default:
                                     return <Network className={iconClass} />
                                 }
@@ -1014,7 +1014,7 @@ function SmartTerminalPageContent() {
                   </div>
                 </div>
 
-                {/* Final Total Display - spans both columns in landscape */}
+                {/* Final Total Display - spans full width */}
                 {tipSelected && (
                   <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 rounded-xl text-white landscape:col-span-2">
                     <div className="text-center">
@@ -1026,7 +1026,7 @@ function SmartTerminalPageContent() {
                     </div>
                   </div>
                 )}
-                {/* Generate Payment Button - spans both columns in landscape */}
+                {/* Generate Payment Button - spans full width */}
                 <Button
                   onClick={generate}
                   variant="default"

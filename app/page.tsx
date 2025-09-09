@@ -268,10 +268,10 @@ export default function Home() {
             <div className="text-left">
               {/* Enhanced Heading */}
               <div className="relative mb-6">
-                <h1 className="font-modern text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold text-gray-900 leading-tight">
+                <h1 className="font-crypto text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold text-gray-900 leading-tight tracking-tighter">
                   Get Paid in{" "}
                   <span className="relative inline-block">
-                    <span className="font-modern text-[#7f5efd] font-bold">Crypto</span>
+                    <span className="font-crypto text-[#7f5efd] font-bold">Crypto</span>
                     {/* Subtle underline decoration */}
                     <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] opacity-20 rounded-full"></div>
                   </span>
