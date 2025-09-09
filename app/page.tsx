@@ -12,6 +12,7 @@ import { PaymentJourneyDemo } from "@/app/components/ui/payment-journey-demo";
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const isScrolling = useRef(false);
 
   const features = [
     {
@@ -49,20 +50,38 @@ export default function Home() {
   const CARDS_PER_VIEW = 3;
   const maxSlide = Math.max(0, features.length - CARDS_PER_VIEW);
 
+  const updateScroll = (slideIndex: number) => {
+    if (carouselRef.current) {
+      const container = carouselRef.current;
+      const cardWidth = container.scrollWidth / features.length;
+      const scrollPosition = slideIndex * cardWidth * CARDS_PER_VIEW;
+      container.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const nextSlide = () => {
     if (currentSlide < maxSlide) {
-      setCurrentSlide(prev => prev + 1);
+      const newSlide = currentSlide + 1;
+      setCurrentSlide(newSlide);
+      updateScroll(newSlide);
     }
   };
 
   const prevSlide = () => {
     if (currentSlide > 0) {
-      setCurrentSlide(prev => prev - 1);
+      const newSlide = currentSlide - 1;
+      setCurrentSlide(newSlide);
+      updateScroll(newSlide);
     }
   };
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(Math.max(0, Math.min(maxSlide, index)));
+    const validIndex = Math.max(0, Math.min(maxSlide, index));
+    setCurrentSlide(validIndex);
+    updateScroll(validIndex);
   };
 
   const supportedCryptos = [
@@ -407,14 +426,30 @@ export default function Home() {
             <div className="overflow-hidden mx-16">
               <div 
                 ref={carouselRef}
-                className="flex transition-transform duration-500 ease-out"
+                className="flex overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
                 style={{
-                  transform: `translateX(-${currentSlide * (100 / CARDS_PER_VIEW)}%)`
+                  scrollBehavior: 'smooth',
+                  scrollSnapType: 'x mandatory'
+                }}
+                onScroll={(e) => {
+                  if (!isScrolling.current) {
+                    isScrolling.current = true;
+                    const container = e.currentTarget;
+                    const scrollLeft = container.scrollLeft;
+                    const cardWidth = container.scrollWidth / features.length;
+                    const newSlide = Math.round(scrollLeft / (cardWidth * CARDS_PER_VIEW));
+                    if (newSlide !== currentSlide && newSlide >= 0 && newSlide <= maxSlide) {
+                      setCurrentSlide(newSlide);
+                    }
+                    setTimeout(() => {
+                      isScrolling.current = false;
+                    }, 150);
+                  }
                 }}
               >
                 {features.map((feature, index) => (
-                  <div key={index} className="w-1/3 flex-shrink-0 px-4">
-                    <Card interactive={false} className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg bg-white h-full">
+                  <div key={index} className="w-1/3 flex-shrink-0 px-4" style={{scrollSnapAlign: 'start'}}>
+                    <Card interactive={false} className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg bg-white h-full select-none">
                       <CardHeader className="text-center pb-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg">
                           <feature.icon className="h-8 w-8 text-white" />
