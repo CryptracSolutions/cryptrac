@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, User, Clock, Share2, Twitter, Linkedin, Facebook, Copy, Check, ChevronRight } from "lucide-react";
+import { ArrowLeft, Calendar, User, Clock, Share2, Twitter, Linkedin, Facebook, Copy, Check, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
@@ -128,7 +128,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                 )}
               </div>
               
-              <h1 className="font-phonic text-4xl lg:text-5xl font-normal tracking-tight text-gray-900 mb-6 leading-tight">
+              <h1 className="font-phonic text-4xl lg:text-5xl font-normal tracking-tight bg-gradient-to-r from-gray-900 via-[#6b46c1] to-gray-900 bg-clip-text text-transparent mb-6 leading-tight">
                 {post.title}
               </h1>
               
@@ -138,11 +138,11 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
               
               <div className="flex items-center gap-6 text-sm text-gray-500 mb-6">
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
+                  <User className="h-4 w-4 text-[#7f5efd]" />
                   <span className="font-phonic font-normal">{post.author}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-4 w-4 text-[#7f5efd]" />
                   <span className="font-phonic font-normal">
                     {new Date(post.date).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -152,14 +152,18 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4 text-[#7f5efd]" />
                   <span className="font-phonic font-normal">{post.readTime}</span>
                 </div>
               </div>
               
               <div className="flex flex-wrap gap-2 mb-8">
                 {post.tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-sm">
+                  <Badge 
+                    key={index} 
+                    variant="secondary" 
+                    className="text-sm bg-[#f5f3ff] text-[#7f5efd] border-[#e4d9ff] hover:bg-[#ede9fe] transition-colors"
+                  >
                     {tag}
                   </Badge>
                 ))}
@@ -171,29 +175,41 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  h1: ({ children }) => <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-6 mt-12 first:mt-0">{children}</h1>,
-                  h2: ({ children }) => <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-4 mt-10">{children}</h2>,
-                  h3: ({ children }) => <h3 className="font-phonic text-xl font-normal text-gray-900 mb-3 mt-8">{children}</h3>,
+                  h1: ({ children }) => (
+                    <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-6 mt-12 first:mt-0 border-l-4 border-[#7f5efd] pl-4 bg-gradient-to-r from-[#f5f3ff]/30 to-transparent py-2">
+                      {children}
+                    </h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-4 mt-10 border-l-4 border-[#a78bfa] pl-4">
+                      {children}
+                    </h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="font-phonic text-xl font-normal text-gray-900 mb-3 mt-8 text-[#6b46c1]">
+                      {children}
+                    </h3>
+                  ),
                   p: ({ children }) => <p className="font-capsule text-base font-normal text-gray-700 mb-4 leading-relaxed">{children}</p>,
                   ul: ({ children }) => <ul className="font-capsule text-base font-normal text-gray-700 mb-4 pl-6 space-y-2">{children}</ul>,
                   ol: ({ children }) => <ol className="font-capsule text-base font-normal text-gray-700 mb-4 pl-6 space-y-2">{children}</ol>,
                   li: ({ children }) => <li className="leading-relaxed">{children}</li>,
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-[#7f5efd] pl-6 py-2 mb-6 bg-[#f5f3ff]/30 italic">
+                    <blockquote className="border-l-4 border-[#7f5efd] pl-6 py-4 mb-6 bg-gradient-to-r from-[#f5f3ff]/40 to-[#f5f3ff]/10 italic rounded-r-lg">
                       {children}
                     </blockquote>
                   ),
                   code: ({ children }) => (
-                    <code className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                    <code className="bg-[#f5f3ff] text-[#7f5efd] px-2 py-1 rounded text-sm font-mono border border-[#e4d9ff]">
                       {children}
                     </code>
                   ),
                   pre: ({ children }) => (
-                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg mb-6 overflow-x-auto">
+                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg mb-6 overflow-x-auto border-l-4 border-[#7f5efd]">
                       {children}
                     </pre>
                   ),
-                  strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                  strong: ({ children }) => <strong className="font-semibold text-[#6b46c1]">{children}</strong>,
                 }}
               >
                 {post.content}
@@ -201,15 +217,18 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
             </div>
 
             {/* Share Section */}
-            <div className="border-t pt-8 mb-12">
+            <div className="border-t border-[#7f5efd]/20 pt-8 mb-12 bg-gradient-to-r from-[#f5f3ff]/10 to-transparent p-4 rounded-lg">
               <div className="flex items-center justify-between">
-                <h3 className="font-phonic text-lg font-normal text-gray-900">Share this article</h3>
+                <h3 className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                  <Share2 className="h-5 w-5 text-[#7f5efd]" />
+                  Share this article
+                </h3>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(shareUrls.twitter, '_blank')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
                   >
                     <Twitter className="h-4 w-4" />
                     Twitter
@@ -218,7 +237,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(shareUrls.linkedin, '_blank')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
                   >
                     <Linkedin className="h-4 w-4" />
                     LinkedIn
@@ -227,7 +246,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(shareUrls.facebook, '_blank')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
                   >
                     <Facebook className="h-4 w-4" />
                     Facebook
@@ -236,7 +255,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                     variant="outline"
                     size="sm"
                     onClick={handleCopyUrl}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
                   >
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     {copied ? 'Copied!' : 'Copy Link'}
@@ -246,9 +265,9 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
             </div>
 
             {/* Author Bio */}
-            <div className="bg-[#f5f3ff]/30 border border-[#7f5efd]/20 rounded-lg p-6 mb-12">
+            <div className="bg-gradient-to-r from-[#f5f3ff]/40 via-[#f5f3ff]/20 to-[#f5f3ff]/10 border border-[#7f5efd]/30 rounded-lg p-6 mb-12 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 bg-[#7f5efd] rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#6547e8] rounded-full flex items-center justify-center shadow-lg">
                   <User className="h-8 w-8 text-white" />
                 </div>
                 <div className="flex-1">
@@ -268,9 +287,10 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
           <aside className="lg:col-span-1">
             <div className="sticky top-24 space-y-8">
               {/* Table of Contents */}
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="font-phonic text-lg font-normal text-gray-900">
+              <Card className="shadow-lg border-l-4 border-[#7f5efd]">
+                <CardHeader className="bg-gradient-to-r from-[#f5f3ff]/20 to-transparent">
+                  <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-[#7f5efd]" />
                     Table of Contents
                   </CardTitle>
                 </CardHeader>
@@ -285,16 +305,17 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
 
               {/* Related Posts */}
               {relatedPosts.length > 0 && (
-                <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="font-phonic text-lg font-normal text-gray-900">
+                <Card className="shadow-lg border-l-4 border-[#a78bfa]">
+                  <CardHeader className="bg-gradient-to-r from-[#f3f0ff]/20 to-transparent">
+                    <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                      <ChevronRight className="h-5 w-5 text-[#a78bfa]" />
                       Related Articles
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {relatedPosts.map((relatedPost) => (
                       <Link key={relatedPost.id} href={`/blog/${relatedPost.slug}`}>
-                        <div className="pb-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 p-2 rounded transition-colors">
+                        <div className="pb-4 border-b border-gray-200 last:border-b-0 hover:bg-[#f5f3ff]/30 p-2 rounded transition-colors">
                           <h4 className="font-phonic text-sm font-normal text-gray-900 mb-2 line-clamp-2">
                             {relatedPost.title}
                           </h4>
@@ -313,9 +334,10 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
               )}
 
               {/* Newsletter Signup */}
-              <Card className="shadow-lg border-[#7f5efd]/20 bg-[#f5f3ff]/30">
-                <CardHeader>
-                  <CardTitle className="font-phonic text-lg font-normal text-gray-900">
+              <Card className="shadow-lg border-l-4 border-[#7f5efd] bg-gradient-to-r from-[#f5f3ff]/40 to-[#f5f3ff]/20">
+                <CardHeader className="bg-gradient-to-r from-[#f5f3ff]/30 to-transparent">
+                  <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                    <Share2 className="h-5 w-5 text-[#7f5efd]" />
                     Stay Updated
                   </CardTitle>
                 </CardHeader>
@@ -340,28 +362,29 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
               </Card>
 
               {/* Quick Links */}
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="font-phonic text-lg font-normal text-gray-900">
+              <Card className="shadow-lg border-l-4 border-[#c4b5fd]">
+                <CardHeader className="bg-gradient-to-r from-[#faf9ff]/40 to-transparent">
+                  <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                    <ChevronRight className="h-5 w-5 text-[#c4b5fd]" />
                     Quick Links
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Link href="/merchant/onboarding" className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    <span className="font-phonic text-sm font-normal text-gray-700">Get Started</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  <Link href="/merchant/onboarding" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
+                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Get Started</span>
+                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
-                  <Link href="/smart-terminal" className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    <span className="font-phonic text-sm font-normal text-gray-700">Smart Terminal</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  <Link href="/smart-terminal" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
+                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Smart Terminal</span>
+                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
-                  <Link href="/security" className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    <span className="font-phonic text-sm font-normal text-gray-700">Security</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  <Link href="/security" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
+                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Security</span>
+                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
-                  <Link href="/contact" className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    <span className="font-phonic text-sm font-normal text-gray-700">Contact Support</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  <Link href="/contact" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
+                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Contact Support</span>
+                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
                 </CardContent>
               </Card>

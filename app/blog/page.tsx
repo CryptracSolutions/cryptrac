@@ -84,9 +84,22 @@ export default function BlogPage() {
                   placeholder="Search articles..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2"
+                  className="pl-10 pr-12 py-2 focus:ring-[#7f5efd] focus:border-[#7f5efd]"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
+              {searchTerm && (
+                <p className="text-sm text-gray-600 mt-2 text-center">
+                  Found {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''} matching "{searchTerm}"
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -112,7 +125,7 @@ export default function BlogPage() {
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Featured Posts */}
-            {selectedCategory === "All" && featuredPosts.length > 0 && (
+            {!searchTerm && selectedCategory === "All" && featuredPosts.length > 0 && (
               <div className="mb-12">
                 <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-2">
                   <Award className="h-6 w-6 text-[#7f5efd]" />
@@ -178,7 +191,12 @@ export default function BlogPage() {
             <div>
               <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-2">
                 <BookOpen className="h-6 w-6 text-[#7f5efd]" />
-                {selectedCategory === "All" ? "All Articles" : `${selectedCategory} Articles`}
+                {searchTerm 
+                  ? `Search Results for "${searchTerm}"` 
+                  : selectedCategory === "All" 
+                    ? "All Articles" 
+                    : `${selectedCategory} Articles`
+                }
                 <Badge variant="outline" className="text-sm">
                   {filteredPosts.length}
                 </Badge>
@@ -189,10 +207,24 @@ export default function BlogPage() {
                   <div className="text-gray-400 mb-4">
                     <Search className="h-12 w-12 mx-auto mb-4" />
                   </div>
-                  <h3 className="font-phonic text-lg font-normal text-gray-900 mb-2">No articles found</h3>
-                  <p className="font-capsule text-sm font-normal text-gray-600">
-                    Try adjusting your search terms or category filter.
+                  <h3 className="font-phonic text-lg font-normal text-gray-900 mb-2">
+                    {searchTerm ? `No articles found for "${searchTerm}"` : "No articles found"}
+                  </h3>
+                  <p className="font-capsule text-sm font-normal text-gray-600 mb-4">
+                    {searchTerm 
+                      ? "Try different keywords or browse all articles." 
+                      : "Try adjusting your category filter."
+                    }
                   </p>
+                  {searchTerm && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSearchTerm("")}
+                      className="text-[#7f5efd] border-[#7f5efd] hover:bg-[#7f5efd] hover:text-white"
+                    >
+                      View All Articles
+                    </Button>
+                  )}
                 </Card>
               ) : (
                 <div className="space-y-6">
