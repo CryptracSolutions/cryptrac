@@ -342,8 +342,20 @@ export default function Home() {
                   
                   <div className="space-y-3 mb-4">
                     <div className="flex justify-between items-center">
-                      <span className="font-phonic text-sm text-gray-600">Amount</span>
+                      <span className="font-phonic text-sm text-gray-600">Subtotal</span>
                       <span className="font-phonic text-sm font-medium text-gray-900">$299.99</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-phonic text-sm text-gray-600">Gateway Fee (0.5%)</span>
+                      <span className="font-phonic text-sm font-medium text-gray-900">$1.50</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-phonic text-sm text-gray-600">Tax</span>
+                      <span className="font-phonic text-sm font-medium text-gray-900">$24.00</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
+                      <span className="font-phonic text-sm font-semibold text-gray-900">Total</span>
+                      <span className="font-phonic text-sm font-semibold text-gray-900">$325.49</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-phonic text-sm text-gray-600">Currency</span>
@@ -355,8 +367,84 @@ export default function Home() {
                   </div>
                   
                   <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                    <div className="w-24 h-24 bg-white rounded-lg mx-auto flex items-center justify-center">
-                      <div className="w-20 h-20 bg-black rounded-sm opacity-80"></div>
+                    <div className="w-24 h-24 bg-white rounded-lg mx-auto flex items-center justify-center overflow-hidden">
+                      <svg className="w-20 h-20" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        {/* QR Code Pattern */}
+                        <rect width="200" height="200" fill="white"/>
+                        
+                        {/* Corner squares */}
+                        <rect x="10" y="10" width="60" height="60" fill="black"/>
+                        <rect x="20" y="20" width="40" height="40" fill="white"/>
+                        <rect x="30" y="30" width="20" height="20" fill="black"/>
+                        
+                        <rect x="130" y="10" width="60" height="60" fill="black"/>
+                        <rect x="140" y="20" width="40" height="40" fill="white"/>
+                        <rect x="150" y="30" width="20" height="20" fill="black"/>
+                        
+                        <rect x="10" y="130" width="60" height="60" fill="black"/>
+                        <rect x="20" y="140" width="40" height="40" fill="white"/>
+                        <rect x="30" y="150" width="20" height="20" fill="black"/>
+                        
+                        {/* Data patterns */}
+                        <rect x="90" y="10" width="10" height="10" fill="black"/>
+                        <rect x="110" y="10" width="10" height="10" fill="black"/>
+                        <rect x="90" y="20" width="10" height="10" fill="black"/>
+                        <rect x="100" y="30" width="10" height="10" fill="black"/>
+                        <rect x="110" y="30" width="10" height="10" fill="black"/>
+                        
+                        <rect x="10" y="90" width="10" height="10" fill="black"/>
+                        <rect x="30" y="90" width="10" height="10" fill="black"/>
+                        <rect x="50" y="90" width="10" height="10" fill="black"/>
+                        <rect x="10" y="100" width="10" height="10" fill="black"/>
+                        <rect x="20" y="100" width="10" height="10" fill="black"/>
+                        <rect x="40" y="100" width="10" height="10" fill="black"/>
+                        <rect x="60" y="100" width="10" height="10" fill="black"/>
+                        
+                        <rect x="90" y="90" width="10" height="10" fill="black"/>
+                        <rect x="100" y="90" width="10" height="10" fill="black"/>
+                        <rect x="110" y="90" width="10" height="10" fill="black"/>
+                        <rect x="90" y="100" width="10" height="10" fill="black"/>
+                        <rect x="110" y="100" width="10" height="10" fill="black"/>
+                        <rect x="90" y="110" width="10" height="10" fill="black"/>
+                        <rect x="100" y="110" width="10" height="10" fill="black"/>
+                        <rect x="110" y="110" width="10" height="10" fill="black"/>
+                        
+                        <rect x="130" y="90" width="10" height="10" fill="black"/>
+                        <rect x="150" y="90" width="10" height="10" fill="black"/>
+                        <rect x="170" y="90" width="10" height="10" fill="black"/>
+                        <rect x="130" y="100" width="10" height="10" fill="black"/>
+                        <rect x="160" y="100" width="10" height="10" fill="black"/>
+                        <rect x="180" y="100" width="10" height="10" fill="black"/>
+                        
+                        <rect x="90" y="130" width="10" height="10" fill="black"/>
+                        <rect x="110" y="130" width="10" height="10" fill="black"/>
+                        <rect x="130" y="130" width="10" height="10" fill="black"/>
+                        <rect x="150" y="130" width="10" height="10" fill="black"/>
+                        <rect x="170" y="130" width="10" height="10" fill="black"/>
+                        <rect x="90" y="140" width="10" height="10" fill="black"/>
+                        <rect x="100" y="140" width="10" height="10" fill="black"/>
+                        <rect x="120" y="140" width="10" height="10" fill="black"/>
+                        <rect x="140" y="140" width="10" height="10" fill="black"/>
+                        <rect x="160" y="140" width="10" height="10" fill="black"/>
+                        <rect x="180" y="140" width="10" height="10" fill="black"/>
+                        
+                        <rect x="90" y="160" width="10" height="10" fill="black"/>
+                        <rect x="110" y="160" width="10" height="10" fill="black"/>
+                        <rect x="130" y="160" width="10" height="10" fill="black"/>
+                        <rect x="150" y="160" width="10" height="10" fill="black"/>
+                        <rect x="170" y="160" width="10" height="10" fill="black"/>
+                        <rect x="100" y="170" width="10" height="10" fill="black"/>
+                        <rect x="120" y="170" width="10" height="10" fill="black"/>
+                        <rect x="140" y="170" width="10" height="10" fill="black"/>
+                        <rect x="160" y="170" width="10" height="10" fill="black"/>
+                        <rect x="180" y="170" width="10" height="10" fill="black"/>
+                        
+                        <rect x="90" y="180" width="10" height="10" fill="black"/>
+                        <rect x="110" y="180" width="10" height="10" fill="black"/>
+                        <rect x="130" y="180" width="10" height="10" fill="black"/>
+                        <rect x="150" y="180" width="10" height="10" fill="black"/>
+                        <rect x="170" y="180" width="10" height="10" fill="black"/>
+                      </svg>
                     </div>
                     <div className="text-center mt-2">
                       <div className="font-phonic text-xs text-gray-500">Scan QR Code</div>
@@ -364,7 +452,7 @@ export default function Home() {
                   </div>
                   
                   <button className="w-full bg-[#7f5efd] text-white rounded-lg py-2 font-phonic text-sm font-medium hover:bg-[#7c3aed] transition-colors">
-                    Copy Payment Link
+                    Pay in BTC
                   </button>
                 </div>
 
@@ -389,18 +477,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Floating Crypto Icons */}
-                <div className="absolute -bottom-8 -left-8 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center animate-bounce">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
-                </div>
-                
-                <div className="absolute -top-8 -left-12 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center animate-pulse">
-                  <div className="w-5 h-5 bg-purple-500 rounded-full"></div>
-                </div>
-                
-                <div className="absolute top-1/2 -right-12 w-14 h-14 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center animate-bounce" style={{ animationDelay: '1s' }}>
-                  <div className="w-7 h-7 bg-green-500 rounded-full"></div>
-                </div>
               </div>
             </div>
           </div>
