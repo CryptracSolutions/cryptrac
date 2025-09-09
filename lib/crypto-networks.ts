@@ -90,9 +90,9 @@ export const NETWORKS: Record<string, CurrencyNetwork> = {
   avalanche: {
     id: 'avalanche',
     name: 'Avalanche',
-    displayName: 'Avalanche (C-Chain)',
-    nativeCurrency: 'AVAXC',
-    currencies: ['AVAX', 'AVAXC', 'USDCARC20', 'USDTARC20']
+    displayName: 'Avalanche',
+    nativeCurrency: 'AVAX',
+    currencies: ['AVAX', 'USDCARC20', 'USDTARC20']
   },
   algorand: {
     id: 'algorand',

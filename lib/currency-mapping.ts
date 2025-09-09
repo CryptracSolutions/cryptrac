@@ -60,7 +60,7 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   // zkSync
   ZK: ['ZK', 'ZKSYNC', 'ZKERC20'],
   // Additional networks
-  FTM: ['FTM', 'FANTOM', 'FTMMAINNET'],
+  FTM: ['FTM', 'FANTOM'],
   RUNE: ['RUNE', 'THORCHAIN'],
   CFX: ['CFX', 'CFXMAINNET', 'CONFLUX'],
   CRO: ['CRO', 'CRONOS', 'CROMAINNET'],
@@ -80,7 +80,6 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   USDTCELO: ['USDTCELO'],
   ZROARB: ['ZROARB'],
   ZROERC20: ['ZROERC20'],
-  AVAXC: ['AVAXC', 'AVAX'],
   BNBBSC: ['BNBBSC'],
   BUSDBSC: ['BUSDBSC'],
   ETHARB: ['ETHARB'],
@@ -104,7 +103,6 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   USDCARB: ['USDCARB'],
   USDCOP: ['USDCOP'],
   USDCBASE: ['USDCBASE'],
-  FTMMAINNET: ['FTM'],
   INJMAINNET: ['INJ'],
   INJERC20: ['INJ'],
 }

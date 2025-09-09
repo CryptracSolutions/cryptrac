@@ -63,7 +63,6 @@ const recommendedCurrencies = [
   { code: 'SOL', name: 'Solana' },
   { code: 'ALGO', name: 'Algorand' },
   { code: 'AVAX', name: 'Avalanche' },
-  { code: 'AVAXC', name: 'Avalanche' },
   { code: 'BNBBSC', name: 'Binance Coin (BSC)' },
   { code: 'ADA', name: 'Cardano' },
   { code: 'CRO', name: 'Crypto.com Coin' },

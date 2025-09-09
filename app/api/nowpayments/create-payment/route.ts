@@ -46,7 +46,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   'OP': ['OP', 'OPTIMISM', 'USDTOP', 'USDCOP'],
   'ETHBASE': ['ETHBASE', 'USDCBASE', 'ETH'],
   // Additional networks
-  'FTM': ['FTM', 'FANTOM', 'FTMMAINNET'],
+  'FTM': ['FTM', 'FANTOM'],
   'RUNE': ['RUNE', 'THORCHAIN'],
   'CFX': ['CFX', 'CONFLUX', 'CFXMAINNET'],
   'CRO': ['CRO', 'CRONOS', 'CROMAINNET'],

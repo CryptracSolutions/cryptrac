@@ -116,9 +116,10 @@ interface WalletsManagerProps<T = Record<string, unknown>> {
     wallet_extra_ids?: Record<string, string>;
   }>>;
   focusCurrency?: string;
+  onValidationChange?: (currency: string, isValid: boolean) => void;
 }
 
-export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, focusCurrency }: WalletsManagerProps<T>) {
+export default function WalletsManager<T = Record<string, unknown>>({ settings, setSettings, focusCurrency, onValidationChange }: WalletsManagerProps<T>) {
   const [validationStatus, setValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [extraIdValidationStatus, setExtraIdValidationStatus] = useState<Record<string, ValidationStatus>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -351,6 +352,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           setNewlyAddedWallet(currency);
           setHiddenAddresses(prev => ({ ...prev, [currency]: true }));
         }
+        onValidationChange?.(currency, true);
       } else {
         setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
         if (requiresExtraId(currency)) {
@@ -358,6 +360,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           if (extra) setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
           else setExtraIdValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
         }
+        onValidationChange?.(currency, false);
       }
     } catch (error) {
       console.error('Validation error:', error);
@@ -574,10 +577,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
 
       {/* Enhanced Configured Wallets Section - Collapsible */}
       {hasExistingWallets && (
-        <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200">
+        <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200" onClick={() => setWalletsExpanded(!walletsExpanded)} style={{ cursor: 'pointer' }}>
           <CardHeader 
-            className="pb-6 cursor-pointer"
-            onClick={() => setWalletsExpanded(!walletsExpanded)}
+            className="pb-6"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -615,7 +617,11 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                     className={`bg-white border-gray-200 shadow-soft hover:shadow-medium hover:border-purple-300 transition-all duration-200 ${hasStableCoins(currency) ? 'cursor-pointer' : ''} ${
                       newlyAddedWallet === currency ? 'ring-2 ring-purple-500 ring-opacity-50 animate-pulse' : ''
                     }`}
-                    onClick={(e) => handleWalletCardClick(currency, e)}
+                    onClick={(e) => {
+                      if (hasStableCoins(currency)) {
+                        toggleStableCoins(currency);
+                      }
+                    }}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">

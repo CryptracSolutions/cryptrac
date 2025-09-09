@@ -25,7 +25,7 @@ const NETWORK_WALLET_MAPPING: Record<string, string[]> = {
   ETHBASE: ['ETHBASE', 'USDCBASE', 'ETH'],
   ZK: ['ZK', 'ZKSYNC'],
   // Additional networks
-  FTM: ['FTM', 'FANTOM', 'FTMMAINNET'],
+  FTM: ['FTM', 'FANTOM'],
   RUNE: ['RUNE', 'THORCHAIN'],
   CFX: ['CFX', 'CONFLUX', 'CFXMAINNET'],
   CRO: ['CRO', 'CRONOS', 'CROMAINNET'],
@@ -111,7 +111,7 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     // zkSync
     'ZK': ['ZK', 'ZKSYNC', 'ZKERC20'],
     // Additional networks
-    'FTM': ['FTM', 'FANTOM', 'FTMMAINNET'],
+    'FTM': ['FTM', 'FANTOM'],
     'RUNE': ['RUNE', 'THORCHAIN'],
     'CFX': ['CFX', 'CFXMAINNET', 'CONFLUX'],
     'CRO': ['CRO', 'CRONOS', 'CROMAINNET'],
@@ -130,7 +130,6 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'USDTCELO': ['USDTCELO'],
     'ZROARB': ['ZROARB'],
     'ZROERC20': ['ZROERC20'],
-    'AVAXC': ['AVAXC', 'AVAX'],
     'BNBBSC': ['BNBBSC'],
     'BUSDBSC': ['BUSDBSC'],
     'ETHARB': ['ETHARB'],
@@ -156,7 +155,6 @@ async function mapToNowPaymentsCode(displayCode: string): Promise<string | null>
     'USDCARB': ['USDCARB'],
     'USDCOP': ['USDCOP'],
     'USDCBASE': ['USDCBASE'],
-    'FTMMAINNET': ['FTM'],
     'CFXMAINNET': ['CFX'],
     'CROMAINNET': ['CRO'],
     'INJMAINNET': ['INJ'],

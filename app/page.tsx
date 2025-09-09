@@ -268,10 +268,10 @@ export default function Home() {
             <div className="text-left">
               {/* Enhanced Heading */}
               <div className="relative mb-6">
-                <h1 className="font-phonic text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold text-gray-900 leading-tight">
+                <h1 className="font-modern text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold text-gray-900 leading-tight">
                   Get Paid in{" "}
                   <span className="relative inline-block">
-                    <span className="font-phonic text-[#7f5efd] font-bold">Crypto</span>
+                    <span className="font-modern text-[#7f5efd] font-bold">Crypto</span>
                     {/* Subtle underline decoration */}
                     <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] opacity-20 rounded-full"></div>
                   </span>
@@ -322,7 +322,7 @@ export default function Home() {
               {/* Stats - Horizontal Layout */}
               <div className="grid grid-cols-3 gap-6 max-w-md">
                 <div>
-                  <div className="font-phonic text-2xl sm:text-3xl font-semibold text-[#7f5efd] mb-1">140+</div>
+                  <div className="font-phonic text-2xl sm:text-3xl font-semibold text-[#7f5efd] mb-1">130+</div>
                   <div className="font-phonic text-sm text-gray-600">Cryptocurrencies</div>
                 </div>
                 <div>
@@ -349,7 +349,7 @@ export default function Home() {
         <div className="container-wide">
           <div className="text-center mb-12">
             <h2 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
-              Accept <span className="text-[#7f5efd]">140+</span> Cryptocurrencies
+              Accept <span className="text-[#7f5efd]">130+</span> Cryptocurrencies
             </h2>
             <p className="font-phonic text-base font-normal text-gray-600 max-w-2xl mx-auto">
               Support for Bitcoin, Ethereum, Solana, and hundreds more digital currencies

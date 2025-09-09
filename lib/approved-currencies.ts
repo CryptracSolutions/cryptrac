@@ -1,4 +1,4 @@
-// Approved cryptocurrencies list - exactly 137 currencies (includes CRO, QTUM)
+// Approved cryptocurrencies list - exactly 136 currencies (includes CRO, QTUM)
 export const APPROVED_CURRENCIES: Record<string, string> = {
   '1INCH': '1inch Network',
   'AAVE': 'Aave',
@@ -7,7 +7,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'ARB': 'Arbitrum',
   'ARV': 'Ariva',
   'ARK': 'Ark',
-  'AVAXC': 'Avalanche',
   'AVAX': 'AVAX',
   'AXS': 'Axie Infinity',
   'BAT': 'Basic Attention Token',
@@ -40,7 +39,6 @@ export const APPROVED_CURRENCIES: Record<string, string> = {
   'ZKSYNC': 'Ethereum (zkSync Era)',
   'ETC': 'Ethereum Classic',
   'FTM': 'Fantom',
-  'FTMMAINNET': 'Fantom',
   'FIL': 'Filecoin',
   'FLOKI': 'Floki',
   'FRONT': 'Frontier',

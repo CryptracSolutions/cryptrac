@@ -25,7 +25,6 @@ const recommendedCurrencies = [
   { code: 'SOL', name: 'Solana' },
   { code: 'ALGO', name: 'Algorand' },
   { code: 'AVAX', name: 'Avalanche' },
-  { code: 'AVAXC', name: 'Avalanche' },
   { code: 'BNBBSC', name: 'Binance Coin (BSC)' },
   { code: 'ADA', name: 'Cardano' },
   { code: 'CRO', name: 'Crypto.com Coin' },
@@ -47,11 +46,12 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     wallet_extra_ids: {}
   } as MerchantSettings)
   const [focusCurrency, setFocusCurrency] = useState<string | undefined>()
+  const [invalidWallets, setInvalidWallets] = useState<string[]>([]);
 
   // Check if we have at least one valid wallet configured
   const hasValidWallet = Object.keys(settings.wallets).some(currency => 
     settings.wallets[currency] && settings.wallets[currency].trim()
-  )
+  ) && invalidWallets.length === 0;
 
   const handleNext = () => {
     // Only pass wallets that have valid addresses
@@ -138,6 +138,16 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         settings={settings}
         setSettings={setSettings}
         focusCurrency={focusCurrency}
+        onValidationChange={(currency, isValid) => {
+          setInvalidWallets(prev => {
+            if (isValid) {
+              return prev.filter(c => c !== currency);
+            } else if (!prev.includes(currency)) {
+              return [...prev, currency];
+            }
+            return prev;
+          });
+        }}
       />
 
       {/* Progress indicator */}
@@ -164,7 +174,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           disabled={!hasValidWallet}
           className="min-w-[140px] px-8 h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {hasValidWallet ? 'Continue' : 'Add at least one wallet'}
+          {hasValidWallet ? 'Continue' : invalidWallets.length > 0 ? 'Fix invalid wallets' : 'Add at least one wallet'}
         </Button>
       </div>
     </div>

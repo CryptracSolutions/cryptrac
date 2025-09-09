@@ -450,7 +450,6 @@ function derivePatternForCurrency(code: string): RegExp | null {
     case 'KAIA':
     case 'ZK':
     case 'ZKSYNC':
-    case 'FTMMAINNET':
     case 'MATICMAINNET':
     case 'BUSDBSC':
     case 'FRONT':
