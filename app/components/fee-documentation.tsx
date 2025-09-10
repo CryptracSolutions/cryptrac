@@ -108,25 +108,29 @@ export function FeeDocumentation({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className={"h-6 w-6 " + (isLanding ? 'text-[#7f5efd]' : 'text-blue-600')} />
-            Understanding Payment Fees: Crypto vs. Traditional Processors
+            {isLanding ? null : (
+              <DollarSign className="h-6 w-6 text-blue-600" />
+            )}
+            {isLanding ? 'Crypto vs. Traditional Processors' : 'Understanding Payment Fees: Crypto vs. Traditional Processors'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Introduction */}
-          <div className={(isLanding ? 'bg-gray-50 border border-gray-200' : 'bg-blue-50 border border-blue-200') + ' p-4 rounded-lg'}>
-            <h3 className={"font-semibold mb-2 " + (isLanding ? 'text-gray-900' : 'text-blue-900')}>Key Principle</h3>
-            <p className={isLanding ? 'text-gray-800' : 'text-blue-800'}>
-              Every payment processor charges a &quot;per-transaction fee.&quot; With crypto payments, there are two separate fees:
-              <strong> network fees</strong> (paid to blockchain) and <strong>gateway fees</strong> (paid to payment processor).
-            </p>
-          </div>
+          {!isLanding && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-900 mb-2">Key Principle</h3>
+              <p className="text-blue-800">
+                Every payment processor charges a &quot;per-transaction fee.&quot; With crypto payments, there are two separate fees:
+                <strong> network fees</strong> (paid to blockchain) and <strong>gateway fees</strong> (paid to payment processor).
+              </p>
+            </div>
+          )}
 
           {/* Traditional Processors Comparison */}
           {showComparison && (
             <div>
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
+                <CreditCard className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : '')} />
                 Traditional Payment Processors
               </h3>
               <div className="bg-gray-50 p-4 rounded-lg">
@@ -148,6 +152,12 @@ export function FeeDocumentation({
                     <div className={"font-semibold " + (isLanding ? 'text-gray-800' : 'text-gray-600')}>Square</div>
                     <div className="text-sm text-gray-600">2.6% + $0.10</div>
                   </div>
+                  {isLanding && (
+                    <div className="text-center p-2 bg-white rounded border md:col-span-3">
+                      <div className="font-semibold text-[#7f5efd]">Cryptrac</div>
+                      <div className="text-sm text-gray-600">0.5% - 1%</div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -158,8 +168,8 @@ export function FeeDocumentation({
           {/* Crypto Payment Fees */}
           <div>
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <Coins className="h-5 w-5" />
-              Crypto Payment Fees
+              <Coins className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : '')} />
+              {isLanding ? 'Crypto Payments with Cryptrac' : 'Crypto Payment Fees'}
             </h3>
             <p className="text-gray-700 mb-4">
               With crypto payments, a similar concept applies but with two separate fee components:
@@ -235,7 +245,7 @@ export function FeeDocumentation({
 
                     <div className={(isLanding ? 'bg-gray-100 border border-gray-200' : 'bg-green-100 border border-green-200') + ' p-3 rounded'}>
                       <p className={"text-sm " + (isLanding ? 'text-gray-800' : 'text-green-800')}>
-                        <strong>Your Choice:</strong> You decide whether the customer pays this fee 
+                        <strong className={isLanding ? 'text-[#7f5efd]' : ''}>Your Choice:</strong> You decide whether the customer pays this fee 
                         (added at checkout) or you absorb it (deducted from payout).
                       </p>
                     </div>
@@ -253,11 +263,11 @@ export function FeeDocumentation({
           <div className={(isLanding ? 'bg-gray-50 border border-gray-200' : 'bg-blue-50 border border-blue-200') + ' p-4 rounded-lg'}>
             <h3 className={"font-semibold mb-2 flex items-center gap-2 " + (isLanding ? 'text-gray-900' : 'text-blue-900')}>
               <CheckCircle className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : '')} />
-              Cryptrac Revenue Transparency
+              {isLanding ? 'Revenue Transparency' : 'Cryptrac Revenue Transparency'}
             </h3>
             <p className={isLanding ? 'text-gray-800' : 'text-blue-800'}>
               <strong>Cryptrac does not earn any revenue from transaction fees.</strong> Neither the gateway fee nor the network fee 
-              goes to Cryptrac. Our only revenue is the <strong>$19/month subscription</strong> for platform access.
+              goes to Cryptrac. Our only revenue is the <span className={isLanding ? 'text-[#7f5efd] font-semibold' : ''}>$19/month</span> subscription for platform access.
             </p>
           </div>
 
