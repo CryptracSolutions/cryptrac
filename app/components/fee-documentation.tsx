@@ -1,8 +1,65 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
 import { Info, DollarSign, Network, CreditCard, Coins, CheckCircle } from 'lucide-react'
+function formatUsd(n: number | null | undefined) {
+  if (n == null || !isFinite(n)) return '—'
+  if (n < 0.01) return `<$0.01`
+  return `$${n.toFixed(n < 1 ? 2 : n < 10 ? 2 : 2)}`
+}
+
+function NetworkFeeEstimator() {
+  const [fees, setFees] = useState<{ btc?: number|null; eth?: number|null; sol?: number|null; xrp?: number|null; base?: number|null; trx?: number|null; bnb?: number|null } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/network-fees', { cache: 'no-store' })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        if (mounted) {
+          setFees(data)
+        }
+      } catch (e) {
+        if (mounted) setError('Unavailable')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
+
+  const item = (label: string, value?: number | null) => (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-gray-600">{label}</span>
+      <span className="font-medium text-[#7f5efd]">{formatUsd(value ?? null)}</span>
+    </div>
+  )
+
+  return (
+    <div className="bg-gray-50 p-3 rounded border border-gray-200">
+      <div className="text-sm font-medium text-gray-900 mb-2">Current average network fee (USD)</div>
+      {loading && <div className="text-sm text-gray-500">Loading…</div>}
+      {!loading && error && <div className="text-sm text-gray-500">{error}</div>}
+      {!loading && !error && fees && (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          {item('Bitcoin', fees.btc)}
+          {item('Ethereum', fees.eth)}
+          {item('Solana', fees.sol)}
+          {item('XRP', fees.xrp)}
+          {item('Base', fees.base)}
+          {item('Tron', fees.trx)}
+          {item('BNB', fees.bnb)}
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 interface FeeDocumentationProps {
   variant?: 'full' | 'compact' | 'tooltip'
@@ -192,23 +249,29 @@ export function FeeDocumentation({
                       who process transactions on the blockchain.
                     </p>
                     
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-gray-900">Network Fee Factors:</h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• <strong>Coin/Network Type:</strong> Bitcoin & Ethereum = higher, Solana & Tron = lower</li>
-                        <li>• <strong>Transaction Size:</strong> Larger amounts may have higher fees</li>
-                        <li>• <strong>Network Congestion:</strong> Busy networks = higher fees</li>
-                        <li>• <strong>Gateway Routing:</strong> Internal processing choices</li>
-                        <li>• <strong>Auto-Convert Setting:</strong> Additional conversion fees</li>
-                      </ul>
-                    </div>
+                    {!isLanding && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-gray-900">Network Fee Factors:</h4>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• <strong>Coin/Network Type:</strong> Bitcoin & Ethereum = higher, Solana & Tron = lower</li>
+                          <li>• <strong>Transaction Size:</strong> Larger amounts may have higher fees</li>
+                          <li>• <strong>Network Congestion:</strong> Busy networks = higher fees</li>
+                          <li>• <strong>Gateway Routing:</strong> Internal processing choices</li>
+                          <li>• <strong>Auto-Convert Setting:</strong> Additional conversion fees</li>
+                        </ul>
+                      </div>
+                    )}
 
-                    <div className={(isLanding ? 'bg-gray-100 border border-gray-200' : 'bg-orange-100 border border-orange-200') + ' p-3 rounded'}>
-                      <p className={"text-sm " + (isLanding ? 'text-gray-800' : 'text-orange-800')}>
-                        <strong>Example:</strong> Some networks like Bitcoin and Ethereum have higher fees, 
-                        while others like Solana, XRP, Tron, Base, or BNB are much lower.
-                      </p>
-                    </div>
+                    {isLanding ? (
+                      <NetworkFeeEstimator />
+                    ) : (
+                      <div className="bg-orange-100 p-3 rounded border border-orange-200">
+                        <p className="text-sm text-orange-800">
+                          <strong>Example:</strong> Some networks like Bitcoin and Ethereum have higher fees, 
+                          while others like Solana, XRP, Tron, Base, or BNB are much lower.
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
