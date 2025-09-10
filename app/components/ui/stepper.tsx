@@ -21,18 +21,8 @@ export function Stepper({
   orientation = 'horizontal',
   className 
 }: StepperProps) {
-  const completionPercentage = ((currentStep - 1) / (steps.length - 1)) * 100
-
   return (
     <div className={cn("relative", className)}>
-      {/* Progress Bar */}
-      <div className="w-full h-1 bg-gray-200 rounded-full mb-8 overflow-hidden">
-        <div 
-          className="h-full bg-gradient-to-r from-[#7f5efd] to-[#9f7aea] rounded-full transition-all duration-1000 ease-out"
-          style={{ width: `${completionPercentage}%` }}
-        />
-      </div>
-
       {/* Stepper */}
       <div className={cn(
         "flex",

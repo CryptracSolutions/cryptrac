@@ -509,13 +509,13 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             </div>
 
             {/* Info Alert */}
-            <Alert className="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 border-blue-200 shadow-sm">
+            <Alert className="bg-gradient-to-br from-[#7f5efd]/8 via-[#9f7aea]/5 to-[#7f5efd]/8 border-[#7f5efd]/30 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Info className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                  <Info className="h-6 w-6 text-[#7f5efd]" />
                 </div>
                 <div className="flex-1">
-                  <AlertDescription className="text-blue-800">
+                  <AlertDescription className="text-[#7f5efd]">
                     <div className="font-bold mb-2 text-base leading-snug">Important Information</div>
                     <p className="text-sm leading-relaxed">
                       This information will be used for tax reporting and compliance.

@@ -39,8 +39,6 @@ const networkLogos: Record<string, string> = {
   'XLM': '*',
 }
 
-// Quick Setup template currencies
-const quickSetupCurrencies = ['BTC', 'ETH', 'SOL', 'XRP', 'BNBBSC', 'ADA']
 
 // Recommended currencies for merchants
 const recommendedCurrencies = [
@@ -102,21 +100,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
     setTimeout(() => setFocusCurrency(undefined), 2000)
   }
 
-  const handleQuickSetup = () => {
-    // Set up wallets for the quick setup currencies
-    const newWallets: Record<string, string> = {}
-    quickSetupCurrencies.forEach(currency => {
-      newWallets[currency] = '' // Empty addresses - user will need to fill them
-    })
-    
-    setSettings(prev => ({
-      ...prev,
-      wallets: newWallets
-    }))
-    
-    // Focus on first currency
-    setFocusCurrency(quickSetupCurrencies[0])
-  }
 
   return (
     <div className="space-y-8">
@@ -143,7 +126,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+      <div className="flex justify-center items-center gap-6">
         <Button
           variant="outline"
           onClick={() => setShowTrustWalletGuide(true)}
@@ -153,22 +136,13 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           Setup Guide
         </Button>
 
-        <Button
-          variant="outline"
-          onClick={handleQuickSetup}
-          className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
-        >
-          <span className="text-lg">⚡</span>
-          Quick Setup
-        </Button>
-
         <Tooltip
           trigger={
             <Button
               variant="outline"
               className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
             >
-              <HelpCircle className="h-4 w-4" />
+              <span className="text-lg">⭐</span>
               Highly Recommended
             </Button>
           }
@@ -179,19 +153,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           className="w-full flex justify-center"
         />
       </div>
-
-      {/* Quick Setup Info */}
-      {Object.keys(settings.wallets).length > 0 && quickSetupCurrencies.every(c => Object.keys(settings.wallets).includes(c)) && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 text-center">
-          <div className="flex items-center justify-center gap-2 text-green-700">
-            <span className="text-lg">✨</span>
-            <span className="font-medium">Quick Setup Active</span>
-          </div>
-          <p className="text-sm text-green-600 mt-1">
-            Popular crypto wallets ready for setup: {quickSetupCurrencies.map(c => networkLogos[c] || c).join(' ')}
-          </p>
-        </div>
-      )}
 
       {/* Wallets Manager - exact same component as /merchant/wallets */}
       <WalletsManager

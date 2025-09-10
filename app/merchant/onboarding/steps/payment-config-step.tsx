@@ -165,98 +165,70 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-8">
-      {/* Main Configuration Card */}
-      <Card className="shadow-medium">
-        <CardHeader className="space-y-6">
-          <CardTitle className="flex items-center gap-6">
-            <Settings className="w-6 h-6 text-[#7f5efd]" />
-            <span>Payment Configuration</span>
-          </CardTitle>
-          <p className="text-body text-gray-600">
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="text-center mb-8 space-y-4">
+        <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+          <Settings className="w-10 h-10 text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">Payment Configuration</h1>
+          <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto">
             Configure your payment preferences and fee settings. All cryptocurrencies from your wallet setup will be accepted.
           </p>
-        </CardHeader>
+        </div>
+      </div>
 
-        <CardContent className="space-y-8">
-          {/* Non-Custodial Compliance Notice */}
-          <Alert className="border-green-200 bg-green-50">
-            <Shield className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
-              <strong>Non-Custodial Security:</strong> Cryptrac automatically forwards all payments directly to your wallet addresses 
-              immediately upon confirmation. We never hold your funds, ensuring maximum security and regulatory compliance.
-            </AlertDescription>
-          </Alert>
-
-          {/* Configured Cryptocurrencies Display */}
-          <div className="space-y-6">
-            <h3 className="heading-sm text-gray-900 flex items-center gap-6">
-              <span>Accepted Cryptocurrencies</span>
-              <div className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">
-                {expandedCurrencies.length} Total ({baseCurrencies.length} Base + {expandedCurrencies.length - baseCurrencies.length} Stable Coins)
-              </div>
-            </h3>
-            
-            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Info className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <AlertDescription className="text-purple-800">
-                  <div className="font-semibold mb-1">Smart Configuration: Your X base cryptocurrencies automatically include X stable coins for maximum payment flexibility</div>
-                  <p className="text-sm leading-relaxed">
-                    Your {baseCurrencies.length} base cryptocurrencies automatically include {expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility.
-                  </p>
-                </AlertDescription>
-              </div>
+      <div className="space-y-12">
+        {/* Main Configuration Card */}
+        <Card className="shadow-lg border-0 bg-white">
+          <CardContent className="p-8 space-y-10">
+            {/* Non-Custodial Compliance Notice */}
+            <Alert className="border-gray-200 bg-gray-50">
+              <Shield className="h-5 w-5 text-[#7f5efd]" />
+              <AlertDescription className="text-gray-700">
+                <span className="font-semibold text-gray-900">Non-Custodial Security:</span> Cryptrac automatically forwards all payments directly to your wallet addresses immediately upon confirmation. We never hold your funds.
+              </AlertDescription>
             </Alert>
 
-            {/* Base Currencies */}
+            {/* Configured Cryptocurrencies Display */}
             <div className="space-y-6">
-              <h4 className="text-lg font-bold text-gray-700 leading-snug">Base Cryptocurrencies</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {baseCurrencies.map((currency) => (
-                  <div
-                    key={currency}
-                    className="bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5 border border-[#7f5efd]/20 rounded-xl p-4 hover:shadow-md transition-all duration-300 hover:border-[#7f5efd]/40"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center text-white font-bold shadow-sm">
-                        {currency.substring(0, 2)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-base text-gray-900 leading-snug">
-                          {currency}
-                        </div>
-                        <div className="text-sm text-gray-600 leading-relaxed">
-                          {getCurrencyDisplayName(currency)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">Accepted Cryptocurrencies</h2>
+                <div className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
+                  {expandedCurrencies.length} Total
+                </div>
               </div>
-            </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Your <span className="font-semibold">{baseCurrencies.length} base cryptocurrencies</span> automatically include <span className="font-semibold">{expandedCurrencies.length - baseCurrencies.length} stable coins</span> for maximum payment flexibility.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            {/* Stable Coins */}
-              {expandedCurrencies.length > baseCurrencies.length && (
-              <div className="space-y-6">
-                <h4 className="text-lg font-bold text-gray-700 leading-snug">Included Stable Coins</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {expandedCurrencies.filter(currency => !baseCurrencies.includes(currency)).map((currency) => (
+              {/* Base Currencies */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900">Base Cryptocurrencies</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {baseCurrencies.map((currency) => (
                     <div
                       key={currency}
-                      className="bg-gradient-to-br from-blue-50 to-emerald-50/50 border border-blue-200 rounded-xl p-4 hover:shadow-md transition-all duration-300 hover:border-blue-300"
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:border-[#7f5efd]/30 transition-colors"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
-                          $
+                        <div className="w-8 h-8 bg-[#7f5efd] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                          {currency.substring(0, 2)}
                         </div>
-                        <div className="flex-1">
-                          <div className="font-bold text-base text-gray-900 leading-snug">
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">
                             {currency}
                           </div>
-                          <div className="text-sm text-gray-600 leading-relaxed">
+                          <div className="text-xs text-gray-600">
                             {getCurrencyDisplayName(currency)}
                           </div>
                         </div>
@@ -265,7 +237,36 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   ))}
                 </div>
               </div>
-            )}
+
+              {/* Stable Coins */}
+              {expandedCurrencies.length > baseCurrencies.length && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">Included Stable Coins</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {expandedCurrencies.filter(currency => !baseCurrencies.includes(currency)).map((currency) => (
+                      <div
+                        key={currency}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            $
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 text-sm">
+                              {currency}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {getCurrencyDisplayName(currency)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {configuredCurrencies.length === 0 && (
               <Alert className="border-yellow-200 bg-yellow-50">
@@ -276,373 +277,307 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             )}
           </div>
 
-          <Separator />
+        </Card>
 
-          {/* Interactive Fee Calculator */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
-              <DollarSign className="w-6 h-6 text-[#7f5efd]" />
-              Fee Calculator
-            </h3>
-            
-            <div className="bg-gradient-to-br from-[#7f5efd]/5 via-blue-50/30 to-[#9f7aea]/5 rounded-xl p-6 border border-[#7f5efd]/20 shadow-sm">
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Amount</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
-                      <Input
-                        type="number"
-                        value={calculatorAmount}
-                        onChange={(e) => setCalculatorAmount(e.target.value)}
-                        className="pl-8 h-12 text-lg font-semibold border-[#7f5efd]/30 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
-                        placeholder="100"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Fee Calculation Results */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Direct Payments (0.5%) */}
-                  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                    <div className="text-center space-y-4">
-                      <h4 className="font-bold text-gray-900 text-lg leading-snug">Direct Payments</h4>
-                      <div className="text-sm text-gray-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                        0.5% Gateway Fee
-                      </div>
-                      
-                      {(() => {
-                        const amount = parseFloat(calculatorAmount) || 0
-                        const merchantPays = calculateFees(amount, false, false)
-                        const customerPays = calculateFees(amount, false, true)
-                        
-                        return (
-                          <div className="space-y-3">
-                            <div className="bg-blue-50 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-blue-900 mb-2">Merchant Pays Fee</div>
-                              <div className="space-y-1 text-sm">
-                                <div>Customer pays: <span className="font-bold">${merchantPays.customerPays.toFixed(2)}</span></div>
-                                <div>You receive: <span className="font-bold text-green-600">${merchantPays.merchantReceives.toFixed(2)}</span></div>
-                                <div className="text-xs text-gray-600">Gateway fee: ${merchantPays.gatewayFee.toFixed(2)}</div>
-                              </div>
-                            </div>
-                            
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">Customer Pays Fee</div>
-                              <div className="space-y-1 text-sm">
-                                <div>Customer pays: <span className="font-bold">${customerPays.customerPays.toFixed(2)}</span></div>
-                                <div>You receive: <span className="font-bold text-green-600">${customerPays.merchantReceives.toFixed(2)}</span></div>
-                                <div className="text-xs text-gray-600">Gateway fee: ${customerPays.gatewayFee.toFixed(2)}</div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Auto-Convert (1%) */}
-                  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                    <div className="text-center space-y-4">
-                      <h4 className="font-bold text-gray-900 text-lg leading-snug">Auto-Convert</h4>
-                      <div className="text-sm text-gray-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
-                        1% Gateway Fee
-                      </div>
-                      
-                      {(() => {
-                        const amount = parseFloat(calculatorAmount) || 0
-                        const merchantPays = calculateFees(amount, true, false)
-                        const customerPays = calculateFees(amount, true, true)
-                        
-                        return (
-                          <div className="space-y-3">
-                            <div className="bg-blue-50 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-blue-900 mb-2">Merchant Pays Fee</div>
-                              <div className="space-y-1 text-sm">
-                                <div>Customer pays: <span className="font-bold">${merchantPays.customerPays.toFixed(2)}</span></div>
-                                <div>You receive: <span className="font-bold text-green-600">${merchantPays.merchantReceives.toFixed(2)}</span></div>
-                                <div className="text-xs text-gray-600">Gateway fee: ${merchantPays.gatewayFee.toFixed(2)}</div>
-                              </div>
-                            </div>
-                            
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">Customer Pays Fee</div>
-                              <div className="space-y-1 text-sm">
-                                <div>Customer pays: <span className="font-bold">${customerPays.customerPays.toFixed(2)}</span></div>
-                                <div>You receive: <span className="font-bold text-green-600">${customerPays.merchantReceives.toFixed(2)}</span></div>
-                                <div className="text-xs text-gray-600">Gateway fee: ${customerPays.gatewayFee.toFixed(2)}</div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Fee Responsibility Setting */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
-                <DollarSign className="w-6 h-6 text-[#7f5efd]" />
-                Gateway Fee Settings
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFeeDetails(!showFeeDetails)}
-                className="text-[#7f5efd] hover:text-[#6b4fd8] border-[#7f5efd] hover:border-[#6b4fd8] hover:bg-[#7f5efd]/5"
-              >
-                {showFeeDetails ? 'Hide' : 'Learn More'} About Fees
-              </Button>
-            </div>
-            
-            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Info className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <AlertDescription className="text-purple-800">
-                  <div className="font-semibold mb-1">Gateway Fee Responsibility: Choose who pays the gateway fee. This setting can be overridden for individual payment links.</div>
-                  <p className="text-sm leading-relaxed">
-                    Choose who pays the gateway fee. This setting can be overridden for individual payment links.
-                  </p>
-                </AlertDescription>
-              </div>
-            </Alert>
-
+        {/* Fee Calculator Section */}
+        <Card className="shadow-lg border-0 bg-white">
+          <CardContent className="p-8">
             <div className="space-y-6">
-              <div className="flex items-start gap-6">
-                <Checkbox
-                  className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
-                  checked={!formData.chargeCustomerFee}
-                  onCheckedChange={(checked) =>
-                    setFormData(prev => ({
-                      ...prev,
-                      chargeCustomerFee: !checked
-                    }))
-                  }
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">Merchant pays gateway fee</div>
-                  <div className="text-body text-gray-600">
-                    You absorb the gateway fee. Customers pay the exact amount shown.
-                  </div>
-                  <div className="text-body-sm text-green-600 mt-1">
-                    ✓ Better customer experience - no surprise fees
-                  </div>
-                </div>
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-6 h-6 text-[#7f5efd]" />
+                <h2 className="text-lg font-bold text-gray-900">Fee Calculator</h2>
               </div>
               
-              <div className="flex items-start gap-6">
-                <Checkbox
-                  className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
-                  checked={formData.chargeCustomerFee}
-                  onCheckedChange={(checked) =>
-                    setFormData(prev => ({
-                      ...prev,
-                      chargeCustomerFee: !!checked
-                    }))
-                  }
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">Customer pays gateway fee</div>
-                  <div className="text-sm text-gray-600">
-                    Gateway fee is added to the payment amount. You receive the full amount.
+              <div className="max-w-sm">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Amount</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
+                  <Input
+                    type="number"
+                    value={calculatorAmount}
+                    onChange={(e) => setCalculatorAmount(e.target.value)}
+                    className="pl-8 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                    placeholder="100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Direct Payments */}
+                <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <h3 className="font-semibold text-gray-900 mb-1">Direct Payments</h3>
+                      <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border">
+                        0.5% Gateway Fee
+                      </div>
+                    </div>
+                    
+                    {(() => {
+                      const amount = parseFloat(calculatorAmount) || 0
+                      const merchantPays = calculateFees(amount, false, false)
+                      const customerPays = calculateFees(amount, false, true)
+                      
+                      return (
+                        <div className="space-y-3 text-sm">
+                          <div className="bg-white rounded p-3 border">
+                            <div className="font-medium text-gray-700 mb-1">Merchant Pays</div>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>Customer pays: <span className="font-semibold text-gray-900">${merchantPays.customerPays.toFixed(2)}</span></div>
+                              <div>You receive: <span className="font-semibold text-[#7f5efd]">${merchantPays.merchantReceives.toFixed(2)}</span></div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white rounded p-3 border">
+                            <div className="font-medium text-gray-700 mb-1">Customer Pays</div>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>Customer pays: <span className="font-semibold text-gray-900">${customerPays.customerPays.toFixed(2)}</span></div>
+                              <div>You receive: <span className="font-semibold text-[#7f5efd]">${customerPays.merchantReceives.toFixed(2)}</span></div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    ✓ You receive the full payment amount
+                </div>
+
+                {/* Auto-Convert */}
+                <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <h3 className="font-semibold text-gray-900 mb-1">Auto-Convert</h3>
+                      <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border">
+                        1% Gateway Fee
+                      </div>
+                    </div>
+                    
+                    {(() => {
+                      const amount = parseFloat(calculatorAmount) || 0
+                      const merchantPays = calculateFees(amount, true, false)
+                      const customerPays = calculateFees(amount, true, true)
+                      
+                      return (
+                        <div className="space-y-3 text-sm">
+                          <div className="bg-white rounded p-3 border">
+                            <div className="font-medium text-gray-700 mb-1">Merchant Pays</div>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>Customer pays: <span className="font-semibold text-gray-900">${merchantPays.customerPays.toFixed(2)}</span></div>
+                              <div>You receive: <span className="font-semibold text-[#7f5efd]">${merchantPays.merchantReceives.toFixed(2)}</span></div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white rounded p-3 border">
+                            <div className="font-medium text-gray-700 mb-1">Customer Pays</div>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>Customer pays: <span className="font-semibold text-gray-900">${customerPays.customerPays.toFixed(2)}</span></div>
+                              <div>You receive: <span className="font-semibold text-[#7f5efd]">${customerPays.merchantReceives.toFixed(2)}</span></div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border border-purple-200 rounded-lg p-4 shadow-soft">
-              <div className="flex items-start space-x-2">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <HelpCircle className="h-5 w-5 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-purple-900">Gateway Fee Examples</h4>
-                  <ul className="text-sm text-purple-800 mt-2 space-y-1">
-                    <li>• <strong>Merchant pays (Direct):</strong> $100 payment = customer pays $100, you receive $99.50 (0.5% fee)</li>
-                    <li>• <strong>Customer pays (Direct):</strong> $100 payment = customer pays $100.50, you receive $100</li>
-                    <li>• <strong>Merchant pays (Auto-convert):</strong> $100 payment = customer pays $100, you receive $99.00 (1% fee)</li>
-                    <li>• <strong>Customer pays (Auto-convert):</strong> $100 payment = customer pays $101.00, you receive $100</li>
-                  </ul>
-                </div>
+        {/* Gateway Fee Settings */}
+        <Card className="shadow-lg border-0 bg-white">
+          <CardContent className="p-8 space-y-8">
+
+            {/* Fee Responsibility Setting */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">Gateway Fee Settings</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFeeDetails(!showFeeDetails)}
+                  className="text-gray-600 hover:text-[#7f5efd] border-gray-300 hover:border-[#7f5efd] text-sm"
+                >
+                  {showFeeDetails ? 'Hide' : 'Learn More'}
+                </Button>
               </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Auto-Conversion Feature */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-gray-900">Auto-Conversion</h3>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <HelpCircle className="h-4 w-4" />
-                    <span className="sr-only">About Auto-Convert OFF</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:rounded-xl bg-white">
-                  <DialogHeader>
-                    <DialogTitle>Auto-Convert OFF (Receive the Same Crypto)</DialogTitle>
-                  </DialogHeader>
-                  <DialogDescription className="space-y-2 text-sm">
-                    <p><strong>How it works:</strong> You receive exactly the same coin or token that your customer pays.</p>
-                    <p><strong>Fees:</strong> Gateway Fee 0.5% per payment plus network fee. No conversion spread.</p>
-                    <p><strong>Pros:</strong> Maximum payout predictability and lowest total fees—ideal for merchants comfortable holding or managing crypto.</p>
-                  </DialogDescription>
-                </DialogContent>
-              </Dialog>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <HelpCircle className="h-4 w-4" />
-                    <span className="sr-only">About Auto-Convert ON</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:rounded-xl bg-white">
-                  <DialogHeader>
-                    <DialogTitle>Auto-Convert ON (Auto-Convert to Preferred Cryptocurrency)</DialogTitle>
-                  </DialogHeader>
-                  <DialogDescription className="space-y-2 text-sm">
-                    <p><strong>How it works:</strong> Your payment is automatically converted to your chosen asset before being sent to your wallet.</p>
-                    <p><strong>Fees:</strong> Gateway Fee 1% per payment plus conversion spread and network fee.</p>
-                    <p><strong>Pros:</strong> Stable value and simplified accounting—ideal if you want payouts in one asset without price swings.</p>
-                  </DialogDescription>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Info className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <AlertDescription className="text-purple-800">
-                  <div className="font-semibold mb-1">Auto-Conversion: Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled.</div>
-                  <p className="text-sm leading-relaxed">
-                    Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled.
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700">
+                    Choose who pays the gateway fee. This setting can be overridden for individual payment links.
                   </p>
-                </AlertDescription>
-              </div>
-            </Alert>
-
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Checkbox
-                  className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
-                  checked={formData.autoConvert}
-                  onCheckedChange={(checked) =>
-                    setFormData(prev => ({
-                      ...prev,
-                      autoConvert: !!checked,
-                      // Clear preferred currency if auto-convert is disabled
-                      preferredPayoutCurrency: checked ? prev.preferredPayoutCurrency : null
-                    }))
-                  }
-                />
-                <div>
-                  <div className="font-medium text-gray-900">Enable Auto-Conversion</div>
-                  <div className="text-sm text-gray-600">
-                    Automatically convert all received payments to your preferred currency
-                  </div>
-                  <div className="text-xs text-orange-600 mt-1">
-                    ⚠️ Higher gateway fee (1% instead of 0.5%) applies when enabled
-                  </div>
                 </div>
               </div>
 
-              {formData.autoConvert && (
-                <div className="space-y-2 ml-6">
-                  <label className="text-sm font-medium text-gray-700">
-                    Preferred Payout Currency
-                  </label>
-                  <Select
-                    value={formData.preferredPayoutCurrency || ''}
-                    onValueChange={(value) => 
-                      setFormData(prev => ({ 
-                        ...prev, 
-                        preferredPayoutCurrency: value 
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <Checkbox
+                    className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
+                    checked={!formData.chargeCustomerFee}
+                    onCheckedChange={(checked) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        chargeCustomerFee: !checked
                       }))
                     }
-                  >
-                    <SelectTrigger className="form-input-enhanced w-full">
-                      <SelectValue placeholder="Select preferred payout currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {expandedCurrencies.map((currency) => (
-                        <SelectItem
-                          key={currency}
-                          value={currency}
-                          textValue={`${currency} - ${getCurrencyDisplayName(currency)}`}
-                        >
-                          {`${currency} - ${getCurrencyDisplayName(currency)}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500">
-                    All payments will be automatically converted to this currency before payout
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900">Merchant pays gateway fee</div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      You absorb the gateway fee. Customers pay the exact amount shown.
+                    </p>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Better customer experience
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <Checkbox
+                    className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
+                    checked={formData.chargeCustomerFee}
+                    onCheckedChange={(checked) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        chargeCustomerFee: !!checked
+                      }))
+                    }
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900">Customer pays gateway fee</div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Gateway fee is added to the payment amount. You receive the full amount.
+                    </p>
+                    <div className="text-xs text-gray-500 mt-1">
+                      You receive full payment amount
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </Card>
+
+          {/* Auto-Conversion Feature */}
+          <Card className="shadow-lg border-0 bg-white">
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-bold text-gray-900">Auto-Conversion</h2>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700">
+                    Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled.
                   </p>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6">
-            <Button
-              type="button"
-              onClick={onPrevious}
-              variant="outline"
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Previous</span>
-            </Button>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <Checkbox
+                    className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
+                    checked={formData.autoConvert}
+                    onCheckedChange={(checked) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        autoConvert: !!checked,
+                        preferredPayoutCurrency: checked ? prev.preferredPayoutCurrency : null
+                      }))
+                    }
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900">Enable Auto-Conversion</div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Automatically convert all received payments to your preferred currency
+                    </p>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Higher gateway fee (1% instead of 0.5%) applies when enabled
+                    </div>
+                  </div>
+                </div>
 
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || configuredCurrencies.length === 0}
-              className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 flex items-center space-x-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <span>Continue</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                {formData.autoConvert && (
+                  <div className="ml-8 space-y-3">
+                    <label className="text-sm font-medium text-gray-700">
+                      Preferred Payout Currency
+                    </label>
+                    <Select
+                      value={formData.preferredPayoutCurrency || ''}
+                      onValueChange={(value) => 
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          preferredPayoutCurrency: value 
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                        <SelectValue placeholder="Select preferred payout currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {expandedCurrencies.map((currency) => (
+                          <SelectItem
+                            key={currency}
+                            value={currency}
+                          >
+                            {`${currency} - ${getCurrencyDisplayName(currency)}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">
+                      All payments will be automatically converted to this currency before payout
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Comprehensive Fee Documentation */}
+        {/* Navigation Buttons */}
+        <div className="flex justify-between pt-6">
+          <Button
+            type="button"
+            onClick={onPrevious}
+            variant="outline"
+            className="flex items-center gap-2 px-6 h-11"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Previous
+          </Button>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || configuredCurrencies.length === 0}
+            className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center gap-2 px-6 h-11"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Fee Documentation */}
       {showFeeDetails && (
-        <FeeDocumentation 
-          variant="full" 
-          showComparison={true}
-          showNetworkFees={true}
-          showGatewayFees={true}
-        />
+        <div className="mt-8">
+          <FeeDocumentation 
+            variant="full" 
+            showComparison={true}
+            showNetworkFees={true}
+            showGatewayFees={true}
+          />
+        </div>
       )}
     </div>
   )
