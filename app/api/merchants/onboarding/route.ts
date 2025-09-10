@@ -34,6 +34,15 @@ interface OnboardingData {
     payoutCurrency?: string;
     preferredPayoutCurrency?: string; // Handle both naming conventions
     autoForward?: boolean;
+    // Tax configuration
+    taxEnabled?: boolean;
+    taxStrategy?: 'origin' | 'destination' | 'custom';
+    salesType?: 'local' | 'online' | 'both';
+    taxRates?: Array<{
+      id: string;
+      label: string;
+      percentage: string;
+    }>;
   };
 }
 
@@ -136,6 +145,13 @@ export async function POST(request: NextRequest) {
       },
       auto_convert_enabled: onboardingData.paymentConfig.autoConvert || false,
       preferred_payout_currency: payoutCurrency,
+      // Store tax configuration in onboarding_data for later use
+      onboarding_data: {
+        tax_enabled: onboardingData.paymentConfig.taxEnabled || false,
+        tax_strategy: onboardingData.paymentConfig.taxStrategy || 'origin',
+        sales_type: onboardingData.paymentConfig.salesType || 'local',
+        tax_rates: onboardingData.paymentConfig.taxRates || []
+      },
       onboarding_completed: true,
       onboarded: true,
       created_at: new Date().toISOString(),
@@ -167,12 +183,13 @@ export async function POST(request: NextRequest) {
           payment_config: merchantData.payment_config,
           auto_convert_enabled: merchantData.auto_convert_enabled,
           preferred_payout_currency: merchantData.preferred_payout_currency,
+          onboarding_data: merchantData.onboarding_data,
           onboarding_completed: merchantData.onboarding_completed,
           onboarded: merchantData.onboarded,
           updated_at: merchantData.updated_at
         })
         .eq('user_id', user.id)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone, onboarding_data')
         .single();
 
       if (updateError) {
@@ -193,7 +210,7 @@ export async function POST(request: NextRequest) {
       const { data: newMerchant, error: insertError } = await supabase
         .from('merchants')
         .insert(merchantData)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone, onboarding_data')
         .single();
 
       if (insertError) {

@@ -223,6 +223,21 @@ export default function MerchantSettingsPage() {
 
       const wallets = { ...(merchant.wallets || {}) };
 
+      // Check if tax data exists in onboarding_data and hasn't been moved to main fields yet
+      const hasOnboardingTaxData = merchant.onboarding_data?.tax_enabled !== undefined;
+      const taxEnabled = merchant.tax_enabled ?? merchant.onboarding_data?.tax_enabled ?? false;
+      const taxStrategy = merchant.tax_strategy || merchant.onboarding_data?.tax_strategy || 'origin';
+      const salesType = merchant.sales_type || merchant.onboarding_data?.sales_type || 'local';
+      
+      // Use tax rates from database, or from onboarding_data, or default
+      let taxRates = merchant.tax_rates;
+      if (!taxRates || taxRates.length === 0) {
+        if (merchant.onboarding_data?.tax_rates && merchant.onboarding_data.tax_rates.length > 0) {
+          taxRates = merchant.onboarding_data.tax_rates;
+        } else {
+          taxRates = [{ id: '1', label: 'Sales Tax', percentage: 8.5 }];
+        }
+      }
 
       setSettings({
         // Payment settings from database
@@ -235,11 +250,9 @@ export default function MerchantSettingsPage() {
           fee_percentage: merchant.auto_convert_enabled ? 1.0 : 0.5,
           ...(merchant.auto_convert_enabled ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
         },
-        // Tax configuration from database or defaults
-        tax_enabled: merchant.tax_enabled || false,
-        tax_rates: (merchant.tax_rates || [
-          { id: '1', label: 'Sales Tax', percentage: 8.5 }
-        ]).map(
+        // Tax configuration from database, onboarding_data, or defaults
+        tax_enabled: taxEnabled,
+        tax_rates: taxRates.map(
           (rate: { id: string; label: string; percentage: number | string | null | undefined }) => ({
             ...rate,
             percentage:
@@ -257,8 +270,8 @@ export default function MerchantSettingsPage() {
           zip_code: '',
           country: 'US'
         },
-        tax_strategy: merchant.tax_strategy || 'origin',
-        sales_type: merchant.sales_type || 'local'
+        tax_strategy: taxStrategy,
+        sales_type: salesType
       });
 
       // Set the last saved settings for auto-save comparison
@@ -272,10 +285,8 @@ export default function MerchantSettingsPage() {
           fee_percentage: merchant.auto_convert_enabled ? 1.0 : 0.5,
           ...(merchant.auto_convert_enabled ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
         },
-        tax_enabled: merchant.tax_enabled || false,
-        tax_rates: (merchant.tax_rates || [
-          { id: '1', label: 'Sales Tax', percentage: 8.5 }
-        ]).map(
+        tax_enabled: taxEnabled,
+        tax_rates: taxRates.map(
           (rate: { id: string; label: string; percentage: number | string | null | undefined }) => ({
             ...rate,
             percentage:
@@ -293,8 +304,8 @@ export default function MerchantSettingsPage() {
           zip_code: '',
           country: 'US'
         },
-        tax_strategy: merchant.tax_strategy || 'origin',
-        sales_type: merchant.sales_type || 'local'
+        tax_strategy: taxStrategy,
+        sales_type: salesType
       });
 
     } catch (error) {

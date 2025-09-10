@@ -1,18 +1,22 @@
 import React, { useState, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
+import { Card, CardContent } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
-import { ArrowRight, ArrowLeft, Settings, HelpCircle, Loader2, Shield } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Settings, HelpCircle, Loader2, Shield, Calculator, DollarSign, Plus } from 'lucide-react'
 import Tooltip from '@/app/components/ui/tooltip'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Badge } from '@/app/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Checkbox } from '@/app/components/ui/checkbox'
-import { Separator } from '@/app/components/ui/separator'
 import FeeDocumentation from '@/app/components/fee-documentation'
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog'
 import toast from 'react-hot-toast'
+
+interface TaxRate {
+  id: string
+  label: string
+  percentage: string
+}
 
 interface PaymentConfigData {
   acceptedCryptos: string[]
@@ -20,6 +24,11 @@ interface PaymentConfigData {
   autoConvert: boolean
   preferredPayoutCurrency: string | null
   chargeCustomerFee: boolean
+  // Tax configuration
+  taxEnabled?: boolean
+  taxStrategy?: 'origin' | 'destination' | 'custom'
+  salesType?: 'local' | 'online' | 'both'
+  taxRates?: TaxRate[]
 }
 
 interface PaymentConfigStepProps {
@@ -38,7 +47,12 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     chargeCustomerFee: data.chargeCustomerFee ?? false,
     autoForward: true, // Always enabled for non-custodial compliance
     // Auto-set accepted cryptos from wallet config
-    acceptedCryptos: data.acceptedCryptos.length > 0 ? data.acceptedCryptos : Object.keys(walletConfig.wallets || {})
+    acceptedCryptos: data.acceptedCryptos.length > 0 ? data.acceptedCryptos : Object.keys(walletConfig.wallets || {}),
+    // Tax configuration defaults
+    taxEnabled: data.taxEnabled ?? false,
+    taxStrategy: data.taxStrategy ?? 'origin',
+    salesType: data.salesType ?? 'local',
+    taxRates: data.taxRates ?? [{ id: '1', label: '', percentage: '' }]
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showFeeDetails, setShowFeeDetails] = useState(false)
@@ -53,22 +67,22 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     return bases
   }, [configuredCurrencies])
 
-  // Stable coin associations for automatic inclusion
-  const stableCoinAssociations: Record<string, string[]> = {
-    'SOL': ['USDCSOL', 'USDTSOL'],
-    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
-    'BNB': ['USDTBSC', 'USDCBSC'],
-    'MATIC': ['USDTMATIC', 'USDCMATIC'],
-    'TRX': ['USDTTRC20'],
-    'TON': ['USDTTON'],
-    'ARB': ['USDTARB', 'USDCARB'],
-    'OP': ['USDTOP', 'USDCOP'],
-    'ETHBASE': ['USDCBASE'],
-    'ALGO': ['USDCALGO']
-  }
-
   // Expand base currencies to include available stable coins
   const expandedCurrencies = useMemo(() => {
+    // Stable coin associations for automatic inclusion
+    const stableCoinAssociations: Record<string, string[]> = {
+      'SOL': ['USDCSOL', 'USDTSOL'],
+      'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+      'BNB': ['USDTBSC', 'USDCBSC'],
+      'MATIC': ['USDTMATIC', 'USDCMATIC'],
+      'TRX': ['USDTTRC20'],
+      'TON': ['USDTTON'],
+      'ARB': ['USDTARB', 'USDCARB'],
+      'OP': ['USDTOP', 'USDCOP'],
+      'ETHBASE': ['USDCBASE'],
+      'ALGO': ['USDCALGO']
+    }
+    
     const expanded = [...baseCurrencies]
     baseCurrencies.forEach(currency => {
       const associatedStableCoins = stableCoinAssociations[currency] || []
@@ -160,7 +174,12 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
       const finalData = {
         ...formData,
         acceptedCryptos: baseCurrencies,
-        autoForward: true // Always enabled for non-custodial compliance
+        autoForward: true, // Always enabled for non-custodial compliance
+        // Include tax configuration
+        taxEnabled: formData.taxEnabled,
+        taxStrategy: formData.taxStrategy,
+        salesType: formData.salesType,
+        taxRates: formData.taxRates
       }
       
       onComplete(finalData)
@@ -370,6 +389,194 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   </div>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tax Configuration */}
+        <Card className="shadow-lg border-0 bg-white">
+          <CardContent className="p-8 space-y-6">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold text-gray-900">Tax Configuration</h2>
+              <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">Optional</Badge>
+            </div>
+
+            <Tooltip
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                  About Tax Collection
+                </Button>
+              }
+              title="Tax Collection Settings"
+              description="Configure tax collection for your payments. You can skip this step and configure it later in your settings."
+              recommendedCurrencies={recommendedCurrencies}
+              className="w-full flex justify-start"
+            />
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <Checkbox
+                  className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
+                  checked={formData.taxEnabled}
+                  onCheckedChange={(checked) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      taxEnabled: !!checked
+                    }))
+                  }
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-900">Enable Tax Collection</div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Automatically calculate and collect taxes on your payments
+                  </p>
+                </div>
+              </div>
+
+              {formData.taxEnabled && (
+                <div className="ml-8 space-y-6">
+                  {/* Tax Strategy */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Calculator className="h-4 w-4 text-[#7f5efd]" />
+                      Tax Strategy
+                    </label>
+                    <Select
+                      value={formData.taxStrategy}
+                      onValueChange={(value: 'origin' | 'destination' | 'custom') => 
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          taxStrategy: value 
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="origin">Origin-based (charge tax based on business location)</SelectItem>
+                        <SelectItem value="destination">Destination-based (charge tax based on customer location)</SelectItem>
+                        <SelectItem value="custom">Custom rates per transaction</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Sales Type */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-gray-700">
+                      Sales Type
+                    </label>
+                    <Select
+                      value={formData.salesType}
+                      onValueChange={(value: 'local' | 'online' | 'both') => 
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          salesType: value 
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="local">Local Sales Only</SelectItem>
+                        <SelectItem value="online">Online Sales Only</SelectItem>
+                        <SelectItem value="both">Both Local and Online</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Default Tax Rates */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-[#7f5efd]" />
+                        Default Tax Rates
+                      </label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const newRate = {
+                            id: `rate-${Date.now()}`,
+                            label: '',
+                            percentage: ''
+                          }
+                          setFormData(prev => ({
+                            ...prev,
+                            taxRates: [...(prev.taxRates || []), newRate]
+                          }))
+                        }}
+                        className="text-sm h-8 px-3"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add Rate
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {formData.taxRates?.map((rate, index) => (
+                        <div key={rate.id} className="flex items-center gap-3">
+                          <Input
+                            placeholder="Tax label (e.g., Sales Tax)"
+                            value={rate.label}
+                            onChange={(e) => {
+                              const newRates = [...(formData.taxRates || [])]
+                              newRates[index] = { ...rate, label: e.target.value }
+                              setFormData(prev => ({ ...prev, taxRates: newRates }))
+                            }}
+                            className="flex-1 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              placeholder="0.0"
+                              value={rate.percentage}
+                              onChange={(e) => {
+                                const newRates = [...(formData.taxRates || [])]
+                                newRates[index] = { ...rate, percentage: e.target.value }
+                                setFormData(prev => ({ ...prev, taxRates: newRates }))
+                              }}
+                              className="w-24 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                            />
+                            <span className="text-sm text-gray-600">%</span>
+                          </div>
+                          {(formData.taxRates?.length || 0) > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const newRates = formData.taxRates?.filter((_, i) => i !== index) || []
+                                setFormData(prev => ({ ...prev, taxRates: newRates }))
+                              }}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-11 px-3"
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Add tax rates that will be applied to your payments. You can customize these later.
+                    </p>
+                  </div>
+
+                  <Alert className="border-yellow-200 bg-yellow-50">
+                    <AlertDescription className="text-yellow-800 text-sm">
+                      <strong>Note:</strong> Cryptrac helps you charge and report taxes but does not file or remit taxes. Consult with a tax professional for compliance requirements.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
