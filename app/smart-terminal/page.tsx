@@ -9,27 +9,18 @@ import { Input } from '@/app/components/ui/input';
 import { QRCode } from '@/app/components/ui/qr-code';
 import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { AlertCircle, Store, CreditCard, Receipt, CheckCircle2, Clock, Smartphone, Copy, ArrowLeft, ArrowRight, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Filter, Globe, ChevronDown, ChevronUp, AlertTriangle, Bitcoin, Coins, Network } from 'lucide-react';
-import { requiresExtraId, getExtraIdLabel, getExtraIdDescription } from '@/lib/extra-id-validation';
-import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder';
+import { AlertCircle, CheckCircle2, Clock, Smartphone, ArrowLeft, ArrowRight, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Globe, AlertTriangle, Bitcoin, Coins, Network } from 'lucide-react';
+import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
+import { formatAmountForDisplay } from '@/lib/crypto-uri-builder';
 import { formatAddressForQR } from '@/lib/simple-address-formatter';
 import { trackURIGeneration } from '@/lib/uri-analytics';
 import { getOrCreateClientId } from '@/lib/ab-testing';
-import { loadDynamicConfig } from '@/lib/wallet-uri-config';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority } from '@/lib/crypto-networks';
 import { buildCurrencyMapping } from '@/lib/currency-mapping';
-import { Label } from '@/app/components/ui/label';
 import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/app/components/ui/dropdown-menu';
 
 interface TerminalDevice {
   id: string;
@@ -96,7 +87,6 @@ function buildPaymentURI(currency: string, address: string, amount: number, extr
 }
 
 function SmartTerminalPageContent() {
-  const searchParams = useSearchParams();
   const [device, setDevice] = useState<TerminalDevice | null>(null);
   const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
   const [amount, setAmount] = useState('');
@@ -107,7 +97,6 @@ function SmartTerminalPageContent() {
   const [crypto, setCrypto] = useState('BTC');
   const [step, setStep] = useState<'amount' | 'customer'>('amount');
   const [preview, setPreview] = useState({ tax_amount: 0, subtotal_with_tax: 0, gateway_fee: 0, pre_tip_total: 0 });
-  const [invoiceBreakdown, setInvoiceBreakdown] = useState<null | { tax_amount: number; subtotal_with_tax: number; gateway_fee: number; pre_tip_total: number; tip_amount: number; final_total: number }>(null);
   const [loading, setLoading] = useState(false);
   interface PaymentLink { id: string; link_id: string; }
   const [paymentLink, setPaymentLink] = useState<PaymentLink | null>(null);
@@ -120,22 +109,13 @@ function SmartTerminalPageContent() {
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
   const [error, setError] = useState<string>('');
-  const [priceBreakdownExpanded, setPriceBreakdownExpanded] = useState(false);
-  const [validatedUri, setValidatedUri] = useState<string | null>(null);
-  const [clientId, setClientId] = useState<string>('anon');
-  const [dynamicConfig, setDynamicConfig] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
 
   // Reset confirmation when a new payment is created/loaded
   useEffect(() => {
     setExtraIdConfirmed(false);
-    setValidatedUri(null);
   }, [paymentData?.payment_id, paymentData?.pay_address, paymentData?.payin_extra_id]);
 
-  // Load client ID only (kept for analytics uniqueness)
-  useEffect(() => {
-    try { setClientId(getOrCreateClientId()); } catch {}
-  }, []);
 
   // Handle keyboard events to prevent escape from locked mode
   useEffect(() => {
@@ -350,7 +330,7 @@ function SmartTerminalPageContent() {
   }, [selectedNetwork, crypto])
 
   // Real-time payment status monitoring for smart terminal
-  const { paymentStatus: realtimePaymentStatus, connectionStatus } = useRealTimePaymentStatus({
+  useRealTimePaymentStatus({
     paymentId: paymentData?.payment_id || null,
     enabled: !!paymentData?.payment_id,
     onStatusChange: (updatedStatus) => {
@@ -464,7 +444,6 @@ function SmartTerminalPageContent() {
       if (json?.payment_link && json?.now) {
         setPaymentLink(json.payment_link);
         setPaymentData(json.now);
-        setInvoiceBreakdown(json.breakdown);
         console.log(`🆕 Setting initial status from payment creation:`, json.now.payment_status || 'pending');
         console.log(`🔍 Full payment data:`, json.now);
         setStatus(json.now.payment_status || 'pending');
@@ -685,7 +664,6 @@ function SmartTerminalPageContent() {
           )}
           {step === 'customer' && !paymentLink && (
             <div className="w-full space-y-2 landscape:grid landscape:grid-cols-2 landscape:gap-3 landscape:space-y-0">
-              <div className="landscape:col-span-2 landscape:grid landscape:grid-cols-2 landscape:gap-3 space-y-2 landscape:space-y-0">
               {/* Order Summary - left column */}
               <div className="bg-gradient-to-br from-purple-50 to-white p-2 rounded-lg border border-purple-100 landscape:col-span-1">
                 <div className="flex items-center gap-1 mb-1">
@@ -1012,46 +990,11 @@ function SmartTerminalPageContent() {
                   </div>
                 </div>
 
-                {/* Mobile-only final total and pay button */}
-                <div className="block landscape:hidden space-y-2">
-                  {/* Final Total Display */}
-                  {tipSelected && (
-                    <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-2 rounded-lg text-white w-full">
-                      <div className="text-center">
-                        <p className="text-[10px] opacity-90">Final Total</p>
-                        <p className="font-bold" style={{fontSize: 'clamp(1.25rem, 4vw, 1.75rem)'}}>${finalTotal.toFixed(2)}</p>
-                        {tipPercent !== null && tipPercent > 0 && (
-                          <p className="text-[10px] opacity-90 mt-0.5">Includes ${tipAmount.toFixed(2)} tip</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {/* Generate Payment Button */}
-                  <Button
-                    onClick={generate}
-                    variant="default"
-                    className="w-full h-10 sm:h-12 text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
-                    aria-label="pay now"
-                    disabled={!tipSelected || loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        Generating Payment...
-                      </>
-                    ) : (
-                      <>
-                        Pay with {crypto.toUpperCase()}
-                        <ArrowRight className="h-5 w-5" />
-                      </>
-                    )}
-                  </Button>
-                </div>
               </div>
-              
-              {/* Bottom row for final total and pay button in landscape */}
-              <div className="landscape:col-span-2 space-y-2">
-                {/* Final Total Display - spans full width in landscape */}
+
+              {/* Final Total and Payment Button */}
+              <div className="w-full space-y-2 landscape:col-span-2">
+                {/* Final Total Display */}
                 {tipSelected && (
                   <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-2 rounded-lg text-white w-full">
                     <div className="text-center">
@@ -1063,7 +1006,7 @@ function SmartTerminalPageContent() {
                     </div>
                   </div>
                 )}
-                {/* Generate Payment Button - spans full width in landscape */}
+                {/* Generate Payment Button */}
                 <Button
                   onClick={generate}
                   variant="default"
@@ -1091,7 +1034,6 @@ function SmartTerminalPageContent() {
                   {(() => {
                 const baseUri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
                 const uri = baseUri;
-                const showAmount = uri === paymentData.pay_address;
                 const needsExtra = !!(paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency));
                   return (
                     <>
@@ -1193,8 +1135,7 @@ function SmartTerminalPageContent() {
                           onClick={() => {
                             setPaymentLink(null);
                             setPaymentData(null);
-                            setInvoiceBreakdown(null);
-                            setStatus('');
+                                  setStatus('');
                             setExtraIdConfirmed(false);
                           }}
                         >
@@ -1252,7 +1193,6 @@ function SmartTerminalPageContent() {
                           onClick={() => { 
                             setPaymentLink(null); 
                             setPaymentData(null); 
-                            setInvoiceBreakdown(null); 
                             setStatus(''); 
                             setTipSelected(false); 
                             setTipPercent(null); 
@@ -1276,7 +1216,6 @@ function SmartTerminalPageContent() {
                     onClick={()=>{
                       setPaymentLink(null); 
                       setPaymentData(null); 
-                      setInvoiceBreakdown(null); 
                       setAmount(''); 
                       setStatus(''); 
                       setTipPercent(null); 
