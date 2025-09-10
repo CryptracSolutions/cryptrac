@@ -3,8 +3,7 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
-import { Badge } from '@/app/components/ui/badge'
-import { CheckCircle, ArrowRight, Wallet, Building2, Settings, Sparkles, Twitter, Facebook, Linkedin, Share2 } from 'lucide-react'
+import { CheckCircle, ArrowRight, Share2, Twitter, Facebook, Linkedin, Instagram } from 'lucide-react'
 import { LoadingSpinner } from '@/app/components/ui/loading-spinner'
 
 interface OnboardingData {
@@ -34,12 +33,13 @@ interface SuccessStepProps {
 export default function SuccessStep({ onboardingData, onFinish, isLoading }: SuccessStepProps) {
   const { businessInfo, walletConfig, paymentConfig } = onboardingData
 
-  const shareMessage = `🚀 ${businessInfo.businessName} is now accepting crypto payments via Cryptrac! Join the future of payments with seamless cryptocurrency transactions. #Crypto #Payments #Innovation`
-  
+  const shareMessage = `🚀 ${businessInfo.businessName} is now accepting crypto payments via Cryptrac!`
+
   const shareLinks = {
-    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}%20${encodeURIComponent('https://cryptrac.com')}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://cryptrac.com')}&quote=${encodeURIComponent(shareMessage)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://cryptrac.com')}&summary=${encodeURIComponent(shareMessage)}`
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://cryptrac.com')}&summary=${encodeURIComponent(shareMessage)}`,
+    instagram: `https://www.instagram.com/?url=${encodeURIComponent('https://cryptrac.com')}`
   }
 
   const handleShare = (platform: string) => {
@@ -47,36 +47,13 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
     window.open(url, '_blank', 'width=600,height=400')
   }
 
-  // Stable coin associations for automatic inclusion
-  const stableCoinAssociations: Record<string, string[]> = {
-    'SOL': ['USDCSOL', 'USDTSOL'],
-    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
-    'BNB': ['USDTBSC', 'USDCBSC'],
-    'MATIC': ['USDTMATIC', 'USDCMATIC'],
-    'TRX': ['USDTTRC20'],
-    'TON': ['USDTTON'],
-    'ARB': ['USDTARB', 'USDCARB'],
-    'OP': ['USDTOP', 'USDCOP'],
-    'ETHBASE': ['USDCBASE'],
-    'ALGO': ['USDCALGO']
-  }
-
-  // Expand base cryptos to include stable coins
-  const expandedCurrencies = React.useMemo(() => {
-    const expanded = [...paymentConfig.acceptedCryptos]
-    paymentConfig.acceptedCryptos.forEach(currency => {
-      const associatedStableCoins = stableCoinAssociations[currency] || []
-      expanded.push(...associatedStableCoins)
-    })
-    return expanded
-  }, [paymentConfig.acceptedCryptos]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="max-w-2xl mx-auto">
       <Card className="shadow-medium border-0 bg-white relative overflow-hidden">
 
         <CardHeader className="text-center space-y-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-xl animate-pulse" style={{ animationDuration: '2s' }}>
+          <div className="w-24 h-24 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-xl">
             <CheckCircle className="w-12 h-12 text-white" />
           </div>
           <div className="space-y-4">
@@ -90,139 +67,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {/* Setup Summary */}
-          <div className="space-y-6">
-            <h3 className="heading-sm text-gray-900 flex items-center gap-6">
-              <Sparkles className="w-5 h-5 text-[#7f5efd]" />
-              Your Setup Summary
-            </h3>
-
-            {/* Business Info */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="flex items-start gap-6">
-                <Building2 className="w-5 h-5 text-[#7f5efd] mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">Business Information</h4>
-                  <div className="mt-2 space-y-1 text-body-sm text-gray-600">
-                    <div><strong>Name:</strong> {businessInfo.businessName}</div>
-                    {businessInfo.website && (
-                      <div><strong>Website:</strong> {businessInfo.website}</div>
-                    )}
-                    <div><strong>Industry:</strong> {businessInfo.industry}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Wallet Config */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <Wallet className="w-5 h-5 text-[#7f5efd] mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">Wallet Configuration</h4>
-                  <div className="mt-2 space-y-2">
-                    <div className="text-sm text-gray-600">
-                      <strong>Type:</strong> {walletConfig.walletType === 'generate' ? 'Generated New Wallets' : 'Existing Wallets'}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.keys(walletConfig.wallets).map(crypto => (
-                        <Badge key={crypto} variant="secondary">
-                          {crypto}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Config */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <Settings className="w-5 h-5 text-[#7f5efd] mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">Payment Settings</h4>
-                  <div className="mt-2 space-y-2">
-                    <div className="text-sm text-gray-600">
-                      <strong>Gateway Fee:</strong> 0.5% (no conversion), 1% (auto-convert enabled)
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600"><strong>Total Payment Options:</strong></span>
-                      <div className="mt-1 text-sm text-gray-600">
-                        {expandedCurrencies.length} cryptocurrencies ({paymentConfig.acceptedCryptos.length} base + {expandedCurrencies.length - paymentConfig.acceptedCryptos.length} stable coins)
-                      </div>
-                      
-                      {/* Base Currencies */}
-                      <div className="mt-2">
-                        <span className="text-xs text-gray-500 font-medium">Base Cryptocurrencies:</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {paymentConfig.acceptedCryptos.map(crypto => (
-                            <Badge key={crypto} className="bg-[#7f5efd] text-white">
-                              {crypto}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Stable Coins */}
-                      {expandedCurrencies.length > paymentConfig.acceptedCryptos.length && (
-                        <div className="mt-2">
-                          <span className="text-xs text-gray-500 font-medium">Included Stable Coins:</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {expandedCurrencies.filter(currency => !paymentConfig.acceptedCryptos.includes(currency)).map(crypto => (
-                              <Badge key={crypto} variant="outline" className="border-blue-300 text-blue-700">
-                                {crypto}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mt-3 text-xs text-green-700 bg-green-50 rounded p-2">
-                        <strong>Smart Configuration:</strong> Your {paymentConfig.acceptedCryptos.length} base cryptocurrencies automatically include {expandedCurrencies.length - paymentConfig.acceptedCryptos.length} stable coins for maximum payment flexibility!
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* What's Next */}
-          <div className="bg-gradient-to-r from-[#7f5efd]/5 to-blue-50 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-3">What&apos;s next?</h3>
-            <div className="space-y-2 text-sm text-gray-700">
-              <div className="flex items-center space-x-2">
-                <div className="w-1.5 h-1.5 bg-[#7f5efd] rounded-full"></div>
-                <span>Create your first payment link</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-1.5 h-1.5 bg-[#7f5efd] rounded-full"></div>
-                <span>Generate QR codes for in-person payments</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-1.5 h-1.5 bg-[#7f5efd] rounded-full"></div>
-                <span>Monitor your payments in real-time</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-1.5 h-1.5 bg-[#7f5efd] rounded-full"></div>
-                <span>Track your earnings and analytics</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Important Reminders */}
-          {walletConfig.walletType === 'generate' && walletConfig.mnemonic && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h4 className="font-medium text-amber-800 mb-2">Important Reminder</h4>
-              <p className="text-sm text-amber-700">
-                Don&apos;t forget to save your recovery phrase securely! You&apos;ll need it to import your 
-                wallets into apps like Coinbase Wallet, MetaMask, or Exodus.
-              </p>
-            </div>
-          )}
-
-          {/* Finish Button */}
+          {/* Go To Dashboard Button */}
           <div className="pt-4">
             <Button
               onClick={onFinish}
@@ -244,54 +89,94 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
             </Button>
           </div>
 
-          {/* Social Share Section */}
-          <div className="bg-gradient-to-br from-[#7f5efd]/8 via-blue-50/50 to-[#9f7aea]/8 rounded-xl p-6 border border-[#7f5efd]/20">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-2">
-                <Share2 className="w-5 h-5 text-[#7f5efd]" />
-                <h3 className="font-bold text-gray-900 text-lg leading-snug">Share Your Achievement!</h3>
+          {/* What's Next */}
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-8">
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+                  <ArrowRight className="w-8 h-8 text-white" />
+                </div>
+                <div className="space-y-4">
+                  <CardTitle className="text-xl font-bold text-gray-900 leading-tight">
+                    What&apos;s next?
+                  </CardTitle>
+                  <div className="space-y-3 text-sm text-gray-700 max-w-md mx-auto">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
+                      <span>Create your first payment link</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
+                      <span>Generate QR codes for in-person payments</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
+                      <span>Monitor your payments in real-time</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
+                      <span>Track your earnings and analytics</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Let the world know that {businessInfo.businessName} is now accepting cryptocurrency payments
-              </p>
-              
-              <div className="flex flex-wrap justify-center gap-3 pt-2">
-                <Button
-                  onClick={() => handleShare('twitter')}
-                  className="flex items-center gap-2 bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
-                >
-                  <Twitter className="w-4 h-4" />
-                  <span className="hidden sm:inline">Twitter</span>
-                </Button>
-                
-                <Button
-                  onClick={() => handleShare('facebook')}
-                  className="flex items-center gap-2 bg-[#4267B2] hover:bg-[#4267B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
-                >
-                  <Facebook className="w-4 h-4" />
-                  <span className="hidden sm:inline">Facebook</span>
-                </Button>
-                
-                <Button
-                  onClick={() => handleShare('linkedin')}
-                  className="flex items-center gap-2 bg-[#2867B2] hover:bg-[#2867B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
-                >
-                  <Linkedin className="w-4 h-4" />
-                  <span className="hidden sm:inline">LinkedIn</span>
-                </Button>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Support */}
-          <div className="text-center pt-4">
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Questions? We&apos;re here to help at{' '}
-              <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] hover:underline font-medium">
-                support@cryptrac.com
-              </a>
-            </p>
-          </div>
+
+          {/* Share Your Achievement */}
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-8">
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+                  <Share2 className="w-8 h-8 text-white" />
+                </div>
+                <div className="space-y-4">
+                  <CardTitle className="text-xl font-bold text-gray-900 leading-tight">
+                    Share Your Achievement!
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
+                    Let the world know that {businessInfo.businessName} is now accepting cryptocurrency payments
+                  </p>
+
+                  <div className="flex flex-wrap justify-center gap-3 pt-4">
+                    <Button
+                      onClick={() => handleShare('twitter')}
+                      className="flex items-center gap-2 bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                    >
+                      <Twitter className="w-4 h-4" />
+                      <span className="hidden sm:inline">Twitter</span>
+                    </Button>
+
+                    <Button
+                      onClick={() => handleShare('facebook')}
+                      className="flex items-center gap-2 bg-[#4267B2] hover:bg-[#4267B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                    >
+                      <Facebook className="w-4 h-4" />
+                      <span className="hidden sm:inline">Facebook</span>
+                    </Button>
+
+                    <Button
+                      onClick={() => handleShare('linkedin')}
+                      className="flex items-center gap-2 bg-[#2867B2] hover:bg-[#2867B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                    >
+                      <Linkedin className="w-4 h-4" />
+                      <span className="hidden sm:inline">LinkedIn</span>
+                    </Button>
+
+                    <Button
+                      onClick={() => handleShare('instagram')}
+                      className="flex items-center gap-2 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] hover:opacity-90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                    >
+                      <Instagram className="w-4 h-4" />
+                      <span className="hidden sm:inline">Instagram</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
         </CardContent>
       </Card>
     </div>

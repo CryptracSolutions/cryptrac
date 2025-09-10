@@ -6,8 +6,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { ArrowRight, ArrowLeft, Building2, MapPin, Phone, Info } from 'lucide-react'
-import { Alert, AlertDescription } from '@/app/components/ui/alert'
+import { ArrowRight, ArrowLeft, Building2, MapPin, Phone } from 'lucide-react'
 
 interface BusinessAddress {
   street: string
@@ -508,23 +507,6 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
               </div>
             </div>
 
-            {/* Info Alert */}
-            <Alert className="bg-gradient-to-br from-[#7f5efd]/8 via-[#9f7aea]/5 to-[#7f5efd]/8 border-[#7f5efd]/30 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                  <Info className="h-6 w-6 text-[#7f5efd]" />
-                </div>
-                <div className="flex-1">
-                  <AlertDescription className="text-[#7f5efd]">
-                    <div className="font-bold mb-2 text-base leading-snug">Important Information</div>
-                    <p className="text-sm leading-relaxed">
-                      This information will be used for tax reporting and compliance.
-                      You can update it later in your profile settings.
-                    </p>
-                  </AlertDescription>
-                </div>
-              </div>
-            </Alert>
 
             {/* Navigation Buttons */}
             <div className="flex justify-between pt-8">

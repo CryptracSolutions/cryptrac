@@ -37,7 +37,7 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
     <div className="max-w-2xl mx-auto">
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="text-center space-y-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg animate-pulse" style={{ animationDuration: '3s' }}>
+          <div className="w-24 h-24 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
             <Users className="w-12 h-12 text-white" />
           </div>
           <div className="space-y-4">
@@ -80,42 +80,6 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
                 </div>
               )
             })}
-          </div>
-
-          {/* What to Expect */}
-          <div className="bg-gradient-to-br from-[#7f5efd]/8 via-blue-50/50 to-[#9f7aea]/8 rounded-xl p-8 border border-[#7f5efd]/10 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-6 text-lg leading-snug">What to expect:</h3>
-            <div className="space-y-6 relative">
-              {/* Connecting line */}
-              <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-gradient-to-b from-[#7f5efd] via-[#7f5efd]/50 to-[#9f7aea] rounded-full"></div>
-              
-              {[
-                { text: "Tell us about your business", icon: "🏢" },
-                { text: "Set up your crypto wallets", icon: "💰" },
-                { text: "Configure payment preferences", icon: "⚙️" },
-                { text: "Start accepting crypto payments!", icon: "🚀" }
-              ].map((step, index) => (
-                <div key={index} className="flex items-center gap-6 relative">
-                  <div 
-                    className="w-8 h-8 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center flex-shrink-0 shadow-lg relative z-10 animate-pulse"
-                    style={{
-                      animationDelay: `${index * 200}ms`,
-                      animationDuration: '2s'
-                    }}
-                  >
-                    <span className="text-sm">{step.icon}</span>
-                  </div>
-                  <span className="text-base text-gray-700 font-medium leading-relaxed">{step.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Time Estimate */}
-          <div className="text-center">
-            <p className="text-sm text-gray-500">
-              ⏱️ This should take about 5-10 minutes to complete
-            </p>
           </div>
 
           {/* Get Started Button */}
