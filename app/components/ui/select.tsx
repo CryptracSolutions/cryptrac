@@ -153,17 +153,13 @@ const SelectItem = React.forwardRef<
         // For simple string/number children, render them as the visible ItemText
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       ) : (
-        // For rich markup children, when textValue is provided Radix will use it
-        // for the trigger/typAhead, so avoid rendering a hidden ItemText to
-        // prevent duplicated labels in the dropdown. If no textValue is provided,
-        // fall back to injecting a visually hidden ItemText so the trigger still
-        // has a plain string.
+        // For rich markup children, always provide a hidden ItemText so the
+        // trigger has a plain string to render. Use `textValue` when given to
+        // avoid duplicating visible markup in the dropdown.
         <>
-          {textValue ? null : (
-            <SelectPrimitive.ItemText className="sr-only">
-              {""}
-            </SelectPrimitive.ItemText>
-          )}
+          <SelectPrimitive.ItemText className="sr-only">
+            {textValue ?? ""}
+          </SelectPrimitive.ItemText>
           {children}
         </>
       )}
