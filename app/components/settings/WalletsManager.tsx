@@ -384,6 +384,8 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     
     if (!address.trim()) {
       setValidationStatus(prev => ({ ...prev, [currency]: 'idle' }));
+      // Clearing the address should remove any prior invalid flag for this currency
+      onValidationChange?.(currency, true);
       return;
     }
 
@@ -421,6 +423,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       delete newHidden[currency];
       return newHidden;
     });
+
+    // Removing a wallet should clear any invalid state for this currency in the parent
+    onValidationChange?.(currency, true);
   };
 
   const handleExtraIdInputChange = (currency: string, extraId: string) => {
@@ -502,10 +507,6 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     }
   };
 
-  const maskAddress = (address: string) => {
-    if (address.length <= 8) return address;
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   const handleWalletCardClick = (currency: string, event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
@@ -700,7 +701,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                         <div className="relative">
                           <Input
                             placeholder={`${getCurrencyDisplayName(currency)} wallet address`}
-                            value={hiddenAddresses[currency] ? maskAddress(settings.wallets[currency] || '') : settings.wallets[currency] || ''}
+                            value={settings.wallets[currency] || ''}
                             onChange={(e) => handleWalletInputChange(currency, e.target.value)}
                             className={`border-gray-300 bg-white pr-20 font-mono text-sm ${
                               requiresExtraId(currency) && validationStatus[currency] === 'invalid' ? 'border-red-300 focus-visible:ring-red-300' : ''
