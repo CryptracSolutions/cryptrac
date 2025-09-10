@@ -547,35 +547,35 @@ export default function MerchantDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {recentTransactions.map(tx => (
                     <div 
                       key={tx.id} 
                       onClick={() => router.push(`/merchant/dashboard/payments/${tx.payment_link_id}`)}
-                      className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
+                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
                     >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg group-hover:bg-[#7f5efd]/20 transition-colors">
-                          <DollarSign className="h-5 w-5 text-[#7f5efd]" />
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg group-hover:bg-[#7f5efd]/15 transition-colors duration-200">
+                          <DollarSign className="h-4 w-4 text-[#7f5efd]" />
                         </div>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-phonic text-lg font-medium">{formatCurrency(tx.amount, tx.currency)}</p>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="font-phonic text-base font-medium text-gray-900">{formatCurrency(tx.amount, tx.currency)}</p>
                             {tx.pay_currency !== tx.currency && (
-                              <span className="font-phonic text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                              <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
                                 paid in {tx.pay_currency}
                               </span>
                             )}
                           </div>
-                          <p className="font-phonic text-sm font-medium text-gray-700 mb-0.5">{tx.payment_link_title}</p>
-                          <p className="font-phonic text-xs text-gray-500">
+                          <p className="font-capsule text-sm text-gray-700">{tx.payment_link_title}</p>
+                          <p className="font-capsule text-xs text-gray-500">
                             {formatDateTime(tx.created_at, timezone)}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-phonic text-sm font-normal text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{tx.currency}</span>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{tx.currency}</span>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>

@@ -201,7 +201,7 @@ export default function ProfilePage() {
   }
 
   return (
-      <div className="space-y-8">
+      <div className="px-6 py-8 space-y-8 max-w-6xl mx-auto">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -212,19 +212,19 @@ export default function ProfilePage() {
         
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
-          <div className="space-y-2">
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+          <div className="space-y-1">
+            <h1 className="font-phonic text-2xl font-semibold tracking-tight text-gray-900">
               Business Profile
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600">
+            <p className="font-capsule text-sm text-gray-600">
               Manage your business information and contact details
             </p>
           </div>
           <Button
             onClick={saveSettings}
             disabled={saving}
-            className="flex items-center gap-2"
-            size="lg"
+            className="flex items-center gap-2 bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-colors duration-200"
+            size="default"
           >
             {saving ? (
               <>
@@ -242,9 +242,9 @@ export default function ProfilePage() {
 
         {/* Enhanced Success Alert */}
         {success && (
-          <Alert className="border-green-200 bg-green-50 shadow-lg">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <AlertDescription className="font-capsule text-base font-normal text-green-800">
+          <Alert className="border border-green-200 bg-green-50 shadow-sm">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="font-capsule text-sm text-green-800">
               <strong>Profile Updated!</strong> Your business information has been saved successfully.
             </AlertDescription>
           </Alert>

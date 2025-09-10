@@ -194,29 +194,29 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
   if (error || !paymentLink) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="px-6 py-8 space-y-8 max-w-4xl mx-auto">
         <div className="flex items-center space-x-4">
           <Button 
             variant="outline" 
             onClick={() => router.push('/merchant/dashboard/payments')}
-            className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+            className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
           <div>
-            <h1 className="font-phonic text-5xl font-normal text-gray-900">Payment Link Details</h1>
-            <p className="font-capsule text-base font-normal text-gray-600 mt-1">Unable to load payment link information</p>
+            <h1 className="font-phonic text-2xl font-semibold text-gray-900">Payment Link Details</h1>
+            <p className="font-capsule text-sm text-gray-600 mt-1">Unable to load payment link information</p>
           </div>
         </div>
         
-        <Card>
+        <Card className="border border-gray-200 shadow-sm">
           <CardContent className="p-6 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">
+            <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">
               {error || 'Payment Link Not Found'}
             </h3>
-            <p className="font-capsule text-base font-normal text-gray-600 mb-4">
+            <p className="font-capsule text-sm text-gray-600 mb-4">
               The payment link you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
             </p>
             <Button 
@@ -248,22 +248,22 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
   const feeLabel = autoConvertEnabled ? `${feePercentage.toFixed(1)}% (Auto-convert)` : `${feePercentage.toFixed(1)}% (Direct crypto)`;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="px-6 py-8 space-y-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center space-x-4">
         <Button 
           variant="outline" 
           onClick={() => router.push('/merchant/dashboard/payments')}
-          className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <div className="flex-1">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+          <h1 className="font-phonic text-2xl font-semibold tracking-tight text-gray-900">
             {paymentLink.title}
           </h1>
-          <p className="font-capsule text-base font-normal text-gray-600 mt-1">Payment link details and management</p>
+          <p className="font-capsule text-sm text-gray-600 mt-1">Payment link details and management</p>
         </div>
         <div className="flex items-center space-x-2">
           {getStatusIcon(paymentLink.status)}
@@ -279,20 +279,20 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
         {name: paymentLink.title, href: '#'}
       ]} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Payment Link Information */}
-        <div className="space-y-6">
-          <Card className="shadow-medium border-0 bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+        <div className="space-y-8">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <CardTitle className="font-phonic text-lg font-semibold text-gray-900 flex items-center space-x-2">
                 <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                 <span>Payment Information</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 pt-0 space-y-6">
               <div>
-                <label className="font-phonic text-sm font-normal text-gray-500">Amount</label>
-                <div className="text-2xl font-bold text-gray-900">
+                <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</label>
+                <div className="text-2xl font-semibold text-gray-900 mt-1">
                   {formatCurrency(paymentLink.amount, paymentLink.currency)}
                 </div>
               </div>
@@ -300,11 +300,11 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
               {/* Subscription Invoice Number */}
               {paymentLink.subscription_invoice && (
                 <div>
-                  <label className="font-phonic text-sm font-normal text-gray-500">Invoice Number</label>
-                  <div className="text-lg font-semibold text-blue-600">
+                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice Number</label>
+                  <div className="text-base font-semibold text-blue-600 mt-1">
                     {paymentLink.subscription_invoice.invoice_number}
                   </div>
-                  <div className="text-sm text-gray-500 mt-1">
+                  <div className="font-capsule text-xs text-gray-500 mt-1">
                     Due: {formatDate(paymentLink.subscription_invoice.due_date)}
                   </div>
                 </div>
@@ -312,23 +312,23 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
               {paymentLink.description && (
                 <div>
-                  <label className="font-phonic text-sm font-normal text-gray-500">Description</label>
-                  <p className="text-gray-900">{paymentLink.description}</p>
+                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Description</label>
+                  <p className="font-capsule text-sm text-gray-900 mt-1">{paymentLink.description}</p>
                 </div>
               )}
 
               {/* Fee Breakdown */}
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <h4 className="font-phonic text-sm font-normal text-gray-700 mb-2">Fee Breakdown</h4>
-                <div className="space-y-1 text-sm">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 className="font-phonic text-sm font-semibold text-gray-700 mb-3">Fee Breakdown</h4>
+                <div className="space-y-2 font-capsule text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Base Amount:</span>
-                    <span>{formatCurrency(baseAmount, paymentLink.currency)}</span>
+                    <span className="font-medium">{formatCurrency(baseAmount, paymentLink.currency)}</span>
                   </div>
                   {paymentLink.tax_enabled && (paymentLink.tax_amount || 0) > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tax:</span>
-                      <span>{formatCurrency(paymentLink.tax_amount || 0, paymentLink.currency)}</span>
+                      <span className="font-medium">{formatCurrency(paymentLink.tax_amount || 0, paymentLink.currency)}</span>
                     </div>
                   )}
                   {paymentLink.tax_enabled && (
@@ -339,24 +339,24 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                   )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Gateway Fee ({feeLabel}):</span>
-                    <span>{chargeCustomerFee ? '+' : ''}{formatCurrency(feeAmount, paymentLink.currency)}</span>
+                    <span className="font-medium">{chargeCustomerFee ? '+' : ''}{formatCurrency(feeAmount, paymentLink.currency)}</span>
                   </div>
-                  <div className="flex justify-between font-medium border-t pt-1">
+                  <div className="flex justify-between font-semibold border-t border-gray-200 pt-2 mt-2">
                     <span>Customer Pays:</span>
-                    <span>{formatCurrency(customerPaysTotal, paymentLink.currency)}</span>
+                    <span className="text-[#7f5efd]">{formatCurrency(customerPaysTotal, paymentLink.currency)}</span>
                   </div>
-                  <div className="flex justify-between font-medium">
+                  <div className="flex justify-between font-semibold">
                     <span>You Receive:</span>
-                    <span>{formatCurrency(merchantReceives, paymentLink.currency)}</span>
+                    <span className="text-green-600">{formatCurrency(merchantReceives, paymentLink.currency)}</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="font-phonic text-sm font-normal text-gray-500">Accepted Cryptocurrencies</label>
-                <div className="flex flex-wrap gap-2 mt-1">
+                <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Accepted Cryptocurrencies</label>
+                <div className="flex flex-wrap gap-2 mt-2">
                   {paymentLink.accepted_cryptos.map((crypto) => (
-                    <Badge key={crypto} variant="secondary">
+                    <Badge key={crypto} variant="secondary" className="text-xs">
                       {crypto}
                     </Badge>
                   ))}
@@ -365,43 +365,43 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             </CardContent>
           </Card>
 
-          <Card className="shadow-medium border-0 bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <CardTitle className="font-phonic text-lg font-semibold text-gray-900 flex items-center space-x-2">
                 <Calendar className="h-5 w-5 text-[#7f5efd]" />
                 <span>Settings & Limits</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="p-6 pt-0 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="font-phonic text-sm font-normal text-gray-500">Created</label>
-                  <p className="text-gray-900">{formatDate(paymentLink.created_at)}</p>
+                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Created</label>
+                  <p className="font-capsule text-sm text-gray-900 mt-1">{formatDate(paymentLink.created_at)}</p>
                 </div>
                 <div>
-                  <label className="font-phonic text-sm font-normal text-gray-500">Link ID</label>
-                  <p className="text-gray-900 font-mono text-sm">{paymentLink.link_id}</p>
+                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Link ID</label>
+                  <p className="font-mono text-xs text-gray-900 mt-1 bg-gray-50 p-2 rounded border">{paymentLink.link_id}</p>
                 </div>
               </div>
 
               {paymentLink.expires_at && (
                 <div>
-                  <label className="font-phonic text-sm font-normal text-gray-500">Expires</label>
-                  <p className="text-gray-900">{formatDate(paymentLink.expires_at)}</p>
+                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</label>
+                  <p className="font-capsule text-sm text-gray-900 mt-1">{formatDate(paymentLink.expires_at)}</p>
                 </div>
               )}
 
               {paymentLink.max_uses && (
                 <div>
-                  <label className="font-phonic text-sm font-normal text-gray-500">Maximum Uses</label>
-                  <p className="text-gray-900">{paymentLink.max_uses}</p>
+                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Maximum Uses</label>
+                  <p className="font-capsule text-sm text-gray-900 mt-1">{paymentLink.max_uses}</p>
                 </div>
               )}
 
               {paymentLink.redirect_url && (
                 <div>
-                  <label className="font-phonic text-sm font-normal text-gray-500">Redirect URL</label>
-                  <p className="text-gray-900 break-all">{paymentLink.redirect_url}</p>
+                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Redirect URL</label>
+                  <p className="font-capsule text-sm text-gray-900 mt-1 break-all">{paymentLink.redirect_url}</p>
                 </div>
               )}
             </CardContent>
@@ -409,39 +409,39 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
         </div>
 
         {/* QR Code and Actions */}
-        <div className="space-y-6">
-          <Card className="shadow-medium border-0 bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+        <div className="space-y-8">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <CardTitle className="font-phonic text-lg font-semibold text-gray-900 flex items-center space-x-2">
                 <LinkIcon className="h-5 w-5 text-[#7f5efd]" />
                 <span>Payment URL</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 pt-0 space-y-6">
               <div>
-                <label className="font-phonic text-sm font-normal text-gray-500 mb-2 block">
+                <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 block">
                   Share this URL with customers
                 </label>
                 <div className="flex items-center space-x-2">
-                  <code className="flex-1 p-3 bg-gray-100 rounded-lg text-sm font-mono break-all">
+                  <code className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-lg font-capsule text-xs break-all">
                     {paymentLink.payment_url}
                   </code>
-                                  <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(paymentLink.payment_url)}
-                  className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
-                >
-                  {copied ? 'Copied!' : <Copy className="h-4 w-4" />}
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(paymentLink.payment_url)}
+                    className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
+                  >
+                    {copied ? 'Copied!' : <Copy className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <Button
                   variant="outline"
                   onClick={() => window.open(paymentLink.payment_url, '_blank')}
-                  className="flex-1 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+                  className="flex-1 border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Open Link
@@ -449,7 +449,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                 <Button
                   variant="outline"
                   onClick={() => copyToClipboard(paymentLink.payment_url)}
-                  className="flex-1 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+                  className="flex-1 border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
                 >
                   <Copy className="mr-2 h-4 w-4" />
                   Copy URL
@@ -458,24 +458,24 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
             </CardContent>
           </Card>
 
-          <Card className="shadow-medium border-0 bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <CardTitle className="font-phonic text-lg font-semibold text-gray-900 flex items-center space-x-2">
                 <QrCode className="h-5 w-5 text-[#7f5efd]" />
                 <span>QR Code</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6 pt-0">
               <div className="text-center space-y-4">
-                <div className="flex justify-center">
+                <div className="flex justify-center p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <QRCode
                     value={paymentLink.payment_url}
                     size={200}
-                    className="border border-gray-200"
+                    className="border border-gray-200 rounded"
                     hideDetails={true}
                   />
                 </div>
-                <p className="font-phonic text-sm font-normal text-gray-500">
+                <p className="font-capsule text-xs text-gray-500">
                   Customers can scan this QR code to access the payment link
                 </p>
                 <Button
@@ -485,7 +485,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                     // Implementation would depend on the QR code component
                     console.log('Download QR code');
                   }}
-                  className="w-full border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
+                  className="w-full border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download QR Code

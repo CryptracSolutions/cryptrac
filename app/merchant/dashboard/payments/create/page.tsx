@@ -373,9 +373,9 @@ export default function CreatePaymentLinkPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Breadcrumbs 
             items={[
               { name: 'Dashboard', href: '/merchant/dashboard' },
@@ -386,8 +386,8 @@ export default function CreatePaymentLinkPage() {
           
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Create Payment Link</h1>
-              <p className="font-phonic text-base font-normal text-gray-600">Create a new cryptocurrency payment link for your customers</p>
+              <h1 className="font-phonic text-2xl font-semibold tracking-tight text-gray-900">Create Payment Link</h1>
+              <p className="font-capsule text-sm text-gray-600 mt-1">Create a new cryptocurrency payment link for your customers</p>
             </div>
           </div>
         </div>
@@ -397,43 +397,43 @@ export default function CreatePaymentLinkPage() {
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-8">
               {/* Basic Information */}
-              <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <LinkIcon className="h-5 w-5 text-white" />
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="p-6 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#7f5efd] rounded-lg">
+                      <LinkIcon className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="font-phonic text-xl font-normal text-gray-900">
+                      <CardTitle className="font-phonic text-lg font-semibold text-gray-900">
                         Basic Information
                       </CardTitle>
-                      <p className="font-phonic text-sm font-normal text-gray-600">
+                      <p className="font-capsule text-sm text-gray-600">
                         Enter the basic details for your payment link
                       </p>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="font-phonic text-base font-normal">Title *</Label>
+                    <Label htmlFor="title" className="font-phonic text-sm font-semibold">Title *</Label>
                     <Input
                       id="title"
                       placeholder="e.g., Product Purchase, Service Payment"
                       value={form.title}
                       onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                      className="form-input-enhanced"
+                      className="border border-gray-200 focus:border-[#7f5efd] focus:ring-1 focus:ring-[#7f5efd] transition-colors duration-200"
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="font-capsule text-base font-normal">Description</Label>
+                    <Label htmlFor="description" className="font-phonic text-sm font-semibold">Description</Label>
                     <Textarea
                       id="description"
                       placeholder="Optional description for your customers"
                       value={form.description}
                       onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-                      className="form-input-enhanced"
+                      className="border border-gray-200 focus:border-[#7f5efd] focus:ring-1 focus:ring-[#7f5efd] transition-colors duration-200"
                       rows={3}
                     />
                   </div>

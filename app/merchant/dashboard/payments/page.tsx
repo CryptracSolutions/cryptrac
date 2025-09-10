@@ -388,25 +388,25 @@ export default function PaymentsPage() {
   const renderLink = (link: PaymentLink) => (
     <div
       key={link.id}
-      className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all duration-200 bg-white"
+      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 bg-white"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <LinkIcon className="h-5 w-5 text-white" />
+              <LinkIcon className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-1">{link.title}</h3>
-              <div className="flex items-center gap-3">
+              <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-1">{link.title}</h3>
+              <div className="flex items-center gap-2">
                 {getStatusBadge(link.status, link)}
                 {(link.source === 'subscription' || link.subscription_id) && (
-                  <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                     Subscription
                   </Badge>
                 )}
                 {link.confirmed_payment_count > 0 && (
-                  <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                     Payment received
                   </Badge>
                 )}
@@ -415,54 +415,54 @@ export default function PaymentsPage() {
           </div>
 
           {link.description && (
-            <p className="font-capsule text-base font-normal text-gray-600 mb-4">{link.description}</p>
+            <p className="font-capsule text-sm text-gray-600 mb-4">{link.description}</p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-green-100 rounded-lg">
-                <DollarSign className="h-4 w-4 text-green-600" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-green-100 rounded">
+                <DollarSign className="h-3 w-3 text-green-600" />
               </div>
-              <span className="font-bold text-lg text-gray-900">
+              <span className="font-semibold text-base text-gray-900">
                 {formatCurrency(link.amount, link.currency)}
               </span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-gray-100 rounded-lg">
-                <Calendar className="h-4 w-4 text-gray-500" />
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-gray-100 rounded">
+                <Calendar className="h-3 w-3 text-gray-500" />
               </div>
-              <span className="text-sm text-gray-600">Created {formatDate(link.created_at)}</span>
+              <span className="font-capsule text-xs text-gray-600">Created {formatDate(link.created_at)}</span>
             </div>
             {link.expires_at && (
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-gray-100 rounded-lg">
-                  <Clock className="h-4 w-4 text-gray-500" />
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-gray-100 rounded">
+                  <Clock className="h-3 w-3 text-gray-500" />
                 </div>
-                <span className="text-sm text-gray-600">Expires {formatDate(link.expires_at)}</span>
+                <span className="font-capsule text-xs text-gray-600">Expires {formatDate(link.expires_at)}</span>
               </div>
             )}
             {link.max_uses && (
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-gray-100 rounded-lg">
-                  <Users className="h-4 w-4 text-gray-500" />
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-gray-100 rounded">
+                  <Users className="h-3 w-3 text-gray-500" />
                 </div>
-                <span className="text-sm text-gray-600">{link.usage_count}/{link.max_uses} uses</span>
+                <span className="font-capsule text-xs text-gray-600">{link.usage_count}/{link.max_uses} uses</span>
               </div>
             )}
           </div>
 
           {/* Subscription Invoice Number */}
           {link.subscription_invoices && link.subscription_invoices.length > 0 && (
-            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <BarChart3 className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-blue-700">
+            <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+              <BarChart3 className="h-3 w-3 text-blue-600" />
+              <span className="font-capsule text-xs font-medium text-blue-700">
                 Invoice: {link.subscription_invoices[0].invoice_number}
               </span>
             </div>
           )}
         </div>
 
-        <div className="flex flex-col items-end gap-3 ml-6">
+        <div className="flex flex-col items-end gap-2 ml-4">
           {/* Status Action Buttons */}
           <div className="flex items-center gap-2">
             {getStatusActions(link)}
@@ -529,7 +529,7 @@ export default function PaymentsPage() {
   ];
 
   return (
-    <div className="container mx-auto p-8 space-y-8">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
       {/* Breadcrumbs */}
       <Breadcrumbs 
         items={[
@@ -541,14 +541,14 @@ export default function PaymentsPage() {
       {/* Enhanced Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
         <div className="space-y-2">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+          <h1 className="font-phonic text-3xl font-semibold tracking-tight text-gray-900">
             Payment Management
           </h1>
-          <p className="font-phonic text-2xl font-normal text-gray-600">View and manage all your payments</p>
+          <p className="font-capsule text-lg text-gray-600">View and manage all your payments</p>
         </div>
         <div className="flex gap-4">
           <Link href="/merchant/subscriptions">
-            <Button variant="outline" size="lg" className="flex items-center gap-3">
+            <Button variant="outline" size="lg" className="flex items-center gap-2 border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200">
               <Calendar className="h-5 w-5" />
               Manage Subscriptions
             </Button>
@@ -558,100 +558,100 @@ export default function PaymentsPage() {
 
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
-        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Total Links</CardTitle>
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Links</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <LinkIcon className="h-5 w-5 text-white" />
+              <LinkIcon className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.total_links}</div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <BarChart3 className="h-4 w-4" />
-              <span className="font-phonic text-sm font-normal">All payment links</span>
+            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.total_links}</div>
+            <div className="flex items-center gap-1 text-gray-600">
+              <BarChart3 className="h-3 w-3" />
+              <span className="font-capsule text-xs">All payment links</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Active</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <TrendingUp className="h-5 w-5 text-white" />
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Active</CardTitle>
+            <div className="p-2 bg-green-600 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.active_links}</div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Zap className="h-4 w-4" />
-              <span className="font-phonic text-sm font-normal">Accepting payments</span>
+            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.active_links}</div>
+            <div className="flex items-center gap-1 text-gray-600">
+              <Zap className="h-3 w-3" />
+              <span className="font-capsule text-xs">Accepting payments</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Completed</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <CheckCircle className="h-5 w-5 text-white" />
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Completed</CardTitle>
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <CheckCircle className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.completed_links}</div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <CheckCircle className="h-4 w-4" />
-              <span className="font-phonic text-sm font-normal">Finished or max uses</span>
+            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.completed_links}</div>
+            <div className="flex items-center gap-1 text-gray-600">
+              <CheckCircle className="h-3 w-3" />
+              <span className="font-capsule text-xs">Finished or max uses</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Expired</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <AlertCircle className="h-5 w-5 text-white" />
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Expired</CardTitle>
+            <div className="p-2 bg-orange-600 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.expired_links}</div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Clock className="h-4 w-4" />
-              <span className="font-phonic text-sm font-normal">Past expiry date</span>
+            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.expired_links}</div>
+            <div className="flex items-center gap-1 text-gray-600">
+              <Clock className="h-3 w-3" />
+              <span className="font-capsule text-xs">Past expiry date</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Single Use</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <CreditCard className="h-5 w-5 text-white" />
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Single Use</CardTitle>
+            <div className="p-2 bg-purple-600 rounded-lg">
+              <CreditCard className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">{statistics.single_use_links}</div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Users className="h-4 w-4" />
-              <span className="font-phonic text-sm font-normal">One-time payments</span>
+            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.single_use_links}</div>
+            <div className="flex items-center gap-1 text-gray-600">
+              <Users className="h-3 w-3" />
+              <span className="font-capsule text-xs">One-time payments</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover border-2 border-[#7f5efd] shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="font-phonic text-lg font-normal text-gray-900">Total Revenue</CardTitle>
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Revenue</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <DollarSign className="h-5 w-5 text-white" />
+              <DollarSign className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-3xl font-bold mb-3 text-[#7f5efd]">
+            <div className="text-2xl font-semibold mb-2 text-gray-900">
               {formatCurrency(statistics.total_revenue)}
             </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <TrendingUp className="h-4 w-4" />
-              <span className="font-phonic text-sm font-normal">{statistics.total_payments} payments</span>
+            <div className="flex items-center gap-1 text-gray-600">
+              <TrendingUp className="h-3 w-3" />
+              <span className="font-capsule text-xs">{statistics.total_payments} payments</span>
             </div>
           </CardContent>
         </Card>
@@ -660,7 +660,7 @@ export default function PaymentsPage() {
       {/* Status Filter */}
       <div className="flex justify-center">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-64 h-12 bg-white border-2 border-gray-200 shadow-md hover:shadow-lg transition-all duration-200">
+          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -675,17 +675,17 @@ export default function PaymentsPage() {
 
       {/* Enhanced Payment Links by Category */}
       {groups.map(group => (
-        <Card key={group.key} className="card-hover shadow-lg">
-          <CardHeader>
+        <Card key={group.key} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <CardTitle className="text-xl font-bold flex items-center gap-3">
+                <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                   {group.title}
                   <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
                     {group.items.length}
                   </Badge>
                 </CardTitle>
-                <CardDescription className="font-capsule text-base font-normal">
+                <CardDescription className="font-capsule text-sm text-gray-600">
                   {group.key === 'links' && 'Standard payment links for invoices and sales'}
                   {group.key === 'pos' && 'Point-of-sale transactions from Smart Terminal'}
                   {group.key === 'subscriptions' && 'Recurring subscription payments'}
@@ -693,12 +693,12 @@ export default function PaymentsPage() {
               </div>
               <Button
                 variant="ghost"
-                size="lg"
+                size="sm"
                 onClick={() => toggleSection(group.key)}
-                className="flex items-center gap-2 hover:bg-gray-100"
+                className="flex items-center gap-2 hover:bg-gray-100 transition-colors duration-200"
               >
                 <ChevronDown 
-                  className={`h-5 w-5 transition-transform duration-200 ${
+                  className={`h-4 w-4 transition-transform duration-200 ${
                     openSections[group.key] ? 'rotate-180' : ''
                   }`} 
                 />
@@ -707,41 +707,41 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           {openSections[group.key] && (
-            <CardContent className="p-8">
+            <CardContent className="p-6 pt-0">
               {group.items.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                     <LinkIcon className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
-                  <p className="font-capsule text-base font-normal text-gray-500 mb-6">Get started by creating your first payment link</p>
+                  <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
+                  <p className="font-capsule text-sm text-gray-500 mb-6">Get started by creating your first payment link</p>
                   {group.key === 'links' && (
                     <Link href="/merchant/dashboard/payments/create">
-                      <Button size="lg" className="flex items-center gap-3">
-                        <Plus className="h-5 w-5" />
+                      <Button size="sm" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
                         Create Payment Link
                       </Button>
                     </Link>
                   )}
                   {group.key === 'pos' && (
                     <Link href="/smart-terminal">
-                      <Button size="lg" className="flex items-center gap-3">
-                        <CreditCard className="h-5 w-5" />
+                      <Button size="sm" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />
                         Open Smart Terminal
                       </Button>
                     </Link>
                   )}
                   {group.key === 'subscriptions' && (
                     <Link href="/merchant/subscriptions">
-                      <Button size="lg" className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5" />
+                      <Button size="sm" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
                         Manage Subscriptions
                       </Button>
                     </Link>
                   )}
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {group.items.map(renderLink)}
                 </div>
               )}
@@ -752,27 +752,27 @@ export default function PaymentsPage() {
 
       {/* Enhanced Pagination */}
       {totalPages > 1 && (
-        <Card className="shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex justify-center gap-4">
+        <Card className="border border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex justify-center gap-3">
               <Button
                 variant="outline"
-                size="lg"
+                size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="flex items-center gap-2"
+                className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
               >
                 Previous
               </Button>
-              <div className="flex items-center px-6 py-3 font-capsule text-base font-normal text-gray-600 bg-gray-50 rounded-lg">
+              <div className="flex items-center px-4 py-2 font-capsule text-sm text-gray-600 bg-gray-50 rounded-lg">
                 Page {currentPage} of {totalPages}
               </div>
               <Button
                 variant="outline"
-                size="lg"
+                size="sm"
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="flex items-center gap-2"
+                className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
               >
                 Next
               </Button>
