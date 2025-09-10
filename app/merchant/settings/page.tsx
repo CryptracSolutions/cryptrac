@@ -652,7 +652,11 @@ export default function MerchantSettingsPage() {
                                   });
                                   
                                   return Array.from(expandedCurrencies).map((currency) => (
-                                    <SelectItem key={currency} value={currency}>
+                                    <SelectItem
+                                      key={currency}
+                                      value={currency}
+                                      textValue={`${currency} - ${getCurrencyDisplayName(currency)}`}
+                                    >
                                       {currency} - {getCurrencyDisplayName(currency)}
                                     </SelectItem>
                                   ));
@@ -890,4 +894,3 @@ export default function MerchantSettingsPage() {
       </div>
   );
 }
-
