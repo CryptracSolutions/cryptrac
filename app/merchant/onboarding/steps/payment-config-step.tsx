@@ -454,7 +454,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                           value={currency}
                           textValue={`${currency} - ${getCurrencyDisplayName(currency)}`}
                         >
-                          {currency} - {getCurrencyDisplayName(currency)}
+                          {`${currency} - ${getCurrencyDisplayName(currency)}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
