@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
@@ -46,9 +46,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   const configuredCurrencies = Object.keys(walletConfig.wallets || {})
 
   // Determine base currencies, automatically including ETH on Base if ETH is configured
-  const baseCurrencies = React.useMemo(() => {
+  const baseCurrencies = useMemo(() => {
     const bases = [...configuredCurrencies]
-
     return bases
   }, [configuredCurrencies])
 
@@ -67,14 +66,14 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   }
 
   // Expand base currencies to include available stable coins
-  const expandedCurrencies = React.useMemo(() => {
+  const expandedCurrencies = useMemo(() => {
     const expanded = [...baseCurrencies]
     baseCurrencies.forEach(currency => {
       const associatedStableCoins = stableCoinAssociations[currency] || []
       expanded.push(...associatedStableCoins)
     })
     return expanded
-  }, [baseCurrencies]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [baseCurrencies])
   
   // Currency display names mapping (updated with comprehensive stable coins)
   const CURRENCY_NAMES: Record<string, string> = {
@@ -154,7 +153,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
       }
       
       onComplete(finalData)
-              toast.success('Saved')
+      toast.success('Saved')
       
     } catch (error) {
       console.error('Error saving payment config:', error)
@@ -275,8 +274,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 </AlertDescription>
               </Alert>
             )}
-          </div>
-
+          </CardContent>
         </Card>
 
         {/* Fee Calculator Section */}
@@ -456,10 +454,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-          </Card>
-
-          {/* Auto-Conversion Feature */}
+        {/* Auto-Conversion Feature */}
           <Card className="shadow-lg border-0 bg-white">
             <CardContent className="p-8 space-y-6">
               <div className="flex items-center gap-3">
