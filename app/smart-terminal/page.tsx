@@ -505,7 +505,7 @@ function SmartTerminalPageContent() {
             {step === 'amount' && !paymentLink && (
               <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
                 <Link href="/merchant/dashboard">
-                  <button className="flex items-center gap-1 text-[#7f5efd] hover:text-[#9b7cff] transition-colors duration-200 p-1.5 rounded-md hover:bg-purple-50">
+                  <button className="flex items-center gap-1 text-[#7f5efd] transition-colors duration-200 p-1.5 rounded-md">
                     <ArrowLeft className="h-4 w-4" />
                     <span className="text-xs font-medium opacity-80">Dashboard</span>
                   </button>

@@ -124,14 +124,10 @@ const SelectItem = React.forwardRef<
   SelectItemProps
 >(({ className, children, textValue, ...props }, ref) => {
   // We want the trigger to display a clean, unstyled string even when the
-  // dropdown items use rich markup (icons, colored text, etc.). Radix's Select
-  // shows the contents of <ItemText> in the trigger, so we inject a visually
-  // hidden plain string there and render the rich children alongside it.
-  // Render the rich children markup directly. The `textValue` prop (when
-  // provided) already supplies a clean, plain-text label for Radix to use
-  // for the trigger and type-ahead, so we don’t need to inject an extra
-  // hidden <ItemText>. This prevents the same label from showing up twice
-  // inside the dropdown list.
+  // dropdown items use rich markup (icons, colored text, etc.). When a
+  // `textValue` is provided, Radix uses it for the trigger and typeahead.
+  // In that case, we should NOT also render a hidden <ItemText> to avoid
+  // duplicate labels appearing in the dropdown.
   const isPlainTextChild =
     typeof children === "string" || typeof children === "number"
 
@@ -157,11 +153,17 @@ const SelectItem = React.forwardRef<
         // For simple string/number children, render them as the visible ItemText
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       ) : (
-        // For rich markup children, provide a hidden plain label for the trigger
+        // For rich markup children, when textValue is provided Radix will use it
+        // for the trigger/typAhead, so avoid rendering a hidden ItemText to
+        // prevent duplicated labels in the dropdown. If no textValue is provided,
+        // fall back to injecting a visually hidden ItemText so the trigger still
+        // has a plain string.
         <>
-          <SelectPrimitive.ItemText className="sr-only">
-            {textValue ?? ""}
-          </SelectPrimitive.ItemText>
+          {textValue ? null : (
+            <SelectPrimitive.ItemText className="sr-only">
+              {""}
+            </SelectPrimitive.ItemText>
+          )}
           {children}
         </>
       )}

@@ -449,7 +449,11 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     </SelectTrigger>
                     <SelectContent>
                       {expandedCurrencies.map((currency) => (
-                        <SelectItem key={currency} value={currency}>
+                        <SelectItem
+                          key={currency}
+                          value={currency}
+                          textValue={`${currency} - ${getCurrencyDisplayName(currency)}`}
+                        >
                           {currency} - {getCurrencyDisplayName(currency)}
                         </SelectItem>
                       ))}
@@ -508,4 +512,3 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     </div>
   )
 }
-
