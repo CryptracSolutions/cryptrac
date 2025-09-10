@@ -153,10 +153,14 @@ const SelectItem = React.forwardRef<
         // For simple string/number children, render them as the visible ItemText
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       ) : (
-        // The `textValue` prop already supplies a plain string for the trigger,
-        // so we can render the rich `children` directly without adding a hidden
-        // duplicate. This prevents duplicate visible text in the dropdown.
-        <>{children}</>
+        // Include a visually-hidden ItemText so the trigger can display a plain
+        // string, but hide it from the dropdown to avoid visible duplicates.
+        <>
+          <SelectPrimitive.ItemText className="sr-only" aria-hidden="true">
+            {textValue ?? ""}
+          </SelectPrimitive.ItemText>
+          {children}
+        </>
       )}
     </SelectPrimitive.Item>
   )
