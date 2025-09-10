@@ -9,20 +9,26 @@ interface FeeDocumentationProps {
   showComparison?: boolean
   showNetworkFees?: boolean
   showGatewayFees?: boolean
+  /**
+   * Color variant controls the palette. "landing" uses only white/gray/black and Cryptrac Purple.
+   */
+  colorVariant?: 'default' | 'landing'
 }
 
 export function FeeDocumentation({ 
   variant = 'full', 
   showComparison = true,
   showNetworkFees = true,
-  showGatewayFees = true 
+  showGatewayFees = true,
+  colorVariant = 'default'
 }: FeeDocumentationProps) {
+  const isLanding = colorVariant === 'landing'
   
   if (variant === 'tooltip') {
     return (
       <div className="max-w-sm space-y-2 text-sm">
         <div className="flex items-center gap-2">
-          <Network className="h-4 w-4 text-blue-500" />
+          <Network className={"h-4 w-4 " + (isLanding ? 'text-[#7f5efd]' : 'text-blue-500')} />
           <span className="font-medium">Network Fees</span>
         </div>
         <p className="text-gray-600">
@@ -30,15 +36,15 @@ export function FeeDocumentation({
         </p>
         
         <div className="flex items-center gap-2 mt-3">
-          <CreditCard className="h-4 w-4 text-green-500" />
+          <CreditCard className={"h-4 w-4 " + (isLanding ? 'text-[#7f5efd]' : 'text-green-500')} />
           <span className="font-medium">Gateway Fees</span>
         </div>
         <p className="text-gray-600">
           0.5% (direct) or 1% (auto-convert). You choose who pays: customer or merchant.
         </p>
         
-        <div className="bg-blue-50 p-2 rounded mt-3">
-          <p className="text-xs text-blue-700">
+        <div className={(isLanding ? 'bg-gray-50' : 'bg-blue-50') + " p-2 rounded mt-3 " + (isLanding ? '' : '')}>
+          <p className={"text-xs " + (isLanding ? 'text-gray-700' : 'text-blue-700')}>
               <strong>Note:</strong> Cryptrac doesn&apos;t earn from these fees. Our revenue is the $19/month subscription.
           </p>
         </div>
@@ -48,21 +54,21 @@ export function FeeDocumentation({
 
   if (variant === 'compact') {
     return (
-      <Card className="border-blue-100 bg-blue-50/50">
+      <Card className={isLanding ? 'border-gray-200 bg-white' : 'border-blue-100 bg-blue-50/50'}>
         <CardContent className="pt-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-blue-600" />
-              <h4 className="font-semibold text-blue-900">Understanding Payment Fees</h4>
+              <Info className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : 'text-blue-600')} />
+              <h4 className={"font-semibold " + (isLanding ? 'text-gray-900' : 'text-blue-900')}>Understanding Payment Fees</h4>
             </div>
             
             <div className="grid gap-3 md:grid-cols-2">
               {showNetworkFees && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Network className="h-4 w-4 text-blue-500" />
+                    <Network className={"h-4 w-4 " + (isLanding ? 'text-[#7f5efd]' : 'text-blue-500')} />
                     <span className="font-medium text-sm">Network Fees</span>
-                    <Badge variant="outline" className="text-xs">Variable</Badge>
+                    <Badge variant="outline" className={"text-xs " + (isLanding ? 'border-gray-300 text-gray-700' : '')}>Variable</Badge>
                   </div>
                   <p className="text-xs text-gray-600">
                     Paid to blockchain miners/validators. Varies by network congestion and coin type.
@@ -73,9 +79,9 @@ export function FeeDocumentation({
               {showGatewayFees && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-green-500" />
+                    <CreditCard className={"h-4 w-4 " + (isLanding ? 'text-[#7f5efd]' : 'text-green-500')} />
                     <span className="font-medium text-sm">Gateway Fees</span>
-                    <Badge variant="outline" className="text-xs">0.5% - 1%</Badge>
+                    <Badge variant="outline" className={"text-xs " + (isLanding ? 'border-gray-300 text-gray-700' : '')}>0.5% - 1%</Badge>
                   </div>
                   <p className="text-xs text-gray-600">
                     Gateway fee. You choose whether the customer or merchant pays.
@@ -84,9 +90,9 @@ export function FeeDocumentation({
               )}
             </div>
             
-            <div className="bg-white p-2 rounded border border-blue-200">
-              <p className="text-xs text-blue-700">
-                <CheckCircle className="h-3 w-3 inline mr-1" />
+            <div className={"bg-white p-2 rounded border " + (isLanding ? 'border-gray-200' : 'border-blue-200')}>
+              <p className={"text-xs " + (isLanding ? 'text-gray-700' : 'text-blue-700')}>
+                <CheckCircle className={"h-3 w-3 inline mr-1 " + (isLanding ? 'text-[#7f5efd]' : '')} />
                   <strong>Cryptrac Revenue:</strong> Only the $19/month subscription. We don&apos;t earn from transaction fees.
               </p>
             </div>
@@ -102,15 +108,15 @@ export function FeeDocumentation({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-6 w-6 text-blue-600" />
+            <DollarSign className={"h-6 w-6 " + (isLanding ? 'text-[#7f5efd]' : 'text-blue-600')} />
             Understanding Payment Fees: Crypto vs. Traditional Processors
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Introduction */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <h3 className="font-semibold text-blue-900 mb-2">Key Principle</h3>
-            <p className="text-blue-800">
+          <div className={(isLanding ? 'bg-gray-50 border border-gray-200' : 'bg-blue-50 border border-blue-200') + ' p-4 rounded-lg'}>
+            <h3 className={"font-semibold mb-2 " + (isLanding ? 'text-gray-900' : 'text-blue-900')}>Key Principle</h3>
+            <p className={isLanding ? 'text-gray-800' : 'text-blue-800'}>
               Every payment processor charges a &quot;per-transaction fee.&quot; With crypto payments, there are two separate fees:
               <strong> network fees</strong> (paid to blockchain) and <strong>gateway fees</strong> (paid to payment processor).
             </p>
@@ -131,15 +137,15 @@ export function FeeDocumentation({
                 </p>
                 <div className="grid gap-2 md:grid-cols-3">
                   <div className="text-center p-2 bg-white rounded border">
-                    <div className="font-semibold text-red-600">Stripe</div>
+                    <div className={"font-semibold " + (isLanding ? 'text-gray-800' : 'text-red-600')}>Stripe</div>
                     <div className="text-sm text-gray-600">2.9% + $0.30</div>
                   </div>
                   <div className="text-center p-2 bg-white rounded border">
-                    <div className="font-semibold text-blue-600">PayPal</div>
+                    <div className={"font-semibold " + (isLanding ? 'text-gray-800' : 'text-blue-600')}>PayPal</div>
                     <div className="text-sm text-gray-600">2.9% + $0.30</div>
                   </div>
                   <div className="text-center p-2 bg-white rounded border">
-                    <div className="font-semibold text-gray-600">Square</div>
+                    <div className={"font-semibold " + (isLanding ? 'text-gray-800' : 'text-gray-600')}>Square</div>
                     <div className="text-sm text-gray-600">2.6% + $0.10</div>
                   </div>
                 </div>
@@ -162,12 +168,12 @@ export function FeeDocumentation({
             <div className="grid gap-4 md:grid-cols-2">
               {/* Network Fees */}
               {showNetworkFees && (
-                <Card className="border-orange-200 bg-orange-50/50">
+                <Card className={isLanding ? 'border-gray-200 bg-white' : 'border-orange-200 bg-orange-50/50'}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Network className="h-5 w-5 text-orange-600" />
+                      <Network className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : 'text-orange-600')} />
                       Network Fees
-                      <Badge variant="outline" className="bg-orange-100 text-orange-700">Variable</Badge>
+                      <Badge variant="outline" className={isLanding ? 'border-gray-300 text-gray-700' : 'bg-orange-100 text-orange-700'}>Variable</Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -187,8 +193,8 @@ export function FeeDocumentation({
                       </ul>
                     </div>
 
-                    <div className="bg-orange-100 p-3 rounded border border-orange-200">
-                      <p className="text-sm text-orange-800">
+                    <div className={(isLanding ? 'bg-gray-100 border border-gray-200' : 'bg-orange-100 border border-orange-200') + ' p-3 rounded'}>
+                      <p className={"text-sm " + (isLanding ? 'text-gray-800' : 'text-orange-800')}>
                         <strong>Example:</strong> Some networks like Bitcoin and Ethereum have higher fees, 
                         while others like Solana, XRP, Tron, Base, or BNB are much lower.
                       </p>
@@ -199,12 +205,12 @@ export function FeeDocumentation({
 
               {/* Gateway Fees */}
               {showGatewayFees && (
-                <Card className="border-green-200 bg-green-50/50">
+                <Card className={isLanding ? 'border-gray-200 bg-white' : 'border-green-200 bg-green-50/50'}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <CreditCard className="h-5 w-5 text-green-600" />
+                      <CreditCard className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : 'text-green-600')} />
                       Gateway Fees
-                      <Badge variant="outline" className="bg-green-100 text-green-700">0.5% - 1%</Badge>
+                      <Badge variant="outline" className={isLanding ? 'border-gray-300 text-gray-700' : 'bg-green-100 text-green-700'}>0.5% - 1%</Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -218,17 +224,17 @@ export function FeeDocumentation({
                       <div className="grid gap-2">
                         <div className="flex justify-between items-center p-2 bg-white rounded border">
                           <span className="text-sm">Direct Payments</span>
-                          <Badge className="bg-green-100 text-green-700">0.5%</Badge>
+                          <Badge className={isLanding ? 'bg-[#7f5efd]/10 text-[#7f5efd]' : 'bg-green-100 text-green-700'}>0.5%</Badge>
                         </div>
                         <div className="flex justify-between items-center p-2 bg-white rounded border">
                           <span className="text-sm">Auto-Convert Payments</span>
-                          <Badge className="bg-green-100 text-green-700">1.0%</Badge>
+                          <Badge className={isLanding ? 'bg-[#7f5efd]/10 text-[#7f5efd]' : 'bg-green-100 text-green-700'}>1.0%</Badge>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-green-100 p-3 rounded border border-green-200">
-                      <p className="text-sm text-green-800">
+                    <div className={(isLanding ? 'bg-gray-100 border border-gray-200' : 'bg-green-100 border border-green-200') + ' p-3 rounded'}>
+                      <p className={"text-sm " + (isLanding ? 'text-gray-800' : 'text-green-800')}>
                         <strong>Your Choice:</strong> You decide whether the customer pays this fee 
                         (added at checkout) or you absorb it (deducted from payout).
                       </p>
@@ -244,12 +250,12 @@ export function FeeDocumentation({
 
 
           {/* Cryptrac Revenue Transparency */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" />
+          <div className={(isLanding ? 'bg-gray-50 border border-gray-200' : 'bg-blue-50 border border-blue-200') + ' p-4 rounded-lg'}>
+            <h3 className={"font-semibold mb-2 flex items-center gap-2 " + (isLanding ? 'text-gray-900' : 'text-blue-900')}>
+              <CheckCircle className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : '')} />
               Cryptrac Revenue Transparency
             </h3>
-            <p className="text-blue-800">
+            <p className={isLanding ? 'text-gray-800' : 'text-blue-800'}>
               <strong>Cryptrac does not earn any revenue from transaction fees.</strong> Neither the gateway fee nor the network fee 
               goes to Cryptrac. Our only revenue is the <strong>$19/month subscription</strong> for platform access.
             </p>

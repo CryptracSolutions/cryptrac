@@ -8,6 +8,7 @@ import { Logo } from "@/app/components/ui/logo";
 import { CryptoIcon } from "@/app/components/ui/crypto-icon";
 import { LandingNav } from "@/app/components/layout/landing-nav";
 import { PaymentJourneyDemo } from "@/app/components/ui/payment-journey-demo";
+import { FeeDocumentation } from "@/app/components/fee-documentation";
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -565,7 +566,7 @@ export default function Home() {
             ))}
           </div>
           
-          {/* Simplified Fee Documentation */}
+          {/* Understanding Payment Fees (uses onboarding step 4 content, landing colors) */}
           <div className="mt-20">
             <div className="text-center mb-12">
               <h3 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
@@ -575,128 +576,15 @@ export default function Home() {
                 Simple breakdown of how crypto payments work compared to traditional processors
               </p>
             </div>
-            
+
             <div className="max-w-6xl mx-auto">
-              {/* Traditional vs Crypto Comparison */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                {/* Traditional Processors */}
-                <Card className="border-0 shadow-lg bg-white">
-                  <CardHeader className="text-center pb-6">
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Traditional Processors</CardTitle>
-                    <p className="font-phonic text-base text-gray-600">Stripe, PayPal, Square</p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="text-center">
-                      <div className="font-phonic text-4xl font-medium text-gray-900 mb-2">2.9% + $0.30</div>
-                      <p className="font-phonic text-sm text-gray-600">per transaction</p>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <span className="font-phonic text-base text-gray-700">Fixed percentage + fixed fee</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <span className="font-phonic text-base text-gray-700">Higher cost for small transactions</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <span className="font-phonic text-base text-gray-700">Requires bank account setup</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Crypto Payments */}
-                <Card className="border-2 border-[#7f5efd] shadow-lg bg-white">
-                  <CardHeader className="text-center pb-6">
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Crypto Payments</CardTitle>
-                    <p className="font-phonic text-base text-gray-600">Cryptrac</p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="text-center">
-                      <div className="font-phonic text-4xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
-                      <p className="font-phonic text-sm text-gray-600">gateway fee only</p>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
-                        <span className="font-phonic text-base text-gray-700">No fixed fees</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
-                        <span className="font-phonic text-base text-gray-700">Lower cost for all transaction sizes</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
-                        <span className="font-phonic text-base text-gray-700">Direct to your crypto wallet</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Fee Breakdown */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <Card className="border-0 shadow-lg bg-white">
-                  <CardHeader className="text-center">
-                    <div className="w-12 h-12 bg-[#f5f3ff] rounded-full flex items-center justify-center mx-auto mb-4">
-                      <DollarSign className="h-6 w-6 text-[#7f5efd]" />
-                    </div>
-                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Gateway Fee</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <div className="font-phonic text-4xl font-medium text-[#7f5efd] mb-2">0.5% - 1%</div>
-                    <p className="font-phonic text-sm text-gray-600 mb-4">
-                      Charged by payment processor for handling transactions
-                    </p>
-                    <div className="font-phonic text-xs text-gray-500">
-                      <div className="mb-1">• Direct payments: 0.5%</div>
-                      <div>• Auto-convert: 1%</div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-0 shadow-lg bg-white">
-                  <CardHeader className="text-center">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Network className="h-6 w-6 text-gray-600" />
-                    </div>
-                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Network Fee</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <div className="font-phonic text-4xl font-medium text-gray-600 mb-2">Variable</div>
-                    <p className="font-phonic text-sm text-gray-600 mb-4">
-                      Charged by blockchain network (not Cryptrac)
-                    </p>
-                    <div className="font-phonic text-xs text-gray-500">
-                      <div className="mb-1">• Bitcoin/Ethereum: Higher</div>
-                      <div>• Solana/XRP: Lower</div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-0 shadow-lg bg-white">
-                  <CardHeader className="text-center">
-                    <div className="w-12 h-12 bg-[#f5f3ff] rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="h-6 w-6 text-[#7f5efd]" />
-                    </div>
-                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Cryptrac Fee</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <div className="font-phonic text-4xl font-medium text-[#7f5efd] mb-2">$19/month</div>
-                    <p className="font-phonic text-sm text-gray-600 mb-4">
-                      Subscription only - no transaction fees
-                    </p>
-                    <div className="font-phonic text-xs text-gray-500">
-                      <div className="mb-1">• No percentage fees</div>
-                      <div>• No per-transaction fees</div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-
+              <FeeDocumentation
+                variant="full"
+                showComparison={true}
+                showNetworkFees={true}
+                showGatewayFees={true}
+                colorVariant="landing"
+              />
             </div>
           </div>
         </div>
