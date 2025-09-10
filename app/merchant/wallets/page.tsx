@@ -16,7 +16,6 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
 import WalletsManager from '@/app/components/settings/WalletsManager';
-import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
 import Tooltip from '@/app/components/ui/tooltip';
@@ -250,9 +249,6 @@ export default function WalletsPage() {
         
         {/* Header */}
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <BackToDashboard />
-          </div>
           <div>
             <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-4">Wallet Addresses</h1>
             <p className="font-phonic text-base font-normal text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>

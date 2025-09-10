@@ -9,7 +9,6 @@ import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
-import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 import { 
@@ -156,9 +155,6 @@ export default function MerchantSubscriptionsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <BackToDashboard />
-            </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Subscriptions</h1>
             <p className="font-phonic text-base font-normal text-gray-600 mt-2">Manage recurring payments and customer subscriptions</p>
           </div>

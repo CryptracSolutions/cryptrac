@@ -32,7 +32,6 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
-import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 interface PaymentLink {
@@ -542,9 +541,6 @@ export default function PaymentsPage() {
       {/* Enhanced Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
         <div className="space-y-2">
-          <div className="flex items-center gap-4 mb-2">
-            <BackToDashboard />
-          </div>
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
             Payment Management
           </h1>

@@ -385,15 +385,6 @@ export default function CreatePaymentLinkPage() {
           />
           
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => router.back()}
-              className="flex items-center gap-2 text-[#7f5efd] hover:bg-[#f5f3ff]"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
             <div>
               <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Create Payment Link</h1>
               <p className="font-phonic text-base font-normal text-gray-600">Create a new cryptocurrency payment link for your customers</p>

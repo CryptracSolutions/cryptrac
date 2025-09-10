@@ -35,7 +35,6 @@ import { Badge } from '@/app/components/ui/badge'
 import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
 import type { User } from '@supabase/supabase-js'
-import { BackToDashboard } from '@/app/components/ui/back-to-dashboard'
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
 
 interface TaxReportFilters {
@@ -373,9 +372,6 @@ export default function TaxReportsPage() {
         {/* Header */}
         <div className="flex items-center">
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <BackToDashboard />
-            </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Transactions</h1>
             <p className="font-phonic text-base font-normal text-gray-600 mt-2">View and manage all your transaction history</p>
           </div>

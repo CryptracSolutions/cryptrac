@@ -9,7 +9,6 @@ import { Checkbox } from '@/app/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { ChevronDown, ArrowLeft, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 interface TaxRate {
@@ -233,9 +232,6 @@ export default function CreateSubscriptionPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <BackToDashboard />
-            </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Create Subscription</h1>
             <p className="font-phonic text-2xl font-normal text-gray-600 mt-2">Set up recurring payments for your customers</p>
           </div>

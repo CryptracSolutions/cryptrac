@@ -213,16 +213,6 @@ export default function ProfilePage() {
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-4 mb-2">
-              <Button 
-                variant="outline" 
-                onClick={() => router.push('/merchant/dashboard')}
-                className="flex items-center gap-2"
-                size="lg"
-              >
-                <ArrowLeft className="h-4 w-4" /> Back to Dashboard
-              </Button>
-            </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Business Profile
             </h1>

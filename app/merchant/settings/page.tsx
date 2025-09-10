@@ -26,7 +26,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { supabase } from '@/lib/supabase-browser';
 import toast from 'react-hot-toast';
-import { BackToDashboard } from '@/app/components/ui/back-to-dashboard';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
 interface TaxRate {
@@ -473,9 +472,6 @@ export default function MerchantSettingsPage() {
         
         {/* Enhanced Header */}
         <div className="space-y-2">
-          <div className="flex items-center gap-4 mb-2">
-            <BackToDashboard />
-          </div>
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
             Account Settings
           </h1>
@@ -649,13 +645,13 @@ export default function MerchantSettingsPage() {
                                     'ALGO': ['USDCALGO']
                                   };
                                   
-                                  const expandedCurrencies = [...baseCurrencies];
+                                  const expandedCurrencies = new Set(baseCurrencies);
                                   baseCurrencies.forEach(currency => {
                                     const associatedStableCoins = stableCoinAssociations[currency] || [];
-                                    expandedCurrencies.push(...associatedStableCoins);
+                                    associatedStableCoins.forEach(coin => expandedCurrencies.add(coin));
                                   });
                                   
-                                  return expandedCurrencies.map((currency) => (
+                                  return Array.from(expandedCurrencies).map((currency) => (
                                     <SelectItem key={currency} value={currency}>
                                       {currency} - {getCurrencyDisplayName(currency)}
                                     </SelectItem>
