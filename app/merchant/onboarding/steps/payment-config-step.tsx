@@ -76,6 +76,15 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     })
     return expanded
   }, [baseCurrencies])
+
+  // Recommended currencies for the tooltip
+  const recommendedCurrencies = [
+    { code: 'BTC', name: 'Bitcoin' },
+    { code: 'ETH', name: 'Ethereum' },
+    { code: 'SOL', name: 'Solana' },
+    { code: 'USDC', name: 'USD Coin' },
+    { code: 'USDT', name: 'Tether' }
+  ]
   
   // Currency display names mapping (updated with comprehensive stable coins)
   const CURRENCY_NAMES: Record<string, string> = {
@@ -213,6 +222,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 }
                 title="Accepted Cryptocurrencies"
                 description={`Your ${baseCurrencies.length} base cryptocurrencies automatically include ${expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility.`}
+                recommendedCurrencies={recommendedCurrencies}
                 className="w-full flex justify-start"
               />
 
@@ -311,6 +321,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 }
                 title="Gateway Fee Settings"
                 description="Choose who pays the gateway fee. This setting can be overridden for individual payment links."
+                recommendedCurrencies={recommendedCurrencies}
                 className="w-full flex justify-start"
               />
 
@@ -383,6 +394,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 }
                 title="Auto-Conversion Feature"
                 description="Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled."
+                recommendedCurrencies={recommendedCurrencies}
                 className="w-full flex justify-start"
               />
 
