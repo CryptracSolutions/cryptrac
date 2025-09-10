@@ -657,7 +657,7 @@ export default function MerchantSettingsPage() {
                                       value={currency}
                                       textValue={`${currency} - ${getCurrencyDisplayName(currency)}`}
                                     >
-                                      {currency} - {getCurrencyDisplayName(currency)}
+                                      {`${currency} - ${getCurrencyDisplayName(currency)}`}
                                     </SelectItem>
                                   ));
                                 })()}
