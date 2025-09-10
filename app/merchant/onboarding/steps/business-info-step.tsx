@@ -242,16 +242,16 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Card className="shadow-medium border-0 bg-white">
+      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="text-center space-y-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto">
-            <Building2 className="w-8 h-8 text-white" />
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <Building2 className="w-10 h-10 text-white" />
           </div>
           <div className="space-y-4">
-            <CardTitle className="heading-sm text-gray-900">
+            <CardTitle className="text-2xl font-bold text-gray-900 leading-tight">
               Complete your business profile
             </CardTitle>
-            <p className="text-body text-gray-600">
+            <p className="text-lg text-gray-600 leading-relaxed max-w-lg mx-auto">
               This information helps us customize your experience and ensure compliance with tax regulations.
             </p>
           </div>
@@ -262,8 +262,8 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             
             {/* Business Information Section */}
             <div className="space-y-8">
-              <h3 className="heading-sm text-gray-900 flex items-center gap-6">
-                <Building2 className="w-5 h-5 text-[#7f5efd]" />
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
+                <Building2 className="w-6 h-6 text-[#7f5efd]" />
                 Business Information
               </h3>
               
@@ -367,8 +367,8 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
             {/* Contact Information Section */}
             <div className="space-y-6">
-              <h3 className="heading-sm text-gray-900 flex items-center gap-6">
-                <Phone className="w-5 h-5 text-[#7f5efd]" />
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
+                <Phone className="w-6 h-6 text-[#7f5efd]" />
                 Contact Information
               </h3>
               
@@ -420,8 +420,8 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
             {/* Business Address Section */}
             <div className="space-y-8">
-              <h3 className="heading-sm text-gray-900 flex items-center gap-6">
-                <MapPin className="w-5 h-5 text-[#7f5efd]" />
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
+                <MapPin className="w-6 h-6 text-[#7f5efd]" />
                 Business Address
               </h3>
               
@@ -509,14 +509,14 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             </div>
 
             {/* Info Alert */}
-            <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
+            <Alert className="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 border-blue-200 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Info className="h-5 w-5 text-purple-600" />
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Info className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <AlertDescription className="text-purple-800">
-                    <div className="font-semibold mb-1">Important</div>
+                  <AlertDescription className="text-blue-800">
+                    <div className="font-bold mb-2 text-base leading-snug">Important Information</div>
                     <p className="text-sm leading-relaxed">
                       This information will be used for tax reporting and compliance.
                       You can update it later in your profile settings.

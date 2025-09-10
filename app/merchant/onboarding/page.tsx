@@ -219,16 +219,16 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/5 to-[#9f7aea]/5">
+    <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/8 via-white to-[#9f7aea]/8">
       <div className="container mx-auto px-6 py-12 space-y-12">
         {/* Header */}
         <div className="text-center space-y-6">
           <Logo className="mx-auto" />
           <div className="space-y-4">
-            <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+            <h2 className="font-phonic text-3xl font-semibold text-gray-900 mb-6 leading-tight">
               Welcome to Cryptrac
             </h2>
-            <p className="font-capsule text-base font-normal text-gray-600">
+            <p className="font-capsule text-lg font-normal text-gray-600 leading-relaxed max-w-xl mx-auto">
               Let&apos;s get your crypto payment system set up in just a few steps
             </p>
           </div>
@@ -245,8 +245,8 @@ export default function OnboardingPage() {
         {/* Error Display */}
         {error && (
           <div className="max-w-2xl mx-auto space-y-6">
-            <Alert className="border-red-200 bg-red-50">
-              <AlertDescription className="font-capsule text-base font-normal text-red-800">
+            <Alert className="border-red-300 bg-red-50 shadow-lg">
+              <AlertDescription className="font-capsule text-base font-medium text-red-800 leading-relaxed">
                 {error}
               </AlertDescription>
             </Alert>
@@ -254,7 +254,7 @@ export default function OnboardingPage() {
         )}
 
         {/* Current Step Content */}
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className="max-w-3xl mx-auto space-y-8 transition-all duration-500">
           {renderCurrentStep()}
         </div>
       </div>

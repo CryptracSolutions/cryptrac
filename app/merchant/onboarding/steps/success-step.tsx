@@ -4,7 +4,7 @@ import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
-import { CheckCircle, ArrowRight, Wallet, Building2, Settings, Sparkles } from 'lucide-react'
+import { CheckCircle, ArrowRight, Wallet, Building2, Settings, Sparkles, Twitter, Facebook, Linkedin, Share2 } from 'lucide-react'
 import { LoadingSpinner } from '@/app/components/ui/loading-spinner'
 
 interface OnboardingData {
@@ -33,6 +33,19 @@ interface SuccessStepProps {
 
 export default function SuccessStep({ onboardingData, onFinish, isLoading }: SuccessStepProps) {
   const { businessInfo, walletConfig, paymentConfig } = onboardingData
+
+  const shareMessage = `🚀 ${businessInfo.businessName} is now accepting crypto payments via Cryptrac! Join the future of payments with seamless cryptocurrency transactions. #Crypto #Payments #Innovation`
+  
+  const shareLinks = {
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://cryptrac.com')}&quote=${encodeURIComponent(shareMessage)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://cryptrac.com')}&summary=${encodeURIComponent(shareMessage)}`
+  }
+
+  const handleShare = (platform: string) => {
+    const url = shareLinks[platform as keyof typeof shareLinks]
+    window.open(url, '_blank', 'width=600,height=400')
+  }
 
   // Stable coin associations for automatic inclusion
   const stableCoinAssociations: Record<string, string[]> = {
@@ -63,14 +76,14 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
       <Card className="shadow-medium border-0 bg-white relative overflow-hidden">
 
         <CardHeader className="text-center space-y-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-10 h-10 text-white" />
+          <div className="w-24 h-24 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-xl animate-pulse" style={{ animationDuration: '2s' }}>
+            <CheckCircle className="w-12 h-12 text-white" />
           </div>
           <div className="space-y-4">
-            <CardTitle className="heading-lg text-gray-900">
+            <CardTitle className="text-3xl font-bold text-gray-900 leading-tight">
               Congratulations!
             </CardTitle>
-            <p className="text-body text-gray-600">
+            <p className="text-lg text-gray-600 leading-relaxed max-w-md mx-auto">
               Your Cryptrac account is ready to accept cryptocurrency payments!
             </p>
           </div>
@@ -231,11 +244,50 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
             </Button>
           </div>
 
+          {/* Social Share Section */}
+          <div className="bg-gradient-to-br from-[#7f5efd]/8 via-blue-50/50 to-[#9f7aea]/8 rounded-xl p-6 border border-[#7f5efd]/20">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <Share2 className="w-5 h-5 text-[#7f5efd]" />
+                <h3 className="font-bold text-gray-900 text-lg leading-snug">Share Your Achievement!</h3>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Let the world know that {businessInfo.businessName} is now accepting cryptocurrency payments
+              </p>
+              
+              <div className="flex flex-wrap justify-center gap-3 pt-2">
+                <Button
+                  onClick={() => handleShare('twitter')}
+                  className="flex items-center gap-2 bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                >
+                  <Twitter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Twitter</span>
+                </Button>
+                
+                <Button
+                  onClick={() => handleShare('facebook')}
+                  className="flex items-center gap-2 bg-[#4267B2] hover:bg-[#4267B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                >
+                  <Facebook className="w-4 h-4" />
+                  <span className="hidden sm:inline">Facebook</span>
+                </Button>
+                
+                <Button
+                  onClick={() => handleShare('linkedin')}
+                  className="flex items-center gap-2 bg-[#2867B2] hover:bg-[#2867B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                >
+                  <Linkedin className="w-4 h-4" />
+                  <span className="hidden sm:inline">LinkedIn</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+
           {/* Support */}
           <div className="text-center pt-4">
-            <p className="text-xs text-gray-500">
+            <p className="text-sm text-gray-500 leading-relaxed">
               Questions? We&apos;re here to help at{' '}
-              <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] hover:underline">
+              <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] hover:underline font-medium">
                 support@cryptrac.com
               </a>
             </p>

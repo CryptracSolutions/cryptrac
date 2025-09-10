@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Bitcoin, Zap, Network, CheckCircle, ArrowRight, DollarSign, Copy, Globe, ShoppingBag, Play, Pause, ChevronLeft, ChevronRight, Mail, Clock } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
+import { QRCode } from "@/app/components/ui/qr-code";
 
 export function PaymentJourneyDemo() {
   const [currentStage, setCurrentStage] = useState(0);
@@ -218,141 +219,14 @@ function QRCodeStage() {
 
       {/* QR Code */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <div className="w-32 h-32 bg-white rounded-lg mx-auto flex items-center justify-center">
-          <svg className="w-28 h-28" viewBox="0 0 210 210" fill="none">
-            <rect width="210" height="210" fill="white"/>
-            
-            {/* Clean, realistic QR Code */}
-            {/* Corner position detection patterns */}
-            <rect x="0" y="0" width="70" height="70" fill="black"/>
-            <rect x="10" y="10" width="50" height="50" fill="white"/>
-            <rect x="20" y="20" width="30" height="30" fill="black"/>
-            
-            <rect x="140" y="0" width="70" height="70" fill="black"/>
-            <rect x="150" y="10" width="50" height="50" fill="white"/>
-            <rect x="160" y="20" width="30" height="30" fill="black"/>
-            
-            <rect x="0" y="140" width="70" height="70" fill="black"/>
-            <rect x="10" y="150" width="50" height="50" fill="white"/>
-            <rect x="20" y="160" width="30" height="30" fill="black"/>
-            
-            {/* Timing patterns */}
-            <rect x="80" y="60" width="10" height="10" fill="black"/>
-            <rect x="100" y="60" width="10" height="10" fill="black"/>
-            <rect x="120" y="60" width="10" height="10" fill="black"/>
-            <rect x="60" y="80" width="10" height="10" fill="black"/>
-            <rect x="60" y="100" width="10" height="10" fill="black"/>
-            <rect x="60" y="120" width="10" height="10" fill="black"/>
-            
-            {/* Alignment pattern (center) */}
-            <rect x="90" y="90" width="30" height="30" fill="black"/>
-            <rect x="100" y="100" width="10" height="10" fill="white"/>
-            <rect x="105" y="105" width="0" height="0" fill="black"/>
-            
-            {/* Data patterns - simplified but realistic */}
-            <rect x="80" y="0" width="10" height="10" fill="black"/>
-            <rect x="100" y="0" width="10" height="10" fill="black"/>
-            <rect x="120" y="0" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="10" width="10" height="10" fill="black"/>
-            <rect x="110" y="10" width="10" height="10" fill="black"/>
-            <rect x="130" y="10" width="10" height="10" fill="black"/>
-            
-            <rect x="90" y="20" width="10" height="10" fill="black"/>
-            <rect x="120" y="20" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="30" width="10" height="10" fill="black"/>
-            <rect x="100" y="30" width="10" height="10" fill="black"/>
-            <rect x="130" y="30" width="10" height="10" fill="black"/>
-            
-            <rect x="90" y="40" width="10" height="10" fill="black"/>
-            <rect x="110" y="40" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="50" width="10" height="10" fill="black"/>
-            <rect x="120" y="50" width="10" height="10" fill="black"/>
-            <rect x="130" y="50" width="10" height="10" fill="black"/>
-            
-            {/* Left side data */}
-            <rect x="0" y="80" width="10" height="10" fill="black"/>
-            <rect x="20" y="80" width="10" height="10" fill="black"/>
-            <rect x="40" y="80" width="10" height="10" fill="black"/>
-            
-            <rect x="10" y="90" width="10" height="10" fill="black"/>
-            <rect x="30" y="90" width="10" height="10" fill="black"/>
-            
-            <rect x="0" y="100" width="10" height="10" fill="black"/>
-            <rect x="20" y="100" width="10" height="10" fill="black"/>
-            <rect x="50" y="100" width="10" height="10" fill="black"/>
-            
-            <rect x="10" y="110" width="10" height="10" fill="black"/>
-            <rect x="40" y="110" width="10" height="10" fill="black"/>
-            
-            <rect x="0" y="120" width="10" height="10" fill="black"/>
-            <rect x="30" y="120" width="10" height="10" fill="black"/>
-            <rect x="50" y="120" width="10" height="10" fill="black"/>
-            
-            <rect x="20" y="130" width="10" height="10" fill="black"/>
-            <rect x="40" y="130" width="10" height="10" fill="black"/>
-            
-            {/* Right side data */}
-            <rect x="140" y="80" width="10" height="10" fill="black"/>
-            <rect x="160" y="80" width="10" height="10" fill="black"/>
-            <rect x="180" y="80" width="10" height="10" fill="black"/>
-            <rect x="200" y="80" width="10" height="10" fill="black"/>
-            
-            <rect x="150" y="90" width="10" height="10" fill="black"/>
-            <rect x="170" y="90" width="10" height="10" fill="black"/>
-            <rect x="190" y="90" width="10" height="10" fill="black"/>
-            
-            <rect x="140" y="100" width="10" height="10" fill="black"/>
-            <rect x="180" y="100" width="10" height="10" fill="black"/>
-            <rect x="200" y="100" width="10" height="10" fill="black"/>
-            
-            <rect x="160" y="110" width="10" height="10" fill="black"/>
-            <rect x="170" y="110" width="10" height="10" fill="black"/>
-            <rect x="190" y="110" width="10" height="10" fill="black"/>
-            
-            <rect x="140" y="120" width="10" height="10" fill="black"/>
-            <rect x="150" y="120" width="10" height="10" fill="black"/>
-            <rect x="180" y="120" width="10" height="10" fill="black"/>
-            
-            <rect x="160" y="130" width="10" height="10" fill="black"/>
-            <rect x="190" y="130" width="10" height="10" fill="black"/>
-            <rect x="200" y="130" width="10" height="10" fill="black"/>
-            
-            {/* Bottom data patterns */}
-            <rect x="80" y="160" width="10" height="10" fill="black"/>
-            <rect x="100" y="160" width="10" height="10" fill="black"/>
-            <rect x="120" y="160" width="10" height="10" fill="black"/>
-            <rect x="140" y="160" width="10" height="10" fill="black"/>
-            <rect x="160" y="160" width="10" height="10" fill="black"/>
-            <rect x="180" y="160" width="10" height="10" fill="black"/>
-            <rect x="200" y="160" width="10" height="10" fill="black"/>
-            
-            <rect x="90" y="170" width="10" height="10" fill="black"/>
-            <rect x="110" y="170" width="10" height="10" fill="black"/>
-            <rect x="130" y="170" width="10" height="10" fill="black"/>
-            <rect x="150" y="170" width="10" height="10" fill="black"/>
-            <rect x="170" y="170" width="10" height="10" fill="black"/>
-            <rect x="190" y="170" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="180" width="10" height="10" fill="black"/>
-            <rect x="120" y="180" width="10" height="10" fill="black"/>
-            <rect x="140" y="180" width="10" height="10" fill="black"/>
-            <rect x="160" y="180" width="10" height="10" fill="black"/>
-            <rect x="200" y="180" width="10" height="10" fill="black"/>
-            
-            <rect x="100" y="190" width="10" height="10" fill="black"/>
-            <rect x="130" y="190" width="10" height="10" fill="black"/>
-            <rect x="150" y="190" width="10" height="10" fill="black"/>
-            <rect x="180" y="190" width="10" height="10" fill="black"/>
-            
-            <rect x="80" y="200" width="10" height="10" fill="black"/>
-            <rect x="110" y="200" width="10" height="10" fill="black"/>
-            <rect x="140" y="200" width="10" height="10" fill="black"/>
-            <rect x="170" y="200" width="10" height="10" fill="black"/>
-            <rect x="190" y="200" width="10" height="10" fill="black"/>
-          </svg>
+        <div className="mx-auto">
+          <QRCode
+            currency="BTC"
+            address="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh9w8r5t"
+            size={128}
+            hideDetails
+            className="mx-auto"
+          />
         </div>
         <div className="text-center mt-2">
           <div className="text-xs text-gray-500">Scan with wallet</div>
