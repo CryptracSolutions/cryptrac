@@ -311,11 +311,11 @@ export function FeeDocumentation({
                       <div className="grid gap-2">
                         <div className="flex justify-between items-center p-2 bg-white rounded border">
                           <span className="text-sm">Direct Payments</span>
-                          <Badge className={isLanding ? 'bg-[#7f5efd]/10 text-[#7f5efd]' : 'bg-green-100 text-green-700'}>0.5%</Badge>
+                          <span className={isLanding ? 'font-bold text-[#7f5efd]' : 'font-bold text-green-700'}>0.5%</span>
                         </div>
                         <div className="flex justify-between items-center p-2 bg-white rounded border">
                           <span className="text-sm">Auto-Convert Payments</span>
-                          <Badge className={isLanding ? 'bg-[#7f5efd]/10 text-[#7f5efd]' : 'bg-green-100 text-green-700'}>1.0%</Badge>
+                          <span className={isLanding ? 'font-bold text-[#7f5efd]' : 'font-bold text-green-700'}>1.0%</span>
                         </div>
                       </div>
                     </div>
