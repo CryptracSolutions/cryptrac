@@ -14,6 +14,7 @@ export function LandingNav() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
   const [canAccessDashboard, setCanAccessDashboard] = React.useState(false)
   const [isAuthChecked, setIsAuthChecked] = React.useState(false)
+  const [isPending, startTransition] = React.useTransition()
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -31,17 +32,29 @@ export function LandingNav() {
   // Detect and subscribe to auth state, and determine dashboard visibility
   React.useEffect(() => {
     let isMounted = true
+    const ric = (cb: () => void) => {
+      // Defer to idle time to avoid blocking navigation/UI thread
+      if (typeof window !== 'undefined' && (window as any).requestIdleCallback) {
+        ;(window as any).requestIdleCallback(cb)
+      } else {
+        setTimeout(cb, 0)
+      }
+    }
 
     const evaluateAccess = async () => {
       const { data } = await supabase.auth.getUser()
       const user = data.user
       if (!isMounted) return
 
-      setIsLoggedIn(!!user)
+      startTransition(() => {
+        setIsLoggedIn(!!user)
+      })
 
       if (!user) {
-        setCanAccessDashboard(false)
-        setIsAuthChecked(true)
+        startTransition(() => {
+          setCanAccessDashboard(false)
+          setIsAuthChecked(true)
+        })
         return
       }
 
@@ -49,8 +62,10 @@ export function LandingNav() {
 
       // Non-merchant roles can access their dashboards
       if (role && role !== 'merchant') {
-        setCanAccessDashboard(true)
-        setIsAuthChecked(true)
+        startTransition(() => {
+          setCanAccessDashboard(true)
+          setIsAuthChecked(true)
+        })
         return
       }
 
@@ -64,24 +79,32 @@ export function LandingNav() {
 
         if (error) {
           // If there's an error or no merchant yet, treat as not completed
-          setCanAccessDashboard(false)
-          setIsAuthChecked(true)
+          startTransition(() => {
+            setCanAccessDashboard(false)
+            setIsAuthChecked(true)
+          })
           return
         }
 
         const completed = !!(merchant?.onboarding_completed || merchant?.onboarded)
-        setCanAccessDashboard(completed)
-        setIsAuthChecked(true)
+        startTransition(() => {
+          setCanAccessDashboard(completed)
+          setIsAuthChecked(true)
+        })
       } catch {
-        setCanAccessDashboard(false)
-        setIsAuthChecked(true)
+        startTransition(() => {
+          setCanAccessDashboard(false)
+          setIsAuthChecked(true)
+        })
       }
     }
 
-    evaluateAccess()
+    ric(evaluateAccess)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      evaluateAccess()
+      ric(() => {
+        evaluateAccess()
+      })
     })
 
     return () => {
@@ -90,7 +113,7 @@ export function LandingNav() {
     }
   }, [])
 
-  const whatWeOfferItems = [
+  const whatWeOfferItems = React.useMemo(() => [
     { 
       name: "Smart Terminal", 
       href: "/smart-terminal-info",
@@ -106,7 +129,7 @@ export function LandingNav() {
       href: "/subscriptions-info",
       description: "Automated recurring crypto payments"
     }
-  ]
+  ], [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
