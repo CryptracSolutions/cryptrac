@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import WalletsManager from '@/app/components/settings/WalletsManager'
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
+import { Dialog, DialogContent } from '@/app/components/ui/dialog'
 import Tooltip from '@/app/components/ui/tooltip'
+import { RECOMMENDED_CURRENCIES } from '@/lib/recommended-currencies'
 import { CheckCircle, HelpCircle, Wallet, Star } from 'lucide-react'
 
 interface WalletSetupStepProps {
@@ -18,46 +20,8 @@ type MerchantSettings = Record<string, any> & {
   wallet_extra_ids?: Record<string, string>
 }
 
-// Network logos mapping
-const networkLogos: Record<string, string> = {
-  'BTC': '₿',
-  'ETH': 'Ξ', 
-  'ETHBASE': 'Ξ',
-  'SOL': '◎',
-  'XRP': '●',
-  'BNBBSC': '●',
-  'ADA': '₳',
-  'ALGO': 'A',
-  'AVAX': '▲',
-  'CRO': '◇',
-  'DOGE': 'Ð',
-  'HYPE': 'H',
-  'LTC': 'Ł',
-  'DOT': '●',
-  'SUI': 'S',
-  'TON': 'T',
-  'TRX': '▼',
-  'XLM': '*',
-}
-
-
-// Recommended currencies for merchants
-const recommendedCurrencies = [
-  { code: 'BTC', name: 'Bitcoin', logo: networkLogos['BTC'] },
-  { code: 'ETH', name: 'Ethereum', logo: networkLogos['ETH'] },
-  { code: 'ETHBASE', name: 'Ethereum', logo: networkLogos['ETHBASE'] },
-  { code: 'SOL', name: 'Solana', logo: networkLogos['SOL'] },
-  { code: 'AVAX', name: 'Avalanche', logo: networkLogos['AVAX'] },
-  { code: 'BNBBSC', name: 'Binance Coin (BSC)', logo: networkLogos['BNBBSC'] },
-  { code: 'ADA', name: 'Cardano', logo: networkLogos['ADA'] },
-  { code: 'LTC', name: 'Litecoin', logo: networkLogos['LTC'] },
-  { code: 'DOT', name: 'Polkadot', logo: networkLogos['DOT'] },
-  { code: 'XRP', name: 'Ripple', logo: networkLogos['XRP'] },
-  { code: 'SUI', name: 'Sui', logo: networkLogos['SUI'] },
-  { code: 'TON', name: 'Toncoin', logo: networkLogos['TON'] },
-  { code: 'TRX', name: 'Tron', logo: networkLogos['TRX'] },
-  { code: 'XLM', name: 'Stellar', logo: networkLogos['XLM'] },
-]
+// Recommended currencies for merchants (shared with wallets page)
+const recommendedCurrencies = RECOMMENDED_CURRENCIES
 
 export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps) {
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false)
@@ -144,17 +108,15 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {/* Trust Wallet Guide Modal - Show at top when activated */}
-          {showTrustWalletGuide && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <TrustWalletGuide
-                  onComplete={() => setShowTrustWalletGuide(false)}
-                  onSkip={() => setShowTrustWalletGuide(false)}
-                />
-              </div>
-            </div>
-          )}
+          {/* Setup Guide Modal */}
+          <Dialog open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
+            <DialogContent className="sm:max-w-3xl w-full bg-white border-[#7f5efd] shadow-xl p-0">
+              <TrustWalletGuide
+                onComplete={() => setShowTrustWalletGuide(false)}
+                onSkip={() => setShowTrustWalletGuide(false)}
+              />
+            </DialogContent>
+          </Dialog>
 
       {/* Wallets Manager - exact same component as /merchant/wallets */}
       <WalletsManager

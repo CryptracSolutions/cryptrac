@@ -19,7 +19,9 @@ import toast from 'react-hot-toast';
 import WalletsManager from '@/app/components/settings/WalletsManager';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
+import { Dialog, DialogContent } from '@/app/components/ui/dialog';
 import Tooltip from '@/app/components/ui/tooltip';
+import { RECOMMENDED_CURRENCIES } from '@/lib/recommended-currencies';
 
 interface MerchantSettings {
   // Wallet settings
@@ -55,23 +57,8 @@ interface MerchantSettings {
   sales_type: 'local' | 'online' | 'both';
 }
 
-// Recommended currencies (mirrors onboarding step 3)
-const recommendedCurrencies = [
-  { code: 'BTC', name: 'Bitcoin' },
-  { code: 'ETH', name: 'Ethereum' },
-  { code: 'ETHBASE', name: 'Ethereum' },
-  { code: 'SOL', name: 'Solana' },
-  { code: 'AVAX', name: 'Avalanche' },
-  { code: 'BNBBSC', name: 'Binance Coin (BSC)' },
-  { code: 'ADA', name: 'Cardano' },
-  { code: 'LTC', name: 'Litecoin' },
-  { code: 'DOT', name: 'Polkadot' },
-  { code: 'XRP', name: 'Ripple' },
-  { code: 'SUI', name: 'Sui' },
-  { code: 'TON', name: 'Toncoin' },
-  { code: 'TRX', name: 'Tron' },
-  { code: 'XLM', name: 'Stellar' },
-]
+// Recommended currencies (shared with onboarding step 3)
+const recommendedCurrencies = RECOMMENDED_CURRENCIES
 
 export default function WalletsPage() {
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
@@ -264,17 +251,15 @@ export default function WalletsPage() {
           </Alert>
         )}
 
-        {/* Trust Wallet Guide Modal - Show at top when activated */}
-        {showTrustWalletGuide && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <TrustWalletGuide
-                onComplete={() => setShowTrustWalletGuide(false)}
-                onSkip={() => setShowTrustWalletGuide(false)}
-              />
-            </div>
-          </div>
-        )}
+        {/* Setup Guide Modal */}
+        <Dialog open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
+          <DialogContent className="sm:max-w-3xl w-full bg-white border-[#7f5efd] shadow-xl p-0">
+            <TrustWalletGuide
+              onComplete={() => setShowTrustWalletGuide(false)}
+              onSkip={() => setShowTrustWalletGuide(false)}
+            />
+          </DialogContent>
+        </Dialog>
 
         {/* Setup Guide + Recommended (matches onboarding step 3) */}
         <div className="flex justify-center items-center gap-6">
