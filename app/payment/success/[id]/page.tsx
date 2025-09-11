@@ -82,7 +82,8 @@ export default function PaymentSuccessPage() {
       setLoading(true)
       console.log('🔍 Loading payment success data for ID:', linkId)
 
-      const response = await fetch(`/api/payments/success/${linkId}`)
+      const qs = paymentId ? `?payment_id=${encodeURIComponent(paymentId)}` : ''
+      const response = await fetch(`/api/payments/success/${linkId}${qs}`)
       
       if (!response.ok) {
         throw new Error('Failed to load payment data')
