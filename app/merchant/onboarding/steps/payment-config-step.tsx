@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
-import { ArrowRight, ArrowLeft, Settings, HelpCircle, Loader2, Calculator, DollarSign, Plus } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Settings, HelpCircle, Loader2, Plus } from 'lucide-react'
 import Tooltip from '@/app/components/ui/tooltip'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
@@ -88,14 +88,6 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     return expanded
   }, [baseCurrencies])
 
-  // Recommended currencies for the tooltip
-  const recommendedCurrencies = [
-    { code: 'BTC', name: 'Bitcoin' },
-    { code: 'ETH', name: 'Ethereum' },
-    { code: 'SOL', name: 'Solana' },
-    { code: 'USDC', name: 'USD Coin' },
-    { code: 'USDT', name: 'Tether' }
-  ]
   
   // Currency display names mapping (updated with comprehensive stable coins)
   const CURRENCY_NAMES: Record<string, string> = {
@@ -207,11 +199,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                   >
                     <HelpCircle className="h-4 w-4" />
-                    ?
                   </Button>
                 }
                 title="Accepted Cryptocurrencies"
-                description={`Your ${baseCurrencies.length} base cryptocurrencies automatically include ${expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility.`}
+                description={`Your ${baseCurrencies.length} base cryptocurrencies automatically include ${expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility. Customers can pay with any of these currencies, and you'll receive payments directly to your configured wallet addresses. All major stablecoins (USDC, USDT, DAI) are included automatically for each supported network.`}
                 recommendedCurrencies={[]}
                 className="w-full flex justify-start"
               />
@@ -296,11 +287,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                   >
                     <HelpCircle className="h-4 w-4" />
-                    ?
                   </Button>
                 }
                 title="Gateway Fee Settings"
-                description="Choose who pays the gateway fee. This setting can be overridden for individual payment links."
+                description="Choose who pays the gateway fee. This setting can be overridden for individual payment links. Gateway fees are 0.5% for direct payments or 1% for auto-convert payments. When merchants pay the fee, customers see cleaner pricing. When customers pay the fee, you receive the full payment amount."
                 recommendedCurrencies={[]}
                 className="w-full flex justify-start"
               />
@@ -370,11 +360,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                 >
                   <HelpCircle className="h-4 w-4" />
-                  ?
                 </Button>
               }
               title="Tax Collection Settings"
-              description="Configure tax collection for your payments. You can skip this step and configure it later in your settings."
+              description="Configure tax collection for your payments. You can skip this step and configure it later in your settings. Tax collection automatically calculates and adds applicable taxes to payment amounts. Choose between origin-based (your location), destination-based (customer location), or custom rates. Cryptrac helps collect taxes but doesn't file them - consult your tax professional."
               recommendedCurrencies={[]}
               className="w-full flex justify-start"
             />
@@ -403,8 +392,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 <div className="ml-8 space-y-6">
                   {/* Tax Strategy */}
                   <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <Calculator className="h-4 w-4 text-[#7f5efd]" />
+                    <label className="text-sm font-medium text-gray-700">
                       Tax Strategy
                     </label>
                     <Select
@@ -455,8 +443,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   {/* Default Tax Rates */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-[#7f5efd]" />
+                      <label className="text-sm font-medium text-gray-700">
                         Default Tax Rates
                       </label>
                       <Button
@@ -558,11 +545,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                   >
                     <HelpCircle className="h-4 w-4" />
-                    ?
                   </Button>
                 }
                 title="Auto-Conversion Feature"
-                description="Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled."
+                description="Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled. This feature converts any crypto payment (Bitcoin, Ethereum, etc.) into your chosen currency before sending to your wallet. Useful for maintaining consistent holdings or receiving payments in stablecoins for price stability."
                 recommendedCurrencies={[]}
                 className="w-full flex justify-start"
               />

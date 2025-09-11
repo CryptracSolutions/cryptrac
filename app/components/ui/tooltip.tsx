@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { ChevronDown, ChevronUp, Star, Info } from 'lucide-react'
+import { ChevronUp, Star } from 'lucide-react'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 
 interface RecommendedCurrency {
@@ -66,7 +66,7 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 z-50 w-full max-w-md">
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 z-50 w-full max-w-2xl">
           <Card className="border-[#7f5efd]/30 shadow-lg bg-white">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -90,7 +90,7 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
               </p>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {recommendedCurrencies.map((currency) => (
                   <div
                     key={currency.code}
@@ -100,11 +100,11 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
                         setIsOpen(false) // Close tooltip when currency is selected
                       }
                     }}
-                    className="flex items-center gap-2 p-3 bg-[#7f5efd]/5 rounded-lg hover:bg-[#7f5efd]/10 transition-all duration-200 border border-[#7f5efd]/20 cursor-pointer"
+                    className="flex flex-col items-center gap-2 p-3 bg-[#7f5efd]/5 rounded-lg hover:bg-[#7f5efd]/10 transition-all duration-200 border border-[#7f5efd]/20 cursor-pointer hover:scale-105"
                   >
-                    <CryptoIcon currency={currency.code} className="h-6 w-6 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-black truncate leading-tight">
+                    <CryptoIcon currency={currency.code} className="h-8 w-8 flex-shrink-0" />
+                    <div className="text-center">
+                      <div className="text-xs font-medium text-black leading-tight">
                         {currency.name}
                       </div>
                       <div className="text-xs text-[#7f5efd] uppercase font-medium">

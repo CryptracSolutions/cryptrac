@@ -136,7 +136,10 @@ export default function Signup() {
           {/* Logo and Header */}
           <div className="text-center">
             <div className="flex justify-center mb-8">
-              <Logo size="lg" />
+              <Link href="/" className="flex items-center gap-3" aria-label="Go to homepage">
+                <Logo size="lg" showText={false} emblemClassName="bg-transparent" />
+                <span className="font-phonic text-xl leading-tight font-medium text-gray-900 tracking-tight">Cryptrac</span>
+              </Link>
             </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Welcome to the future of payments</h1>
             <p className="font-capsule text-base text-gray-600 mb-6">

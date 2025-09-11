@@ -190,7 +190,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           onClick={onBack} 
           className="px-8 h-12 text-base font-medium"
         >
-          Back
+          Previous
         </Button>
         <Button
           onClick={handleNext}
