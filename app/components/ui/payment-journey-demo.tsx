@@ -269,8 +269,8 @@ function SuccessStage() {
   return (
     <div className="space-y-4 text-center">
       {/* Success Icon */}
-      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <CheckCircle className="h-12 w-12 text-green-500" />
+      <div className="w-20 h-20 bg-[#f5f3ff] rounded-full flex items-center justify-center mx-auto mb-4">
+        <CheckCircle className="h-6 w-6 text-[#7f5efd]" />
       </div>
 
       {/* Success Message */}

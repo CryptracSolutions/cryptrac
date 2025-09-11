@@ -10,7 +10,7 @@ function formatUsd(n: number | null | undefined) {
 }
 
 function NetworkFeeEstimator() {
-  const [fees, setFees] = useState<{ btc?: number|null; eth?: number|null; sol?: number|null; xrp?: number|null; base?: number|null; trx?: number|null; bnb?: number|null } | null>(null)
+  const [fees, setFees] = useState<{ btc?: number|null; eth?: number|null; sol?: number|null; xrp?: number|null; base?: number|null; trx?: number|null; bnb?: number|null; sui?: number|null } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,6 +51,7 @@ function NetworkFeeEstimator() {
           {item('Ethereum', fees.eth)}
           {item('Solana', fees.sol)}
           {item('XRP', fees.xrp)}
+          {item('Sui', fees.sui)}
           {item('Base', fees.base)}
           {item('Tron', fees.trx)}
           {item('BNB', fees.bnb)}

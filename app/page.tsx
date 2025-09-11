@@ -537,6 +537,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Understanding Payment Fees Section */}
+      <section id="fees" className="py-12 bg-slate-50">
+        <div className="container-wide">
+          <div className="text-center mb-12">
+            <h3 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
+              Understanding Payment Fees
+            </h3>
+            <p className="font-phonic text-base text-gray-600 max-w-3xl mx-auto">
+              Simple breakdown of how crypto payments work compared to traditional processors
+            </p>
+          </div>
+
+          <div className="max-w-6xl mx-auto">
+            <FeeDocumentation
+              variant="full"
+              showComparison={true}
+              showNetworkFees={true}
+              showGatewayFees={true}
+              colorVariant="landing"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section id="faq" className="py-12 bg-slate-50">
         <div className="container-wide">
@@ -564,28 +588,6 @@ export default function Home() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-          
-          {/* Understanding Payment Fees (uses onboarding step 4 content, landing colors) */}
-          <div className="mt-20">
-            <div className="text-center mb-12">
-              <h3 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
-                Understanding Payment Fees
-              </h3>
-              <p className="font-phonic text-base text-gray-600 max-w-3xl mx-auto">
-                Simple breakdown of how crypto payments work compared to traditional processors
-              </p>
-            </div>
-
-            <div className="max-w-6xl mx-auto">
-              <FeeDocumentation
-                variant="full"
-                showComparison={true}
-                showNetworkFees={true}
-                showGatewayFees={true}
-                colorVariant="landing"
-              />
-            </div>
           </div>
         </div>
       </section>

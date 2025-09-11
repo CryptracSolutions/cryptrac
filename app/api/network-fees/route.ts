@@ -32,7 +32,7 @@ function safeNumber(n: unknown): number | null {
 export async function GET(_req: NextRequest) {
   try {
     // 1) Prices (USD)
-    const priceIds = ['bitcoin','ethereum','solana','ripple','tron','binancecoin']
+    const priceIds = ['bitcoin','ethereum','solana','ripple','tron','binancecoin','sui']
     const priceUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${priceIds.join(',')}&vs_currencies=usd`
     const prices = await fetchJSON(priceUrl)
 
@@ -43,7 +43,8 @@ export async function GET(_req: NextRequest) {
       XRP: safeNumber(prices?.ripple?.usd) || 0,
       TRX: safeNumber(prices?.tron?.usd) || 0,
       BNB: safeNumber(prices?.binancecoin?.usd) || 0,
-      BASE: safeNumber(prices?.ethereum?.usd) || 0 // Base uses ETH for gas
+      BASE: safeNumber(prices?.ethereum?.usd) || 0, // Base uses ETH for gas
+      SUI: safeNumber(prices?.sui?.usd) || 0
     }
 
     // 2) BTC: mempool.space sat/vB → assume 140 vB tx
@@ -86,8 +87,8 @@ export async function GET(_req: NextRequest) {
     const bnbFeeBnb = bnbGasWei != null ? (bnbGasWei * 21000) / 1e18 : null
     const bnbFeeUsd = bnbFeeBnb != null ? bnbFeeBnb * usdPrice.BNB : null
 
-    // 6) XRP fee via Ripple public server (drops)
-    const xrpFeeRes = await fetchJSON('https://s2.ripple.com:51234/', {
+    // 6) XRP fee via public HTTPS JSON-RPC (xrplcluster)
+    const xrpFeeRes = await fetchJSON('https://xrplcluster.com/', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ method: 'fee', params: [{}] })
@@ -102,11 +103,23 @@ export async function GET(_req: NextRequest) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getRecentBlockhash', params: [] })
     }).catch(() => null)
-    const lamportsPerSig = safeNumber(solRes?.result?.value?.feeCalculator?.lamportsPerSignature) || null
-    const solFeeSol = lamportsPerSig != null ? lamportsPerSig / 1e9 : null
+    // Fallback to typical base signature fee if not provided
+    const lamportsPerSig = safeNumber(solRes?.result?.value?.feeCalculator?.lamportsPerSignature) ?? 5000
+    const solFeeSol = lamportsPerSig != null ? (lamportsPerSig as number) / 1e9 : null
     const solFeeUsd = solFeeSol != null ? solFeeSol * usdPrice.SOL : null
 
-    // 8) Tron (approx): use chain parameter transaction fee per KB (sun)
+    // 8) SUI (approx): use RPC to fetch reference gas price, assume 2e4 gas units for simple transfer
+    const suiGasRes = await fetchJSON('https://fullnode.mainnet.sui.io', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'suix_getReferenceGasPrice', params: [] })
+    }).catch(() => null)
+    const suiGasPrice = safeNumber(suiGasRes?.result) // in MIST per gas unit (1 SUI = 1e9 MIST)
+    const suiGasUnits = 20000 // compact heuristic for a transfer
+    const suiFeeSui = suiGasPrice != null ? (suiGasPrice * suiGasUnits) / 1e9 : null
+    const suiFeeUsd = suiFeeSui != null ? suiFeeSui * usdPrice.SUI : null
+
+    // 9) Tron (approx): use chain parameter transaction fee per KB (sun)
     const tronParams = await fetchJSON('https://api.trongrid.io/wallet/getchainparameters', { method: 'GET' }).catch(() => null)
     const txFeeParam = (tronParams?.chainParameter || []).find((p: any) => p.key === 'getTransactionFee')
     const tronSunPerKb = safeNumber(txFeeParam?.value) || 1000 // default 1000 sun
@@ -120,6 +133,7 @@ export async function GET(_req: NextRequest) {
       xrp: xrpFeeUsd,
       base: baseFeeUsd,
       trx: tronFeeUsd,
+      sui: suiFeeUsd,
       bnb: bnbFeeUsd
     }
 
