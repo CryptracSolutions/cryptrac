@@ -146,12 +146,12 @@ function CurrencySelectionStage() {
   return (
     <div className="space-y-4">
       {/* Fee Breakdown */}
-      <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100">
+      <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
         <div className="flex items-center gap-2 mb-2">
-          <ShoppingBag className="h-3 w-3 text-[#7f5efd]" />
-          <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
+          <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
+          <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
         </div>
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1.5 text-sm">
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Subtotal</span>
             <span className="font-semibold text-gray-900">$299.99</span>
@@ -164,7 +164,7 @@ function CurrencySelectionStage() {
             <span>Gateway fee (0.5%)</span>
             <span className="font-medium">+$1.50</span>
           </div>
-          <div className="flex justify-between items-center font-bold border-t border-purple-100 pt-1">
+          <div className="flex justify-between items-center font-bold border-t border-purple-100 pt-2">
             <span className="text-gray-700">Total</span>
             <span className="text-[#7f5efd]">$319.49</span>
           </div>
@@ -177,9 +177,9 @@ function CurrencySelectionStage() {
           <Network className="h-3 w-3 text-[#7f5efd]" />
           Network
         </label>
-        <div className="h-10 bg-gradient-to-r from-white to-purple-50 border border-purple-200 rounded-lg flex items-center px-3">
+        <div className="h-12 bg-gradient-to-r from-white to-purple-50 border border-purple-200 rounded-lg flex items-center px-4">
           <div className="flex items-center gap-2">
-            <Bitcoin className="h-4 w-4 text-[#f7931a]" />
+            <Bitcoin className="h-5 w-5 text-[#f7931a]" />
             <span className="text-sm font-medium text-gray-900">Bitcoin</span>
           </div>
         </div>
@@ -191,9 +191,9 @@ function CurrencySelectionStage() {
           <Bitcoin className="h-3 w-3 text-[#7f5efd]" />
           Currency
         </label>
-        <div className="h-10 bg-gradient-to-r from-white to-purple-50 border border-purple-200 rounded-lg flex items-center px-3">
+        <div className="h-12 bg-gradient-to-r from-white to purple-50 border border-purple-200 rounded-lg flex items-center px-4">
           <div className="flex items-center gap-2">
-            <Bitcoin className="h-4 w-4 text-[#f7931a]" />
+            <Bitcoin className="h-5 w-5 text-[#f7931a]" />
             <span className="text-sm font-medium text-gray-900">BTC</span>
             <span className="text-xs text-gray-500">Bitcoin</span>
           </div>
@@ -213,20 +213,20 @@ function QRCodeStage() {
   return (
     <div className="space-y-4">
       {/* Status */}
-      <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
         <div className="flex items-center justify-center gap-2">
-          <Clock className="h-5 w-5 text-[#7f5efd] animate-spin" />
+          <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
           <span className="text-sm font-medium text-gray-700">Awaiting Payment</span>
         </div>
       </div>
 
       {/* QR Code */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
         <div className="mx-auto">
           <QRCode
             currency="BTC"
             address="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh9w8r5t"
-            size={128}
+            size={160}
             hideDetails
             className="mx-auto"
           />
@@ -237,21 +237,21 @@ function QRCodeStage() {
       </div>
 
       {/* Amount */}
-      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-3 rounded-lg border border-purple-200 text-center">
+      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200 text-center">
         <p className="text-xs text-gray-600 mb-1">Send exactly</p>
-        <p className="text-lg font-bold text-[#7f5efd]">0.00748 BTC</p>
+        <p className="text-xl font-bold text-[#7f5efd]">0.00748 BTC</p>
       </div>
 
       {/* Address - Full Address with Gradient */}
-      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-3 rounded-lg border border-purple-200 relative">
+      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200 relative">
         <div className="text-center">
           <p className="text-xs text-gray-600 mb-1">Wallet Address</p>
           <p className="text-xs font-mono text-[#7f5efd] font-medium break-all leading-relaxed">
             bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh9w8r5t
           </p>
         </div>
-        <button className="absolute right-2 top-2 p-1 text-[#7f5efd] hover:bg-purple-50 rounded">
-          <Copy className="h-3 w-3" />
+        <button className="absolute right-2 top-2 p-1.5 text-[#7f5efd] hover:bg-purple-50 rounded">
+          <Copy className="h-4 w-4" />
         </button>
       </div>
     </div>

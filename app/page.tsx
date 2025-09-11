@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Network, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Network, ChevronLeft, ChevronRight, ExternalLink, FileText } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
@@ -17,19 +17,29 @@ export default function Home() {
 
   const features = [
     {
-      icon: Shield,
-      title: "Non-Custodial Security",
-      description: "You hold your keys - we never touch your funds. Direct wallet-to-wallet transfers ensure maximum security."
-    },
-    {
       icon: Zap,
       title: "Instant Setup",
       description: "Get started in minutes. Generate payment links, QR codes, and invoices with just a few clicks."
     },
     {
+      icon: FileText,
+      title: "Exportable Tax Reports",
+      description: "Full, exportable tax reports to simplify accounting and compliance."
+    },
+    {
+      icon: Shield,
+      title: "Non-Custodial Security",
+      description: "You hold your keys - we never touch your funds. Direct wallet-to-wallet transfers ensure maximum security."
+    },
+    {
       icon: Globe,
       title: "Global Reach",
       description: "Accept payments from anywhere in the world. Support for all major cryptocurrencies."
+    },
+    {
+      icon: Bitcoin,
+      title: "Multi-Currency",
+      description: "Support for Bitcoin, Ethereum, Litecoin, and many more cryptocurrencies."
     },
     {
       icon: BarChart3,
@@ -40,11 +50,6 @@ export default function Home() {
       icon: Smartphone,
       title: "Mobile Optimized",
       description: "Perfect for point-of-sale. Mobile-friendly interface works on any device."
-    },
-    {
-      icon: Bitcoin,
-      title: "Multi-Currency",
-      description: "Support for Bitcoin, Ethereum, Litecoin, and many more cryptocurrencies."
     }
   ];
 
