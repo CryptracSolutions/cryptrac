@@ -29,6 +29,20 @@ function safeNumber(n: unknown): number | null {
   return isFinite(x) ? x : null
 }
 
+function isHexResult(v: unknown): v is string {
+  return typeof v === 'string' && /^0x[0-9a-fA-F]+$/.test(v)
+}
+
+async function jsonRpcHex(url: string, payload: any): Promise<string | null> {
+  const res = await fetchJSON(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(() => null)
+  const hex = (res as any)?.result
+  return isHexResult(hex) ? hex : null
+}
+
 export async function GET(_req: NextRequest) {
   try {
     // 1) Prices (USD)
@@ -54,42 +68,38 @@ export async function GET(_req: NextRequest) {
       ? ((btcSatPerVb * 140 /* vB */) / 1e8) * usdPrice.BTC
       : null
 
-    // 3) ETH gas price (wei) with fallbacks
+    // 3) ETH gas price (wei) — race multiple RPCs and take first valid hex result
     const ethRpcPayload = { jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] }
-    const tryEth = async (url: string) => fetchJSON(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(ethRpcPayload)
-    }).catch(() => null)
-    const ethGas =
-      (await tryEth('https://cloudflare-eth.com')) ||
-      (await tryEth('https://rpc.ankr.com/eth')) ||
-      (await tryEth('https://rpc.ethermine.org')) ||
-      (await tryEth('https://rpc.builder0x69.io')) ||
-      (await tryEth('https://ethereum.publicnode.com'))
-    const ethGasWeiHex = ethGas?.result
+    const ethRpcUrls = [
+      'https://cloudflare-eth.com',
+      'https://rpc.ankr.com/eth',
+      'https://rpc.ethermine.org',
+      'https://rpc.builder0x69.io',
+      'https://ethereum.publicnode.com',
+    ]
+    const ethGasWeiHex = await Promise.any(
+      ethRpcUrls.map((u) =>
+        jsonRpcHex(u, ethRpcPayload).then((hex) =>
+          hex ? Promise.resolve(hex) : Promise.reject(new Error('invalid'))
+        )
+      )
+    ).catch(() => null) as string | null
     const ethGasWei = ethGasWeiHex ? parseInt(ethGasWeiHex, 16) : null
     const ethFeeEth = ethGasWei != null ? (ethGasWei * 21000) / 1e18 : null
     const ethFeeUsd = ethFeeEth != null ? ethFeeEth * usdPrice.ETH : null
 
-    // 4) BASE gas price via Base RPC
-    const baseGas = await fetchJSON('https://mainnet.base.org', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] })
-    }).catch(() => null)
-    const baseGasWeiHex = baseGas?.result
+    // 4) BASE gas price — validate hex result
+    const baseGasWeiHex = await jsonRpcHex('https://mainnet.base.org', {
+      jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: []
+    })
     const baseGasWei = baseGasWeiHex ? parseInt(baseGasWeiHex, 16) : null
     const baseFeeEth = baseGasWei != null ? (baseGasWei * 21000) / 1e18 : null
     const baseFeeUsd = baseFeeEth != null ? baseFeeEth * usdPrice.ETH : null
 
-    // 5) BNB Chain gas price via BSC RPC
-    const bnbGas = await fetchJSON('https://bsc-dataseed.binance.org', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] })
-    }).catch(() => null)
-    const bnbGasWeiHex = bnbGas?.result
+    // 5) BNB Chain gas price — validate hex result
+    const bnbGasWeiHex = await jsonRpcHex('https://bsc-dataseed.binance.org', {
+      jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: []
+    })
     const bnbGasWei = bnbGasWeiHex ? parseInt(bnbGasWeiHex, 16) : null
     const bnbFeeBnb = bnbGasWei != null ? (bnbGasWei * 21000) / 1e18 : null
     const bnbFeeUsd = bnbFeeBnb != null ? bnbFeeBnb * usdPrice.BNB : null
@@ -149,5 +159,3 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ error: 'failed' }, { status: 500 })
   }
 }
-
-

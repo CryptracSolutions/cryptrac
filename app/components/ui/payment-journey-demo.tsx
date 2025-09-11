@@ -124,7 +124,10 @@ export function PaymentJourneyDemo() {
                 {stages[currentStage].title}
               </h3>
             </div>
-            {stages[currentStage].component}
+            {/* Reserve consistent height across stages to prevent page jump */}
+            <div className="min-h-[380px] sm:min-h-[400px] md:min-h-[420px]">
+              {stages[currentStage].component}
+            </div>
           </CardContent>
         </Card>
       </div>
