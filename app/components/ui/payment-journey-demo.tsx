@@ -279,7 +279,6 @@ function SuccessStage() {
       {/* Success Message */}
       <div>
         <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">Payment Complete!</h3>
-        <p className="text-sm text-gray-600">Your Bitcoin payment has been confirmed</p>
       </div>
 
       {/* Transaction Details - Purple Background */}

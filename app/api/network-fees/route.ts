@@ -43,6 +43,33 @@ async function jsonRpcHex(url: string, payload: any): Promise<string | null> {
   return isHexResult(hex) ? hex : null
 }
 
+async function ethFeeHistoryWei(url: string): Promise<number> {
+  const payload = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'eth_feeHistory',
+    params: [5, 'latest', [50]] // 5 blocks, 50th percentile tip
+  }
+  const res: any = await fetchJSON(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  const baseFees: string[] | undefined = res?.result?.baseFeePerGas
+  const rewards: string[][] | undefined = res?.result?.reward
+  if (!Array.isArray(baseFees) || !Array.isArray(rewards) || rewards.length === 0) {
+    throw new Error('bad feeHistory')
+  }
+  // baseFeePerGas length = blockCount + 1; the last element is the next block base fee
+  const nextBaseHex = baseFees[baseFees.length - 1]
+  const tipHex = rewards[rewards.length - 1]?.[0] // 50th percentile (only one percentile requested)
+  if (!isHexResult(nextBaseHex) || !isHexResult(tipHex)) throw new Error('bad hex')
+  const nextBase = parseInt(nextBaseHex, 16)
+  const tip = parseInt(tipHex, 16)
+  // Add a small safety margin (10%) to tip to reflect volatility
+  return nextBase + Math.ceil(tip * 1.1)
+}
+
 export async function GET(_req: NextRequest) {
   try {
     // 1) Prices (USD)
@@ -61,15 +88,14 @@ export async function GET(_req: NextRequest) {
       SUI: safeNumber(prices?.sui?.usd) || 0
     }
 
-    // 2) BTC: mempool.space sat/vB → assume 140 vB tx
+    // 2) BTC: mempool.space sat/vB → assume 225 vB tx (more typical)
     const btcFees = await fetchJSON('https://mempool.space/api/v1/fees/recommended').catch(() => null)
-    const btcSatPerVb = safeNumber(btcFees?.hourFee) || safeNumber(btcFees?.halfHourFee) || safeNumber(btcFees?.fastestFee) || null
+    const btcSatPerVb = safeNumber(btcFees?.halfHourFee) || safeNumber(btcFees?.hourFee) || safeNumber(btcFees?.fastestFee) || null
     const btcFeeUsd = btcSatPerVb != null
-      ? ((btcSatPerVb * 140 /* vB */) / 1e8) * usdPrice.BTC
+      ? ((btcSatPerVb * 225 /* vB */) / 1e8) * usdPrice.BTC
       : null
 
-    // 3) ETH gas price (wei) — race multiple RPCs and take first valid hex result
-    const ethRpcPayload = { jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] }
+    // 3) ETH gas price (wei) — race multiple RPCs using feeHistory; fallback to gasPrice
     const ethRpcUrls = [
       'https://cloudflare-eth.com',
       'https://rpc.ankr.com/eth',
@@ -77,30 +103,43 @@ export async function GET(_req: NextRequest) {
       'https://rpc.builder0x69.io',
       'https://ethereum.publicnode.com',
     ]
-    const ethGasWeiHex = await Promise.any(
-      ethRpcUrls.map((u) =>
-        jsonRpcHex(u, ethRpcPayload).then((hex) =>
-          hex ? Promise.resolve(hex) : Promise.reject(new Error('invalid'))
-        )
+    let ethGasWei: number | null = null
+    try {
+      ethGasWei = await Promise.any(
+        ethRpcUrls.map((u) => ethFeeHistoryWei(u))
       )
-    ).catch(() => null) as string | null
-    const ethGasWei = ethGasWeiHex ? parseInt(ethGasWeiHex, 16) : null
+    } catch {
+      // fallback to eth_gasPrice race
+      const payload = { jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] }
+      const hex = await Promise.any(
+        ethRpcUrls.map((u) =>
+          jsonRpcHex(u, payload).then((h) => (h ? Promise.resolve(h) : Promise.reject(new Error('invalid'))))
+        )
+      ).catch(() => null) as string | null
+      ethGasWei = hex ? parseInt(hex, 16) : null
+    }
     const ethFeeEth = ethGasWei != null ? (ethGasWei * 21000) / 1e18 : null
     const ethFeeUsd = ethFeeEth != null ? ethFeeEth * usdPrice.ETH : null
 
-    // 4) BASE gas price — validate hex result
-    const baseGasWeiHex = await jsonRpcHex('https://mainnet.base.org', {
-      jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: []
-    })
-    const baseGasWei = baseGasWeiHex ? parseInt(baseGasWeiHex, 16) : null
+    // 4) BASE gas price — try feeHistory then fallback to gasPrice; validate hex
+    let baseGasWei: number | null = null
+    try {
+      baseGasWei = await ethFeeHistoryWei('https://mainnet.base.org')
+    } catch {
+      const hex = await jsonRpcHex('https://mainnet.base.org', { jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] })
+      baseGasWei = hex ? parseInt(hex, 16) : null
+    }
     const baseFeeEth = baseGasWei != null ? (baseGasWei * 21000) / 1e18 : null
     const baseFeeUsd = baseFeeEth != null ? baseFeeEth * usdPrice.ETH : null
 
-    // 5) BNB Chain gas price — validate hex result
-    const bnbGasWeiHex = await jsonRpcHex('https://bsc-dataseed.binance.org', {
-      jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: []
-    })
-    const bnbGasWei = bnbGasWeiHex ? parseInt(bnbGasWeiHex, 16) : null
+    // 5) BNB Chain gas price — try feeHistory then fallback to gasPrice; validate hex
+    let bnbGasWei: number | null = null
+    try {
+      bnbGasWei = await ethFeeHistoryWei('https://bsc-dataseed.binance.org')
+    } catch {
+      const hex = await jsonRpcHex('https://bsc-dataseed.binance.org', { jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] })
+      bnbGasWei = hex ? parseInt(hex, 16) : null
+    }
     const bnbFeeBnb = bnbGasWei != null ? (bnbGasWei * 21000) / 1e18 : null
     const bnbFeeUsd = bnbFeeBnb != null ? bnbFeeBnb * usdPrice.BNB : null
 
