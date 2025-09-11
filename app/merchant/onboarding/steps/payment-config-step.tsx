@@ -186,26 +186,28 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             {/* Configured Cryptocurrencies Display */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">Accepted Cryptocurrencies</h2>
+                <div className="flex items-center gap-2">
+                  <Tooltip
+                    trigger={
+                      <button
+                        type="button"
+                        aria-label="Accepted Cryptocurrencies info"
+                        className="h-5 w-5 text-[#7f5efd]"
+                      >
+                        <HelpCircle className="h-5 w-5" />
+                      </button>
+                    }
+                    title="Accepted Cryptocurrencies"
+                    description={`Your ${baseCurrencies.length} base cryptocurrencies automatically include ${expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility. Customers can pay with any of these currencies, and you'll receive payments directly to your configured wallet addresses. All major stablecoins (USDC, USDT, DAI) are included automatically for each supported network.`}
+                    recommendedCurrencies={[]}
+                    className=""
+                  />
+                  <h2 className="text-lg font-bold text-gray-900">Accepted Cryptocurrencies</h2>
+                </div>
                 <div className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
                   <span className="text-[#7f5efd] font-bold">{expandedCurrencies.length}</span> Total
                 </div>
               </div>
-              
-              <Tooltip
-                trigger={
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                }
-                title="Accepted Cryptocurrencies"
-                description={`Your ${baseCurrencies.length} base cryptocurrencies automatically include ${expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility. Customers can pay with any of these currencies, and you'll receive payments directly to your configured wallet addresses. All major stablecoins (USDC, USDT, DAI) are included automatically for each supported network.`}
-                recommendedCurrencies={[]}
-                className="w-full flex justify-start"
-              />
 
               {/* Base Currencies */}
               <div className="space-y-4">
@@ -214,7 +216,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   {baseCurrencies.map((currency) => (
                     <div
                       key={currency}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:border-[#7f5efd]/30 transition-colors"
+                      className="bg-white border border-gray-200 rounded-lg p-4"
                     >
                       <div className="flex items-center space-x-3">
                         <CryptoIcon currency={currency} size="sm" />
@@ -240,7 +242,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     {expandedCurrencies.filter(currency => !baseCurrencies.includes(currency)).map((currency) => (
                       <div
                         key={currency}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+                        className="bg-white border border-gray-200 rounded-lg p-4"
                       >
                         <div className="flex items-center space-x-3">
                           <CryptoIcon currency={currency} size="sm" />
@@ -272,28 +274,29 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
 
         {/* Gateway Fee Settings */}
-        <Card className="shadow-lg border-0 bg-white">
+        <Card className="shadow-lg border-0 bg-white mt-8">
           <CardContent className="p-8 space-y-8">
 
             {/* Fee Responsibility Setting */}
             <div className="space-y-6">
-              <h2 className="text-lg font-bold text-gray-900">Gateway Fee Settings</h2>
-              
-              <Tooltip
-                trigger={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                }
-                title="Gateway Fee Settings"
-                description="Choose who pays the gateway fee. This setting can be overridden for individual payment links. Gateway fees are 0.5% for direct payments or 1% for auto-convert payments. When merchants pay the fee, customers see cleaner pricing. When customers pay the fee, you receive the full payment amount."
-                recommendedCurrencies={[]}
-                className="w-full flex justify-start"
-              />
+              <div className="flex items-center gap-2">
+                <Tooltip
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label="Gateway Fee Settings info"
+                      className="h-5 w-5 text-[#7f5efd]"
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                    </button>
+                  }
+                  title="Gateway Fee Settings"
+                  description="Choose who pays the gateway fee. This setting can be overridden for individual payment links. Gateway fees are 0.5% for direct payments or 1% for auto-convert payments. When merchants pay the fee, customers see cleaner pricing. When customers pay the fee, you receive the full payment amount."
+                  recommendedCurrencies={[]}
+                  className=""
+                />
+                <h2 className="text-lg font-bold text-gray-900">Gateway Fee Settings</h2>
+              </div>
 
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -345,28 +348,29 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
         </Card>
 
         {/* Tax Configuration */}
-        <Card className="shadow-lg border-0 bg-white">
+        <Card className="shadow-lg border-0 bg-white mt-8">
           <CardContent className="p-8 space-y-6">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-bold text-gray-900">Tax Configuration</h2>
+              <div className="flex items-center gap-2">
+                <Tooltip
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label="Tax Collection Settings info"
+                      className="h-5 w-5 text-[#7f5efd]"
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                    </button>
+                  }
+                  title="Tax Collection Settings"
+                  description="Configure tax collection for your payments. You can skip this step and configure it later in your settings. Tax collection automatically calculates and adds applicable taxes to payment amounts. Choose between origin-based (your location), destination-based (customer location), or custom rates. Cryptrac helps collect taxes but doesn't file them - consult your tax professional."
+                  recommendedCurrencies={[]}
+                  className=""
+                />
+                <h2 className="text-lg font-bold text-gray-900">Tax Configuration</h2>
+              </div>
               <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">Optional</Badge>
             </div>
-
-            <Tooltip
-              trigger={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                </Button>
-              }
-              title="Tax Collection Settings"
-              description="Configure tax collection for your payments. You can skip this step and configure it later in your settings. Tax collection automatically calculates and adds applicable taxes to payment amounts. Choose between origin-based (your location), destination-based (customer location), or custom rates. Cryptrac helps collect taxes but doesn't file them - consult your tax professional."
-              recommendedCurrencies={[]}
-              className="w-full flex justify-start"
-            />
 
             <div className="space-y-6">
               <div className="flex items-start gap-4">
@@ -530,28 +534,29 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
         </Card>
 
         {/* Auto-Conversion Feature */}
-          <Card className="shadow-lg border-0 bg-white">
+          <Card className="shadow-lg border-0 bg-white mt-8">
             <CardContent className="p-8 space-y-6">
               <div className="flex items-center gap-3">
-                <h2 className="text-lg font-bold text-gray-900">Auto-Conversion</h2>
+                <div className="flex items-center gap-2">
+                  <Tooltip
+                    trigger={
+                      <button
+                        type="button"
+                        aria-label="Auto-Conversion info"
+                        className="h-5 w-5 text-[#7f5efd]"
+                      >
+                        <HelpCircle className="h-5 w-5" />
+                      </button>
+                    }
+                    title="Auto-Conversion Feature"
+                    description="Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled. This feature converts any crypto payment (Bitcoin, Ethereum, etc.) into your chosen currency before sending to your wallet. Useful for maintaining consistent holdings or receiving payments in stablecoins for price stability."
+                    recommendedCurrencies={[]}
+                    className=""
+                  />
+                  <h2 className="text-lg font-bold text-gray-900">Auto-Conversion</h2>
+                </div>
                 <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">Optional</Badge>
               </div>
-
-              <Tooltip
-                trigger={
-                    <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                }
-                title="Auto-Conversion Feature"
-                description="Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled. This feature converts any crypto payment (Bitcoin, Ethereum, etc.) into your chosen currency before sending to your wallet. Useful for maintaining consistent holdings or receiving payments in stablecoins for price stability."
-                recommendedCurrencies={[]}
-                className="w-full flex justify-start"
-              />
 
               <div className="space-y-6">
                 <div className="flex items-start gap-4">

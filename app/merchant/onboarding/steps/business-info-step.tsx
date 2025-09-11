@@ -291,7 +291,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="Enter your business name"
                     value={formData.businessName}
                     onChange={(e) => handleInputChange('businessName', e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors.businessName ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors.businessName ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.businessName && (
                     <p className="text-body-sm text-red-600">{errors.businessName}</p>
@@ -307,7 +307,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     value={formData.businessType}
                     onValueChange={(value) => handleInputChange('businessType', value)}
                   >
-                    <SelectTrigger className="form-input-enhanced h-12">
+                    <SelectTrigger className="form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                       <SelectValue placeholder="Select business type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -329,7 +329,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     value={formData.industry}
                     onValueChange={(value) => handleInputChange('industry', value)}
                   >
-                    <SelectTrigger className={`form-input-enhanced h-12 ${errors.industry ? 'border-red-300 focus:border-red-500' : ''}`}>
+                    <SelectTrigger className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors.industry ? 'border-red-300 focus:border-red-500' : ''}`}>
                       <SelectValue placeholder="Select your industry" />
                     </SelectTrigger>
                     <SelectContent>
@@ -355,7 +355,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="www.yourwebsite.com"
                     value={formData.website}
                     onChange={(e) => handleInputChange('website', e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors.website ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors.website ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.website && (
                     <p className="text-body-sm text-red-600">{errors.website}</p>
@@ -373,7 +373,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={3}
-                  className="form-input-enhanced resize-none"
+                  className="form-input-enhanced resize-none focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                 />
               </div>
             </div>
@@ -396,7 +396,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="Enter your first name"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors.firstName ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors.firstName ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.firstName && (
                     <p className="text-body-sm text-red-600">{errors.firstName}</p>
@@ -413,7 +413,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="Enter your last name"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors.lastName ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors.lastName ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors.lastName && (
                     <p className="text-body-sm text-red-600">{errors.lastName}</p>
@@ -430,7 +430,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="(555) 123-4567"
                     value={formData.phoneNumber}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors.phoneNumber ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors.phoneNumber ? 'border-red-300 focus:border-red-500' : ''}`}
                     maxLength={14}
                   />
                   {errors.phoneNumber && (
@@ -450,7 +450,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     value={formData.timezone}
                     onValueChange={(value) => handleInputChange('timezone', value)}
                   >
-                    <SelectTrigger className="form-input-enhanced h-12">
+                    <SelectTrigger className="form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -483,7 +483,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="123 Main Street"
                     value={formData.businessAddress.street}
                     onChange={(e) => handleInputChange('businessAddress.street', e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors['businessAddress.street'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors['businessAddress.street'] ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors['businessAddress.street'] && (
                     <p className="text-body-sm text-red-600">{errors['businessAddress.street']}</p>
@@ -501,7 +501,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="San Francisco"
                     value={formData.businessAddress.city}
                     onChange={(e) => handleInputChange('businessAddress.city', e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors['businessAddress.city'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors['businessAddress.city'] ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
                   {errors['businessAddress.city'] && (
                     <p className="text-body-sm text-red-600">{errors['businessAddress.city']}</p>
@@ -517,7 +517,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                       value={formData.businessAddress.state} 
                       onValueChange={(value) => handleInputChange('businessAddress.state', value)}
                     >
-                      <SelectTrigger className={`form-input-enhanced h-12 ${errors['businessAddress.state'] ? 'border-red-300 focus:border-red-500' : ''}`}>
+                      <SelectTrigger className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors['businessAddress.state'] ? 'border-red-300 focus:border-red-500' : ''}`}>
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
@@ -543,7 +543,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                     placeholder="94105"
                     value={formData.businessAddress.zip_code}
                     onChange={(e) => handleInputChange('businessAddress.zip_code', e.target.value)}
-                    className={`form-input-enhanced h-12 ${errors['businessAddress.zip_code'] ? 'border-red-300 focus:border-red-500' : ''}`}
+                    className={`form-input-enhanced h-12 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 ${errors['businessAddress.zip_code'] ? 'border-red-300 focus:border-red-500' : ''}`}
                     maxLength={10}
                   />
                   {errors['businessAddress.zip_code'] && (

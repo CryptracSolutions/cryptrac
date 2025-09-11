@@ -66,9 +66,9 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 z-50 w-full max-w-2xl">
-          <Card className="border-[#7f5efd]/30 shadow-lg bg-white">
-            <CardHeader className="pb-3">
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 z-50 w-full max-w-3xl">
+          <Card className="border-[#7f5efd]/30 shadow-xl bg-white/95 backdrop-blur-sm">
+            <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-[#7f5efd]" />
@@ -85,33 +85,32 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
                   <ChevronUp className="h-4 w-4 text-[#7f5efd]" />
                 </Button>
               </div>
-              <p className="text-xs text-black mt-1 leading-relaxed">
+              <p className="text-xs text-gray-700 mt-1 leading-relaxed">
                 {description}
               </p>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <CardContent className="pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {recommendedCurrencies.map((currency) => (
-                  <div
+                  <button
                     key={currency.code}
+                    type="button"
                     onClick={() => {
                       if (onCurrencyClick) {
                         onCurrencyClick(currency.code)
-                        setIsOpen(false) // Close tooltip when currency is selected
+                        setIsOpen(false)
                       }
                     }}
-                    className="flex flex-col items-center gap-2 p-3 bg-[#7f5efd]/5 rounded-lg hover:bg-[#7f5efd]/10 transition-all duration-200 border border-[#7f5efd]/20 cursor-pointer hover:scale-105"
+                    className="group w-full text-left flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-[#7f5efd]/40 bg-white hover:bg-[#7f5efd]/5 transition-colors"
                   >
-                    <CryptoIcon currency={currency.code} className="h-8 w-8 flex-shrink-0" />
-                    <div className="text-center">
-                      <div className="text-xs font-medium text-black leading-tight">
-                        {currency.name}
-                      </div>
-                      <div className="text-xs text-[#7f5efd] uppercase font-medium">
-                        {currency.code}
-                      </div>
+                    <div className="flex items-center justify-center h-10 w-10 rounded-full ring-1 ring-[#7f5efd]/30 bg-white group-hover:ring-[#7f5efd]/60">
+                      <CryptoIcon currency={currency.code} className="h-6 w-6" />
                     </div>
-                  </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">{currency.name}</div>
+                      <div className="text-xs font-semibold tracking-wide text-[#7f5efd]">{currency.code}</div>
+                    </div>
+                  </button>
                 ))}
               </div>
             </CardContent>

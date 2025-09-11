@@ -8,7 +8,8 @@ import {
   Save,
   CheckCircle,
   Loader2,
-  HelpCircle
+  HelpCircle,
+  Star
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 
@@ -54,19 +55,15 @@ interface MerchantSettings {
   sales_type: 'local' | 'online' | 'both';
 }
 
-// Recommended currencies for merchants
+// Recommended currencies (mirrors onboarding step 3)
 const recommendedCurrencies = [
   { code: 'BTC', name: 'Bitcoin' },
   { code: 'ETH', name: 'Ethereum' },
   { code: 'ETHBASE', name: 'Ethereum' },
   { code: 'SOL', name: 'Solana' },
-  { code: 'ALGO', name: 'Algorand' },
   { code: 'AVAX', name: 'Avalanche' },
   { code: 'BNBBSC', name: 'Binance Coin (BSC)' },
   { code: 'ADA', name: 'Cardano' },
-  { code: 'CRO', name: 'Crypto.com Coin' },
-  { code: 'DOGE', name: 'Dogecoin' },
-  { code: 'HYPE', name: 'Hyperliquid' },
   { code: 'LTC', name: 'Litecoin' },
   { code: 'DOT', name: 'Polkadot' },
   { code: 'XRP', name: 'Ripple' },
@@ -279,23 +276,31 @@ export default function WalletsPage() {
           </div>
         )}
 
-        {/* Recommended Currencies Tooltip */}
-        <div className="flex justify-center">
+        {/* Setup Guide + Recommended (matches onboarding step 3) */}
+        <div className="flex justify-center items-center gap-6">
+          <Button
+            variant="outline"
+            onClick={() => setShowTrustWalletGuide(true)}
+            className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
+          >
+            <HelpCircle className="h-4 w-4" />
+            Setup Guide
+          </Button>
+
           <Tooltip
             trigger={
               <Button
                 variant="outline"
-                className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
+                className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
               >
-                <HelpCircle className="h-4 w-4" />
-                Highly recommended
+                <Star className="h-4 w-4" />
+                Highly Recommended
               </Button>
             }
             title="Recommended Networks & Wallets"
             description="These are the most popular cryptocurrencies that Cryptrac merchants typically accept for payments"
             recommendedCurrencies={recommendedCurrencies}
             onCurrencyClick={handleCurrencyClick}
-            className="w-full flex justify-center"
           />
         </div>
 

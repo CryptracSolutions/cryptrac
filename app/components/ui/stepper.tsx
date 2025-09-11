@@ -48,8 +48,16 @@ export function Stepper({
                 </div>
 
                 {/* Connector Line */}
+                {index > 0 && (
+                  <div className="absolute top-6 left-0 right-1/2 h-0.5 -translate-y-1/2 z-0">
+                    <div className={cn(
+                      "h-full transition-all duration-500 mr-6",
+                      steps[index - 1].id < currentStep ? "bg-gradient-to-r from-[#7f5efd] to-[#9f7aea]" : "bg-gray-300"
+                    )} />
+                  </div>
+                )}
                 {isNotLast && (
-                  <div className="absolute top-6 left-1/2 w-full h-0.5 -translate-y-1/2 z-0">
+                  <div className="absolute top-6 left-1/2 right-0 h-0.5 -translate-y-1/2 z-0">
                     <div className={cn(
                       "h-full transition-all duration-500 ml-6",
                       isCompleted ? "bg-gradient-to-r from-[#7f5efd] to-[#9f7aea]" : "bg-gray-300"

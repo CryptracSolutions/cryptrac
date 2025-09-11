@@ -686,7 +686,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             placeholder={`${getCurrencyDisplayName(currency)} wallet address`}
                             value={settings.wallets[currency] || ''}
                             onChange={(e) => handleWalletInputChange(currency, e.target.value)}
-                            className={`border-gray-300 bg-white pr-20 font-mono text-sm ${
+                            className={`border-gray-300 bg-white pr-20 font-mono text-sm focus:border-[#7f5efd] focus-visible:ring-[#7f5efd]/20 ${
                               requiresExtraId(currency) && validationStatus[currency] === 'invalid' ? 'border-red-300 focus-visible:ring-red-300' : ''
                             }`}
                             type={hiddenAddresses[currency] ? "password" : "text"}
@@ -735,7 +735,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                                 placeholder={getExtraIdPlaceholder(currency)}
                                 value={settings.wallet_extra_ids?.[currency] || ''}
                                 onChange={(e) => handleExtraIdInputChange(currency, e.target.value)}
-                                className={`border-gray-300 bg-white pr-12 font-mono text-sm ${
+                                className={`border-gray-300 bg-white pr-12 font-mono text-sm focus:border-[#7f5efd] focus-visible:ring-[#7f5efd]/20 ${
                                   extraIdValidationStatus[currency] === 'idle' || extraIdValidationStatus[currency] === 'checking' ? 'border-[#7f5efd] focus-visible:ring-[#7f5efd]' : ''
                                 }`}
                                 onClick={(e) => e.stopPropagation()}
@@ -953,7 +953,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                                 placeholder={getExtraIdPlaceholder(currency.code)}
                                 value={settings.wallet_extra_ids?.[currency.code] || ''}
                                 onChange={(e) => handleExtraIdInputChange(currency.code, e.target.value)}
-                                className={`pr-12 font-mono text-sm ${
+                                className={`pr-12 font-mono text-sm focus:border-[#7f5efd] focus-visible:ring-[#7f5efd]/20 ${
                                   extraIdValidationStatus[currency.code] === 'idle' || extraIdValidationStatus[currency.code] === 'checking' ? 'border-[#7f5efd] focus-visible:ring-[#7f5efd]' : ''
                                 }`}
                               />
