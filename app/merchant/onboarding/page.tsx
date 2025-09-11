@@ -30,6 +30,8 @@ interface OnboardingData {
     industry: string
     description: string
     businessType: string
+    firstName: string
+    lastName: string
     phoneNumber: string
     businessAddress: {
       street: string
@@ -70,6 +72,8 @@ export default function OnboardingPage() {
       industry: '',
       description: '',
       businessType: '',
+      firstName: '',
+      lastName: '',
       phoneNumber: '',
       businessAddress: {
         street: '',

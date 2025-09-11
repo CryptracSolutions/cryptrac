@@ -50,6 +50,8 @@ export async function GET() {
         industry,
         business_description,
         website,
+        first_name,
+        last_name,
         phone_number,
         timezone,
         business_address,
@@ -85,6 +87,8 @@ export async function GET() {
         industry: merchant.industry || '',
         business_description: merchant.business_description || '',
         website: merchant.website || '',
+        first_name: merchant.first_name || '',
+        last_name: merchant.last_name || '',
         phone_number: merchant.phone_number || '',
         timezone: merchant.timezone || 'America/New_York',
         email: merchant.email || '',
@@ -132,6 +136,8 @@ export async function PUT(request: NextRequest) {
       industry?: string;
       business_description?: string;
       website?: string;
+      first_name?: string;
+      last_name?: string;
       phone_number?: string;
       timezone?: string;
       email?: string;
@@ -155,6 +161,8 @@ export async function PUT(request: NextRequest) {
       industry,
       business_description,
       website,
+      first_name,
+      last_name,
       phone_number,
       timezone,
       email,
@@ -255,6 +263,8 @@ export async function PUT(request: NextRequest) {
       industry?: string;
       business_description?: string;
       website?: string;
+      first_name?: string;
+      last_name?: string;
       phone_number?: string;
       timezone?: string;
       email?: string;
@@ -292,6 +302,14 @@ export async function PUT(request: NextRequest) {
 
     if (website !== undefined) {
       updateData.website = website;
+    }
+
+    if (first_name !== undefined) {
+      updateData.first_name = first_name;
+    }
+
+    if (last_name !== undefined) {
+      updateData.last_name = last_name;
     }
 
     if (phone_number !== undefined) {
@@ -344,6 +362,8 @@ export async function PUT(request: NextRequest) {
         industry,
         business_description,
         website,
+        first_name,
+        last_name,
         phone_number,
         timezone,
         business_address,
@@ -454,6 +474,8 @@ export async function PUT(request: NextRequest) {
         industry: merchant.industry || '',
         business_description: merchant.business_description || '',
         website: merchant.website || '',
+        first_name: merchant.first_name || '',
+        last_name: merchant.last_name || '',
         phone_number: merchant.phone_number || '',
         timezone: merchant.timezone || 'America/New_York',
         email: merchant.email || '',

@@ -26,6 +26,8 @@ interface MerchantSettings {
   industry: string;
   business_description: string;
   website: string;
+  first_name: string;
+  last_name: string;
   phone_number: string;
   timezone: string;
   email: string;
@@ -66,6 +68,8 @@ export default function ProfilePage() {
     industry: '',
     business_description: '',
     website: '',
+    first_name: '',
+    last_name: '',
     phone_number: '',
     timezone: 'America/New_York',
     email: '',

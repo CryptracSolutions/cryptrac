@@ -9,6 +9,8 @@ interface OnboardingData {
     website?: string;
     description?: string;
     industry?: string;
+    firstName?: string;
+    lastName?: string;
     phoneNumber?: string;
     email?: string; // ADDED: Email field for merchant notifications
     businessAddress?: {
@@ -131,6 +133,8 @@ export async function POST(request: NextRequest) {
       website: onboardingData.businessInfo.website || null,
       business_description: onboardingData.businessInfo.description || null,
       business_type: onboardingData.businessInfo.businessType || null,
+      first_name: onboardingData.businessInfo.firstName || null,
+      last_name: onboardingData.businessInfo.lastName || null,
       phone_number: onboardingData.businessInfo.phoneNumber || null,
       email: merchantEmail, // ADDED: Store merchant email for notifications
       business_address: onboardingData.businessInfo.businessAddress || null,
@@ -174,6 +178,8 @@ export async function POST(request: NextRequest) {
           industry: merchantData.industry,
           website: merchantData.website,
           business_description: merchantData.business_description,
+          first_name: merchantData.first_name,
+          last_name: merchantData.last_name,
           phone_number: merchantData.phone_number,
           email: merchantData.email,
           business_address: merchantData.business_address,
@@ -189,7 +195,7 @@ export async function POST(request: NextRequest) {
           updated_at: merchantData.updated_at
         })
         .eq('user_id', user.id)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone, onboarding_data')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, first_name, last_name, email, business_type, industry, phone_number, business_address, timezone, onboarding_data')
         .single();
 
       if (updateError) {
@@ -210,7 +216,7 @@ export async function POST(request: NextRequest) {
       const { data: newMerchant, error: insertError } = await supabase
         .from('merchants')
         .insert(merchantData)
-        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone, onboarding_data')
+        .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, first_name, last_name, email, business_type, industry, phone_number, business_address, timezone, onboarding_data')
         .single();
 
       if (insertError) {
@@ -257,7 +263,7 @@ export async function POST(request: NextRequest) {
     // Verify the data was saved correctly
     const { data: verifyMerchant, error: verifyError } = await supabase
       .from('merchants')
-      .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, email, business_type, industry, phone_number, business_address, timezone')
+      .select('id, wallets, charge_customer_fee, auto_convert_enabled, preferred_payout_currency, business_name, first_name, last_name, email, business_type, industry, phone_number, business_address, timezone')
       .eq('user_id', user.id)
       .single();
 
@@ -268,6 +274,8 @@ export async function POST(request: NextRequest) {
       console.log('🔍 Business name:', verifyMerchant.business_name);
       console.log('🔍 Business type:', verifyMerchant.business_type);
       console.log('🔍 Industry:', verifyMerchant.industry);
+      console.log('🔍 First name:', verifyMerchant.first_name);
+      console.log('🔍 Last name:', verifyMerchant.last_name);
       console.log('🔍 Phone number:', verifyMerchant.phone_number);
       console.log('🔍 Email:', verifyMerchant.email);
       console.log('🔍 Business address:', JSON.stringify(verifyMerchant.business_address, null, 2));

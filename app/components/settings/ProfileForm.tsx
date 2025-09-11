@@ -112,6 +112,8 @@ interface MerchantSettings {
   industry: string;
   website: string;
   business_description: string;
+  first_name: string;
+  last_name: string;
   phone_number: string;
   timezone: string;
   email: string;
@@ -304,6 +306,28 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="font-phonic text-base font-normal text-gray-700">First Name *</label>
+              <Input
+                value={settings.first_name}
+                onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, first_name: e.target.value }))}
+                placeholder="Enter your first name"
+                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="font-phonic text-base font-normal text-gray-700">Last Name *</label>
+              <Input
+                value={settings.last_name}
+                onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, last_name: e.target.value }))}
+                placeholder="Enter your last name"
+                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <label className="font-phonic text-base font-normal text-gray-700">Phone Number *</label>
               <Input

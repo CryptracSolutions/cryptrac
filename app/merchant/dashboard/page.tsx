@@ -95,7 +95,7 @@ interface RecentTransaction {
 export default function MerchantDashboard() {
   const [user, setUser] = useState<{ email?: string; user_metadata?: { business_name?: string; trial_end?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [merchant, setMerchant] = useState<{ id: string; wallets: Record<string, string>; trial_end?: string } | null>(null);
+  const [merchant, setMerchant] = useState<{ id: string; wallets: Record<string, string>; trial_end?: string; first_name?: string } | null>(null);
   const [stats, setStats] = useState({ totalRevenue: 0, paymentLinks: 0, successfulPayments: 0 });
   const [supportedCurrencies, setSupportedCurrencies] = useState<{ symbol: string; name: string }[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
@@ -252,7 +252,7 @@ export default function MerchantDashboard() {
 
         const { data: merchantData, error: merchantErrorFetch } = await supabase
           .from('merchants')
-          .select('id, wallets, trial_end')
+          .select('id, wallets, trial_end, first_name')
           .eq('user_id', user.id)
           .single();
 
@@ -342,7 +342,7 @@ export default function MerchantDashboard() {
     return null;
   }
 
-  const businessName = user.user_metadata?.business_name || user.email?.split('@')[0] || 'Your Business';
+  const displayName = merchant?.first_name || user.user_metadata?.business_name || user.email?.split('@')[0] || 'Your Business';
   return (
     <div className="space-y-8">
         {/* Breadcrumbs */}
@@ -356,7 +356,7 @@ export default function MerchantDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="space-y-2">
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
-              Welcome back, {businessName}!
+              Welcome back, {displayName}!
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600">
               Here&apos;s what&apos;s happening with your cryptocurrency payments today.

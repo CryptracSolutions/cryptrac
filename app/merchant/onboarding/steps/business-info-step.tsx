@@ -22,6 +22,8 @@ interface BusinessInfoData {
   industry: string
   description: string
   businessType: string
+  firstName: string
+  lastName: string
   phoneNumber: string
   businessAddress: BusinessAddress
   timezone: string
@@ -84,6 +86,8 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
     industry: data.industry || '',
     description: data.description || '',
     businessType: data.businessType || '',
+    firstName: data.firstName || '',
+    lastName: data.lastName || '',
     phoneNumber: data.phoneNumber || '',
     businessAddress: data.businessAddress || {
       street: '',
@@ -129,6 +133,14 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
     // Required fields
     if (!formData.businessName.trim()) {
       newErrors.businessName = 'Business name is required'
+    }
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required'
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required'
     }
 
     if (!formData.phoneNumber.trim()) {
@@ -200,6 +212,8 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
       ...formData,
       website: cleanWebsite,
       businessName: formData.businessName.trim(),
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
       description: formData.description.trim(),
       phoneNumber: formData.phoneNumber.replace(/[^\d]/g, ''), // Store as digits only
       businessAddress: {
@@ -372,6 +386,40 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* First Name */}
+                <div className="space-y-2">
+                  <label className="text-body font-medium text-gray-700">
+                    First Name *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Enter your first name"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    className={`form-input-enhanced h-12 ${errors.firstName ? 'border-red-300 focus:border-red-500' : ''}`}
+                  />
+                  {errors.firstName && (
+                    <p className="text-body-sm text-red-600">{errors.firstName}</p>
+                  )}
+                </div>
+
+                {/* Last Name */}
+                <div className="space-y-2">
+                  <label className="text-body font-medium text-gray-700">
+                    Last Name *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Enter your last name"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    className={`form-input-enhanced h-12 ${errors.lastName ? 'border-red-300 focus:border-red-500' : ''}`}
+                  />
+                  {errors.lastName && (
+                    <p className="text-body-sm text-red-600">{errors.lastName}</p>
+                  )}
+                </div>
+
                 {/* Phone Number */}
                 <div className="space-y-2">
                   <label className="text-body font-medium text-gray-700">
