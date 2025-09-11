@@ -71,6 +71,11 @@ interface FeeDocumentationProps {
    * Color variant controls the palette. "landing" uses only white/gray/black and Cryptrac Purple.
    */
   colorVariant?: 'default' | 'landing'
+  /**
+   * Optional content to render above the dynamic fee estimator inside the Network Fees card.
+   * Provided by the caller so copy can live outside this component.
+   */
+  networkFeesNote?: React.ReactNode
 }
 
 export function FeeDocumentation({ 
@@ -78,7 +83,8 @@ export function FeeDocumentation({
   showComparison = true,
   showNetworkFees = true,
   showGatewayFees = true,
-  colorVariant = 'default'
+  colorVariant = 'default',
+  networkFeesNote
 }: FeeDocumentationProps) {
   const isLanding = colorVariant === 'landing'
   
@@ -264,7 +270,14 @@ export function FeeDocumentation({
                     )}
 
                     {isLanding ? (
-                      <NetworkFeeEstimator />
+                      <>
+                        {networkFeesNote && (
+                          <div className="mb-2 text-sm text-gray-600">
+                            {networkFeesNote}
+                          </div>
+                        )}
+                        <NetworkFeeEstimator />
+                      </>
                     ) : (
                       <div className="bg-orange-100 p-3 rounded border border-orange-200">
                         <p className="text-sm text-orange-800">

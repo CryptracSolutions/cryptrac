@@ -286,8 +286,6 @@ export default function Home() {
                   Get Paid in
                   <span className="relative block">
                     <span className="font-modern text-[#7f5efd] font-bold">Crypto</span>
-                    {/* Subtle underline decoration */}
-                    <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#7f5efd] to-[#a78bfa] opacity-20 rounded-full"></div>
                   </span>
                 </h1>
               </div>
@@ -569,6 +567,11 @@ export default function Home() {
               showNetworkFees={true}
               showGatewayFees={true}
               colorVariant="landing"
+              networkFeesNote={(
+                <span>
+                  Network fees vary depending on coin/network choice, current congestion, and transaction size
+                </span>
+              )}
             />
           </div>
         </div>
