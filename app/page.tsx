@@ -144,7 +144,7 @@ export default function Home() {
       <LandingNav />
 
       {/* Hero Section - Left Aligned */}
-      <section id="hero" className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
+      <section id="hero" className="relative overflow-hidden py-10 sm:py-12 lg:py-16">
         {/* Base Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-[#f8f7ff]"></div>
         
