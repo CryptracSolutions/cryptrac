@@ -223,7 +223,10 @@ export default function OnboardingPage() {
       <div className="container mx-auto px-6 py-12 space-y-12">
         {/* Header */}
         <div className="text-center space-y-6">
-          <Logo className="mx-auto" />
+          <Link href="/" className="inline-flex items-center gap-3" aria-label="Go to homepage">
+            <Logo size="lg" showText={false} emblemClassName="bg-transparent" />
+            <span className="font-phonic text-xl leading-tight font-medium text-gray-900 tracking-tight">Cryptrac</span>
+          </Link>
         </div>
 
         {/* Progress Stepper */}

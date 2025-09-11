@@ -53,8 +53,8 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
       <Card className="shadow-medium border-0 bg-white relative overflow-hidden">
 
         <CardHeader className="text-center space-y-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-xl">
-            <CheckCircle className="w-12 h-12 text-white" />
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <CheckCircle className="w-10 h-10 text-white" />
           </div>
           <div className="space-y-4">
             <CardTitle className="text-3xl font-bold text-gray-900 leading-tight">
@@ -68,7 +68,7 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
 
         <CardContent className="space-y-8">
           {/* Go To Dashboard Button */}
-          <div className="pt-4">
+          <div className="pt-2">
             <Button
               onClick={onFinish}
               disabled={isLoading}
@@ -101,19 +101,19 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
                     What&apos;s next?
                   </CardTitle>
                   <div className="space-y-3 text-sm text-gray-700 max-w-md mx-auto">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center space-x-3">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Create your first payment link</span>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center space-x-3">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Generate QR codes for in-person payments</span>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center space-x-3">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Monitor your payments in real-time</span>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center space-x-3">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Track your earnings and analytics</span>
                     </div>

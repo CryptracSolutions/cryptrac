@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Badge } from '@/app/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Checkbox } from '@/app/components/ui/checkbox'
-import FeeDocumentation from '@/app/components/fee-documentation'
 import toast from 'react-hot-toast'
 
 interface TaxRate {
@@ -55,8 +54,6 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     taxRates: data.taxRates ?? [{ id: '1', label: '', percentage: '' }]
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showFeeDetails, setShowFeeDetails] = useState(false)
-  const [calculatorAmount, setCalculatorAmount] = useState<string>('100')
 
   // Get configured wallet currencies
   const configuredCurrencies = Object.keys(walletConfig.wallets || {})
@@ -146,25 +143,6 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
     return CURRENCY_NAMES[code] || code
   }
 
-  // Fee calculation helper
-  const calculateFees = (amount: number, isAutoConvert: boolean, customerPays: boolean) => {
-    const gatewayRate = isAutoConvert ? 0.01 : 0.005
-    const gatewayFee = amount * gatewayRate
-    
-    if (customerPays) {
-      return {
-        customerPays: amount + gatewayFee,
-        merchantReceives: amount,
-        gatewayFee: gatewayFee
-      }
-    } else {
-      return {
-        customerPays: amount,
-        merchantReceives: amount - gatewayFee,
-        gatewayFee: gatewayFee
-      }
-    }
-  }
 
   const handleSubmit = async () => {
     try {
@@ -241,7 +219,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 }
                 title="Accepted Cryptocurrencies"
                 description={`Your ${baseCurrencies.length} base cryptocurrencies automatically include ${expandedCurrencies.length - baseCurrencies.length} stable coins for maximum payment flexibility.`}
-                recommendedCurrencies={recommendedCurrencies}
+                recommendedCurrencies={[]}
                 className="w-full flex justify-start"
               />
 
@@ -315,17 +293,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
             {/* Fee Responsibility Setting */}
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">Gateway Fee Settings</h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFeeDetails(!showFeeDetails)}
-                  className="text-gray-600 hover:text-[#7f5efd] border-gray-300 hover:border-[#7f5efd] text-sm"
-                >
-                  {showFeeDetails ? 'Hide' : 'Learn More'}
-                </Button>
-              </div>
+              <h2 className="text-lg font-bold text-gray-900">Gateway Fee Settings</h2>
               
               <Tooltip
                 trigger={
@@ -340,7 +308,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 }
                 title="Gateway Fee Settings"
                 description="Choose who pays the gateway fee. This setting can be overridden for individual payment links."
-                recommendedCurrencies={recommendedCurrencies}
+                recommendedCurrencies={[]}
                 className="w-full flex justify-start"
               />
 
@@ -414,7 +382,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               }
               title="Tax Collection Settings"
               description="Configure tax collection for your payments. You can skip this step and configure it later in your settings."
-              recommendedCurrencies={recommendedCurrencies}
+              recommendedCurrencies={[]}
               className="w-full flex justify-start"
             />
 
@@ -586,6 +554,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <CardContent className="p-8 space-y-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-bold text-gray-900">Auto-Conversion</h2>
+                <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">Optional</Badge>
               </div>
 
               <Tooltip
@@ -601,7 +570,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 }
                 title="Auto-Conversion Feature"
                 description="Automatically convert all received payments to your preferred cryptocurrency. Higher gateway fee (1%) applies when enabled."
-                recommendedCurrencies={recommendedCurrencies}
+                recommendedCurrencies={[]}
                 className="w-full flex justify-start"
               />
 
@@ -698,120 +667,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
         </div>
       </div>
 
-      {/* Fee Calculator Section */}
-      <Card className="shadow-lg border-0 bg-white">
-        <CardContent className="p-8">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-bold text-gray-900">Fee Calculator</h2>
-            </div>
 
-            <div className="max-w-sm">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Payment Amount (USD)</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
-                <Input
-                  type="number"
-                  value={calculatorAmount}
-                  onChange={(e) => setCalculatorAmount(e.target.value)}
-                  className="pl-8 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
-                  placeholder="100"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Direct Payments */}
-              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-1">Direct Payments</h3>
-                    <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border">
-                      0.5% Gateway Fee
-                    </div>
-                  </div>
-
-                  {(() => {
-                    const amount = parseFloat(calculatorAmount) || 0
-                    const merchantPays = calculateFees(amount, false, false)
-                    const customerPays = calculateFees(amount, false, true)
-
-                    return (
-                      <div className="space-y-3 text-sm">
-                        <div className="bg-white rounded p-3 border">
-                          <div className="font-medium text-gray-700 mb-1">Merchant Pays</div>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div>Customer pays: <span className="font-semibold text-gray-900">${merchantPays.customerPays.toFixed(2)}</span></div>
-                            <div>You receive: <span className="font-semibold text-[#7f5efd]">${merchantPays.merchantReceives.toFixed(2)}</span></div>
-                          </div>
-                        </div>
-
-                        <div className="bg-white rounded p-3 border">
-                          <div className="font-medium text-gray-700 mb-1">Customer Pays</div>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div>Customer pays: <span className="font-semibold text-gray-900">${customerPays.customerPays.toFixed(2)}</span></div>
-                            <div>You receive: <span className="font-semibold text-[#7f5efd]">${customerPays.merchantReceives.toFixed(2)}</span></div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </div>
-              </div>
-
-              {/* Auto-Convert */}
-              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-1">Auto-Convert</h3>
-                    <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border">
-                      1% Gateway Fee
-                    </div>
-                  </div>
-
-                  {(() => {
-                    const amount = parseFloat(calculatorAmount) || 0
-                    const merchantPays = calculateFees(amount, true, false)
-                    const customerPays = calculateFees(amount, true, true)
-
-                    return (
-                      <div className="space-y-3 text-sm">
-                        <div className="bg-white rounded p-3 border">
-                          <div className="font-medium text-gray-700 mb-1">Merchant Pays</div>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div>Customer pays: <span className="font-semibold text-gray-900">${merchantPays.customerPays.toFixed(2)}</span></div>
-                            <div>You receive: <span className="font-semibold text-[#7f5efd]">${merchantPays.merchantReceives.toFixed(2)}</span></div>
-                          </div>
-                        </div>
-
-                        <div className="bg-white rounded p-3 border">
-                          <div className="font-medium text-gray-700 mb-1">Customer Pays</div>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div>Customer pays: <span className="font-semibold text-gray-900">${customerPays.customerPays.toFixed(2)}</span></div>
-                            <div>You receive: <span className="font-semibold text-[#7f5efd]">${customerPays.merchantReceives.toFixed(2)}</span></div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Fee Documentation */}
-      {showFeeDetails && (
-        <div className="mt-8">
-          <FeeDocumentation
-            variant="full"
-            showComparison={true}
-            showNetworkFees={true}
-            showGatewayFees={true}
-          />
-        </div>
-      )}
     </div>
   )
 }

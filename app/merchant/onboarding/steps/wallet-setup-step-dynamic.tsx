@@ -113,20 +113,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               Configure wallet addresses for the cryptocurrencies you want to accept. Major stablecoins will be automatically included for each ecosystem.
             </p>
           </div>
-        </CardHeader>
-
-        <CardContent className="space-y-8">
-          {/* Trust Wallet Guide Modal - Show at top when activated */}
-          {showTrustWalletGuide && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <TrustWalletGuide
-                  onComplete={() => setShowTrustWalletGuide(false)}
-                  onSkip={() => setShowTrustWalletGuide(false)}
-                />
-              </div>
-            </div>
-          )}
 
           {/* Action Buttons */}
           <div className="flex justify-center items-center gap-6">
@@ -156,6 +142,20 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               className="w-full flex justify-center"
             />
           </div>
+        </CardHeader>
+
+        <CardContent className="space-y-8">
+          {/* Trust Wallet Guide Modal - Show at top when activated */}
+          {showTrustWalletGuide && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <TrustWalletGuide
+                  onComplete={() => setShowTrustWalletGuide(false)}
+                  onSkip={() => setShowTrustWalletGuide(false)}
+                />
+              </div>
+            </div>
+          )}
 
       {/* Wallets Manager - exact same component as /merchant/wallets */}
       <WalletsManager

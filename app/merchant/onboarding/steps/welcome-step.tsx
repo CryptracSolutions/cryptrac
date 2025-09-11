@@ -37,17 +37,29 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
     <div className="max-w-2xl mx-auto">
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="text-center space-y-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
-            <Users className="w-12 h-12 text-white" />
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <Users className="w-10 h-10 text-white" />
           </div>
           <div className="space-y-4">
             <CardTitle className="text-3xl font-bold text-gray-900 leading-tight bg-gradient-to-r from-[#7f5efd] to-[#9f7aea] bg-clip-text text-transparent">
               Welcome to Cryptrac
             </CardTitle>
             <p className="text-lg text-gray-600 max-w-lg mx-auto leading-relaxed">
-              Let&apos;s get you set up to accept cryptocurrency payments in just 5 easy steps. 
+              Let&apos;s get you set up to accept cryptocurrency payments in just 5 easy steps.
               You&apos;ll be accepting crypto in no time!
             </p>
+          </div>
+
+          {/* Get Started Button */}
+          <div className="pt-2">
+            <Button
+              onClick={onNext}
+              className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white py-3 text-base font-semibold px-8"
+              size="lg"
+            >
+              Get Started
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
           </div>
         </CardHeader>
 
@@ -57,7 +69,7 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
             {features.map((feature, index) => {
               const Icon = feature.icon
               return (
-                <div 
+                <div
                   key={index}
                   className="flex items-start gap-6 p-6 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100/50 hover:from-[#7f5efd]/5 hover:to-[#9f7aea]/5 transition-all duration-300 hover:shadow-lg border border-gray-100 hover:border-[#7f5efd]/20"
                   style={{
@@ -81,16 +93,6 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
               )
             })}
           </div>
-
-          {/* Get Started Button */}
-          <Button 
-            onClick={onNext}
-            className="w-full bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white py-3 text-base font-semibold"
-            size="lg"
-          >
-            Get Started
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
 
           {/* Help Text */}
           <div className="text-center">
