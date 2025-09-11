@@ -299,4 +299,3 @@ npm install --save-dev jest @types/jest @testing-library/react @testing-library/
 - **Integration Testing**: API endpoints with database interactions
 - **Frontend Testing**: Component behavior and user interactions
 - **E2E Testing**: Complete payment flows and merchant onboarding
-
