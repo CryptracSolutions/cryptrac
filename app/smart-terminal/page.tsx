@@ -165,7 +165,7 @@ function SmartTerminalPageContent() {
         // Get merchant settings
         const { data: merchant, error: merchantError } = await supabase
           .from('merchants')
-          .select('charge_customer_fee, auto_convert_enabled, tax_enabled, tax_rates, wallets')
+          .select('charge_customer_fee, auto_convert_enabled, tax_enabled, tax_rates, wallets, onboarding_data')
           .eq('user_id', session.user.id)
           .single();
 
@@ -180,7 +180,21 @@ function SmartTerminalPageContent() {
           return;
         }
 
-        setMerchantSettings(merchant);
+        // Resolve tax configuration using top-level fields, falling back to onboarding_data
+        const resolvedTaxEnabled = (merchant as any).tax_enabled ?? (merchant as any).onboarding_data?.tax_enabled ?? false;
+        const resolvedTaxRates = resolvedTaxEnabled
+          ? ((merchant as any).tax_rates && (merchant as any).tax_rates.length > 0
+              ? (merchant as any).tax_rates
+              : ((merchant as any).onboarding_data?.tax_rates || []))
+          : [];
+
+        setMerchantSettings({
+          charge_customer_fee: merchant.charge_customer_fee,
+          auto_convert_enabled: merchant.auto_convert_enabled,
+          tax_enabled: resolvedTaxEnabled,
+          tax_rates: resolvedTaxRates,
+          wallets: merchant.wallets
+        });
 
         // Load or create terminal device
         const id = localStorage.getItem('terminal_device_id');
@@ -213,7 +227,7 @@ function SmartTerminalPageContent() {
           // Set default values based on merchant settings
           if (json.data?.accepted_cryptos?.length) setCrypto(json.data.accepted_cryptos[0]);
           setChargeFee(Boolean(merchant.charge_customer_fee));
-          setTax(Boolean(merchant.tax_enabled));
+          setTax(Boolean(resolvedTaxEnabled));
 
           // Expand accepted cryptocurrencies to include stablecoins
           const deviceCryptos = json.data?.accepted_cryptos && json.data.accepted_cryptos.length

@@ -112,7 +112,7 @@ export default function CreatePaymentLinkPage() {
       // Load merchant settings
       const { data: merchant, error: merchantError } = await supabase
         .from('merchants')
-        .select('wallets, auto_convert_enabled, charge_customer_fee, payment_config, tax_enabled, tax_rates, tax_strategy')
+        .select('wallets, auto_convert_enabled, charge_customer_fee, payment_config, tax_enabled, tax_rates, tax_strategy, onboarding_data')
         .eq('user_id', session.user.id)
         .single();
 
@@ -124,8 +124,22 @@ export default function CreatePaymentLinkPage() {
 
       const wallets = { ...(merchant.wallets || {}) };
 
+      // Resolve tax configuration using top-level fields, falling back to onboarding_data
+      const resolvedTaxEnabled = (merchant as any).tax_enabled ?? (merchant as any).onboarding_data?.tax_enabled ?? false;
+      const resolvedTaxRates = resolvedTaxEnabled
+        ? ((merchant as any).tax_rates && (merchant as any).tax_rates.length > 0
+            ? (merchant as any).tax_rates
+            : ((merchant as any).onboarding_data?.tax_rates || []))
+        : [];
+      const resolvedTaxStrategy = (merchant as any).tax_strategy || (merchant as any).onboarding_data?.tax_strategy || 'origin';
 
-      const updatedMerchant = { ...merchant, wallets };
+      const updatedMerchant = { 
+        ...merchant, 
+        wallets,
+        tax_enabled: resolvedTaxEnabled,
+        tax_rates: resolvedTaxRates,
+        tax_strategy: resolvedTaxStrategy
+      } as any;
       setMerchantSettings(updatedMerchant);
       const cryptos = Object.keys(wallets);
       setAvailableCryptos(cryptos);
