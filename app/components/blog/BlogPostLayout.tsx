@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, User, Clock, Share2, Twitter, Linkedin, Facebook, Copy, Check, ChevronRight, BookOpen } from "lucide-react";
+import { Calendar, User, Clock, Share2, Twitter, Linkedin, Facebook, Copy, Check, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Logo } from "@/app/components/ui/logo";
+import { LandingNav } from "@/app/components/layout/landing-nav";
 import { Separator } from "@/app/components/ui/separator";
 import { BlogPost, getAllBlogPosts } from "@/lib/blog-posts";
 import ReactMarkdown from 'react-markdown';
@@ -85,31 +86,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
       />
       
       {/* Header */}
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="container-wide flex h-16 items-center justify-between">
-          <Logo size="md" />
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/blog" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Blog
-            </Link>
-            <Link href="/about" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              About
-            </Link>
-            <Link href="/security" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Security
-            </Link>
-            <Link href="/contact" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Contact
-            </Link>
-          </nav>
-          <Button variant="ghost" size="sm" asChild className="text-gray-600 hover:text-gray-900">
-            <Link href="/blog" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Blog
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <LandingNav />
 
       <div className="container-wide py-8">
         <div className="grid lg:grid-cols-4 gap-8">
