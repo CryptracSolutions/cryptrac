@@ -3,7 +3,9 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ChevronRight, Users, Target, Zap, Shield, Globe, Lightbulb, Heart, Award, TrendingUp, Clock, Phone, Mail, Building, Rocket, Star } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
 import { Badge } from "@/app/components/ui/badge";
 import { LandingNav } from "@/app/components/layout/landing-nav";

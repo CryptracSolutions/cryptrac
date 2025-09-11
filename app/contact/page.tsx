@@ -6,6 +6,7 @@ import { Mail, Phone, MapPin, Send, MessageSquare, Clock, Users, Shield, Zap, Ch
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
 import { Badge } from "@/app/components/ui/badge";
 import { toast } from 'react-hot-toast';

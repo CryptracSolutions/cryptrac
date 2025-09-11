@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight, Cookie, Settings, Shield, Users, AlertCircle, Eye, Clock, Lock, Phone, Mail, MapPin, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
 import { Badge } from "@/app/components/ui/badge";
 import { LandingNav } from "@/app/components/layout/landing-nav";
