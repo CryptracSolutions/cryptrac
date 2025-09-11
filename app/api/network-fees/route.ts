@@ -54,12 +54,14 @@ export async function GET(_req: NextRequest) {
       ? ((btcSatPerVb * 140 /* vB */) / 1e8) * usdPrice.BTC
       : null
 
-    // 3) ETH gas price (wei) via Cloudflare RPC
-    const ethGas = await fetchJSON('https://cloudflare-eth.com', {
+    // 3) ETH gas price (wei) with fallbacks
+    const ethRpcPayload = { jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] }
+    const tryEth = async (url: string) => fetchJSON(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_gasPrice', params: [] })
+      body: JSON.stringify(ethRpcPayload)
     }).catch(() => null)
+    const ethGas = (await tryEth('https://cloudflare-eth.com')) || (await tryEth('https://rpc.ankr.com/eth')) || (await tryEth('https://rpc.ethermine.org'))
     const ethGasWeiHex = ethGas?.result
     const ethGasWei = ethGasWeiHex ? parseInt(ethGasWeiHex, 16) : null
     const ethFeeEth = ethGasWei != null ? (ethGasWei * 21000) / 1e18 : null

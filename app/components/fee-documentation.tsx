@@ -139,7 +139,7 @@ export function FeeDocumentation({
                   <div className="flex items-center gap-2">
                     <CreditCard className={"h-4 w-4 " + (isLanding ? 'text-[#7f5efd]' : 'text-green-500')} />
                     <span className="font-medium text-sm">Gateway Fees</span>
-                    <Badge variant="outline" className={"text-xs " + (isLanding ? 'border-gray-300 text-gray-700' : '')}>0.5% - 1%</Badge>
+                    <Badge variant="outline" className={"text-xs " + (isLanding ? 'border-[#7f5efd] text-[#7f5efd] bg-[#7f5efd]/10' : '')}>0.5% - 1%</Badge>
                   </div>
                   <p className="text-xs text-gray-600">
                     Gateway fee. You choose whether the customer or merchant pays.
@@ -213,7 +213,7 @@ export function FeeDocumentation({
                   {isLanding && (
                     <div className="text-center p-2 bg-white rounded border md:col-span-3">
                       <div className="font-semibold text-[#7f5efd]">Cryptrac</div>
-                      <div className="text-sm text-gray-600">0.5% - 1%</div>
+                      <div className="text-sm font-medium text-[#7f5efd]">0.5% - 1%</div>
                     </div>
                   )}
                 </div>

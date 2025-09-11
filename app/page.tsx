@@ -135,6 +135,14 @@ export default function Home() {
     {
       question: "Why is crypto cheaper than credit cards?",
       answer: "Traditional processors like Stripe charge 2.9% + $0.30 per transaction. Crypto gateway fees are typically 0.5-1% with no fixed fees, making them cheaper for most transaction sizes, especially larger payments."
+    },
+    {
+      question: "How fast can I start accepting crypto payments?",
+      answer: "Immediately. Sign up, add your wallet, and you can generate a payment link in minutes. No bank approvals or long underwriting cycles."
+    },
+    {
+      question: "Do I need to hold crypto or can I convert?",
+      answer: "You choose. You can receive crypto directly to your wallet or enable auto-convert for a 1% gateway fee. Either way, funds auto-forward—Cryptrac never holds your money."
     }
   ];
 
@@ -144,7 +152,7 @@ export default function Home() {
       <LandingNav />
 
       {/* Hero Section - Left Aligned */}
-      <section id="hero" className="relative overflow-hidden py-10 sm:py-12 lg:py-16">
+      <section id="hero" className="relative overflow-hidden py-8 sm:py-10 lg:py-14">
         {/* Base Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-[#f8f7ff]"></div>
         
@@ -572,11 +580,11 @@ export default function Home() {
               Everything you need to know about Cryptrac pricing and fees
             </p>
           </div>
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {faqItems.map((item, index) => (
               <Card key={index} className="border-0 shadow-lg bg-white">
                 <CardHeader>
-                  <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
+                  <CardTitle className="font-phonic text-xl font-normal flex items-center gap-3">
                     <div className="w-8 h-8 bg-[#f5f3ff] rounded-full flex items-center justify-center flex-shrink-0">
                       <HelpCircle className="h-4 w-4 text-[#7f5efd]" />
                     </div>
@@ -584,7 +592,7 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="font-phonic text-base text-gray-600">{item.answer}</p>
+                  <p className="font-phonic text-sm text-gray-600">{item.answer}</p>
                 </CardContent>
               </Card>
             ))}
