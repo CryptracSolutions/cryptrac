@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from "next/link";
-import { ArrowLeft, Mail, Phone, MapPin, Send, MessageSquare, Clock, Users, Shield, Zap, ChevronRight, FileText, HelpCircle, AlertCircle, CheckCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Send, MessageSquare, Clock, Users, Shield, Zap, ChevronRight, FileText, HelpCircle, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
 import { Badge } from "@/app/components/ui/badge";
 import { toast } from 'react-hot-toast';
+import { LandingNav } from "@/app/components/layout/landing-nav";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -89,31 +89,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="container-wide flex h-16 items-center justify-between">
-          <Logo size="md" />
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/privacy" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/cookies" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Cookie Policy
-            </Link>
-            <Link href="/help" className="font-phonic text-sm font-normal text-gray-600 hover:text-gray-900 transition-colors">
-              Help Center
-            </Link>
-          </nav>
-          <Button variant="ghost" size="sm" asChild className="text-gray-600 hover:text-gray-900">
-            <Link href="/" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <LandingNav />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-16">

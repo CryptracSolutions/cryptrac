@@ -277,7 +277,7 @@ export default function Home() {
             <div className="text-left">
               {/* Enhanced Heading */}
               <div className="relative mb-6">
-                <h1 className="font-modern text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold text-gray-900 leading-tight tracking-tighter">
+                <h1 className="font-modern text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-normal text-gray-900 leading-tight tracking-tighter">
                   Get Paid in{" "}
                   <span className="relative inline-block">
                     <span className="font-modern text-[#7f5efd] font-bold">Crypto</span>
