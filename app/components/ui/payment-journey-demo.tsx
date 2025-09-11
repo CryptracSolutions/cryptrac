@@ -63,11 +63,11 @@ export function PaymentJourneyDemo() {
   return (
     <div className="relative w-full max-w-lg mx-auto">
       {/* Stage Indicators and Controls */}
-      <div className="flex justify-center items-center mb-6 space-x-4">
+      <div className="flex justify-center items-center mb-2 space-x-2">
         {/* Previous Button */}
         <button
           onClick={prevStage}
-          className="p-1.5 rounded-full hover:bg-purple-100 transition-colors group"
+          className="p-1 rounded-full hover:bg-purple-100 transition-colors group"
           title="Previous step"
         >
           <ChevronLeft className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
@@ -94,7 +94,7 @@ export function PaymentJourneyDemo() {
         {/* Pause/Play Button */}
         <button
           onClick={() => setIsPaused(!isPaused)}
-          className="p-1.5 rounded-full hover:bg-purple-100 transition-colors group"
+          className="p-1 rounded-full hover:bg-purple-100 transition-colors group"
           title={isPaused ? "Resume auto-play" : "Pause auto-play"}
         >
           {isPaused ? (
@@ -107,7 +107,7 @@ export function PaymentJourneyDemo() {
         {/* Next Button */}
         <button
           onClick={nextStage}
-          className="p-1.5 rounded-full hover:bg-purple-100 transition-colors group"
+          className="p-1 rounded-full hover:bg-purple-100 transition-colors group"
           title="Next step"
         >
           <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
