@@ -1,8 +1,9 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
 import { formatAddressForQR } from '@/lib/simple-address-formatter'
 import { cn } from '@/lib/utils'
+import { LoadingSpinner } from './loading-spinner'
 
 interface QRCodeProps {
   // Preferred: currency/address/extraId for payment addresses
@@ -17,13 +18,46 @@ interface QRCodeProps {
 }
 
 export function QRCode({ currency, address, extraId, value, size = 256, className, hideDetails = false }: QRCodeProps) {
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+
   const derived = currency && address ? formatAddressForQR(currency, address, extraId) : null
   const qrContent = value ?? derived?.qrContent ?? ''
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(qrContent)}`
 
+  const handleImageLoad = () => {
+    setIsLoading(false)
+  }
+
+  const handleImageError = () => {
+    setIsLoading(false)
+    setHasError(true)
+  }
+
   return (
     <div className={cn('flex flex-col items-center gap-3', className)}>
-      <img src={qrUrl} alt={`${currency} address QR`} width={size} height={size} className="rounded-lg" />
+      <div className="relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg">
+            <LoadingSpinner size="lg" variant="primary" />
+          </div>
+        )}
+        {hasError ? (
+          <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 text-sm">
+            Failed to load QR
+          </div>
+        ) : (
+          <img
+            src={qrUrl}
+            alt={`${currency} address QR`}
+            width={size}
+            height={size}
+            className="rounded-lg"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        )}
+      </div>
       {!hideDetails && (
         <div className="w-full text-center">
           {derived && (

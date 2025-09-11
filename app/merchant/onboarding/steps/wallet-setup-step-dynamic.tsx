@@ -139,7 +139,6 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               description="These are the most popular cryptocurrencies that Cryptrac merchants typically accept for payments"
               recommendedCurrencies={recommendedCurrencies}
               onCurrencyClick={handleCurrencyClick}
-              className="w-full flex justify-center"
             />
           </div>
         </CardHeader>

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
-import { ArrowRight, ArrowLeft, Settings, HelpCircle, Loader2, Shield, Calculator, DollarSign, Plus } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Settings, HelpCircle, Loader2, Calculator, DollarSign, Plus } from 'lucide-react'
 import Tooltip from '@/app/components/ui/tooltip'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
@@ -190,13 +190,6 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
         {/* Main Configuration Card */}
         <Card className="shadow-lg border-0 bg-white">
           <CardContent className="p-8 space-y-10">
-            {/* Non-Custodial Compliance Notice */}
-            <Alert className="border-gray-200 bg-gray-50">
-              <Shield className="h-5 w-5 text-[#7f5efd]" />
-              <AlertDescription className="text-gray-700">
-                <span className="font-semibold text-gray-900">Non-Custodial Security:</span> Cryptrac automatically forwards all payments directly to your wallet addresses immediately upon confirmation. We never hold your funds.
-              </AlertDescription>
-            </Alert>
 
             {/* Configured Cryptocurrencies Display */}
             <div className="space-y-6">
@@ -214,7 +207,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                   >
                     <HelpCircle className="h-4 w-4" />
-                    Learn More
+                    ?
                   </Button>
                 }
                 title="Accepted Cryptocurrencies"
@@ -303,7 +296,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                   >
                     <HelpCircle className="h-4 w-4" />
-                    About Fees
+                    ?
                   </Button>
                 }
                 title="Gateway Fee Settings"
@@ -377,7 +370,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                 >
                   <HelpCircle className="h-4 w-4" />
-                  About Tax Collection
+                  ?
                 </Button>
               }
               title="Tax Collection Settings"
@@ -559,13 +552,13 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
               <Tooltip
                 trigger={
-                  <Button
+                    <Button
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                   >
                     <HelpCircle className="h-4 w-4" />
-                    Learn More
+                    ?
                   </Button>
                 }
                 title="Auto-Conversion Feature"

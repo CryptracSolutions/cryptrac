@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Wallet,
-  Info,
   Trash2,
   Loader2,
   CheckCircle,
@@ -23,7 +22,7 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
-import { Alert, AlertDescription } from '@/app/components/ui/alert';
+// Removed Smart Wallet Setup alert
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { isApprovedCurrency, getApprovedDisplayName } from '@/lib/approved-currencies';
 import { requiresExtraId, validateExtraId, getExtraIdLabel, getExtraIdPlaceholder, getExtraIdDescription } from '@/lib/extra-id-validation';
@@ -561,23 +560,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
 
   return (
     <div className="space-y-8">
-      {/* Enhanced Smart Setup Info */}
-      <Alert className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-purple-200 shadow-soft">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Info className="h-5 w-5 text-purple-600" />
-          </div>
-          <div className="flex-1">
-            <AlertDescription className="text-purple-800">
-              <div className="font-semibold mb-1">Smart Wallet Setup</div>
-              <p className="text-sm leading-relaxed">
-                Add a base cryptocurrency wallet and automatically support its stable coins.
-                Click on wallets with stable coins to see what&apos;s included!
-              </p>
-            </AlertDescription>
-          </div>
-        </div>
-      </Alert>
+      {/* Smart Wallet Setup card removed as requested */}
 
       {/* Enhanced Configured Wallets Section - Collapsible */}
       {hasExistingWallets && (

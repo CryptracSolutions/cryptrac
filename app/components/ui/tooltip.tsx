@@ -67,12 +67,12 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
 
       {isOpen && (
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 z-50 w-full max-w-md">
-          <Card className="border-purple-200 shadow-lg bg-white">
+          <Card className="border-[#7f5efd]/30 shadow-lg bg-white">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-purple-600" />
-                  <CardTitle className="text-sm font-semibold text-purple-900">
+                  <Star className="h-4 w-4 text-[#7f5efd]" />
+                  <CardTitle className="text-sm font-semibold text-[#7f5efd]">
                     {title}
                   </CardTitle>
                 </div>
@@ -80,12 +80,12 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsOpen(false)}
-                  className="h-6 w-6 p-0 hover:bg-purple-50"
+                  className="h-6 w-6 p-0 hover:bg-[#7f5efd]/10"
                 >
-                  <ChevronUp className="h-4 w-4 text-purple-600" />
+                  <ChevronUp className="h-4 w-4 text-[#7f5efd]" />
                 </Button>
               </div>
-              <p className="text-xs text-purple-700 mt-1 leading-relaxed">
+              <p className="text-xs text-black mt-1 leading-relaxed">
                 {description}
               </p>
             </CardHeader>
@@ -100,14 +100,14 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
                         setIsOpen(false) // Close tooltip when currency is selected
                       }
                     }}
-                    className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all duration-200 border border-purple-100 cursor-pointer"
+                    className="flex items-center gap-2 p-3 bg-[#7f5efd]/5 rounded-lg hover:bg-[#7f5efd]/10 transition-all duration-200 border border-[#7f5efd]/20 cursor-pointer"
                   >
                     <CryptoIcon currency={currency.code} className="h-6 w-6 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-purple-900 truncate leading-tight">
+                      <div className="text-xs font-medium text-black truncate leading-tight">
                         {currency.name}
                       </div>
-                      <div className="text-xs text-purple-600 uppercase font-medium">
+                      <div className="text-xs text-[#7f5efd] uppercase font-medium">
                         {currency.code}
                       </div>
                     </div>
