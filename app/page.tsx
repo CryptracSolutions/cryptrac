@@ -568,9 +568,9 @@ export default function Home() {
               showGatewayFees={true}
               colorVariant="landing"
               networkFeesNote={(
-                <span>
+                <p className="text-gray-700">
                   Network fees vary depending on coin/network choice, current congestion, and transaction size
-                </span>
+                </p>
               )}
             />
           </div>

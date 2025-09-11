@@ -35,14 +35,14 @@ function NetworkFeeEstimator() {
 
   const item = (label: string, value?: number | null) => (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-gray-600">{label}</span>
-      <span className="font-medium text-[#7f5efd]">{formatUsd(value ?? null)}</span>
+      <span className="text-gray-800">{label}</span>
+      <span className="font-bold text-[#7f5efd]">{formatUsd(value ?? null)}</span>
     </div>
   )
 
   return (
-    <div className="bg-gray-50 p-3 rounded border border-gray-200">
-      <div className="text-sm font-medium text-gray-900 mb-2">Current average network fee (USD)</div>
+    <div className="bg-gray-100 p-3 rounded border border-gray-200">
+      <div className="text-sm font-medium text-gray-800 mb-2">Live average network fee (USD)</div>
       {loading && <div className="text-sm text-gray-500">Loading…</div>}
       {!loading && error && <div className="text-sm text-gray-500">{error}</div>}
       {!loading && !error && fees && (
@@ -272,7 +272,7 @@ export function FeeDocumentation({
                     {isLanding ? (
                       <>
                         {networkFeesNote && (
-                          <div className="mb-2 text-sm text-gray-600">
+                          <div className="mb-2">
                             {networkFeesNote}
                           </div>
                         )}
