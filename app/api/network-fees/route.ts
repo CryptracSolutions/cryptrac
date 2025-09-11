@@ -61,7 +61,12 @@ export async function GET(_req: NextRequest) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(ethRpcPayload)
     }).catch(() => null)
-    const ethGas = (await tryEth('https://cloudflare-eth.com')) || (await tryEth('https://rpc.ankr.com/eth')) || (await tryEth('https://rpc.ethermine.org'))
+    const ethGas =
+      (await tryEth('https://cloudflare-eth.com')) ||
+      (await tryEth('https://rpc.ankr.com/eth')) ||
+      (await tryEth('https://rpc.ethermine.org')) ||
+      (await tryEth('https://rpc.builder0x69.io')) ||
+      (await tryEth('https://ethereum.publicnode.com'))
     const ethGasWeiHex = ethGas?.result
     const ethGasWei = ethGasWeiHex ? parseInt(ethGasWeiHex, 16) : null
     const ethFeeEth = ethGasWei != null ? (ethGasWei * 21000) / 1e18 : null
