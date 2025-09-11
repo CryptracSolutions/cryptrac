@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Card, CardContent } from '@/app/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { ArrowRight, ArrowLeft, Settings, HelpCircle, Loader2, Calculator, DollarSign, Plus } from 'lucide-react'
@@ -173,23 +173,23 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-8 space-y-4">
-        <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
-          <Settings className="w-10 h-10 text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">Payment Configuration</h1>
-          <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto">
-            Configure your payment preferences and fee settings. All cryptocurrencies from your wallet setup will be accepted.
-          </p>
-        </div>
-      </div>
+      {/* Main Configuration Card */}
+      <Card className="shadow-lg border-0 bg-white">
+        <CardHeader className="text-center space-y-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <Settings className="w-10 h-10 text-white" />
+          </div>
+          <div className="space-y-4">
+            <CardTitle className="text-2xl font-bold text-gray-900 leading-tight">
+              Payment Configuration
+            </CardTitle>
+            <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+              Configure your payment preferences and fee settings. All cryptocurrencies from your wallet setup will be accepted.
+            </p>
+          </div>
+        </CardHeader>
 
-      <div className="space-y-12">
-        {/* Main Configuration Card */}
-        <Card className="shadow-lg border-0 bg-white">
-          <CardContent className="p-8 space-y-10">
+        <CardContent className="p-8 space-y-10">
 
             {/* Configured Cryptocurrencies Display */}
             <div className="space-y-6">
@@ -625,40 +625,38 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between pt-6 border-t">
+            <Button
+              type="button"
+              onClick={onPrevious}
+              variant="outline"
+              className="flex items-center gap-2 px-6 h-11"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Previous
+            </Button>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between pt-6">
-          <Button
-            type="button"
-            onClick={onPrevious}
-            variant="outline"
-            className="flex items-center gap-2 px-6 h-11"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Previous
-          </Button>
-
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || configuredCurrencies.length === 0}
-            className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center gap-2 px-6 h-11"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                Continue
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting || configuredCurrencies.length === 0}
+              className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center gap-2 px-6 h-11"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
 
     </div>
