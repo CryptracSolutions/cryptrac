@@ -482,7 +482,7 @@ export default function CreateSubscriptionPage() {
                               setForm({ ...form, accepted_cryptos: form.accepted_cryptos.filter(c => c !== crypto) });
                             }
                           }}
-                          className="form-input-enhanced text-[#7f5efd]"
+                          className=""
                         />
                         <span className="text-sm font-medium">{crypto}</span>
                       </label>
@@ -576,7 +576,7 @@ export default function CreateSubscriptionPage() {
                         <Checkbox
                           checked={form.auto_resume_on_payment}
                           onCheckedChange={(checked) => setForm({ ...form, auto_resume_on_payment: checked as boolean })}
-                          className="form-input-enhanced text-[#7f5efd]"
+                          className=""
                         />
                         <span className="text-sm text-gray-600">Automatically resume when payment is received</span>
                       </div>

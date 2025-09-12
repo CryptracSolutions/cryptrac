@@ -675,7 +675,7 @@ export default function TaxReportsPage() {
                   <Checkbox
                     checked={filters.tax_only}
                     onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
-                    className="form-input-enhanced text-[#7f5efd]"
+                    className=""
                   />
                   <Label className="font-phonic text-sm font-normal text-gray-700">Show tax-only transactions</Label>
                 </div>

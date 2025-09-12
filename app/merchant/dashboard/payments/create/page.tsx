@@ -499,7 +499,6 @@ export default function CreatePaymentLinkPage() {
                             <SelectItem
                               key={currency.code}
                               value={currency.code}
-                              textValue={`${currency.symbol} ${currency.name}`}
                             >
                               {currency.symbol} {currency.name}
                             </SelectItem>

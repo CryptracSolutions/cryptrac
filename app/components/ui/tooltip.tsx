@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { ChevronRight, Star } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Star } from 'lucide-react'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 
 interface RecommendedCurrency {
@@ -20,9 +20,91 @@ interface TooltipProps {
   className?: string
 }
 
+type Position = 'top' | 'bottom' | 'left' | 'right'
+
 export default function Tooltip({ trigger, title, description, recommendedCurrencies, onCurrencyClick, className = "" }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [position, setPosition] = useState<Position>('right')
+  const [chevronIcon, setChevronIcon] = useState<React.ReactNode>(<ChevronRight className="h-4 w-4 text-[#7f5efd]" />)
   const tooltipRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLDivElement>(null)
+
+  // Calculate the best position for the tooltip
+  const calculateBestPosition = (): Position => {
+    if (!triggerRef.current) return 'right'
+
+    const triggerRect = triggerRef.current.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const isMobile = viewportWidth < 768
+
+    // Tooltip dimensions (responsive)
+    const tooltipWidth = isMobile ? Math.min(560, viewportWidth - 32) : 560
+    const tooltipHeight = 300 // Approximate height
+
+    // Calculate available space in each direction
+    const spaceRight = viewportWidth - triggerRect.right
+    const spaceLeft = triggerRect.left
+    const spaceTop = triggerRect.top
+    const spaceBottom = viewportHeight - triggerRect.bottom
+
+    // Required margins (smaller on mobile)
+    const margin = isMobile ? 16 : 20
+
+    // Check if each direction has enough space
+    const canFitRight = spaceRight >= tooltipWidth + margin
+    const canFitLeft = spaceLeft >= tooltipWidth + margin
+    const canFitTop = spaceTop >= tooltipHeight + margin
+    const canFitBottom = spaceBottom >= tooltipHeight + margin
+
+    // Priority order: right, bottom, left, top (adjusted for mobile)
+    if (canFitRight) return 'right'
+    if (canFitBottom) return 'bottom'
+    if (canFitLeft) return 'left'
+    if (canFitTop) return 'top'
+
+    // On mobile, prefer bottom if possible, otherwise fallback to top
+    if (isMobile) {
+      if (spaceBottom >= tooltipHeight * 0.8) return 'bottom'
+      if (spaceTop >= tooltipHeight * 0.8) return 'top'
+    }
+
+    // Final fallback
+    return 'right'
+  }
+
+  // Update position when tooltip opens or window resizes
+  useEffect(() => {
+    const updatePosition = () => {
+      if (isOpen && triggerRef.current) {
+        const bestPosition = calculateBestPosition()
+        setPosition(bestPosition)
+
+        // Set appropriate chevron icon
+        switch (bestPosition) {
+          case 'top':
+            setChevronIcon(<ChevronUp className="h-4 w-4 text-[#7f5efd]" />)
+            break
+          case 'bottom':
+            setChevronIcon(<ChevronDown className="h-4 w-4 text-[#7f5efd]" />)
+            break
+          case 'left':
+            setChevronIcon(<ChevronLeft className="h-4 w-4 text-[#7f5efd]" />)
+            break
+          case 'right':
+          default:
+            setChevronIcon(<ChevronRight className="h-4 w-4 text-[#7f5efd]" />)
+            break
+        }
+      }
+    }
+
+    if (isOpen) {
+      updatePosition()
+      window.addEventListener('resize', updatePosition)
+      return () => window.removeEventListener('resize', updatePosition)
+    }
+  }, [isOpen])
 
   // Handle click outside to close tooltip
   useEffect(() => {
@@ -56,9 +138,27 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
     }
   }, [isOpen])
 
+  // Get positioning classes based on calculated position
+  const getPositionClasses = () => {
+    const baseClasses = "absolute z-50 w-[560px] max-w-[calc(100vw-2rem)] sm:max-w-[90vw]"
+
+    switch (position) {
+      case 'top':
+        return `${baseClasses} bottom-full left-1/2 transform -translate-x-1/2 mb-3`
+      case 'bottom':
+        return `${baseClasses} top-full left-1/2 transform -translate-x-1/2 mt-3`
+      case 'left':
+        return `${baseClasses} top-1/2 right-full transform translate-y-[-50%] mr-3`
+      case 'right':
+      default:
+        return `${baseClasses} top-1/2 left-full transform -translate-y-1/2 ml-3`
+    }
+  }
+
   return (
     <div className={`relative ${className}`} ref={tooltipRef}>
       <div
+        ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         className="cursor-pointer"
       >
@@ -66,7 +166,7 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
       </div>
 
       {isOpen && (
-        <div className="absolute top-0 left-full ml-3 z-50 w-[560px] max-w-[90vw]">
+        <div className={getPositionClasses()}>
           <Card className="border-[#7f5efd]/30 shadow-xl bg-white/95 backdrop-blur-sm rounded-xl">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -82,7 +182,7 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
                   onClick={() => setIsOpen(false)}
                   className="h-6 w-6 p-0 hover:bg-[#7f5efd]/10"
                 >
-                  <ChevronRight className="h-4 w-4 text-[#7f5efd]" />
+                  {chevronIcon}
                 </Button>
               </div>
               <p className="text-xs text-gray-700 mt-1 leading-relaxed">
