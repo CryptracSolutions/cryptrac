@@ -564,18 +564,22 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
 
       {/* Enhanced Configured Wallets Section - Collapsible */}
       {hasExistingWallets && (
-        <Card 
+        <Card
           className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200"
           onClick={(e) => {
-            // Only collapse if clicking on the card background
-            if (e.target === e.currentTarget) {
+            // Allow clicks within the header area to expand/collapse
+            const target = e.target as HTMLElement;
+            const isClickingOnHeader = target.closest('.card-header') || e.target === e.currentTarget;
+            const isClickingOnButton = target.closest('button');
+
+            if (isClickingOnHeader && !isClickingOnButton) {
               setWalletsExpanded(!walletsExpanded);
             }
           }}
           style={{ cursor: 'pointer' }}
         >
-          <CardHeader 
-            className="pb-6"
+          <CardHeader
+            className="pb-6 card-header"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">

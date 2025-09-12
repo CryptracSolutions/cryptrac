@@ -33,15 +33,12 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
   const steps = [
     {
       id: 1,
-      title: "Download Trust Wallet",
-      description: "Get the official Trust Wallet app on your device",
+      title: "Install Trust Wallet",
+      description: "A free app to securely hold your crypto",
       icon: Download,
       content: (
         <div className="space-y-4">
-          <p className="text-gray-600">
-            Trust Wallet is a secure, decentralized wallet that supports all major cryptocurrencies. 
-            Download it from the official app stores:
-          </p>
+          <p className="text-gray-600">Trust Wallet is an easy, beginner‑friendly crypto wallet. Install it on your phone:</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a 
@@ -79,24 +76,19 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
 
           <Alert className="border-blue-200 bg-blue-50">
             <Shield className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-800">
-              <strong>Security Tip:</strong> Only download Trust Wallet from official app stores. 
-              Never download from third-party websites or unofficial sources.
-            </AlertDescription>
+            <AlertDescription className="text-blue-800">Download only from official stores. Never share your recovery phrase with anyone.</AlertDescription>
           </Alert>
         </div>
       )
     },
     {
       id: 2,
-      title: "Create or Import Wallet",
-      description: "Set up your wallet securely",
+      title: "Create or import a wallet",
+      description: "Save your recovery phrase somewhere safe",
       icon: Key,
       content: (
         <div className="space-y-4">
-          <p className="text-gray-600">
-            Once you have Trust Wallet installed, you'll need to either create a new wallet or import an existing one:
-          </p>
+          <p className="text-gray-600">Open the app and follow these simple steps:</p>
           
           <div className="space-y-3">
             <div className="p-4 border rounded-lg">
@@ -106,7 +98,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                 </div>
                 <span className="font-medium">Open Trust Wallet</span>
               </div>
-              <p className="text-sm text-gray-600 ml-11">Launch the app and agree to the terms of service</p>
+              <p className="text-sm text-gray-600 ml-11">Agree to the terms to continue</p>
             </div>
             
             <div className="p-4 border rounded-lg">
@@ -114,11 +106,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
                   <span className="text-green-600 font-bold text-sm">2</span>
                 </div>
-                <span className="font-medium">Choose "Create a new wallet" or "I already have a wallet"</span>
+                <span className="font-medium">Create a new wallet or import existing</span>
               </div>
-              <p className="text-sm text-gray-600 ml-11">
-                If you're new to crypto, select "Create a new wallet". If you have an existing wallet, choose "I already have a wallet"
-              </p>
+              <p className="text-sm text-gray-600 ml-11">New to crypto? Choose Create. Already have one? Choose Import.</p>
             </div>
             
             <div className="p-4 border rounded-lg">
@@ -126,34 +116,27 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
                   <span className="text-green-600 font-bold text-sm">3</span>
                 </div>
-                <span className="font-medium">Secure your wallet</span>
+                <span className="font-medium">Write down your recovery phrase</span>
               </div>
-              <p className="text-sm text-gray-600 ml-11">
-                Write down your recovery phrase and store it safely. Never share this with anyone!
-              </p>
+              <p className="text-sm text-gray-600 ml-11">Store it offline (paper). Anyone with it can access your funds.</p>
             </div>
           </div>
 
           <Alert className="border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              <strong>Critical:</strong> Your recovery phrase is the only way to restore your wallet. 
-              Store it offline in a secure location. Cryptrac never has access to your recovery phrase.
-            </AlertDescription>
+            <AlertDescription className="text-red-800">Your recovery phrase is the only way to restore your wallet. Cryptrac never sees or stores it.</AlertDescription>
           </Alert>
         </div>
       )
     },
     {
       id: 3,
-      title: "Find Your Wallet Addresses",
-      description: "Locate addresses for each cryptocurrency",
+      title: "Find your wallet address",
+      description: "Copy the address for each coin you accept",
       icon: Copy,
       content: (
         <div className="space-y-4">
-          <p className="text-gray-600">
-            For each cryptocurrency you want to accept, you'll need to find and copy the wallet address:
-          </p>
+          <p className="text-gray-600">Repeat these steps for every coin you want to accept:</p>
           
           <div className="space-y-3">
             <div className="p-4 border rounded-lg">
@@ -161,11 +144,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                   <span className="text-blue-600 font-bold text-sm">1</span>
                 </div>
-                <span className="font-medium">Navigate to the cryptocurrency</span>
+                <span className="font-medium">Open the cryptocurrency</span>
               </div>
-              <p className="text-sm text-gray-600 ml-11">
-                In Trust Wallet, tap on the cryptocurrency you want (e.g., Bitcoin, Ethereum, etc.)
-              </p>
+              <p className="text-sm text-gray-600 ml-11">Example: Bitcoin, Ethereum, Solana, etc.</p>
             </div>
             
             <div className="p-4 border rounded-lg">
@@ -173,11 +154,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                   <span className="text-blue-600 font-bold text-sm">2</span>
                 </div>
-                <span className="font-medium">Tap "Receive"</span>
+                <span className="font-medium">Tap “Receive”</span>
               </div>
-              <p className="text-sm text-gray-600 ml-11">
-                This will show your wallet address and QR code for that cryptocurrency
-              </p>
+              <p className="text-sm text-gray-600 ml-11">You’ll see your address and QR code</p>
             </div>
             
             <div className="p-4 border rounded-lg">
@@ -187,18 +166,13 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                 </div>
                 <span className="font-medium">Copy the address</span>
               </div>
-              <p className="text-sm text-gray-600 ml-11">
-                Tap the copy button to copy your wallet address. You'll paste this into Cryptrac
-              </p>
+              <p className="text-sm text-gray-600 ml-11">Use the copy button. You’ll paste it into Cryptrac.</p>
             </div>
           </div>
 
           <Alert className="border-yellow-200 bg-yellow-50">
             <Info className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
-              <strong>Important:</strong> Each cryptocurrency has its own unique address. 
-              Make sure you're copying the correct address for each coin type.
-            </AlertDescription>
+            <AlertDescription className="text-yellow-800">Each cryptocurrency has a different address. Always match coin and network.</AlertDescription>
           </Alert>
         </div>
       )
@@ -240,42 +214,36 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch content-stretch">
             <Button
               onClick={() => setHasWallet(false)}
               variant="outline"
-              className="p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-blue-50 hover:border-blue-200 h-full"
+              className="p-6 w-full min-h-[160px] flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-blue-50 hover:border-blue-200"
             >
               <Download className="w-8 h-8 text-blue-600" />
               <span className="font-medium text-center">Use a wallet (Trust Wallet)</span>
-              <span className="text-sm text-gray-500 text-center leading-snug">
-                Trust Wallet with broad asset support
-              </span>
+              <span className="text-sm text-gray-500 text-center leading-snug">A simple mobile app to hold your crypto</span>
             </Button>
             
             <Button
               onClick={() => setHasWallet(true)}
               variant="outline"
-              className="p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-green-50 hover:border-green-200 h-full"
+              className="p-6 w-full min-h-[160px] flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-green-50 hover:border-green-200"
             >
               <CheckCircle className="w-8 h-8 text-green-600" />
               <span className="font-medium text-center">I already have a wallet</span>
-              <span className="text-sm text-gray-500 text-center leading-snug">
-                Skip to entering your wallet addresses
-              </span>
+              <span className="text-sm text-gray-500 text-center leading-snug">Go straight to adding your addresses</span>
             </Button>
 
-            <div className="h-full flex flex-col">
+            <div className="flex flex-col">
               <Button
                 onClick={() => { setUseExchange(true); setExchangeStep(1); }}
                 variant="outline"
-                className="p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-indigo-50 border-[#7f5efd] h-full"
+                className="p-6 w-full min-h-[160px] flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-indigo-50 border-[#7f5efd]"
               >
                 <Banknote className="w-8 h-8 text-indigo-600" />
                 <span className="font-medium text-center">Use an exchange (Coinbase Exchange)</span>
-                <span className="text-sm text-gray-500 text-center leading-snug">
-                  We'll show you how to find deposit addresses on Coinbase
-                </span>
+                <span className="text-sm text-gray-500 text-center leading-snug">Find the deposit address from your Coinbase account</span>
               </Button>
               <div className="mt-2 flex justify-center">
                 <span className="text-[10px] font-semibold text-[#7f5efd] bg-white border border-[#7f5efd] rounded-full px-2 py-0.5">Recommended</span>
@@ -292,7 +260,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               I'll set this up later
             </Button>
             <div className="mt-2 text-xs text-gray-500">
-              Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Contact support</a>
+              Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Email support</a> or call <a href="tel:+13476193721" className="text-[#7f5efd] underline">(347) 619-3721</a>
             </div>
           </div>
         </CardContent>
@@ -516,7 +484,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             </div>
           </div>
           <div className="text-center text-xs text-gray-500">
-            Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Contact support</a>
+            Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Email support</a> or call <a href="tel:+13476193721" className="text-[#7f5efd] underline">(347) 619-3721</a>
           </div>
         </CardContent>
       </Card>
@@ -554,7 +522,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             </Button>
           </div>
           <div className="text-center text-xs text-gray-500">
-            Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Contact support</a>
+            Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Email support</a> or call <a href="tel:+13476193721" className="text-[#7f5efd] underline">(347) 619-3721</a>
           </div>
         </CardContent>
       </Card>

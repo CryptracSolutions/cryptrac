@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { ChevronUp, Star } from 'lucide-react'
+import { ChevronRight, Star } from 'lucide-react'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 
 interface RecommendedCurrency {
@@ -66,7 +66,7 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 z-50 w-[560px] max-w-[90vw]">
+        <div className="absolute top-0 left-full ml-3 z-50 w-[560px] max-w-[90vw]">
           <Card className="border-[#7f5efd]/30 shadow-xl bg-white/95 backdrop-blur-sm rounded-xl">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -82,7 +82,7 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
                   onClick={() => setIsOpen(false)}
                   className="h-6 w-6 p-0 hover:bg-[#7f5efd]/10"
                 >
-                  <ChevronUp className="h-4 w-4 text-[#7f5efd]" />
+                  <ChevronRight className="h-4 w-4 text-[#7f5efd]" />
                 </Button>
               </div>
               <p className="text-xs text-gray-700 mt-1 leading-relaxed">

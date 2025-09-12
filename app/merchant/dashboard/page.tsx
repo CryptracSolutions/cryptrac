@@ -612,38 +612,104 @@ export default function MerchantDashboard() {
           </CardContent>
         </Card>
 
-        {/* Enhanced Getting Started Guide */}
-        <Card className="card-hover shadow-lg">
-          <CardHeader>
-            <CardTitle className="font-phonic text-3xl font-normal">Getting Started</CardTitle>
-            <CardDescription className="font-phonic text-base">
-              Follow these steps to start accepting cryptocurrency payments
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {steps.map(step => (
-                <div key={step.id} className="flex items-start gap-6">
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-phonic text-lg font-normal ${
-                    step.completed 
-                      ? 'bg-[#7f5efd]/10 text-[#7f5efd]' 
-                      : 'bg-gray-100 text-gray-400'
-                  }`}>
-                    {step.completed ? <CheckCircle className="h-6 w-6" /> : step.id}
+        {/* Getting Started & What's New - Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Getting Started Guide */}
+          <Card className="card-hover shadow-lg">
+            <CardHeader>
+              <CardTitle className="font-phonic text-3xl font-normal">Getting Started</CardTitle>
+              <CardDescription className="font-phonic text-base">
+                Follow these steps to start accepting cryptocurrency payments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {steps.map(step => (
+                  <div key={step.id} className="flex items-start gap-6">
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-phonic text-lg font-normal ${
+                      step.completed 
+                        ? 'bg-[#7f5efd]/10 text-[#7f5efd]' 
+                        : 'bg-gray-100 text-gray-400'
+                    }`}>
+                      {step.completed ? <CheckCircle className="h-6 w-6" /> : step.id}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className={`font-phonic text-xl font-normal mb-2 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {step.title}
+                      </h4>
+                      <p className={`font-phonic text-base ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
+                        {step.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h4 className={`font-phonic text-xl font-normal mb-2 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {step.title}
-                    </h4>
-                    <p className={`font-phonic text-base ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
-                      {step.description}
-                    </p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* What's New Section */}
+          <Card className="card-hover shadow-lg">
+            <CardHeader>
+              <CardTitle className="font-phonic text-3xl font-normal">What's New</CardTitle>
+              <CardDescription className="font-phonic text-base">
+                Latest features and improvements to enhance your payment experience
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                  <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
+                    <CreditCard className="h-6 w-6 text-[#7f5efd]" />
+                  </div>
+                  <div>
+                    <h4 className="font-phonic text-lg font-medium text-gray-900 mb-1">Smart Terminal</h4>
+                    <p className="font-phonic text-sm text-gray-600">Accept in-person crypto payments with our new point-of-sale interface</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
+
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                  <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
+                    <Calendar className="h-6 w-6 text-[#7f5efd]" />
+                  </div>
+                  <div>
+                    <h4 className="font-phonic text-lg font-medium text-gray-900 mb-1">Subscription Payments</h4>
+                    <p className="font-phonic text-sm text-gray-600">Set up recurring cryptocurrency payments for your regular customers</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                  <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
+                    <Zap className="h-6 w-6 text-[#7f5efd]" />
+                  </div>
+                  <div>
+                    <h4 className="font-phonic text-lg font-medium text-gray-900 mb-1">Real-time Notifications</h4>
+                    <p className="font-phonic text-sm text-gray-600">Get instant alerts when payments are received and confirmed</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                  <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
+                    <TrendingUp className="h-6 w-6 text-[#7f5efd]" />
+                  </div>
+                  <div>
+                    <h4 className="font-phonic text-lg font-medium text-gray-900 mb-1">Enhanced Analytics</h4>
+                    <p className="font-phonic text-sm text-gray-600">Track your revenue trends and payment patterns with detailed insights</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                  <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
+                    <Users className="h-6 w-6 text-[#7f5efd]" />
+                  </div>
+                  <div>
+                    <h4 className="font-phonic text-lg font-medium text-gray-900 mb-1">Multi-Currency Support</h4>
+                    <p className="font-phonic text-sm text-gray-600">Accept payments in 20+ cryptocurrencies including Bitcoin, Ethereum, and stablecoins</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>
+        </div>
     </div>
   );
 }

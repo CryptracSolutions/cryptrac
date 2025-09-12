@@ -492,7 +492,7 @@ export default function CreatePaymentLinkPage() {
                       <Label htmlFor="currency" className="font-phonic text-base font-normal">Currency</Label>
                       <Select value={form.currency} onValueChange={(value) => setForm(prev => ({ ...prev, currency: value }))}>
                         <SelectTrigger className="form-input-enhanced">
-                          <SelectValue />
+                          <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                         <SelectContent>
                           {FIAT_CURRENCIES.map(currency => (

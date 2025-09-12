@@ -229,7 +229,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.business_name}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_name: e.target.value }))}
                 placeholder="Enter your business name"
-                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                className="h-12 font-capsule text-base font-normal transition-colors"
                 required
               />
             </div>
@@ -240,7 +240,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.business_type} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, business_type: value }))}
               >
-                <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
+                <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -257,7 +257,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.industry} 
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, industry: value }))}
               >
-                <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
+                <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,7 +275,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, website: e.target.value }))}
                 placeholder="https://your-website.com"
                 type="url"
-                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                className="h-12 font-capsule text-base font-normal transition-colors"
               />
             </div>
           </div>
@@ -312,7 +312,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.first_name}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, first_name: e.target.value }))}
                 placeholder="Enter your first name"
-                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                className="h-12 font-capsule text-base font-normal transition-colors"
                 required
               />
             </div>
@@ -323,7 +323,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.last_name}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, last_name: e.target.value }))}
                 placeholder="Enter your last name"
-                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                className="h-12 font-capsule text-base font-normal transition-colors"
                 required
               />
             </div>
@@ -335,7 +335,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="(555) 123-4567"
                 maxLength={14}
-                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                className="h-12 font-capsule text-base font-normal transition-colors"
               />
             </div>
 
@@ -345,7 +345,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.timezone}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, timezone: value }))}
               >
-                <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
+                <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
                 <SelectContent>
@@ -412,7 +412,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   business_address: { ...prev.business_address, street: e.target.value }
                 }))}
                 placeholder="123 Main Street"
-                className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                className="h-12 font-capsule text-base font-normal transition-colors"
                 required
               />
             </div>
@@ -427,7 +427,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, city: e.target.value }
                   }))}
                   placeholder="San Francisco"
-                  className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                  className="h-12 font-capsule text-base font-normal transition-colors"
                   required
                 />
               </div>
@@ -441,7 +441,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, state: value }
                   }))}
                 >
-                  <SelectTrigger className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors">
+                  <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -461,7 +461,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   onChange={(e) => handleZipChange(e.target.value)}
                   placeholder="94105"
                   maxLength={10}
-                  className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                  className="h-12 font-capsule text-base font-normal transition-colors"
                   required
                 />
               </div>
