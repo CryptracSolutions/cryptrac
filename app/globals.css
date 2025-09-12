@@ -386,9 +386,10 @@
   
   /* Enhanced form styles */
   .form-input-enhanced {
+    height: 3rem;
     border: 2px solid #e5e7eb;
-    border-radius: 0.75rem;
-    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
     font-size: 1rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: white;
@@ -396,7 +397,7 @@
   
   .form-input-enhanced:focus {
     border-color: #7f5efd;
-    box-shadow: 0 0 0 4px rgb(127 94 253 / 0.1);
+    box-shadow: 0 0 0 4px rgb(127 94 253 / 0.2);
     outline: none;
   }
   

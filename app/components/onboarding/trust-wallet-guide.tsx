@@ -223,7 +223,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
 
   if (hasWallet === null && !useExchange) {
     return (
-      <Card className="max-w-2xl mx-auto shadow-lg border-0 bg-white">
+      <Card interactive={false} className="max-w-2xl mx-auto shadow-lg border-0 bg-white">
         <CardHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-8 h-8 text-white" />
@@ -499,7 +499,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
 
   if (hasWallet) {
     return (
-      <Card className="max-w-2xl mx-auto shadow-lg border-0 bg-white">
+      <Card interactive={false} className="max-w-2xl mx-auto shadow-lg border-0 bg-white">
         <CardHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-white" />
@@ -533,7 +533,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
   }
 
   return (
-    <Card className="max-w-4xl mx-auto shadow-lg border-0 bg-white">
+    <Card interactive={false} className="max-w-4xl mx-auto shadow-lg border-0 bg-white">
       <CardHeader className="text-center pb-6">
         <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
           {currentStepData && <currentStepData.icon className="w-8 h-8 text-white" />}

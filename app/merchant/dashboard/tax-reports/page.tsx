@@ -590,7 +590,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-phonic text-sm font-normal text-gray-700">Report Type</Label>
                     <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
-                    <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                    <SelectTrigger className="form-input-enhanced">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -605,7 +605,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-phonic text-sm font-normal text-gray-700">Year</Label>
                     <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
-                      <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                      <SelectTrigger className="form-input-enhanced">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -620,7 +620,7 @@ export default function TaxReportsPage() {
                     <div className="space-y-2">
                       <Label className="font-phonic text-sm font-normal text-gray-700">Quarter</Label>
                       <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
-                        <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                        <SelectTrigger className="form-input-enhanced">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -636,7 +636,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-phonic text-sm font-normal text-gray-700">Status</Label>
                     <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
-                      <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                      <SelectTrigger className="form-input-enhanced">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
