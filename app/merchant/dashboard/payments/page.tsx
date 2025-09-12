@@ -547,6 +547,18 @@ export default function PaymentsPage() {
           <p className="font-capsule text-lg text-gray-600">View and manage all your payments</p>
         </div>
         <div className="flex gap-4">
+          <Link href="/merchant/dashboard/payments/create">
+            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create Payment Link
+            </Button>
+          </Link>
+          <Link href="/smart-terminal">
+            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Open Smart Terminal
+            </Button>
+          </Link>
           <Link href="/merchant/subscriptions">
             <Button variant="outline" size="lg" className="flex items-center gap-2 border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200">
               <Calendar className="h-5 w-5" />
@@ -715,30 +727,6 @@ export default function PaymentsPage() {
                   </div>
                   <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
                   <p className="font-capsule text-sm text-gray-500 mb-6">Get started by creating your first payment link</p>
-                  {group.key === 'links' && (
-                    <Link href="/merchant/dashboard/payments/create">
-                      <Button size="sm" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Create Payment Link
-                      </Button>
-                    </Link>
-                  )}
-                  {group.key === 'pos' && (
-                    <Link href="/smart-terminal">
-                      <Button size="sm" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        Open Smart Terminal
-                      </Button>
-                    </Link>
-                  )}
-                  {group.key === 'subscriptions' && (
-                    <Link href="/merchant/subscriptions">
-                      <Button size="sm" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Manage Subscriptions
-                      </Button>
-                    </Link>
-                  )}
                 </div>
               ) : (
                 <div className="space-y-4">

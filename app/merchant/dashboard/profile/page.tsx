@@ -154,9 +154,9 @@ export default function ProfilePage() {
   }, [autoSaveSettings]);
 
   // Update settings with auto-save
-  const updateSettings = useCallback((updater: (prev: MerchantSettings) => MerchantSettings) => {
+  const updateSettings = useCallback((updater: React.SetStateAction<MerchantSettings>) => {
     setSettings((prev) => {
-      const newSettings = updater(prev);
+      const newSettings = typeof updater === 'function' ? updater(prev) : updater;
       triggerAutoSave(newSettings);
       return newSettings;
     });
