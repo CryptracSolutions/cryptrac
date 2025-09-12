@@ -218,12 +218,15 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
+    } else {
+      // Return to option selection
+      setHasWallet(null)
     }
   }
 
   if (hasWallet === null && !useExchange) {
     return (
-      <Card interactive={false} className="max-w-4xl mx-auto shadow-lg bg-white min-h-[560px]">
+      <Card interactive={false} className="w-full shadow-lg bg-white min-h-[560px]">
         <CardHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-8 h-8 text-white" />
@@ -246,7 +249,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               <Download className="w-8 h-8 text-blue-600" />
               <span className="font-medium text-center">Use a wallet (Trust Wallet)</span>
               <span className="text-sm text-gray-500 text-center leading-snug">
-                Suggested: Trust Wallet with broad asset support
+                Trust Wallet with broad asset support
               </span>
             </Button>
             
@@ -262,18 +265,22 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               </span>
             </Button>
 
-            <Button
-              onClick={() => { setUseExchange(true); setExchangeStep(1); }}
-              variant="outline"
-              className="relative p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-indigo-50 border-[#7f5efd] h-full"
-            >
-              <span className="absolute top-2 right-2 text-[10px] font-semibold text-[#7f5efd] bg-white border border-[#7f5efd] rounded-full px-2 py-0.5">Recommended</span>
-              <Banknote className="w-8 h-8 text-indigo-600" />
-              <span className="font-medium text-center">Use an exchange (Coinbase Exchange)</span>
-              <span className="text-sm text-gray-500 text-center leading-snug">
-                We'll show you how to find deposit addresses on Coinbase
-              </span>
-            </Button>
+            <div className="flex flex-col items-stretch">
+              <Button
+                onClick={() => { setUseExchange(true); setExchangeStep(1); }}
+                variant="outline"
+                className="p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-indigo-50 border-[#7f5efd] h-full"
+              >
+                <Banknote className="w-8 h-8 text-indigo-600" />
+                <span className="font-medium text-center">Use an exchange (Coinbase Exchange)</span>
+                <span className="text-sm text-gray-500 text-center leading-snug">
+                  We'll show you how to find deposit addresses on Coinbase
+                </span>
+              </Button>
+              <div className="mt-2 flex justify-center">
+                <span className="text-[10px] font-semibold text-[#7f5efd] bg-white border border-[#7f5efd] rounded-full px-2 py-0.5">Recommended</span>
+              </div>
+            </div>
           </div>
 
           <div className="text-center pt-4">
@@ -346,54 +353,68 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
       },
       {
         id: 2,
-        title: 'Find Deposit Addresses',
-        description: 'Locate deposit addresses for each asset',
+        title: 'Choose Asset & Network',
+        description: 'Pick the crypto and correct network',
         icon: Key,
         content: (
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              For each cryptocurrency you want to accept, navigate to the asset in Coinbase and find your deposit address.
-            </p>
-            <div className="space-y-3">
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center mb-2">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-purple-600 font-bold text-sm">1</span>
-                  </div>
-                  <span className="font-medium">Open the asset</span>
+          <div className="space-y-3">
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-purple-600 font-bold text-sm">1</span>
                 </div>
-                <p className="text-sm text-gray-600 ml-11">Go to Assets, select the cryptocurrency (e.g., BTC, ETH)</p>
+                <span className="font-medium">Open Assets and select crypto</span>
               </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center mb-2">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-purple-600 font-bold text-sm">2</span>
-                  </div>
-                  <span className="font-medium">Choose Receive / Deposit</span>
+              <p className="text-sm text-gray-600 ml-11">BTC, ETH, SOL, USDC, etc.</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-purple-600 font-bold text-sm">2</span>
                 </div>
-                <p className="text-sm text-gray-600 ml-11">Select Receive (or Deposit → Crypto address on web)</p>
+                <span className="font-medium">Confirm network matches Cryptrac</span>
               </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center mb-2">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-purple-600 font-bold text-sm">3</span>
-                  </div>
-                  <span className="font-medium">Copy the address</span>
+              <p className="text-sm text-gray-600 ml-11">Example: ETH vs Base, BTC vs Lightning, BSC vs BNB, etc.</p>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 3,
+        title: 'Get Deposit Details',
+        description: 'Find address and tag/memo (if any)',
+        icon: Key,
+        content: (
+          <div className="space-y-3">
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-purple-600 font-bold text-sm">1</span>
                 </div>
-                <p className="text-sm text-gray-600 ml-11">Copy the deposit address for that asset to use in Cryptrac</p>
+                <span className="font-medium">Tap Receive / Deposit</span>
               </div>
+              <p className="text-sm text-gray-600 ml-11">On web: Deposit → Crypto address</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-purple-600 font-bold text-sm">2</span>
+                </div>
+                <span className="font-medium">Copy address (and Memo/Tag)</span>
+              </div>
+              <p className="text-sm text-gray-600 ml-11">XRP/XLM require a Destination Tag or Memo — copy both.</p>
             </div>
             <Alert className="border-yellow-200 bg-yellow-50">
               <Info className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800">
-                Some assets (e.g., XRP, XLM) require a Destination Tag or Memo. Copy both the address and the tag/memo.
+                Deposits to wrong networks can be lost. Always verify the network shown matches what you configure in Cryptrac.
               </AlertDescription>
             </Alert>
           </div>
         )
       },
       {
-        id: 3,
+        id: 4,
         title: 'Paste Into Cryptrac',
         description: 'Add the addresses to your settings',
         icon: Copy,
@@ -414,7 +435,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
     const currentExchangeStep = exchangeSteps.find(step => step.id === exchangeStep)
 
     return (
-      <Card className="max-w-4xl mx-auto shadow-lg border-0 bg-white">
+      <Card className="w-full shadow-lg bg-white">
         <CardHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
             {currentExchangeStep && <currentExchangeStep.icon className="w-8 h-8 text-white" />}
@@ -466,7 +487,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               variant="outline"
               className="px-6"
             >
-              {exchangeStep === 1 ? 'Back' : 'Previous'}
+              Previous
             </Button>
 
             <div className="flex space-x-3">
@@ -534,7 +555,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
   }
 
   return (
-    <Card interactive={false} className="max-w-4xl mx-auto shadow-lg bg-white min-h-[560px]">
+    <Card interactive={false} className="w-full shadow-lg bg-white min-h-[560px]">
       <CardHeader className="text-center pb-6">
         <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
           {currentStepData && <currentStepData.icon className="w-8 h-8 text-white" />}
@@ -578,7 +599,6 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
           <Button
             onClick={handlePrevious}
             variant="outline"
-            disabled={currentStep === 1}
             className="px-6"
           >
             Previous
