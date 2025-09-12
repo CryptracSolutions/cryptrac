@@ -577,8 +577,7 @@ export default function MerchantSettingsPage() {
                               id="merchant-pays-fee"
                               checked={!settings.charge_customer_fee}
                               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: !(checked as boolean) }))}
-                              className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
-                            />
+                              />
                              <label htmlFor="merchant-pays-fee" className="font-phonic text-base font-normal">
                                Merchant pays gateway fee
                              </label>
@@ -589,8 +588,7 @@ export default function MerchantSettingsPage() {
                               id="customer-pays-fee"
                               checked={settings.charge_customer_fee}
                               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
-                              className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
-                            />
+                              />
                             <label htmlFor="customer-pays-fee" className="font-phonic text-base font-normal">
                               Customer pays gateway fee
                             </label>
@@ -623,7 +621,6 @@ export default function MerchantSettingsPage() {
                                 ...(checked ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
                               }
                             }))}
-                            className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                           />
                           <label htmlFor="auto-convert" className="font-phonic text-base font-normal">
                             Enable automatic conversion to preferred payout currency

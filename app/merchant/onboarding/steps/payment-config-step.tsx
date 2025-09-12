@@ -301,7 +301,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
                   <Checkbox
-                    className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
+                    className="mt-1"
                     checked={!formData.chargeCustomerFee}
                     onCheckedChange={(checked) =>
                       setFormData(prev => ({
@@ -323,7 +323,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 
                 <div className="flex items-start gap-4">
                   <Checkbox
-                    className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
+                    className="mt-1"
                     checked={formData.chargeCustomerFee}
                     onCheckedChange={(checked) =>
                       setFormData(prev => ({
@@ -561,7 +561,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <Checkbox
-                    className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
+                    className="mt-1"
                     checked={formData.autoConvert}
                     onCheckedChange={(checked) =>
                       setFormData(prev => ({

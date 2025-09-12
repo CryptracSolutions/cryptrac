@@ -639,7 +639,7 @@ export default function CreateSubscriptionPage() {
                   <Checkbox
                     checked={form.tax_enabled}
                     onCheckedChange={(checked) => setForm({ ...form, tax_enabled: checked as boolean })}
-                    className="form-input-enhanced text-[#7f5efd]"
+                    className=""
                   />
                   <span className="font-phonic text-sm font-normal text-gray-700">Enable tax collection</span>
                 </div>

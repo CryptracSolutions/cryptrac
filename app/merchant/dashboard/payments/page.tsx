@@ -557,7 +557,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Links</CardTitle>
@@ -577,7 +577,7 @@ export default function PaymentsPage() {
         <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Active</CardTitle>
-            <div className="p-2 bg-green-600 rounded-lg">
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
               <TrendingUp className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
@@ -593,7 +593,7 @@ export default function PaymentsPage() {
         <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Completed</CardTitle>
-            <div className="p-2 bg-blue-600 rounded-lg">
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
               <CheckCircle className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
@@ -609,7 +609,7 @@ export default function PaymentsPage() {
         <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Expired</CardTitle>
-            <div className="p-2 bg-orange-600 rounded-lg">
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
               <AlertCircle className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
@@ -625,7 +625,7 @@ export default function PaymentsPage() {
         <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Single Use</CardTitle>
-            <div className="p-2 bg-purple-600 rounded-lg">
+            <div className="p-2 bg-[#7f5efd] rounded-lg">
               <CreditCard className="h-4 w-4 text-white" />
             </div>
           </CardHeader>

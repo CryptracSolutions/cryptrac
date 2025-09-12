@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTimezone } from '@/lib/contexts/TimezoneContext';
 
@@ -61,6 +61,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedSettingsRef = useRef<string>('');
   const [settings, setSettings] = useState<MerchantSettings>({
     // Profile
     business_name: '',
@@ -97,6 +100,68 @@ export default function ProfilePage() {
   });
   const router = useRouter();
 
+  // Auto-save function with debouncing
+  const autoSaveSettings = useCallback(async (newSettings: MerchantSettings) => {
+    // Check if settings have changed
+    const currentSettingsStr = JSON.stringify(newSettings);
+    if (currentSettingsStr === lastSavedSettingsRef.current) {
+      return; // No changes, skip save
+    }
+
+    try {
+      setAutoSaving(true);
+
+      const response = await fetch('/api/merchants/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSettings),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to auto-save settings');
+      }
+
+      lastSavedSettingsRef.current = currentSettingsStr;
+      
+      // Update the timezone context if it changed
+      if (newSettings.timezone !== currentTimezone) {
+        await updateTimezone(newSettings.timezone);
+      }
+      
+      // Show brief success indicator
+      toast.success('Changes saved', { duration: 1500 });
+    } catch (error) {
+      console.error('Failed to auto-save settings:', error);
+      toast.error('Failed to save changes');
+    } finally {
+      setAutoSaving(false);
+    }
+  }, [currentTimezone, updateTimezone]);
+
+  // Debounced auto-save trigger
+  const triggerAutoSave = useCallback((newSettings: MerchantSettings) => {
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save (1.5 seconds after last change)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSaveSettings(newSettings);
+    }, 1500);
+  }, [autoSaveSettings]);
+
+  // Update settings with auto-save
+  const updateSettings = useCallback((updater: (prev: MerchantSettings) => MerchantSettings) => {
+    setSettings((prev) => {
+      const newSettings = updater(prev);
+      triggerAutoSave(newSettings);
+      return newSettings;
+    });
+  }, [triggerAutoSave]);
+
   // Fetch user and settings
   useEffect(() => {
     const fetchUserAndSettings = async () => {
@@ -113,11 +178,13 @@ export default function ProfilePage() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.settings) {
-            setSettings(prev => ({
-              ...prev,
+            const loadedSettings = {
+              ...settings,
               ...data.settings,
               email: data.settings.email || user.email || ''
-            }));
+            };
+            setSettings(loadedSettings);
+            lastSavedSettingsRef.current = JSON.stringify(loadedSettings);
           }
         }
       } catch (error) {
@@ -167,7 +234,7 @@ export default function ProfilePage() {
     }
   };
 
-  // Phone number formatting
+  // Phone number formatting with auto-save
   const handlePhoneChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     let formatted = cleaned;
@@ -178,10 +245,10 @@ export default function ProfilePage() {
       formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
     }
     
-    setSettings(prev => ({ ...prev, phone_number: formatted }));
+    updateSettings(prev => ({ ...prev, phone_number: formatted }));
   };
 
-  // ZIP code formatting
+  // ZIP code formatting with auto-save
   const handleZipChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     let formatted = cleaned;
@@ -190,11 +257,20 @@ export default function ProfilePage() {
       formatted = `${cleaned.slice(0, 5)}-${cleaned.slice(5, 9)}`;
     }
     
-    setSettings(prev => ({
+    updateSettings(prev => ({
       ...prev,
       business_address: { ...prev.business_address, zip_code: formatted }
     }));
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -224,24 +300,32 @@ export default function ProfilePage() {
               Manage your business information and contact details
             </p>
           </div>
-          <Button
-            onClick={saveSettings}
-            disabled={saving}
-            className="flex items-center gap-2 bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-colors duration-200"
-            size="default"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Save Changes
-              </>
+          <div className="flex items-center gap-3">
+            {autoSaving && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span className="font-capsule">Auto-saving...</span>
+              </div>
             )}
-          </Button>
+            <Button
+              onClick={saveSettings}
+              disabled={saving || autoSaving}
+              className="flex items-center gap-2 bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-colors duration-200"
+              size="default"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Enhanced Success Alert */}
@@ -257,12 +341,12 @@ export default function ProfilePage() {
         {/* Enhanced Profile Form */}
         <ProfileForm
           settings={settings}
-          setSettings={setSettings}
+          setSettings={updateSettings}
           handlePhoneChange={handlePhoneChange}
           handleZipChange={handleZipChange}
           onEmailChange={(newEmail) => {
             console.log('Email change requested:', newEmail);
-            // Additional email change logic can be added here if needed
+            // Email changes are handled separately with confirmation
           }}
         />
         </div>
