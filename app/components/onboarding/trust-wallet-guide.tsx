@@ -265,7 +265,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               </span>
             </Button>
 
-            <div className="flex flex-col items-stretch">
+            <div className="h-full flex flex-col">
               <Button
                 onClick={() => { setUseExchange(true); setExchangeStep(1); }}
                 variant="outline"
@@ -291,6 +291,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             >
               I'll set this up later
             </Button>
+            <div className="mt-2 text-xs text-gray-500">
+              Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Contact support</a>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -360,8 +363,8 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
           <div className="space-y-3">
             <div className="p-4 border rounded-lg">
               <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-purple-600 font-bold text-sm">1</span>
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-green-600 font-bold text-sm">1</span>
                 </div>
                 <span className="font-medium">Open Assets and select crypto</span>
               </div>
@@ -369,8 +372,8 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             </div>
             <div className="p-4 border rounded-lg">
               <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-purple-600 font-bold text-sm">2</span>
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-green-600 font-bold text-sm">2</span>
                 </div>
                 <span className="font-medium">Confirm network matches Cryptrac</span>
               </div>
@@ -381,15 +384,15 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
       },
       {
         id: 3,
-        title: 'Get Deposit Details',
-        description: 'Find address and tag/memo (if any)',
+        title: 'Get Deposit Details & Paste',
+        description: 'Find address, tag/memo, and add to Cryptrac',
         icon: Key,
         content: (
           <div className="space-y-3">
             <div className="p-4 border rounded-lg">
               <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-purple-600 font-bold text-sm">1</span>
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-600 font-bold text-sm">1</span>
                 </div>
                 <span className="font-medium">Tap Receive / Deposit</span>
               </div>
@@ -397,12 +400,21 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             </div>
             <div className="p-4 border rounded-lg">
               <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-purple-600 font-bold text-sm">2</span>
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-600 font-bold text-sm">2</span>
                 </div>
                 <span className="font-medium">Copy address (and Memo/Tag)</span>
               </div>
               <p className="text-sm text-gray-600 ml-11">XRP/XLM require a Destination Tag or Memo — copy both.</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-600 font-bold text-sm">3</span>
+                </div>
+                <span className="font-medium">Paste into Cryptrac</span>
+              </div>
+              <p className="text-sm text-gray-600 ml-11">Add the address in Wallets and save changes.</p>
             </div>
             <Alert className="border-yellow-200 bg-yellow-50">
               <Info className="h-4 w-4 text-yellow-600" />
@@ -410,21 +422,10 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                 Deposits to wrong networks can be lost. Always verify the network shown matches what you configure in Cryptrac.
               </AlertDescription>
             </Alert>
-          </div>
-        )
-      },
-      {
-        id: 4,
-        title: 'Paste Into Cryptrac',
-        description: 'Add the addresses to your settings',
-        icon: Copy,
-        content: (
-          <div className="space-y-4">
-            <p className="text-gray-600">Paste each deposit address into the corresponding cryptocurrency field in Cryptrac.</p>
             <Alert className="border-red-200 bg-red-50">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                Exchanges may change deposit address availability per network and enforce deposit rules. Always verify the network matches the address type you entered.
+                Exchanges may change deposit rules. If an address isn’t available for a network, select a supported network.
               </AlertDescription>
             </Alert>
           </div>
@@ -514,6 +515,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               </Button>
             </div>
           </div>
+          <div className="text-center text-xs text-gray-500">
+            Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Contact support</a>
+          </div>
         </CardContent>
       </Card>
     )
@@ -548,6 +552,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               Continue to Wallet Setup
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
+          </div>
+          <div className="text-center text-xs text-gray-500">
+            Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Contact support</a>
           </div>
         </CardContent>
       </Card>
@@ -621,7 +628,10 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
-        </div>
+          </div>
+          <div className="text-center text-xs text-gray-500">
+            Need help? <a href="mailto:support@cryptrac.com" className="text-[#7f5efd] underline">Contact support</a>
+          </div>
       </CardContent>
     </Card>
   )
