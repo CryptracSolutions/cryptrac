@@ -223,7 +223,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
 
   if (hasWallet === null && !useExchange) {
     return (
-      <Card interactive={false} className="max-w-2xl mx-auto shadow-lg border-0 bg-white">
+      <Card interactive={false} className="max-w-4xl mx-auto shadow-lg bg-white min-h-[560px]">
         <CardHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-8 h-8 text-white" />
@@ -244,9 +244,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
               className="p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-blue-50 hover:border-blue-200 h-full"
             >
               <Download className="w-8 h-8 text-blue-600" />
-              <span className="font-medium text-center">Set up Trust Wallet</span>
+              <span className="font-medium text-center">Use a wallet (Trust Wallet)</span>
               <span className="text-sm text-gray-500 text-center leading-snug">
-                Recommended mobile wallet with broad asset support
+                Suggested: Trust Wallet with broad asset support
               </span>
             </Button>
             
@@ -265,8 +265,9 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             <Button
               onClick={() => { setUseExchange(true); setExchangeStep(1); }}
               variant="outline"
-              className="p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-indigo-50 hover:border-indigo-200 h-full"
+              className="relative p-6 flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-indigo-50 border-[#7f5efd] h-full"
             >
+              <span className="absolute top-2 right-2 text-[10px] font-semibold text-[#7f5efd] bg-white border border-[#7f5efd] rounded-full px-2 py-0.5">Recommended</span>
               <Banknote className="w-8 h-8 text-indigo-600" />
               <span className="font-medium text-center">Use an exchange (Coinbase Exchange)</span>
               <span className="text-sm text-gray-500 text-center leading-snug">
@@ -499,7 +500,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
 
   if (hasWallet) {
     return (
-      <Card interactive={false} className="max-w-2xl mx-auto shadow-lg border-0 bg-white">
+      <Card interactive={false} className="max-w-4xl mx-auto shadow-lg bg-white min-h-[560px]">
         <CardHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-white" />
@@ -533,7 +534,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
   }
 
   return (
-    <Card interactive={false} className="max-w-4xl mx-auto shadow-lg border-0 bg-white">
+    <Card interactive={false} className="max-w-4xl mx-auto shadow-lg bg-white min-h-[560px]">
       <CardHeader className="text-center pb-6">
         <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto mb-4">
           {currentStepData && <currentStepData.icon className="w-8 h-8 text-white" />}

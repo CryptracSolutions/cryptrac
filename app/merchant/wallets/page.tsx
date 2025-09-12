@@ -253,7 +253,7 @@ export default function WalletsPage() {
 
         {/* Setup Guide Modal */}
         <Dialog open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
-          <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-white border-[#7f5efd] shadow-xl p-0 max-h-[90vh] overflow-y-auto overscroll-contain">
+          <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-transparent border-0 shadow-none p-0 max-h-[90vh] overflow-y-auto overscroll-contain">
             <TrustWalletGuide
               onComplete={() => setShowTrustWalletGuide(false)}
               onSkip={() => setShowTrustWalletGuide(false)}
