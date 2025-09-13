@@ -16,7 +16,9 @@ import {
   Trash2,
   Info,
   Coins,
-  ShoppingBag
+  ShoppingBag,
+  Receipt,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -424,32 +426,26 @@ export default function CreatePaymentLinkPage() {
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-8">
               {/* Basic Information */}
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <CreditCard className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
-                        Basic Information
-                      </CardTitle>
-                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
-                        Enter the basic details for your payment link
-                      </p>
-                    </div>
-                  </div>
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="p-6">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-[#7f5efd]" />
+                    Basic Information
+                  </CardTitle>
+                  <CardDescription className="font-capsule text-sm text-gray-600">
+                    Enter the basic details for your payment link
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="title" className="font-phonic text-sm font-normal text-gray-700">Payment Link Title *</Label>
+                      <Label htmlFor="title" className="font-phonic text-sm font-semibold text-gray-900">Payment Link Title *</Label>
                       <Input
                         id="title"
                         placeholder="e.g., Product Purchase, Service Payment"
                         value={form.title}
                         onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                         required
                       />
                     </div>
@@ -460,7 +456,7 @@ export default function CreatePaymentLinkPage() {
                         placeholder="Brief description for your customers"
                         value={form.description}
                         onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
                     </div>
                   </div>
@@ -468,23 +464,17 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Pricing Configuration */}
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <DollarSign className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
-                        Pricing Configuration
-                      </CardTitle>
-                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
-                        Set the amount, currency, and billing details
-                      </p>
-                    </div>
-                  </div>
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="p-6">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-[#7f5efd]" />
+                    Pricing Configuration
+                  </CardTitle>
+                  <CardDescription className="font-capsule text-sm text-gray-600">
+                    Set the amount, currency, and billing details
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="amount" className="font-phonic text-sm font-normal text-gray-700">Amount *</Label>
@@ -496,7 +486,7 @@ export default function CreatePaymentLinkPage() {
                         placeholder="0.00"
                         value={form.amount}
                         onChange={(e) => setForm(prev => ({ ...prev, amount: e.target.value }))}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                         required
                       />
                     </div>
@@ -504,7 +494,7 @@ export default function CreatePaymentLinkPage() {
                     <div className="space-y-2">
                       <Label htmlFor="currency" className="font-phonic text-sm font-normal text-gray-700">Currency *</Label>
                       <Select value={form.currency} onValueChange={(value) => setForm(prev => ({ ...prev, currency: value }))}>
-                        <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                        <SelectTrigger className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                         <SelectContent>
@@ -529,14 +519,14 @@ export default function CreatePaymentLinkPage() {
                         checked={form.tax_enabled}
                         onCheckedChange={(checked) => handleTaxEnabledToggle(checked === true)}
                       />
-                      <Label htmlFor="tax_enabled" className="font-phonic text-sm font-normal text-gray-700">
-                        Add tax to payment
+                      <Label htmlFor="tax_enabled" className="font-phonic text-sm font-semibold text-gray-900">
+                        Enable tax collection
                       </Label>
                     </div>
 
                     {/* Show global tax settings info */}
                     {merchantSettings && (
-                      <div className="font-phonic text-xs font-normal text-gray-500 bg-gray-50 p-3 rounded-lg">
+                      <div className="font-capsule text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Global tax setting: {merchantSettings.tax_enabled ? 'Enabled' : 'Disabled'}
                         {merchantSettings.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 &&
@@ -551,7 +541,7 @@ export default function CreatePaymentLinkPage() {
                     {form.tax_enabled && (
                       <div className="ml-6 space-y-6">
                         <div className="flex items-center justify-between">
-                          <Label className="font-phonic text-sm font-normal text-gray-700">Tax Rates</Label>
+                          <Label className="font-phonic text-sm font-semibold text-gray-900">Tax Rates</Label>
                           <Button
                             type="button"
                             variant="outline"
@@ -572,7 +562,7 @@ export default function CreatePaymentLinkPage() {
                                   placeholder="Tax Label (e.g., State Tax, Local Tax)"
                                   value={taxRate.label}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'label', e.target.value)}
-                                  className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                                  className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                                 />
                               </div>
 
@@ -585,7 +575,7 @@ export default function CreatePaymentLinkPage() {
                                   placeholder="6.625"
                                   value={taxRate.percentage}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
-                                  className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                                  className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                                 />
                               </div>
 
@@ -621,33 +611,27 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Payment Settings */}
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <Coins className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
-                        Payment Settings
-                      </CardTitle>
-                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
-                        Configure cryptocurrency payment options
-                      </p>
-                    </div>
-                  </div>
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="p-6">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Coins className="h-5 w-5 text-[#7f5efd]" />
+                    Payment Settings
+                  </CardTitle>
+                  <CardDescription className="font-capsule text-sm text-gray-600">
+                    Configure cryptocurrency payment options
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <Label className="font-phonic text-sm font-normal text-gray-700">Accepted Cryptocurrencies</Label>
+                      <Label className="font-phonic text-sm font-semibold text-gray-900">Accepted Cryptocurrencies</Label>
                       <p className="font-phonic text-xs font-normal text-gray-500 mt-1">Select which cryptocurrencies customers can use for payment</p>
                     </div>
                     {availableCryptos.length > 0 ? (
                       <>
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                           {availableCryptos.map(crypto => (
-                            <label key={crypto} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <label key={crypto} className="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200">
                               <Checkbox
                                 checked={form.accepted_cryptos.includes(crypto)}
                                 onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
@@ -689,7 +673,7 @@ export default function CreatePaymentLinkPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Gateway Fee Setting */}
                       <div className="space-y-2">
-                        <Label className="font-phonic text-sm font-normal text-gray-700">Gateway Fee</Label>
+                        <Label className="font-phonic text-sm font-semibold text-gray-900">Gateway Fee</Label>
                         <Select
                           value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'customer' : 'merchant'}
                           onValueChange={(value) => {
@@ -699,7 +683,7 @@ export default function CreatePaymentLinkPage() {
                             });
                           }}
                         >
-                          <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                          <SelectTrigger className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -714,7 +698,7 @@ export default function CreatePaymentLinkPage() {
 
                       {/* Auto-Convert Setting */}
                       <div className="space-y-2">
-                        <Label className="font-phonic text-sm font-normal text-gray-700">Auto-Convert to Fiat</Label>
+                        <Label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Fiat</Label>
                         <Select
                           value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'enabled' : 'disabled'}
                           onValueChange={(value) => {
@@ -724,7 +708,7 @@ export default function CreatePaymentLinkPage() {
                             });
                           }}
                         >
-                          <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                          <SelectTrigger className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -743,23 +727,17 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Advanced Settings */}
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <Settings className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
-                        Advanced Settings
-                      </CardTitle>
-                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
-                        Configure expiration and usage limits
-                      </p>
-                    </div>
-                  </div>
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="p-6">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-[#7f5efd]" />
+                    Advanced Settings
+                  </CardTitle>
+                  <CardDescription className="font-capsule text-sm text-gray-600">
+                    Configure expiration and usage limits
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="expires_at" className="font-phonic text-sm font-normal text-gray-700">Expiration Date</Label>
@@ -768,9 +746,9 @@ export default function CreatePaymentLinkPage() {
                         type="datetime-local"
                         value={form.expires_at}
                         onChange={(e) => setForm(prev => ({ ...prev, expires_at: e.target.value }))}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
-                      <p className="font-phonic text-xs font-normal text-gray-500">Leave empty for no expiration</p>
+                      <p className="font-capsule text-xs text-gray-600">Leave empty for no expiration</p>
                     </div>
 
                     <div className="space-y-2">
@@ -782,9 +760,9 @@ export default function CreatePaymentLinkPage() {
                         placeholder="Leave empty for unlimited"
                         value={form.max_uses}
                         onChange={(e) => setForm(prev => ({ ...prev, max_uses: e.target.value }))}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
-                      <p className="font-phonic text-xs font-normal text-gray-500">Leave empty for unlimited uses</p>
+                      <p className="font-capsule text-xs text-gray-600">Leave empty for unlimited uses</p>
                     </div>
                   </div>
 
@@ -800,23 +778,17 @@ export default function CreatePaymentLinkPage() {
 
             {/* Payment Link Preview */}
             <div className="space-y-8">
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <CreditCard className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
-                        Payment Preview
-                      </CardTitle>
-                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
-                        How your payment link will appear
-                      </p>
-                    </div>
-                  </div>
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="p-6">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Receipt className="h-5 w-5 text-[#7f5efd]" />
+                    Payment Preview
+                  </CardTitle>
+                  <CardDescription className="font-capsule text-sm text-gray-600">
+                    How your payment link will appear
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   {/* Preview Section - Smart Terminal Style */}
                   <div className="space-y-4">
                     {/* Title and Description */}
@@ -916,7 +888,7 @@ export default function CreatePaymentLinkPage() {
             <Button
               type="submit"
               disabled={loading || availableCryptos.length === 0}
-              className="px-8 h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white flex items-center gap-2"
+              className="px-6 h-11 bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
             >
               {loading ? (
                 <>
@@ -925,7 +897,7 @@ export default function CreatePaymentLinkPage() {
                 </>
               ) : (
                 <>
-                  <CheckCircle className="h-5 w-5" />
+                  <Zap className="h-5 w-5" />
                   Create Payment Link
                 </>
               )}

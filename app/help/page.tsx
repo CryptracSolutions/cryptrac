@@ -183,40 +183,10 @@ export default function HelpPage() {
                             <Badge variant="outline" className="mt-0.5">3</Badge>
                             <span>Create secure login credentials and verify your email address</span>
                           </li>
-                          <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">4</Badge>
-                            <span>Complete business verification and compliance requirements</span>
-                          </li>
                         </ul>
                       </CardContent>
                     </Card>
 
-                    <Card className="border-gray-200">
-                      <CardHeader className="bg-gray-50">
-                        <CardTitle className="text-lg text-gray-900">Business Verification and Compliance</CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <p className="text-gray-700 mb-3">Requirements vary based on your location and business type, but generally include:</p>
-                        <ul className="space-y-2 text-gray-700">
-                          <li className="flex items-start gap-2">
-                            <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
-                            <span>Proof of business registration</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
-                            <span>Tax identification numbers</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
-                            <span>Contact information for key business personnel</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
-                            <span>Additional documentation as required by regulations</span>
-                          </li>
-                        </ul>
-                      </CardContent>
-                    </Card>
 
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
@@ -233,7 +203,7 @@ export default function HelpPage() {
                           </li>
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
-                            <span>Our platform supports Bitcoin, Ethereum, Solana, TRON, BNB, and associated stablecoins</span>
+                            <span>Our platform supports 135 unique cryptocurrencies including Bitcoin, Ethereum, Solana, TRON, BNB, and associated stablecoins</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
@@ -286,7 +256,7 @@ export default function HelpPage() {
                     </Card>
                     
                     <Card className="border-gray-200">
-                      <CardHeader className="bg-gray-50">
+                      <CardHeader className="bg-[#f5f3ff]">
                         <CardTitle className="text-lg text-gray-900">Payment Link Management</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
@@ -625,8 +595,8 @@ export default function HelpPage() {
                         <Shield className="h-5 w-5 text-[#7f5efd]" />
                         <div>
                           <p className="text-sm text-gray-600">Security Issues</p>
-                          <a href="mailto:security@cryptrac.com" className="font-semibold text-gray-900 hover:text-[#7f5efd]">
-                            security@cryptrac.com
+                          <a href="mailto:support@cryptrac.com" className="font-semibold text-gray-900 hover:text-[#7f5efd]">
+                            support@cryptrac.com
                           </a>
                         </div>
                       </div>
@@ -643,7 +613,7 @@ export default function HelpPage() {
                       
                       <div className="pt-4 border-t">
                         <p className="text-sm text-gray-600">
-                          <strong>Response Time Expectations:</strong> Email support within 24 hours (business days), live chat immediate during business hours, security issues within 2 hours, emergency issues within 1 hour.
+                          <strong>Response Time Expectations:</strong> Email support within 2 hours (24/7) and Phone support immediate (Business days/hours)
                         </p>
                       </div>
                     </CardContent>
