@@ -249,35 +249,42 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
   return (
     <div className="px-6 py-8 space-y-8 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button 
-          variant="outline" 
-          onClick={() => router.push('/merchant/dashboard/payments')}
-          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <div className="flex-1">
-          <h1 className="font-phonic text-2xl font-semibold tracking-tight text-gray-900">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { name: 'Dashboard', href: '/merchant/dashboard' },
+          { name: 'Payments', href: '/merchant/dashboard/payments' },
+          { name: paymentLink.title, href: `/merchant/dashboard/payments/${paymentLink.id}` }
+        ]}
+      />
+
+      {/* Enhanced Header */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+        <div className="space-y-2">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
             {paymentLink.title}
           </h1>
-          <p className="font-capsule text-sm text-gray-600 mt-1">Payment link details and management</p>
+          <p className="font-phonic text-base font-normal text-gray-600">
+            Payment link details and management
+          </p>
         </div>
-        <div className="flex items-center space-x-2">
-          {getStatusIcon(paymentLink.status)}
-          <Badge className={getStatusColor(paymentLink.status)}>
-            {paymentLink.status.charAt(0).toUpperCase() + paymentLink.status.slice(1)}
-          </Badge>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/merchant/dashboard/payments')}
+            className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <div className="flex items-center space-x-2">
+            {getStatusIcon(paymentLink.status)}
+              <Badge className={getStatusColor(paymentLink.status)}>
+              {paymentLink.status.charAt(0).toUpperCase() + paymentLink.status.slice(1)}
+            </Badge>
+          </div>
         </div>
       </div>
-
-      <Breadcrumbs items={[
-        {name: 'Dashboard', href: '/merchant/dashboard'},
-        {name: 'Payments', href: '/merchant/dashboard/payments'},
-        {name: paymentLink.title, href: '#'}
-      ]} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Payment Link Information */}

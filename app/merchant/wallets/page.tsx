@@ -231,12 +231,14 @@ export default function WalletsPage() {
           ]} 
         />
         
-        {/* Header */}
-        <div className="space-y-4">
-          <div>
-            <h1 className="font-phonic text-3xl font-normal text-gray-900 mb-4">Wallet Addresses</h1>
-            <p className="font-phonic text-base font-normal text-gray-600">Manage your cryptocurrency wallet addresses for receiving payments</p>
-          </div>
+        {/* Enhanced Header */}
+        <div className="space-y-2">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            Wallet Addresses
+          </h1>
+          <p className="font-phonic text-base font-normal text-gray-600">
+            Manage your cryptocurrency wallet addresses for receiving payments
+          </p>
         </div>
 
         

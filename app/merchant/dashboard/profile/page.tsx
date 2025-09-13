@@ -260,11 +260,11 @@ export default function ProfilePage() {
         
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
-          <div className="space-y-1">
-            <h1 className="font-phonic text-2xl font-semibold tracking-tight text-gray-900">
+          <div className="space-y-2">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Business Profile
             </h1>
-            <p className="font-capsule text-sm text-gray-600">
+            <p className="font-phonic text-base font-normal text-gray-600">
               Manage your business information and contact details
             </p>
           </div>

@@ -358,11 +358,36 @@ export default function MerchantDashboard() {
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Welcome back, {displayName}!
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600">
+            <p className="font-phonic text-base font-normal text-gray-600">
               Here&apos;s what&apos;s happening with your cryptocurrency payments today.
             </p>
           </div>
-          
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/merchant/dashboard/payments/create">
+              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create Payment Link
+              </Button>
+            </Link>
+            <Link href="/smart-terminal">
+              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Open Smart Terminal
+              </Button>
+            </Link>
+            <Link href="/merchant/subscriptions/create">
+              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create Subscription
+              </Button>
+            </Link>
+            <Link href="/merchant/subscriptions">
+              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Manage Subscriptions
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Compact New Payments Notification */}

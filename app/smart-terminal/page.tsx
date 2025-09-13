@@ -601,7 +601,7 @@ function SmartTerminalPageContent() {
                   <Button 
                     key={d}
                     variant="outline"
-                    className="h-10 sm:h-12 lg:h-14 text-lg sm:text-xl lg:text-2xl font-semibold bg-white hover:bg-purple-50 border-purple-200 hover:border-[#7f5efd] text-gray-700 hover:text-[#7f5efd] transition-all duration-200 rounded-lg shadow-sm hover:shadow-md"
+                    className="h-10 sm:h-12 lg:h-14 text-lg sm:text-xl lg:text-2xl font-semibold bg-white border-purple-200 text-gray-700 transition-all duration-200 rounded-lg shadow-sm"
                     aria-label={`digit ${d}`}
                     onClick={() => appendDigit(String(d))}
                   >
@@ -609,7 +609,7 @@ function SmartTerminalPageContent() {
                   </Button>
                 ))}
                 <Button 
-                  className="h-10 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-orange-50 hover:bg-orange-100 border-orange-200 hover:border-orange-300 text-orange-600 transition-all duration-200 rounded-lg shadow-sm hover:shadow-md" 
+                  className="h-10 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-orange-50 border-orange-200 text-orange-600 transition-all duration-200 rounded-lg shadow-sm" 
                   onClick={backspace} 
                   aria-label="backspace"
                   variant="outline"
@@ -617,7 +617,7 @@ function SmartTerminalPageContent() {
                   ⌫
                 </Button>
                 <Button 
-                  className="h-10 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-red-50 hover:bg-red-100 border-red-200 hover:border-red-300 text-red-600 transition-all duration-200 rounded-lg shadow-sm hover:shadow-md" 
+                  className="h-10 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-red-50 border-red-200 text-red-600 transition-all duration-200 rounded-lg shadow-sm" 
                   onClick={clearAmount} 
                   aria-label="clear"
                   variant="outline"
@@ -631,7 +631,7 @@ function SmartTerminalPageContent() {
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <div className={cn(
                     "h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-                    tax ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300 bg-white hover:border-[#7f5efd]"
+                    tax ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300 bg-white"
                   )}>
                     {tax && <div className="h-2 w-2 rounded-full bg-white"></div>}
                   </div>
@@ -648,7 +648,7 @@ function SmartTerminalPageContent() {
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <div className={cn(
                     "h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-                    chargeFee ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300 bg-white hover:border-[#7f5efd]"
+                    chargeFee ? "border-[#7f5efd] bg-[#7f5efd]" : "border-gray-300 bg-white"
                   )}>
                     {chargeFee && <div className="h-2 w-2 rounded-full bg-white"></div>}
                   </div>
@@ -668,7 +668,7 @@ function SmartTerminalPageContent() {
               <Button 
                 onClick={readyForPayment}
                 variant="default"
-                className="w-full h-10 sm:h-12 lg:h-16 text-base sm:text-lg lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-5"
+                className="w-full h-10 sm:h-12 lg:h-16 text-base sm:text-lg lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-5"
                 aria-label="ready"
                 disabled={!amount}
               >
@@ -751,7 +751,7 @@ function SmartTerminalPageContent() {
                       
                       return (
                         <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                          <SelectTrigger className="w-full h-9 bg-gradient-to-r from-white to-purple-50 border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-gray-900 text-xs">
+                          <SelectTrigger className="w-full h-9 bg-gradient-to-r from-white to-purple-50 border border-purple-200 focus:border-[#7f5efd] rounded-lg transition-all duration-200 shadow-sm text-gray-900 text-xs">
                             <div className="flex items-center gap-2">
                               {(() => {
                                 const iconClass = "h-4 w-4 text-[#7f5efd]"
@@ -806,7 +806,7 @@ function SmartTerminalPageContent() {
                             sideOffset={5}
                             className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
                           >
-                            <SelectItem value="all" className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                            <SelectItem value="all" className="rounded-lg transition-colors duration-200">
                               <div className="flex items-center gap-2">
                                 <Globe className="h-4 w-4 text-white" />
                                 <span className="font-bold text-white">All Networks</span>
@@ -817,7 +817,7 @@ function SmartTerminalPageContent() {
                               if (!network) return null
                               const currencyCount = groupedCurrencies.get(networkId)?.length || 0
                               return (
-                                <SelectItem key={networkId} value={networkId} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
+                                <SelectItem key={networkId} value={networkId} className="rounded-lg transition-colors duration-200">
                                   <div className="flex items-center justify-between w-full">
                                     <div className="flex items-center gap-2">
                                       {getNetworkIcon(networkId)}
@@ -842,7 +842,7 @@ function SmartTerminalPageContent() {
                         Currency
                       </label>
                       <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
-                        <SelectTrigger className="w-full h-9 bg-gradient-to-r from-white to-purple-50 border border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-gray-900 text-xs">
+                        <SelectTrigger className="w-full h-9 bg-gradient-to-r from-white to-purple-50 border border-purple-200 focus:border-[#7f5efd] rounded-lg transition-all duration-200 shadow-sm text-gray-900 text-xs">
                           {(() => {
                             const current = availableCurrencies.find(c => c.code === crypto)
                             const displayName = current?.name || getCurrencyDisplayName(crypto)
@@ -949,7 +949,7 @@ function SmartTerminalPageContent() {
                                   value={c.code}
                                   disabled={!isAvailable}
                                   className={cn(
-                                    "hover:bg-white/10 rounded-lg transition-colors duration-200",
+                                    "rounded-lg transition-colors duration-200",
                                     !isAvailable && "opacity-50 cursor-not-allowed"
                                   )}
                                   title={!isAvailable ? 'Temporarily unavailable' : undefined}
@@ -980,7 +980,7 @@ function SmartTerminalPageContent() {
                             "h-8 text-xs font-semibold rounded-md transition-all duration-200",
                             tipPercent === p 
                               ? "bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white shadow-lg" 
-                              : "bg-white border border-purple-200 text-[#7f5efd] hover:bg-purple-50 hover:border-[#7f5efd]"
+                              : "bg-white border border-purple-200 text-[#7f5efd]"
                           )}
                           onClick={() => {setTipPercent(p); setTipSelected(true);}} 
                           aria-label={`tip ${p}%`}
@@ -994,7 +994,7 @@ function SmartTerminalPageContent() {
                           "h-8 text-xs font-semibold rounded-md transition-all duration-200",
                           tipPercent === 0 && tipSelected
                             ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg" 
-                            : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
+                            : "bg-white border border-gray-300 text-gray-600"
                         )}
                         onClick={() => {setTipPercent(0); setTipSelected(true);}} 
                         aria-label="no tip"
@@ -1025,7 +1025,7 @@ function SmartTerminalPageContent() {
                 <Button
                   onClick={generate}
                   variant="default"
-                  className="w-full h-10 sm:h-12 lg:h-16 text-base lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                  className="w-full h-10 sm:h-12 lg:h-16 text-base lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   aria-label="pay now"
                   disabled={!tipSelected || loading}
                 >
@@ -1086,7 +1086,7 @@ function SmartTerminalPageContent() {
                                 value={receipt.email} 
                                 onChange={e=>setReceipt({...receipt, email:e.target.value})} 
                                 aria-label="receipt email"
-                                className="h-10 bg-white border-2 border-transparent hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs"
+                                className="h-10 bg-white border-2 border-transparent focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs"
                               />
                               <Button 
                                 onClick={sendEmailReceipt} 
@@ -1094,8 +1094,8 @@ function SmartTerminalPageContent() {
                                 className={cn(
                                   "h-10 px-4 font-semibold rounded-lg transition-all duration-200",
                                   receipt.sent 
-                                    ? "bg-green-600 hover:bg-green-700 text-white" 
-                                    : "bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                                    ? "bg-green-600 text-white" 
+                                    : "bg-[#7f5efd] text-white"
                                 )}
                               >
                                 {receipt.sent ? (
@@ -1146,7 +1146,7 @@ function SmartTerminalPageContent() {
                       <div className="flex justify-center">
                         <button
                           type="button"
-                          className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm transition-colors"
+                          className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] text-white shadow-sm transition-colors"
                           onClick={() => {
                             setPaymentLink(null);
                             setPaymentData(null);
@@ -1212,7 +1212,7 @@ function SmartTerminalPageContent() {
                             setTipSelected(false); 
                             setTipPercent(null); 
                           }}
-                          className="bg-white border-2 border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 font-semibold rounded-lg transition-all duration-200"
+                          className="bg-white border-2 border-gray-300 text-gray-600 font-semibold rounded-lg transition-all duration-200"
                         >
                           <ArrowLeft className="h-4 w-4 mr-2" />
                           Back
@@ -1246,7 +1246,7 @@ function SmartTerminalPageContent() {
                         document.exitFullscreen().catch(console.warn);
                       }
                     }}
-                    className="w-full h-10 text-sm sm:text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full h-10 text-sm sm:text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     <ShoppingBag className="h-5 w-5" />
                     Start New Sale

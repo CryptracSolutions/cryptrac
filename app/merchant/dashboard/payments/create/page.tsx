@@ -17,7 +17,10 @@ import {
   Plus,
   Trash2,
   Loader2,
-  Info
+  Info,
+  Receipt,
+  Coins,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -388,22 +391,23 @@ export default function CreatePaymentLinkPage() {
 
   return (
     <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="space-y-6">
-          <Breadcrumbs 
-            items={[
-              { name: 'Dashboard', href: '/merchant/dashboard' },
-              { name: 'Payments', href: '/merchant/dashboard/payments' },
-              { name: 'Create Payment Link', href: '/merchant/dashboard/payments/create' }
-            ]} 
-          />
-          
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="font-phonic text-2xl font-semibold tracking-tight text-gray-900">Create Payment Link</h1>
-              <p className="font-capsule text-sm text-gray-600 mt-1">Create a new cryptocurrency payment link for your customers</p>
-            </div>
-          </div>
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { name: 'Dashboard', href: '/merchant/dashboard' },
+            { name: 'Payments', href: '/merchant/dashboard/payments' },
+            { name: 'Create Payment Link', href: '/merchant/dashboard/payments/create' }
+          ]}
+        />
+
+        {/* Enhanced Header */}
+        <div className="space-y-2">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            Create Payment Link
+          </h1>
+          <p className="font-phonic text-base font-normal text-gray-600">
+            Create a new cryptocurrency payment link for your customers
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
