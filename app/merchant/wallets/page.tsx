@@ -222,7 +222,7 @@ export default function WalletsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[

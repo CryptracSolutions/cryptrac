@@ -143,7 +143,7 @@ export default function MerchantSubscriptionsPage() {
   }
 
   return (
-      <div className="space-y-8">
+      <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -182,102 +182,103 @@ export default function MerchantSubscriptionsPage() {
 
         {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                  <CreditCard className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="font-phonic text-sm font-normal text-gray-600">Active Subscriptions</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {subs.filter(s => s.status === 'active').length}
-                  </p>
-                </div>
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Active Subscriptions</CardTitle>
+              <div className="p-2 bg-[#7f5efd] rounded-lg">
+                <CreditCard className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-semibold mb-2 text-gray-900">
+                {subs.filter(s => s.status === 'active').length}
+              </div>
+              <div className="flex items-center gap-1 text-gray-600">
+                <TrendingUp className="h-3 w-3" />
+                <span className="font-capsule text-xs">Currently active</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                  <DollarSign className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="font-phonic text-sm font-normal text-gray-600">Monthly Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${subs.filter(s => s.status === 'active').reduce((sum, s) => sum + s.amount, 0).toFixed(2)}
-                  </p>
-                </div>
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Monthly Revenue</CardTitle>
+              <div className="p-2 bg-[#7f5efd] rounded-lg">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-semibold mb-2 text-gray-900">
+                ${subs.filter(s => s.status === 'active').reduce((sum, s) => sum + s.amount, 0).toFixed(2)}
+              </div>
+              <div className="flex items-center gap-1 text-gray-600">
+                <TrendingUp className="h-3 w-3" />
+                <span className="font-capsule text-xs">Recurring revenue</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="font-phonic text-sm font-normal text-gray-600">Total Customers</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {new Set(subs.map(s => s.customer_id)).size}
-                  </p>
-                </div>
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Customers</CardTitle>
+              <div className="p-2 bg-[#7f5efd] rounded-lg">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-semibold mb-2 text-gray-900">
+                {new Set(subs.map(s => s.customer_id)).size}
+              </div>
+              <div className="flex items-center gap-1 text-gray-600">
+                <Users className="h-3 w-3" />
+                <span className="font-capsule text-xs">Unique customers</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="font-phonic text-sm font-normal text-gray-600">Success Rate</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {subs.length > 0 ? Math.round((subs.filter(s => s.status === 'active').length / subs.length) * 100) : 0}%
-                  </p>
-                </div>
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Success Rate</CardTitle>
+              <div className="p-2 bg-[#7f5efd] rounded-lg">
+                <TrendingUp className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-semibold mb-2 text-gray-900">
+                {subs.length > 0 ? Math.round((subs.filter(s => s.status === 'active').length / subs.length) * 100) : 0}%
+              </div>
+              <div className="flex items-center gap-1 text-gray-600">
+                <BarChart3 className="h-3 w-3" />
+                <span className="font-capsule text-xs">Active rate</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filters and Search */}
-        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-          <CardHeader className="pb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                <Filter className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-bold text-gray-900">Filters & Search</CardTitle>
-                <CardDescription className="text-base text-gray-600 mt-1">
-                  Find and filter your subscriptions
-                </CardDescription>
-              </div>
-            </div>
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="p-6">
+            <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Filters & Search</CardTitle>
+            <CardDescription className="font-capsule text-sm text-gray-600">
+              Find and filter your subscriptions
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <CardContent className="p-6 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   placeholder="Search subscriptions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="form-input-enhanced pl-10 h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                  className="pl-10 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                 />
               </div>
               <div>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                  className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
                 >
                   <option value="all">All Statuses</option>
                   <option value="active">Active</option>
@@ -314,14 +315,14 @@ export default function MerchantSubscriptionsPage() {
         ) : (
           <div className="space-y-6">
             {filteredSubs.length === 0 ? (
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-                <CardContent className="pt-12 pb-12">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardContent className="p-12">
                   <div className="text-center">
                     <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                       <CreditCard className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">No Subscriptions Found</h3>
-                    <p className="font-phonic text-base font-normal text-gray-600 mb-6">
+                    <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No Subscriptions Found</h3>
+                    <p className="font-capsule text-sm text-gray-600 mb-6">
                       {searchTerm || statusFilter !== 'all' 
                         ? 'Try adjusting your search or filters to see more results.'
                         : 'Get started by creating your first subscription.'
@@ -329,7 +330,7 @@ export default function MerchantSubscriptionsPage() {
                     </p>
                     {!searchTerm && statusFilter === 'all' && (
                       <Link href="/merchant/subscriptions/create">
-                        <Button className="bg-[#7f5efd] hover:bg-[#6b4fd8] text-white font-medium">
+                        <Button className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
                           <Plus className="h-4 w-4 mr-2" />
                           Create First Subscription
                         </Button>
@@ -341,20 +342,20 @@ export default function MerchantSubscriptionsPage() {
             ) : (
               <div className="grid gap-6">
                 {filteredSubs.map((subscription) => (
-                  <Card key={subscription.id} className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <Card key={subscription.id} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
-                            <h3 className="font-phonic text-2xl font-normal text-gray-900">{subscription.title}</h3>
+                            <h3 className="font-phonic text-lg font-semibold text-gray-900">{subscription.title}</h3>
                             <Badge
                               variant={getStatusVariant(subscription.status)}
-                              className="text-xs font-medium"
+                              className="font-capsule text-xs"
                             >
                               {subscription.status}
                             </Badge>
                             {subscription.missed_payments_count && subscription.missed_payments_count > 0 && (
-                              <Badge variant="destructive" className="text-xs font-medium">
+                              <Badge variant="destructive" className="font-capsule text-xs">
                                 {subscription.missed_payments_count} missed
                               </Badge>
                             )}
@@ -363,26 +364,26 @@ export default function MerchantSubscriptionsPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                             <div className="flex items-center gap-2">
                               <DollarSign className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-600">
+                              <span className="font-capsule text-xs text-gray-600">
                                 ${subscription.amount} {subscription.currency}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-600">
+                              <span className="font-capsule text-xs text-gray-600">
                                 Every {subscription.interval_count} {subscription.interval}
                                 {subscription.interval_count > 1 ? 's' : ''}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Users className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-600">
+                              <span className="font-capsule text-xs text-gray-600">
                                 {subscription.name || subscription.email || 'No customer info'}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-600">
+                              <span className="font-capsule text-xs text-gray-600">
                                 {subscription.next_billing_at 
                                   ? formatDateShort(subscription.next_billing_at, timezone)
                                   : 'No next billing'
@@ -395,11 +396,11 @@ export default function MerchantSubscriptionsPage() {
                             <div className="bg-gray-50 rounded-lg p-3 mb-4">
                               <div className="flex items-center gap-2 mb-2">
                                 <Receipt className="h-4 w-4 text-gray-500" />
-                                <span className="font-phonic text-sm font-normal text-gray-700">Recent Invoices</span>
+                                <span className="font-phonic text-sm font-semibold text-gray-900">Recent Invoices</span>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {subscription.subscription_invoices.slice(0, 3).map((invoice, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
+                                  <Badge key={index} variant="outline" className="font-capsule text-xs">
                                     {invoice.invoice_number} - {invoice.status}
                                   </Badge>
                                 ))}

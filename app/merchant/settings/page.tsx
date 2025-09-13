@@ -472,7 +472,7 @@ export default function MerchantSettingsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -525,7 +525,7 @@ export default function MerchantSettingsPage() {
 
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-8">
-            <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
@@ -686,7 +686,7 @@ export default function MerchantSettingsPage() {
 
           {/* Tax Management Tab */}
           <TabsContent value="tax" className="space-y-8">
-            <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
@@ -839,7 +839,7 @@ export default function MerchantSettingsPage() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-8">
-            <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">

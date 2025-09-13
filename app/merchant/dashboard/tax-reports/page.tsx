@@ -360,7 +360,7 @@ export default function TaxReportsPage() {
   }
 
   return (
-      <div className="space-y-8">
+      <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -386,7 +386,7 @@ export default function TaxReportsPage() {
             {/* Report Summary Cards */}
             {reportData && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
@@ -400,7 +400,7 @@ export default function TaxReportsPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
@@ -414,7 +414,7 @@ export default function TaxReportsPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
@@ -428,7 +428,7 @@ export default function TaxReportsPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
@@ -446,7 +446,7 @@ export default function TaxReportsPage() {
 
             {/* Detailed Transactions */}
             {reportData && (
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="pb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
@@ -571,7 +571,7 @@ export default function TaxReportsPage() {
             )}
 
             {/* Filters - Smaller and Less Intrusive */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader className="space-y-6">
                 <div className="flex items-center gap-6">
                   <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
@@ -700,7 +700,7 @@ export default function TaxReportsPage() {
 
             {/* Export Report Section */}
             {reportData && (
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="pb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
@@ -744,7 +744,7 @@ export default function TaxReportsPage() {
 
             {/* No Data State */}
             {!reportData && !loadingReport && (
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="pt-12 pb-12">
                   <div className="text-center">
                     <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">

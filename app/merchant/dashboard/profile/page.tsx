@@ -249,7 +249,7 @@ export default function ProfilePage() {
   }
 
   return (
-      <div className="px-6 py-8 space-y-8 max-w-6xl mx-auto">
+      <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[

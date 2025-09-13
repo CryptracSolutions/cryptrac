@@ -233,7 +233,7 @@ export default function CreateSubscriptionPage() {
 
 
   return (
-    <div className="space-y-8">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -272,39 +272,35 @@ export default function CreateSubscriptionPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <CreditCard className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Basic Information</CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
-                      Set up the core details of your subscription
-                    </CardDescription>
-                  </div>
-                </div>
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
+                <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-[#7f5efd]" />
+                  Basic Information
+                </CardTitle>
+                <CardDescription className="font-capsule text-sm text-gray-600">
+                  Set up the core details of your subscription
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Subscription Title *</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Subscription Title *</label>
                     <Input
                       placeholder="e.g., Premium Plan, Monthly Service"
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Description</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Description</label>
                     <Input
                       placeholder="Brief description of the subscription"
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                     />
                   </div>
                 </div>
@@ -312,24 +308,20 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Pricing Configuration */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <DollarSign className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Pricing Configuration</CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
-                      Set the amount, currency, and billing frequency
-                    </CardDescription>
-                  </div>
-                </div>
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
+                <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-[#7f5efd]" />
+                  Pricing Configuration
+                </CardTitle>
+                <CardDescription className="font-capsule text-sm text-gray-600">
+                  Set the amount, currency, and billing frequency
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Amount *</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Amount *</label>
                     <Input
                       type="number"
                       step="0.01"
@@ -337,16 +329,16 @@ export default function CreateSubscriptionPage() {
                       placeholder="0.00"
                       value={form.amount}
                       onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Currency *</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Currency *</label>
                     <select
                       value={form.currency}
                       onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                      className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                      className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
                     >
                       {FIAT_CURRENCIES.map(currency => (
                         <option key={currency.code} value={currency.code}>
@@ -356,12 +348,12 @@ export default function CreateSubscriptionPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Billing Interval *</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Billing Interval *</label>
                     <div className="flex gap-2">
                       <select
                         value={form.interval}
                         onChange={(e) => setForm({ ...form, interval: e.target.value })}
-                        className="form-input-enhanced flex-1 h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                        className="flex-1 h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
                       >
                         <option value="day">Day</option>
                         <option value="week">Week</option>
@@ -373,7 +365,7 @@ export default function CreateSubscriptionPage() {
                         min="1"
                         value={form.interval_count}
                         onChange={(e) => setForm({ ...form, interval_count: parseInt(e.target.value) || 1 })}
-                        className="form-input-enhanced w-20 h-12 text-center text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="w-20 h-11 text-center bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
                     </div>
                   </div>
@@ -381,75 +373,71 @@ export default function CreateSubscriptionPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Maximum Cycles</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Maximum Cycles</label>
                     <Input
                       type="number"
                       min="1"
                       placeholder="Leave empty for unlimited"
                       value={form.max_cycles}
                       onChange={(e) => setForm({ ...form, max_cycles: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                     />
-                    <p className="font-phonic text-xs font-normal text-gray-500">Leave empty for unlimited billing cycles</p>
+                    <p className="font-capsule text-xs text-gray-600">Leave empty for unlimited billing cycles</p>
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Anchor Date</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Anchor Date</label>
                     <Input
                       type="date"
                       value={form.anchor}
                       onChange={(e) => setForm({ ...form, anchor: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                     />
-                    <p className="font-phonic text-xs font-normal text-gray-500">Optional: Specific date to start billing</p>
+                    <p className="font-capsule text-xs text-gray-600">Optional: Specific date to start billing</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Customer Information */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <Users className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Customer Information</CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
-                      Customer details for the subscription
-                    </CardDescription>
-                  </div>
-                </div>
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
+                <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-[#7f5efd]" />
+                  Customer Information
+                </CardTitle>
+                <CardDescription className="font-capsule text-sm text-gray-600">
+                  Customer details for the subscription
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Customer Name</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Customer Name</label>
                     <Input
                       placeholder="Customer's full name"
                       value={form.customer_name}
                       onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Email Address *</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Email Address *</label>
                     <Input
                       type="email"
                       placeholder="customer@example.com"
                       value={form.customer_email}
                       onChange={(e) => setForm({ ...form, customer_email: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Phone Number</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Phone Number</label>
                     <Input
                       placeholder="+1 (555) 123-4567"
                       value={form.customer_phone}
                       onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
-                      className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                     />
                   </div>
                 </div>
@@ -457,26 +445,22 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Payment Settings */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <Coins className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Payment Settings</CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
-                      Configure cryptocurrency payment options
-                    </CardDescription>
-                  </div>
-                </div>
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
+                <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-[#7f5efd]" />
+                  Payment Settings
+                </CardTitle>
+                <CardDescription className="font-capsule text-sm text-gray-600">
+                  Configure cryptocurrency payment options
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-6">
                 <div className="space-y-4">
-                  <label className="font-phonic text-sm font-normal text-gray-700">Accepted Cryptocurrencies</label>
+                  <label className="font-phonic text-sm font-semibold text-gray-900">Accepted Cryptocurrencies</label>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {availableCryptos.map(crypto => (
-                      <label key={crypto} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <label key={crypto} className="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200">
                         <Checkbox
                           checked={form.accepted_cryptos.includes(crypto)}
                           onCheckedChange={(checked) => {
@@ -496,7 +480,7 @@ export default function CreateSubscriptionPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Charge Customer Fee</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Charge Customer Fee</label>
                     <select
                       value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'yes' : 'no'}
                       onChange={(e) => {
@@ -506,7 +490,7 @@ export default function CreateSubscriptionPage() {
                           charge_customer_fee: value === 'inherit' ? null : value === 'yes'
                         });
                       }}
-                      className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                      className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
                     >
                       <option value="inherit">Inherit from merchant settings</option>
                       <option value="yes">Yes</option>
@@ -514,7 +498,7 @@ export default function CreateSubscriptionPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-normal text-gray-700">Auto-Convert to Fiat</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Fiat</label>
                     <select
                       value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'yes' : 'no'}
                       onChange={(e) => {
@@ -524,7 +508,7 @@ export default function CreateSubscriptionPage() {
                           auto_convert_enabled: value === 'inherit' ? null : value === 'yes'
                         });
                       }}
-                      className="form-input-enhanced w-full h-12 px-3 border border-gray-300 rounded-md focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-base"
+                      className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
                     >
                       <option value="inherit">Inherit from merchant settings</option>
                       <option value="yes">Yes</option>
@@ -536,19 +520,17 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Advanced Settings */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader className="pb-6">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <Settings className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Advanced Settings</CardTitle>
-                      <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
-                        Configure advanced subscription behavior
-                      </CardDescription>
-                    </div>
+                  <div>
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-[#7f5efd]" />
+                      Advanced Settings
+                    </CardTitle>
+                    <CardDescription className="font-capsule text-sm text-gray-600">
+                      Configure advanced subscription behavior
+                    </CardDescription>
                   </div>
                   <Button
                     type="button"
@@ -562,20 +544,20 @@ export default function CreateSubscriptionPage() {
                 </div>
               </CardHeader>
               {form.showAdvanced && (
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="font-phonic text-sm font-normal text-gray-700">Pause After Missed Payments</label>
+                      <label className="font-phonic text-sm font-semibold text-gray-900">Pause After Missed Payments</label>
                       <Input
                         type="number"
                         min="1"
                         value={form.pause_after_missed_payments}
                         onChange={(e) => setForm({ ...form, pause_after_missed_payments: parseInt(e.target.value) || 3 })}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-phonic text-sm font-normal text-gray-700">Auto Resume on Payment</label>
+                      <label className="font-phonic text-sm font-semibold text-gray-900">Auto Resume on Payment</label>
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           checked={form.auto_resume_on_payment}
@@ -589,33 +571,33 @@ export default function CreateSubscriptionPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <label className="font-phonic text-sm font-normal text-gray-700">Invoice Due Days</label>
+                      <label className="font-phonic text-sm font-semibold text-gray-900">Invoice Due Days</label>
                       <Input
                         type="number"
                         min="0"
                         value={form.invoice_due_days}
                         onChange={(e) => setForm({ ...form, invoice_due_days: parseInt(e.target.value) || 0 })}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-phonic text-sm font-normal text-gray-700">Generate Days in Advance</label>
+                      <label className="font-phonic text-sm font-semibold text-gray-900">Generate Days in Advance</label>
                       <Input
                         type="number"
                         min="0"
                         value={form.generate_days_in_advance}
                         onChange={(e) => setForm({ ...form, generate_days_in_advance: parseInt(e.target.value) || 0 })}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-phonic text-sm font-normal text-gray-700">Past Due After Days</label>
+                      <label className="font-phonic text-sm font-semibold text-gray-900">Past Due After Days</label>
                       <Input
                         type="number"
                         min="1"
                         value={form.past_due_after_days}
                         onChange={(e) => setForm({ ...form, past_due_after_days: parseInt(e.target.value) || 2 })}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                       />
                     </div>
                   </div>
@@ -624,35 +606,31 @@ export default function CreateSubscriptionPage() {
             </Card>
 
             {/* Tax Configuration */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <Receipt className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Tax Configuration</CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
-                      Configure tax settings for this subscription
-                    </CardDescription>
-                  </div>
-                </div>
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
+                <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Receipt className="h-5 w-5 text-[#7f5efd]" />
+                  Tax Configuration
+                </CardTitle>
+                <CardDescription className="font-capsule text-sm text-gray-600">
+                  Configure tax settings for this subscription
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-6">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     checked={form.tax_enabled}
                     onCheckedChange={(checked) => setForm({ ...form, tax_enabled: checked as boolean })}
                     className=""
                   />
-                  <span className="font-phonic text-sm font-normal text-gray-700">Enable tax collection</span>
+                  <span className="font-phonic text-sm font-semibold text-gray-900">Enable tax collection</span>
                 </div>
 
                 {form.tax_enabled && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="font-phonic text-sm font-normal text-gray-700">Tax Rate Label</label>
+                        <label className="font-phonic text-sm font-semibold text-gray-900">Tax Rate Label</label>
                         <Input
                           placeholder="e.g., Sales Tax, VAT"
                           value={form.tax_rates[0]?.label || ''}
@@ -665,11 +643,11 @@ export default function CreateSubscriptionPage() {
                             }
                             setForm({ ...form, tax_rates: newRates });
                           }}
-                          className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                          className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="font-phonic text-sm font-normal text-gray-700">Tax Rate Percentage</label>
+                        <label className="font-phonic text-sm font-semibold text-gray-900">Tax Rate Percentage</label>
                         <Input
                           type="number"
                           step="0.01"
@@ -685,7 +663,7 @@ export default function CreateSubscriptionPage() {
                             }
                             setForm({ ...form, tax_rates: newRates });
                           }}
-                          className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                          className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
                         />
                       </div>
                     </div>
@@ -699,7 +677,7 @@ export default function CreateSubscriptionPage() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white flex items-center gap-2"
+                className="px-6 h-11 bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
               >
                 {isSubmitting ? (
                   <>
