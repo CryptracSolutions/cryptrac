@@ -153,7 +153,6 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
       }
       
       onComplete(finalData)
-      toast.success('Saved')
       
     } catch (error) {
       console.error('Error saving payment config:', error)

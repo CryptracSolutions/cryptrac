@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Button } from '@/app/components/ui/button';
-import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase-browser';
 
 // Business types
@@ -176,14 +175,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
       if (!res.ok) throw new Error('Failed to save email');
       setSettings((prev: MerchantSettings) => ({ ...prev, email: trimmed }));
       onEmailChange?.(trimmed);
-      toast.success('Email updated');
       // Refresh auth session so header/nav reflects new email
       try { await supabase.auth.refreshSession(); } catch {}
       setShowEmailConfirmDialog(false);
       setPendingEmailChange('');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update email');
+      // Silent failure - no toast notification
     } finally {
       setSavingEmail(false);
     }

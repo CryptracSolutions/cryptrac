@@ -6,16 +6,9 @@ import { useTimezone } from '@/lib/contexts/TimezoneContext';
 
 export const dynamic = 'force-dynamic';
 import {
-  Save,
-  CheckCircle,
-  Loader2,
-  ArrowLeft
+  Loader2
 } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
-
-import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { supabase } from '@/lib/supabase-browser';
-import toast from 'react-hot-toast';
 import ProfileForm from '@/app/components/settings/ProfileForm';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
@@ -59,8 +52,6 @@ export default function ProfilePage() {
   const { timezone: currentTimezone, updateTimezone } = useTimezone();
   const [, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedSettingsRef = useRef<string>('');
@@ -111,12 +102,27 @@ export default function ProfilePage() {
     try {
       setAutoSaving(true);
 
+      // Extract only the fields that the API endpoint accepts
+      const profileData = {
+        business_name: newSettings.business_name,
+        business_type: newSettings.business_type,
+        industry: newSettings.industry,
+        business_description: newSettings.business_description,
+        website: newSettings.website,
+        first_name: newSettings.first_name,
+        last_name: newSettings.last_name,
+        phone_number: newSettings.phone_number,
+        timezone: newSettings.timezone,
+        email: newSettings.email,
+        business_address: newSettings.business_address
+      };
+
       const response = await fetch('/api/merchants/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newSettings),
+        body: JSON.stringify(profileData),
       });
 
       if (!response.ok) {
@@ -129,12 +135,9 @@ export default function ProfilePage() {
       if (newSettings.timezone !== currentTimezone) {
         await updateTimezone(newSettings.timezone);
       }
-      
-      // Show brief success indicator
-      toast.success('Changes saved', { duration: 1500 });
     } catch (error) {
       console.error('Failed to auto-save settings:', error);
-      toast.error('Failed to save changes');
+      // Silent failure - no toast notification
     } finally {
       setAutoSaving(false);
     }
@@ -189,7 +192,7 @@ export default function ProfilePage() {
         }
       } catch (error) {
         console.error('Failed to fetch settings:', error);
-        toast.error('Failed to load settings');
+        // Silent failure - no toast notification
       } finally {
         setLoading(false);
       }
@@ -198,41 +201,6 @@ export default function ProfilePage() {
     fetchUserAndSettings();
   }, [router]);
 
-  // Save settings
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-      setSuccess(false);
-
-      const response = await fetch('/api/merchants/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save settings');
-      }
-
-      setSuccess(true);
-              toast.success('Saved');
-      
-      // Update the timezone context if it changed
-      if (settings.timezone !== currentTimezone) {
-        await updateTimezone(settings.timezone);
-      }
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      toast.error('Failed to save settings');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   // Phone number formatting with auto-save
   const handlePhoneChange = (value: string) => {
@@ -300,43 +268,14 @@ export default function ProfilePage() {
               Manage your business information and contact details
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            {autoSaving && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                <span className="font-capsule">Auto-saving...</span>
-              </div>
-            )}
-            <Button
-              onClick={saveSettings}
-              disabled={saving || autoSaving}
-              className="flex items-center gap-2 bg-[#7f5efd] hover:bg-[#7c3aed] text-white transition-colors duration-200"
-              size="default"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          </div>
+          {autoSaving && (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span className="font-capsule">Saving changes...</span>
+            </div>
+          )}
         </div>
 
-        {/* Enhanced Success Alert */}
-        {success && (
-          <Alert className="border border-green-200 bg-green-50 shadow-sm">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="font-capsule text-sm text-green-800">
-              <strong>Profile Updated!</strong> Your business information has been saved successfully.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Enhanced Profile Form */}
         <ProfileForm

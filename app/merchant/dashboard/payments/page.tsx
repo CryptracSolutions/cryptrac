@@ -544,23 +544,29 @@ export default function PaymentsPage() {
           <h1 className="font-phonic text-3xl font-semibold tracking-tight text-gray-900">
             Payment Management
           </h1>
-          <p className="font-capsule text-lg text-gray-600">View and manage all your payments</p>
+          <p className="font-capsule text-lg text-gray-600">Generate, view and manage all payments</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-3">
           <Link href="/merchant/dashboard/payments/create">
             <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-              <Plus className="h-4 w-4" />
+              <Plus className="h-5 w-5" />
               Create Payment Link
             </Button>
           </Link>
           <Link href="/smart-terminal">
             <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
+              <CreditCard className="h-5 w-5" />
               Open Smart Terminal
             </Button>
           </Link>
+          <Link href="/merchant/subscriptions/create">
+            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Create Subscription
+            </Button>
+          </Link>
           <Link href="/merchant/subscriptions">
-            <Button variant="outline" size="lg" className="flex items-center gap-2 border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200">
+            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Manage Subscriptions
             </Button>
