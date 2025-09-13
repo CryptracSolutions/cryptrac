@@ -482,16 +482,31 @@ export default function MerchantSettingsPage() {
         />
         
         {/* Enhanced Header */}
-        <div className="space-y-2">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
-            Account Settings
-          </h1>
-          <p className="font-phonic text-base font-normal text-gray-600">
-            Manage your payment preferences, tax settings, and notifications
-          </p>
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+          <div className="space-y-2">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+              Account Settings
+            </h1>
+            <p className="font-phonic text-base font-normal text-gray-600">Manage your payment preferences, tax settings, and notifications</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            <Button
+              onClick={saveSettings}
+              disabled={saving}
+              size="default"
+              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {saving ? 'Saving...' : 'Save Settings'}
+            </Button>
+          </div>
         </div>
 
-        
+
 
         {/* Enhanced Tabs */}
         <Tabs defaultValue="payments" className="space-y-8">
@@ -526,31 +541,28 @@ export default function MerchantSettingsPage() {
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-8">
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <CreditCard className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">
+              <CardHeader className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                       Payment Configuration
                     </CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600">
+                    <CardDescription className="font-capsule text-sm text-gray-600">
                       Configure your payment processing preferences and fees
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-8">
+              <CardContent className="p-6 pt-0 space-y-8">
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                          <DollarSign className="h-5 w-5 text-[#7f5efd]" />
+                        <div className="p-2 bg-[#7f5efd] rounded-lg">
+                          <DollarSign className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Gateway Fee Structure</h3>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Gateway Fee Structure</h3>
                       </div>
                       
                       <div className="space-y-4">
@@ -601,10 +613,10 @@ export default function MerchantSettingsPage() {
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                          <Zap className="h-5 w-5 text-[#7f5efd]" />
+                        <div className="p-2 bg-[#7f5efd] rounded-lg">
+                          <Zap className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Auto-Convert Settings</h3>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Auto-Convert Settings</h3>
                       </div>
                       
                       <div className="space-y-4">
@@ -630,11 +642,11 @@ export default function MerchantSettingsPage() {
                         {settings.auto_convert_enabled && (
                           <div className="space-y-2">
                             <label className="font-phonic text-sm font-normal text-gray-700">Preferred Payout Currency</label>
-                            <Select 
-                              value={settings.preferred_payout_currency || ''} 
+                            <Select
+                              value={settings.preferred_payout_currency || ''}
                               onValueChange={(value) => setSettings(prev => ({ ...prev, preferred_payout_currency: value }))}
                             >
-                              <SelectTrigger className="form-input-enhanced">
+                              <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                                 <SelectValue placeholder="Select payout currency" />
                               </SelectTrigger>
                               <SelectContent>
@@ -687,22 +699,19 @@ export default function MerchantSettingsPage() {
           {/* Tax Management Tab */}
           <TabsContent value="tax" className="space-y-8">
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <Calculator className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">
+              <CardHeader className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                       Tax Collection Settings
                     </CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600">
+                    <CardDescription className="font-capsule text-sm text-gray-600">
                       Configure tax collection for your payments
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-8">
+              <CardContent className="p-6 pt-0 space-y-8">
                 <div className="flex items-center space-x-3">
                   <Checkbox
                     id="tax-enabled"
@@ -720,16 +729,16 @@ export default function MerchantSettingsPage() {
                     {/* Tax Strategy */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                          <Calculator className="h-5 w-5 text-[#7f5efd]" />
+                        <div className="p-2 bg-[#7f5efd] rounded-lg">
+                          <Calculator className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Tax Strategy</h3>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Tax Strategy</h3>
                       </div>
-                      <Select 
-                        value={settings.tax_strategy} 
+                      <Select
+                        value={settings.tax_strategy}
                         onValueChange={(value: 'origin' | 'destination' | 'custom') => setSettings(prev => ({ ...prev, tax_strategy: value }))}
                       >
-                        <SelectTrigger className="form-input-enhanced">
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -743,16 +752,16 @@ export default function MerchantSettingsPage() {
                     {/* Sales Type */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                          <Zap className="h-5 w-5 text-[#7f5efd]" />
+                        <div className="p-2 bg-[#7f5efd] rounded-lg">
+                          <Zap className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Sales Type</h3>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Sales Type</h3>
                       </div>
-                      <Select 
-                        value={settings.sales_type} 
+                      <Select
+                        value={settings.sales_type}
                         onValueChange={(value: 'local' | 'online' | 'both') => setSettings(prev => ({ ...prev, sales_type: value }))}
                       >
-                        <SelectTrigger className="form-input-enhanced">
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -767,18 +776,18 @@ export default function MerchantSettingsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                            <DollarSign className="h-5 w-5 text-[#7f5efd]" />
+                          <div className="p-2 bg-[#7f5efd] rounded-lg">
+                            <DollarSign className="h-4 w-4 text-white" />
                           </div>
-                          <h3 className="font-phonic text-2xl font-normal text-gray-900">Default Tax Rates</h3>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Default Tax Rates</h3>
                         </div>
                         <Button
                           variant="outline"
-                          size="lg"
+                          size="sm"
                           onClick={addTaxRate}
-                          className="flex items-center gap-3"
+                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
                         >
-                          <Plus className="h-5 w-5" />
+                          <Plus className="h-4 w-4" />
                           Add Rate
                         </Button>
                       </div>
@@ -790,7 +799,7 @@ export default function MerchantSettingsPage() {
                               placeholder="Tax label (e.g., Sales Tax)"
                               value={rate.label}
                               onChange={(e) => updateTaxRate(rate.id, 'label', e.target.value)}
-                              className="flex-1 form-input-enhanced"
+                              className="flex-1 w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
                             />
                             <div className="flex items-center gap-3">
                               <input
@@ -800,16 +809,16 @@ export default function MerchantSettingsPage() {
                                 placeholder="0.0"
                                 value={rate.percentage}
                                 onChange={(e) => updateTaxRate(rate.id, 'percentage', e.target.value)}
-                                className="w-24 form-input-enhanced"
+                                className="w-24 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
                                 min="0"
                                 max="100"
                               />
-                              <span className="font-phonic text-sm font-normal text-gray-600">%</span>
+                              <span className="font-capsule text-xs text-gray-600">%</span>
                             </div>
                             {settings.tax_rates.length > 1 && (
                               <Button
                                 variant="ghost"
-                                size="lg"
+                                size="sm"
                                 onClick={() => removeTaxRate(rate.id)}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
@@ -840,31 +849,28 @@ export default function MerchantSettingsPage() {
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-8">
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                    <Bell className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-2xl font-normal text-gray-900">
+              <CardHeader className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                       Notification Preferences
                     </CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600">
+                    <CardDescription className="font-capsule text-sm text-gray-600">
                       Manage email alerts and public receipts
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-8">
+              <CardContent className="p-6 pt-0 space-y-8">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-[#7f5efd]/10 rounded-lg">
-                        <Bell className="h-5 w-5 text-[#7f5efd]" />
+                      <div className="p-2 bg-[#7f5efd] rounded-lg">
+                        <Bell className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Payment Notifications</h3>
-                        <p className="font-phonic text-base font-normal text-gray-600">Receive email alerts when payments are received</p>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Payment Notifications</h3>
+                        <p className="font-capsule text-sm text-gray-600">Receive email alerts when payments are received</p>
                       </div>
                     </div>
                     <Checkbox
@@ -875,15 +881,15 @@ export default function MerchantSettingsPage() {
                       className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-[#7f5efd]/10 rounded-lg">
-                        <CreditCard className="h-5 w-5 text-[#7f5efd]" />
+                      <div className="p-2 bg-[#7f5efd] rounded-lg">
+                        <CreditCard className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-phonic text-2xl font-normal text-gray-900">Public Receipts</h3>
-                        <p className="font-phonic text-base font-normal text-gray-600">Make payment receipts publicly accessible</p>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Public Receipts</h3>
+                        <p className="font-capsule text-sm text-gray-600">Make payment receipts publicly accessible</p>
                       </div>
                     </div>
                     <Checkbox

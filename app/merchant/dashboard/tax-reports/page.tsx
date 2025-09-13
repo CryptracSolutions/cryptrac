@@ -369,11 +369,33 @@ export default function TaxReportsPage() {
           ]} 
         />
         
-        {/* Header */}
-        <div className="flex items-center">
-          <div>
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Transactions</h1>
-            <p className="font-phonic text-base font-normal text-gray-600 mt-2">View and manage all your transaction history</p>
+        {/* Enhanced Header */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+          <div className="space-y-2">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+              Tax Reports & Transactions
+            </h1>
+            <p className="font-phonic text-base font-normal text-gray-600">View and manage all your transaction history</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={generateReport}
+              disabled={loadingReport}
+              size="default"
+              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Generate Report
+            </Button>
+            <Button
+              onClick={() => exportToCSV()}
+              disabled={exportingCSV || !reportData}
+              size="default"
+              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
           </div>
         </div>
 
@@ -383,61 +405,69 @@ export default function TaxReportsPage() {
           </div>
         ) : (
           <>
-            {/* Report Summary Cards */}
+            {/* Enhanced Statistics Cards */}
             {reportData && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                        <DollarSign className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-phonic text-sm font-normal text-gray-500">Gross Sales</p>
-                        <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_gross_sales.toFixed(2)}</p>
-                      </div>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Gross Sales</CardTitle>
+                    <div className="p-2 bg-[#7f5efd] rounded-lg">
+                      <DollarSign className="h-4 w-4 text-white" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">${reportData.summary.total_gross_sales.toFixed(2)}</div>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <TrendingUp className="h-3 w-3" />
+                      <span className="font-capsule text-xs">Total revenue before fees</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                        <Receipt className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-phonic text-sm font-normal text-gray-500">Tax Collected</p>
-                        <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_tax_collected.toFixed(2)}</p>
-                      </div>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Tax Collected</CardTitle>
+                    <div className="p-2 bg-[#7f5efd] rounded-lg">
+                      <Receipt className="h-4 w-4 text-white" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">${reportData.summary.total_tax_collected.toFixed(2)}</div>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <Calculator className="h-3 w-3" />
+                      <span className="font-capsule text-xs">Tax from all transactions</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                        <Calculator className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-phonic text-sm font-normal text-gray-500">Net Revenue</p>
-                        <p className="text-2xl font-bold text-gray-900">${reportData.summary.total_net_revenue.toFixed(2)}</p>
-                      </div>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Net Revenue</CardTitle>
+                    <div className="p-2 bg-[#7f5efd] rounded-lg">
+                      <Calculator className="h-4 w-4 text-white" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">${reportData.summary.total_net_revenue.toFixed(2)}</div>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <DollarSign className="h-3 w-3" />
+                      <span className="font-capsule text-xs">After fees and costs</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                        <TrendingUp className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-phonic text-sm font-normal text-gray-500">Transactions</p>
-                        <p className="text-2xl font-bold text-gray-900">{reportData.summary.total_transactions}</p>
-                      </div>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Transactions</CardTitle>
+                    <div className="p-2 bg-[#7f5efd] rounded-lg">
+                      <TrendingUp className="h-4 w-4 text-white" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">{reportData.summary.total_transactions}</div>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <BarChart3 className="h-3 w-3" />
+                      <span className="font-capsule text-xs">Total processed</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -447,20 +477,22 @@ export default function TaxReportsPage() {
             {/* Detailed Transactions */}
             {reportData && (
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                      <BarChart3 className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Transaction Details</CardTitle>
-                      <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
+                <CardHeader className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                        Transaction Details
+                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                          {reportData.transactions.length}
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription className="font-capsule text-sm text-gray-600">
                         Detailed view of all transactions in this report
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6 pt-0">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -554,7 +586,7 @@ export default function TaxReportsPage() {
                           variant="outline"
                           onClick={() => loadTaxReport()}
                           disabled={loadingReport}
-                          className="font-phonic text-sm font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] flex items-center gap-2"
+                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
                         >
                           {loadingReport ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -572,25 +604,24 @@ export default function TaxReportsPage() {
 
             {/* Filters - Smaller and Less Intrusive */}
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="space-y-6">
-                <div className="flex items-center gap-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                    <Filter className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Report Filters</CardTitle>
-                    <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
+              <CardHeader className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                      Report Filters
+                    </CardTitle>
+                    <CardDescription className="font-capsule text-sm text-gray-600">
                       Configure your tax report parameters
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="space-y-2">
                     <Label className="font-phonic text-sm font-normal text-gray-700">Report Type</Label>
                     <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
-                    <SelectTrigger className="form-input-enhanced">
+                    <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -605,7 +636,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-phonic text-sm font-normal text-gray-700">Year</Label>
                     <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
-                      <SelectTrigger className="form-input-enhanced">
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -620,7 +651,7 @@ export default function TaxReportsPage() {
                     <div className="space-y-2">
                       <Label className="font-phonic text-sm font-normal text-gray-700">Quarter</Label>
                       <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
-                        <SelectTrigger className="form-input-enhanced">
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -636,7 +667,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-phonic text-sm font-normal text-gray-700">Status</Label>
                     <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
-                      <SelectTrigger className="form-input-enhanced">
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -656,7 +687,7 @@ export default function TaxReportsPage() {
                         type="date"
                         value={filters.start_date}
                         onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -665,7 +696,7 @@ export default function TaxReportsPage() {
                         type="date"
                         value={filters.end_date}
                         onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
                     </div>
                   </div>
@@ -685,7 +716,8 @@ export default function TaxReportsPage() {
                   <Button
                     onClick={generateReport}
                     disabled={loadingReport}
-                    className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white h-12 flex items-center gap-2"
+                    size="default"
+                    className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
                   >
                     {loadingReport ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -701,40 +733,40 @@ export default function TaxReportsPage() {
             {/* Export Report Section */}
             {reportData && (
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="pb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-                      <Download className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Export Report</CardTitle>
-                      <CardDescription className="font-phonic text-base font-normal text-gray-600 mt-1">
+                <CardHeader className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                        Export Report
+                      </CardTitle>
+                      <CardDescription className="font-capsule text-sm text-gray-600">
                         Download your tax report in various formats
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Button
                       onClick={() => exportToCSV()}
                       disabled={exportingCSV}
-                      className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white h-12 flex items-center gap-2"
+                      size="default"
+                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
                     >
                       {exportingCSV ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <FileText className="h-5 w-5" />
+                        <FileText className="h-4 w-4" />
                       )}
                       {exportingCSV ? 'Exporting...' : 'Export to CSV'}
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       onClick={() => window.print()}
-                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] h-12 flex items-center gap-2"
+                      className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
                     >
-                      <Printer className="h-5 w-5" />
+                      <Printer className="h-4 w-4" />
                       Print Report
                     </Button>
                   </div>
@@ -747,15 +779,16 @@ export default function TaxReportsPage() {
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="pt-12 pb-12">
                   <div className="text-center">
-                    <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                       <BarChart3 className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="font-phonic text-2xl font-normal text-gray-900 mb-2">No Report Generated</h3>
-                    <p className="font-phonic text-base font-normal text-gray-600 mb-6">Configure your filters and generate a tax report to see your data.</p>
+                    <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No Report Generated</h3>
+                    <p className="font-capsule text-sm text-gray-500 mb-6">Configure your filters and generate a tax report to see your data</p>
                     <Button
                       onClick={generateReport}
                       disabled={loadingReport}
-                      className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                      size="default"
+                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                     >
                       Generate Report
                     </Button>

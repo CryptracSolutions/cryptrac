@@ -222,15 +222,11 @@ export default function ContactPage() {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-500" />
-                            <span className="font-phonic text-sm font-normal text-gray-600">Email: Within 24 hours</span>
+                            <span className="font-phonic text-sm font-normal text-gray-600">Email: Within 2 hours</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-500" />
                             <span className="font-phonic text-sm font-normal text-gray-600">Phone: Immediate during hours</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            <span className="font-phonic text-sm font-normal text-gray-600">Urgent: Within 4 hours</span>
                           </div>
                         </div>
                       </CardContent>
@@ -266,7 +262,7 @@ export default function ContactPage() {
                       <CardContent className="pt-4">
                         <p className="font-phonic text-sm font-normal text-blue-800 mb-2">Saturday - Sunday</p>
                         <p className="font-phonic text-2xl font-bold text-blue-900 mb-2">Email Only</p>
-                        <p className="font-phonic text-xs font-normal text-blue-700">Response within 48 hours</p>
+                        <p className="font-phonic text-xs font-normal text-blue-700">Response within 2 hours</p>
                       </CardContent>
                     </Card>
                     
@@ -383,7 +379,7 @@ export default function ContactPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
-                          We typically respond to email inquiries within 24 hours during business days. Phone support is available immediately during business hours. For urgent matters, we offer expedited support.
+                          We typically respond to email inquiries within 2 hours during business days. Phone support is available immediately during business hours. For urgent matters, we offer expedited support.
                         </p>
                       </CardContent>
                     </Card>
@@ -474,8 +470,8 @@ export default function ContactPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700 mb-2">For critical issues:</p>
-                        <a href="mailto:emergency@cryptrac.com" className="font-phonic font-semibold text-gray-900 hover:text-[#7f5efd]">
-                          emergency@cryptrac.com
+                        <a href="mailto:support@cryptrac.com" className="font-phonic font-semibold text-gray-900 hover:text-[#7f5efd]">
+                          support@cryptrac.com
                         </a>
                         <p className="font-phonic text-sm font-normal text-gray-500 mt-2">Include "URGENT" in subject line</p>
                       </CardContent>
@@ -487,7 +483,7 @@ export default function ContactPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700 mb-2">Emergency issues:</p>
-                        <p className="font-phonic font-semibold text-gray-900">Within 4 hours</p>
+                        <p className="font-phonic font-semibold text-gray-900">Immediately</p>
                         <p className="font-phonic text-sm font-normal text-gray-500 mt-2">24/7 monitoring for critical issues</p>
                       </CardContent>
                     </Card>
