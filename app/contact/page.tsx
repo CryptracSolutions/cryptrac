@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from "next/link";
-import { Mail, Phone, MapPin, Send, MessageSquare, Clock, Users, Shield, Zap, ChevronRight, FileText, HelpCircle, AlertCircle, CheckCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Send, MessageSquare, Clock, Users, Shield, HelpCircle, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";

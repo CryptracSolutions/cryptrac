@@ -1,17 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), ms)
-  try {
-    // @ts-ignore fetch accepts signal
-    const result = await promise
-    return result
-  } finally {
-    clearTimeout(timeout)
-  }
-}
-
 async function fetchJSON(input: RequestInfo, init?: RequestInit, timeoutMs = 6000) {
   const controller = new AbortController()
   const t = setTimeout(() => controller.abort(), timeoutMs)
@@ -70,7 +58,7 @@ async function ethFeeHistoryWei(url: string): Promise<number> {
   return nextBase + Math.ceil(tip * 1.1)
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     // 1) Prices (USD)
     const priceIds = ['bitcoin','ethereum','solana','ripple','tron','binancecoin','sui']

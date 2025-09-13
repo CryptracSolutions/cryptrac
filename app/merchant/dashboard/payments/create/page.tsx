@@ -18,9 +18,9 @@ import {
   Trash2,
   Loader2,
   Info,
-  Receipt,
   Coins,
-  Zap
+  Receipt,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -415,62 +415,18 @@ export default function CreatePaymentLinkPage() {
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-8">
               {/* Basic Information */}
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#7f5efd] rounded-lg">
-                      <LinkIcon className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-phonic text-lg font-semibold text-gray-900">
-                        Basic Information
-                      </CardTitle>
-                      <p className="font-capsule text-sm text-gray-600">
-                        Enter the basic details for your payment link
-                      </p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="title" className="font-phonic text-sm font-semibold">Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="e.g., Product Purchase, Service Payment"
-                      value={form.title}
-                      onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                      className="border border-gray-200 focus:border-[#7f5efd] focus:ring-1 focus:ring-[#7f5efd] transition-colors duration-200"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="description" className="font-phonic text-sm font-semibold">Description</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Optional description for your customers"
-                      value={form.description}
-                      onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-                      className="border border-gray-200 focus:border-[#7f5efd] focus:ring-1 focus:ring-[#7f5efd] transition-colors duration-200"
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Payment Details */}
-              <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader className="pb-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                      <DollarSign className="h-5 w-5 text-white" />
+                      <CreditCard className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="font-phonic text-xl font-normal text-gray-900">
-                        Payment Details
+                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
+                        Basic Information
                       </CardTitle>
-                      <p className="font-phonic text-sm font-normal text-gray-600">
-                        Configure pricing, currency, and tax settings
+                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
+                        Enter the basic details for your payment link
                       </p>
                     </div>
                   </div>
@@ -478,7 +434,51 @@ export default function CreatePaymentLinkPage() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="amount" className="font-phonic text-base font-normal">Amount *</Label>
+                      <Label htmlFor="title" className="font-phonic text-sm font-normal text-gray-700">Payment Link Title *</Label>
+                      <Input
+                        id="title"
+                        placeholder="e.g., Product Purchase, Service Payment"
+                        value={form.title}
+                        onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description" className="font-phonic text-sm font-normal text-gray-700">Description</Label>
+                      <Input
+                        id="description"
+                        placeholder="Brief description for your customers"
+                        value={form.description}
+                        onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pricing Configuration */}
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+                <CardHeader className="pb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                      <DollarSign className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
+                        Pricing Configuration
+                      </CardTitle>
+                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
+                        Set the amount, currency, and billing details
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="amount" className="font-phonic text-sm font-normal text-gray-700">Amount *</Label>
                       <Input
                         id="amount"
                         type="number"
@@ -487,15 +487,15 @@ export default function CreatePaymentLinkPage() {
                         placeholder="0.00"
                         value={form.amount}
                         onChange={(e) => setForm(prev => ({ ...prev, amount: e.target.value }))}
-                        className="form-input-enhanced"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                         required
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
-                      <Label htmlFor="currency" className="font-phonic text-base font-normal">Currency</Label>
+                      <Label htmlFor="currency" className="font-phonic text-sm font-normal text-gray-700">Currency *</Label>
                       <Select value={form.currency} onValueChange={(value) => setForm(prev => ({ ...prev, currency: value }))}>
-                        <SelectTrigger className="form-input-enhanced">
+                        <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                         <SelectContent>
@@ -504,58 +504,12 @@ export default function CreatePaymentLinkPage() {
                               key={currency.code}
                               value={currency.code}
                             >
-                              {currency.symbol} {currency.name}
+                              {currency.symbol} {currency.code} - {currency.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  {/* Accepted Cryptocurrencies */}
-                  <div className="space-y-4">
-                    <Label className="font-phonic text-base font-normal">Accepted Cryptocurrencies *</Label>
-                    <p className="font-phonic text-sm font-normal text-gray-600">All cryptocurrencies are selected by default. Uncheck the ones you don&apos;t want to accept.</p>
-                    
-                    {/* Stable Coin Information */}
-                    <Alert className="bg-blue-50 border-blue-200">
-                      <Info className="h-4 w-4 text-blue-600" />
-                      <AlertDescription className="text-blue-800">
-                        <strong>Bonus:</strong> Selecting base cryptocurrencies automatically includes their stable coins for customers:
-                        <div className="mt-2 text-sm">
-                          • <strong>SOL</strong> → includes USDC & USDT on Solana
-                          • <strong>ETH</strong> → includes USDT, USDC, DAI & PYUSD on Ethereum
-                          • <strong>BNB</strong> → includes USDT & USDC on BSC
-                          • <strong>MATIC</strong> → includes USDT & USDC on Polygon
-                          • <strong>TRX</strong> → includes USDT on Tron
-                          • <strong>TON</strong> → includes USDT on TON
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-
-                    {availableCryptos.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {availableCryptos.map(crypto => (
-                          <div key={crypto} className="flex items-center space-x-3">
-                            <Checkbox
-                              id={crypto}
-                              checked={form.accepted_cryptos.includes(crypto)}
-                              onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
-                            />
-                            <Label htmlFor={crypto} className="font-phonic text-sm font-normal">
-                              {crypto}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          No cryptocurrency wallets configured. Please add wallet addresses in your settings first.
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </div>
 
                   {/* Tax Configuration */}
@@ -566,29 +520,29 @@ export default function CreatePaymentLinkPage() {
                         checked={form.tax_enabled}
                         onCheckedChange={(checked) => handleTaxEnabledToggle(checked === true)}
                       />
-                      <Label htmlFor="tax_enabled" className="text-body font-medium">
+                      <Label htmlFor="tax_enabled" className="font-phonic text-sm font-normal text-gray-700">
                         Add tax to payment
                       </Label>
                     </div>
-                    
+
                     {/* Show global tax settings info */}
                     {merchantSettings && (
                       <div className="font-phonic text-xs font-normal text-gray-500 bg-gray-50 p-3 rounded-lg">
                         <Info className="h-3 w-3 inline mr-1" />
                         Global tax setting: {merchantSettings.tax_enabled ? 'Enabled' : 'Disabled'}
-                        {merchantSettings.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 && 
+                        {merchantSettings.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 &&
                           ` (${merchantSettings.tax_rates.length} tax rate${merchantSettings.tax_rates.length !== 1 ? 's' : ''} configured)`
                         }
-                        {form.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 && 
+                        {form.tax_enabled && merchantSettings.tax_rates && merchantSettings.tax_rates.length > 0 &&
                           ' - Global rates auto-filled below'
                         }
                       </div>
                     )}
-                    
+
                     {form.tax_enabled && (
                       <div className="ml-6 space-y-6">
                         <div className="flex items-center justify-between">
-                          <Label className="text-body font-medium">Tax Rates</Label>
+                          <Label className="font-phonic text-sm font-normal text-gray-700">Tax Rates</Label>
                           <Button
                             type="button"
                             variant="outline"
@@ -600,7 +554,7 @@ export default function CreatePaymentLinkPage() {
                             Add Tax Rate
                           </Button>
                         </div>
-                        
+
                         <div className="space-y-4">
                           {form.tax_rates.map((taxRate) => (
                             <div key={taxRate.id} className="flex items-center gap-4 p-4 border rounded-lg">
@@ -609,10 +563,10 @@ export default function CreatePaymentLinkPage() {
                                   placeholder="Tax Label (e.g., State Tax, Local Tax)"
                                   value={taxRate.label}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'label', e.target.value)}
-                                  className="form-input-enhanced"
+                                  className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                                 />
                               </div>
-                              
+
                               <div className="w-24">
                                 <Input
                                   type="number"
@@ -622,12 +576,12 @@ export default function CreatePaymentLinkPage() {
                                   placeholder="6.625"
                                   value={taxRate.percentage}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
-                                  className="form-input-enhanced"
+                                  className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                                 />
                               </div>
-                              
+
                               <span className="text-body text-gray-500">%</span>
-                              
+
                               {form.tax_rates.length > 1 && (
                                 <Button
                                   type="button"
@@ -642,7 +596,7 @@ export default function CreatePaymentLinkPage() {
                             </div>
                           ))}
                         </div>
-                        
+
                         <div className="text-body-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
                           <strong>Total Tax Rate:</strong> {fees.totalTaxPercentage.toFixed(3)}%
                           {fees.totalTaxAmount > 0 && (
@@ -657,19 +611,64 @@ export default function CreatePaymentLinkPage() {
                 </CardContent>
               </Card>
 
+              {/* Payment Settings */}
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
+                <CardHeader className="pb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
+                      <Coins className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
+                        Payment Settings
+                      </CardTitle>
+                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
+                        Configure cryptocurrency payment options
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <Label className="font-phonic text-sm font-normal text-gray-700">Accepted Cryptocurrencies</Label>
+                    {availableCryptos.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {availableCryptos.map(crypto => (
+                          <label key={crypto} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <Checkbox
+                              checked={form.accepted_cryptos.includes(crypto)}
+                              onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
+                            />
+                            <span className="text-sm font-medium">{crypto}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          No cryptocurrency wallets configured. Please add wallet addresses in your settings first.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+
+                </CardContent>
+              </Card>
+
               {/* Advanced Settings */}
-              <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader className="pb-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
                       <Settings className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="font-phonic text-xl font-normal text-gray-900">
+                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
                         Advanced Settings
                       </CardTitle>
-                      <p className="font-phonic text-sm font-normal text-gray-600">
-                        Configure expiration, usage limits, and payment options
+                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
+                        Configure expiration and usage limits
                       </p>
                     </div>
                   </div>
@@ -677,160 +676,71 @@ export default function CreatePaymentLinkPage() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="expires_at" className="font-phonic text-base font-normal">Expiration Date</Label>
+                      <Label htmlFor="expires_at" className="font-phonic text-sm font-normal text-gray-700">Expiration Date</Label>
                       <Input
                         id="expires_at"
                         type="datetime-local"
                         value={form.expires_at}
                         onChange={(e) => setForm(prev => ({ ...prev, expires_at: e.target.value }))}
-                        className="form-input-enhanced"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
+                      <p className="font-phonic text-xs font-normal text-gray-500">Leave empty for no expiration</p>
                     </div>
-                    
+
                     <div className="space-y-2">
-                      <Label htmlFor="max_uses" className="font-phonic text-base font-normal">Maximum Uses</Label>
+                      <Label htmlFor="max_uses" className="font-phonic text-sm font-normal text-gray-700">Maximum Uses</Label>
                       <Input
                         id="max_uses"
                         type="number"
                         min="1"
-                        placeholder="Unlimited"
+                        placeholder="Leave empty for unlimited"
                         value={form.max_uses}
                         onChange={(e) => setForm(prev => ({ ...prev, max_uses: e.target.value }))}
-                        className="form-input-enhanced"
+                        className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                       />
+                      <p className="font-phonic text-xs font-normal text-gray-500">Leave empty for unlimited uses</p>
                     </div>
                   </div>
 
-                  {/* Payment Options with Global Settings Display */}
-                  <div className="space-y-6">
-                    <div className="font-phonic text-base font-normal text-gray-700">Payment Options</div>
-                    
-                    {/* Auto-convert setting */}
-                    <div className="space-y-4">
-                      <div className="font-phonic text-base font-normal text-gray-900">Auto-Convert Setting</div>
-                      <p className="font-phonic text-sm font-normal text-gray-600">Automatically swap received funds to your payout currency.</p>
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            id="auto_convert_global"
-                            name="auto_convert_setting"
-                            checked={form.auto_convert_enabled === null}
-                            onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: null }))}
-                            className="h-4 w-4 text-[#7f5efd]"
-                          />
-                          <Label htmlFor="auto_convert_global" className="font-phonic text-sm font-normal">
-                            Use global setting ({merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            id="auto_convert_disable"
-                            name="auto_convert_setting"
-                            checked={form.auto_convert_enabled === false}
-                            onChange={() => setForm(prev => ({ ...prev, auto_convert_enabled: false }))}
-                            className="h-4 w-4 text-[#7f5efd]"
-                          />
-                          <Label htmlFor="auto_convert_disable" className="font-phonic text-sm font-normal">
-                            Disable auto-convert for this payment link
-                          </Label>
-                        </div>
-                      </div>
-                      
-                      <div className="font-phonic text-xs font-normal text-gray-500 bg-gray-50 p-3 rounded-lg">
-                        <Info className="h-3 w-3 inline mr-1" />
-                        Current selection: {
-                          form.auto_convert_enabled === null 
-                            ? `Global setting (${merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})`
-                            : form.auto_convert_enabled ? 'Enabled' : 'Disabled'
-                        }
-                      </div>
-                    </div>
-                    
-                    {/* Gateway fee setting */}
-                    <div className="space-y-4">
-                      <div className="font-phonic text-base font-normal text-gray-900">Gateway Fee Setting</div>
-                      <p className="font-phonic text-sm font-normal text-gray-600">Choose who covers the NOWPayments gateway fee for this link.</p>
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            id="fee_global"
-                            name="fee_setting"
-                            checked={form.charge_customer_fee === null}
-                            onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: null }))}
-                            className="h-4 w-4 text-[#7f5efd]"
-                          />
-                          <Label htmlFor="fee_global" className="font-phonic text-sm font-normal">
-                            Use global setting ({merchantSettings?.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'})
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            id="merchant_pays_fee"
-                            name="fee_setting"
-                            checked={form.charge_customer_fee === false}
-                            onChange={() => setForm(prev => ({ ...prev, charge_customer_fee: false }))}
-                            className="h-4 w-4 text-[#7f5efd]"
-                          />
-                          <Label htmlFor="merchant_pays_fee" className="font-phonic text-sm font-normal">
-                            Merchant pays fee for this payment link
-                          </Label>
-                        </div>
-                      </div>
-                      
-                      <div className="font-phonic text-xs font-normal text-gray-500 bg-gray-50 p-3 rounded-lg">
-                        <Info className="h-3 w-3 inline mr-1" />
-                        Current selection: {
-                          form.charge_customer_fee === null 
-                            ? `Global setting (${merchantSettings?.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'})`
-                            : form.charge_customer_fee ? 'Customer pays fee' : 'Merchant pays fee'
-                        }
-                      </div>
-                    </div>
-                  </div>
-
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                      <AlertDescription className="font-phonic text-sm font-normal">
-                        After successful payment, customers will be automatically redirected to Cryptrac&apos;s branded thank you page with options to receive their receipt.
-                      </AlertDescription>
+                  <Alert className="bg-[#7f5efd]/10 border-[#7f5efd]/20">
+                    <Info className="h-4 w-4 text-[#7f5efd]" />
+                    <AlertDescription className="font-phonic text-sm font-normal text-[#7f5efd]">
+                      After successful payment, customers will be automatically redirected to Cryptrac&apos;s branded thank you page with options to receive their receipt.
+                    </AlertDescription>
                   </Alert>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Combined Preview & Fee Summary */}
+            {/* Payment Link Preview */}
             <div className="space-y-8">
-              <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
                 <CardHeader className="pb-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
                       <CreditCard className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="font-phonic text-xl font-normal text-gray-900">
-                        Payment Link Preview
+                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">
+                        Payment Preview
                       </CardTitle>
-                      <p className="font-phonic text-sm font-normal text-gray-600">
-                        See how your payment link will appear to customers
+                      <p className="font-phonic text-base font-normal text-gray-600 mt-1">
+                        How your payment link will appear
                       </p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Preview Section */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border-2 border-dashed border-blue-200">
+                  <div className="bg-gradient-to-br from-purple-50 to-white p-6 rounded-xl border border-purple-100">
                     <div className="space-y-4">
-                      <div>
-                        <p className="font-phonic text-base font-normal text-gray-900">{form.title || 'Payment Link Title'}</p>
-                        <p className="font-phonic text-sm font-normal text-gray-600">{form.description || 'Payment description will appear here'}</p>
+                      <div className="text-center">
+                        <h3 className="font-phonic text-xl font-semibold text-gray-900">{form.title || 'Payment Link Title'}</h3>
+                        <p className="font-phonic text-base text-gray-600 mt-1">{form.description || 'Payment description will appear here'}</p>
                       </div>
-                      
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="default" className="text-lg px-3 py-1">
+
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <Badge variant="default" className="text-lg px-3 py-1 bg-[#7f5efd] hover:bg-[#7c3aed]">
                           {form.currency} {fees.totalAmount.toFixed(2)}
                         </Badge>
                         {form.accepted_cryptos.length > 0 && (
@@ -846,15 +756,15 @@ export default function CreatePaymentLinkPage() {
                       </div>
 
                       {(form.expires_at || form.max_uses) && (
-                        <div className="font-phonic text-xs font-normal text-gray-500 space-y-1">
+                        <div className="font-phonic text-xs font-normal text-gray-500 space-y-1 text-center">
                           {form.expires_at && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 justify-center">
                               <Clock className="h-3 w-3" />
                               Expires: {formatDateShort(form.expires_at, timezone)}
                             </div>
                           )}
                           {form.max_uses && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 justify-center">
                               <Users className="h-3 w-3" />
                               Max uses: {form.max_uses}
                             </div>
@@ -864,78 +774,54 @@ export default function CreatePaymentLinkPage() {
                     </div>
                   </div>
 
-                  {/* Fee Breakdown */}
-                  <div className="space-y-4">
-                    <div className="font-phonic text-base font-normal text-gray-700 border-b pb-2">Payment Breakdown</div>
-                    
-                    <div className="space-y-3 font-phonic text-sm font-normal">
-                      <div className="flex justify-between">
-                        <span>Base Amount:</span>
-                        <span className="font-medium">{form.currency} {fees.baseAmount.toFixed(2)}</span>
+                  {/* Order Summary */}
+                  <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
+                      <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-semibold text-gray-900">{form.currency} {fees.baseAmount.toFixed(2)}</span>
                       </div>
-                      
+
                       {form.tax_enabled && fees.totalTaxAmount > 0 && (
                         <>
                           {form.tax_rates.map((taxRate) => {
                             const percentage = parseFloat(taxRate.percentage) || 0;
                             const amount = (fees.baseAmount * percentage) / 100;
                             return amount > 0 && taxRate.label ? (
-                              <div key={taxRate.id} className="flex justify-between text-green-700">
-                                <span>{taxRate.label} ({percentage}%):</span>
-                                <span>+{form.currency} {amount.toFixed(2)}</span>
+                              <div key={taxRate.id} className="flex justify-between items-center text-[#7f5efd]">
+                                <span className="text-sm">{taxRate.label} ({percentage}%)</span>
+                                <span className="text-sm">+{form.currency} {amount.toFixed(2)}</span>
                               </div>
                             ) : null;
                           })}
-                          
-                          <div className="flex justify-between font-medium text-green-700 border-t pt-2">
-                            <span>Total Tax ({fees.totalTaxPercentage.toFixed(3)}%):</span>
-                            <span>+{form.currency} {fees.totalTaxAmount.toFixed(2)}</span>
-                          </div>
                         </>
                       )}
-                      
-                      {form.tax_enabled && (
-                        <div className="flex justify-between font-medium border-t pt-2">
-                          <span>Subtotal with Tax:</span>
-                          <span>{form.currency} {fees.subtotalWithTax.toFixed(2)}</span>
+
+                      {fees.effectiveSettings.charge_customer_fee && (
+                        <div className="flex justify-between items-center text-blue-600">
+                          <span className="text-sm">Processing Fee ({fees.feePercentage}%)</span>
+                          <span className="text-sm">+{form.currency} {fees.feeAmount.toFixed(2)}</span>
                         </div>
                       )}
-                      
-                      <div className="flex justify-between text-blue-700">
-                        <span>Gateway Fee ({fees.feePercentage}%):</span>
-                        <span>{fees.effectiveSettings.charge_customer_fee ? '+' : ''}{form.currency} {fees.feeAmount.toFixed(2)}</span>
-                      </div>
-                      
-                      <div className="border-t pt-3 space-y-2">
-                        <div className="flex justify-between font-bold text-lg">
-                          <span>Customer Pays:</span>
-                          <span className="text-primary">{form.currency} {fees.totalAmount.toFixed(2)}</span>
-                        </div>
-                        
-                        <div className="flex justify-between text-body-sm text-gray-600">
-                          <span>You Receive:</span>
-                          <span className="font-medium text-green-600">{form.currency} {fees.merchantReceives.toFixed(2)}</span>
+
+                      <div className="pt-2 mt-2 border-t border-purple-200">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-900">Total</span>
+                          <span className="text-xl font-bold text-[#7f5efd]">{form.currency} {fees.totalAmount.toFixed(2)}</span>
                         </div>
                       </div>
+
+                      {!fees.effectiveSettings.charge_customer_fee && (
+                        <div className="pt-2 text-xs text-gray-600">
+                          <Info className="h-3 w-3 inline mr-1" />
+                          Processing fee will be deducted from your payout
+                        </div>
+                      )}
                     </div>
-
-                    {fees.effectiveSettings.auto_convert_enabled && (
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="font-phonic text-xs font-normal">
-                          Auto-convert enabled: 1% gateway fee applies (crypto will be converted to your preferred currency)
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    {!fees.effectiveSettings.charge_customer_fee && (
-                      <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertDescription className="font-phonic text-xs font-normal">
-                          Gateway fee will be deducted from your payout
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -943,28 +829,20 @@ export default function CreatePaymentLinkPage() {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end gap-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => router.back()}
-              className="px-6 py-3 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
+          <div className="flex justify-end pt-6">
+            <Button
+              type="submit"
               disabled={loading || availableCryptos.length === 0}
-              className="min-w-[150px] px-6 py-3 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+              className="px-8 h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white flex items-center gap-2"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Creating...
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Creating Payment Link...
                 </>
               ) : (
                 <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="h-5 w-5" />
                   Create Payment Link
                 </>
               )}

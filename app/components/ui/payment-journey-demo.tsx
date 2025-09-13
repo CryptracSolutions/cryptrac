@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bitcoin, Zap, Network, CheckCircle, ArrowRight, DollarSign, Copy, Globe, ShoppingBag, Play, Pause, ChevronLeft, ChevronRight, Mail, Clock } from "lucide-react";
+import { Bitcoin, Network, CheckCircle, ArrowRight, Copy, Globe, ShoppingBag, Play, Pause, ChevronLeft, ChevronRight, Mail, Clock } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { QRCode } from "@/app/components/ui/qr-code";

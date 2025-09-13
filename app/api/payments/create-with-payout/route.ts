@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🚀 Calling NOWPayments API with payload:', { ...paymentPayload, payout_address: String(paymentPayload.payout_address).substring(0, 10) + '...' });
 
-    let nowPaymentsResponse = await fetch('https://api.nowpayments.io/v1/payment', {
+    const nowPaymentsResponse = await fetch('https://api.nowpayments.io/v1/payment', {
       method: 'POST',
       headers: {
         'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(paymentPayload)
     });
-    let responseText = await nowPaymentsResponse.text()
+    const responseText = await nowPaymentsResponse.text()
 
     if (responseText.trim().startsWith('<')) {
       console.error('❌ NOWPayments service returned HTML (outage)')
