@@ -106,24 +106,26 @@ export default function Signup() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-center space-x-4 text-white/90">
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5" />
-                  <span className="font-phonic font-normal">Secure & Non-Custodial</span>
-                </div>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 text-white/90">
+                <Zap className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Instant Setup</span>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-white/90">
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-5 w-5" />
-                  <span className="font-phonic font-normal">Instant Setup</span>
-                </div>
+              <div className="flex items-start space-x-3 text-white/90">
+                <CreditCard className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Accept Bitcoin, Ethereum, and more</span>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-white/90">
-                <div className="flex items-center space-x-2">
-                  <CreditCard className="h-5 w-5" />
-                  <span className="font-phonic font-normal">Global Support</span>
-                </div>
+              <div className="flex items-start space-x-3 text-white/90">
+                <Shield className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Non-custodial - you control your funds</span>
+              </div>
+              <div className="flex items-start space-x-3 text-white/90">
+                <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Gateway Fee: 0.5% (direct), 1% (auto-convert)</span>
+              </div>
+              <div className="flex items-start space-x-3 text-white/90">
+                <CreditCard className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Global Support</span>
               </div>
             </div>
           </div>
@@ -223,24 +225,6 @@ export default function Signup() {
             </CardContent>
           </Card>
 
-          {/* Features */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3">
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />
-                <span className="font-phonic text-sm text-gray-600">Accept Bitcoin, Ethereum, and more</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />
-                <span>Non-custodial - you control your funds</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-[#7f5efd] flex-shrink-0" />
-                <span>Gateway Fee: 0.5% (direct), 1% (auto-convert)</span>
-              </div>
-            </div>
-          </div>
 
           {/* Footer */}
           <div className="text-center text-sm text-gray-500">
