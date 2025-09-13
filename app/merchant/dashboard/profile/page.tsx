@@ -264,16 +264,16 @@ export default function ProfilePage() {
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
               Business Profile
             </h1>
-            <p className="font-phonic text-base font-normal text-gray-600">
-              Manage your business information and contact details
-            </p>
+            <p className="font-phonic text-base font-normal text-gray-600">Manage your business information and contact details</p>
           </div>
-          {autoSaving && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              <span className="font-capsule">Saving changes...</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {autoSaving && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="font-capsule text-xs">Auto-saving...</span>
+              </div>
+            )}
+          </div>
         </div>
 
 

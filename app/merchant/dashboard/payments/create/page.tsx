@@ -881,29 +881,28 @@ export default function CreatePaymentLinkPage() {
                 </CardContent>
               </Card>
             </div>
+            {/* Submit Button - full width below cards */}
+            <div className="lg:col-span-3">
+              <Button
+                type="submit"
+                disabled={loading || availableCryptos.length === 0}
+                className="w-full h-11 bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Creating Payment Link...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-5 w-5" />
+                    Create Payment Link
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end pt-6">
-            <Button
-              type="submit"
-              disabled={loading || availableCryptos.length === 0}
-              className="px-6 h-11 bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Creating Payment Link...
-                </>
-              ) : (
-                <>
-                  <Zap className="h-5 w-5" />
-                  Create Payment Link
-                </>
-              )}
-            </Button>
-          </div>
-          </form>
+        </form>
       </div>
     );
   }

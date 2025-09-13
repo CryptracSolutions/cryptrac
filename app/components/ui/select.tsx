@@ -123,11 +123,18 @@ const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   SelectItemProps
 >(({ className, children, textValue, ...props }, ref) => {
-  // We want the trigger to display a clean, unstyled string even when the
-  // dropdown items use rich markup (icons, colored text, etc.). When a
-  // `textValue` is provided, Radix uses it for the trigger and typeahead.
-  // In that case, we should NOT also render a hidden <ItemText> to avoid
-  // duplicate labels appearing in the dropdown.
+  // Convert arbitrary ReactNode children into a plain text string.
+  // This ensures the trigger always shows readable text after selection.
+  const getPlainText = (node: React.ReactNode): string => {
+    if (node == null) return ""
+    if (typeof node === "string" || typeof node === "number") return String(node)
+    if (Array.isArray(node)) return node.map(getPlainText).join("")
+    if (React.isValidElement(node)) return getPlainText((node as any).props?.children)
+    return ""
+  }
+
+  const computedText = (textValue ?? getPlainText(children)) || undefined
+
   const isPlainTextChild =
     typeof children === "string" || typeof children === "number"
 
@@ -140,8 +147,8 @@ const SelectItem = React.forwardRef<
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
-      // Pass textValue through for typeahead semantics
-      textValue={textValue ?? (isPlainTextChild ? String(children) : undefined)}
+      // Provide a clean text label for typeahead and for the trigger display
+      textValue={computedText}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -153,10 +160,10 @@ const SelectItem = React.forwardRef<
         // For simple string/number children, render them as the visible ItemText
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       ) : (
-        // Provide hidden plain text for the trigger while rendering rich children visibly
+        // Render a hidden plain text for the trigger while keeping rich children visible in the list
         <>
           <SelectPrimitive.ItemText asChild>
-            <span className="sr-only">{textValue ?? ""}</span>
+            <span className="sr-only">{computedText ?? ""}</span>
           </SelectPrimitive.ItemText>
           {children}
         </>

@@ -255,9 +255,8 @@ export default function CreateSubscriptionPage() {
           </div>
           <div className="flex items-center gap-3">
             <Button
-              variant="outline"
               onClick={() => router.push('/merchant/subscriptions')}
-              className="flex items-center gap-2 font-medium"
+              className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Subscriptions

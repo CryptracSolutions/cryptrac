@@ -207,38 +207,39 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
   return (
     <div className="space-y-8">
-      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-        <CardHeader>
-          <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-              <Building className="h-6 w-6 text-white" />
+      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                Business Information
+              </CardTitle>
+              <CardDescription className="font-capsule text-sm text-gray-600">
+                Basic information about your business and operations
+              </CardDescription>
             </div>
-            Business Information
-          </CardTitle>
-          <CardDescription className="font-capsule text-base font-normal">
-            Basic information about your business and operations
-          </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="p-6 pt-0 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Business Name *</label>
+              <label className="font-phonic text-sm font-normal text-gray-700">Business Name *</label>
               <Input
                 value={settings.business_name}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_name: e.target.value }))}
                 placeholder="Enter your business name"
-                className="h-12 font-capsule text-base font-normal transition-colors"
+                className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Business Type</label>
-              <Select 
-                value={settings.business_type} 
+              <label className="font-phonic text-sm font-normal text-gray-700">Business Type</label>
+              <Select
+                value={settings.business_type}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, business_type: value }))}
               >
-                <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
+                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -250,12 +251,12 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </div>
 
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Industry *</label>
-              <Select 
-                value={settings.industry} 
+              <label className="font-phonic text-sm font-normal text-gray-700">Industry *</label>
+              <Select
+                value={settings.industry}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, industry: value }))}
               >
-                <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
+                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
                 <SelectContent>
@@ -267,83 +268,84 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </div>
 
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Website</label>
+              <label className="font-phonic text-sm font-normal text-gray-700">Website</label>
               <Input
                 value={settings.website}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, website: e.target.value }))}
                 placeholder="https://your-website.com"
                 type="url"
-                className="h-12 font-capsule text-base font-normal transition-colors"
+                className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="font-phonic text-base font-normal text-gray-700">Business Description</label>
+            <label className="font-phonic text-sm font-normal text-gray-700">Business Description</label>
             <Input
               value={settings.business_description}
               onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, business_description: e.target.value }))}
               placeholder="Brief description of your business"
-              className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+              className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-        <CardHeader>
-          <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-              <Phone className="h-6 w-6 text-white" />
+      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                Contact Information
+              </CardTitle>
+              <CardDescription className="font-capsule text-sm text-gray-600">
+                Contact details and business preferences
+              </CardDescription>
             </div>
-            Contact Information
-          </CardTitle>
-          <CardDescription className="font-capsule text-base font-normal">
-            Contact details and business preferences
-          </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="p-6 pt-0 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">First Name *</label>
+              <label className="font-phonic text-sm font-normal text-gray-700">First Name *</label>
               <Input
                 value={settings.first_name}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, first_name: e.target.value }))}
                 placeholder="Enter your first name"
-                className="h-12 font-capsule text-base font-normal transition-colors"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Last Name *</label>
-              <Input
-                value={settings.last_name}
-                onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, last_name: e.target.value }))}
-                placeholder="Enter your last name"
-                className="h-12 font-capsule text-base font-normal transition-colors"
+                className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Phone Number *</label>
+              <label className="font-phonic text-sm font-normal text-gray-700">Last Name *</label>
+              <Input
+                value={settings.last_name}
+                onChange={(e) => setSettings((prev: MerchantSettings) => ({ ...prev, last_name: e.target.value }))}
+                placeholder="Enter your last name"
+                className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="font-phonic text-sm font-normal text-gray-700">Phone Number *</label>
               <Input
                 value={settings.phone_number}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="(555) 123-4567"
                 maxLength={14}
-                className="h-12 font-capsule text-base font-normal transition-colors"
+                className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Timezone</label>
+              <label className="font-phonic text-sm font-normal text-gray-700">Timezone</label>
               <Select
                 value={settings.timezone}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, timezone: value }))}
               >
-                <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
+                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
                 <SelectContent>
@@ -358,7 +360,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
           </div>
 
           <div className="space-y-2">
-            <label className="font-phonic text-base font-normal text-gray-700">Email Address *</label>
+            <label className="font-phonic text-sm font-normal text-gray-700">Email Address *</label>
             <div className="flex flex-wrap items-start gap-3">
               <div className="flex-1 min-w-[220px]">
                 <Input
@@ -366,43 +368,40 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   readOnly
                   placeholder="your.email@example.com"
                   type="email"
-                  className="h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors bg-gray-50"
+                  className="w-full h-11 bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                   required
                 />
               </div>
-              <Button type="button" onClick={openEmailChangeModal} className="shrink-0">
-                Change Email
-              </Button>
-            </div>
-            <div className="mt-1">
-              <button
+              <Button
                 type="button"
                 onClick={openEmailChangeModal}
-                className="text-sm text-primary-600 hover:text-primary-700 underline underline-offset-2"
+                size="sm"
+                className="shrink-0 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
               >
-                Change email
-              </button>
+                Change Email
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-        <CardHeader>
-          <CardTitle className="font-phonic text-2xl font-normal flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
-              <MapPin className="h-6 w-6 text-white" />
+      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                Business Address
+              </CardTitle>
+              <CardDescription className="font-capsule text-sm text-gray-600">
+                Your business address for tax and compliance purposes
+              </CardDescription>
             </div>
-            Business Address
-          </CardTitle>
-          <CardDescription className="font-capsule text-base font-normal">
-            Your business address for tax and compliance purposes
-          </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="p-6 pt-0 space-y-8">
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="font-phonic text-base font-normal text-gray-700">Street Address *</label>
+              <label className="font-phonic text-sm font-normal text-gray-700">Street Address *</label>
               <Input
                 value={settings.business_address.street || ''}
                 onChange={(e) => setSettings((prev: MerchantSettings) => ({
@@ -410,14 +409,14 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   business_address: { ...prev.business_address, street: e.target.value }
                 }))}
                 placeholder="123 Main Street"
-                className="h-12 font-capsule text-base font-normal transition-colors"
+                className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="font-phonic text-base font-normal text-gray-700">City *</label>
+                <label className="font-phonic text-sm font-normal text-gray-700">City *</label>
                 <Input
                   value={settings.business_address.city || ''}
                   onChange={(e) => setSettings((prev: MerchantSettings) => ({
@@ -425,21 +424,21 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, city: e.target.value }
                   }))}
                   placeholder="San Francisco"
-                  className="h-12 font-capsule text-base font-normal transition-colors"
+                  className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="font-phonic text-base font-normal text-gray-700">State *</label>
-                <Select 
-                  value={settings.business_address.state || ''} 
+                <label className="font-phonic text-sm font-normal text-gray-700">State *</label>
+                <Select
+                  value={settings.business_address.state || ''}
                   onValueChange={(value) => setSettings((prev: MerchantSettings) => ({
                     ...prev,
                     business_address: { ...prev.business_address, state: value }
                   }))}
                 >
-                  <SelectTrigger className="h-12 font-capsule text-base font-normal transition-colors">
+                  <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -453,13 +452,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               </div>
 
               <div className="space-y-2">
-                <label className="font-phonic text-base font-normal text-gray-700">ZIP Code *</label>
+                <label className="font-phonic text-sm font-normal text-gray-700">ZIP Code *</label>
                 <Input
                   value={settings.business_address.zip_code || ''}
                   onChange={(e) => handleZipChange(e.target.value)}
                   placeholder="94105"
                   maxLength={10}
-                  className="h-12 font-capsule text-base font-normal transition-colors"
+                  className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                   required
                 />
               </div>
@@ -500,14 +499,14 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 confirmEmailChange();
               }}
             >
-              <label className="font-phonic text-base font-normal text-gray-700">New Email</label>
+              <label className="font-phonic text-sm font-normal text-gray-700">New Email</label>
               <Input
                 autoFocus
                 value={pendingEmailChange}
                 onChange={(e) => setPendingEmailChange(e.target.value)}
                 placeholder="new.email@example.com"
                 type="email"
-                className="mt-2 h-12 font-capsule text-base font-normal border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd] transition-colors"
+                className="mt-2 w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                 required
               />
               <div className="mt-6 flex justify-end gap-3">
@@ -515,14 +514,16 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   type="button"
                   variant="outline"
                   onClick={cancelEmailChange}
-                  className="font-capsule text-base font-normal border-gray-300 px-6 py-2 hover:border-gray-400 hover:bg-gray-50"
+                  size="sm"
+                  className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={savingEmail || !pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
-                  className="font-capsule text-base font-normal bg-[#7f5efd] px-6 py-2 text-white shadow-md transition-all duration-200 hover:bg-[#7c3aed] hover:shadow-lg"
+                  size="sm"
+                  className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                 >
                   {savingEmail ? 'Saving…' : 'Confirm Change'}
                 </Button>
