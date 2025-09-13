@@ -1301,6 +1301,8 @@ CREATE TABLE IF NOT EXISTS "public"."merchants" (
     "tax_strategy" "text" DEFAULT 'origin'::"text",
     "sales_type" "text" DEFAULT 'local'::"text",
     "email" "text",
+    "first_name" "text",
+    "last_name" "text",
     CONSTRAINT "check_trial_end" CHECK (("trial_end" > "created_at")),
     CONSTRAINT "merchants_subscription_plan_check" CHECK (("subscription_plan" = ANY (ARRAY['monthly'::"text", 'yearly'::"text"]))),
     CONSTRAINT "merchants_subscription_status_check" CHECK (("subscription_status" = ANY (ARRAY['active'::"text", 'cancelled'::"text", 'past_due'::"text"])))
@@ -1343,6 +1345,14 @@ COMMENT ON COLUMN "public"."merchants"."supported_currencies" IS 'Array of curre
 
 
 COMMENT ON COLUMN "public"."merchants"."charge_customer_fee" IS 'Global setting: true = customer pays gateway fee, false = merchant absorbs gateway fee';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."first_name" IS 'Merchant first name for personalization and contact purposes';
+
+
+
+COMMENT ON COLUMN "public"."merchants"."last_name" IS 'Merchant last name for personalization and contact purposes';
 
 
 
@@ -3549,7 +3559,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-
 -- Create buckets
 select storage.create_bucket('w9-uploads', public := false);
 select storage.create_bucket('promo-kits', public := true);
@@ -3574,8 +3583,6 @@ to public
 with check (
   bucket_id = 'w9-uploads' AND auth.uid() = owner
 );
-
-
 
 
 

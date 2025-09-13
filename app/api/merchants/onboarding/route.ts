@@ -132,6 +132,11 @@ export async function POST(request: NextRequest) {
       },
       auto_convert_enabled: onboardingData.paymentConfig.autoConvert || false,
       preferred_payout_currency: payoutCurrency,
+      // Persist tax configuration directly on merchant columns
+      tax_enabled: onboardingData.paymentConfig.taxEnabled || false,
+      tax_strategy: onboardingData.paymentConfig.taxStrategy || 'origin',
+      sales_type: onboardingData.paymentConfig.salesType || 'local',
+      tax_rates: onboardingData.paymentConfig.taxRates || [],
       // Store tax configuration in onboarding_data for later use
       onboarding_data: {
         tax_enabled: onboardingData.paymentConfig.taxEnabled || false,
@@ -172,6 +177,10 @@ export async function POST(request: NextRequest) {
           payment_config: merchantData.payment_config,
           auto_convert_enabled: merchantData.auto_convert_enabled,
           preferred_payout_currency: merchantData.preferred_payout_currency,
+          tax_enabled: merchantData.tax_enabled,
+          tax_strategy: merchantData.tax_strategy,
+          sales_type: merchantData.sales_type,
+          tax_rates: merchantData.tax_rates,
           onboarding_data: merchantData.onboarding_data,
           onboarding_completed: merchantData.onboarding_completed,
           onboarded: merchantData.onboarded,

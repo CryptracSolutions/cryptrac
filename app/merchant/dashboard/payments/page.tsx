@@ -546,28 +546,28 @@ export default function PaymentsPage() {
           </h1>
           <p className="font-capsule text-lg text-gray-600">Generate, view and manage all payments</p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Link href="/merchant/dashboard/payments/create">
-            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-              <Plus className="h-5 w-5" />
+            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+              <Plus className="h-4 w-4" />
               Create Payment Link
             </Button>
           </Link>
           <Link href="/smart-terminal">
-            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
+            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+              <CreditCard className="h-4 w-4" />
               Open Smart Terminal
             </Button>
           </Link>
           <Link href="/merchant/subscriptions/create">
-            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-              <Plus className="h-5 w-5" />
+            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+              <Plus className="h-4 w-4" />
               Create Subscription
             </Button>
           </Link>
           <Link href="/merchant/subscriptions">
-            <Button size="lg" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+              <Calendar className="h-4 w-4" />
               Manage Subscriptions
             </Button>
           </Link>

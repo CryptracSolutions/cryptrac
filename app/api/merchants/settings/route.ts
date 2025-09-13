@@ -39,7 +39,11 @@ export async function GET() {
         wallets,
         payment_config,
         charge_customer_fee,
-        email
+        email,
+        tax_enabled,
+        tax_rates,
+        tax_strategy,
+        sales_type
       `)
       .eq('user_id', user.id)
       .single();
@@ -83,6 +87,10 @@ export async function GET() {
         wallets: merchant.wallets || {},
         wallet_extra_ids: merchantSettings?.wallet_extra_ids || {},
         charge_customer_fee: merchant.charge_customer_fee || false,
+        tax_enabled: merchant.tax_enabled || false,
+        tax_rates: merchant.tax_rates || [],
+        tax_strategy: merchant.tax_strategy || 'origin',
+        sales_type: merchant.sales_type || 'local',
         payment_config: {
           // Always enable auto_forward for non-custodial compliance
           auto_forward: true,
@@ -331,7 +339,11 @@ export async function PUT(request: NextRequest) {
         wallets,
         payment_config,
         charge_customer_fee,
-        email
+        email,
+        tax_enabled,
+        tax_rates,
+        tax_strategy,
+        sales_type
       `)
       .single();
 
@@ -450,6 +462,10 @@ export async function PUT(request: NextRequest) {
         wallets: merchant.wallets || {},
         wallet_extra_ids: merchantSettings?.wallet_extra_ids || {},
         charge_customer_fee: merchant.charge_customer_fee || false,
+        tax_enabled: merchant.tax_enabled || false,
+        tax_rates: merchant.tax_rates || [],
+        tax_strategy: merchant.tax_strategy || 'origin',
+        sales_type: merchant.sales_type || 'local',
         payment_config: {
           // Always enable auto_forward for non-custodial compliance
           auto_forward: true,
