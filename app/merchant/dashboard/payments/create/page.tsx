@@ -5,9 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTimezone } from '@/lib/contexts/TimezoneContext';
 import { formatDateShort } from '@/lib/utils/date-utils';
 import {
-  ArrowLeft,
   DollarSign,
-  LinkIcon,
   Settings,
   CreditCard,
   Users,
@@ -16,17 +14,14 @@ import {
   Clock,
   Plus,
   Trash2,
-  Loader2,
   Info,
   Coins,
-  Receipt,
   ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Textarea } from '@/app/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Badge } from '@/app/components/ui/badge';
@@ -78,6 +73,20 @@ const FIAT_CURRENCIES = [
   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
   { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
 ];
+
+// Stable coin associations for automatic inclusion
+const stableCoinAssociations: Record<string, string[]> = {
+  SOL: ['USDCSOL', 'USDTSOL'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
+  BNB: ['USDTBSC', 'USDCBSC'],
+  MATIC: ['USDTMATIC', 'USDCMATIC'],
+  TRX: ['USDTTRC20'],
+  TON: ['USDTTON'],
+  ARB: ['USDTARB', 'USDCARB'],
+  OP: ['USDTOP', 'USDCOP'],
+  ETHBASE: ['USDCBASE'],
+  ALGO: ['USDCALGO'],
+};
 
 export default function CreatePaymentLinkPage() {
   const router = useRouter();
@@ -630,19 +639,41 @@ export default function CreatePaymentLinkPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
-                    <Label className="font-phonic text-sm font-normal text-gray-700">Accepted Cryptocurrencies</Label>
+                    <div>
+                      <Label className="font-phonic text-sm font-normal text-gray-700">Accepted Cryptocurrencies</Label>
+                      <p className="font-phonic text-xs font-normal text-gray-500 mt-1">Select which cryptocurrencies customers can use for payment</p>
+                    </div>
                     {availableCryptos.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {availableCryptos.map(crypto => (
-                          <label key={crypto} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                            <Checkbox
-                              checked={form.accepted_cryptos.includes(crypto)}
-                              onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
-                            />
-                            <span className="text-sm font-medium">{crypto}</span>
-                          </label>
-                        ))}
-                      </div>
+                      <>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {availableCryptos.map(crypto => (
+                            <label key={crypto} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                              <Checkbox
+                                checked={form.accepted_cryptos.includes(crypto)}
+                                onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
+                              />
+                              <span className="text-sm font-medium">{crypto}</span>
+                            </label>
+                          ))}
+                        </div>
+
+                        {/* Display associated stablecoins */}
+                        {form.accepted_cryptos.some(crypto => stableCoinAssociations[crypto]) && (
+                          <Alert className="bg-blue-50 border-blue-200">
+                            <Info className="h-4 w-4 text-blue-600" />
+                            <AlertDescription className="text-blue-800">
+                              <strong>Included stablecoins:</strong>
+                              <div className="mt-2 text-sm space-y-1">
+                                {form.accepted_cryptos.filter(crypto => stableCoinAssociations[crypto]).map(crypto => (
+                                  <div key={crypto}>
+                                    • <strong>{crypto}</strong> → {stableCoinAssociations[crypto].join(', ')}
+                                  </div>
+                                ))}
+                              </div>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </>
                     ) : (
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
@@ -651,6 +682,61 @@ export default function CreatePaymentLinkPage() {
                         </AlertDescription>
                       </Alert>
                     )}
+                  </div>
+
+                  {/* Payment Options */}
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Gateway Fee Setting */}
+                      <div className="space-y-2">
+                        <Label className="font-phonic text-sm font-normal text-gray-700">Gateway Fee</Label>
+                        <Select
+                          value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'customer' : 'merchant'}
+                          onValueChange={(value) => {
+                            setForm({
+                              ...form,
+                              charge_customer_fee: value === 'inherit' ? null : value === 'customer'
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inherit">
+                              Use global setting ({merchantSettings?.charge_customer_fee ? 'Customer pays' : 'Merchant pays'})
+                            </SelectItem>
+                            <SelectItem value="customer">Customer pays fee</SelectItem>
+                            <SelectItem value="merchant">Merchant pays fee</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Auto-Convert Setting */}
+                      <div className="space-y-2">
+                        <Label className="font-phonic text-sm font-normal text-gray-700">Auto-Convert to Fiat</Label>
+                        <Select
+                          value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'enabled' : 'disabled'}
+                          onValueChange={(value) => {
+                            setForm({
+                              ...form,
+                              auto_convert_enabled: value === 'inherit' ? null : value === 'enabled'
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="form-input-enhanced h-12 text-base focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inherit">
+                              Use global setting ({merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})
+                            </SelectItem>
+                            <SelectItem value="enabled">Enable auto-convert</SelectItem>
+                            <SelectItem value="disabled">Disable auto-convert</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
 
                 </CardContent>
@@ -731,59 +817,59 @@ export default function CreatePaymentLinkPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Preview Section */}
-                  <div className="bg-gradient-to-br from-purple-50 to-white p-6 rounded-xl border border-purple-100">
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <h3 className="font-phonic text-xl font-semibold text-gray-900">{form.title || 'Payment Link Title'}</h3>
-                        <p className="font-phonic text-base text-gray-600 mt-1">{form.description || 'Payment description will appear here'}</p>
-                      </div>
+                  {/* Preview Section - Smart Terminal Style */}
+                  <div className="space-y-4">
+                    {/* Title and Description */}
+                    <div className="text-center">
+                      <h3 className="font-phonic text-lg font-semibold text-gray-900">{form.title || 'Payment Link Title'}</h3>
+                      {form.description && (
+                        <p className="font-phonic text-sm text-gray-600 mt-1">{form.description}</p>
+                      )}
+                    </div>
 
-                      <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <Badge variant="default" className="text-lg px-3 py-1 bg-[#7f5efd] hover:bg-[#7c3aed]">
-                          {form.currency} {fees.totalAmount.toFixed(2)}
+                    {/* Amount Display - Smart Terminal Style */}
+                    <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
+                      <div className="flex items-center justify-center mb-2">
+                        <DollarSign className="h-5 w-5 text-[#7f5efd] mr-1" />
+                        <span className="text-sm text-gray-500 uppercase tracking-wider">Amount</span>
+                      </div>
+                      <div className="text-center font-phonic font-bold text-[#7f5efd]" style={{fontSize: 'clamp(1.75rem, 5vw, 2.5rem)'}}>
+                        ${fees.totalAmount.toFixed(2)}
+                      </div>
+                    </div>
+
+                    {/* Metadata */}
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                      {form.accepted_cryptos.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {form.accepted_cryptos.length} crypto{form.accepted_cryptos.length !== 1 ? 's' : ''} accepted
                         </Badge>
-                        {form.accepted_cryptos.length > 0 && (
-                          <Badge variant="secondary">
-                            {form.accepted_cryptos.length} crypto{form.accepted_cryptos.length !== 1 ? 's' : ''} accepted
-                          </Badge>
-                        )}
-                        {form.tax_enabled && fees.totalTaxAmount > 0 && (
-                          <Badge variant="outline" className="text-green-700 border-green-300">
-                            Tax included
-                          </Badge>
-                        )}
-                      </div>
-
-                      {(form.expires_at || form.max_uses) && (
-                        <div className="font-phonic text-xs font-normal text-gray-500 space-y-1 text-center">
-                          {form.expires_at && (
-                            <div className="flex items-center gap-1 justify-center">
-                              <Clock className="h-3 w-3" />
-                              Expires: {formatDateShort(form.expires_at, timezone)}
-                            </div>
-                          )}
-                          {form.max_uses && (
-                            <div className="flex items-center gap-1 justify-center">
-                              <Users className="h-3 w-3" />
-                              Max uses: {form.max_uses}
-                            </div>
-                          )}
-                        </div>
+                      )}
+                      {form.expires_at && (
+                        <Badge variant="outline" className="text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Expires: {formatDateShort(form.expires_at, timezone)}
+                        </Badge>
+                      )}
+                      {form.max_uses && (
+                        <Badge variant="outline" className="text-xs">
+                          <Users className="h-3 w-3 mr-1" />
+                          Max uses: {form.max_uses}
+                        </Badge>
                       )}
                     </div>
                   </div>
 
-                  {/* Order Summary */}
-                  <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
-                    <div className="flex items-center gap-2 mb-3">
-                      <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
-                      <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
+                  {/* Order Summary - Smart Terminal Style */}
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShoppingBag className="h-3 w-3 text-[#7f5efd]" />
+                      <span className="text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
                     </div>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1 text-xs">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="font-semibold text-gray-900">{form.currency} {fees.baseAmount.toFixed(2)}</span>
+                        <span className="font-semibold text-gray-900">${fees.baseAmount.toFixed(2)}</span>
                       </div>
 
                       {form.tax_enabled && fees.totalTaxAmount > 0 && (
@@ -793,8 +879,8 @@ export default function CreatePaymentLinkPage() {
                             const amount = (fees.baseAmount * percentage) / 100;
                             return amount > 0 && taxRate.label ? (
                               <div key={taxRate.id} className="flex justify-between items-center text-[#7f5efd]">
-                                <span className="text-sm">{taxRate.label} ({percentage}%)</span>
-                                <span className="text-sm">+{form.currency} {amount.toFixed(2)}</span>
+                                <span>{taxRate.label}</span>
+                                <span className="font-medium">+${amount.toFixed(2)}</span>
                               </div>
                             ) : null;
                           })}
@@ -802,23 +888,20 @@ export default function CreatePaymentLinkPage() {
                       )}
 
                       {fees.effectiveSettings.charge_customer_fee && (
-                        <div className="flex justify-between items-center text-blue-600">
-                          <span className="text-sm">Processing Fee ({fees.feePercentage}%)</span>
-                          <span className="text-sm">+{form.currency} {fees.feeAmount.toFixed(2)}</span>
+                        <div className="flex justify-between items-center text-[#7f5efd]">
+                          <span>Gateway fee</span>
+                          <span className="font-medium">+${fees.feeAmount.toFixed(2)}</span>
                         </div>
                       )}
 
-                      <div className="pt-2 mt-2 border-t border-purple-200">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-900">Total</span>
-                          <span className="text-xl font-bold text-[#7f5efd]">{form.currency} {fees.totalAmount.toFixed(2)}</span>
-                        </div>
+                      <div className="flex justify-between items-center font-bold border-t border-gray-200 pt-1">
+                        <span className="text-gray-700">Total</span>
+                        <span className="text-[#7f5efd]">${fees.totalAmount.toFixed(2)}</span>
                       </div>
 
                       {!fees.effectiveSettings.charge_customer_fee && (
-                        <div className="pt-2 text-xs text-gray-600">
-                          <Info className="h-3 w-3 inline mr-1" />
-                          Processing fee will be deducted from your payout
+                        <div className="pt-1 text-[10px] text-gray-500">
+                          Gateway fee will be deducted from your payout
                         </div>
                       )}
                     </div>
