@@ -129,7 +129,10 @@ const SelectItem = React.forwardRef<
     if (node == null) return ""
     if (typeof node === "string" || typeof node === "number") return String(node)
     if (Array.isArray(node)) return node.map(getPlainText).join("")
-    if (React.isValidElement(node)) return getPlainText((node as React.ReactElement).props?.children)
+    if (React.isValidElement(node)) {
+      const element = node as React.ReactElement<{ children?: React.ReactNode }>
+      return getPlainText(element.props?.children)
+    }
     return ""
   }
 
