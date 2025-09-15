@@ -168,9 +168,8 @@ export default function SupportedCryptocurrencies() {
       <section className="py-16 bg-gray-50">
         <div className="container-wide">
           {loading ? (
-            <div className="text-center py-20">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#7f5efd]"></div>
-              <p className="mt-4 text-gray-600">Loading supported currencies...</p>
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
             </div>
           ) : error ? (
             <div className="text-center py-20">

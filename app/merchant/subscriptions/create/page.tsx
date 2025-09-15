@@ -8,7 +8,7 @@ import { Button } from '@/app/components/ui/button';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { ChevronDown, ArrowLeft, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap } from 'lucide-react';
+import { ChevronDown, Calendar, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
@@ -259,15 +259,15 @@ export default function CreateSubscriptionPage() {
               onClick={() => router.push('/merchant/subscriptions')}
               className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Subscriptions
+              <Calendar className="h-4 w-4" />
+              Manage Subscriptions
             </Button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7f5efd]"></div>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">

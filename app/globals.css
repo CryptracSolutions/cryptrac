@@ -274,6 +274,7 @@
     background-color: transparent;
     outline: none !important;
     box-shadow: none !important;
+    color: inherit !important; /* unify base text color */
   }
   
   [data-radix-select-item][data-highlighted] {
@@ -282,6 +283,34 @@
     outline: none !important;
     box-shadow: none !important;
     border: 0 !important;
+  }
+
+  /* Ensure all descendant text flips to white on highlight/checked */
+  [data-radix-select-item][data-highlighted] *,
+  [data-radix-select-item][data-state="checked"] *,
+  [data-radix-select-item][data-highlighted] svg,
+  [data-radix-select-item][data-state="checked"] svg {
+    color: white !important;
+    fill: currentColor !important;
+  }
+
+  /* Also treat checked items similarly for consistency */
+  [data-radix-select-item][data-state="checked"] {
+    background-color: rgb(127 94 253) !important;
+    color: white !important;
+  }
+
+  /* Mobile-friendly touch targets and sizing */
+  @media (max-width: 640px) {
+    [data-radix-select-content] {
+      max-height: 60vh !important;
+    }
+    [data-radix-select-content] [data-radix-select-item] {
+      min-height: 44px !important; /* comfortable touch target */
+      padding-top: 0.5rem !important;
+      padding-bottom: 0.5rem !important;
+      font-size: 1rem !important; /* slightly larger text */
+    }
   }
 
   /* Remove focus ring/border from options inside Radix Select/Dropdown while preserving hover color */

@@ -377,31 +377,11 @@ export default function TaxReportsPage() {
             </h1>
             <p className="font-phonic text-base font-normal text-gray-600">View and manage all your transaction history</p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              onClick={generateReport}
-              disabled={loadingReport}
-              size="default"
-              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Generate Report
-            </Button>
-            <Button
-              onClick={() => exportToCSV()}
-              disabled={exportingCSV || !reportData}
-              size="default"
-              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </Button>
-          </div>
         </div>
 
         {loadingReport ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7f5efd]"></div>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
           </div>
         ) : (
           <>
