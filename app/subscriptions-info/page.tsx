@@ -143,54 +143,6 @@ export default function SubscriptionsInfo() {
           </div>
         </div>
 
-        {/* Pricing Model */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-12 mb-16">
-          <h2 className="font-phonic text-3xl font-normal text-center mb-8">Why Choose Crypto Subscriptions?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div>
-              <h3 className="font-phonic text-2xl font-medium mb-6">Traditional Payment Processors</h3>
-              <div className="space-y-4 text-gray-600">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span>2.9% + $0.30 per transaction</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span>Additional fees for failed payments</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span>Limited global reach</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span>Complex compliance requirements</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-phonic text-2xl font-medium mb-6 text-[#7f5efd]">Cryptrac Subscriptions</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
-                  <span>0.5% - 1% gateway fee only</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
-                  <span>No additional fees</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
-                  <span>Global crypto payments</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#7f5efd] rounded-full"></div>
-                  <span>Non-custodial security</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* CTA Section */}
         <div className="text-center bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] rounded-2xl p-12">

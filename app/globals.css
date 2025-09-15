@@ -248,11 +248,15 @@
     color: white !important;
   }
 
-  /* Ensure dropdown backgrounds are always solid */
+  /* Enhanced Select Dropdown Styling for Cryptrac */
   [data-radix-select-content] {
     background-color: white !important;
     backdrop-filter: none !important;
+    border: 2px solid hsl(var(--border)) !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    border-radius: 0.5rem !important;
   }
+
   /* Hide additional plain text label inside dropdown items only; keep it visible in trigger clone */
   [data-radix-select-content] [data-select-item-text] {
     position: absolute !important;
@@ -265,39 +269,62 @@
     white-space: nowrap !important;
     border: 0 !important;
   }
-  
+
+  /* Dark mode support */
   .dark [data-radix-select-content] {
-    background-color: rgb(31 41 55) !important;
-  }
-  
-  [data-radix-select-item] {
-    background-color: transparent;
-    outline: none !important;
-    box-shadow: none !important;
-    color: inherit !important; /* unify base text color */
-  }
-  
-  [data-radix-select-item][data-highlighted] {
-    background-color: rgb(127 94 253) !important;
-    color: white !important;
-    outline: none !important;
-    box-shadow: none !important;
-    border: 0 !important;
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
   }
 
-  /* Ensure all descendant text flips to white on highlight/checked */
+  /* Base item styling */
+  [data-radix-select-item] {
+    background-color: transparent !important;
+    color: #374151 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+  }
+
+  /* Dark mode item text */
+  .dark [data-radix-select-item] {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Hover state */
+  [data-radix-select-item]:hover {
+    background-color: rgba(127, 94, 253, 0.1) !important;
+    color: #7f5efd !important;
+  }
+
+  /* Highlighted state (keyboard navigation) */
+  [data-radix-select-item][data-highlighted] {
+    background-color: #7f5efd !important;
+    color: white !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Selected/checked state */
+  [data-radix-select-item][data-state="checked"] {
+    background-color: #7f5efd !important;
+    color: white !important;
+    font-weight: 600 !important;
+  }
+
+  /* Ensure all descendant elements inherit the proper colors */
   [data-radix-select-item][data-highlighted] *,
   [data-radix-select-item][data-state="checked"] *,
-  [data-radix-select-item][data-highlighted] svg,
-  [data-radix-select-item][data-state="checked"] svg {
-    color: white !important;
+  [data-radix-select-item]:hover * {
+    color: inherit !important;
     fill: currentColor !important;
   }
 
-  /* Also treat checked items similarly for consistency */
-  [data-radix-select-item][data-state="checked"] {
-    background-color: rgb(127 94 253) !important;
-    color: white !important;
+  /* Check icon styling */
+  [data-radix-select-item] [data-radix-select-item-indicator] {
+    color: inherit !important;
   }
 
   /* Mobile-friendly touch targets and sizing */
