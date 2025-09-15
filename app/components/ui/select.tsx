@@ -74,7 +74,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 min-w-[8rem] overflow-hidden rounded-lg border-2 border-gray-200 bg-white text-gray-900 shadow-xl backdrop-blur-none",
+        "relative z-50 min-w-[8rem] overflow-hidden rounded-lg shadow-xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         position === "popper" &&
           "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
@@ -145,9 +145,7 @@ const SelectItem = React.forwardRef<
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-md py-3 pl-8 pr-4 text-sm font-medium text-gray-900 outline-none transition-all duration-200",
-        "hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] focus:bg-[#7f5efd] focus:text-white",
-        "data-[state=checked]:bg-[#7f5efd] data-[state=checked]:text-white",
+        "relative flex w-full cursor-pointer select-none items-center rounded-md py-3 pl-8 pr-4 text-sm outline-none transition-all duration-200",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}

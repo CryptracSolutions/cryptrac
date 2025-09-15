@@ -248,13 +248,18 @@
     color: white !important;
   }
 
-  /* Enhanced Select Dropdown Styling for Cryptrac */
-  [data-radix-select-content] {
+  /* Enhanced Select Dropdown Styling for Cryptrac - CRITICAL FIX */
+  [data-radix-select-content],
+  [role="listbox"][data-radix-select-content],
+  .radix-select-content,
+  div[data-radix-select-content] {
     background-color: white !important;
+    background: white !important;
     backdrop-filter: none !important;
-    border: 2px solid hsl(var(--border)) !important;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
-    border-radius: 0.5rem !important;
+    -webkit-backdrop-filter: none !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04) !important;
+    border-radius: 0.75rem !important;
   }
 
   /* Hide additional plain text label inside dropdown items only; keep it visible in trigger clone */
@@ -277,49 +282,77 @@
     color: hsl(var(--foreground)) !important;
   }
 
-  /* Base item styling */
-  [data-radix-select-item] {
+  /* Base item styling - ENSURE READABILITY */
+  [data-radix-select-item],
+  [role="option"][data-radix-select-item],
+  div[data-radix-select-item] {
     background-color: transparent !important;
-    color: #374151 !important;
+    background: transparent !important;
+    color: #111827 !important;
+    font-weight: 500 !important;
     outline: none !important;
     box-shadow: none !important;
     border: none !important;
     transition: all 0.2s ease !important;
+    padding: 0.75rem 2rem !important;
+    margin: 0.125rem 0 !important;
+    cursor: pointer !important;
   }
 
   /* Dark mode item text */
-  .dark [data-radix-select-item] {
-    color: hsl(var(--foreground)) !important;
+  .dark [data-radix-select-item],
+  .dark [role="option"][data-radix-select-item] {
+    color: #f3f4f6 !important;
   }
 
-  /* Hover state */
-  [data-radix-select-item]:hover {
-    background-color: rgba(127, 94, 253, 0.1) !important;
+  /* Hover state - MORE VISIBLE */
+  [data-radix-select-item]:hover,
+  [role="option"][data-radix-select-item]:hover {
+    background-color: #f3f4f6 !important;
+    background: #f3f4f6 !important;
     color: #7f5efd !important;
+    font-weight: 600 !important;
   }
 
-  /* Highlighted state (keyboard navigation) */
-  [data-radix-select-item][data-highlighted] {
+  /* Highlighted state (keyboard navigation) - BRANDED */
+  [data-radix-select-item][data-highlighted],
+  [role="option"][data-radix-select-item][data-highlighted] {
     background-color: #7f5efd !important;
+    background: #7f5efd !important;
     color: white !important;
+    font-weight: 600 !important;
     outline: none !important;
     box-shadow: none !important;
     border: none !important;
   }
 
-  /* Selected/checked state */
-  [data-radix-select-item][data-state="checked"] {
+  /* Selected/checked state - BRANDED */
+  [data-radix-select-item][data-state="checked"],
+  [role="option"][data-radix-select-item][data-state="checked"] {
     background-color: #7f5efd !important;
+    background: #7f5efd !important;
     color: white !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
   }
 
   /* Ensure all descendant elements inherit the proper colors */
   [data-radix-select-item][data-highlighted] *,
   [data-radix-select-item][data-state="checked"] *,
-  [data-radix-select-item]:hover * {
+  [data-radix-select-item]:hover *,
+  [data-radix-select-item] span,
+  [data-radix-select-item] div {
     color: inherit !important;
     fill: currentColor !important;
+  }
+
+  /* Force text color for items not highlighted */
+  [data-radix-select-viewport] [data-radix-select-item]:not([data-highlighted]):not([data-state="checked"]):not(:hover) {
+    color: #111827 !important;
+  }
+
+  /* Ensure viewport has proper styling */
+  [data-radix-select-viewport] {
+    padding: 0.5rem !important;
   }
 
   /* Check icon styling */
