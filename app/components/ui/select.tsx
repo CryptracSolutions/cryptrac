@@ -152,6 +152,9 @@ const SelectItem = React.forwardRef<
       // Provide a clean text label for typeahead and for the trigger display
       textValue={computedText}
       data-radix-select-item
+      // Signal to CSS whether this item renders rich children so we can
+      // selectively hide the internal plain text clone only in that case.
+      data-has-rich-children={!isPlainTextChild ? "true" : "false"}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -159,7 +162,7 @@ const SelectItem = React.forwardRef<
           <Check className="h-4 w-4 text-current" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      {/* Provide plain text for trigger cloning; hide only inside dropdown via CSS */}
+      {/* Provide plain text for trigger cloning; hidden inside dropdown only when rich content is present */}
       <SelectPrimitive.ItemText asChild>
         <span data-select-item-text>{computedText ?? ""}</span>
       </SelectPrimitive.ItemText>

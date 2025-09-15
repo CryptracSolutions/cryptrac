@@ -303,7 +303,7 @@ export async function PUT(request: NextRequest) {
       updateData.preferred_payout_currency = preferred_payout_currency;
     }
 
-    if (wallets) {
+    if (rawWallets !== undefined) {
       updateData.wallets = wallets;
     }
 

@@ -97,24 +97,18 @@ export default function Login() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-center space-x-4 text-white/90">
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5" />
-                  <span className="font-phonic font-normal">Non-Custodial Security</span>
-                </div>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 text-white/90">
+                <Shield className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Non-Custodial Security</span>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-white/90">
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-5 w-5" />
-                  <span className="font-phonic font-normal">Instant Processing</span>
-                </div>
+              <div className="flex items-start space-x-3 text-white/90">
+                <Zap className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Instant Processing</span>
               </div>
-              <div className="flex items-center justify-center space-x-4 text-white/90">
-                <div className="flex items-center space-x-2">
-                  <CreditCard className="h-5 w-5" />
-                  <span className="font-phonic font-normal">Global Support</span>
-                </div>
+              <div className="flex items-start space-x-3 text-white/90">
+                <CreditCard className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="font-phonic font-normal">Global Support</span>
               </div>
             </div>
           </div>

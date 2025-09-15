@@ -146,18 +146,19 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )}
 
       {/* Navigation buttons for onboarding flow */}
-      <div className="flex justify-between pt-6 border-t">
-        <Button 
-          variant="outline" 
-          onClick={onBack} 
-          className="px-8 h-12 text-base font-medium"
+      <div className="flex justify-between pt-8">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          className="flex items-center"
         >
           Previous
         </Button>
         <Button
           onClick={handleNext}
           disabled={!hasValidWallet}
-          className="min-w-[140px] px-8 h-12 text-base font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center"
         >
           {hasValidWallet ? 'Continue' : invalidWallets.length > 0 ? 'Fix invalid wallets' : 'Add at least one wallet'}
         </Button>
