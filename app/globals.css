@@ -296,10 +296,10 @@
 
   /* Step 3: Base item styling */
   [data-radix-select-item] {
-    padding: 0.75rem 2rem !important;
-    margin: 0.125rem 0.25rem !important;
+    padding: 0.75rem 0.75rem !important; /* tighter sides for left alignment */
+    margin: 0 !important; /* remove gaps so hover covers full width */
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    transition: background-color 0.15s ease !important; /* avoid color-only flash */
     border-radius: 0.375rem !important;
     background: transparent !important;
   }
@@ -322,7 +322,7 @@
 
   /* Ensure viewport has proper styling */
   [data-radix-select-viewport] {
-    padding: 0.5rem !important;
+    padding: 0 !important; /* let items align to container edges */
   }
 
   /* Check icon styling */
