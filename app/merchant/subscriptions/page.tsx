@@ -9,21 +9,21 @@ import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  Calendar, 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
-  Clock, 
+import {
+  Search,
+  Plus,
+  Filter,
+  Calendar,
+  DollarSign,
+  Users,
+  TrendingUp,
+  Clock,
   Eye,
   Edit,
   MoreHorizontal,
-  RefreshCw,
   Download,
   BarChart3,
   CreditCard,
@@ -163,14 +163,6 @@ export default function MerchantSubscriptionsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-2 font-medium"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
             <Link href="/merchant/subscriptions/create">
               <Button className="flex items-center gap-2 font-medium bg-[#7f5efd] hover:bg-[#6b4fd8] text-white">
                 <Plus className="h-4 w-4" />
@@ -275,17 +267,21 @@ export default function MerchantSubscriptionsPage() {
                 />
               </div>
               <div>
-                <select
+                <Select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
+                  onValueChange={(value) => setStatusFilter(value)}
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="active">Active</option>
-                  <option value="paused">Paused</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="completed">Completed</option>
-                </select>
+                  <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="font-capsule text-base font-normal">All Statuses</SelectItem>
+                    <SelectItem value="active" className="font-capsule text-base font-normal">Active</SelectItem>
+                    <SelectItem value="paused" className="font-capsule text-base font-normal">Paused</SelectItem>
+                    <SelectItem value="cancelled" className="font-capsule text-base font-normal">Cancelled</SelectItem>
+                    <SelectItem value="completed" className="font-capsule text-base font-normal">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-center gap-2">
                 <Button

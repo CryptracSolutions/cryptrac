@@ -80,6 +80,7 @@ const SelectContent = React.forwardRef<
           "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
       )}
+      data-radix-select-content
       position={position}
       {...props}
     >
@@ -149,6 +150,7 @@ const SelectItem = React.forwardRef<
       )}
       // Provide a clean text label for typeahead and for the trigger display
       textValue={computedText}
+      data-radix-select-item
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -156,18 +158,12 @@ const SelectItem = React.forwardRef<
           <Check className="h-4 w-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      {isPlainTextChild ? (
-        // For simple string/number children, render them as the visible ItemText
-        <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-      ) : (
-        // Render a hidden plain text for the trigger while keeping rich children visible in the list
-        <>
-          <SelectPrimitive.ItemText asChild>
-            <span className="sr-only">{computedText ?? ""}</span>
-          </SelectPrimitive.ItemText>
-          {children}
-        </>
-      )}
+      {/* Provide plain text for trigger cloning; hide only inside dropdown via CSS */}
+      <SelectPrimitive.ItemText asChild>
+        <span data-select-item-text>{computedText ?? ""}</span>
+      </SelectPrimitive.ItemText>
+      {/* Render the actual rich content for the list */}
+      {!isPlainTextChild && children}
     </SelectPrimitive.Item>
   )
 })

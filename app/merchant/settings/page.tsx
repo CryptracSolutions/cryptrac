@@ -488,6 +488,14 @@ export default function MerchantSettingsPage() {
             </h1>
             <p className="font-phonic text-base font-normal text-gray-600">Manage your payment preferences, tax settings, and notifications</p>
           </div>
+          <div className="flex items-center gap-3">
+            {saving && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="font-capsule text-xs">Auto-saving...</span>
+              </div>
+            )}
+          </div>
         </div>
 
 

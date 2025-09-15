@@ -6,6 +6,7 @@ import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Checkbox } from '@/app/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { ChevronDown, ArrowLeft, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -334,31 +335,39 @@ export default function CreateSubscriptionPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="font-phonic text-sm font-semibold text-gray-900">Currency *</label>
-                    <select
+                    <Select
                       value={form.currency}
-                      onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                      className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
+                      onValueChange={(value) => setForm({ ...form, currency: value })}
                     >
-                      {FIAT_CURRENCIES.map(currency => (
-                        <option key={currency.code} value={currency.code}>
-                          {currency.symbol} {currency.code} - {currency.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FIAT_CURRENCIES.map(currency => (
+                          <SelectItem key={currency.code} value={currency.code} className="font-capsule text-base font-normal">
+                            {currency.symbol} {currency.code} - {currency.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <label className="font-phonic text-sm font-semibold text-gray-900">Billing Interval *</label>
                     <div className="flex gap-2">
-                      <select
+                      <Select
                         value={form.interval}
-                        onChange={(e) => setForm({ ...form, interval: e.target.value })}
-                        className="flex-1 h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
+                        onValueChange={(value) => setForm({ ...form, interval: value })}
                       >
-                        <option value="day">Day</option>
-                        <option value="week">Week</option>
-                        <option value="month">Month</option>
-                        <option value="year">Year</option>
-                      </select>
+                        <SelectTrigger className="flex-1 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectValue placeholder="Select interval" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="day" className="font-capsule text-base font-normal">Day</SelectItem>
+                          <SelectItem value="week" className="font-capsule text-base font-normal">Week</SelectItem>
+                          <SelectItem value="month" className="font-capsule text-base font-normal">Month</SelectItem>
+                          <SelectItem value="year" className="font-capsule text-base font-normal">Year</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Input
                         type="number"
                         min="1"
@@ -480,39 +489,45 @@ export default function CreateSubscriptionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="font-phonic text-sm font-semibold text-gray-900">Charge Customer Fee</label>
-                    <select
+                    <Select
                       value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'yes' : 'no'}
-                      onChange={(e) => {
-                        const value = e.target.value;
+                      onValueChange={(value) => {
                         setForm({
                           ...form,
                           charge_customer_fee: value === 'inherit' ? null : value === 'yes'
                         });
                       }}
-                      className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
                     >
-                      <option value="inherit">Inherit from merchant settings</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
-                    </select>
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <SelectValue placeholder="Select fee option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Inherit from merchant settings</SelectItem>
+                        <SelectItem value="yes" className="font-capsule text-base font-normal">Yes</SelectItem>
+                        <SelectItem value="no" className="font-capsule text-base font-normal">No</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Fiat</label>
-                    <select
+                    <Select
                       value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'yes' : 'no'}
-                      onChange={(e) => {
-                        const value = e.target.value;
+                      onValueChange={(value) => {
                         setForm({
                           ...form,
                           auto_convert_enabled: value === 'inherit' ? null : value === 'yes'
                         });
                       }}
-                      className="w-full h-11 px-3 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-md"
                     >
-                      <option value="inherit">Inherit from merchant settings</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
-                    </select>
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <SelectValue placeholder="Select auto-convert option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Inherit from merchant settings</SelectItem>
+                        <SelectItem value="yes" className="font-capsule text-base font-normal">Yes</SelectItem>
+                        <SelectItem value="no" className="font-capsule text-base font-normal">No</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </CardContent>
@@ -557,7 +572,7 @@ export default function CreateSubscriptionPage() {
                     </div>
                     <div className="space-y-2">
                       <label className="font-phonic text-sm font-semibold text-gray-900">Auto Resume on Payment</label>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 h-11">
                         <Checkbox
                           checked={form.auto_resume_on_payment}
                           onCheckedChange={(checked) => setForm({ ...form, auto_resume_on_payment: checked as boolean })}

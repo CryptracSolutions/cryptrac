@@ -381,8 +381,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <Button
                 type="button"
                 onClick={openEmailChangeModal}
-                size="sm"
-                className="shrink-0 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                className="shrink-0 h-11 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
               >
                 Change Email
               </Button>
