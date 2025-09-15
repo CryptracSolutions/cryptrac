@@ -618,9 +618,6 @@ export default function MerchantDashboard() {
         <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-6">
             <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Cryptocurrencies you currently accept</CardTitle>
-            <CardDescription className="font-capsule text-sm text-gray-600">
-              Accept payments in these popular cryptocurrencies
-            </CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

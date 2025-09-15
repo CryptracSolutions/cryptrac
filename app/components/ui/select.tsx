@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check, ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const Select = SelectPrimitive.Root
@@ -145,7 +145,7 @@ const SelectItem = React.forwardRef<
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-md py-3 pl-8 pr-4 text-sm outline-none transition-all duration-200",
+        "relative flex w-full cursor-pointer select-none items-center rounded-md py-3 pl-4 pr-4 text-sm outline-none transition-all duration-200",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
@@ -157,11 +157,7 @@ const SelectItem = React.forwardRef<
       data-has-rich-children={!isPlainTextChild ? "true" : "false"}
       {...props}
     >
-      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-        <SelectPrimitive.ItemIndicator>
-          <Check className="h-4 w-4 text-current" />
-        </SelectPrimitive.ItemIndicator>
-      </span>
+      {/* Removed in-menu selection icon for a cleaner look */}
       {/* Provide plain text for trigger cloning; hidden inside dropdown only when rich content is present */}
       <SelectPrimitive.ItemText asChild>
         <span data-select-item-text>{computedText ?? ""}</span>

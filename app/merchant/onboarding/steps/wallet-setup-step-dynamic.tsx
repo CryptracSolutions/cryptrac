@@ -8,7 +8,7 @@ import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide'
 import { Dialog, DialogContent } from '@/app/components/ui/dialog'
 import Tooltip from '@/app/components/ui/tooltip'
 import { RECOMMENDED_CURRENCIES } from '@/lib/recommended-currencies'
-import { CheckCircle, HelpCircle, Wallet, Star } from 'lucide-react'
+import { CheckCircle, HelpCircle, Wallet, Star, ArrowLeft } from 'lucide-react'
 
 interface WalletSetupStepProps {
   onNext: (wallets: Record<string, string>, walletExtraIds?: Record<string, string>) => void
@@ -153,6 +153,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           onClick={onBack}
           className="flex items-center"
         >
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
         </Button>
         <Button

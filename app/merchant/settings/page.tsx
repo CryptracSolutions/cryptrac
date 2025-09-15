@@ -174,6 +174,7 @@ export default function MerchantSettingsPage() {
   ) => {
     setNotificationSettings(prev => ({ ...prev, [field]: value }));
     try {
+      setSaving(true);
       await fetch('/api/merchant/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -182,6 +183,8 @@ export default function MerchantSettingsPage() {
     } catch (err) {
       console.error('Failed to update notification setting:', err);
       toast.error('Failed to update settings');
+    } finally {
+      setSaving(false);
     }
   };
 

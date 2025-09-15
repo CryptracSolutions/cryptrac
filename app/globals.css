@@ -250,27 +250,27 @@
 
   /* ULTIMATE FIX FOR DROPDOWN TEXT VISIBILITY */
 
-  /* Step 1: Ensure dropdown container is white */
+  /* Step 1: Dropdown container uses black background */
   [data-radix-select-content],
   [role="listbox"][data-radix-select-content],
   .radix-select-content,
   div[data-radix-select-content],
   [data-radix-popper-content-wrapper] > div {
-    background-color: white !important;
-    background: white !important;
+    background-color: #000 !important;
+    background: #000 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    border: 2px solid #e5e7eb !important;
+    border: 1px solid #333 !important;
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04) !important;
     border-radius: 0.75rem !important;
   }
 
-  /* Step 2: FORCE ALL TEXT IN DROPDOWNS TO BE DARK */
+  /* Step 2: FORCE ALL TEXT IN DROPDOWNS TO BE WHITE */
   [data-radix-select-content] *,
   [data-radix-select-viewport] *,
   [data-radix-select-item] *,
   [data-radix-select-item] {
-    color: #111827 !important;
+    color: #ffffff !important;
   }
 
   /* Hide the plain text clone only when an item has rich children
@@ -304,11 +304,11 @@
     background: transparent !important;
   }
 
-  /* Step 4: Hover state - purple text on light purple background */
+  /* Step 4: Hover state - purple background with white text */
   [data-radix-select-item]:hover:not([data-highlighted]):not([data-state="checked"]),
   [data-radix-select-item]:hover:not([data-highlighted]):not([data-state="checked"]) * {
-    background-color: rgba(127, 94, 253, 0.1) !important;
-    color: #7f5efd !important;
+    background-color: #7f5efd !important;
+    color: #ffffff !important;
   }
 
   /* Step 5: Selected/Highlighted state - white text on purple background */
