@@ -212,6 +212,9 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                <div className="p-2 bg-[#7f5efd] rounded-lg">
+                  <Building className="h-4 w-4 text-white" />
+                </div>
                 Business Information
               </CardTitle>
               <CardDescription className="font-capsule text-sm text-gray-600">
@@ -296,6 +299,9 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                <div className="p-2 bg-[#7f5efd] rounded-lg">
+                  <Phone className="h-4 w-4 text-white" />
+                </div>
                 Contact Information
               </CardTitle>
               <CardDescription className="font-capsule text-sm text-gray-600">
@@ -390,6 +396,9 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                <div className="p-2 bg-[#7f5efd] rounded-lg">
+                  <MapPin className="h-4 w-4 text-white" />
+                </div>
                 Business Address
               </CardTitle>
               <CardDescription className="font-capsule text-sm text-gray-600">

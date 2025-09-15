@@ -643,9 +643,9 @@ export default function CreatePaymentLinkPage() {
 
                         {/* Display associated stablecoins */}
                         {form.accepted_cryptos.some(crypto => stableCoinAssociations[crypto]) && (
-                          <Alert className="bg-blue-50 border-blue-200">
-                            <Info className="h-4 w-4 text-blue-600" />
-                            <AlertDescription className="text-blue-800">
+                          <Alert className="bg-[#7f5efd]/10 border-[#7f5efd]/20">
+                            <Info className="h-4 w-4 text-[#7f5efd]" />
+                            <AlertDescription className="text-[#7f5efd]">
                               <strong>Included stablecoins:</strong>
                               <div className="mt-2 text-sm space-y-1">
                                 {form.accepted_cryptos.filter(crypto => stableCoinAssociations[crypto]).map(crypto => (
@@ -698,7 +698,7 @@ export default function CreatePaymentLinkPage() {
 
                       {/* Auto-Convert Setting */}
                       <div className="space-y-2">
-                        <Label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Fiat</Label>
+                        <Label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Preferred Cryptocurrency</Label>
                         <Select
                           value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'enabled' : 'disabled'}
                           onValueChange={(value) => {

@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import {
-  Save,
   AlertCircle,
   CheckCircle,
   Loader2,
@@ -488,21 +487,6 @@ export default function MerchantSettingsPage() {
               Account Settings
             </h1>
             <p className="font-phonic text-base font-normal text-gray-600">Manage your payment preferences, tax settings, and notifications</p>
-          </div>
-          <div className="grid grid-cols-1 gap-3">
-            <Button
-              onClick={saveSettings}
-              disabled={saving}
-              size="default"
-              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2"
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {saving ? 'Saving...' : 'Save Settings'}
-            </Button>
           </div>
         </div>
 
