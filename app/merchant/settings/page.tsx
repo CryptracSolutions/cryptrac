@@ -546,143 +546,154 @@ export default function MerchantSettingsPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-8">
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
+                <div className="space-y-6">
+                  {/* Gateway Fee Display */}
+                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
                         <div className="p-2 bg-[#7f5efd] rounded-lg">
                           <DollarSign className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Gateway Fee Structure</h3>
+                        <div>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Gateway Fee</h3>
+                          <p className="font-capsule text-sm text-gray-600">
+                            {settings.auto_convert_enabled ? 'With auto-convert enabled' : 'With auto-convert disabled'}
+                          </p>
+                        </div>
                       </div>
-                      
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-phonic text-base font-normal text-gray-900">Gateway Fee</p>
-                            <p className="font-phonic text-sm font-normal text-gray-600">
-                              {settings.auto_convert_enabled ? 'With auto-convert enabled' : 'With auto-convert disabled'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-phonic text-2xl font-normal text-[#7f5efd]">
-                              {settings.auto_convert_enabled ? '1.0%' : '0.5%'}
-                            </p>
-                            <p className="font-phonic text-xs font-normal text-gray-500">
-                              {settings.auto_convert_enabled ? 'Higher rate for conversion' : 'Standard rate'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div className="flex items-center space-x-3">
-                            <Checkbox
-                              id="merchant-pays-fee"
-                              checked={!settings.charge_customer_fee}
-                              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: !(checked as boolean) }))}
-                              />
-                             <label htmlFor="merchant-pays-fee" className="font-phonic text-base font-normal">
-                               Merchant pays gateway fee
-                             </label>
-                           </div>
-                           
-                          <div className="flex items-center space-x-3">
-                            <Checkbox
-                              id="customer-pays-fee"
-                              checked={settings.charge_customer_fee}
-                              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
-                              />
-                            <label htmlFor="customer-pays-fee" className="font-phonic text-base font-normal">
-                              Customer pays gateway fee
-                            </label>
-                          </div>
-                        </div>
+                      <div className="text-right">
+                        <p className="font-phonic text-2xl font-normal text-[#7f5efd]">
+                          {settings.auto_convert_enabled ? '1.0%' : '0.5%'}
+                        </p>
+                        <p className="font-phonic text-xs font-normal text-gray-500">
+                          {settings.auto_convert_enabled ? 'Higher rate for conversion' : 'Standard rate'}
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#7f5efd] rounded-lg">
-                          <Zap className="h-4 w-4 text-white" />
-                        </div>
-                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Auto-Convert Settings</h3>
+                  {/* Fee Payment Options */}
+                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="p-2 bg-[#7f5efd] rounded-lg">
+                        <CreditCard className="h-4 w-4 text-white" />
                       </div>
-                      
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-3">
-                          <Checkbox
-                            id="auto-convert"
-                            checked={settings.auto_convert_enabled}
-                            onCheckedChange={(checked) => setSettings(prev => ({ 
-                              ...prev, 
-                              auto_convert_enabled: checked as boolean,
-                              payment_config: {
-                                ...prev.payment_config,
-                                fee_percentage: checked ? 1.0 : 0.5,
-                                ...(checked ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
-                              }
-                            }))}
-                          />
-                          <label htmlFor="auto-convert" className="font-phonic text-base font-normal">
-                            Enable automatic conversion to preferred payout currency
-                          </label>
-                        </div>
-                        
-                        {settings.auto_convert_enabled && (
-                          <div className="space-y-2">
-                            <label className="font-phonic text-sm font-normal text-gray-700">Preferred Payout Currency</label>
-                            <Select
-                              value={settings.preferred_payout_currency || ''}
-                              onValueChange={(value) => setSettings(prev => ({ ...prev, preferred_payout_currency: value }))}
-                            >
-                              <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                <SelectValue placeholder="Select payout currency" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {(() => {
-                                  const baseCurrencies = Object.keys(settings.wallets);
-                                  const stableCoinAssociations: Record<string, string[]> = {
-                                    'SOL': ['USDCSOL', 'USDTSOL'],
-                                    'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
-                                    'BNB': ['USDTBSC', 'USDCBSC'],
-                                    'MATIC': ['USDTMATIC', 'USDCMATIC'],
-                                    'TRX': ['USDTTRC20'],
-                                    'TON': ['USDTTON'],
-                                    'ARB': ['USDTARB', 'USDCARB'],
-                                    'OP': ['USDTOP', 'USDCOP'],
-                                    'ETHBASE': ['USDCBASE'],
-                                    'ALGO': ['USDCALGO']
-                                  };
-                                  
-                                  const expandedCurrencies = new Set(baseCurrencies);
-                                  baseCurrencies.forEach(currency => {
-                                    const associatedStableCoins = stableCoinAssociations[currency] || [];
-                                    associatedStableCoins.forEach(coin => expandedCurrencies.add(coin));
-                                  });
-                                  
-                                  return Array.from(expandedCurrencies).map((currency) => (
-                                    <SelectItem
-                                      key={currency}
-                                      value={currency}
-                                      textValue={`${currency} - ${getCurrencyDisplayName(currency)}`}
-                                    >
-                                      {`${currency} - ${getCurrencyDisplayName(currency)}`}
-                                    </SelectItem>
-                                  ));
-                                })()}
-                              </SelectContent>
-                            </Select>
-                            <p className="font-phonic text-sm font-normal text-gray-500">
-                              Convert all payments to this currency before forwarding to your wallet
-                            </p>
-                          </div>
-                        )}
+                      <div>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Fee Payment</h3>
+                        <p className="font-capsule text-sm text-gray-600">Choose who pays the gateway fee</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          id="merchant-pays-fee"
+                          checked={!settings.charge_customer_fee}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: !(checked as boolean) }))}
+                          className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                        />
+                        <label htmlFor="merchant-pays-fee" className="font-phonic text-base font-normal">
+                          Merchant pays gateway fee
+                        </label>
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          id="customer-pays-fee"
+                          checked={settings.charge_customer_fee}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
+                          className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                        />
+                        <label htmlFor="customer-pays-fee" className="font-phonic text-base font-normal">
+                          Customer pays gateway fee
+                        </label>
                       </div>
                     </div>
                   </div>
+
+                  {/* Auto-Convert Toggle */}
+                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-[#7f5efd] rounded-lg">
+                          <Zap className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Auto-Convert</h3>
+                          <p className="font-capsule text-sm text-gray-600">Automatically convert payments to preferred currency</p>
+                        </div>
+                      </div>
+                      <Checkbox
+                        id="auto-convert"
+                        checked={settings.auto_convert_enabled}
+                        onCheckedChange={(checked) => setSettings(prev => ({
+                          ...prev,
+                          auto_convert_enabled: checked as boolean,
+                          payment_config: {
+                            ...prev.payment_config,
+                            fee_percentage: checked ? 1.0 : 0.5,
+                            ...(checked ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
+                          }
+                        }))}
+                        className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preferred Currency Selection */}
+                  {settings.auto_convert_enabled && (
+                    <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="p-2 bg-[#7f5efd] rounded-lg">
+                          <DollarSign className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Preferred Payout Currency</h3>
+                          <p className="font-capsule text-sm text-gray-600">Select the currency for automatic conversion</p>
+                        </div>
+                      </div>
+                      <Select
+                        value={settings.preferred_payout_currency || ''}
+                        onValueChange={(value) => setSettings(prev => ({ ...prev, preferred_payout_currency: value }))}
+                      >
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectValue placeholder="Select payout currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(() => {
+                            const baseCurrencies = Object.keys(settings.wallets);
+                            const stableCoinAssociations: Record<string, string[]> = {
+                              'SOL': ['USDCSOL', 'USDTSOL'],
+                              'ETH': ['USDT', 'USDC', 'DAI', 'PYUSD'],
+                              'BNB': ['USDTBSC', 'USDCBSC'],
+                              'MATIC': ['USDTMATIC', 'USDCMATIC'],
+                              'TRX': ['USDTTRC20'],
+                              'TON': ['USDTTON'],
+                              'ARB': ['USDTARB', 'USDCARB'],
+                              'OP': ['USDTOP', 'USDCOP'],
+                              'ETHBASE': ['USDCBASE'],
+                              'ALGO': ['USDCALGO']
+                            };
+
+                            const expandedCurrencies = new Set(baseCurrencies);
+                            baseCurrencies.forEach(currency => {
+                              const associatedStableCoins = stableCoinAssociations[currency] || [];
+                              associatedStableCoins.forEach(coin => expandedCurrencies.add(coin));
+                            });
+
+                            return Array.from(expandedCurrencies).map((currency) => (
+                              <SelectItem
+                                key={currency}
+                                value={currency}
+                                textValue={`${currency} - ${getCurrencyDisplayName(currency)}`}
+                              >
+                                {`${currency} - ${getCurrencyDisplayName(currency)}`}
+                              </SelectItem>
+                            ));
+                          })()}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -704,136 +715,161 @@ export default function MerchantSettingsPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-8">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="tax-enabled"
-                    checked={settings.tax_enabled}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked as boolean }))}
-                    className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
-                  />
-                  <label htmlFor="tax-enabled" className="font-phonic text-base font-normal">
-                    Enable tax collection
-                  </label>
-                </div>
-
-                {settings.tax_enabled && (
-                  <div className="space-y-8">
-                    {/* Tax Strategy */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
+                <div className="space-y-6">
+                  {/* Tax Collection Toggle */}
+                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
                         <div className="p-2 bg-[#7f5efd] rounded-lg">
                           <Calculator className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Tax Strategy</h3>
-                      </div>
-                      <Select
-                        value={settings.tax_strategy}
-                        onValueChange={(value: 'origin' | 'destination' | 'custom') => setSettings(prev => ({ ...prev, tax_strategy: value }))}
-                      >
-                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="origin">Origin-based (charge tax based on business location)</SelectItem>
-                          <SelectItem value="destination">Destination-based (charge tax based on customer location)</SelectItem>
-                          <SelectItem value="custom">Custom rates per transaction</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Sales Type */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#7f5efd] rounded-lg">
-                          <Zap className="h-4 w-4 text-white" />
+                        <div>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Tax Collection</h3>
+                          <p className="font-capsule text-sm text-gray-600">Enable tax collection on payments</p>
                         </div>
-                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Sales Type</h3>
                       </div>
-                      <Select
-                        value={settings.sales_type}
-                        onValueChange={(value: 'local' | 'online' | 'both') => setSettings(prev => ({ ...prev, sales_type: value }))}
-                      >
-                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="local">Local Sales Only</SelectItem>
-                          <SelectItem value="online">Online Sales Only</SelectItem>
-                          <SelectItem value="both">Both Local and Online</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Checkbox
+                        id="tax-enabled"
+                        checked={settings.tax_enabled}
+                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked as boolean }))}
+                        className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                      />
                     </div>
-
-                    {/* Default Tax Rates */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-[#7f5efd] rounded-lg">
-                            <DollarSign className="h-4 w-4 text-white" />
-                          </div>
-                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Default Tax Rates</h3>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={addTaxRate}
-                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Add Rate
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        {settings.tax_rates.map((rate) => (
-                          <div key={rate.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
-                            <input
-                              placeholder="Tax label (e.g., Sales Tax)"
-                              value={rate.label}
-                              onChange={(e) => updateTaxRate(rate.id, 'label', e.target.value)}
-                              className="flex-1 w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
-                            />
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                step="any"
-                                placeholder="0.0"
-                                value={rate.percentage}
-                                onChange={(e) => updateTaxRate(rate.id, 'percentage', e.target.value)}
-                                className="w-24 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
-                                min="0"
-                                max="100"
-                              />
-                              <span className="font-capsule text-xs text-gray-600">%</span>
-                            </div>
-                            {settings.tax_rates.length > 1 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeTaxRate(rate.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                Remove
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {null}
-                    </div>
-
-                    {/* Tax Information */}
-                    <Alert className="border-orange-200 bg-orange-50">
-                      <AlertCircle className="h-5 w-5 text-orange-600" />
-                      <AlertDescription className="font-phonic text-base font-normal">
-                        <strong>Important:</strong> Cryptrac helps you charge and report taxes accurately but does not file or remit taxes. 
-                        Consult with a tax professional for compliance requirements in your jurisdiction.
-                      </AlertDescription>
-                    </Alert>
                   </div>
-                )}
+
+                  {settings.tax_enabled && (
+                    <>
+                      {/* Tax Strategy */}
+                      <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="p-2 bg-[#7f5efd] rounded-lg">
+                            <Calculator className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-phonic text-lg font-semibold text-gray-900">Tax Strategy</h3>
+                            <p className="font-capsule text-sm text-gray-600">Choose how tax rates are applied</p>
+                          </div>
+                        </div>
+                        <Select
+                          value={settings.tax_strategy}
+                          onValueChange={(value: 'origin' | 'destination' | 'custom') => setSettings(prev => ({ ...prev, tax_strategy: value }))}
+                        >
+                          <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="origin">Origin-based (charge tax based on business location)</SelectItem>
+                            <SelectItem value="destination">Destination-based (charge tax based on customer location)</SelectItem>
+                            <SelectItem value="custom">Custom rates per transaction</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sales Type */}
+                      <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="p-2 bg-[#7f5efd] rounded-lg">
+                            <Zap className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-phonic text-lg font-semibold text-gray-900">Sales Type</h3>
+                            <p className="font-capsule text-sm text-gray-600">Define your business model</p>
+                          </div>
+                        </div>
+                        <Select
+                          value={settings.sales_type}
+                          onValueChange={(value: 'local' | 'online' | 'both') => setSettings(prev => ({ ...prev, sales_type: value }))}
+                        >
+                          <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="local">Local Sales Only</SelectItem>
+                            <SelectItem value="online">Online Sales Only</SelectItem>
+                            <SelectItem value="both">Both Local and Online</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Default Tax Rates */}
+                      <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4">
+                            <div className="p-2 bg-[#7f5efd] rounded-lg">
+                              <DollarSign className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-phonic text-lg font-semibold text-gray-900">Default Tax Rates</h3>
+                              <p className="font-capsule text-sm text-gray-600">Configure your tax rates</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={addTaxRate}
+                            className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add Rate
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {settings.tax_rates.map((rate) => (
+                            <div key={rate.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                              <input
+                                placeholder="Tax label (e.g., Sales Tax)"
+                                value={rate.label}
+                                onChange={(e) => updateTaxRate(rate.id, 'label', e.target.value)}
+                                className="flex-1 w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
+                              />
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  step="any"
+                                  placeholder="0.0"
+                                  value={rate.percentage}
+                                  onChange={(e) => updateTaxRate(rate.id, 'percentage', e.target.value)}
+                                  className="w-24 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
+                                  min="0"
+                                  max="100"
+                                />
+                                <span className="font-capsule text-xs text-gray-600">%</span>
+                              </div>
+                              {settings.tax_rates.length > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeTaxRate(rate.id)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  Remove
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Tax Information Alert */}
+                      <div className="p-6 border border-orange-200 rounded-lg bg-orange-50">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 bg-orange-100 rounded-lg">
+                            <AlertCircle className="h-4 w-4 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-phonic text-lg font-semibold text-orange-900 mb-2">Important Notice</h3>
+                            <p className="font-capsule text-sm text-orange-800">
+                              Cryptrac helps you charge and report taxes accurately but does not file or remit taxes.
+                              Consult with a tax professional for compliance requirements in your jurisdiction.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

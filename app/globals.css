@@ -248,11 +248,14 @@
     color: white !important;
   }
 
-  /* Enhanced Select Dropdown Styling for Cryptrac - CRITICAL FIX */
+  /* ULTIMATE FIX FOR DROPDOWN TEXT VISIBILITY */
+
+  /* Step 1: Ensure dropdown container is white */
   [data-radix-select-content],
   [role="listbox"][data-radix-select-content],
   .radix-select-content,
-  div[data-radix-select-content] {
+  div[data-radix-select-content],
+  [data-radix-popper-content-wrapper] > div {
     background-color: white !important;
     background: white !important;
     backdrop-filter: none !important;
@@ -260,6 +263,14 @@
     border: 2px solid #e5e7eb !important;
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04) !important;
     border-radius: 0.75rem !important;
+  }
+
+  /* Step 2: FORCE ALL TEXT IN DROPDOWNS TO BE DARK */
+  [data-radix-select-content] *,
+  [data-radix-select-viewport] *,
+  [data-radix-select-item] *,
+  [data-radix-select-item] {
+    color: #111827 !important;
   }
 
   /* Hide additional plain text label inside dropdown items only; keep it visible in trigger clone */
@@ -282,72 +293,30 @@
     color: hsl(var(--foreground)) !important;
   }
 
-  /* Base item styling - ENSURE READABILITY */
-  [data-radix-select-item],
-  [role="option"][data-radix-select-item],
-  div[data-radix-select-item] {
-    background-color: transparent !important;
-    background: transparent !important;
-    color: #111827 !important;
-    font-weight: 500 !important;
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-    transition: all 0.2s ease !important;
+  /* Step 3: Base item styling */
+  [data-radix-select-item] {
     padding: 0.75rem 2rem !important;
-    margin: 0.125rem 0 !important;
+    margin: 0.125rem 0.25rem !important;
     cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border-radius: 0.375rem !important;
+    background: transparent !important;
   }
 
-  /* Dark mode item text */
-  .dark [data-radix-select-item],
-  .dark [role="option"][data-radix-select-item] {
-    color: #f3f4f6 !important;
-  }
-
-  /* Hover state - MORE VISIBLE */
-  [data-radix-select-item]:hover,
-  [role="option"][data-radix-select-item]:hover {
-    background-color: #f3f4f6 !important;
-    background: #f3f4f6 !important;
+  /* Step 4: Hover state - purple text on light purple background */
+  [data-radix-select-item]:hover:not([data-highlighted]):not([data-state="checked"]),
+  [data-radix-select-item]:hover:not([data-highlighted]):not([data-state="checked"]) * {
+    background-color: rgba(127, 94, 253, 0.1) !important;
     color: #7f5efd !important;
-    font-weight: 600 !important;
   }
 
-  /* Highlighted state (keyboard navigation) - BRANDED */
+  /* Step 5: Selected/Highlighted state - white text on purple background */
   [data-radix-select-item][data-highlighted],
-  [role="option"][data-radix-select-item][data-highlighted] {
-    background-color: #7f5efd !important;
-    background: #7f5efd !important;
-    color: white !important;
-    font-weight: 600 !important;
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-
-  /* Selected/checked state - BRANDED */
   [data-radix-select-item][data-state="checked"],
-  [role="option"][data-radix-select-item][data-state="checked"] {
-    background-color: #7f5efd !important;
-    background: #7f5efd !important;
-    color: white !important;
-    font-weight: 700 !important;
-  }
-
-  /* Ensure all descendant elements inherit the proper colors */
   [data-radix-select-item][data-highlighted] *,
-  [data-radix-select-item][data-state="checked"] *,
-  [data-radix-select-item]:hover *,
-  [data-radix-select-item] span,
-  [data-radix-select-item] div {
-    color: inherit !important;
-    fill: currentColor !important;
-  }
-
-  /* Force text color for items not highlighted */
-  [data-radix-select-viewport] [data-radix-select-item]:not([data-highlighted]):not([data-state="checked"]):not(:hover) {
-    color: #111827 !important;
+  [data-radix-select-item][data-state="checked"] * {
+    background-color: #7f5efd !important;
+    color: white !important;
   }
 
   /* Ensure viewport has proper styling */
