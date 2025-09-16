@@ -8,7 +8,8 @@ import { Button } from '@/app/components/ui/button';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { ChevronDown, Calendar, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap } from 'lucide-react';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
+import { ChevronDown, Calendar, CreditCard, DollarSign, Settings, Users, Receipt, Coins, Zap, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 
@@ -36,6 +37,20 @@ const FIAT_CURRENCIES = [
   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
   { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
 ];
+
+// Stable coin associations for automatic inclusion
+const stableCoinAssociations: Record<string, string[]> = {
+  SOL: ['USDCSOL', 'USDTSOL'],
+  ETH: ['USDT', 'USDC', 'DAI', 'PYUSD'],
+  BNB: ['USDTBSC', 'USDCBSC'],
+  MATIC: ['USDTMATIC', 'USDCMATIC'],
+  TRX: ['USDTTRC20'],
+  TON: ['USDTTON'],
+  ARB: ['USDTARB', 'USDCARB'],
+  OP: ['USDTOP', 'USDCOP'],
+  ETHBASE: ['USDCBASE'],
+  ALGO: ['USDCALGO'],
+};
 
 export default function CreateSubscriptionPage() {
   const router = useRouter();
@@ -484,11 +499,28 @@ export default function CreateSubscriptionPage() {
                       </label>
                     ))}
                   </div>
-                </div>
+                  </div>
+
+                  {/* Display associated stablecoins */}
+                  {form.accepted_cryptos.some(crypto => stableCoinAssociations[crypto]) && (
+                    <Alert className="bg-[#7f5efd]/10 border-[#7f5efd]/20">
+                      <Info className="h-4 w-4 text-[#7f5efd]" />
+                      <AlertDescription className="text-[#7f5efd]">
+                        <strong>Included stablecoins:</strong>
+                        <div className="mt-2 text-sm space-y-1">
+                          {form.accepted_cryptos.filter(crypto => stableCoinAssociations[crypto]).map(crypto => (
+                            <div key={crypto}>
+                              • <strong>{crypto}</strong> → {stableCoinAssociations[crypto].join(', ')}
+                            </div>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-semibold text-gray-900">Charge Customer Fee</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Gateway Fee</label>
                     <Select
                       value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'yes' : 'no'}
                       onValueChange={(value) => {
@@ -509,7 +541,7 @@ export default function CreateSubscriptionPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Fiat</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Preferred Cryptocurrency</label>
                     <Select
                       value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'yes' : 'no'}
                       onValueChange={(value) => {

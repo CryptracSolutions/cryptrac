@@ -296,12 +296,17 @@
 
   /* Step 3: Base item styling */
   [data-radix-select-item] {
-    padding: 0.75rem 0.75rem !important; /* tighter sides for left alignment */
+    padding: 0.75rem 0.875rem !important; /* slight gutter left/right */
     margin: 0 !important; /* remove gaps so hover covers full width */
     cursor: pointer !important;
-    transition: background-color 0.15s ease !important; /* avoid color-only flash */
+    transition: none !important; /* eliminate staggered text-before-bg hover */
     border-radius: 0.375rem !important;
     background: transparent !important;
+  }
+
+  /* Disable descendant transitions so text color doesn't animate before bg */
+  [data-radix-select-item] * {
+    transition: none !important;
   }
 
   /* Step 4: Hover state - purple background with white text */
