@@ -67,6 +67,19 @@ export const formatFullDateTime = (dateString: string | null | undefined, timezo
   });
 };
 
+export const formatCompactDateTime = (dateString: string | null | undefined, timezone: string): string => {
+  return formatDate(dateString, {
+    timeZone: timezone,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+};
+
 export const getTimezoneAbbreviation = (timezone: string): string => {
   try {
     const date = new Date();
