@@ -20,9 +20,7 @@ import {
   FileText,
   Eye,
   EyeOff,
-  Printer,
   XCircle,
-  ChevronDown,
   Info
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
@@ -33,14 +31,6 @@ import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Badge } from '@/app/components/ui/badge'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/app/components/ui/dropdown-menu'
 
 import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
@@ -126,6 +116,7 @@ export default function TaxReportsPage() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<ExportTemplate>('audit')
 
   const currentYear = new Date().getFullYear()
   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3)
@@ -977,133 +968,67 @@ export default function TaxReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* CSV Export Dropdown */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          disabled={exportingCSV}
-                          size="default"
-                          className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-                        >
-                          {exportingCSV ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <FileText className="h-4 w-4" />
-                          )}
-                          {exportingCSV ? 'Exporting...' : 'Export CSV'}
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48">
-                        <DropdownMenuLabel>CSV Templates</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => exportToCSV('audit')}>
-                          <FileText className="h-4 w-4 mr-2" />
-                          Audit Template
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToCSV('tax_filing')}>
-                          <Receipt className="h-4 w-4 mr-2" />
-                          Tax Filing Template
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToCSV('accounting')}>
-                          <Calculator className="h-4 w-4 mr-2" />
-                          Accounting Template
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToCSV('summary')}>
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Summary Template
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* PDF Export Dropdown */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          disabled={exportingPDF}
-                          variant="outline"
-                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
-                        >
-                          {exportingPDF ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <FileText className="h-4 w-4" />
-                          )}
-                          {exportingPDF ? 'Generating...' : 'Export PDF'}
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48">
-                        <DropdownMenuLabel>PDF Templates</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => exportToPDF('audit')}>
-                          <FileText className="h-4 w-4 mr-2" />
-                          Detailed Audit Report
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToPDF('tax_filing')}>
-                          <Receipt className="h-4 w-4 mr-2" />
-                          Tax Filing Report
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToPDF('accounting')}>
-                          <Calculator className="h-4 w-4 mr-2" />
-                          Accounting Report
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToPDF('summary')}>
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Executive Summary
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Excel Export Dropdown */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          disabled={exportingExcel}
-                          variant="outline"
-                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
-                        >
-                          {exportingExcel ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <BarChart3 className="h-4 w-4" />
-                          )}
-                          {exportingExcel ? 'Generating...' : 'Export Excel'}
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48">
-                        <DropdownMenuLabel>Excel Templates</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => exportToExcel('audit')}>
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Full Data Export
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToExcel('tax_filing')}>
-                          <Receipt className="h-4 w-4 mr-2" />
-                          Tax Preparation
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToExcel('accounting')}>
-                          <Calculator className="h-4 w-4 mr-2" />
-                          QuickBooks Ready
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => exportToExcel('summary')}>
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          Summary Analysis
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  {/* Template Selection */}
+                  <div className="space-y-2">
+                    <Label className="font-phonic text-sm font-normal text-gray-700">Report Template</Label>
+                    <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
+                      <SelectTrigger className="w-full md:w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="audit">Audit Template - Full transaction details</SelectItem>
+                        <SelectItem value="tax_filing">Tax Filing - IRS compliant format</SelectItem>
+                        <SelectItem value="accounting">Accounting - QuickBooks ready</SelectItem>
+                        <SelectItem value="summary">Summary - Executive overview</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="border-t pt-4">
+                  {/* Export Buttons */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* CSV Export Button */}
                     <Button
-                      variant="outline"
-                      onClick={() => window.print()}
-                      className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
+                      disabled={exportingCSV}
+                      size="default"
+                      onClick={() => exportToCSV(selectedTemplate)}
+                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
                     >
-                      <Printer className="h-4 w-4" />
-                      Print Current View
+                      {exportingCSV ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileText className="h-4 w-4" />
+                      )}
+                      {exportingCSV ? 'Exporting...' : 'Export CSV'}
+                    </Button>
+
+                    {/* PDF Export Button */}
+                    <Button
+                      disabled={exportingPDF}
+                      size="default"
+                      onClick={() => exportToPDF(selectedTemplate)}
+                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
+                    >
+                      {exportingPDF ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileText className="h-4 w-4" />
+                      )}
+                      {exportingPDF ? 'Generating...' : 'Export PDF'}
+                    </Button>
+
+                    {/* Excel Export Button */}
+                    <Button
+                      disabled={exportingExcel}
+                      size="default"
+                      onClick={() => exportToExcel(selectedTemplate)}
+                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
+                    >
+                      {exportingExcel ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <BarChart3 className="h-4 w-4" />
+                      )}
+                      {exportingExcel ? 'Generating...' : 'Export Excel'}
                     </Button>
                   </div>
                 </CardContent>
