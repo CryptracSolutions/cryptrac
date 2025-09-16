@@ -188,7 +188,7 @@ export async function GET(request: Request) {
         payment_links!inner(
           link_id,
           description,
-          merchants!inner(user_id, business_name, business_address, tax_id, contact_email, phone, website)
+          merchants!inner(user_id, business_name)
         )
       `, { count: 'exact' })
       .eq('payment_links.merchants.user_id', user_id)
@@ -328,7 +328,7 @@ export async function GET(request: Request) {
             payment_links!inner(
               link_id,
               description,
-              merchants!inner(user_id)
+              merchants!inner(user_id, business_name)
             )
           `)
           .eq('payment_links.merchants.user_id', user_id)

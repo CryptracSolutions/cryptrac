@@ -165,18 +165,18 @@ export default function TaxReportsPage() {
       // Fetch merchant info for exports
       const { data: merchant } = await supabase
         .from('merchants')
-        .select('business_name, business_address, tax_id, contact_email, phone, website')
+        .select('business_name')
         .eq('user_id', authUser.id)
         .single()
 
       if (merchant) {
         setMerchantInfo({
           business_name: merchant.business_name || 'Cryptrac Merchant',
-          business_address: merchant.business_address || '',
-          tax_id: merchant.tax_id || '',
-          contact_email: merchant.contact_email || '',
-          phone: merchant.phone || '',
-          website: merchant.website || ''
+          business_address: '',
+          tax_id: '',
+          contact_email: '',
+          phone: '',
+          website: ''
         })
       }
 
