@@ -684,7 +684,7 @@ export default function TaxReportsPage() {
                         </Badge>
                       </CardTitle>
                       <CardDescription className="font-capsule text-sm text-gray-600">
-                        Detailed view of all transactions in this report
+                        Select any transaction for a detailed view
                       </CardDescription>
                     </div>
                   </div>
