@@ -73,11 +73,11 @@ export function generateTaxReportPDF(
 
     // Color scheme - professional black and gray
     const colors = {
-      primary: [0, 0, 0],        // Black for headers
-      secondary: [128, 128, 128], // Gray for subtext
-      accent: [127, 94, 253],     // Purple accent (used sparingly)
-      border: [200, 200, 200],    // Light gray for borders
-      background: [250, 250, 250]  // Light background
+      primary: [0, 0, 0] as [number, number, number],        // Black for headers
+      secondary: [128, 128, 128] as [number, number, number], // Gray for subtext
+      accent: [127, 94, 253] as [number, number, number],     // Purple accent (used sparingly)
+      border: [200, 200, 200] as [number, number, number],    // Light gray for borders
+      background: [250, 250, 250] as [number, number, number]  // Light background
     }
 
     // Add logo/header background
@@ -254,8 +254,8 @@ export function generateTaxReportPDF(
       columnStyles: columnStyles,
       didDrawPage: (data) => {
         // Add footer on every page
-        const pageNumber = doc.getCurrentPageInfo().pageNumber
-        const totalPages = doc.getNumberOfPages()
+        const pageNumber = (doc as any).internal.getCurrentPageInfo().pageNumber
+        const totalPages = (doc as any).internal.getNumberOfPages()
 
         // Footer background
         doc.setFillColor(colors.background[0], colors.background[1], colors.background[2])
@@ -275,7 +275,7 @@ export function generateTaxReportPDF(
     })
 
     // Add digital verification notice on last page
-    const lastPageNumber = doc.getNumberOfPages()
+    const lastPageNumber = (doc as any).internal.getNumberOfPages()
     doc.setPage(lastPageNumber)
 
     const currentY = (doc as any).lastAutoTable.finalY || yPos
