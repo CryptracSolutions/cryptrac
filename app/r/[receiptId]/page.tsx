@@ -51,6 +51,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       merchant_id,
       payment_link_id,
       created_at,
+      updated_at,
       currency,
       settlement_currency,
       asset,
@@ -69,8 +70,10 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       total_amount_paid,
       pay_currency,
       amount_received,
+      payin_hash,
       status,
-      receipt_metadata
+      receipt_metadata,
+      payment_data
     `)
     .eq('public_receipt_id', receiptId)
     .single();
@@ -120,8 +123,30 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   const baseAmount = Number(tx.base_amount || tx.amount || 0);
   const totalPaid = Number(tx.total_paid || tx.total_amount_paid || tx.amount || 0);
   
-  const explorerBase = tx.network ? explorers[tx.network.toUpperCase()] : undefined;
-  const txLink = explorerBase && tx.tx_hash ? `${explorerBase}${tx.tx_hash}` : null;
+  const resolveExplorerBase = (
+    network?: string | null,
+    asset?: string | null,
+    payCurrency?: string | null
+  ) => {
+    const candidates = [network, asset, payCurrency, payCurrency?.replace(/[^a-zA-Z]/g, '')];
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const upper = candidate.toUpperCase();
+      if (explorers[upper]) return explorers[upper];
+
+      if (upper.includes('TRX') || upper.includes('TRON') || upper.includes('TRC')) return explorers.TRX;
+      if (upper.includes('ETH') || upper.includes('ERC') || upper.includes('BASE')) return explorers.ETH;
+      if (upper.includes('BTC')) return explorers.BTC;
+      if (upper.includes('LTC')) return explorers.LTC;
+      if (upper.includes('XLM') || upper.includes('STELLAR')) return explorers.XLM;
+      if (upper.includes('XRP')) return explorers.XRP;
+    }
+    return null;
+  };
+
+  const explorerBase = resolveExplorerBase(tx.network, tx.asset, tx.pay_currency || tx.currency);
+  const displayHash = tx.tx_hash || tx.payin_hash || null;
+  const txLink = explorerBase && displayHash ? `${explorerBase}${displayHash}` : null;
 
   // ENHANCED: Format cryptocurrency payment information
   const formatCryptoAmount = (amount: number | null | undefined, currency: string) => {
@@ -135,6 +160,13 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   const cryptoPaymentInfo = tx.amount_received && tx.pay_currency 
     ? formatCryptoAmount(tx.amount_received, tx.pay_currency)
     : null;
+
+  const paymentData = (tx.payment_data as { payment_confirmed_at?: string } | null) || null;
+  const paymentConfirmedAt = paymentData?.payment_confirmed_at || null;
+  const paymentTimestamp = paymentConfirmedAt
+    || (((tx.status === 'confirmed' || tx.status === 'finished' || tx.status === 'sending') && tx.updated_at)
+      ? tx.updated_at
+      : tx.created_at);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f6f3ff] via-white to-[#eef2ff] py-12">
@@ -399,7 +431,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
                     <span className="font-phonic text-sm text-gray-600">Payment Date</span>
                     <span className="font-phonic text-sm text-gray-900">
-                      {formatFullDateTime(tx.created_at, merchantTimezone)}
+                      {formatFullDateTime(paymentTimestamp, merchantTimezone)}
                     </span>
                   </div>
 
@@ -426,7 +458,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   )}
                 </div>
 
-                {tx.tx_hash && (
+                {displayHash && (
                   <div className="mt-6 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="font-phonic text-sm text-gray-600">Transaction Hash</span>
@@ -454,11 +486,11 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                           className="flex-1 rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono hover:bg-gray-800/90 transition-colors block"
                           title="Click to view on blockchain explorer"
                         >
-                          {tx.tx_hash}
+                          {displayHash}
                         </a>
                       ) : (
                         <code className="flex-1 block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono">
-                          {tx.tx_hash}
+                          {displayHash}
                         </code>
                       )}
                     </div>

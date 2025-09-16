@@ -1069,12 +1069,10 @@ function SmartTerminalPageContent() {
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {/* Left: Payment Confirmed */}
-                          <div className="bg-green-50 border border-green-200 p-2 rounded-md">
-                            <div className="flex items-center gap-2 justify-center md:justify-start">
-                              <CheckCircle2 className="h-5 w-5 text-green-600" />
-                              <div className="text-center md:text-left">
-                                <p className="text-xs font-semibold text-green-800 leading-tight">Payment Confirmed</p>
-                              </div>
+                          <div className="bg-green-50 border border-green-200 p-3 rounded-md min-h-[60px] flex items-center justify-center">
+                            <div className="flex items-center gap-3">
+                              <CheckCircle2 className="h-6 w-6 text-green-600" />
+                              <p className="text-sm font-bold text-green-800">Payment Confirmed</p>
                             </div>
                           </div>
                           {/* Right: Send Receipt */}

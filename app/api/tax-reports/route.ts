@@ -76,6 +76,7 @@ interface ReportTransaction {
   id: string
   payment_id: string
   created_at: string | null
+  updated_at: string | null
   product_description: string
   gross_amount: number
   tax_label: string
@@ -97,6 +98,57 @@ interface ReportTransaction {
   blockchain_network: string | null
   currency_received: string | null
   amount_received: number | null
+  payment_confirmed_at: string | null
+}
+
+type RawTransactionRow = {
+  tx_hash?: string | null
+  payin_hash?: string | null
+  blockchain_network?: string | null
+  network?: string | null
+  pay_currency?: string | null
+  asset?: string | null
+  currency_received?: string | null
+  amount_received?: number | string | null
+  fee_paid_by_customer?: boolean | null
+  total_paid?: number | string | null
+}
+
+function normalizeNetwork(...values: Array<unknown>): string | null {
+  for (const value of values) {
+    if (!value) continue
+    const str = String(value).trim().toLowerCase()
+    if (!str) continue
+
+    if (str.includes('tron') || str.includes('trx') || str.includes('trc')) return 'tron'
+    if (str.includes('bitcoin') || str === 'btc') return 'bitcoin'
+    if (str.includes('litecoin') || str.includes('ltc')) return 'litecoin'
+    if (str.includes('doge')) return 'dogecoin'
+    if (str.includes('ethereum') || str.includes('eth') || str.includes('erc')) return 'ethereum'
+    if (str.includes('polygon') || str.includes('matic')) return 'polygon'
+    if (str.includes('bsc') || str.includes('bnb') || str.includes('binance')) return 'bsc'
+    if (str.includes('solana') || str.includes('sol')) return 'solana'
+    if (str.includes('avax') || str.includes('avalanche')) return 'avax'
+    if (str.includes('cardano') || str.includes('ada')) return 'cardano'
+    if (str.includes('arbitrum') || str.includes('arb')) return 'arbitrum'
+    if (str.includes('optimism') || str === 'op') return 'optimism'
+    if (str.includes('base')) return 'base'
+    if (str.includes('fantom') || str.includes('ftm')) return 'fantom'
+    if (str.includes('cosmos') || str.includes('atom')) return 'cosmos'
+    if (str.includes('near')) return 'near'
+    if (str.includes('algorand') || str.includes('algo')) return 'algorand'
+    if (str.includes('ton')) return 'ton'
+    if (str.includes('xrp') || str.includes('ripple')) return 'xrp'
+    if (str.includes('stellar') || str.includes('xlm')) return 'xlm'
+  }
+
+  for (const value of values) {
+    if (!value) continue
+    const str = String(value).trim()
+    if (str) return str.toLowerCase()
+  }
+
+  return null
 }
 
 export async function GET(request: Request) {
@@ -175,15 +227,25 @@ export async function GET(request: Request) {
         tax_percentage,
         tax_amount,
         total_amount_paid,
+        total_paid,
         tax_rates,
         merchant_receives,
         currency,
+        pay_currency,
+        asset,
+        network,
         status,
         gateway_fee,
         cryptrac_fee,
         refund_amount,
         refunded_at,
         created_at,
+        updated_at,
+        payment_data,
+        tx_hash,
+        payin_hash,
+        currency_received,
+        amount_received,
         public_receipt_id,
         payment_links!inner(
           link_id,
@@ -232,6 +294,7 @@ export async function GET(request: Request) {
 
     const formattedTransactions: ReportTransaction[] = safeTransactions.map(t => {
       const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
+      const transactionRow = t as RawTransactionRow
       // const merchant = paymentLink?.merchants
       const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
       const gross = Number(t.base_amount || 0)
@@ -251,15 +314,43 @@ export async function GET(request: Request) {
       const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
       const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
       const net = totalPaid - fees
+      const txHash = transactionRow.tx_hash || transactionRow.payin_hash || null
+      const blockchainNetwork = normalizeNetwork(
+        transactionRow.blockchain_network,
+        transactionRow.network,
+        transactionRow.pay_currency,
+        transactionRow.asset,
+        t.currency
+      )
+      const rawCurrencyReceived =
+        transactionRow.currency_received ||
+        transactionRow.pay_currency ||
+        transactionRow.asset ||
+        t.currency ||
+        null
+      const currencyReceived = rawCurrencyReceived ? String(rawCurrencyReceived).toLowerCase() : null
+      const amountReceivedValue = transactionRow.amount_received
+      const amountReceived =
+        amountReceivedValue !== null && amountReceivedValue !== undefined
+          ? Number(amountReceivedValue)
+          : null
+
+      const paymentData = (t as { payment_data?: { payment_confirmed_at?: string } }).payment_data || null
+      const paymentConfirmedAt =
+        paymentData?.payment_confirmed_at ||
+        (((t.status === 'confirmed' || t.status === 'finished') && t.updated_at)
+          ? t.updated_at
+          : null)
 
       // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
       // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
-      const feePayer: 'merchant' | 'customer' = (t as any).fee_paid_by_customer ? 'customer' : 'merchant'
+      const feePayer: 'merchant' | 'customer' = transactionRow.fee_paid_by_customer ? 'customer' : 'merchant'
 
       return {
         id: t.id,
         payment_id: paymentId,
         created_at: t.created_at,
+        updated_at: t.updated_at,
         product_description: paymentLink?.description || '',
         gross_amount: gross,
         tax_label: label,
@@ -277,11 +368,12 @@ export async function GET(request: Request) {
         // Include link_id from payment_links for UI display
         link_id: paymentLink?.link_id || null,
         // ENHANCED: Include blockchain verification fields (may not exist yet in database)
-        tx_hash: (t as any).tx_hash || null,
-        blockchain_network: (t as any).blockchain_network || null,
-        currency_received: (t as any).currency_received || null,
-        amount_received: (t as any).amount_received ? Number((t as any).amount_received) : null
-      } as ReportTransaction
+        tx_hash: txHash,
+        blockchain_network: blockchainNetwork,
+        currency_received: currencyReceived,
+        amount_received: amountReceived,
+        payment_confirmed_at: paymentConfirmedAt
+      }
     })
 
     // Calculate summary statistics
@@ -315,15 +407,25 @@ export async function GET(request: Request) {
             tax_percentage,
             tax_amount,
             total_amount_paid,
+            total_paid,
             tax_rates,
             merchant_receives,
             currency,
+            pay_currency,
+            asset,
+            network,
             status,
             gateway_fee,
             cryptrac_fee,
             refund_amount,
             refunded_at,
             created_at,
+            updated_at,
+            payment_data,
+            tx_hash,
+            payin_hash,
+            currency_received,
+            amount_received,
             public_receipt_id,
             payment_links!inner(
               link_id,
@@ -344,6 +446,7 @@ export async function GET(request: Request) {
         const { data: fullData } = await fullQuery
         allData = (fullData || []).map(t => {
           const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
+          const transactionRow = t as RawTransactionRow
           const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
           const gross = Number(t.base_amount || 0)
           const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: { label: string }) => r.label).join(', ') : '')
@@ -362,15 +465,43 @@ export async function GET(request: Request) {
           const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
           const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
           const net = totalPaid - fees
+          const txHash = transactionRow.tx_hash || transactionRow.payin_hash || null
+          const blockchainNetwork = normalizeNetwork(
+            transactionRow.blockchain_network,
+            transactionRow.network,
+            transactionRow.pay_currency,
+            transactionRow.asset,
+            t.currency
+          )
+          const rawCurrencyReceived =
+            transactionRow.currency_received ||
+            transactionRow.pay_currency ||
+            transactionRow.asset ||
+            t.currency ||
+            null
+          const currencyReceived = rawCurrencyReceived ? String(rawCurrencyReceived).toLowerCase() : null
+          const amountReceivedValue = transactionRow.amount_received
+          const amountReceived =
+            amountReceivedValue !== null && amountReceivedValue !== undefined
+              ? Number(amountReceivedValue)
+              : null
+
+          const paymentData = (t as { payment_data?: { payment_confirmed_at?: string } }).payment_data || null
+          const paymentConfirmedAt =
+            paymentData?.payment_confirmed_at ||
+            (((t.status === 'confirmed' || t.status === 'finished') && t.updated_at)
+              ? t.updated_at
+              : null)
 
           // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
           // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
-          const feePayer: 'merchant' | 'customer' = (t as any).fee_paid_by_customer ? 'customer' : 'merchant'
+          const feePayer: 'merchant' | 'customer' = transactionRow.fee_paid_by_customer ? 'customer' : 'merchant'
 
           return {
             id: t.id,
             payment_id: paymentId,
             created_at: t.created_at,
+            updated_at: t.updated_at,
             product_description: paymentLink?.description || '',
             gross_amount: gross,
             tax_label: label,
@@ -385,10 +516,11 @@ export async function GET(request: Request) {
             refund_date: t.refunded_at,
             public_receipt_id: t.public_receipt_id,
             link_id: paymentLink?.link_id || null,
-            tx_hash: (t as any).tx_hash || null,
-            blockchain_network: (t as any).blockchain_network || null,
-            currency_received: (t as any).currency_received || null,
-            amount_received: (t as any).amount_received ? Number((t as any).amount_received) : null
+            tx_hash: txHash,
+            blockchain_network: blockchainNetwork,
+            currency_received: currencyReceived,
+            amount_received: amountReceived,
+            payment_confirmed_at: paymentConfirmedAt
           }
         })
       }
@@ -543,10 +675,18 @@ function generateAuditCSV(transactions: ReportTransaction[], summary: Transactio
     'Receipt URL'
   ]
 
-  const rows = transactions.map(tx => [
+  const rows = transactions.map(tx => {
+    const effectiveTimestamp =
+      tx.payment_confirmed_at ||
+      (((tx.status === 'confirmed' || tx.status === 'finished') && tx.updated_at)
+        ? tx.updated_at
+        : tx.created_at)
+    const isoTimestamp = effectiveTimestamp ? new Date(effectiveTimestamp).toISOString() : null
+
+    return [
     tx.payment_id,
-    tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
-    tx.created_at ? new Date(tx.created_at).toISOString().split('T')[1].split('.')[0] : '',
+    isoTimestamp ? isoTimestamp.split('T')[0] : '',
+    isoTimestamp ? isoTimestamp.split('T')[1].split('.')[0] : '',
     tx.product_description || '',
     tx.gross_amount.toFixed(2),
     tx.tax_label || '',
@@ -566,7 +706,7 @@ function generateAuditCSV(transactions: ReportTransaction[], summary: Transactio
     tx.link_id || '',
     // ENHANCED: Include receipt URL in CSV export
     tx.public_receipt_id ? `${process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN}/r/${tx.public_receipt_id}` : ''
-  ])
+  ]})
 
   const csvContent = [
     `# Cryptrac Tax Report`,

@@ -6,6 +6,7 @@ export interface ExportTransaction {
   id: string
   payment_id: string
   created_at: string
+  updated_at: string
   product_description: string
   gross_amount: number
   tax_label: string
@@ -24,6 +25,7 @@ export interface ExportTransaction {
   blockchain_network: string | null
   currency_received: string | null
   amount_received: number | null
+  payment_confirmed_at: string | null
 }
 
 export interface ExportSummary {
@@ -55,6 +57,18 @@ export interface ExportOptions {
   includeReceiptUrls: boolean
   includeBlockchainLinks: boolean
   timezone: string
+}
+
+const resolveTransactionTimestamp = (tx: Pick<ExportTransaction, 'created_at' | 'updated_at' | 'payment_confirmed_at' | 'status'>): string => {
+  if (tx.payment_confirmed_at) {
+    return tx.payment_confirmed_at
+  }
+
+  if ((tx.status === 'confirmed' || tx.status === 'finished' || tx.status === 'sending') && tx.updated_at) {
+    return tx.updated_at
+  }
+
+  return tx.created_at
 }
 
 // Professional PDF Generation with improved formatting
@@ -482,7 +496,8 @@ function getColumnStylesForTemplate(template: ExportTemplate, contentWidth: numb
 
 // Row data for PDF templates
 function getRowDataForPDFTemplate(tx: ExportTransaction, options: ExportOptions): string[] {
-  const date = formatDate(tx.created_at)
+  const timestamp = resolveTransactionTimestamp(tx)
+  const date = formatDate(timestamp)
   const description = tx.product_description || 'Payment'
 
   switch (options.template) {
@@ -556,8 +571,9 @@ function getExcelHeadersForTemplate(template: ExportTemplate): string[] {
 
 // Excel row data based on template
 function getExcelRowDataForTemplate(tx: ExportTransaction, options: ExportOptions): (string | number)[] {
-  const date = formatDate(tx.created_at)
-  const time = new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  const timestamp = resolveTransactionTimestamp(tx)
+  const date = formatDate(timestamp)
+  const time = new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
   switch (options.template) {
     case 'tax_filing':
@@ -634,7 +650,7 @@ function generateMonthlyAnalytics(transactions: ExportTransaction[]): any[][] {
   const monthlyData: { [key: string]: { count: number, gross: number, tax: number, fees: number, net: number } } = {}
 
   transactions.forEach(tx => {
-    const month = new Date(tx.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+    const month = new Date(resolveTransactionTimestamp(tx)).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
     if (!monthlyData[month]) {
       monthlyData[month] = { count: 0, gross: 0, tax: 0, fees: 0, net: 0 }
     }

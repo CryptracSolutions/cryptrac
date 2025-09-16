@@ -8,8 +8,6 @@ export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation'
 import {
   Calculator,
-  Download,
-  Filter,
   TrendingUp,
   DollarSign,
   Receipt,
@@ -19,7 +17,6 @@ import {
   BarChart3,
   FileText,
   Eye,
-  EyeOff,
   XCircle,
   Info
 } from 'lucide-react'
@@ -71,6 +68,7 @@ interface Transaction {
   id: string
   payment_id: string
   created_at: string
+  updated_at: string
   product_description: string
   gross_amount: number
   tax_label: string
@@ -92,6 +90,7 @@ interface Transaction {
   blockchain_network: string | null
   currency_received: string | null
   amount_received: number | null
+  payment_confirmed_at: string | null
 }
 
 interface TaxReportData {
@@ -112,7 +111,6 @@ export default function TaxReportsPage() {
   const [exportingCSV, setExportingCSV] = useState(false)
   const [exportingPDF, setExportingPDF] = useState(false)
   const [exportingExcel, setExportingExcel] = useState(false)
-  const [showDetailedView, setShowDetailedView] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
@@ -280,6 +278,7 @@ export default function TaxReportsPage() {
         id: tx.id,
         payment_id: tx.payment_id,
         created_at: tx.created_at,
+        updated_at: tx.updated_at,
         product_description: tx.product_description,
         gross_amount: tx.gross_amount,
         tax_label: tx.tax_label,
@@ -297,7 +296,8 @@ export default function TaxReportsPage() {
         tx_hash: tx.tx_hash,
         blockchain_network: tx.blockchain_network,
         currency_received: tx.currency_received,
-        amount_received: tx.amount_received
+        amount_received: tx.amount_received,
+        payment_confirmed_at: tx.payment_confirmed_at
       }))
 
       // Use actual date range based on filter type
@@ -354,6 +354,7 @@ export default function TaxReportsPage() {
         id: tx.id,
         payment_id: tx.payment_id,
         created_at: tx.created_at,
+        updated_at: tx.updated_at,
         product_description: tx.product_description,
         gross_amount: tx.gross_amount,
         tax_label: tx.tax_label,
@@ -371,7 +372,8 @@ export default function TaxReportsPage() {
         tx_hash: tx.tx_hash,
         blockchain_network: tx.blockchain_network,
         currency_received: tx.currency_received,
-        amount_received: tx.amount_received
+        amount_received: tx.amount_received,
+        payment_confirmed_at: tx.payment_confirmed_at
       }))
 
       // Use actual date range based on filter type
@@ -427,6 +429,7 @@ export default function TaxReportsPage() {
         id: tx.id,
         payment_id: tx.payment_id,
         created_at: tx.created_at,
+        updated_at: tx.updated_at,
         product_description: tx.product_description,
         gross_amount: tx.gross_amount,
         tax_label: tx.tax_label,
@@ -444,7 +447,8 @@ export default function TaxReportsPage() {
         tx_hash: tx.tx_hash,
         blockchain_network: tx.blockchain_network,
         currency_received: tx.currency_received,
-        amount_received: tx.amount_received
+        amount_received: tx.amount_received,
+        payment_confirmed_at: tx.payment_confirmed_at
       }))
 
       // Use actual date range based on filter type
@@ -517,6 +521,18 @@ export default function TaxReportsPage() {
   const viewReceipt = (publicReceiptId: string) => {
     const receiptUrl = `${window.location.origin}/r/${publicReceiptId}`
     window.open(receiptUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const getTransactionTimestamp = (transaction: Transaction): string => {
+    if (transaction.payment_confirmed_at) {
+      return transaction.payment_confirmed_at
+    }
+
+    if ((transaction.status === 'confirmed' || transaction.status === 'finished' || transaction.status === 'sending') && transaction.updated_at) {
+      return transaction.updated_at
+    }
+
+    return transaction.created_at
   }
 
   // Helper function to get the actual date range based on filter type
@@ -765,7 +781,7 @@ export default function TaxReportsPage() {
                             onClick={() => handleTransactionClick(transaction)}
                           >
                             <td className="py-3 px-4 text-sm text-gray-600">
-                              {formatDateShort(transaction.created_at, timezone)}
+                              {formatDateShort(getTransactionTimestamp(transaction), timezone)}
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-900 font-medium">
                               <div className="flex items-center gap-2">
@@ -1121,4 +1137,3 @@ export default function TaxReportsPage() {
         </div>
     );
   }
-

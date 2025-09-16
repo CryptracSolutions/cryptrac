@@ -124,10 +124,24 @@ export async function GET(
               effectiveStatus = payment.status
             }
 
+            const existingPaymentData = (payment.payment_data || {}) as Record<string, any>
+            const nowIso = new Date().toISOString()
+            const paymentDataUpdate: Record<string, any> = { ...existingPaymentData }
+            let shouldUpdatePaymentData = false
+
+            if ((effectiveStatus === 'confirmed' || effectiveStatus === 'finished') && !paymentDataUpdate.payment_confirmed_at) {
+              paymentDataUpdate.payment_confirmed_at = nowIso
+              shouldUpdatePaymentData = true
+            }
+
             const updateData: Record<string, unknown> = {
               status: effectiveStatus,
-              updated_at: new Date().toISOString()
+              updated_at: nowIso
             };
+
+            if (shouldUpdatePaymentData) {
+              updateData.payment_data = paymentDataUpdate
+            }
 
             // Capture transaction hashes if available
             let primaryHash = null;

@@ -7,11 +7,9 @@ import {
   DollarSign,
   Link2,
   Package,
-  Receipt,
   AlertCircle,
   Shield,
   Clock,
-  Hash,
   CheckCircle,
   Activity
 } from 'lucide-react'
@@ -35,6 +33,7 @@ interface TransactionDetailModalProps {
     id: string
     payment_id: string
     created_at: string
+    updated_at: string
     product_description: string
     gross_amount: number
     tax_label: string
@@ -53,6 +52,7 @@ interface TransactionDetailModalProps {
     blockchain_network: string | null
     currency_received: string | null
     amount_received: number | null
+    payment_confirmed_at: string | null
   } | null
   timezone: string
 }
@@ -83,6 +83,12 @@ export function TransactionDetailModal({
   }
 
   if (!transaction) return null
+
+  const displayedTimestamp =
+    transaction.payment_confirmed_at ||
+    (((transaction.status === 'confirmed' || transaction.status === 'finished' || transaction.status === 'sending') && transaction.updated_at)
+      ? transaction.updated_at
+      : transaction.created_at)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -115,16 +121,16 @@ export function TransactionDetailModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Date & Time */}
             <div className="bg-[#7f5efd]/5 rounded-lg p-3 border border-[#7f5efd]/20">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-[#7f5efd]/10 rounded flex items-center justify-center border border-[#7f5efd]/20">
-                  <Clock className="h-4 w-4 text-[#7f5efd]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5">Timestamp</p>
-                  <p className="font-medium text-gray-900 text-sm">{formatCompactDateTime(transaction.created_at, timezone)}</p>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-[#7f5efd]/10 rounded flex items-center justify-center border border-[#7f5efd]/20">
+                    <Clock className="h-4 w-4 text-[#7f5efd]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5">Timestamp</p>
+                    <p className="font-medium text-gray-900 text-sm">{formatCompactDateTime(displayedTimestamp, timezone)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
             {/* Link ID */}
             {transaction.link_id && (

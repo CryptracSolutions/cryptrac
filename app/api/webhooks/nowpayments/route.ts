@@ -892,17 +892,26 @@ export async function POST(request: Request) {
       newStatus = currentStatus
     }
 
+    const existingPaymentData = (payment.payment_data || {}) as Record<string, any>
+    const nowIso = new Date().toISOString()
+
+    const paymentDataUpdate: Record<string, any> = {
+      ...existingPaymentData,
+      now_webhook_payment_id: String(payment_id),
+      now_parent_payment_id: parent_payment_id ? String(parent_payment_id) : undefined,
+      now_purchase_id: purchase_id ? String(purchase_id) : undefined,
+    }
+
+    if (newStatus === 'confirmed' && !paymentDataUpdate.payment_confirmed_at) {
+      paymentDataUpdate.payment_confirmed_at = nowIso
+    }
+
     // Prepare update data
     const updateData: Record<string, unknown> = {
       status: newStatus,
-      updated_at: new Date().toISOString(),
+      updated_at: nowIso,
       // Persist identifiers to help with future investigations
-      payment_data: {
-        ...(payment.payment_data || {}),
-        now_webhook_payment_id: String(payment_id),
-        now_parent_payment_id: parent_payment_id ? String(parent_payment_id) : undefined,
-        now_purchase_id: purchase_id ? String(purchase_id) : undefined,
-      },
+      payment_data: paymentDataUpdate,
     }
 
     // Enhanced transaction hash logging with all possible sources
