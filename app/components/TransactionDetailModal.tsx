@@ -4,17 +4,16 @@ import React from 'react'
 import {
   ExternalLink,
   Copy,
-  Calendar,
   DollarSign,
   Link2,
   Package,
-  TrendingUp,
   Receipt,
   AlertCircle,
   Shield,
-  ChevronRight,
   Clock,
-  Hash
+  Hash,
+  CheckCircle,
+  Activity
 } from 'lucide-react'
 import {
   Dialog,
@@ -66,7 +65,7 @@ export function TransactionDetailModal({
 }: TransactionDetailModalProps) {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
-    toast.success(`${label} copied to clipboard`)
+    toast.success(`${label} copied`)
   }
 
   const openBlockchainExplorer = () => {
@@ -87,11 +86,11 @@ export function TransactionDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-white border border-gray-200 shadow-xl rounded-lg">
-        <DialogHeader className="pb-4 border-b border-gray-100">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-white border-[#7f5efd] shadow-xl rounded-lg">
+        <DialogHeader className="pb-4 border-b border-[#7f5efd]/20">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <DialogTitle className="font-phonic text-xl font-semibold text-gray-900 mb-1">
+              <DialogTitle className="font-phonic text-xl font-bold text-gray-900 mb-1">
                 Transaction Details
               </DialogTitle>
               <DialogDescription className="font-capsule text-sm text-gray-600">
@@ -115,10 +114,10 @@ export function TransactionDetailModal({
           {/* Key Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Date & Time */}
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div className="bg-[#7f5efd]/5 rounded-lg p-3 border border-[#7f5efd]/20">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-white rounded flex items-center justify-center border border-gray-200">
-                  <Clock className="h-4 w-4 text-gray-600" />
+                <div className="w-8 h-8 bg-[#7f5efd]/10 rounded flex items-center justify-center border border-[#7f5efd]/20">
+                  <Clock className="h-4 w-4 text-[#7f5efd]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5">Timestamp</p>
@@ -129,10 +128,10 @@ export function TransactionDetailModal({
 
             {/* Link ID */}
             {transaction.link_id && (
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <div className="bg-[#7f5efd]/5 rounded-lg p-3 border border-[#7f5efd]/20">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-white rounded flex items-center justify-center border border-gray-200">
-                    <Link2 className="h-4 w-4 text-gray-600" />
+                  <div className="w-8 h-8 bg-[#7f5efd]/10 rounded flex items-center justify-center border border-[#7f5efd]/20">
+                    <Link2 className="h-4 w-4 text-[#7f5efd]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5">Link ID</p>
@@ -140,9 +139,9 @@ export function TransactionDetailModal({
                       <p className="font-mono text-sm text-gray-900 truncate">{transaction.link_id}</p>
                       <button
                         onClick={() => copyToClipboard(transaction.link_id!, 'Link ID')}
-                        className="flex-shrink-0 p-1 hover:bg-gray-200 rounded transition-colors"
+                        className="flex-shrink-0 p-1 hover:bg-[#7f5efd]/10 rounded transition-colors"
                       >
-                        <Copy className="h-3 w-3 text-gray-500" />
+                        <Copy className="h-3 w-3 text-[#7f5efd]" />
                       </button>
                     </div>
                   </div>
@@ -152,14 +151,16 @@ export function TransactionDetailModal({
           </div>
 
           {/* Product Description */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-[#7f5efd]/5 rounded-lg border border-[#7f5efd]/20 p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Package className="h-4 w-4 text-gray-600" />
+              <div className="w-6 h-6 bg-[#7f5efd]/10 rounded flex items-center justify-center">
+                <Package className="h-3.5 w-3.5 text-[#7f5efd]" />
+              </div>
               <h3 className="font-phonic text-sm font-semibold text-gray-900">Product Description</h3>
             </div>
-            <p className="text-gray-800 text-sm">{transaction.product_description}</p>
+            <p className="text-gray-800 text-sm ml-8">{transaction.product_description}</p>
             {transaction.currency_received && (
-              <div className="mt-2 pt-2 border-t border-gray-100">
+              <div className="mt-2 pt-2 border-t border-[#7f5efd]/10 ml-8">
                 <p className="text-xs text-gray-600">
                   Payment received: <span className="font-mono font-medium text-gray-900">{transaction.amount_received?.toFixed(8)} {transaction.currency_received.toUpperCase()}</span>
                 </p>
@@ -170,11 +171,13 @@ export function TransactionDetailModal({
           {/* Financial Breakdown */}
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <DollarSign className="h-4 w-4 text-gray-600" />
+              <div className="w-6 h-6 bg-[#7f5efd]/10 rounded flex items-center justify-center">
+                <DollarSign className="h-3.5 w-3.5 text-[#7f5efd]" />
+              </div>
               <h3 className="font-phonic text-sm font-semibold text-gray-900">Financial Breakdown</h3>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 ml-8">
               <div className="flex justify-between items-center py-1.5">
                 <span className="text-sm text-gray-600">Base Amount</span>
                 <span className="text-sm font-medium text-gray-900">${transaction.gross_amount.toFixed(2)}</span>
@@ -216,7 +219,7 @@ export function TransactionDetailModal({
 
             {/* Refund Information */}
             {transaction.refund_amount > 0 && (
-              <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+              <div className="mt-3 ml-8 p-3 bg-red-50 rounded-lg border border-red-200">
                 <div className="flex items-center gap-2 mb-1">
                   <AlertCircle className="h-4 w-4 text-red-600" />
                   <span className="font-medium text-red-800 text-sm">Refund Issued</span>
@@ -239,29 +242,32 @@ export function TransactionDetailModal({
 
           {/* Blockchain Verification */}
           {transaction.tx_hash && (
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-[#7f5efd]/5 rounded-lg border border-[#7f5efd]/20 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-gray-600" />
+                  <div className="w-6 h-6 bg-[#7f5efd]/10 rounded flex items-center justify-center">
+                    <Shield className="h-3.5 w-3.5 text-[#7f5efd]" />
+                  </div>
                   <h3 className="font-phonic text-sm font-semibold text-gray-900">Blockchain Verification</h3>
                 </div>
                 <Badge className="bg-green-100 text-green-700 border-green-200 text-xs px-2 py-0.5">
+                  <CheckCircle className="h-3 w-3 mr-1" />
                   Verified
                 </Badge>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 ml-8">
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Hash</span>
                     <button
                       onClick={() => copyToClipboard(transaction.tx_hash!, 'Transaction Hash')}
-                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                      className="p-1 hover:bg-[#7f5efd]/10 rounded transition-colors"
                     >
-                      <Copy className="h-3 w-3 text-gray-500" />
+                      <Copy className="h-3 w-3 text-[#7f5efd]" />
                     </button>
                   </div>
-                  <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                  <div className="bg-white p-2 rounded border border-[#7f5efd]/10">
                     <p className="font-mono text-xs text-gray-700 break-all">{transaction.tx_hash}</p>
                   </div>
                 </div>
@@ -269,44 +275,51 @@ export function TransactionDetailModal({
                 {transaction.blockchain_network && (
                   <div>
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Network</span>
-                    <p className="text-sm text-gray-900 mt-0.5">
-                      {transaction.blockchain_network.replace('-', ' ').replace(/_/g, ' ').toUpperCase()}
-                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <Activity className="h-3.5 w-3.5 text-[#7f5efd]" />
+                      <p className="text-sm text-gray-900">
+                        {transaction.blockchain_network.replace('-', ' ').replace(/_/g, ' ').toUpperCase()}
+                      </p>
+                    </div>
                   </div>
                 )}
-
-                <Button
-                  onClick={openBlockchainExplorer}
-                  className="w-full bg-[#7f5efd] hover:bg-[#6b4fd8] text-white flex items-center justify-center gap-2 h-9 text-sm font-medium"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  View on Blockchain Explorer
-                </Button>
               </div>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 pt-2">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3 pt-2">
             {transaction.public_receipt_id && (
               <Button
                 onClick={openReceipt}
                 variant="outline"
-                className="flex items-center gap-2 border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50 h-9 text-sm"
+                className="flex items-center gap-2 border-[#7f5efd]/30 hover:border-[#7f5efd] text-gray-700 hover:text-[#7f5efd] hover:bg-[#7f5efd]/5 h-9 text-sm transition-all"
               >
                 <Receipt className="h-4 w-4" />
                 View Receipt
               </Button>
             )}
 
-            <Button
-              onClick={() => copyToClipboard(transaction.payment_id, 'Payment ID')}
-              variant="outline"
-              className="flex items-center gap-2 border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50 h-9 text-sm"
-            >
-              <Hash className="h-4 w-4" />
-              Copy Payment ID
-            </Button>
+            {transaction.tx_hash && transaction.blockchain_network && (
+              <Button
+                onClick={openBlockchainExplorer}
+                className="flex items-center gap-2 bg-[#7f5efd] hover:bg-[#6b4fd8] text-white h-9 text-sm font-medium transition-all"
+              >
+                <ExternalLink className="h-4 w-4" />
+                View on Blockchain Explorer
+              </Button>
+            )}
+
+            {transaction.payment_id && (
+              <Button
+                onClick={() => copyToClipboard(transaction.payment_id, 'Payment ID')}
+                variant="ghost"
+                className="flex items-center gap-2 text-gray-500 hover:text-[#7f5efd] hover:bg-[#7f5efd]/5 h-9 text-sm transition-all ml-auto"
+              >
+                <Hash className="h-4 w-4" />
+                Payment ID
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

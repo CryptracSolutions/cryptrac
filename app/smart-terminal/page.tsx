@@ -1074,7 +1074,6 @@ function SmartTerminalPageContent() {
                               <CheckCircle2 className="h-5 w-5 text-green-600" />
                               <div className="text-center md:text-left">
                                 <p className="text-xs font-semibold text-green-800 leading-tight">Payment Confirmed</p>
-                                <p className="text-[10px] text-green-600">Transaction confirmed</p>
                               </div>
                             </div>
                           </div>

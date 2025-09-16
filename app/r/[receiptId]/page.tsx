@@ -144,6 +144,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
             body, html {
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
 
             .min-h-screen {
@@ -156,6 +158,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
             .max-w-4xl {
               max-width: 100% !important;
               padding: 0 !important;
+              margin: 0 !important;
             }
 
             .shadow-xl, .backdrop-blur {
@@ -168,19 +171,106 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
             }
 
             .print-compact {
-              margin: 0.5rem 0 !important;
+              margin: 0.25rem 0 !important;
             }
 
             .CardContent {
-              padding: 1rem !important;
+              padding: 0.75rem !important;
             }
 
-            h1 { font-size: 1.5rem !important; }
-            h2 { font-size: 1.25rem !important; }
-            h3 { font-size: 1.125rem !important; }
+            /* More compact heading sizes */
+            h1 { font-size: 1.25rem !important; line-height: 1.3 !important; }
+            h2 { font-size: 1.125rem !important; line-height: 1.3 !important; }
+            h3 { font-size: 1rem !important; line-height: 1.3 !important; }
 
+            /* Tighter spacing throughout */
             .space-y-6 > * + * {
-              margin-top: 1rem !important;
+              margin-top: 0.75rem !important;
+            }
+
+            .space-y-4 > * + * {
+              margin-top: 0.5rem !important;
+            }
+
+            .space-y-2 > * + * {
+              margin-top: 0.25rem !important;
+            }
+
+            /* Compact gaps */
+            .gap-4 {
+              gap: 0.5rem !important;
+            }
+
+            .gap-6 {
+              gap: 0.75rem !important;
+            }
+
+            /* Compact padding */
+            .p-8 {
+              padding: 0.75rem !important;
+            }
+
+            .p-6 {
+              padding: 0.5rem !important;
+            }
+
+            .px-8, .py-8 {
+              padding-left: 0.75rem !important;
+              padding-right: 0.75rem !important;
+              padding-top: 0.75rem !important;
+              padding-bottom: 0.75rem !important;
+            }
+
+            .px-6, .py-6 {
+              padding-left: 0.5rem !important;
+              padding-right: 0.5rem !important;
+              padding-top: 0.5rem !important;
+              padding-bottom: 0.5rem !important;
+            }
+
+            /* Compact margins */
+            .my-10 {
+              margin-top: 0.5rem !important;
+              margin-bottom: 0.5rem !important;
+            }
+
+            .mb-6, .mt-6 {
+              margin-bottom: 0.5rem !important;
+              margin-top: 0.5rem !important;
+            }
+
+            .mb-4, .mt-4 {
+              margin-bottom: 0.25rem !important;
+              margin-top: 0.25rem !important;
+            }
+
+            /* Smaller text sizes for better fit */
+            .text-3xl, .text-4xl {
+              font-size: 1.25rem !important;
+            }
+
+            .text-2xl {
+              font-size: 1.125rem !important;
+            }
+
+            .text-xl {
+              font-size: 1rem !important;
+            }
+
+            .text-lg {
+              font-size: 0.9rem !important;
+            }
+
+            .text-base {
+              font-size: 0.85rem !important;
+            }
+
+            .text-sm {
+              font-size: 0.75rem !important;
+            }
+
+            .text-xs {
+              font-size: 0.65rem !important;
             }
           }
         `
@@ -189,8 +279,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
         <Card className="border border-white/60 bg-white/90 shadow-xl backdrop-blur">
           <CardContent className="p-8 md:p-12">
             {/* Header */}
-            <div className="flex flex-col items-center gap-6 text-center">
-              <Logo size="xl" showText={false} emblemClassName="border border-[#7f5efd]/20 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] shadow-inner" />
+            <div className="flex flex-col items-center gap-4 text-center">
+              <Logo size="xl" showText={false} emblemClassName="bg-transparent" />
 
               <div className="space-y-2">
                 <p className="font-phonic text-sm uppercase tracking-[0.3em] text-[#7f5efd]">Customer Receipt</p>
@@ -202,10 +292,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 )}
               </div>
 
-              <div className="flex flex-col items-center gap-2">
-                {tx.public_receipt_id && (
-                  <span className="font-mono text-sm text-gray-500">Receipt ID: {tx.public_receipt_id}</span>
-                )}
+              <div className="flex flex-col items-center">
                 {tx.status && (
                   <Badge
                     variant={tx.status === 'confirmed' ? 'default' : 'secondary'}
@@ -238,8 +325,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#7f5efd]/10 bg-[#7f5efd]/5 p-6">
-                <div className="grid gap-4 text-sm text-gray-700">
+              <div className="rounded-3xl border border-[#7f5efd]/10 bg-[#7f5efd]/5 p-8">
+                <div className="grid gap-6 text-sm text-gray-700">
                   <div className="flex items-center justify-between">
                     <span className="font-phonic text-base text-gray-600">Base Amount</span>
                     <span className="font-phonic text-base text-gray-900">{format(baseAmount, tx.currency)}</span>
@@ -253,7 +340,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   )}
 
                   {Number(tx.tax_amount || 0) > 0 && (
-                    <div className="flex items-center justify-between border-t border-white/40 pt-4">
+                    <div className="flex items-center justify-between border-t border-white/40 pt-6">
                       <span className="font-phonic text-base text-gray-600">Subtotal with Tax</span>
                       <span className="font-phonic text-base text-gray-900">
                         {format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}
@@ -261,7 +348,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                     </div>
                   )}
 
-                  {Number(tx.gateway_fee_amount || 0) > 0 && (
+                  {/* Only show gateway fee if customer paid it (total_paid includes gateway fee) */}
+                  {Number(tx.gateway_fee_amount || 0) > 0 && totalPaid > (Number(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0)) + Number(tx.conversion_fee_amount || 0) + Number(tx.network_fee_amount || 0)) && (
                     <div className="flex items-center justify-between">
                       <span className="font-phonic text-base text-gray-600">Gateway Fee</span>
                       <span className="font-phonic text-base text-[#7f5efd]">+{format(tx.gateway_fee_amount, tx.currency)}</span>
@@ -282,7 +370,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+                  <div className="flex items-center justify-between rounded-2xl bg-white px-6 py-4 shadow-sm">
                     <span className="font-phonic text-lg text-gray-900">Total Paid</span>
                     <span className="font-phonic text-lg text-[#7f5efd]">{format(totalPaid, tx.currency)}</span>
                   </div>
@@ -307,45 +395,44 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
               </div>
 
               <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
-                      <span className="font-phonic text-sm text-gray-600">Payment Date</span>
-                      <span className="font-phonic text-sm text-gray-900">
-                        {formatFullDateTime(tx.created_at, merchantTimezone)}
-                      </span>
-                    </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                    <span className="font-phonic text-sm text-gray-600">Payment Date</span>
+                    <span className="font-phonic text-sm text-gray-900">
+                      {formatFullDateTime(tx.created_at, merchantTimezone)}
+                    </span>
+                  </div>
 
+                  {/* Payment ID and Link ID on the same row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-dashed border-gray-200 pb-3">
                     {tx.nowpayments_payment_id && (
-                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                      <div className="flex items-center justify-between">
                         <span className="font-phonic text-sm text-gray-600">Payment ID</span>
                         <span className="font-mono text-xs font-medium text-gray-900">{tx.nowpayments_payment_id}</span>
                       </div>
                     )}
 
                     {paymentLink?.link_id && (
-                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                      <div className="flex items-center justify-between">
                         <span className="font-phonic text-sm text-gray-600">Link ID</span>
                         <span className="font-mono text-xs font-medium text-[#7f5efd]">{paymentLink.link_id}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="space-y-4">
-                    {cryptoPaymentInfo && (
-                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
-                        <span className="font-phonic text-sm text-gray-600">Payment Method</span>
-                        <span className="font-phonic text-sm text-gray-900">{cryptoPaymentInfo}</span>
-                      </div>
-                    )}
+                  {cryptoPaymentInfo && (
+                    <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                      <span className="font-phonic text-sm text-gray-600">Payment Method</span>
+                      <span className="font-phonic text-sm text-gray-900">{cryptoPaymentInfo}</span>
+                    </div>
+                  )}
 
-                    {tx.asset && tx.network && (
-                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
-                        <span className="font-phonic text-sm text-gray-600">Network</span>
-                        <span className="font-phonic text-sm text-gray-900">{tx.asset} on {tx.network}</span>
-                      </div>
-                    )}
-                  </div>
+                  {tx.asset && tx.network && (
+                    <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                      <span className="font-phonic text-sm text-gray-600">Network</span>
+                      <span className="font-phonic text-sm text-gray-900">{tx.asset} on {tx.network}</span>
+                    </div>
+                  )}
                 </div>
 
                 {tx.tx_hash && (
@@ -368,9 +455,21 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                       )}
                     </div>
                     <div className="flex items-center gap-3">
-                      <code className="flex-1 block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono">
-                        {tx.tx_hash}
-                      </code>
+                      {txLink ? (
+                        <a
+                          href={txLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono hover:bg-gray-800/90 transition-colors cursor-pointer"
+                          title="Click to view on blockchain explorer"
+                        >
+                          {tx.tx_hash}
+                        </a>
+                      ) : (
+                        <code className="flex-1 block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono">
+                          {tx.tx_hash}
+                        </code>
+                      )}
                       {txLink && (
                         <a
                           href={txLink}
