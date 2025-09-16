@@ -137,63 +137,57 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
     : null;
 
   return (
-    <>
-      <style jsx global>{`
-        @media print {
-          body, html {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
+    <div className="min-h-screen bg-gradient-to-br from-[#f6f3ff] via-white to-[#eef2ff] py-12">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media print {
+            body, html {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
 
-          .print-container {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-            background: white !important;
-          }
+            .min-h-screen {
+              min-height: auto !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: white !important;
+            }
 
-          .print-card {
-            border: none !important;
-            box-shadow: none !important;
-            background: white !important;
-            backdrop-filter: none !important;
-            margin: 0 !important;
-            padding: 1rem !important;
-            max-height: 100vh !important;
-            overflow: hidden !important;
-          }
+            .max-w-4xl {
+              max-width: 100% !important;
+              padding: 0 !important;
+            }
 
-          .print-content {
-            padding: 1rem !important;
-            font-size: 0.875rem !important;
-            line-height: 1.4 !important;
-          }
+            .shadow-xl, .backdrop-blur {
+              box-shadow: none !important;
+              backdrop-filter: none !important;
+            }
 
-          .print-hide {
-            display: none !important;
-          }
+            .print-hide {
+              display: none !important;
+            }
 
-          .print-compact {
-            margin: 0.5rem 0 !important;
-          }
+            .print-compact {
+              margin: 0.5rem 0 !important;
+            }
 
-          .print-small-text {
-            font-size: 0.75rem !important;
-          }
+            .CardContent {
+              padding: 1rem !important;
+            }
 
-          .print-medium-text {
-            font-size: 0.875rem !important;
-          }
+            h1 { font-size: 1.5rem !important; }
+            h2 { font-size: 1.25rem !important; }
+            h3 { font-size: 1.125rem !important; }
 
-          h1 { font-size: 1.5rem !important; }
-          h2 { font-size: 1.25rem !important; }
-          h3 { font-size: 1.125rem !important; }
-        }
-      `}</style>
-      <div className="min-h-screen bg-gradient-to-br from-[#f6f3ff] via-white to-[#eef2ff] py-12 print-container">
-        <div className="mx-auto w-full max-w-4xl px-4">
-          <Card className="border border-white/60 bg-white/90 shadow-xl backdrop-blur print-card">
-            <CardContent className="p-8 md:p-12 print-content">
+            .space-y-6 > * + * {
+              margin-top: 1rem !important;
+            }
+          }
+        `
+      }} />
+      <div className="mx-auto w-full max-w-4xl px-4">
+        <Card className="border border-white/60 bg-white/90 shadow-xl backdrop-blur">
+          <CardContent className="p-8 md:p-12">
             {/* Header */}
             <div className="flex flex-col items-center gap-6 text-center">
               <Logo size="xl" showText={false} emblemClassName="border border-[#7f5efd]/20 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] shadow-inner" />
@@ -433,6 +427,5 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
         </Card>
       </div>
     </div>
-    </>
   );
 }
