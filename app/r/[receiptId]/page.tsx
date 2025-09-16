@@ -304,7 +304,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
               </div>
             </div>
 
-            <Separator className="my-10 print-compact" />
+            <Separator className="my-8 print-compact" />
 
             {/* Payment Details */}
             <div className="space-y-6 print-compact">
@@ -378,7 +378,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
               </div>
             </div>
 
-            <Separator className="my-10 print-compact" />
+            <Separator className="my-8 print-compact" />
 
             {/* Transaction Information */}
             <div className="space-y-6 print-compact">
@@ -403,22 +403,15 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                     </span>
                   </div>
 
-                  {/* Payment ID and Link ID on the same row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-dashed border-gray-200 pb-3">
-                    {tx.nowpayments_payment_id && (
-                      <div className="flex items-center justify-between">
-                        <span className="font-phonic text-sm text-gray-600">Payment ID</span>
-                        <span className="font-mono text-xs font-medium text-gray-900">{tx.nowpayments_payment_id}</span>
-                      </div>
-                    )}
-
-                    {paymentLink?.link_id && (
-                      <div className="flex items-center justify-between">
-                        <span className="font-phonic text-sm text-gray-600">Link ID</span>
+                  {/* Link ID only */}
+                  {paymentLink?.link_id && (
+                    <div className="border-b border-dashed border-gray-200 pb-3">
+                      <span className="font-phonic text-sm text-gray-600">Link ID</span>
+                      <div className="mt-1">
                         <span className="font-mono text-xs font-medium text-[#7f5efd]">{paymentLink.link_id}</span>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {cryptoPaymentInfo && (
                     <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
@@ -460,7 +453,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                           href={txLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono hover:bg-gray-800/90 transition-colors cursor-pointer"
+                          className="flex-1 rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono hover:bg-gray-800/90 transition-colors block"
                           title="Click to view on blockchain explorer"
                         >
                           {tx.tx_hash}
@@ -470,27 +463,13 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                           {tx.tx_hash}
                         </code>
                       )}
-                      {txLink && (
-                        <a
-                          href={txLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center p-2 rounded-lg border border-[#7f5efd] text-[#7f5efd] transition-colors hover:bg-[#7f5efd] hover:text-white"
-                          title="View on blockchain explorer"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H19.5V12" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6L10.5 15" />
-                          </svg>
-                        </a>
-                      )}
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            <Separator className="my-10 print-compact" />
+            <Separator className="my-8 print-compact" />
 
             {/* Customer Support Notice */}
             {paymentLink?.link_id && (
@@ -514,7 +493,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   </div>
                 </div>
 
-                <Separator className="my-10 print-compact" />
+                <Separator className="my-8 print-compact" />
               </>
             )}
 

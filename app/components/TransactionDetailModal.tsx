@@ -150,13 +150,13 @@ export function TransactionDetailModal({
             )}
           </div>
 
-          {/* Product Description */}
+          {/* Description */}
           <div className="bg-[#7f5efd]/5 rounded-lg border border-[#7f5efd]/20 p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 bg-[#7f5efd]/10 rounded flex items-center justify-center">
                 <Package className="h-3.5 w-3.5 text-[#7f5efd]" />
               </div>
-              <h3 className="font-phonic text-sm font-semibold text-gray-900">Product Description</h3>
+              <h3 className="font-phonic text-sm font-semibold text-gray-900">Description</h3>
             </div>
             <p className="text-gray-800 text-sm ml-8">{transaction.product_description}</p>
             {transaction.currency_received && (
@@ -293,9 +293,8 @@ export function TransactionDetailModal({
               <Button
                 onClick={openReceipt}
                 variant="outline"
-                className="flex items-center gap-2 border-[#7f5efd]/30 hover:border-[#7f5efd] text-gray-700 hover:text-[#7f5efd] hover:bg-[#7f5efd]/5 h-9 text-sm transition-all"
+                className="border-[#7f5efd]/30 hover:border-[#7f5efd] text-gray-700 hover:text-[#7f5efd] hover:bg-[#7f5efd]/5 h-9 text-sm transition-all"
               >
-                <Receipt className="h-4 w-4" />
                 View Receipt
               </Button>
             )}
@@ -307,17 +306,6 @@ export function TransactionDetailModal({
               >
                 <ExternalLink className="h-4 w-4" />
                 View on Blockchain Explorer
-              </Button>
-            )}
-
-            {transaction.payment_id && (
-              <Button
-                onClick={() => copyToClipboard(transaction.payment_id, 'Payment ID')}
-                variant="ghost"
-                className="flex items-center gap-2 text-gray-500 hover:text-[#7f5efd] hover:bg-[#7f5efd]/5 h-9 text-sm transition-all ml-auto"
-              >
-                <Hash className="h-4 w-4" />
-                Payment ID
               </Button>
             )}
           </div>
