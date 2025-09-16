@@ -3,6 +3,7 @@ import PrintButton from '@/components/PrintButton';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Separator } from '@/app/components/ui/separator';
+import { Logo } from '@/app/components/ui/logo';
 import { formatFullDateTime } from '@/lib/utils/date-utils';
 
 export const revalidate = 0;
@@ -136,17 +137,66 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f6f3ff] via-white to-[#eef2ff] py-12">
-      <div className="mx-auto w-full max-w-4xl px-4">
-        <Card className="border border-white/60 bg-white/90 shadow-xl backdrop-blur">
-          <CardContent className="p-8 md:p-12">
+    <>
+      <style jsx global>{`
+        @media print {
+          body, html {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .print-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            background: white !important;
+          }
+
+          .print-card {
+            border: none !important;
+            box-shadow: none !important;
+            background: white !important;
+            backdrop-filter: none !important;
+            margin: 0 !important;
+            padding: 1rem !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+          }
+
+          .print-content {
+            padding: 1rem !important;
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+          }
+
+          .print-hide {
+            display: none !important;
+          }
+
+          .print-compact {
+            margin: 0.5rem 0 !important;
+          }
+
+          .print-small-text {
+            font-size: 0.75rem !important;
+          }
+
+          .print-medium-text {
+            font-size: 0.875rem !important;
+          }
+
+          h1 { font-size: 1.5rem !important; }
+          h2 { font-size: 1.25rem !important; }
+          h3 { font-size: 1.125rem !important; }
+        }
+      `}</style>
+      <div className="min-h-screen bg-gradient-to-br from-[#f6f3ff] via-white to-[#eef2ff] py-12 print-container">
+        <div className="mx-auto w-full max-w-4xl px-4">
+          <Card className="border border-white/60 bg-white/90 shadow-xl backdrop-blur print-card">
+            <CardContent className="p-8 md:p-12 print-content">
             {/* Header */}
             <div className="flex flex-col items-center gap-6 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[#7f5efd]/20 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] text-white shadow-inner">
-                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v6m0 6v6m6-6H6" />
-                </svg>
-              </div>
+              <Logo size="xl" showText={false} emblemClassName="border border-[#7f5efd]/20 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] shadow-inner" />
 
               <div className="space-y-2">
                 <p className="font-phonic text-sm uppercase tracking-[0.3em] text-[#7f5efd]">Customer Receipt</p>
@@ -173,10 +223,10 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
               </div>
             </div>
 
-            <Separator className="my-10" />
+            <Separator className="my-10 print-compact" />
 
             {/* Payment Details */}
-            <div className="space-y-6">
+            <div className="space-y-6 print-compact">
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-[#7f5efd]/10 p-3 text-[#7f5efd]">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -246,10 +296,10 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
               </div>
             </div>
 
-            <Separator className="my-10" />
+            <Separator className="my-10 print-compact" />
 
             {/* Transaction Information */}
-            <div className="space-y-6">
+            <div className="space-y-6 print-compact">
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-[#7f5efd]/10 p-3 text-[#7f5efd]">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -313,35 +363,76 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                           href={txLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-full border border-[#7f5efd] px-4 py-1.5 text-xs font-medium text-[#7f5efd] transition-colors hover:bg-[#7f5efd] hover:text-white"
+                          className="inline-flex items-center gap-2 rounded-full border border-[#7f5efd] bg-[#7f5efd] px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#7c3aed] hover:border-[#7c3aed] shadow-sm"
                         >
-                          View on explorer
+                          Verify on Blockchain
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H19.5V12" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6L10.5 15" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18H4.5V14.25" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 18L13.5 9" />
                           </svg>
                         </a>
                       )}
                     </div>
-                    <code className="block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner">
-                      {tx.tx_hash}
-                    </code>
+                    <div className="flex items-center gap-3">
+                      <code className="flex-1 block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono">
+                        {tx.tx_hash}
+                      </code>
+                      {txLink && (
+                        <a
+                          href={txLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center p-2 rounded-lg border border-[#7f5efd] text-[#7f5efd] transition-colors hover:bg-[#7f5efd] hover:text-white"
+                          title="View on blockchain explorer"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H19.5V12" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6L10.5 15" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            <Separator className="my-10" />
+            <Separator className="my-10 print-compact" />
+
+            {/* Customer Support Notice */}
+            {paymentLink?.link_id && (
+              <>
+                <div className="rounded-3xl border border-[#7f5efd]/20 bg-gradient-to-br from-[#7f5efd]/5 to-[#7c3aed]/5 p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-full bg-[#7f5efd]/10 p-3 text-[#7f5efd]">
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-phonic text-lg font-normal text-gray-900 mb-2">Need Help?</h3>
+                      <p className="font-phonic text-sm text-gray-700 leading-relaxed mb-3">
+                        If you have any issues with your purchase or order, please contact the merchant directly and reference your <strong>Link ID</strong>:
+                      </p>
+                      <div className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 border border-[#7f5efd]/30">
+                        <code className="font-mono text-sm font-medium text-[#7f5efd]">{paymentLink.link_id}</code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-10 print-compact" />
+              </>
+            )}
 
             {/* Print Button */}
-            <div className="flex justify-center">
+            <div className="flex justify-center print-hide">
               <PrintButton />
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+    </>
   );
 }
