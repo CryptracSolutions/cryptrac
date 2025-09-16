@@ -405,11 +405,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
 
                   {/* Link ID only */}
                   {paymentLink?.link_id && (
-                    <div className="border-b border-dashed border-gray-200 pb-3">
+                    <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
                       <span className="font-phonic text-sm text-gray-600">Link ID</span>
-                      <div className="mt-1">
-                        <span className="font-mono text-xs font-medium text-[#7f5efd]">{paymentLink.link_id}</span>
-                      </div>
+                      <span className="font-mono text-xs font-medium text-[#7f5efd]">{paymentLink.link_id}</span>
                     </div>
                   )}
 

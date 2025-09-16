@@ -300,13 +300,16 @@ export default function TaxReportsPage() {
         amount_received: tx.amount_received
       }))
 
+      // Use actual date range based on filter type
+      const dateRange = getActualDateRange(filters)
+
       const exportSummary: ExportSummary = {
         total_transactions: reportData.summary.total_transactions,
         total_gross_sales: reportData.summary.total_gross_sales,
         total_tax_collected: reportData.summary.total_tax_collected,
         total_fees: reportData.summary.total_fees,
         total_net_revenue: reportData.summary.total_net_revenue,
-        date_range: reportData.filters.applied_date_range,
+        date_range: dateRange,
         generated_at: new Date().toISOString()
       }
 
@@ -324,7 +327,7 @@ export default function TaxReportsPage() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `cryptrac-tax-report-${template}-${filters.start_date}-to-${filters.end_date}.csv`
+      a.download = `cryptrac-tax-report-${template}-${dateRange.start_date}-to-${dateRange.end_date}.csv`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -371,13 +374,16 @@ export default function TaxReportsPage() {
         amount_received: tx.amount_received
       }))
 
+      // Use actual date range based on filter type
+      const dateRange = getActualDateRange(filters)
+
       const exportSummary: ExportSummary = {
         total_transactions: reportData.summary.total_transactions,
         total_gross_sales: reportData.summary.total_gross_sales,
         total_tax_collected: reportData.summary.total_tax_collected,
         total_fees: reportData.summary.total_fees,
         total_net_revenue: reportData.summary.total_net_revenue,
-        date_range: reportData.filters.applied_date_range,
+        date_range: dateRange,
         generated_at: new Date().toISOString()
       }
 
@@ -394,7 +400,7 @@ export default function TaxReportsPage() {
       const url = window.URL.createObjectURL(pdfBlob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `cryptrac-tax-report-${template}-${filters.start_date}-to-${filters.end_date}.pdf`
+      a.download = `cryptrac-tax-report-${template}-${dateRange.start_date}-to-${dateRange.end_date}.pdf`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -441,13 +447,16 @@ export default function TaxReportsPage() {
         amount_received: tx.amount_received
       }))
 
+      // Use actual date range based on filter type
+      const dateRange = getActualDateRange(filters)
+
       const exportSummary: ExportSummary = {
         total_transactions: reportData.summary.total_transactions,
         total_gross_sales: reportData.summary.total_gross_sales,
         total_tax_collected: reportData.summary.total_tax_collected,
         total_fees: reportData.summary.total_fees,
         total_net_revenue: reportData.summary.total_net_revenue,
-        date_range: reportData.filters.applied_date_range,
+        date_range: dateRange,
         generated_at: new Date().toISOString()
       }
 
@@ -464,7 +473,7 @@ export default function TaxReportsPage() {
       const url = window.URL.createObjectURL(excelBlob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `cryptrac-tax-report-${template}-${filters.start_date}-to-${filters.end_date}.xlsx`
+      a.download = `cryptrac-tax-report-${template}-${dateRange.start_date}-to-${dateRange.end_date}.xlsx`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -508,6 +517,48 @@ export default function TaxReportsPage() {
   const viewReceipt = (publicReceiptId: string) => {
     const receiptUrl = `${window.location.origin}/r/${publicReceiptId}`
     window.open(receiptUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  // Helper function to get the actual date range based on filter type
+  const getActualDateRange = (filters: TaxReportFilters): { start_date: string, end_date: string } => {
+    const currentYear = filters.year
+    let startDate: Date
+    let endDate: Date
+
+    switch (filters.report_type) {
+      case 'calendar_year':
+        startDate = new Date(currentYear, 0, 1) // January 1st
+        endDate = new Date(currentYear, 11, 31) // December 31st
+        break
+
+      case 'fiscal_year':
+        const [month, day] = filters.fiscal_year_start.split('-').map(Number)
+        startDate = new Date(currentYear, month - 1, day)
+        endDate = new Date(currentYear + 1, month - 1, day - 1)
+        break
+
+      case 'quarterly':
+        const quarterStartMonth = (filters.quarter - 1) * 3
+        startDate = new Date(currentYear, quarterStartMonth, 1)
+        endDate = new Date(currentYear, quarterStartMonth + 3, 0) // Last day of quarter
+        break
+
+      case 'custom':
+        return {
+          start_date: filters.start_date,
+          end_date: filters.end_date
+        }
+
+      default:
+        // Fallback to current year
+        startDate = new Date(currentYear, 0, 1)
+        endDate = new Date(currentYear, 11, 31)
+    }
+
+    return {
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0]
+    }
   }
 
   const handleTransactionClick = (transaction: Transaction) => {
