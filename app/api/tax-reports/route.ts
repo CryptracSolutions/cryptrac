@@ -83,6 +83,7 @@ interface ReportTransaction {
   tax_amount: number
   total_paid: number
   fees: number
+  fee_payer: 'merchant' | 'customer'
   net_amount: number
   status: string
   refund_amount: number
@@ -91,6 +92,11 @@ interface ReportTransaction {
   public_receipt_id: string | null
   // Added link_id for payment link identification
   link_id: string | null
+  // ENHANCED: Added blockchain verification fields
+  tx_hash: string | null
+  blockchain_network: string | null
+  currency_received: string | null
+  amount_received: number | null
 }
 
 export async function GET(request: Request) {
@@ -182,7 +188,7 @@ export async function GET(request: Request) {
         payment_links!inner(
           link_id,
           description,
-          merchants!inner(user_id)
+          merchants!inner(user_id, business_name, business_address, tax_id, contact_email, phone, website)
         )
       `, { count: 'exact' })
       .eq('payment_links.merchants.user_id', user_id)
@@ -226,6 +232,7 @@ export async function GET(request: Request) {
 
     const formattedTransactions: ReportTransaction[] = safeTransactions.map(t => {
       const paymentLink = Array.isArray(t.payment_links) ? t.payment_links[0] : t.payment_links
+      // const merchant = paymentLink?.merchants
       const paymentId = t.invoice_id || paymentLink?.link_id || t.nowpayments_payment_id || t.id
       const gross = Number(t.base_amount || 0)
       const label = t.tax_label || (Array.isArray(t.tax_rates) ? t.tax_rates.map((r: { label: string }) => r.label).join(', ') : '')
@@ -244,6 +251,11 @@ export async function GET(request: Request) {
       const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
       const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
       const net = totalPaid - fees
+
+      // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
+      // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
+      const feePayer: 'merchant' | 'customer' = (t as any).fee_paid_by_customer ? 'customer' : 'merchant'
+
       return {
         id: t.id,
         payment_id: paymentId,
@@ -255,6 +267,7 @@ export async function GET(request: Request) {
         tax_amount: taxAmt,
         total_paid: totalPaid,
         fees,
+        fee_payer: feePayer,
         net_amount: net,
         status: t.status,
         refund_amount: Number(t.refund_amount || 0),
@@ -262,7 +275,12 @@ export async function GET(request: Request) {
         // ENHANCED: Include public_receipt_id for receipt links
         public_receipt_id: t.public_receipt_id,
         // Include link_id from payment_links for UI display
-        link_id: paymentLink?.link_id || null
+        link_id: paymentLink?.link_id || null,
+        // ENHANCED: Include blockchain verification fields (may not exist yet in database)
+        tx_hash: (t as any).tx_hash || null,
+        blockchain_network: (t as any).blockchain_network || null,
+        currency_received: (t as any).currency_received || null,
+        amount_received: (t as any).amount_received ? Number((t as any).amount_received) : null
       } as ReportTransaction
     })
 
@@ -344,6 +362,11 @@ export async function GET(request: Request) {
           const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
           const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
           const net = totalPaid - fees
+
+          // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
+          // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
+          const feePayer: 'merchant' | 'customer' = (t as any).fee_paid_by_customer ? 'customer' : 'merchant'
+
           return {
             id: t.id,
             payment_id: paymentId,
@@ -355,12 +378,17 @@ export async function GET(request: Request) {
             tax_amount: taxAmt,
             total_paid: totalPaid,
             fees,
+            fee_payer: feePayer,
             net_amount: net,
             status: t.status,
             refund_amount: Number(t.refund_amount || 0),
             refund_date: t.refunded_at,
             public_receipt_id: t.public_receipt_id,
-            link_id: paymentLink?.link_id || null
+            link_id: paymentLink?.link_id || null,
+            tx_hash: (t as any).tx_hash || null,
+            blockchain_network: (t as any).blockchain_network || null,
+            currency_received: (t as any).currency_received || null,
+            amount_received: (t as any).amount_received ? Number((t as any).amount_received) : null
           }
         })
       }
@@ -501,11 +529,17 @@ function generateAuditCSV(transactions: ReportTransaction[], summary: Transactio
     'Tax Rate (%)',
     'Tax Amount',
     'Total Paid by Customer',
-    'Fees',
+    'Gateway Fees',
+    'Fee Paid By',
     'Net Amount Received',
     'Payment Status',
     'Refund Amount',
     'Refund Date',
+    'Transaction Hash',
+    'Blockchain Network',
+    'Currency Received',
+    'Amount Received',
+    'Link ID',
     'Receipt URL'
   ]
 
@@ -520,10 +554,16 @@ function generateAuditCSV(transactions: ReportTransaction[], summary: Transactio
     tx.tax_amount.toFixed(2),
     tx.total_paid.toFixed(2),
     tx.fees.toFixed(2),
+    tx.fee_payer,
     tx.net_amount.toFixed(2),
     tx.status,
     tx.refund_amount ? tx.refund_amount.toFixed(2) : '',
     tx.refund_date ? new Date(tx.refund_date).toISOString().split('T')[0] : '',
+    tx.tx_hash || '',
+    tx.blockchain_network || '',
+    tx.currency_received || '',
+    tx.amount_received ? tx.amount_received.toFixed(8) : '',
+    tx.link_id || '',
     // ENHANCED: Include receipt URL in CSV export
     tx.public_receipt_id ? `${process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN}/r/${tx.public_receipt_id}` : ''
   ])

@@ -56,7 +56,7 @@ export default function CreateSubscriptionPage() {
   const router = useRouter();
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [, setMerchantSettings] = useState<MerchantSettings | null>(null);
+  const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
   const [availableCryptos, setAvailableCryptos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -534,7 +534,9 @@ export default function CreateSubscriptionPage() {
                         <SelectValue placeholder="Select fee option" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Use global setting</SelectItem>
+                        <SelectItem value="inherit" className="font-capsule text-base font-normal">
+                          Use global setting ({merchantSettings?.charge_customer_fee ? 'Customer pays' : 'Merchant pays'})
+                        </SelectItem>
                         <SelectItem value="customer" className="font-capsule text-base font-normal">Customer pays fee</SelectItem>
                         <SelectItem value="merchant" className="font-capsule text-base font-normal">Merchant pays fee</SelectItem>
                       </SelectContent>
@@ -555,7 +557,9 @@ export default function CreateSubscriptionPage() {
                         <SelectValue placeholder="Select auto-convert option" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Use global setting</SelectItem>
+                        <SelectItem value="inherit" className="font-capsule text-base font-normal">
+                          Use global setting ({merchantSettings?.auto_convert_enabled ? 'Enabled' : 'Disabled'})
+                        </SelectItem>
                         <SelectItem value="enabled" className="font-capsule text-base font-normal">Enable auto-convert</SelectItem>
                         <SelectItem value="disabled" className="font-capsule text-base font-normal">Disable auto-convert</SelectItem>
                       </SelectContent>

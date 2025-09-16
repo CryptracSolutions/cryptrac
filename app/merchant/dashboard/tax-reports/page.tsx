@@ -21,7 +21,9 @@ import {
   Eye,
   EyeOff,
   Printer,
-  XCircle
+  XCircle,
+  ChevronDown,
+  Info
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card'
@@ -31,11 +33,30 @@ import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Badge } from '@/app/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu'
 
 import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
 import type { User } from '@supabase/supabase-js'
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
+import { TransactionDetailModal } from '@/app/components/TransactionDetailModal'
+import {
+  generateTaxReportPDF,
+  generateTaxReportExcel,
+  generateEnhancedCSV,
+  type ExportTransaction,
+  type ExportSummary,
+  type MerchantInfo,
+  type ExportTemplate,
+  type ExportOptions
+} from '@/lib/utils/export-utils'
 
 interface TaxReportFilters {
   start_date: string
@@ -67,6 +88,7 @@ interface Transaction {
   tax_amount: number
   total_paid: number
   fees: number
+  fee_payer: 'merchant' | 'customer'
   net_amount: number
   status: string
   refund_amount: number
@@ -75,6 +97,11 @@ interface Transaction {
   public_receipt_id: string | null
   // Added link_id for payment link identification
   link_id: string | null
+  // ENHANCED: Added blockchain verification fields
+  tx_hash: string | null
+  blockchain_network: string | null
+  currency_received: string | null
+  amount_received: number | null
 }
 
 interface TaxReportData {
@@ -93,7 +120,12 @@ export default function TaxReportsPage() {
   const [reportData, setReportData] = useState<TaxReportData | null>(null)
   const [loadingReport, setLoadingReport] = useState(false)
   const [exportingCSV, setExportingCSV] = useState(false)
+  const [exportingPDF, setExportingPDF] = useState(false)
+  const [exportingExcel, setExportingExcel] = useState(false)
   const [showDetailedView, setShowDetailedView] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  const [showTransactionModal, setShowTransactionModal] = useState(false)
+  const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
 
   const currentYear = new Date().getFullYear()
   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3)
@@ -129,6 +161,25 @@ export default function TaxReportsPage() {
       }
 
       setUser(authUser)
+
+      // Fetch merchant info for exports
+      const { data: merchant } = await supabase
+        .from('merchants')
+        .select('business_name, business_address, tax_id, contact_email, phone, website')
+        .eq('user_id', authUser.id)
+        .single()
+
+      if (merchant) {
+        setMerchantInfo({
+          business_name: merchant.business_name || 'Cryptrac Merchant',
+          business_address: merchant.business_address || '',
+          tax_id: merchant.tax_id || '',
+          contact_email: merchant.contact_email || '',
+          phone: merchant.phone || '',
+          website: merchant.website || ''
+        })
+      }
+
       // Start loading initial data after auth is complete
       setLoadingReport(true)
     } catch (error) {
@@ -227,53 +278,214 @@ export default function TaxReportsPage() {
     }
   }
 
-  const exportToCSV = async () => {
-    if (!user) return
+  const exportToCSV = async (template: ExportTemplate = 'audit') => {
+    if (!user || !reportData || !merchantInfo) return
 
     try {
       setExportingCSV(true)
       console.log('📥 Exporting tax report to CSV...')
 
-      const params = new URLSearchParams({
-        user_id: user.id,
-        report_type: filters.report_type,
-        year: filters.year.toString(),
-        quarter: filters.quarter.toString(),
-        fiscal_year_start: filters.fiscal_year_start,
-        tax_only: filters.tax_only.toString(),
-        status: filters.status,
-        export_format: 'csv'
-      })
+      const exportTransactions: ExportTransaction[] = reportData.transactions.map(tx => ({
+        id: tx.id,
+        payment_id: tx.payment_id,
+        created_at: tx.created_at,
+        product_description: tx.product_description,
+        gross_amount: tx.gross_amount,
+        tax_label: tx.tax_label,
+        tax_percentage: tx.tax_percentage,
+        tax_amount: tx.tax_amount,
+        total_paid: tx.total_paid,
+        fees: tx.fees,
+        fee_payer: tx.fee_payer,
+        net_amount: tx.net_amount,
+        status: tx.status,
+        refund_amount: tx.refund_amount,
+        refund_date: tx.refund_date,
+        public_receipt_id: tx.public_receipt_id,
+        link_id: tx.link_id,
+        tx_hash: tx.tx_hash,
+        blockchain_network: tx.blockchain_network,
+        currency_received: tx.currency_received,
+        amount_received: tx.amount_received
+      }))
 
-      if (filters.report_type === 'custom') {
-        params.append('start_date', `${filters.start_date}T00:00:00.000Z`)
-        params.append('end_date', `${filters.end_date}T23:59:59.999Z`)
+      const exportSummary: ExportSummary = {
+        total_transactions: reportData.summary.total_transactions,
+        total_gross_sales: reportData.summary.total_gross_sales,
+        total_tax_collected: reportData.summary.total_tax_collected,
+        total_fees: reportData.summary.total_fees,
+        total_net_revenue: reportData.summary.total_net_revenue,
+        date_range: reportData.filters.applied_date_range,
+        generated_at: new Date().toISOString()
       }
 
-      const response = await fetch(`/api/tax-reports?${params}`)
-      
-      if (!response.ok) {
-        throw new Error('Failed to export tax report')
+      const options: ExportOptions = {
+        template,
+        includeReceiptUrls: true,
+        includeBlockchainLinks: true,
+        timezone
       }
+
+      const csvContent = generateEnhancedCSV(exportTransactions, exportSummary, merchantInfo, options)
 
       // Download the CSV file
-      const blob = await response.blob()
+      const blob = new Blob([csvContent], { type: 'text/csv' })
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `tax-report-${filters.start_date}-to-${filters.end_date}.csv`
+      a.download = `cryptrac-tax-report-${template}-${filters.start_date}-to-${filters.end_date}.csv`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
 
-      toast.success('Tax report exported successfully!')
+      toast.success('CSV report exported successfully!')
 
     } catch (error) {
-      console.error('❌ Error exporting tax report:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to export tax report')
+      console.error('❌ Error exporting CSV report:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to export CSV report')
     } finally {
       setExportingCSV(false)
+    }
+  }
+
+  const exportToPDF = async (template: ExportTemplate = 'audit') => {
+    if (!reportData || !merchantInfo) return
+
+    try {
+      setExportingPDF(true)
+      console.log('📄 Exporting tax report to PDF...')
+
+      const exportTransactions: ExportTransaction[] = reportData.transactions.map(tx => ({
+        id: tx.id,
+        payment_id: tx.payment_id,
+        created_at: tx.created_at,
+        product_description: tx.product_description,
+        gross_amount: tx.gross_amount,
+        tax_label: tx.tax_label,
+        tax_percentage: tx.tax_percentage,
+        tax_amount: tx.tax_amount,
+        total_paid: tx.total_paid,
+        fees: tx.fees,
+        fee_payer: tx.fee_payer,
+        net_amount: tx.net_amount,
+        status: tx.status,
+        refund_amount: tx.refund_amount,
+        refund_date: tx.refund_date,
+        public_receipt_id: tx.public_receipt_id,
+        link_id: tx.link_id,
+        tx_hash: tx.tx_hash,
+        blockchain_network: tx.blockchain_network,
+        currency_received: tx.currency_received,
+        amount_received: tx.amount_received
+      }))
+
+      const exportSummary: ExportSummary = {
+        total_transactions: reportData.summary.total_transactions,
+        total_gross_sales: reportData.summary.total_gross_sales,
+        total_tax_collected: reportData.summary.total_tax_collected,
+        total_fees: reportData.summary.total_fees,
+        total_net_revenue: reportData.summary.total_net_revenue,
+        date_range: reportData.filters.applied_date_range,
+        generated_at: new Date().toISOString()
+      }
+
+      const options: ExportOptions = {
+        template,
+        includeReceiptUrls: true,
+        includeBlockchainLinks: true,
+        timezone
+      }
+
+      const pdfBlob = await generateTaxReportPDF(exportTransactions, exportSummary, merchantInfo, options)
+
+      // Download the PDF file
+      const url = window.URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cryptrac-tax-report-${template}-${filters.start_date}-to-${filters.end_date}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success('PDF report exported successfully!')
+
+    } catch (error) {
+      console.error('❌ Error exporting PDF report:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to export PDF report')
+    } finally {
+      setExportingPDF(false)
+    }
+  }
+
+  const exportToExcel = async (template: ExportTemplate = 'audit') => {
+    if (!reportData || !merchantInfo) return
+
+    try {
+      setExportingExcel(true)
+      console.log('📊 Exporting tax report to Excel...')
+
+      const exportTransactions: ExportTransaction[] = reportData.transactions.map(tx => ({
+        id: tx.id,
+        payment_id: tx.payment_id,
+        created_at: tx.created_at,
+        product_description: tx.product_description,
+        gross_amount: tx.gross_amount,
+        tax_label: tx.tax_label,
+        tax_percentage: tx.tax_percentage,
+        tax_amount: tx.tax_amount,
+        total_paid: tx.total_paid,
+        fees: tx.fees,
+        fee_payer: tx.fee_payer,
+        net_amount: tx.net_amount,
+        status: tx.status,
+        refund_amount: tx.refund_amount,
+        refund_date: tx.refund_date,
+        public_receipt_id: tx.public_receipt_id,
+        link_id: tx.link_id,
+        tx_hash: tx.tx_hash,
+        blockchain_network: tx.blockchain_network,
+        currency_received: tx.currency_received,
+        amount_received: tx.amount_received
+      }))
+
+      const exportSummary: ExportSummary = {
+        total_transactions: reportData.summary.total_transactions,
+        total_gross_sales: reportData.summary.total_gross_sales,
+        total_tax_collected: reportData.summary.total_tax_collected,
+        total_fees: reportData.summary.total_fees,
+        total_net_revenue: reportData.summary.total_net_revenue,
+        date_range: reportData.filters.applied_date_range,
+        generated_at: new Date().toISOString()
+      }
+
+      const options: ExportOptions = {
+        template,
+        includeReceiptUrls: true,
+        includeBlockchainLinks: true,
+        timezone
+      }
+
+      const excelBlob = generateTaxReportExcel(exportTransactions, exportSummary, merchantInfo, options)
+
+      // Download the Excel file
+      const url = window.URL.createObjectURL(excelBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cryptrac-tax-report-${template}-${filters.start_date}-to-${filters.end_date}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success('Excel report exported successfully!')
+
+    } catch (error) {
+      console.error('❌ Error exporting Excel report:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to export Excel report')
+    } finally {
+      setExportingExcel(false)
     }
   }
 
@@ -305,6 +517,11 @@ export default function TaxReportsPage() {
   const viewReceipt = (publicReceiptId: string) => {
     const receiptUrl = `${window.location.origin}/r/${publicReceiptId}`
     window.open(receiptUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleTransactionClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction)
+    setShowTransactionModal(true)
   }
 
 
@@ -482,7 +699,17 @@ export default function TaxReportsPage() {
                           <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Link ID</th>
                           <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Gross Amount</th>
                           <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Tax</th>
-                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Fees</th>
+                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">
+                            <div className="flex items-center justify-end gap-1">
+                              Fees
+                              <div className="group relative">
+                                <Info className="h-3 w-3 text-gray-400" />
+                                <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                                  Shows who paid the gateway fee
+                                </div>
+                              </div>
+                            </div>
+                          </th>
                           <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Net Amount</th>
                           <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Status</th>
                           <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Actions</th>
@@ -490,12 +717,23 @@ export default function TaxReportsPage() {
                       </thead>
                       <tbody>
                         {reportData.transactions.map((transaction) => (
-                          <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <tr
+                            key={transaction.id}
+                            className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => handleTransactionClick(transaction)}
+                          >
                             <td className="py-3 px-4 text-sm text-gray-600">
                               {formatDateShort(transaction.created_at, timezone)}
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-900 font-medium">
-                              {transaction.product_description}
+                              <div className="flex items-center gap-2">
+                                {transaction.product_description}
+                                {transaction.tx_hash && (
+                                  <span className="text-green-500" title="Blockchain verified">
+                                    <ExternalLink className="h-3 w-3" />
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="py-3 px-4 text-xs font-mono">
                               {transaction.link_id ? (
@@ -513,7 +751,14 @@ export default function TaxReportsPage() {
                               ${transaction.tax_amount.toFixed(2)}
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-600 text-right">
-                              ${transaction.fees.toFixed(2)}
+                              <div className="flex flex-col items-end">
+                                <span>${transaction.fees.toFixed(2)}</span>
+                                {transaction.fee_payer && (
+                                  <span className="text-xs text-gray-400 mt-1">
+                                    {transaction.fee_payer === 'customer' ? 'Customer paid' : 'Merchant paid'}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="py-3 px-4 text-sm text-gray-900 text-right font-medium">
                               ${transaction.net_amount.toFixed(2)}
@@ -532,7 +777,10 @@ export default function TaxReportsPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => viewReceipt(transaction.public_receipt_id!)}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      viewReceipt(transaction.public_receipt_id!)
+                                    }}
                                     className="h-8 px-2 text-xs"
                                     title="View customer receipt"
                                   >
@@ -544,7 +792,10 @@ export default function TaxReportsPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => markAsRefunded(transaction)}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      markAsRefunded(transaction)
+                                    }}
                                     className="h-8 px-2 text-xs"
                                     title="Mark as refunded"
                                   >
@@ -720,34 +971,139 @@ export default function TaxReportsPage() {
                         Export Report
                       </CardTitle>
                       <CardDescription className="font-capsule text-sm text-gray-600">
-                        Download your tax report in various formats
+                        Download your tax report in multiple formats with different templates for various use cases
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button
-                      onClick={() => exportToCSV()}
-                      disabled={exportingCSV}
-                      size="default"
-                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-                    >
-                      {exportingCSV ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <FileText className="h-4 w-4" />
-                      )}
-                      {exportingCSV ? 'Exporting...' : 'Export to CSV'}
-                    </Button>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* CSV Export Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          disabled={exportingCSV}
+                          size="default"
+                          className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
+                        >
+                          {exportingCSV ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FileText className="h-4 w-4" />
+                          )}
+                          {exportingCSV ? 'Exporting...' : 'Export CSV'}
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-48">
+                        <DropdownMenuLabel>CSV Templates</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => exportToCSV('audit')}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Audit Template
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToCSV('tax_filing')}>
+                          <Receipt className="h-4 w-4 mr-2" />
+                          Tax Filing Template
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToCSV('accounting')}>
+                          <Calculator className="h-4 w-4 mr-2" />
+                          Accounting Template
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToCSV('summary')}>
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Summary Template
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
+                    {/* PDF Export Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          disabled={exportingPDF}
+                          variant="outline"
+                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
+                        >
+                          {exportingPDF ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FileText className="h-4 w-4" />
+                          )}
+                          {exportingPDF ? 'Generating...' : 'Export PDF'}
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-48">
+                        <DropdownMenuLabel>PDF Templates</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => exportToPDF('audit')}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Detailed Audit Report
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToPDF('tax_filing')}>
+                          <Receipt className="h-4 w-4 mr-2" />
+                          Tax Filing Report
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToPDF('accounting')}>
+                          <Calculator className="h-4 w-4 mr-2" />
+                          Accounting Report
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToPDF('summary')}>
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Executive Summary
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Excel Export Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          disabled={exportingExcel}
+                          variant="outline"
+                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
+                        >
+                          {exportingExcel ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <BarChart3 className="h-4 w-4" />
+                          )}
+                          {exportingExcel ? 'Generating...' : 'Export Excel'}
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-48">
+                        <DropdownMenuLabel>Excel Templates</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => exportToExcel('audit')}>
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Full Data Export
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToExcel('tax_filing')}>
+                          <Receipt className="h-4 w-4 mr-2" />
+                          Tax Preparation
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToExcel('accounting')}>
+                          <Calculator className="h-4 w-4 mr-2" />
+                          QuickBooks Ready
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToExcel('summary')}>
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Summary Analysis
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="border-t pt-4">
                     <Button
                       variant="outline"
                       onClick={() => window.print()}
                       className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
                     >
                       <Printer className="h-4 w-4" />
-                      Print Report
+                      Print Current View
                     </Button>
                   </div>
                 </CardContent>
@@ -778,6 +1134,14 @@ export default function TaxReportsPage() {
             )}
           </>
         )}
+
+        {/* Transaction Detail Modal */}
+        <TransactionDetailModal
+          open={showTransactionModal}
+          onOpenChange={setShowTransactionModal}
+          transaction={selectedTransaction}
+          timezone={timezone}
+        />
         </div>
     );
   }

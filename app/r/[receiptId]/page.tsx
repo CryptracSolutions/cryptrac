@@ -1,9 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import PrintButton from '@/components/PrintButton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Separator } from '@/app/components/ui/separator';
-import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
 import { formatFullDateTime } from '@/lib/utils/date-utils';
 
 export const revalidate = 0;
@@ -137,185 +136,204 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
     : null;
 
   return (
-    <div className="min-h-screen bg-background py-12">
-      <div className="container-narrow">
-        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 bg-white">
-          <CardContent className="p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#f6f3ff] via-white to-[#eef2ff] py-12">
+      <div className="mx-auto w-full max-w-4xl px-4">
+        <Card className="border border-white/60 bg-white/90 shadow-xl backdrop-blur">
+          <CardContent className="p-8 md:p-12">
             {/* Header */}
-            <div className="text-center space-y-4 mb-8">
-              
-              <div>
-                <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            <div className="flex flex-col items-center gap-6 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[#7f5efd]/20 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] text-white shadow-inner">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v6m0 6v6m6-6H6" />
+                </svg>
+              </div>
+
+              <div className="space-y-2">
+                <p className="font-phonic text-sm uppercase tracking-[0.3em] text-[#7f5efd]">Customer Receipt</p>
+                <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 md:text-4xl">
                   {merchant?.business_name || 'Business Name Not Available'}
                 </h1>
                 {paymentLink?.title && (
                   <p className="font-phonic text-base font-normal text-gray-600">{paymentLink.title}</p>
                 )}
               </div>
-              
-              {/* Status Badge */}
-              {tx.status && (
-                <div className="flex justify-center">
-                  <Badge 
+
+              <div className="flex flex-col items-center gap-2">
+                {tx.public_receipt_id && (
+                  <span className="font-mono text-sm text-gray-500">Receipt ID: {tx.public_receipt_id}</span>
+                )}
+                {tx.status && (
+                  <Badge
                     variant={tx.status === 'confirmed' ? 'default' : 'secondary'}
-                    className={tx.status === 'confirmed' ? "font-phonic text-sm font-normal bg-[#7f5efd] text-white" : "font-phonic text-sm font-normal"}
+                    className={tx.status === 'confirmed' ? 'font-phonic text-xs font-medium uppercase tracking-wide bg-[#7f5efd] text-white' : 'font-phonic text-xs font-medium uppercase tracking-wide bg-gray-900/5 text-gray-700'}
                   >
                     {tx.status === 'confirmed' ? 'Payment Confirmed' : tx.status}
                   </Badge>
-                </div>
-              )}
-            </div>
-
-            <Separator className="my-6" />
-
-            {/* Payment Details */}
-            <div className="space-y-4">
-              <h2 className="font-phonic text-2xl font-normal text-gray-900">Payment Details</h2>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-phonic text-base font-normal text-gray-600">Base Amount</span>
-                  <span className="font-phonic text-base font-normal">{format(baseAmount, tx.currency)}</span>
-                </div>
-                
-                {Number(tx.tax_amount || 0) > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-phonic text-base font-normal text-gray-600">{tx.tax_label || 'Tax'}</span>
-                    <span className="font-phonic text-base font-normal text-green-700">
-                      +{format(tx.tax_amount, tx.currency)}
-                    </span>
-                  </div>
                 )}
-                
-                {Number(tx.tax_amount || 0) > 0 && (
-                  <div className="flex justify-between items-center border-t pt-3">
-                    <span className="font-phonic text-base font-normal">Subtotal with Tax</span>
-                    <span className="font-phonic text-base font-normal">
-                      {format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}
-                    </span>
-                  </div>
-                )}
-                
-                {Number(tx.gateway_fee_amount || 0) > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-phonic text-base font-normal text-gray-600">Gateway Fee</span>
-                    <span className="font-phonic text-base font-normal text-blue-700">
-                      +{format(tx.gateway_fee_amount, tx.currency)}
-                    </span>
-                  </div>
-                )}
-                
-                {Number(tx.conversion_fee_amount || 0) > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-phonic text-base font-normal text-gray-600">Conversion Fee</span>
-                    <span className="font-phonic text-base font-normal text-blue-700">
-                      +{format(tx.conversion_fee_amount, tx.currency)}
-                    </span>
-                  </div>
-                )}
-                
-                {Number(tx.network_fee_amount || 0) > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-phonic text-base font-normal text-gray-600">Network Fee</span>
-                    <span className="font-phonic text-base font-normal text-blue-700">
-                      +{format(tx.network_fee_amount, tx.currency)}
-                    </span>
-                  </div>
-                )}
-                
-                <Separator className="my-4" />
-                
-                <div className="flex justify-between items-center">
-                  <span className="font-phonic text-xl font-medium text-gray-900">Total Paid</span>
-                  <span className="font-phonic text-xl font-medium text-[#7f5efd]">
-                    {format(totalPaid, tx.currency)}
-                  </span>
-                </div>
               </div>
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-10" />
 
-            {/* Transaction Information */}
-            <div className="bg-white border-2 border-gray-200 rounded-xl shadow-lg p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-xl shadow-lg">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0-1.125.504-1.125 1.125V11.25a9 9 0 00-9-9z" />
+            {/* Payment Details */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-[#7f5efd]/10 p-3 text-[#7f5efd]">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25l1.5 1.5 6-6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l1.5 1.5 6-6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l1.5 1.5 6-6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 9h6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 12.75h6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 16.5H18" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900">Transaction Information</h2>
-                  <p className="font-phonic text-sm font-normal text-gray-600">Payment details and transaction data</p>
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900">Payment Summary</h2>
+                  <p className="font-phonic text-sm text-gray-600">All amounts in {tx.currency}</p>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between border-b border-gray-100 pb-2">
-                    <span className="font-phonic text-sm font-normal text-gray-600">Payment Date</span>
-                    <span className="font-phonic text-sm font-medium text-gray-900">
-                      {formatFullDateTime(tx.created_at, merchantTimezone)}
-                    </span>
+
+              <div className="rounded-3xl border border-[#7f5efd]/10 bg-[#7f5efd]/5 p-6">
+                <div className="grid gap-4 text-sm text-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span className="font-phonic text-base text-gray-600">Base Amount</span>
+                    <span className="font-phonic text-base text-gray-900">{format(baseAmount, tx.currency)}</span>
                   </div>
-                  
-                  {tx.nowpayments_payment_id && (
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="font-phonic text-sm font-normal text-gray-600">Payment ID</span>
-                      <span className="font-mono text-xs font-medium bg-gray-100 px-2 py-1 rounded">{tx.nowpayments_payment_id}</span>
+
+                  {Number(tx.tax_amount || 0) > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-phonic text-base text-gray-600">{tx.tax_label || 'Tax'}</span>
+                      <span className="font-phonic text-base text-green-700">+{format(tx.tax_amount, tx.currency)}</span>
                     </div>
                   )}
-                  
-                  {paymentLink?.link_id && (
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="font-phonic text-sm font-normal text-gray-600">Link ID</span>
-                      <span className="font-mono text-xs font-medium bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">{paymentLink.link_id}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {cryptoPaymentInfo && (
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="font-phonic text-sm font-normal text-gray-600">Payment Method</span>
-                      <span className="font-phonic text-sm font-medium text-gray-900">{cryptoPaymentInfo}</span>
-                    </div>
-                  )}
-                  
-                  {tx.asset && tx.network && (
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="font-phonic text-sm font-normal text-gray-600">Network</span>
-                      <span className="font-phonic text-sm font-medium text-gray-900">{tx.asset} on {tx.network}</span>
-                    </div>
-                  )}
-                  
-                  {/* Note: payin_extra_id is not stored in transactions; omit display */}
-                  
-                  {tx.tx_hash && (
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="font-phonic text-sm font-normal text-gray-600">Transaction Hash</span>
-                      <span className="font-mono text-xs">
-                        {txLink ? (
-                          <a 
-                            href={txLink} 
-                            className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors bg-[#7f5efd]/10 px-2 py-1 rounded inline-block" 
-                            target="_blank" 
-                          rel="noopener noreferrer"
-                        >
-                          {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
-                        </a>
-                        ) : (
-                          <span className="bg-gray-100 px-2 py-1 rounded">
-                            {tx.tx_hash.slice(0, 8)}...{tx.tx_hash.slice(-8)}
-                          </span>
-                        )}
+
+                  {Number(tx.tax_amount || 0) > 0 && (
+                    <div className="flex items-center justify-between border-t border-white/40 pt-4">
+                      <span className="font-phonic text-base text-gray-600">Subtotal with Tax</span>
+                      <span className="font-phonic text-base text-gray-900">
+                        {format(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0), tx.currency)}
                       </span>
                     </div>
                   )}
+
+                  {Number(tx.gateway_fee_amount || 0) > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-phonic text-base text-gray-600">Gateway Fee</span>
+                      <span className="font-phonic text-base text-[#7f5efd]">+{format(tx.gateway_fee_amount, tx.currency)}</span>
+                    </div>
+                  )}
+
+                  {Number(tx.conversion_fee_amount || 0) > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-phonic text-base text-gray-600">Conversion Fee</span>
+                      <span className="font-phonic text-base text-[#7f5efd]">+{format(tx.conversion_fee_amount, tx.currency)}</span>
+                    </div>
+                  )}
+
+                  {Number(tx.network_fee_amount || 0) > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-phonic text-base text-gray-600">Network Fee</span>
+                      <span className="font-phonic text-base text-[#7f5efd]">+{format(tx.network_fee_amount, tx.currency)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+                    <span className="font-phonic text-lg text-gray-900">Total Paid</span>
+                    <span className="font-phonic text-lg text-[#7f5efd]">{format(totalPaid, tx.currency)}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-10" />
+
+            {/* Transaction Information */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-[#7f5efd]/10 p-3 text-[#7f5efd]">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125.504 1.125 1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="font-phonic text-2xl font-normal text-gray-900">Transaction Details</h2>
+                  <p className="font-phonic text-sm text-gray-600">Secure blockchain record of your payment</p>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                      <span className="font-phonic text-sm text-gray-600">Payment Date</span>
+                      <span className="font-phonic text-sm text-gray-900">
+                        {formatFullDateTime(tx.created_at, merchantTimezone)}
+                      </span>
+                    </div>
+
+                    {tx.nowpayments_payment_id && (
+                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                        <span className="font-phonic text-sm text-gray-600">Payment ID</span>
+                        <span className="font-mono text-xs font-medium text-gray-900">{tx.nowpayments_payment_id}</span>
+                      </div>
+                    )}
+
+                    {paymentLink?.link_id && (
+                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                        <span className="font-phonic text-sm text-gray-600">Link ID</span>
+                        <span className="font-mono text-xs font-medium text-[#7f5efd]">{paymentLink.link_id}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    {cryptoPaymentInfo && (
+                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                        <span className="font-phonic text-sm text-gray-600">Payment Method</span>
+                        <span className="font-phonic text-sm text-gray-900">{cryptoPaymentInfo}</span>
+                      </div>
+                    )}
+
+                    {tx.asset && tx.network && (
+                      <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3">
+                        <span className="font-phonic text-sm text-gray-600">Network</span>
+                        <span className="font-phonic text-sm text-gray-900">{tx.asset} on {tx.network}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {tx.tx_hash && (
+                  <div className="mt-6 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="font-phonic text-sm text-gray-600">Transaction Hash</span>
+                      {txLink && (
+                        <a
+                          href={txLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-full border border-[#7f5efd] px-4 py-1.5 text-xs font-medium text-[#7f5efd] transition-colors hover:bg-[#7f5efd] hover:text-white"
+                        >
+                          View on explorer
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H19.5V12" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6L10.5 15" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18H4.5V14.25" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 18L13.5 9" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                    <code className="block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner">
+                      {tx.tx_hash}
+                    </code>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="my-10" />
 
             {/* Print Button */}
             <div className="flex justify-center">
