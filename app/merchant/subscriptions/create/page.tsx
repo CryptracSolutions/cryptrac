@@ -522,11 +522,11 @@ export default function CreateSubscriptionPage() {
                   <div className="space-y-2">
                     <label className="font-phonic text-sm font-semibold text-gray-900">Gateway Fee</label>
                     <Select
-                      value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'yes' : 'no'}
+                      value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'customer' : 'merchant'}
                       onValueChange={(value) => {
                         setForm({
                           ...form,
-                          charge_customer_fee: value === 'inherit' ? null : value === 'yes'
+                          charge_customer_fee: value === 'inherit' ? null : value === 'customer'
                         });
                       }}
                     >
@@ -534,20 +534,20 @@ export default function CreateSubscriptionPage() {
                         <SelectValue placeholder="Select fee option" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Inherit from merchant settings</SelectItem>
-                        <SelectItem value="yes" className="font-capsule text-base font-normal">Yes</SelectItem>
-                        <SelectItem value="no" className="font-capsule text-base font-normal">No</SelectItem>
+                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Use global setting</SelectItem>
+                        <SelectItem value="customer" className="font-capsule text-base font-normal">Customer pays fee</SelectItem>
+                        <SelectItem value="merchant" className="font-capsule text-base font-normal">Merchant pays fee</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Preferred Cryptocurrency</label>
+                    <label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert</label>
                     <Select
-                      value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'yes' : 'no'}
+                      value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'enabled' : 'disabled'}
                       onValueChange={(value) => {
                         setForm({
                           ...form,
-                          auto_convert_enabled: value === 'inherit' ? null : value === 'yes'
+                          auto_convert_enabled: value === 'inherit' ? null : value === 'enabled'
                         });
                       }}
                     >
@@ -555,9 +555,9 @@ export default function CreateSubscriptionPage() {
                         <SelectValue placeholder="Select auto-convert option" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Inherit from merchant settings</SelectItem>
-                        <SelectItem value="yes" className="font-capsule text-base font-normal">Yes</SelectItem>
-                        <SelectItem value="no" className="font-capsule text-base font-normal">No</SelectItem>
+                        <SelectItem value="inherit" className="font-capsule text-base font-normal">Use global setting</SelectItem>
+                        <SelectItem value="enabled" className="font-capsule text-base font-normal">Enable auto-convert</SelectItem>
+                        <SelectItem value="disabled" className="font-capsule text-base font-normal">Disable auto-convert</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

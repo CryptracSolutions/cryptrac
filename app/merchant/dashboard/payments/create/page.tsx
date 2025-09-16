@@ -698,7 +698,7 @@ export default function CreatePaymentLinkPage() {
 
                       {/* Auto-Convert Setting */}
                       <div className="space-y-2">
-                        <Label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert to Preferred Cryptocurrency</Label>
+                        <Label className="font-phonic text-sm font-semibold text-gray-900">Auto-Convert</Label>
                         <Select
                           value={form.auto_convert_enabled === null ? 'inherit' : form.auto_convert_enabled ? 'enabled' : 'disabled'}
                           onValueChange={(value) => {
