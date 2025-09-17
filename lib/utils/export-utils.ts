@@ -303,7 +303,7 @@ export function generateTaxReportPDF(
         const disclaimer = 'This is a computer-generated document provided for informational purposes only and should not be considered legal or tax advice. Please consult a qualified professional for advice regarding your specific circumstances.'
         const disclaimerLines = doc.splitTextToSize(disclaimer, contentWidth)
         doc.setFontSize(7)
-        doc.text(disclaimerLines, pageWidth / 2, pageHeight - 8, { align: 'center' })
+        doc.text(disclaimerLines, pageWidth / 2, pageHeight - 15, { align: 'center' })
       }
     })
 

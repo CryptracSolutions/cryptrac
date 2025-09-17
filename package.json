@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "generate-types": "node scripts/generate-supabase-types.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",

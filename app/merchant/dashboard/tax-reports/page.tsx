@@ -1018,11 +1018,18 @@ export default function TaxReportsPage() {
                       {/* Client-side pagination controls */}
                       {filteredTransactions.length > 5 && (
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">Show:</span>
-                          <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(10)} disabled={displayLimit === 10 || filteredTransactions.length < 10}>10</Button>
-                          <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(50)} disabled={displayLimit === 50 || filteredTransactions.length < 50}>50</Button>
-                          <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(filteredTransactions.length)} disabled={displayLimit === filteredTransactions.length}>All</Button>
-                          {displayLimit > 5 && <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(5)}>5</Button>}
+                          <Label className="font-capsule text-xs text-gray-600">Show</Label>
+                          <Select value={displayLimit.toString()} onValueChange={(value) => setDisplayLimit(Number(value))}>
+                            <SelectTrigger className="w-24 h-9 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="5">5</SelectItem>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="50">50</SelectItem>
+                              <SelectItem value={filteredTransactions.length.toString()}>All</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       )}
                     </div>
@@ -1178,7 +1185,7 @@ export default function TaxReportsPage() {
                         Export Options
                       </h3>
 
-                      <div className="flex flex-col lg:flex-row gap-6 lg:items-end">
+                      <div className="flex flex-col lg:flex-row gap-6 lg:items-center">
                         {/* Template Selection */}
                         <div className="flex-1 space-y-2">
                           <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
