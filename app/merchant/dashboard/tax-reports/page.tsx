@@ -126,6 +126,8 @@ export default function TaxReportsPage() {
   const [transactionStartDate, setTransactionStartDate] = useState<string>('')
   const [transactionEndDate, setTransactionEndDate] = useState<string>('')
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+  // Transaction status filter (isolated from report generation)
+  const [transactionStatus, setTransactionStatus] = useState<'all' | 'confirmed' | 'refunded'>('all')
 
   const currentYear = new Date().getFullYear()
   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3)
@@ -616,11 +618,6 @@ export default function TaxReportsPage() {
     // DECOUPLING: Use transactionsForDisplay as the source of truth, not reportData
     if (!transactionsForDisplay) return
 
-    if (!transactionStartDate && !transactionEndDate) {
-      setFilteredTransactions(transactionsForDisplay)
-      return
-    }
-
     const filtered = transactionsForDisplay.filter(tx => {
       const txDate = new Date(getTransactionTimestamp(tx))
       const txDateStr = txDate.toLocaleDateString('sv-SE', { timeZone: timezone })
@@ -628,7 +625,10 @@ export default function TaxReportsPage() {
       const startMatch = !transactionStartDate || txDateStr >= transactionStartDate
       const endMatch = !transactionEndDate || txDateStr <= transactionEndDate
 
-      return startMatch && endMatch
+      // Apply local status filter (isolated from report generation)
+      const statusMatch = transactionStatus === 'all' || tx.status === transactionStatus
+
+      return startMatch && endMatch && statusMatch
     })
 
     setFilteredTransactions(filtered)
@@ -637,12 +637,13 @@ export default function TaxReportsPage() {
   // Apply date filters when they change
   useEffect(() => {
     filterTransactionsByDate()
-  }, [transactionStartDate, transactionEndDate, transactionsForDisplay]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [transactionStartDate, transactionEndDate, transactionStatus, transactionsForDisplay]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clear transaction date filters
   const clearTransactionFilters = () => {
     setTransactionStartDate('')
     setTransactionEndDate('')
+    setTransactionStatus('all')
     // DECOUPLING: Reset to the full list of transactions for display
     setFilteredTransactions(transactionsForDisplay)
   }
@@ -813,9 +814,24 @@ export default function TaxReportsPage() {
                     </div>
                   </div>
 
-                  {/* Date Filter Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-100">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  {/* Filters Row: Status + Date + Show (centered) */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3 pt-3 border-t border-gray-100">
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      {/* Local Status Filter (isolated) */}
+                      <div className="space-y-1">
+                        <Label className="font-capsule text-xs text-gray-600">Status</Label>
+                        <Select value={transactionStatus} onValueChange={(value: 'all' | 'confirmed' | 'refunded') => setTransactionStatus(value)}>
+                          <SelectTrigger className="w-40 h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Transactions</SelectItem>
+                            <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                            <SelectItem value="refunded">Refunded Only</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <div className="flex items-center gap-2">
                         <Label htmlFor="tx-start-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
                           From:
@@ -862,19 +878,19 @@ export default function TaxReportsPage() {
                           </Select>
                         </div>
                       )}
-                    </div>
 
-                    {(transactionStartDate || transactionEndDate) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearTransactionFilters}
-                        className="h-9 px-3 text-xs hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
-                      >
-                        <XCircle className="h-3 w-3 mr-1" />
-                        Clear
-                      </Button>
-                    )}
+                      {(transactionStartDate || transactionEndDate || transactionStatus !== 'all') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearTransactionFilters}
+                          className="h-9 px-3 text-xs hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
+                        >
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Clear
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -1307,7 +1323,7 @@ export default function TaxReportsPage() {
 
         {/* Refund Modal */}
         <Dialog open={showRefundModal} onOpenChange={setShowRefundModal}>
-          <DialogContent className="sm:max-w-md bg-white border-[#7f5efd] shadow-xl rounded-lg">
+          <DialogContent className="sm:max-w-lg bg-white border-[#7f5efd] shadow-xl rounded-lg">
             <DialogHeader className="pb-4 border-b border-[#7f5efd]/20">
               <DialogTitle className="font-phonic text-xl font-bold text-gray-900 mb-1">
                 Mark as Refunded
@@ -1315,28 +1331,30 @@ export default function TaxReportsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="refund-amount" className="text-right">
+                <Label htmlFor="refund-amount" className="font-capsule text-xs text-gray-600 text-right">
                   Refund Amount
                 </Label>
-                <Input
-                  id="refund-amount"
-                  type="number"
-                  value={refundAmount}
-                  onChange={(e) => setRefundAmount(e.target.value)}
-                  className="col-span-3"
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="refund-amount"
+                    type="number"
+                    value={refundAmount}
+                    onChange={(e) => setRefundAmount(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="refund-date" className="text-right">
+                <Label htmlFor="refund-date" className="font-capsule text-xs text-gray-600 text-right">
                   Refund Date
                 </Label>
-                <Input
-                  id="refund-date"
-                  type="date"
-                  value={refundDate}
-                  onChange={(e) => setRefundDate(e.target.value)}
-                  className="col-span-3"
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="refund-date"
+                    type="date"
+                    value={refundDate}
+                    onChange={(e) => setRefundDate(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter className="border-t border-[#7f5efd]/20 pt-4">
