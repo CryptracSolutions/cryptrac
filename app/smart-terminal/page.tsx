@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense, useMemo } from 'react';
 // import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -91,6 +92,7 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
 
 
 function SmartTerminalPageContent() {
+  const router = useRouter();
   const [device, setDevice] = useState<TerminalDevice | null>(null);
   const [merchantSettings, setMerchantSettings] = useState<MerchantSettings | null>(null);
   const [amount, setAmount] = useState('');
@@ -349,6 +351,11 @@ function SmartTerminalPageContent() {
     }
   }, [selectedNetwork, crypto])
 
+  // Stabilize wallet keys for useMemo dependencies
+  const walletKeys = useMemo(() => {
+    return merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+  }, [merchantSettings?.wallets])
+
   // Real-time payment status monitoring for smart terminal
   useRealTimePaymentStatus({
     paymentId: paymentData?.payment_id || null,
@@ -524,10 +531,22 @@ function SmartTerminalPageContent() {
             {/* Dashboard Button - Top Center of Card (only on initial page) */}
             {step === 'amount' && !paymentLink && (
               <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
-                <Link href="/merchant/dashboard" className="flex items-center gap-1 text-[#7f5efd] transition-colors duration-200 p-1.5 rounded-md">
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      setIsLocked(false);
+                      if (document.fullscreenElement && document.exitFullscreen) {
+                        document.exitFullscreen().catch(() => {});
+                      }
+                    } catch {}
+                    router.push('/merchant/dashboard');
+                  }}
+                  className="flex items-center gap-1 text-[#7f5efd] transition-colors duration-200 p-1.5 rounded-md"
+                >
                   <ArrowLeft className="h-4 w-4" />
                   <span className="text-xs font-medium opacity-80">Dashboard</span>
-                </Link>
+                </button>
               </div>
             )}
 
@@ -891,7 +910,7 @@ function SmartTerminalPageContent() {
                             if (selectedNetwork !== 'all') {
                               const groupedCurrencies = groupCurrenciesByNetwork(
                                 availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                                merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
+                                walletKeys
                               )
                               const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
                               const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
@@ -966,7 +985,7 @@ function SmartTerminalPageContent() {
                                 </SelectItem>
                               )
                             })
-                          }, [availableCurrencies, selectedNetwork, merchantSettings?.wallets])}
+                          }, [availableCurrencies, selectedNetwork, walletKeys])}
                         </SelectContent>
                       </Select>
                     </div>

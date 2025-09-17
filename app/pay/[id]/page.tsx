@@ -199,7 +199,12 @@ export default function PaymentPage() {
       setSelectedCurrency('DAI')
     }
   }, [selectedNetwork, selectedCurrency])
-  
+
+  // Stabilize accepted cryptos for useMemo dependencies
+  const acceptedCryptos = useMemo(() => {
+    return paymentLink?.accepted_cryptos || []
+  }, [paymentLink?.accepted_cryptos])
+
   // Currency backend mapping for payment processing
   const [currencyBackendMapping, setCurrencyBackendMapping] = useState<Record<string, string>>({})
   
@@ -734,7 +739,7 @@ export default function PaymentPage() {
                               if (selectedNetwork !== 'all') {
                                 const groupedCurrencies = groupCurrenciesByNetwork(
                                   availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                                  paymentLink.accepted_cryptos
+                                  acceptedCryptos
                                 )
                                 const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
                                 const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
@@ -809,7 +814,7 @@ export default function PaymentPage() {
                                   </SelectItem>
                                 )
                               })
-                            }, [availableCurrencies, selectedNetwork, paymentLink?.accepted_cryptos])}
+                            }, [availableCurrencies, selectedNetwork, acceptedCryptos])}
                           </SelectContent>
                         </Select>
                       )}
