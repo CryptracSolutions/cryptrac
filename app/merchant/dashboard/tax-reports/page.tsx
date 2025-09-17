@@ -1304,6 +1304,49 @@ export default function TaxReportsPage() {
           transaction={selectedTransaction}
           timezone={timezone}
         />
+
+        {/* Refund Modal */}
+        <Dialog open={showRefundModal} onOpenChange={setShowRefundModal}>
+          <DialogContent className="sm:max-w-md bg-white border-[#7f5efd] shadow-xl rounded-lg">
+            <DialogHeader className="pb-4 border-b border-[#7f5efd]/20">
+              <DialogTitle className="font-phonic text-xl font-bold text-gray-900 mb-1">
+                Mark as Refunded
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="refund-amount" className="text-right">
+                  Refund Amount
+                </Label>
+                <Input
+                  id="refund-amount"
+                  type="number"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="refund-date" className="text-right">
+                  Refund Date
+                </Label>
+                <Input
+                  id="refund-date"
+                  type="date"
+                  value={refundDate}
+                  onChange={(e) => setRefundDate(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter className="border-t border-[#7f5efd]/20 pt-4">
+              <Button variant="outline" onClick={() => setShowRefundModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRefundConfirm}>Confirm Refund</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </div>
     );
   }
