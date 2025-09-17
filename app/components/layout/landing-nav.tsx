@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase-browser"
 export function LandingNav() {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  const [isMobileWhatWeOfferOpen, setIsMobileWhatWeOfferOpen] = React.useState(false)
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
   const [canAccessDashboard, setCanAccessDashboard] = React.useState(false)
   const [isAuthChecked, setIsAuthChecked] = React.useState(false)
@@ -203,8 +204,8 @@ export function LandingNav() {
           </Link>
         </nav>
         
-        {/* Auth Buttons */}
-        <div className="flex items-center space-x-3">
+        {/* Auth Buttons - Hidden on mobile */}
+        <div className="hidden md:flex items-center space-x-3">
           {isAuthChecked && (
             isLoggedIn ? (
               canAccessDashboard ? (
@@ -232,7 +233,7 @@ export function LandingNav() {
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden"
+            className={`md:hidden ${isMobileMenuOpen ? 'bg-black text-white hover:bg-gray-900' : 'hover:bg-gray-100'}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -246,17 +247,33 @@ export function LandingNav() {
           <div className="container-wide py-4 space-y-2">
             {/* What We Offer Mobile Section */}
             <div className="space-y-2">
-              <div className="px-3 py-2 text-sm font-medium text-gray-900">What We Offer</div>
-              {whatWeOfferItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="block px-6 py-2 text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-50 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              <button
+                className="w-full px-3 py-2 text-left text-sm font-medium text-gray-900 hover:text-[#7f5efd] transition-colors flex items-center justify-between"
+                onClick={() => setIsMobileWhatWeOfferOpen(!isMobileWhatWeOfferOpen)}
+              >
+                What We Offer
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  isMobileWhatWeOfferOpen && "rotate-180"
+                )} />
+              </button>
+              {isMobileWhatWeOfferOpen && (
+                <div className="space-y-1 pl-4">
+                  {whatWeOfferItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="block px-6 py-2 text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-50 transition-colors"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false)
+                        setIsMobileWhatWeOfferOpen(false)
+                      }}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
             
             <Link
@@ -323,11 +340,11 @@ export function LandingNav() {
                   )
                 ) : (
                   <>
+                    <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white mb-2" asChild>
+                      <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
+                    </Button>
                     <Button variant="ghost" size="sm" className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
                       <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Log in</Link>
-                    </Button>
-                    <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-                      <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
                     </Button>
                   </>
                 )
