@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { supabase as supabaseBrowserClient } from '@/lib/supabase-browser'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 // import { Input } from '@/app/components/ui/input'
@@ -26,10 +26,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/app/componen
 import { cn } from '@/lib/utils'
 import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const SUPABASE_AVAILABLE = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
+
+const supabase = supabaseBrowserClient
 
 interface PaymentLink {
   id: string
@@ -204,6 +206,42 @@ export default function PaymentPage() {
   const acceptedCryptos = useMemo(() => {
     return paymentLink?.accepted_cryptos || []
   }, [paymentLink?.accepted_cryptos])
+
+  const filteredCurrencies = useMemo(() => {
+    if (!availableCurrencies.length) {
+      return []
+    }
+
+    let filtered = [...availableCurrencies]
+
+    if (selectedNetwork !== 'all') {
+      const groupedCurrencies = groupCurrenciesByNetwork(
+        availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+        acceptedCryptos
+      )
+      const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+      const networkCurrencyCodes = new Set(networkCurrencies.map(currency => currency.code))
+      filtered = filtered.filter(c => networkCurrencyCodes.has(c.code))
+    }
+
+    if (selectedNetwork === 'ethereum') {
+      const normalized = filtered.map(c =>
+        c.code.toUpperCase() === 'DAIARB'
+          ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
+          : c
+      )
+
+      const seen = new Set<string>()
+      filtered = normalized.filter(c => {
+        const key = c.code.toUpperCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+    }
+
+    return filtered
+  }, [availableCurrencies, selectedNetwork, acceptedCryptos])
 
   // Currency backend mapping for payment processing
   const [currencyBackendMapping, setCurrencyBackendMapping] = useState<Record<string, string>>({})
@@ -427,10 +465,17 @@ export default function PaymentPage() {
 
   // Load payment link on component mount
   useEffect(() => {
-    if (id) {
-      loadPaymentLink()
+    if (!id) return
+
+    if (!SUPABASE_AVAILABLE) {
+      console.error('Payment page cannot load: Supabase public configuration is missing.')
+      setError('Payment service is temporarily unavailable. Please contact support if the issue persists.')
+      setLoading(false)
+      return
     }
-    }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    loadPaymentLink()
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -732,38 +777,7 @@ export default function PaymentPage() {
                             sideOffset={5}
                             className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
                           >
-                            {useMemo(() => {
-                              // Filter currencies based on selected network
-                              let filteredCurrencies = availableCurrencies
-
-                              if (selectedNetwork !== 'all') {
-                                const groupedCurrencies = groupCurrenciesByNetwork(
-                                  availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                                  acceptedCryptos
-                                )
-                                const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
-                                const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
-                                filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
-                              }
-
-                              // Swap: when Ethereum network is selected, show DAI (ETH)
-                              // instead of any Arbitrum-specific DAI code that may leak in
-                              if (selectedNetwork === 'ethereum') {
-                                filteredCurrencies = filteredCurrencies.map(c =>
-                                  c.code.toUpperCase() === 'DAIARB'
-                                    ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
-                                    : c
-                                )
-                                // Deduplicate if both DAI and DAIARB were present
-                                const seen = new Set<string>()
-                                filteredCurrencies = filteredCurrencies.filter(c => {
-                                  const key = c.code.toUpperCase()
-                                  if (seen.has(key)) return false
-                                  seen.add(key)
-                                  return true
-                                })
-                              }
-                              
+                            {(() => {
                               const getCurrencyIcon = (currencyCode: string) => {
                                 const code = currencyCode.toUpperCase()
                                 // Bitcoin
@@ -791,7 +805,7 @@ export default function PaymentPage() {
                                 if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
                                 return <Coins className="h-4 w-4 text-white" />
                               }
-                              
+
                               return filteredCurrencies.map((c) => {
                                 const displayName = c.name || getCurrencyDisplayName(c.code)
                                 const isAvailable = c.enabled
@@ -814,7 +828,7 @@ export default function PaymentPage() {
                                   </SelectItem>
                                 )
                               })
-                            }, [availableCurrencies, selectedNetwork, acceptedCryptos])}
+                            })()}
                           </SelectContent>
                         </Select>
                       )}

@@ -12,6 +12,7 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "normalized"
   }
+
   public: {
     Tables: {
       audit_logs: {

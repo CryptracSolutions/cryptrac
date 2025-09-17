@@ -1,6 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { createClient, type SupabaseClient, type RealtimeChannel } from '@supabase/supabase-js'
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const HAS_SUPABASE_CONFIG = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
+
 interface PaymentStatus {
   payment_id: string
   payment_status: string
@@ -61,17 +65,21 @@ export function useRealTimePaymentStatus({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const reconnectAttemptsRef = useRef(0)
   const maxReconnectAttempts = 10
+  const missingConfigWarnedRef = useRef(false)
   
   // Stable refs to prevent stale closures
   const connectSSERef = useRef<(() => void) | null>(null)
   const startPollingRef = useRef<(() => void) | null>(null)
 
   // Initialize Supabase client
-  if (!supabaseRef.current) {
+  if (!supabaseRef.current && HAS_SUPABASE_CONFIG) {
     supabaseRef.current = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      SUPABASE_URL!,
+      SUPABASE_ANON_KEY!
     )
+  } else if (!HAS_SUPABASE_CONFIG && !missingConfigWarnedRef.current) {
+    console.warn('useRealTimePaymentStatus: Supabase configuration missing. Falling back to polling/SSE only.')
+    missingConfigWarnedRef.current = true
   }
 
   // Update payment status and notify listeners
@@ -375,10 +383,20 @@ export function useRealTimePaymentStatus({
     console.log(`🚀 Starting real-time connection for payment: ${paymentId}`)
     
     // Try real-time first, with fallbacks
+    if (!HAS_SUPABASE_CONFIG) {
+      if (connectSSERef.current) {
+        connectSSERef.current()
+      }
+      if (fallbackToPolling && startPollingRef.current) {
+        startPollingRef.current()
+      }
+      return disconnect
+    }
+
     connectRealTime()
 
     return disconnect
-  }, [enabled, paymentId, connectRealTime, disconnect])
+  }, [enabled, paymentId, connectRealTime, disconnect, fallbackToPolling])
 
   // Perform an immediate status fetch to avoid waiting solely on realtime
   useEffect(() => {

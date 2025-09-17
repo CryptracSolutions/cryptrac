@@ -27,7 +27,7 @@ jobs:
       run: supabase gen types typescript --project-id ${{ secrets.SUPABASE_PROJECT_ID }} > types/database.types.ts
     - name: Normalize Supabase Type Metadata
       run: |
-        perl -0pi -e "s/PostgrestVersion:\s*['\"][^'\"]*['\"]/PostgrestVersion: \"normalized\"/" types/database.types.ts
+        perl -0pi -e 's/__InternalSupabase:\s*\{.*?\n\s*\}/__InternalSupabase: {\n    PostgrestVersion: "normalized"\n  }\n/s' types/database.types.ts
     - name: Check for Type Changes
       run: git diff --exit-code types/database.types.ts || (echo "Types changed - run gen types locally" && exit 1)
     - run: yarn lint  # Assuming we'll add ESLint later

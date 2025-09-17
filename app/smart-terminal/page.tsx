@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, Suspense, useMemo } from 'react';
 // import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
@@ -355,6 +354,42 @@ function SmartTerminalPageContent() {
   const walletKeys = useMemo(() => {
     return merchantSettings?.wallets ? Object.keys(merchantSettings.wallets) : []
   }, [merchantSettings?.wallets])
+
+  const filteredCurrencies = useMemo(() => {
+    if (!availableCurrencies.length) {
+      return []
+    }
+
+    let filtered = [...availableCurrencies]
+
+    if (selectedNetwork !== 'all') {
+      const groupedCurrencies = groupCurrenciesByNetwork(
+        availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+        walletKeys
+      )
+      const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
+      const networkCurrencyCodes = new Set(networkCurrencies.map(currency => currency.code))
+      filtered = filtered.filter(c => networkCurrencyCodes.has(c.code))
+    }
+
+    if (selectedNetwork === 'ethereum') {
+      const normalized = filtered.map(c =>
+        c.code.toUpperCase() === 'DAIARB'
+          ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
+          : c
+      )
+
+      const seen = new Set<string>()
+      filtered = normalized.filter(c => {
+        const key = c.code.toUpperCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+    }
+
+    return filtered
+  }, [availableCurrencies, selectedNetwork, walletKeys])
 
   // Real-time payment status monitoring for smart terminal
   useRealTimePaymentStatus({
@@ -903,38 +938,7 @@ function SmartTerminalPageContent() {
                           sideOffset={5}
                           className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
                         >
-                          {useMemo(() => {
-                            // Filter currencies based on selected network
-                            let filteredCurrencies = availableCurrencies
-
-                            if (selectedNetwork !== 'all') {
-                              const groupedCurrencies = groupCurrenciesByNetwork(
-                                availableCurrencies.map(c => ({ code: c.code, name: c.name })),
-                                walletKeys
-                              )
-                              const networkCurrencies = groupedCurrencies.get(selectedNetwork) || []
-                              const networkCurrencyCodes = new Set(networkCurrencies.map(c => c.code))
-                              filteredCurrencies = availableCurrencies.filter(c => networkCurrencyCodes.has(c.code))
-                            }
-
-                            // Swap: when Ethereum network is selected, show DAI (ETH)
-                            // instead of any Arbitrum-specific DAI code that may leak in
-                            if (selectedNetwork === 'ethereum') {
-                              filteredCurrencies = filteredCurrencies.map(c =>
-                                c.code.toUpperCase() === 'DAIARB'
-                                  ? { ...c, code: 'DAI', name: getCurrencyDisplayName('DAI') }
-                                  : c
-                              )
-                              // Deduplicate if both DAI and DAIARB were present
-                              const seen = new Set<string>()
-                              filteredCurrencies = filteredCurrencies.filter(c => {
-                                const key = c.code.toUpperCase()
-                                if (seen.has(key)) return false
-                                seen.add(key)
-                                return true
-                              })
-                            }
-                            
+                          {(() => {
                             const getCurrencyIcon = (currencyCode: string) => {
                               const code = currencyCode.toUpperCase()
                               // Bitcoin
@@ -962,7 +966,7 @@ function SmartTerminalPageContent() {
                               if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
                               return <Coins className="h-4 w-4 text-white" />
                             }
-                            
+
                             return filteredCurrencies.map((c) => {
                               const displayName = c.name || getCurrencyDisplayName(c.code)
                               const isAvailable = c.enabled
@@ -985,7 +989,7 @@ function SmartTerminalPageContent() {
                                 </SelectItem>
                               )
                             })
-                          }, [availableCurrencies, selectedNetwork, walletKeys])}
+                          })()}
                         </SelectContent>
                       </Select>
                     </div>
