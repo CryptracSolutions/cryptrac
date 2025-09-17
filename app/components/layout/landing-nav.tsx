@@ -235,7 +235,7 @@ export function LandingNav() {
           <Button
             variant="ghost"
             size="sm"
-            className={`md:hidden ${isMobileMenuOpen ? 'bg-black text-white hover:bg-gray-900' : 'hover:bg-gray-100'}`}
+            className={`md:hidden ${isMobileMenuOpen ? 'bg-white text-black hover:bg-gray-100' : 'hover:bg-gray-100'}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -245,17 +245,17 @@ export function LandingNav() {
       
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t bg-background">
+        <div className="md:hidden border-t bg-black">
           <div className="container-wide py-4 space-y-2">
             {/* What We Offer Mobile Section */}
             <div className="space-y-2">
               <button
-                className="w-full px-3 py-2 text-left text-sm font-medium text-gray-900 hover:text-[#7f5efd] transition-colors flex items-center justify-between"
+                className="w-full px-3 py-2 text-left text-sm font-medium text-white hover:text-[#7f5efd] transition-colors flex items-center justify-between"
                 onClick={() => setIsMobileWhatWeOfferOpen(!isMobileWhatWeOfferOpen)}
               >
                 What We Offer
                 <ChevronDown className={cn(
-                  "h-4 w-4 transition-transform duration-200",
+                  "h-4 w-4 text-white transition-transform duration-200",
                   isMobileWhatWeOfferOpen && "rotate-180"
                 )} />
               </button>
@@ -265,7 +265,7 @@ export function LandingNav() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="block px-6 py-2 text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-50 transition-colors"
+                      className="block px-6 py-2 text-sm font-normal text-gray-300 hover:text-[#7f5efd] hover:bg-gray-800 transition-colors"
                       onClick={() => {
                         setIsMobileMenuOpen(false)
                         setIsMobileWhatWeOfferOpen(false)
@@ -280,55 +280,55 @@ export function LandingNav() {
             
             <Link
               href="/#features"
-              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              className="block px-3 py-2 text-sm font-medium text-white hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Features
             </Link>
             <Link
               href="/#pricing"
-              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              className="block px-3 py-2 text-sm font-medium text-white hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link
               href="/#faq"
-              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              className="block px-3 py-2 text-sm font-medium text-white hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               FAQ
             </Link>
             <Link
               href="/blog"
-              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              className="block px-3 py-2 text-sm font-medium text-white hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Blog
             </Link>
             <Link
               href="/about"
-              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              className="block px-3 py-2 text-sm font-medium text-white hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               About
             </Link>
             <Link
               href="/help"
-              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              className="block px-3 py-2 text-sm font-medium text-white hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Help
             </Link>
             <Link
               href="/contact"
-              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#7f5efd] transition-colors"
+              className="block px-3 py-2 text-sm font-medium text-white hover:text-[#7f5efd] transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Contact
             </Link>
             
-            <div className="pt-4 space-y-2 border-t">
+            <div className="pt-4 space-y-2 border-t border-gray-700">
               {isAuthChecked && (
                 isLoggedIn ? (
                   canAccessDashboard ? (
@@ -345,7 +345,7 @@ export function LandingNav() {
                     <Button size="sm" className="w-full font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white mb-2" asChild>
                       <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
                     </Button>
-                    <Button variant="ghost" size="sm" className="w-full font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
+                    <Button variant="ghost" size="sm" className="w-full font-phonic text-sm font-normal text-white hover:text-[#7f5efd] hover:bg-gray-800" asChild>
                       <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Log in</Link>
                     </Button>
                   </>
