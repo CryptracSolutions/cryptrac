@@ -18,6 +18,9 @@ jobs:
         node-version: '20'
     - run: yarn install
     - name: Generate Supabase Types
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       run: yarn generate-types
     - name: Normalize Supabase Type Metadata
       run: |
