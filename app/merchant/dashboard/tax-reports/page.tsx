@@ -1020,7 +1020,7 @@ export default function TaxReportsPage() {
                         <div className="flex items-center gap-2">
                           <Label className="font-capsule text-xs text-gray-600">Show</Label>
                           <Select value={displayLimit.toString()} onValueChange={(value) => setDisplayLimit(Number(value))}>
-                            <SelectTrigger className="w-24 h-9 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                            <SelectTrigger className="w-20 h-8 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -1185,7 +1185,7 @@ export default function TaxReportsPage() {
                         Export Options
                       </h3>
 
-                      <div className="flex flex-col lg:flex-row gap-6 lg:items-center">
+                      <div className="flex flex-col lg:flex-row gap-6 lg:items-end">
                         {/* Template Selection */}
                         <div className="flex-1 space-y-2">
                           <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
@@ -1206,51 +1206,54 @@ export default function TaxReportsPage() {
                         </div>
 
                         {/* Export Buttons */}
-                        <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-3">
-                          <Button
-                            disabled={exportingCSV}
-                            size="default"
-                            onClick={() => exportToCSV(selectedTemplate)}
-                            variant="outline"
-                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
-                          >
-                            {exportingCSV ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <FileText className="h-4 w-4" />
-                            )}
-                            {exportingCSV ? 'Exporting...' : 'CSV'}
-                          </Button>
+                        <div className="space-y-2">
+                          <Label className="font-capsule text-xs text-gray-600 text-center block">Export Report</Label>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <Button
+                              disabled={exportingCSV}
+                              size="default"
+                              onClick={() => exportToCSV(selectedTemplate)}
+                              variant="outline"
+                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                            >
+                              {exportingCSV ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
+                              {exportingCSV ? 'Exporting...' : 'CSV'}
+                            </Button>
 
-                          <Button
-                            disabled={exportingPDF}
-                            size="default"
-                            onClick={() => exportToPDF(selectedTemplate)}
-                            variant="outline"
-                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
-                          >
-                            {exportingPDF ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <FileText className="h-4 w-4" />
-                            )}
-                            {exportingPDF ? 'Generating...' : 'PDF'}
-                          </Button>
+                            <Button
+                              disabled={exportingPDF}
+                              size="default"
+                              onClick={() => exportToPDF(selectedTemplate)}
+                              variant="outline"
+                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                            >
+                              {exportingPDF ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
+                              {exportingPDF ? 'Generating...' : 'PDF'}
+                            </Button>
 
-                          <Button
-                            disabled={exportingExcel}
-                            size="default"
-                            onClick={() => exportToExcel(selectedTemplate)}
-                            variant="outline"
-                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
-                          >
-                            {exportingExcel ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <BarChart3 className="h-4 w-4" />
-                            )}
-                            {exportingExcel ? 'Generating...' : 'Excel'}
-                          </Button>
+                            <Button
+                              disabled={exportingExcel}
+                              size="default"
+                              onClick={() => exportToExcel(selectedTemplate)}
+                              variant="outline"
+                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                            >
+                              {exportingExcel ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <BarChart3 className="h-4 w-4" />
+                              )}
+                              {exportingExcel ? 'Generating...' : 'Excel'}
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
