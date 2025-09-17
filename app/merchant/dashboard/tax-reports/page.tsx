@@ -712,318 +712,140 @@ export default function TaxReportsPage() {
           </div>
         </div>
 
-        {loadingReport ? (
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#7f5efd]"></div>
-          </div>
-        ) : (
-          <>
-            {/* Enhanced Statistics Cards */}
-            {displayReportData && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Gross Sales</CardTitle>
-                    <div className="p-2 bg-[#7f5efd] rounded-lg">
-                      <DollarSign className="h-4 w-4 text-white" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_gross_sales.toFixed(2)}</div>
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <TrendingUp className="h-3 w-3" />
-                      <span className="font-capsule text-xs">Total revenue before fees</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Tax Collected</CardTitle>
-                    <div className="p-2 bg-[#7f5efd] rounded-lg">
-                      <Receipt className="h-4 w-4 text-white" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_tax_collected.toFixed(2)}</div>
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <Calculator className="h-3 w-3" />
-                      <span className="font-capsule text-xs">Tax from all transactions</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Net Revenue</CardTitle>
-                    <div className="p-2 bg-[#7f5efd] rounded-lg">
-                      <Calculator className="h-4 w-4 text-white" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_net_revenue.toFixed(2)}</div>
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <DollarSign className="h-3 w-3" />
-                      <span className="font-capsule text-xs">After fees and costs</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Transactions</CardTitle>
-                    <div className="p-2 bg-[#7f5efd] rounded-lg">
-                      <TrendingUp className="h-4 w-4 text-white" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">{displayReportData.summary.total_transactions}</div>
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <BarChart3 className="h-3 w-3" />
-                      <span className="font-capsule text-xs">Total processed</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Detailed Transactions */}
-            {displayReportData && (
+        {/* REFACTOR: Remove full-page loader to prevent page jump */}
+        <>
+          {/* Enhanced Statistics Cards */}
+          {displayReportData && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6">
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
-                          Transaction Details
-                          <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
-                            {filteredTransactions.length}
-                            {filteredTransactions.length !== displayReportData.transactions.length && (
-                              <span className="text-xs"> / {displayReportData.transactions.length}</span>
-                            )}
-                          </Badge>
-                        </CardTitle>
-                        <CardDescription className="font-capsule text-sm text-gray-600">
-                          Select any transaction for a detailed view
-                        </CardDescription>
-                      </div>
-                    </div>
-
-                    {/* Date Filter Row */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-100">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <Label htmlFor="tx-start-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
-                            From:
-                          </Label>
-                          <Input
-                            id="tx-start-date"
-                            type="date"
-                            value={transactionStartDate}
-                            onChange={(e) => setTransactionStartDate(e.target.value)}
-                            max={transactionEndDate || undefined}
-                            className="h-9 text-sm bg-white border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
-                            placeholder="Start date"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Label htmlFor="tx-end-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
-                            To:
-                          </Label>
-                          <Input
-                            id="tx-end-date"
-                            type="date"
-                            value={transactionEndDate}
-                            onChange={(e) => setTransactionEndDate(e.target.value)}
-                            min={transactionStartDate || undefined}
-                            className="h-9 text-sm bg-white border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
-                            placeholder="End date"
-                          />
-                        </div>
-                      </div>
-
-                      {(transactionStartDate || transactionEndDate) && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearTransactionFilters}
-                          className="h-9 px-3 text-xs hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Clear
-                        </Button>
-                      )}
-                    </div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Gross Sales</CardTitle>
+                  <div className="p-2 bg-[#7f5efd] rounded-lg">
+                    <DollarSign className="h-4 w-4 text-white" />
                   </div>
                 </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Date</th>
-                          <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Description</th>
-                          <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Link ID</th>
-                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Gross Amount</th>
-                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Tax</th>
-                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">
-                            <div className="flex items-center justify-end gap-1">
-                              Fees
-                              <div className="group relative">
-                                <Info className="h-3 w-3 text-gray-400" />
-                                <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-                                  Shows who paid the gateway fee
-                                </div>
-                              </div>
-                            </div>
-                          </th>
-                          <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Net Amount</th>
-                          <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Status</th>
-                          <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredTransactions.length === 0 ? (
-                          <tr>
-                            <td colSpan={9} className="py-12 text-center">
-                              <div className="flex flex-col items-center justify-center space-y-3">
-                                <div className="p-3 bg-gray-50 rounded-full">
-                                  <FileText className="h-6 w-6 text-gray-400" />
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="font-phonic text-sm font-medium text-gray-600">
-                                    No transactions found
-                                  </p>
-                                  <p className="font-capsule text-xs text-gray-500">
-                                    Try adjusting your date filters
-                                  </p>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        ) : (
-                          filteredTransactions.slice(0, displayLimit).map((transaction) => (
-                          <tr
-                            key={transaction.id}
-                            className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => handleTransactionClick(transaction)}
-                          >
-                            <td className="py-3 px-4 text-sm text-gray-600">
-                              {formatDateShort(getTransactionTimestamp(transaction), timezone)}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-900 font-medium">
-                              <div className="flex items-center gap-2">
-                                {transaction.product_description}
-                                {transaction.tx_hash && (
-                                  <span className="text-green-500" title="Blockchain verified">
-                                    <ExternalLink className="h-3 w-3" />
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 text-xs font-mono">
-                              {transaction.link_id ? (
-                                <span className="bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
-                                  {transaction.link_id}
-                                </span>
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-900 text-right">
-                              ${transaction.gross_amount.toFixed(2)}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-600 text-right">
-                              ${transaction.tax_amount.toFixed(2)}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-600 text-right">
-                              <div className="flex flex-col items-end">
-                                <span>${transaction.fees.toFixed(2)}</span>
-                                {transaction.fee_payer && (
-                                  <span className="text-xs text-gray-400 mt-1">
-                                    {transaction.fee_payer === 'customer' ? 'Customer paid' : 'Merchant paid'}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-900 text-right font-medium">
-                              ${transaction.net_amount.toFixed(2)}
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <Badge
-                                variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
-                                className="text-xs"
-                              >
-                                {transaction.status}
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                {transaction.public_receipt_id && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      viewReceipt(transaction.public_receipt_id!)
-                                    }}
-                                    className="h-8 px-2 text-xs"
-                                    title="View customer receipt"
-                                  >
-                                    <ExternalLink className="h-3 w-3 mr-1" />
-                                    Receipt
-                                  </Button>
-                                )}
-                                {transaction.status !== 'refunded' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      markAsRefunded(transaction)
-                                    }}
-                                    className="h-8 px-2 text-xs"
-                                    title="Mark as refunded"
-                                  >
-                                    <XCircle className="h-3 w-3 mr-1" />
-                                    Refund
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                    
-                    <div className="flex flex-col items-center gap-4 pt-6 border-t border-gray-200 mt-6">
-                      {/* Load all transactions button */}
-                      {displayReportData && displayReportData.transactions.length < displayReportData.total_count && (
-                        <Button
-                          variant="outline"
-                          onClick={() => loadTaxReport()}
-                          disabled={loadingReport}
-                          className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
-                        >
-                          {loadingReport ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                          {loadingReport ? 'Loading...' : `View All Transactions (${displayReportData.total_count})`}
-                        </Button>
-                      )}
+                <CardContent className="pt-0">
+                  <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_gross_sales.toFixed(2)}</div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <TrendingUp className="h-3 w-3" />
+                    <span className="font-capsule text-xs">Total revenue before fees</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-                      {/* Client-side pagination controls */}
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Tax Collected</CardTitle>
+                  <div className="p-2 bg-[#7f5efd] rounded-lg">
+                    <Receipt className="h-4 w-4 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_tax_collected.toFixed(2)}</div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Calculator className="h-3 w-3" />
+                    <span className="font-capsule text-xs">Tax from all transactions</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Net Revenue</CardTitle>
+                  <div className="p-2 bg-[#7f5efd] rounded-lg">
+                    <Calculator className="h-4 w-4 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_net_revenue.toFixed(2)}</div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <DollarSign className="h-3 w-3" />
+                    <span className="font-capsule text-xs">After fees and costs</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Transactions</CardTitle>
+                  <div className="p-2 bg-[#7f5efd] rounded-lg">
+                    <TrendingUp className="h-4 w-4 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-2xl font-semibold mb-2 text-gray-900">{displayReportData.summary.total_transactions}</div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <BarChart3 className="h-3 w-3" />
+                    <span className="font-capsule text-xs">Total processed</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Detailed Transactions */}
+          {displayReportData && (
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                        Transaction Details
+                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                          {filteredTransactions.length}
+                          {filteredTransactions.length !== displayReportData.transactions.length && (
+                            <span className="text-xs"> / {displayReportData.transactions.length}</span>
+                          )}
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription className="font-capsule text-sm text-gray-600">
+                        Select any transaction for a detailed view
+                      </CardDescription>
+                    </div>
+                  </div>
+
+                  {/* Date Filter Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="tx-start-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
+                          From:
+                        </Label>
+                        <Input
+                          id="tx-start-date"
+                          type="date"
+                          value={transactionStartDate}
+                          onChange={(e) => setTransactionStartDate(e.target.value)}
+                          max={transactionEndDate || undefined}
+                          className="h-9 text-sm bg-white border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                          placeholder="Start date"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="tx-end-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
+                          To:
+                        </Label>
+                        <Input
+                          id="tx-end-date"
+                          type="date"
+                          value={transactionEndDate}
+                          onChange={(e) => setTransactionEndDate(e.target.value)}
+                          min={transactionStartDate || undefined}
+                          className="h-9 text-sm bg-white border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                          placeholder="End date"
+                        />
+                      </div>
+
+                      {/* REFACTOR: Moved Show dropdown here */}
                       {filteredTransactions.length > 5 && (
                         <div className="flex items-center gap-2">
                           <Label className="font-capsule text-xs text-gray-600">Show</Label>
                           <Select value={displayLimit.toString()} onValueChange={(value) => setDisplayLimit(Number(value))}>
-                            <SelectTrigger className="w-20 h-8 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-xs">
+                            <SelectTrigger className="w-20 h-9 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-xs">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="w-20">
                               <SelectItem value="5">5</SelectItem>
                               <SelectItem value="10">10</SelectItem>
                               <SelectItem value="50">50</SelectItem>
@@ -1033,276 +855,453 @@ export default function TaxReportsPage() {
                         </div>
                       )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
-            {/* Combined Report Configuration & Export */}
-            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
-                      Report Configuration
-                      {exportReportData && (
-                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
-                          Ready to Export
-                        </Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="font-capsule text-sm text-gray-600">
-                      Configure parameters and export your tax report in multiple formats
-                    </CardDescription>
+                    {(transactionStartDate || transactionEndDate) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearTransactionFilters}
+                        className="h-9 px-3 text-xs hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
+                      >
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Clear
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-6">
-                {/* Filter Section */}
-                <div>
-                  <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4 text-[#7f5efd]" />
-                    Report Filters
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-capsule text-xs text-gray-600">Report Type</Label>
-                      <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
-                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="calendar_year">Calendar Year</SelectItem>
-                          <SelectItem value="fiscal_year">Fiscal Year</SelectItem>
-                          <SelectItem value="quarterly">Quarterly</SelectItem>
-                          <SelectItem value="custom">Custom Range</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="font-capsule text-xs text-gray-600">Year</Label>
-                      <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
-                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 5 }, (_, i) => currentYear - i).map(year => (
-                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {filters.report_type === 'quarterly' && (
-                      <div className="space-y-2">
-                        <Label className="font-capsule text-xs text-gray-600">Quarter</Label>
-                        <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
-                          <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">Q1 (Jan-Mar)</SelectItem>
-                            <SelectItem value="2">Q2 (Apr-Jun)</SelectItem>
-                            <SelectItem value="3">Q3 (Jul-Sep)</SelectItem>
-                            <SelectItem value="4">Q4 (Oct-Dec)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+              <CardContent className="p-6 pt-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Date</th>
+                        <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Description</th>
+                        <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Link ID</th>
+                        <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Gross Amount</th>
+                        <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Tax</th>
+                        <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">
+                          <div className="flex items-center justify-end gap-1">
+                            Fees
+                            <div className="group relative">
+                              <Info className="h-3 w-3 text-gray-400" />
+                              <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                                Shows who paid the gateway fee
+                              </div>
+                            </div>
+                          </div>
+                        </th>
+                        <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Net Amount</th>
+                        <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Status</th>
+                        <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTransactions.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="py-12 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-3">
+                              <div className="p-3 bg-gray-50 rounded-full">
+                                <FileText className="h-6 w-6 text-gray-400" />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="font-phonic text-sm font-medium text-gray-600">
+                                  No transactions found
+                                </p>
+                                <p className="font-capsule text-xs text-gray-500">
+                                  Try adjusting your date filters
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredTransactions.slice(0, displayLimit).map((transaction) => (
+                        <tr
+                          key={transaction.id}
+                          className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => handleTransactionClick(transaction)}
+                        >
+                          <td className="py-3 px-4 text-sm text-gray-600">
+                            {formatDateShort(getTransactionTimestamp(transaction), timezone)}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 font-medium">
+                            <div className="flex items-center gap-2">
+                              {transaction.product_description}
+                              {transaction.tx_hash && (
+                                <span className="text-green-500" title="Blockchain verified">
+                                  <ExternalLink className="h-3 w-3" />
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-xs font-mono">
+                            {transaction.link_id ? (
+                              <span className="bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
+                                {transaction.link_id}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 text-right">
+                            ${transaction.gross_amount.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600 text-right">
+                            ${transaction.tax_amount.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600 text-right">
+                            <div className="flex flex-col items-end">
+                              <span>${transaction.fees.toFixed(2)}</span>
+                              {transaction.fee_payer && (
+                                <span className="text-xs text-gray-400 mt-1">
+                                  {transaction.fee_payer === 'customer' ? 'Customer paid' : 'Merchant paid'}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 text-right font-medium">
+                            ${transaction.net_amount.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge
+                              variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {transaction.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              {transaction.public_receipt_id && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    viewReceipt(transaction.public_receipt_id!)
+                                  }}
+                                  className="h-8 px-2 text-xs"
+                                  title="View customer receipt"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Receipt
+                                </Button>
+                              )}
+                              {transaction.status !== 'refunded' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    markAsRefunded(transaction)
+                                  }}
+                                  className="h-8 px-2 text-xs"
+                                  title="Mark as refunded"
+                                >
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Refund
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                  
+                  <div className="flex flex-col items-center gap-4 pt-6 border-t border-gray-200 mt-6">
+                    {/* Load all transactions button */}
+                    {displayReportData && displayReportData.transactions.length < displayReportData.total_count && (
+                      <Button
+                        variant="outline"
+                        onClick={() => loadTaxReport()}
+                        disabled={loadingReport}
+                        className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
+                      >
+                        {loadingReport ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                        {loadingReport ? 'Loading...' : `View All Transactions (${displayReportData.total_count})`}
+                      </Button>
                     )}
 
+                    {/* REFACTOR: Removed Show dropdown from here */}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Combined Report Configuration & Export */}
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                    Report Configuration
+                    {exportReportData && (
+                      <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                        Ready to Export
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="font-capsule text-sm text-gray-600">
+                    Configure parameters and export your tax report in multiple formats
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 pt-0 space-y-6">
+              {/* Filter Section */}
+              <div>
+                <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 text-[#7f5efd]" />
+                  Report Filters
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-capsule text-xs text-gray-600">Report Type</Label>
+                    <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
+                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="calendar_year">Calendar Year</SelectItem>
+                        <SelectItem value="fiscal_year">Fiscal Year</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="custom">Custom Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="font-capsule text-xs text-gray-600">Year</Label>
+                    <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
+                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 5 }, (_, i) => currentYear - i).map(year => (
+                          <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {filters.report_type === 'quarterly' && (
                     <div className="space-y-2">
-                      <Label className="font-capsule text-xs text-gray-600">Status</Label>
-                      <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
+                      <Label className="font-capsule text-xs text-gray-600">Quarter</Label>
+                      <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
                         <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Transactions</SelectItem>
-                          <SelectItem value="confirmed">Confirmed Only</SelectItem>
-                          <SelectItem value="refunded">Refunded Only</SelectItem>
+                          <SelectItem value="1">Q1 (Jan-Mar)</SelectItem>
+                          <SelectItem value="2">Q2 (Apr-Jun)</SelectItem>
+                          <SelectItem value="3">Q3 (Jul-Sep)</SelectItem>
+                          <SelectItem value="4">Q4 (Oct-Dec)</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                  </div>
-
-                  {filters.report_type === 'custom' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div className="space-y-2">
-                        <Label className="font-capsule text-xs text-gray-600">Start Date</Label>
-                        <Input
-                          type="date"
-                          value={filters.start_date}
-                          onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-                          className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="font-capsule text-xs text-gray-600">End Date</Label>
-                        <Input
-                          type="date"
-                          value={filters.end_date}
-                          onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-                          className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
-                        />
-                      </div>
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={filters.tax_only}
-                        onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
-                        className="border-gray-300"
-                      />
-                      <Label className="font-capsule text-sm text-gray-700 cursor-pointer">Show tax-only transactions</Label>
-                    </div>
-
-                    <Button
-                      onClick={generateReport}
-                      disabled={loadingReport}
-                      size="default"
-                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-                    >
-                      {loadingReport ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      {loadingReport ? 'Generating...' : 'Generate Report'}
-                    </Button>
+                  <div className="space-y-2">
+                    <Label className="font-capsule text-xs text-gray-600">Status</Label>
+                    <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
+                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Transactions</SelectItem>
+                        <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                        <SelectItem value="refunded">Refunded Only</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                {/* Export Section - Only show when report data is available */}
-                {exportReportData && (
-                  <>
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-[#7f5efd]" />
-                        Export Options
-                      </h3>
-
-                      <div className="flex flex-col lg:flex-row gap-6 lg:items-end">
-                        {/* Template Selection */}
-                        <div className="flex-1 space-y-2">
-                          <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
-                          <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
-                            <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
-                              <SelectValue className="text-left" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="audit">Audit Template - Full transaction details</SelectItem>
-                              <SelectItem value="tax_filing">Tax Filing - IRS compliant format</SelectItem>
-                              <SelectItem value="accounting">Accounting - QuickBooks ready</SelectItem>
-                              <SelectItem value="summary">Summary - Executive overview</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <p className="font-capsule text-xs text-gray-500 mt-1">
-                            Choose a template based on your intended use
-                          </p>
-                        </div>
-
-                        {/* Export Buttons */}
-                        <div className="space-y-2">
-                          <Label className="font-capsule text-xs text-gray-600 text-center block">Export Report</Label>
-                          <div className="flex flex-col sm:flex-row gap-3">
-                            <Button
-                              disabled={exportingCSV}
-                              size="default"
-                              onClick={() => exportToCSV(selectedTemplate)}
-                              variant="outline"
-                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
-                            >
-                              {exportingCSV ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <FileText className="h-4 w-4" />
-                              )}
-                              {exportingCSV ? 'Exporting...' : 'CSV'}
-                            </Button>
-
-                            <Button
-                              disabled={exportingPDF}
-                              size="default"
-                              onClick={() => exportToPDF(selectedTemplate)}
-                              variant="outline"
-                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
-                            >
-                              {exportingPDF ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <FileText className="h-4 w-4" />
-                              )}
-                              {exportingPDF ? 'Generating...' : 'PDF'}
-                            </Button>
-
-                            <Button
-                              disabled={exportingExcel}
-                              size="default"
-                              onClick={() => exportToExcel(selectedTemplate)}
-                              variant="outline"
-                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
-                            >
-                              {exportingExcel ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <BarChart3 className="h-4 w-4" />
-                              )}
-                              {exportingExcel ? 'Generating...' : 'Excel'}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                {filters.report_type === 'custom' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="space-y-2">
+                      <Label className="font-capsule text-xs text-gray-600">Start Date</Label>
+                      <Input
+                        type="date"
+                        value={filters.start_date}
+                        onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+                        className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                      />
                     </div>
+                    <div className="space-y-2">
+                      <Label className="font-capsule text-xs text-gray-600">End Date</Label>
+                      <Input
+                        type="date"
+                        value={filters.end_date}
+                        onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+                        className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
 
-                    {/* Report Date Range Info */}
-                    <div className="bg-[#7f5efd]/10 border border-[#7f5efd]/20 rounded-lg p-4 flex items-start gap-3">
-                      <Info className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <p className="font-capsule text-xs text-gray-700">
-                          Current report includes transactions from{' '}
-                          <span className="font-semibold">
-                            {formatFullDate(exportReportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date, timezone)}
-                          </span>{' '}
-                          to{' '}
-                          <span className="font-semibold">
-                            {formatFullDate(exportReportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date, timezone)}
-                          </span>
+                <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={filters.tax_only}
+                      onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
+                      className="border-gray-300"
+                    />
+                    <Label className="font-capsule text-sm text-gray-700 cursor-pointer">Show tax-only transactions</Label>
+                  </div>
+
+                  <Button
+                    onClick={generateReport}
+                    disabled={loadingReport}
+                    size="default"
+                    className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
+                  >
+                    {loadingReport ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    {loadingReport ? 'Generating...' : 'Generate Report'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Export Section - Only show when report data is available */}
+              {exportReportData && (
+                <>
+                  <div className="border-t border-gray-200 pt-6">
+                    <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-[#7f5efd]" />
+                      Export Options
+                    </h3>
+
+                    {/* REFACTOR: Improved alignment for export controls */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-end">
+                      {/* Template Selection */}
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
+                        <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
+                          <SelectTrigger className="w-full lg:w-[calc(50%-0.75rem)] h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                            <SelectValue className="text-left" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="audit">Audit Template - Full transaction details</SelectItem>
+                            <SelectItem value="tax_filing">Tax Filing - IRS compliant format</SelectItem>
+                            <SelectItem value="accounting">Accounting - QuickBooks ready</SelectItem>
+                            <SelectItem value="summary">Summary - Executive overview</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="font-capsule text-xs text-gray-500 mt-1">
+                          Choose a template based on your intended use
                         </p>
                       </div>
+
+                      {/* Export Buttons */}
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600 text-center block lg:text-left">Export Report</Label>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button
+                            disabled={exportingCSV}
+                            size="default"
+                            onClick={() => exportToCSV(selectedTemplate)}
+                            variant="outline"
+                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                          >
+                            {exportingCSV ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FileText className="h-4 w-4" />
+                            )}
+                            {exportingCSV ? 'Exporting...' : 'CSV'}
+                          </Button>
+
+                          <Button
+                            disabled={exportingPDF}
+                            size="default"
+                            onClick={() => exportToPDF(selectedTemplate)}
+                            variant="outline"
+                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                          >
+                            {exportingPDF ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FileText className="h-4 w-4" />
+                            )}
+                            {exportingPDF ? 'Generating...' : 'PDF'}
+                          </Button>
+
+                          <Button
+                            disabled={exportingExcel}
+                            size="default"
+                            onClick={() => exportToExcel(selectedTemplate)}
+                            variant="outline"
+                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                          >
+                            {exportingExcel ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <BarChart3 className="h-4 w-4" />
+                            )}
+                            {exportingExcel ? 'Generating...' : 'Excel'}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  </>
-                )}
+                  </div>
+
+                  {/* Report Date Range Info */}
+                  <div className="bg-[#7f5efd]/10 border border-[#7f5efd]/20 rounded-lg p-4 flex items-start gap-3">
+                    <Info className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-capsule text-xs text-gray-700">
+                        Current report includes transactions from{' '}
+                        <span className="font-semibold">
+                          {formatFullDate(exportReportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date, timezone)}
+                        </span>{' '}
+                        to{' '}
+                        <span className="font-semibold">
+                          {formatFullDate(exportReportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date, timezone)}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* No Data State */}
+          {!displayReportData && !loadingReport && (
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardContent className="pt-12 pb-12">
+                <div className="text-center">
+                  <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <BarChart3 className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No Report Generated</h3>
+                  <p className="font-capsule text-sm text-gray-500 mb-6">Configure your filters and generate a tax report to see your data</p>
+                  <Button
+                    onClick={generateReport}
+                    disabled={loadingReport}
+                    size="default"
+                    className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                  >
+                    Generate Report
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-
-            {/* No Data State */}
-            {!displayReportData && !loadingReport && (
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardContent className="pt-12 pb-12">
-                  <div className="text-center">
-                    <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                      <BarChart3 className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No Report Generated</h3>
-                    <p className="font-capsule text-sm text-gray-500 mb-6">Configure your filters and generate a tax report to see your data</p>
-                    <Button
-                      onClick={generateReport}
-                      disabled={loadingReport}
-                      size="default"
-                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
-                    >
-                      Generate Report
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+          )}
+        </>
+        
 
         {/* Transaction Detail Modal */}
         <TransactionDetailModal
