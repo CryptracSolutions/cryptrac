@@ -5,6 +5,14 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const HAS_SUPABASE_CONFIG = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
 
+const initialConnectionStatus: ConnectionStatus = {
+  connected: false,
+  reconnecting: false,
+  error: null,
+  method: 'none',
+  lastUpdate: null
+}
+
 interface PaymentStatus {
   payment_id: string
   payment_status: string
@@ -49,13 +57,7 @@ export function useRealTimePaymentStatus({
   pollingInterval = 5000
 }: UseRealTimePaymentStatusOptions) {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    connected: false,
-    reconnecting: false,
-    error: null,
-    method: 'none',
-    lastUpdate: null
-  })
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(initialConnectionStatus)
 
   const supabaseRef = useRef<SupabaseClient | null>(null)
   const subscriptionRef = useRef<RealtimeChannel | null>(null)
@@ -340,6 +342,11 @@ export function useRealTimePaymentStatus({
   const disconnect = useCallback(() => {
     console.log('🔌 Disconnecting from payment status updates')
     
+    const hadPolling = Boolean(pollingIntervalRef.current)
+    const hadSSE = Boolean(eventSourceRef.current)
+    const hadSubscription = Boolean(subscriptionRef.current)
+    const hadTimeout = Boolean(reconnectTimeoutRef.current)
+
     // Clear polling
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current)
@@ -364,12 +371,18 @@ export function useRealTimePaymentStatus({
       reconnectTimeoutRef.current = null
     }
     
-    setConnectionStatus({
-      connected: false,
-      reconnecting: false,
-      error: null,
-      method: 'none',
-      lastUpdate: null
+    const hadSideEffect = hadPolling || hadSSE || hadSubscription || hadTimeout
+
+    setConnectionStatus(prev => {
+      const shouldUpdateStatus =
+        hadSideEffect ||
+        prev.connected ||
+        prev.reconnecting ||
+        prev.error !== null ||
+        prev.method !== 'none' ||
+        prev.lastUpdate !== null
+
+      return shouldUpdateStatus ? initialConnectionStatus : prev
     })
   }, [])
 
