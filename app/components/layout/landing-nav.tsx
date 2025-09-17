@@ -204,31 +204,33 @@ export function LandingNav() {
           </Link>
         </nav>
         
-        {/* Auth Buttons - Hidden on mobile */}
-        <div className="hidden md:flex items-center space-x-3">
-          {isAuthChecked && (
-            isLoggedIn ? (
-              canAccessDashboard ? (
-                <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-                  <Link href="/merchant/dashboard">Dashboard</Link>
-                </Button>
+        <div className="flex items-center space-x-3">
+          {/* Auth Buttons - Hidden on mobile */}
+          <div className="hidden md:flex items-center space-x-3">
+            {isAuthChecked && (
+              isLoggedIn ? (
+                canAccessDashboard ? (
+                  <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                    <Link href="/merchant/dashboard">Dashboard</Link>
+                  </Button>
+                ) : (
+                  <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                    <Link href="/merchant/onboarding">Continue Onboarding</Link>
+                  </Button>
+                )
               ) : (
-                <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-                  <Link href="/merchant/onboarding">Continue Onboarding</Link>
-                </Button>
+                <>
+                  <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
+                    <Link href="/login">Log in</Link>
+                  </Button>
+                  <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
+                    <Link href="/signup">Get Started</Link>
+                  </Button>
+                </>
               )
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" className="font-phonic text-sm font-normal text-gray-600 hover:text-[#7f5efd] hover:bg-gray-100" asChild>
-                  <Link href="/login">Log in</Link>
-                </Button>
-                <Button size="sm" className="font-phonic text-sm font-normal bg-[#7f5efd] hover:bg-[#7c3aed] text-white" asChild>
-                  <Link href="/signup">Get Started</Link>
-                </Button>
-              </>
-            )
-          )}
-          
+            )}
+          </div>
+
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"

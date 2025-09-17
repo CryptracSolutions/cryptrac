@@ -231,9 +231,6 @@ function QRCodeStage() {
             className="mx-auto"
           />
         </div>
-        <div className="text-center mt-2">
-          <div className="text-xs text-gray-500">Scan with wallet</div>
-        </div>
       </div>
 
       {/* Amount */}
