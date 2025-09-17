@@ -22,10 +22,16 @@ jobs:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       run: yarn generate-types
-    - name: Normalize Supabase Type Metadata
+    - name: Normalize Supabase Type Metadata and Format
       run: |
-        perl -0pi -e 's/__InternalSupabase:\s*\{.*?\n\s*\}/__InternalSupabase: {\n    PostgrestVersion: "normalized"\n  }\n/s' types/database.types.ts
+        # Apply the normalization
+        perl -0pi -e 's/__InternalSupabase:\s*\{.*?\n\s*\}/__InternalSupabase: {\n    PostgrestVersion: "normalized"\n  }/s' types/database.types.ts
+        # Ensure consistent formatting by removing extra blank lines and normalizing spacing
+        sed -i '/^[[:space:]]*$/N;/^[[:space:]]*\n[[:space:]]*$/d' types/database.types.ts
+        # Ensure there's exactly one blank line after the __InternalSupabase block
+        sed -i '/PostgrestVersion: "normalized"/,/^[[:space:]]*$/{/^[[:space:]]*$/d;}' types/database.types.ts
+        sed -i '/PostgrestVersion: "normalized"/a\\n' types/database.types.ts
     - name: Check for Type Changes
       run: git diff --exit-code types/database.types.ts || (echo "Types changed - run gen types locally" && exit 1)
-    - run: yarn lint  # Assuming we'll add ESLint later
-    - run: yarn type-check  # For TypeScript checks
+    - run: yarn lint
+    - run: yarn type-check
