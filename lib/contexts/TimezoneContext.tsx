@@ -38,7 +38,7 @@ export const TimezoneProvider = ({ children }: { children: ReactNode }) => {
     };
 
     fetchMerchantTimezone();
-  }, [supabase]);
+  }, []);
 
   const updateTimezone = async (newTimezone: string) => {
     try {

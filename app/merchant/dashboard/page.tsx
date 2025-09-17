@@ -92,6 +92,19 @@ interface RecentTransaction {
   payment_link_title: string;
 }
 
+interface TransactionRow {
+  id: string;
+  amount: number | null;
+  currency: string | null;
+  pay_currency: string | null;
+  status: string | null;
+  created_at: string;
+  payment_link_id: string | null;
+  payment_links?: {
+    title?: string | null;
+  } | null;
+}
+
 export default function MerchantDashboard() {
   const [user, setUser] = useState<{ email?: string; user_metadata?: { business_name?: string; trial_end?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,16 +155,27 @@ export default function MerchantDashboard() {
         .gt('created_at', lastSeen)
         .order('created_at', { ascending: false });
 
-      setNewPayments((txs || []).map(t => ({
-        id: t.id,
-        amount: Number(t.amount || 0),
-        currency: t.currency || 'USD',
-        pay_currency: t.pay_currency || t.currency || 'USD',
-        status: t.status || 'confirmed',
-        created_at: t.created_at,
-        payment_link_id: t.payment_link_id,
-        payment_link_title: ((t as Record<string, unknown>).payment_links as any)?.title as string || 'Payment',
-      })));
+      const typedTransactions = (txs ?? []) as TransactionRow[]
+
+      setNewPayments(
+        typedTransactions.map((t) => {
+          const paymentLinkTitle = t.payment_links?.title
+          const normalizedTitle = typeof paymentLinkTitle === 'string' && paymentLinkTitle.trim()
+            ? paymentLinkTitle
+            : 'Payment'
+
+          return {
+            id: t.id,
+            amount: Number(t.amount || 0),
+            currency: t.currency || 'USD',
+            pay_currency: t.pay_currency || t.currency || 'USD',
+            status: t.status || 'confirmed',
+            created_at: t.created_at,
+            payment_link_id: t.payment_link_id || '',
+            payment_link_title: normalizedTitle,
+          }
+        })
+      )
     } catch (err) {
       console.error('Failed to fetch new payments:', err);
     }
@@ -180,7 +204,9 @@ export default function MerchantDashboard() {
         .in('status', ['confirmed', 'finished'])
         .order('created_at', { ascending: false });
 
-      const totalRevenue = transactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+      const typedTransactionsForStats = (transactions ?? []) as TransactionRow[]
+
+      const totalRevenue = typedTransactionsForStats.reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
       setStats({
         totalRevenue,
@@ -188,18 +214,27 @@ export default function MerchantDashboard() {
         successfulPayments: paymentsCount || 0,
       });
 
+      const typedRecentTransactions = typedTransactionsForStats
+
       setRecentTransactions(
-        (transactions || []).slice(0, 5).map(t => ({
-          id: t.id,
-          amount: Number(t.amount || 0),
-          currency: t.currency || 'USD',
-          pay_currency: t.pay_currency || t.currency || 'USD',
-          status: t.status || 'confirmed',
-          created_at: t.created_at,
-          payment_link_id: t.payment_link_id,
-          payment_link_title: ((t as Record<string, unknown>).payment_links as any)?.title as string || 'Payment',
-        }))
-      );
+        typedRecentTransactions.slice(0, 5).map((t) => {
+          const paymentLinkTitle = t.payment_links?.title
+          const normalizedTitle = typeof paymentLinkTitle === 'string' && paymentLinkTitle.trim()
+            ? paymentLinkTitle
+            : 'Payment'
+
+          return {
+            id: t.id,
+            amount: Number(t.amount || 0),
+            currency: t.currency || 'USD',
+            pay_currency: t.pay_currency || t.currency || 'USD',
+            status: t.status || 'confirmed',
+            created_at: t.created_at,
+            payment_link_id: t.payment_link_id || '',
+            payment_link_title: normalizedTitle,
+          }
+        })
+      )
 
       // Fetch new payments since last seen
       await fetchNewPayments(merchantId);
@@ -735,4 +770,3 @@ export default function MerchantDashboard() {
     </div>
   );
 }
-

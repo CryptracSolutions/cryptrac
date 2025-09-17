@@ -154,6 +154,19 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     doSearch(query)
   }, [query, doSearch])
 
+  // Handle result click
+  const handleResultClick = React.useCallback((result: SearchResult) => {
+    saveSearchHistory(query, result.id)
+    
+    // Track click analytics
+    const totalResults = flatResults.length
+    trackSearchClick(query, result.id, totalResults)
+    updateSearchMetrics(query, totalResults, true)
+    
+    router.push(result.href)
+    onClose()
+  }, [query, router, onClose, flatResults.length, trackSearchClick])
+
   // Handle keyboard navigation
   const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
     switch (e.key) {
@@ -176,20 +189,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         onClose()
         break
     }
-  }, [flatResults, selectedIndex, onClose])
-
-  // Handle result click
-  const handleResultClick = React.useCallback((result: SearchResult) => {
-    saveSearchHistory(query, result.id)
-    
-    // Track click analytics
-    const totalResults = flatResults.length
-    trackSearchClick(query, result.id, totalResults)
-    updateSearchMetrics(query, totalResults, true)
-    
-    router.push(result.href)
-    onClose()
-  }, [query, router, onClose, flatResults.length, trackSearchClick])
+  }, [flatResults, selectedIndex, onClose, handleResultClick])
 
   // Handle recent search click
   const handleRecentClick = React.useCallback((recentQuery: string) => {

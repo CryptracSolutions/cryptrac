@@ -34,11 +34,18 @@ export function LandingNav() {
     let isMounted = true
     const ric = (cb: () => void) => {
       // Defer to idle time to avoid blocking navigation/UI thread
-      if (typeof window !== 'undefined' && (window as any).requestIdleCallback) {
-        ;(window as any).requestIdleCallback(cb)
-      } else {
-        setTimeout(cb, 0)
+      if (typeof window !== 'undefined') {
+        const globalWindow = window as Window & typeof globalThis & {
+          requestIdleCallback?: (callback: IdleRequestCallback) => number
+        }
+
+        if (typeof globalWindow.requestIdleCallback === 'function') {
+          globalWindow.requestIdleCallback(cb)
+          return
+        }
       }
+
+      setTimeout(cb, 0)
     }
 
     const evaluateAccess = async () => {

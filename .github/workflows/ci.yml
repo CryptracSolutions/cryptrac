@@ -16,9 +16,15 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+    - name: Install Supabase CLI
+      uses: supabase/setup-cli@v1
+      with:
+        version: latest
     - run: yarn install
     - name: Generate Supabase Types
-      run: yarn supabase gen types typescript --project-id ${{ secrets.SUPABASE_PROJECT_ID }} > types/database.types.ts
+      env:
+        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      run: supabase gen types typescript --project-id ${{ secrets.SUPABASE_PROJECT_ID }} > types/database.types.ts
     - name: Check for Type Changes
       run: git diff --exit-code types/database.types.ts || (echo "Types changed - run gen types locally" && exit 1)
     - run: yarn lint  # Assuming we'll add ESLint later

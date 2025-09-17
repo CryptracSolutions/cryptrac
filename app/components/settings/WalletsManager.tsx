@@ -251,7 +251,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     };
 
     loadAdditionalCurrencies();
-  }, [settings.wallets]);
+  }, [settings.wallets, settings.wallet_extra_ids]);
 
   // Handle newly added wallet animation
   useEffect(() => {

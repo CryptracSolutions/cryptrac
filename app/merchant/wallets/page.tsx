@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
@@ -116,9 +116,11 @@ export default function WalletsPage() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.settings) {
-            const updatedSettings = { ...settings, ...data.settings };
-            setSettings(updatedSettings);
-            setLastSavedSettings(updatedSettings);
+            setSettings(prevSettings => {
+              const mergedSettings = { ...prevSettings, ...data.settings };
+              setLastSavedSettings(mergedSettings);
+              return mergedSettings;
+            });
           }
         }
       } catch (error) {
@@ -134,7 +136,7 @@ export default function WalletsPage() {
 
 
   // Auto-save functionality
-  const autoSave = async (newSettings: MerchantSettings) => {
+  const autoSave = useCallback(async (newSettings: MerchantSettings) => {
     if (JSON.stringify(newSettings) === JSON.stringify(lastSavedSettings)) {
       return; // No changes to save
     }
@@ -162,7 +164,7 @@ export default function WalletsPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [lastSavedSettings]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -173,7 +175,7 @@ export default function WalletsPage() {
     }, 1000); // 1 second debounce
 
     return () => clearTimeout(timeoutId);
-  }, [settings, lastSavedSettings]);
+  }, [settings, lastSavedSettings, autoSave]);
 
   // Auto-hide success message after 3 seconds
   useEffect(() => {

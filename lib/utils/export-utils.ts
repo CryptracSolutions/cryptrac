@@ -71,6 +71,32 @@ const resolveTransactionTimestamp = (tx: Pick<ExportTransaction, 'created_at' | 
   return tx.created_at
 }
 
+type JsPDFInstance = InstanceType<typeof jsPDF>
+
+type JsPDFInternalWithPages = {
+  getCurrentPageInfo: () => { pageNumber: number }
+  getNumberOfPages: () => number
+}
+
+type JsPDFWithAutoTable = JsPDFInstance & {
+  lastAutoTable?: {
+    finalY?: number
+  }
+  internal: JsPDFInstance['internal'] & JsPDFInternalWithPages
+}
+
+const getDocumentMetrics = (doc: jsPDF): { pageNumber: number; totalPages: number } => {
+  const docWithExtras = doc as unknown as JsPDFWithAutoTable
+  const info = docWithExtras.internal.getCurrentPageInfo()
+  const totalPages = docWithExtras.internal.getNumberOfPages()
+  return { pageNumber: info.pageNumber, totalPages }
+}
+
+const getLastAutoTablePosition = (doc: jsPDF): number | null => {
+  const docWithExtras = doc as unknown as JsPDFWithAutoTable
+  return docWithExtras.lastAutoTable?.finalY ?? null
+}
+
 // Professional PDF Generation with improved formatting
 export function generateTaxReportPDF(
   transactions: ExportTransaction[],
@@ -265,11 +291,10 @@ export function generateTaxReportPDF(
       alternateRowStyles: {
         fillColor: colors.background
       },
-      columnStyles: columnStyles as any,
+      columnStyles,
       didDrawPage: () => {
         // Add footer on every page
-        const pageNumber = ((doc as any).internal as any).getCurrentPageInfo().pageNumber
-        const totalPages = ((doc as any).internal as any).getNumberOfPages()
+        const { pageNumber, totalPages } = getDocumentMetrics(doc)
 
         // Footer background
         doc.setFillColor(colors.background[0], colors.background[1], colors.background[2])
@@ -289,10 +314,11 @@ export function generateTaxReportPDF(
     })
 
     // Add digital verification notice on last page
-    const lastPageNumber = ((doc as any).internal as any).getNumberOfPages()
+    const { totalPages } = getDocumentMetrics(doc)
+    const lastPageNumber = totalPages
     doc.setPage(lastPageNumber)
 
-    const currentY = ((doc as any).lastAutoTable as any)?.finalY || yPos
+    const currentY = getLastAutoTablePosition(doc) ?? yPos
     if (currentY < pageHeight - 60) {
       doc.setFontSize(9)
       doc.setFont('helvetica', 'italic')
@@ -447,8 +473,8 @@ function getColumnsForPDFTemplate(template: ExportTemplate): string[] {
 }
 
 // Column styles for PDF tables
-function getColumnStylesForTemplate(template: ExportTemplate): Record<string, unknown> {
-  const baseStyles = {
+function getColumnStylesForTemplate(template: ExportTemplate): Record<number, Record<string, unknown>> {
+  const baseStyles: Record<number, Record<string, unknown>> = {
     0: { cellWidth: 22, halign: 'left' },   // Date
     1: { cellWidth: 'auto', halign: 'left' }, // Description (auto-expand)
   }

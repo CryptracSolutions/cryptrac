@@ -66,6 +66,21 @@ interface MerchantSettings {
   };
 }
 
+interface MerchantRecord {
+  wallets: Record<string, string> | null;
+  auto_convert_enabled: boolean | null;
+  charge_customer_fee: boolean | null;
+  tax_enabled: boolean | null;
+  tax_rates: TaxRate[] | null;
+  tax_strategy: string | null;
+  payment_config: MerchantSettings['payment_config'] | null;
+  onboarding_data?: {
+    tax_enabled?: boolean;
+    tax_rates?: TaxRate[];
+    tax_strategy?: string;
+  } | null;
+}
+
 const FIAT_CURRENCIES = [
   { code: 'USD', name: 'US Dollar', symbol: '$' },
   { code: 'EUR', name: 'Euro', symbol: '€' },
@@ -127,7 +142,7 @@ export default function CreatePaymentLinkPage() {
         .from('merchants')
         .select('wallets, auto_convert_enabled, charge_customer_fee, payment_config, tax_enabled, tax_rates, tax_strategy, onboarding_data')
         .eq('user_id', session.user.id)
-        .single();
+        .single<MerchantRecord>();
 
       if (merchantError) {
         console.error('Error loading merchant settings:', merchantError);
@@ -135,23 +150,32 @@ export default function CreatePaymentLinkPage() {
         return;
       }
 
+      if (!merchant) {
+        toast.error('Merchant settings are unavailable');
+        return;
+      }
+
       const wallets = { ...(merchant.wallets || {}) };
 
+      const onboardingData = merchant.onboarding_data ?? null;
+      const merchantTaxRates = merchant.tax_rates ?? [];
+      const onboardingTaxRates = onboardingData?.tax_rates ?? [];
+
       // Resolve tax configuration using top-level fields, falling back to onboarding_data
-      const resolvedTaxEnabled = (merchant as Record<string, unknown>).tax_enabled ?? ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_enabled ?? false;
+      const resolvedTaxEnabled = Boolean(merchant.tax_enabled ?? onboardingData?.tax_enabled ?? false);
       const resolvedTaxRates = resolvedTaxEnabled
-        ? ((merchant as Record<string, unknown>).tax_rates && ((merchant as Record<string, unknown>).tax_rates as any[]).length > 0
-            ? (merchant as Record<string, unknown>).tax_rates
-            : (((merchant as Record<string, unknown>).onboarding_data as any)?.tax_rates || []))
+        ? (merchantTaxRates.length > 0 ? merchantTaxRates : onboardingTaxRates)
         : [];
-      const resolvedTaxStrategy = (merchant as Record<string, unknown>).tax_strategy || ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_strategy || 'origin';
+      const resolvedTaxStrategy = merchant.tax_strategy || onboardingData?.tax_strategy || 'origin';
 
       const updatedMerchant = { 
-        ...merchant, 
         wallets,
+        auto_convert_enabled: merchant.auto_convert_enabled ?? false,
+        charge_customer_fee: merchant.charge_customer_fee ?? false,
         tax_enabled: resolvedTaxEnabled,
         tax_rates: resolvedTaxRates,
-        tax_strategy: resolvedTaxStrategy
+        tax_strategy: resolvedTaxStrategy,
+        payment_config: merchant.payment_config ?? {}
       } as MerchantSettings;
       setMerchantSettings(updatedMerchant);
       const cryptos = Object.keys(wallets);

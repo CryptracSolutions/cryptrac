@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import { formatAddressForQR } from '@/lib/simple-address-formatter'
 import { cn } from '@/lib/utils'
 import { LoadingSpinner } from './loading-spinner'
@@ -47,9 +48,9 @@ export function QRCode({ currency, address, extraId, value, size = 256, classNam
             Failed to load QR
           </div>
         ) : (
-          <img
+          <Image
             src={qrUrl}
-            alt={`${currency} address QR`}
+            alt={`${currency ?? 'Payment'} address QR`}
             width={size}
             height={size}
             className="rounded-lg"

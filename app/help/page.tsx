@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ChevronRight, HelpCircle, Users, CreditCard, Shield, Settings, Phone, Mail, MapPin, Clock, FileText, Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -13,7 +13,7 @@ export default function HelpPage() {
   const [activeSection, setActiveSection] = useState<string>("");
   const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: "welcome", title: "Welcome to Cryptrac", icon: HelpCircle },
     { id: "merchants", title: "Getting Started for Merchants", icon: Users },
     { id: "dashboard", title: "Merchant Dashboard Features", icon: Settings },
@@ -21,7 +21,7 @@ export default function HelpPage() {
     { id: "troubleshooting", title: "Troubleshooting Common Issues", icon: Wrench },
     { id: "security", title: "Security Best Practices", icon: Shield },
     { id: "contact", title: "Contact Information & Support", icon: Phone }
-  ];
+  ], []);
 
   useEffect(() => {
     const handleScroll = () => {

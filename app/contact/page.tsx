@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from "next/link";
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock, Users, Shield, HelpCircle, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
@@ -22,13 +22,13 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("");
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: "contact-info", title: "Contact Information", icon: Phone },
     { id: "support-hours", title: "Support Hours", icon: Clock },
     { id: "contact-form", title: "Send Message", icon: MessageSquare },
     { id: "faq", title: "Frequently Asked", icon: HelpCircle },
     { id: "emergency", title: "Emergency Support", icon: AlertCircle }
-  ];
+  ], []);
 
   useEffect(() => {
     const handleScroll = () => {

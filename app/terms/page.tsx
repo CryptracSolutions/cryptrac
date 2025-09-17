@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, Shield, CreditCard, Users, AlertCircle, Ban, Lock, Scale, Zap, Phone, Mail, MapPin, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -13,7 +13,7 @@ export default function TermsOfService() {
   const [activeSection, setActiveSection] = useState<string>("");
   const effectiveDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: "introduction", title: "Introduction & Acceptance", icon: FileText },
     { id: "service", title: "Service Description", icon: Zap },
     { id: "eligibility", title: "Eligibility & Registration", icon: Users },
@@ -30,7 +30,7 @@ export default function TermsOfService() {
     { id: "force", title: "Force Majeure", icon: AlertCircle },
     { id: "general", title: "General Provisions", icon: FileText },
     { id: "contact", title: "Contact Information", icon: Phone }
-  ];
+  ], []);
 
   useEffect(() => {
     const handleScroll = () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Shield, Lock, Eye, AlertTriangle, CheckCircle2, Server, Key, Users, Clock, Phone, Mail, FileText, Zap, Database, Globe, UserCheck, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -13,7 +13,7 @@ export default function SecurityPage() {
   const [activeSection, setActiveSection] = useState<string>("");
   const effectiveDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: "overview", title: "Security Overview", icon: Shield },
     { id: "platform-security", title: "Platform Security", icon: Lock },
     { id: "data-protection", title: "Data Protection", icon: Database },
@@ -25,7 +25,7 @@ export default function SecurityPage() {
     { id: "user-security", title: "Your Security Role", icon: Users },
     { id: "reporting", title: "Security Reporting", icon: Eye },
     { id: "contact", title: "Security Contact", icon: Phone }
-  ];
+  ], []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,7 +46,7 @@ export default function SecurityPage() {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

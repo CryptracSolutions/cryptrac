@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // Function to trigger real-time notifications for payment status updates
 async function broadcastPaymentUpdate(
-  supabase: any,
+  supabase: SupabaseClient,
   paymentId: string,
   updateData: Record<string, unknown>
 ) {

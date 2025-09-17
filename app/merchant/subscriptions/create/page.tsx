@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Input } from '@/app/components/ui/input';
@@ -27,6 +27,21 @@ interface MerchantSettings {
   tax_enabled: boolean;
   tax_rates: TaxRate[];
   tax_strategy: string;
+}
+
+interface MerchantRecord {
+  wallets: Record<string, string> | null;
+  auto_convert_enabled: boolean | null;
+  charge_customer_fee: boolean | null;
+  preferred_payout_currency: string | null;
+  tax_enabled: boolean | null;
+  tax_rates: TaxRate[] | null;
+  tax_strategy: string | null;
+  onboarding_data?: {
+    tax_enabled?: boolean;
+    tax_rates?: TaxRate[];
+    tax_strategy?: string;
+  } | null;
 }
 
 const FIAT_CURRENCIES = [
@@ -87,11 +102,7 @@ export default function CreateSubscriptionPage() {
     showAdvanced: false,
   });
 
-  useEffect(() => {
-    loadMerchantSettings();
-  }, []);
-
-  const loadMerchantSettings = async () => {
+  const loadMerchantSettings = useCallback(async () => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -107,7 +118,7 @@ export default function CreateSubscriptionPage() {
         .from('merchants')
         .select('wallets, auto_convert_enabled, charge_customer_fee, preferred_payout_currency, tax_enabled, tax_rates, tax_strategy, onboarding_data')
         .eq('user_id', session.user.id)
-        .single();
+        .single<MerchantRecord>();
 
       if (merchantError) {
         console.error('Error loading merchant settings:', merchantError);
@@ -115,20 +126,29 @@ export default function CreateSubscriptionPage() {
         return;
       }
 
+      if (!merchant) {
+        toast.error('Merchant settings are unavailable');
+        return;
+      }
+
       const wallets = { ...(merchant.wallets || {}) };
 
+      const onboardingData = merchant.onboarding_data ?? null;
+      const merchantTaxRates = merchant.tax_rates ?? [];
+      const onboardingTaxRates = onboardingData?.tax_rates ?? [];
+
       // Resolve tax configuration using top-level fields, falling back to onboarding_data
-      const resolvedTaxEnabled = (merchant as Record<string, unknown>).tax_enabled ?? ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_enabled ?? false;
+      const resolvedTaxEnabled = Boolean(merchant.tax_enabled ?? onboardingData?.tax_enabled ?? false);
       const resolvedTaxRates = resolvedTaxEnabled
-        ? ((merchant as Record<string, unknown>).tax_rates && ((merchant as Record<string, unknown>).tax_rates as any[]).length > 0
-            ? (merchant as Record<string, unknown>).tax_rates
-            : (((merchant as Record<string, unknown>).onboarding_data as any)?.tax_rates || []))
+        ? (merchantTaxRates.length > 0 ? merchantTaxRates : onboardingTaxRates)
         : [];
-      const resolvedTaxStrategy = (merchant as Record<string, unknown>).tax_strategy || ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_strategy || 'origin';
+      const resolvedTaxStrategy = merchant.tax_strategy || onboardingData?.tax_strategy || 'origin';
 
       const updatedMerchant = { 
-        ...merchant, 
         wallets,
+        auto_convert_enabled: merchant.auto_convert_enabled ?? false,
+        charge_customer_fee: merchant.charge_customer_fee ?? false,
+        preferred_payout_currency: merchant.preferred_payout_currency || 'USD',
         tax_enabled: resolvedTaxEnabled,
         tax_rates: resolvedTaxRates,
         tax_strategy: resolvedTaxStrategy
@@ -154,7 +174,11 @@ export default function CreateSubscriptionPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    loadMerchantSettings();
+  }, [loadMerchantSettings]);
 
 
 

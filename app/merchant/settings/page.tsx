@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
@@ -318,7 +318,7 @@ export default function MerchantSettingsPage() {
 
 
   // Auto-save functionality
-  const autoSave = async (newSettings: MerchantSettings) => {
+  const autoSave = useCallback(async (newSettings: MerchantSettings) => {
     if (JSON.stringify(newSettings) === JSON.stringify(lastSavedSettings)) {
       return; // No changes to save
     }
@@ -372,7 +372,7 @@ export default function MerchantSettingsPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [lastSavedSettings]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -383,7 +383,7 @@ export default function MerchantSettingsPage() {
     }, 1000); // 1 second debounce
 
     return () => clearTimeout(timeoutId);
-  }, [settings, lastSavedSettings]);
+  }, [settings, lastSavedSettings, autoSave]);
 
   const addTaxRate = () => {
     const newId = Date.now().toString();

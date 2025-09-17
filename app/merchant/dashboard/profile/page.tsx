@@ -181,13 +181,15 @@ export default function ProfilePage() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.settings) {
-            const loadedSettings = {
-              ...settings,
-              ...data.settings,
-              email: data.settings.email || user.email || ''
-            };
-            setSettings(loadedSettings);
-            lastSavedSettingsRef.current = JSON.stringify(loadedSettings);
+            setSettings(prevSettings => {
+              const mergedSettings = {
+                ...prevSettings,
+                ...data.settings,
+                email: data.settings.email || user.email || ''
+              };
+              lastSavedSettingsRef.current = JSON.stringify(mergedSettings);
+              return mergedSettings;
+            });
           }
         }
       } catch (error) {

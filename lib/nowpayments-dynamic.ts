@@ -128,16 +128,28 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
                 : ''
 
         // Try to infer network if provided in nested structure
+        const rawNetworks = Array.isArray((currency as { networks?: unknown }).networks)
+          ? (currency as { networks?: unknown[] }).networks || []
+          : []
+
+        const firstNetwork = rawNetworks[0]
+
         const network =
           typeof currency.network === 'string'
             ? currency.network
-            : Array.isArray((currency as Record<string, unknown>).networks) && ((currency as Record<string, unknown>).networks as any[]).length > 0
-              ? String(((currency as Record<string, unknown>).networks as any[])[0]?.network || ((currency as Record<string, unknown>).networks as any[])[0])
-              : 'Unknown'
+            : typeof firstNetwork === 'string'
+              ? firstNetwork
+              : typeof firstNetwork === 'object' && firstNetwork !== null && 'network' in firstNetwork
+                ? String((firstNetwork as { network?: unknown }).network ?? 'Unknown')
+                : 'Unknown'
 
         // NOWPayments may use other names for min/max; default safely
-        const minAmtRaw = (currency as Record<string, unknown>).min_amount ?? (currency as Record<string, unknown>).min_deposit_amount ?? (currency as Record<string, unknown>).min_trx_amount
-        const maxAmtRaw = (currency as Record<string, unknown>).max_amount ?? (currency as Record<string, unknown>).max_deposit_amount ?? (currency as Record<string, unknown>).max_trx_amount
+        const minAmtRaw = (currency as Record<string, unknown>).min_amount
+          ?? (currency as Record<string, unknown>).min_deposit_amount
+          ?? (currency as Record<string, unknown>).min_trx_amount
+        const maxAmtRaw = (currency as Record<string, unknown>).max_amount
+          ?? (currency as Record<string, unknown>).max_deposit_amount
+          ?? (currency as Record<string, unknown>).max_trx_amount
 
         return {
           code: String(codeValue).toUpperCase(),

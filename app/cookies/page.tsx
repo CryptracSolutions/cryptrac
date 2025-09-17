@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ChevronRight, Cookie, Settings, Shield, Users, AlertCircle, Eye, Clock, Lock, Phone, Mail, MapPin, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -13,7 +13,7 @@ export default function CookiePolicy() {
   const [activeSection, setActiveSection] = useState<string>("");
   const effectiveDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: "introduction", title: "Introduction", icon: Cookie },
     { id: "types", title: "Types of Cookies", icon: Settings },
     { id: "third-party", title: "Third-Party Services", icon: Users },
@@ -22,7 +22,7 @@ export default function CookiePolicy() {
     { id: "security", title: "Security & Privacy", icon: Shield },
     { id: "updates", title: "Policy Updates", icon: AlertCircle },
     { id: "contact", title: "Contact Information", icon: Phone }
-  ];
+  ], []);
 
   useEffect(() => {
     const handleScroll = () => {

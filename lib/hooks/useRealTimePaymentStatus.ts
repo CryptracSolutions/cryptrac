@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient, type RealtimeChannel } from '@supabase/supabase-js'
 
 interface PaymentStatus {
   payment_id: string
@@ -53,8 +53,9 @@ export function useRealTimePaymentStatus({
     lastUpdate: null
   })
 
-  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
-  const subscriptionRef = useRef<any>(null)
+  const supabaseRef = useRef<SupabaseClient | null>(null)
+  const subscriptionRef = useRef<RealtimeChannel | null>(null)
+  const paymentStatusRef = useRef<PaymentStatus | null>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -76,6 +77,7 @@ export function useRealTimePaymentStatus({
   // Update payment status and notify listeners
   const updatePaymentStatus = useCallback((newStatus: PaymentStatus) => {
     console.log(`📨 Payment status update received:`, newStatus.payment_status)
+    paymentStatusRef.current = newStatus
     setPaymentStatus(newStatus)
     setConnectionStatus(prev => ({ ...prev, lastUpdate: new Date() }))
     onStatusChange?.(newStatus)
@@ -146,7 +148,7 @@ export function useRealTimePaymentStatus({
         
         if (data.type === 'payment_status_update' && data.payment_id === paymentId) {
           // Use current payment status from ref to avoid stale closure
-          const currentStatus = paymentStatus
+          const currentStatus = paymentStatusRef.current
           updatePaymentStatus({
             payment_id: data.payment_id,
             payment_status: data.status,
@@ -195,7 +197,7 @@ export function useRealTimePaymentStatus({
     }
 
     eventSourceRef.current = eventSource
-  }, [paymentId, updatePaymentStatus, fallbackToPolling]) // Remove paymentStatus dependency
+  }, [paymentId, updatePaymentStatus, fallbackToPolling])
 
   // Supabase real-time connection
   const connectRealTime = useCallback(() => {
@@ -245,7 +247,7 @@ export function useRealTimePaymentStatus({
           const broadcastData = payload.payload
           if (broadcastData.payment_id === paymentId) {
             // Use current status to avoid stale closure
-            const currentStatus = paymentStatus
+            const currentStatus = paymentStatusRef.current
             updatePaymentStatus({
               payment_id: broadcastData.payment_id,
               payment_status: broadcastData.status,
@@ -344,7 +346,7 @@ export function useRealTimePaymentStatus({
     
     // Unsubscribe from Supabase
     if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe()
+      void subscriptionRef.current.unsubscribe()
       subscriptionRef.current = null
     }
     
@@ -376,7 +378,7 @@ export function useRealTimePaymentStatus({
     connectRealTime()
 
     return disconnect
-  }, [enabled, paymentId]) // Remove function dependencies
+  }, [enabled, paymentId, connectRealTime, disconnect])
 
   // Perform an immediate status fetch to avoid waiting solely on realtime
   useEffect(() => {
@@ -389,7 +391,7 @@ export function useRealTimePaymentStatus({
   // Cleanup on unmount
   useEffect(() => {
     return disconnect
-  }, [])
+  }, [disconnect])
 
   return {
     paymentStatus,

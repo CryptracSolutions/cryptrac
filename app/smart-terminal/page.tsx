@@ -39,6 +39,18 @@ interface MerchantSettings {
   wallets: Record<string, string>;
 }
 
+interface MerchantRecord {
+  charge_customer_fee: boolean | null;
+  auto_convert_enabled: boolean | null;
+  tax_enabled: boolean | null;
+  tax_rates: Array<{ label: string; percentage: number }> | null;
+  wallets: Record<string, string> | null;
+  onboarding_data?: {
+    tax_enabled?: boolean;
+    tax_rates?: Array<{ label: string; percentage: number }>;
+  } | null;
+}
+
 interface CurrencyInfo {
   code: string;
   name: string;
@@ -159,7 +171,7 @@ function SmartTerminalPageContent() {
           .from('merchants')
           .select('charge_customer_fee, auto_convert_enabled, tax_enabled, tax_rates, wallets, onboarding_data')
           .eq('user_id', session.user.id)
-          .single();
+          .single<MerchantRecord>();
 
         if (merchantError) {
           console.error('Error loading merchant settings:', merchantError);
@@ -173,19 +185,21 @@ function SmartTerminalPageContent() {
         }
 
         // Resolve tax configuration using top-level fields, falling back to onboarding_data
-        const resolvedTaxEnabled = (merchant as Record<string, unknown>).tax_enabled ?? ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_enabled ?? false;
+        const onboardingData = merchant.onboarding_data ?? null;
+        const merchantTaxRates = merchant.tax_rates ?? [];
+        const onboardingTaxRates = onboardingData?.tax_rates ?? [];
+
+        const resolvedTaxEnabled = Boolean(merchant.tax_enabled ?? onboardingData?.tax_enabled ?? false);
         const resolvedTaxRates = resolvedTaxEnabled
-          ? ((merchant as Record<string, unknown>).tax_rates && ((merchant as Record<string, unknown>).tax_rates as any[]).length > 0
-              ? (merchant as Record<string, unknown>).tax_rates
-              : (((merchant as Record<string, unknown>).onboarding_data as any)?.tax_rates || []))
+          ? (merchantTaxRates.length > 0 ? merchantTaxRates : onboardingTaxRates)
           : [];
 
         setMerchantSettings({
-          charge_customer_fee: merchant.charge_customer_fee,
-          auto_convert_enabled: merchant.auto_convert_enabled,
+          charge_customer_fee: merchant.charge_customer_fee ?? false,
+          auto_convert_enabled: merchant.auto_convert_enabled ?? false,
           tax_enabled: resolvedTaxEnabled,
           tax_rates: resolvedTaxRates,
-          wallets: merchant.wallets
+          wallets: merchant.wallets || {}
         });
 
         // Load or create terminal device

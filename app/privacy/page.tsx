@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ChevronRight, Shield, Users, Eye, Lock, Settings, AlertCircle, Clock, Phone, Mail, MapPin, FileText, Database, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -13,7 +13,7 @@ export default function PrivacyPolicy() {
   const [activeSection, setActiveSection] = useState<string>("");
   const effectiveDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: "introduction", title: "Introduction", icon: Shield },
     { id: "information-collected", title: "Information We Collect", icon: Database },
     { id: "how-we-use", title: "How We Use Your Information", icon: Settings },
@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
     { id: "children-privacy", title: "Children's Privacy", icon: Users },
     { id: "policy-changes", title: "Changes to This Policy", icon: AlertCircle },
     { id: "contact", title: "Contact Information", icon: Phone }
-  ];
+  ], []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
