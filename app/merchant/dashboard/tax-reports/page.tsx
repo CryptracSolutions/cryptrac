@@ -1040,7 +1040,7 @@ export default function TaxReportsPage() {
                     <Label className="font-phonic text-sm font-normal text-gray-700">Report Template</Label>
                     <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
                       <SelectTrigger className="w-full md:w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <SelectValue />
+                        <SelectValue className="text-left" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="audit">Audit Template - Full transaction details</SelectItem>

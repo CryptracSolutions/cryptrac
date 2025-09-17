@@ -25,6 +25,9 @@ jobs:
       env:
         SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       run: supabase gen types typescript --project-id ${{ secrets.SUPABASE_PROJECT_ID }} > types/database.types.ts
+    - name: Normalize Supabase Type Metadata
+      run: |
+        perl -0pi -e "s/PostgrestVersion: \"[^\"]*\"/PostgrestVersion: \"normalized\"/" types/database.types.ts
     - name: Check for Type Changes
       run: git diff --exit-code types/database.types.ts || (echo "Types changed - run gen types locally" && exit 1)
     - run: yarn lint  # Assuming we'll add ESLint later

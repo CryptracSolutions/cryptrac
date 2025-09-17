@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense, useMemo } from 'react';
 // import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
@@ -524,11 +524,9 @@ function SmartTerminalPageContent() {
             {/* Dashboard Button - Top Center of Card (only on initial page) */}
             {step === 'amount' && !paymentLink && (
               <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
-                <Link href="/merchant/dashboard">
-                  <button className="flex items-center gap-1 text-[#7f5efd] transition-colors duration-200 p-1.5 rounded-md">
-                    <ArrowLeft className="h-4 w-4" />
-                    <span className="text-xs font-medium opacity-80">Dashboard</span>
-                  </button>
+                <Link href="/merchant/dashboard" className="flex items-center gap-1 text-[#7f5efd] transition-colors duration-200 p-1.5 rounded-md">
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="text-xs font-medium opacity-80">Dashboard</span>
                 </Link>
               </div>
             )}
@@ -881,15 +879,15 @@ function SmartTerminalPageContent() {
                             )
                           })()}
                         </SelectTrigger>
-                        <SelectContent 
+                        <SelectContent
                           position="popper"
                           sideOffset={5}
                           className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
                         >
-                          {(() => {
+                          {useMemo(() => {
                             // Filter currencies based on selected network
                             let filteredCurrencies = availableCurrencies
-                            
+
                             if (selectedNetwork !== 'all') {
                               const groupedCurrencies = groupCurrenciesByNetwork(
                                 availableCurrencies.map(c => ({ code: c.code, name: c.name })),
@@ -968,7 +966,7 @@ function SmartTerminalPageContent() {
                                 </SelectItem>
                               )
                             })
-                          })()}
+                          }, [availableCurrencies, selectedNetwork, merchantSettings?.wallets])}
                         </SelectContent>
                       </Select>
                     </div>

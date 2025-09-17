@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent } from '@/app/components/ui/card'
@@ -727,10 +727,10 @@ export default function PaymentPage() {
                             sideOffset={5}
                             className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
                           >
-                            {(() => {
+                            {useMemo(() => {
                               // Filter currencies based on selected network
                               let filteredCurrencies = availableCurrencies
-                              
+
                               if (selectedNetwork !== 'all') {
                                 const groupedCurrencies = groupCurrenciesByNetwork(
                                   availableCurrencies.map(c => ({ code: c.code, name: c.name })),
@@ -809,7 +809,7 @@ export default function PaymentPage() {
                                   </SelectItem>
                                 )
                               })
-                            })()}
+                            }, [availableCurrencies, selectedNetwork, paymentLink?.accepted_cryptos])}
                           </SelectContent>
                         </Select>
                       )}
