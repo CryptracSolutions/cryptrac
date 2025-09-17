@@ -116,6 +116,11 @@ export default function TaxReportsPage() {
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<ExportTemplate>('audit')
 
+  // Transaction filtering states
+  const [transactionStartDate, setTransactionStartDate] = useState<string>('')
+  const [transactionEndDate, setTransactionEndDate] = useState<string>('')
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+
   const currentYear = new Date().getFullYear()
   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3)
 
@@ -211,6 +216,7 @@ export default function TaxReportsPage() {
 
       console.log('✅ Initial transactions loaded:', data.data)
       setReportData(data.data)
+      setFilteredTransactions(data.data.transactions)
 
     } catch (error) {
       console.error('❌ Error loading initial transactions:', error)
@@ -258,6 +264,10 @@ export default function TaxReportsPage() {
 
       console.log('✅ Tax report loaded:', data.data)
       setReportData(data.data)
+      setFilteredTransactions(data.data.transactions)
+      // Clear transaction date filters when loading new report
+      setTransactionStartDate('')
+      setTransactionEndDate('')
 
     } catch (error) {
       console.error('❌ Error loading tax report:', error)
@@ -582,6 +592,47 @@ export default function TaxReportsPage() {
     setShowTransactionModal(true)
   }
 
+  // Filter transactions by date range
+  const filterTransactionsByDate = () => {
+    if (!reportData) return
+
+    let filtered = [...reportData.transactions]
+
+    if (transactionStartDate) {
+      const startDate = new Date(transactionStartDate)
+      startDate.setHours(0, 0, 0, 0)
+      filtered = filtered.filter(tx => {
+        const txDate = new Date(getTransactionTimestamp(tx))
+        return txDate >= startDate
+      })
+    }
+
+    if (transactionEndDate) {
+      const endDate = new Date(transactionEndDate)
+      endDate.setHours(23, 59, 59, 999)
+      filtered = filtered.filter(tx => {
+        const txDate = new Date(getTransactionTimestamp(tx))
+        return txDate <= endDate
+      })
+    }
+
+    setFilteredTransactions(filtered)
+  }
+
+  // Apply date filters when they change
+  useEffect(() => {
+    filterTransactionsByDate()
+  }, [transactionStartDate, transactionEndDate, reportData]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clear transaction date filters
+  const clearTransactionFilters = () => {
+    setTransactionStartDate('')
+    setTransactionEndDate('')
+    if (reportData) {
+      setFilteredTransactions(reportData.transactions)
+    }
+  }
+
 
 
   const generateReport = async () => {
@@ -733,17 +784,71 @@ export default function TaxReportsPage() {
             {reportData && (
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
-                        Transaction Details
-                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
-                          {reportData.transactions.length}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription className="font-capsule text-sm text-gray-600">
-                        Select any transaction for a detailed view
-                      </CardDescription>
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                          Transaction Details
+                          <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                            {filteredTransactions.length}
+                            {filteredTransactions.length !== reportData.transactions.length && (
+                              <span className="text-xs"> / {reportData.transactions.length}</span>
+                            )}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription className="font-capsule text-sm text-gray-600">
+                          Select any transaction for a detailed view
+                        </CardDescription>
+                      </div>
+                    </div>
+
+                    {/* Date Filter Row */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-gray-100">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="tx-start-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
+                            From:
+                          </Label>
+                          <Input
+                            id="tx-start-date"
+                            type="date"
+                            value={transactionStartDate}
+                            onChange={(e) => setTransactionStartDate(e.target.value)}
+                            max={transactionEndDate || undefined}
+                            className="h-9 text-sm bg-white border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                            placeholder="Start date"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="tx-end-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
+                            To:
+                          </Label>
+                          <Input
+                            id="tx-end-date"
+                            type="date"
+                            value={transactionEndDate}
+                            onChange={(e) => setTransactionEndDate(e.target.value)}
+                            min={transactionStartDate || undefined}
+                            className="h-9 text-sm bg-white border-gray-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                            placeholder="End date"
+                          />
+                        </div>
+                      </div>
+
+                      {(transactionStartDate || transactionEndDate) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearTransactionFilters}
+                          className="h-9 px-3 text-xs hover:bg-gray-100"
+                        >
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Clear
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -774,7 +879,26 @@ export default function TaxReportsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.transactions.map((transaction) => (
+                        {filteredTransactions.length === 0 ? (
+                          <tr>
+                            <td colSpan={9} className="py-12 text-center">
+                              <div className="flex flex-col items-center justify-center space-y-3">
+                                <div className="p-3 bg-gray-50 rounded-full">
+                                  <FileText className="h-6 w-6 text-gray-400" />
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="font-phonic text-sm font-medium text-gray-600">
+                                    No transactions found
+                                  </p>
+                                  <p className="font-capsule text-xs text-gray-500">
+                                    Try adjusting your date filters
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredTransactions.map((transaction) => (
                           <tr
                             key={transaction.id}
                             className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -864,12 +988,13 @@ export default function TaxReportsPage() {
                               </div>
                             </td>
                           </tr>
-                        ))}
+                          ))
+                        )}
                       </tbody>
                     </table>
                     
                     {/* View More button - only show if we have the initial 5 and there might be more */}
-                    {reportData.transactions.length === 5 && reportData.total_count > 5 && (
+                    {reportData.transactions.length === 5 && reportData.total_count > 5 && !transactionStartDate && !transactionEndDate && (
                       <div className="flex justify-center pt-6 border-t border-gray-200 mt-6">
                         <Button
                           variant="outline"
@@ -891,216 +1016,243 @@ export default function TaxReportsPage() {
               </Card>
             )}
 
-            {/* Filters - Smaller and Less Intrusive */}
+            {/* Combined Report Configuration & Export */}
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
-                      Report Filters
+                      Report Configuration
+                      {reportData && (
+                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                          Ready to Export
+                        </Badge>
+                      )}
                     </CardTitle>
                     <CardDescription className="font-capsule text-sm text-gray-600">
-                      Configure your tax report parameters
+                      Configure parameters and export your tax report in multiple formats
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="space-y-2">
-                    <Label className="font-phonic text-sm font-normal text-gray-700">Report Type</Label>
-                    <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
-                    <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="calendar_year">Calendar Year</SelectItem>
-                        <SelectItem value="fiscal_year">Fiscal Year</SelectItem>
-                        <SelectItem value="quarterly">Quarterly</SelectItem>
-                        <SelectItem value="custom">Custom Range</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Filter Section */}
+                <div>
+                  <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-[#7f5efd]" />
+                    Report Filters
+                  </h3>
 
-                  <div className="space-y-2">
-                    <Label className="font-phonic text-sm font-normal text-gray-700">Year</Label>
-                    <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
-                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 5 }, (_, i) => currentYear - i).map(year => (
-                          <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {filters.report_type === 'quarterly' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
-                      <Label className="font-phonic text-sm font-normal text-gray-700">Quarter</Label>
-                      <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
-                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                      <Label className="font-capsule text-xs text-gray-600">Report Type</Label>
+                      <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
+                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">Q1 (Jan-Mar)</SelectItem>
-                          <SelectItem value="2">Q2 (Apr-Jun)</SelectItem>
-                          <SelectItem value="3">Q3 (Jul-Sep)</SelectItem>
-                          <SelectItem value="4">Q4 (Oct-Dec)</SelectItem>
+                          <SelectItem value="calendar_year">Calendar Year</SelectItem>
+                          <SelectItem value="fiscal_year">Fiscal Year</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="custom">Custom Range</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-capsule text-xs text-gray-600">Year</Label>
+                      <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
+                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 5 }, (_, i) => currentYear - i).map(year => (
+                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {filters.report_type === 'quarterly' && (
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600">Quarter</Label>
+                        <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
+                          <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Q1 (Jan-Mar)</SelectItem>
+                            <SelectItem value="2">Q2 (Apr-Jun)</SelectItem>
+                            <SelectItem value="3">Q3 (Jul-Sep)</SelectItem>
+                            <SelectItem value="4">Q4 (Oct-Dec)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="font-capsule text-xs text-gray-600">Status</Label>
+                      <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
+                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Transactions</SelectItem>
+                          <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                          <SelectItem value="refunded">Refunded Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {filters.report_type === 'custom' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600">Start Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.start_date}
+                          onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+                          className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600">End Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.end_date}
+                          onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+                          className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                        />
+                      </div>
+                    </div>
                   )}
 
-                  <div className="space-y-2">
-                    <Label className="font-phonic text-sm font-normal text-gray-700">Status</Label>
-                    <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
-                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Transactions</SelectItem>
-                        <SelectItem value="confirmed">Confirmed Only</SelectItem>
-                        <SelectItem value="refunded">Refunded Only</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={filters.tax_only}
+                        onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
+                        className="border-gray-300"
+                      />
+                      <Label className="font-capsule text-sm text-gray-700 cursor-pointer">Show tax-only transactions</Label>
+                    </div>
+
+                    <Button
+                      onClick={generateReport}
+                      disabled={loadingReport}
+                      size="default"
+                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
+                    >
+                      {loadingReport ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      {loadingReport ? 'Generating...' : 'Generate Report'}
+                    </Button>
                   </div>
                 </div>
 
-                {filters.report_type === 'custom' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="font-phonic text-sm font-normal text-gray-700">Start Date</Label>
-                      <Input
-                        type="date"
-                        value={filters.start_date}
-                        onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-                        className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
-                      />
+                {/* Export Section - Only show when report data is available */}
+                {reportData && (
+                  <>
+                    <div className="border-t border-gray-200 pt-6">
+                      <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-[#7f5efd]" />
+                        Export Options
+                      </h3>
+
+                      <div className="flex flex-col lg:flex-row gap-6">
+                        {/* Template Selection */}
+                        <div className="flex-1 space-y-2">
+                          <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
+                          <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
+                            <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                              <SelectValue className="text-left" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="audit">Audit Template - Full transaction details</SelectItem>
+                              <SelectItem value="tax_filing">Tax Filing - IRS compliant format</SelectItem>
+                              <SelectItem value="accounting">Accounting - QuickBooks ready</SelectItem>
+                              <SelectItem value="summary">Summary - Executive overview</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="font-capsule text-xs text-gray-500 mt-1">
+                            Choose a template based on your intended use
+                          </p>
+                        </div>
+
+                        {/* Export Buttons */}
+                        <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-3">
+                          <Button
+                            disabled={exportingCSV}
+                            size="default"
+                            onClick={() => exportToCSV(selectedTemplate)}
+                            variant="outline"
+                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                          >
+                            {exportingCSV ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FileText className="h-4 w-4" />
+                            )}
+                            {exportingCSV ? 'Exporting...' : 'CSV'}
+                          </Button>
+
+                          <Button
+                            disabled={exportingPDF}
+                            size="default"
+                            onClick={() => exportToPDF(selectedTemplate)}
+                            variant="outline"
+                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                          >
+                            {exportingPDF ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FileText className="h-4 w-4" />
+                            )}
+                            {exportingPDF ? 'Generating...' : 'PDF'}
+                          </Button>
+
+                          <Button
+                            disabled={exportingExcel}
+                            size="default"
+                            onClick={() => exportToExcel(selectedTemplate)}
+                            variant="outline"
+                            className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                          >
+                            {exportingExcel ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <BarChart3 className="h-4 w-4" />
+                            )}
+                            {exportingExcel ? 'Generating...' : 'Excel'}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="font-phonic text-sm font-normal text-gray-700">End Date</Label>
-                      <Input
-                        type="date"
-                        value={filters.end_date}
-                        onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-                        className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
-                      />
+
+                    {/* Report Date Range Info */}
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-start gap-3">
+                      <Info className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-capsule text-xs text-gray-600">
+                          Current report includes transactions from{' '}
+                          <span className="font-semibold">
+                            {reportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date}
+                          </span>{' '}
+                          to{' '}
+                          <span className="font-semibold">
+                            {reportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={filters.tax_only}
-                    onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
-                    className=""
-                  />
-                  <Label className="font-phonic text-sm font-normal text-gray-700">Show tax-only transactions</Label>
-                </div>
-
-                {/* Generate Report Button */}
-                <div className="pt-4 border-t border-gray-200">
-                  <Button
-                    onClick={generateReport}
-                    disabled={loadingReport}
-                    size="default"
-                    className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-                  >
-                    {loadingReport ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                    {loadingReport ? 'Generating...' : 'Generate Report'}
-                  </Button>
-                </div>
               </CardContent>
             </Card>
-
-            {/* Export Report Section */}
-            {reportData && (
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
-                        Export Report
-                      </CardTitle>
-                      <CardDescription className="font-capsule text-sm text-gray-600">
-                        Download your tax report in multiple formats with different templates for various use cases
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
-                  {/* Template Selection */}
-                  <div className="space-y-2">
-                    <Label className="font-phonic text-sm font-normal text-gray-700">Report Template</Label>
-                    <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
-                      <SelectTrigger className="w-full md:w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <SelectValue className="text-left" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="audit">Audit Template - Full transaction details</SelectItem>
-                        <SelectItem value="tax_filing">Tax Filing - IRS compliant format</SelectItem>
-                        <SelectItem value="accounting">Accounting - QuickBooks ready</SelectItem>
-                        <SelectItem value="summary">Summary - Executive overview</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Export Buttons */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* CSV Export Button */}
-                    <Button
-                      disabled={exportingCSV}
-                      size="default"
-                      onClick={() => exportToCSV(selectedTemplate)}
-                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-                    >
-                      {exportingCSV ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <FileText className="h-4 w-4" />
-                      )}
-                      {exportingCSV ? 'Exporting...' : 'Export CSV'}
-                    </Button>
-
-                    {/* PDF Export Button */}
-                    <Button
-                      disabled={exportingPDF}
-                      size="default"
-                      onClick={() => exportToPDF(selectedTemplate)}
-                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-                    >
-                      {exportingPDF ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <FileText className="h-4 w-4" />
-                      )}
-                      {exportingPDF ? 'Generating...' : 'Export PDF'}
-                    </Button>
-
-                    {/* Excel Export Button */}
-                    <Button
-                      disabled={exportingExcel}
-                      size="default"
-                      onClick={() => exportToExcel(selectedTemplate)}
-                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
-                    >
-                      {exportingExcel ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <BarChart3 className="h-4 w-4" />
-                      )}
-                      {exportingExcel ? 'Generating...' : 'Export Excel'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* No Data State */}
             {!reportData && !loadingReport && (
