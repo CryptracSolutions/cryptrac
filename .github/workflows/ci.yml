@@ -16,15 +16,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-    - name: Install Supabase CLI
-      uses: supabase/setup-cli@v1
-      with:
-        version: latest
     - run: yarn install
     - name: Generate Supabase Types
-      env:
-        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      run: supabase gen types typescript --project-id ${{ secrets.SUPABASE_PROJECT_ID }} > types/database.types.ts
+      run: yarn generate-types
     - name: Normalize Supabase Type Metadata
       run: |
         perl -0pi -e 's/__InternalSupabase:\s*\{.*?\n\s*\}/__InternalSupabase: {\n    PostgrestVersion: "normalized"\n  }\n/s' types/database.types.ts

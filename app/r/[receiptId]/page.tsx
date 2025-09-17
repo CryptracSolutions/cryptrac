@@ -5,6 +5,8 @@ import { Badge } from '@/app/components/ui/badge';
 import { Separator } from '@/app/components/ui/separator';
 import { Logo } from '@/app/components/ui/logo';
 import { formatFullDateTime } from '@/lib/utils/date-utils';
+import { Shield, CheckCircle, Activity } from 'lucide-react';
+import { CopyButton } from '@/app/components/CopyButton';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -458,48 +460,83 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                   )}
                 </div>
 
-                {displayHash && (
-                  <div className="mt-6 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <span className="font-phonic text-sm text-gray-600">Transaction Hash</span>
-                      {txLink && (
+              </div>
+            </div>
+
+            <Separator className="my-8 print-compact" />
+
+            {/* Blockchain Verification */}
+            {displayHash && (
+              <div className="space-y-6 print-compact">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-[#7f5efd]/10 p-3 text-[#7f5efd]">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="font-phonic text-2xl font-normal text-gray-900">Blockchain Verification</h2>
+                    <p className="font-phonic text-sm text-gray-600">Secure blockchain record of your payment</p>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[#7f5efd]/20 bg-[#7f5efd]/5 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-[#7f5efd]/10 rounded flex items-center justify-center">
+                        <Shield className="h-3.5 w-3.5 text-[#7f5efd]" />
+                      </div>
+                      <h3 className="font-phonic text-sm font-semibold text-gray-900">Transaction Verified</h3>
+                    </div>
+                    <Badge className="bg-green-100 text-green-700 border-green-200 text-xs px-2 py-0.5">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Verified
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-phonic text-sm text-gray-600">Transaction Hash</span>
+                        <CopyButton text={displayHash} label="Transaction Hash" />
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl border border-[#7f5efd]/10">
+                        <p className="font-mono text-xs text-gray-700 break-all">{displayHash}</p>
+                      </div>
+                    </div>
+
+                    {(tx.network || tx.asset) && (
+                      <div>
+                        <span className="font-phonic text-sm text-gray-600">Network</span>
+                        <div className="mt-2 flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-[#7f5efd]" />
+                          <p className="font-phonic text-sm text-gray-900">
+                            {tx.asset && tx.network ? `${tx.asset} on ${tx.network}` : (tx.network || tx.asset || 'Unknown Network')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {txLink && (
+                      <div className="pt-3">
                         <a
                           href={txLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-full border border-[#7f5efd] bg-[#7f5efd] px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#7c3aed] hover:border-[#7c3aed] shadow-sm"
+                          className="inline-flex items-center gap-2 rounded-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white px-5 py-2.5 text-sm font-medium transition-all shadow-sm"
                         >
-                          Verify on Blockchain
+                          View on Blockchain Explorer
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H19.5V12" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6L10.5 15" />
                           </svg>
                         </a>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {txLink ? (
-                        <a
-                          href={txLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono hover:bg-gray-800/90 transition-colors block"
-                          title="Click to view on blockchain explorer"
-                        >
-                          {displayHash}
-                        </a>
-                      ) : (
-                        <code className="flex-1 block rounded-2xl bg-gray-900/90 px-4 py-3 text-xs text-white shadow-inner font-mono">
-                          {displayHash}
-                        </code>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
 
-            <Separator className="my-8 print-compact" />
+            {displayHash && <Separator className="my-8 print-compact" />}
 
             {/* Customer Support Notice */}
             {paymentLink?.link_id && (
