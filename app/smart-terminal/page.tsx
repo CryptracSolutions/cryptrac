@@ -419,7 +419,7 @@ function SmartTerminalPageContent() {
       });
     },
     fallbackToPolling: true,
-    pollingInterval: 5000 // Reduced polling frequency to minimize API calls
+    pollingInterval: 2000 // Fast polling for POS environment to ensure quick updates
   });
 
   const appendDigit = (d: string) => {

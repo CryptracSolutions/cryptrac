@@ -190,7 +190,7 @@ export default function PaymentPage() {
       });
     },
     fallbackToPolling: true,
-    pollingInterval: 5000 // Reduced polling frequency to minimize API calls
+    pollingInterval: 2000 // Fast polling for customer experience
   })
 
   useEffect(() => {

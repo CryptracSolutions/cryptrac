@@ -159,17 +159,18 @@ export function useRealTimePaymentStatus({
     if (!paymentId) return
 
     console.log(`📺 Connecting to SSE for payment: ${paymentId}`)
-    
+    connectionMethodRef.current = 'sse'
+
     const eventSource = new EventSource(`/api/websocket/payment-status`, {
       // Note: EventSource doesn't support POST, so we'll use the subscription endpoint
     })
 
     eventSource.onopen = () => {
       console.log('✅ SSE connection established')
-      setConnectionStatus(prev => ({ 
-        ...prev, 
-        connected: true, 
-        reconnecting: false, 
+      setConnectionStatus(prev => ({
+        ...prev,
+        connected: true,
+        reconnecting: false,
         error: null,
         method: 'sse'
       }))
@@ -226,7 +227,9 @@ export function useRealTimePaymentStatus({
         }, Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000)) // Exponential backoff with max 30s
       } else if (fallbackToPolling) {
         console.log('🔄 Falling back to polling after SSE failures')
-        if (paymentId && startPollingRef.current) startPollingRef.current()
+        if (paymentId && startPollingRef.current) {
+          startPollingRef.current()
+        }
       }
     }
 
@@ -238,6 +241,7 @@ export function useRealTimePaymentStatus({
     if (!paymentId || !supabaseRef.current) return
 
     console.log(`📡 Connecting to Supabase real-time for payment: ${paymentId}`)
+    connectionMethodRef.current = 'realtime'
 
     // Create subscription to both database changes and broadcast events
     const channel = supabaseRef.current
@@ -306,16 +310,18 @@ export function useRealTimePaymentStatus({
       )
       .subscribe((status) => {
         console.log(`📡 Supabase subscription status: ${status}`)
-        
+
         if (status === 'SUBSCRIBED') {
-          setConnectionStatus(prev => ({ 
-            ...prev, 
-            connected: true, 
-            reconnecting: false, 
+          setConnectionStatus(prev => ({
+            ...prev,
+            connected: true,
+            reconnecting: false,
             error: null,
             method: 'realtime'
           }))
           reconnectAttemptsRef.current = 0
+          // Keep polling running for redundancy - both methods can coexist
+          console.log('✅ Real-time connected, keeping polling for redundancy')
         } else if (status === 'CLOSED') {
           setConnectionStatus(prev => ({ 
             ...prev, 
@@ -333,10 +339,11 @@ export function useRealTimePaymentStatus({
             }, Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000))
           } else {
             console.log('🔄 Falling back to SSE after real-time failures')
-            // Use timeout to avoid circular dependency
-            setTimeout(() => {
-              if (paymentId && connectSSERef.current) connectSSERef.current()
-            }, 100)
+            // Fallback to polling for reliability
+            console.log('🔄 Falling back to polling after real-time failures')
+            if (paymentId && startPollingRef.current) {
+              startPollingRef.current()
+            }
           }
         }
       })
@@ -346,23 +353,17 @@ export function useRealTimePaymentStatus({
 
   // Start polling
   const startPolling = useCallback(() => {
-    if (pollingIntervalRef.current || connectionMethodRef.current !== 'none') return // Already connected
+    if (pollingIntervalRef.current) return // Already polling
 
     console.log(`🔄 Starting polling for payment: ${paymentId}`)
     connectionMethodRef.current = 'polling'
     setConnectionStatus(prev => ({ ...prev, method: 'polling' }))
 
-    // Initial poll with delay to avoid immediate call
-    const initialDelay = hasInitialFetchRef.current ? 0 : 1000
-    setTimeout(() => {
-      if (isMountedRef.current) {
-        pollPaymentStatus()
-      }
-    }, initialDelay)
+    // Start polling immediately for faster updates
+    pollPaymentStatus()
 
-    // Set up interval with minimum 5 second polling
-    const effectiveInterval = Math.max(pollingInterval, 5000)
-    pollingIntervalRef.current = setInterval(pollPaymentStatus, effectiveInterval)
+    // Set up interval - use provided interval for faster updates
+    pollingIntervalRef.current = setInterval(pollPaymentStatus, pollingInterval)
   }, [paymentId, pollPaymentStatus, pollingInterval])
 
   // Update function refs to avoid stale closures
@@ -436,34 +437,29 @@ export function useRealTimePaymentStatus({
 
     console.log(`🚀 Starting real-time connection for payment: ${paymentId}`)
 
-    // Try real-time first, with fallbacks
-    if (!HAS_SUPABASE_CONFIG) {
-      // Try SSE first, then fall back to polling
-      if (connectSSERef.current) {
-        connectSSERef.current()
-      } else if (fallbackToPolling && startPollingRef.current) {
-        startPollingRef.current()
-      }
-      return disconnect
+    // Always start with polling for immediate updates, then try real-time
+    if (fallbackToPolling && startPollingRef.current) {
+      startPollingRef.current()
     }
 
-    // Only connect real-time, let it handle fallbacks
-    connectRealTime()
+    // Try real-time connections in parallel for faster updates
+    if (HAS_SUPABASE_CONFIG) {
+      connectRealTime()
+    } else if (connectSSERef.current) {
+      connectSSERef.current()
+    }
 
     return disconnect
   }, [enabled, paymentId, connectRealTime, disconnect, fallbackToPolling])
 
-  // Perform a single initial status fetch after a short delay
+  // Perform an immediate initial status fetch for fastest first update
   useEffect(() => {
     if (enabled && paymentId && !hasInitialFetchRef.current) {
       hasInitialFetchRef.current = true
-      // Delay initial fetch to avoid race with real-time connection
-      const timer = setTimeout(() => {
-        if (isMountedRef.current) {
-          pollPaymentStatus()
-        }
-      }, 500)
-      return () => clearTimeout(timer)
+      // Immediate fetch for fastest initial status
+      if (isMountedRef.current) {
+        pollPaymentStatus()
+      }
     }
   }, [enabled, paymentId, pollPaymentStatus])
 
