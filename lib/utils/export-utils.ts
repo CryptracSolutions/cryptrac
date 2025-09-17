@@ -59,16 +59,8 @@ export interface ExportOptions {
   timezone: string
 }
 
-const resolveTransactionTimestamp = (tx: Pick<ExportTransaction, 'created_at' | 'updated_at' | 'payment_confirmed_at' | 'status'>): string => {
-  if (tx.payment_confirmed_at) {
-    return tx.payment_confirmed_at
-  }
-
-  if ((tx.status === 'confirmed' || tx.status === 'finished' || tx.status === 'sending') && tx.updated_at) {
-    return tx.updated_at
-  }
-
-  return tx.created_at
+const resolveTransactionTimestamp = (tx: Pick<ExportTransaction, 'payment_confirmed_at'>): string | null => {
+  return tx.payment_confirmed_at
 }
 
 type JsPDFInstance = InstanceType<typeof jsPDF>
@@ -308,8 +300,10 @@ export function generateTaxReportPDF(
         doc.text(formatDateTimeLong(new Date().toISOString()), pageWidth - margin, pageHeight - 10, { align: 'right' })
 
         // Legal disclaimer
+        const disclaimer = 'This is a computer-generated document provided for informational purposes only and should not be considered legal or tax advice. Please consult a qualified professional for advice regarding your specific circumstances.'
+        const disclaimerLines = doc.splitTextToSize(disclaimer, contentWidth)
         doc.setFontSize(7)
-        doc.text('This report is for tax purposes only. Please consult with a tax professional for advice.', pageWidth / 2, pageHeight - 5, { align: 'center' })
+        doc.text(disclaimerLines, pageWidth / 2, pageHeight - 8, { align: 'center' })
       }
     })
 
@@ -364,7 +358,12 @@ export function generateTaxReportExcel(
     ['Gross Sales:', `$${summary.total_gross_sales.toFixed(2)}`],
     ['Tax Collected:', `$${summary.total_tax_collected.toFixed(2)}`],
     ['Processing Fees:', `$${summary.total_fees.toFixed(2)}`],
-    ['Net Revenue:', `$${summary.total_net_revenue.toFixed(2)}`]
+    ['Net Revenue:', `$${summary.total_net_revenue.toFixed(2)}`],
+    [''],
+    ['Disclaimer:', 'This is a computer-generated document provided for informational purposes only and should not be considered legal or tax advice. Please consult a qualified professional for advice regarding your specific circumstances.'],
+    [''],
+    ['TRANSACTION DETAILS'],
+    ['Date', 'Description', 'Gross Amount', 'Tax', 'Fees', 'Fee Payer', 'Net Amount', 'Link ID', 'Currency', 'Status', 'TX Hash', 'Blockchain', 'Receipt ID']
   ]
 
   const coverSheet = XLSX.utils.aoa_to_sheet(coverData)
@@ -440,6 +439,8 @@ export function generateEnhancedCSV(
     `"Tax Collected:","$${summary.total_tax_collected.toFixed(2)}"`,
     `"Processing Fees:","$${summary.total_fees.toFixed(2)}"`,
     `"Net Revenue:","$${summary.total_net_revenue.toFixed(2)}"`,
+    `""`,
+    `"Disclaimer:","This is a computer-generated document provided for informational purposes only and should not be considered legal or tax advice. Please consult a qualified professional for advice regarding your specific circumstances."`,
     `""`,
     `"TRANSACTION DETAILS"`,
     headers.map(h => `"${h}"`).join(','),
@@ -523,7 +524,7 @@ function getColumnStylesForTemplate(template: ExportTemplate): Record<number, Re
 // Row data for PDF templates
 function getRowDataForPDFTemplate(tx: ExportTransaction, options: ExportOptions): string[] {
   const timestamp = resolveTransactionTimestamp(tx)
-  const date = formatDate(timestamp)
+  const date = timestamp ? formatDate(timestamp) : 'N/A'
   const description = tx.product_description || 'Payment'
 
   switch (options.template) {
@@ -598,8 +599,8 @@ function getExcelHeadersForTemplate(template: ExportTemplate): string[] {
 // Excel row data based on template
 function getExcelRowDataForTemplate(tx: ExportTransaction, options: ExportOptions): (string | number)[] {
   const timestamp = resolveTransactionTimestamp(tx)
-  const date = formatDate(timestamp)
-  const time = new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  const date = timestamp ? formatDate(timestamp) : 'N/A'
+  const time = timestamp ? new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A'
 
   switch (options.template) {
     case 'tax_filing':
@@ -676,7 +677,11 @@ function generateMonthlyAnalytics(transactions: ExportTransaction[]): unknown[][
   const monthlyData: { [key: string]: { count: number, gross: number, tax: number, fees: number, net: number } } = {}
 
   transactions.forEach(tx => {
-    const month = new Date(resolveTransactionTimestamp(tx)).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+    const timestamp = resolveTransactionTimestamp(tx)
+    if (!timestamp) {
+      return // Skip transactions without a confirmed payment timestamp
+    }
+    const month = new Date(timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
     if (!monthlyData[month]) {
       monthlyData[month] = { count: 0, gross: 0, tax: 0, fees: 0, net: 0 }
     }

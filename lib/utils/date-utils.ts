@@ -45,6 +45,22 @@ export const formatDateTime = (dateString: string | null | undefined, timezone: 
   });
 };
 
+export const formatFullDate = (dateString: string | null | undefined, timezone: string): string => {
+  if (!dateString) return 'N/A';
+  // Handle cases where the date string might be just a date (YYYY-MM-DD)
+  // by appending a time to make it a valid ISO string for the Date constructor.
+  const correctedDateString = /^\d{4}-\d{2}-\d{2}$/.test(dateString)
+    ? `${dateString}T00:00:00.000Z`
+    : dateString;
+
+  return formatDate(correctedDateString, {
+    timeZone: timezone,
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 export const formatTime = (dateString: string | null | undefined, timezone: string): string => {
   return formatDate(dateString, {
     timeZone: timezone,
@@ -62,7 +78,6 @@ export const formatFullDateTime = (dateString: string | null | undefined, timezo
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
     hour12: true,
   });
 };
@@ -75,7 +90,6 @@ export const formatCompactDateTime = (dateString: string | null | undefined, tim
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
     hour12: true,
   });
 };

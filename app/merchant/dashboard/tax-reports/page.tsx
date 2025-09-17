@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useTimezone } from '@/lib/contexts/TimezoneContext'
-import { formatDateShort } from '@/lib/utils/date-utils'
+import { formatDateShort, formatFullDate } from '@/lib/utils/date-utils'
 
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation'
@@ -106,7 +106,8 @@ export default function TaxReportsPage() {
 
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [reportData, setReportData] = useState<TaxReportData | null>(null)
+  const [exportReportData, setExportReportData] = useState<TaxReportData | null>(null)
+  const [displayReportData, setDisplayReportData] = useState<TaxReportData | null>(null)
   const [loadingReport, setLoadingReport] = useState(false)
   const [exportingCSV, setExportingCSV] = useState(false)
   const [exportingPDF, setExportingPDF] = useState(false)
@@ -115,6 +116,10 @@ export default function TaxReportsPage() {
   const [showTransactionModal, setShowTransactionModal] = useState(false)
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<ExportTemplate>('audit')
+
+  // DECOUPLING: State for transactions displayed in the UI
+  const [transactionsForDisplay, setTransactionsForDisplay] = useState<Transaction[]>([])
+  const [displayLimit, setDisplayLimit] = useState(5)
 
   // Transaction filtering states
   const [transactionStartDate, setTransactionStartDate] = useState<string>('')
@@ -215,7 +220,10 @@ export default function TaxReportsPage() {
       }
 
       console.log('✅ Initial transactions loaded:', data.data)
-      setReportData(data.data)
+      setExportReportData(data.data)
+      setDisplayReportData(data.data)
+      // DECOUPLING: Set both display transactions and filtered transactions
+      setTransactionsForDisplay(data.data.transactions)
       setFilteredTransactions(data.data.transactions)
 
     } catch (error) {
@@ -263,7 +271,10 @@ export default function TaxReportsPage() {
       }
 
       console.log('✅ Tax report loaded:', data.data)
-      setReportData(data.data)
+      setExportReportData(data.data)
+      setDisplayReportData(data.data)
+      // DECOUPLING: Update display transactions since this is a user action to load more transactions
+      setTransactionsForDisplay(data.data.transactions)
       setFilteredTransactions(data.data.transactions)
       // Clear transaction date filters when loading new report
       setTransactionStartDate('')
@@ -278,13 +289,13 @@ export default function TaxReportsPage() {
   }
 
   const exportToCSV = async (template: ExportTemplate = 'audit') => {
-    if (!user || !reportData || !merchantInfo) return
+    if (!user || !exportReportData || !merchantInfo) return
 
     try {
       setExportingCSV(true)
       console.log('📥 Exporting tax report to CSV...')
 
-      const exportTransactions: ExportTransaction[] = reportData.transactions.map(tx => ({
+      const exportTransactions: ExportTransaction[] = exportReportData.transactions.map(tx => ({
         id: tx.id,
         payment_id: tx.payment_id,
         created_at: tx.created_at,
@@ -314,11 +325,11 @@ export default function TaxReportsPage() {
       const dateRange = getActualDateRange(filters)
 
       const exportSummary: ExportSummary = {
-        total_transactions: reportData.summary.total_transactions,
-        total_gross_sales: reportData.summary.total_gross_sales,
-        total_tax_collected: reportData.summary.total_tax_collected,
-        total_fees: reportData.summary.total_fees,
-        total_net_revenue: reportData.summary.total_net_revenue,
+        total_transactions: exportReportData.summary.total_transactions,
+        total_gross_sales: exportReportData.summary.total_gross_sales,
+        total_tax_collected: exportReportData.summary.total_tax_collected,
+        total_fees: exportReportData.summary.total_fees,
+        total_net_revenue: exportReportData.summary.total_net_revenue,
         date_range: dateRange,
         generated_at: new Date().toISOString()
       }
@@ -354,13 +365,13 @@ export default function TaxReportsPage() {
   }
 
   const exportToPDF = async (template: ExportTemplate = 'audit') => {
-    if (!reportData || !merchantInfo) return
+    if (!exportReportData || !merchantInfo) return
 
     try {
       setExportingPDF(true)
       console.log('📄 Exporting tax report to PDF...')
 
-      const exportTransactions: ExportTransaction[] = reportData.transactions.map(tx => ({
+      const exportTransactions: ExportTransaction[] = exportReportData.transactions.map(tx => ({
         id: tx.id,
         payment_id: tx.payment_id,
         created_at: tx.created_at,
@@ -390,11 +401,11 @@ export default function TaxReportsPage() {
       const dateRange = getActualDateRange(filters)
 
       const exportSummary: ExportSummary = {
-        total_transactions: reportData.summary.total_transactions,
-        total_gross_sales: reportData.summary.total_gross_sales,
-        total_tax_collected: reportData.summary.total_tax_collected,
-        total_fees: reportData.summary.total_fees,
-        total_net_revenue: reportData.summary.total_net_revenue,
+        total_transactions: exportReportData.summary.total_transactions,
+        total_gross_sales: exportReportData.summary.total_gross_sales,
+        total_tax_collected: exportReportData.summary.total_tax_collected,
+        total_fees: exportReportData.summary.total_fees,
+        total_net_revenue: exportReportData.summary.total_net_revenue,
         date_range: dateRange,
         generated_at: new Date().toISOString()
       }
@@ -429,13 +440,13 @@ export default function TaxReportsPage() {
   }
 
   const exportToExcel = async (template: ExportTemplate = 'audit') => {
-    if (!reportData || !merchantInfo) return
+    if (!exportReportData || !merchantInfo) return
 
     try {
       setExportingExcel(true)
       console.log('📊 Exporting tax report to Excel...')
 
-      const exportTransactions: ExportTransaction[] = reportData.transactions.map(tx => ({
+      const exportTransactions: ExportTransaction[] = exportReportData.transactions.map(tx => ({
         id: tx.id,
         payment_id: tx.payment_id,
         created_at: tx.created_at,
@@ -465,11 +476,11 @@ export default function TaxReportsPage() {
       const dateRange = getActualDateRange(filters)
 
       const exportSummary: ExportSummary = {
-        total_transactions: reportData.summary.total_transactions,
-        total_gross_sales: reportData.summary.total_gross_sales,
-        total_tax_collected: reportData.summary.total_tax_collected,
-        total_fees: reportData.summary.total_fees,
-        total_net_revenue: reportData.summary.total_net_revenue,
+        total_transactions: exportReportData.summary.total_transactions,
+        total_gross_sales: exportReportData.summary.total_gross_sales,
+        total_tax_collected: exportReportData.summary.total_tax_collected,
+        total_fees: exportReportData.summary.total_fees,
+        total_net_revenue: exportReportData.summary.total_net_revenue,
         date_range: dateRange,
         generated_at: new Date().toISOString()
       }
@@ -594,27 +605,23 @@ export default function TaxReportsPage() {
 
   // Filter transactions by date range
   const filterTransactionsByDate = () => {
-    if (!reportData) return
+    // DECOUPLING: Use transactionsForDisplay as the source of truth, not reportData
+    if (!transactionsForDisplay) return
 
-    let filtered = [...reportData.transactions]
-
-    if (transactionStartDate) {
-      const startDate = new Date(transactionStartDate)
-      startDate.setHours(0, 0, 0, 0)
-      filtered = filtered.filter(tx => {
-        const txDate = new Date(getTransactionTimestamp(tx))
-        return txDate >= startDate
-      })
+    if (!transactionStartDate && !transactionEndDate) {
+      setFilteredTransactions(transactionsForDisplay)
+      return
     }
 
-    if (transactionEndDate) {
-      const endDate = new Date(transactionEndDate)
-      endDate.setHours(23, 59, 59, 999)
-      filtered = filtered.filter(tx => {
-        const txDate = new Date(getTransactionTimestamp(tx))
-        return txDate <= endDate
-      })
-    }
+    const filtered = transactionsForDisplay.filter(tx => {
+      const txDate = new Date(getTransactionTimestamp(tx))
+      const txDateStr = txDate.toLocaleDateString('sv-SE', { timeZone: timezone })
+
+      const startMatch = !transactionStartDate || txDateStr >= transactionStartDate
+      const endMatch = !transactionEndDate || txDateStr <= transactionEndDate
+
+      return startMatch && endMatch
+    })
 
     setFilteredTransactions(filtered)
   }
@@ -622,15 +629,14 @@ export default function TaxReportsPage() {
   // Apply date filters when they change
   useEffect(() => {
     filterTransactionsByDate()
-  }, [transactionStartDate, transactionEndDate, reportData]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [transactionStartDate, transactionEndDate, transactionsForDisplay]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clear transaction date filters
   const clearTransactionFilters = () => {
     setTransactionStartDate('')
     setTransactionEndDate('')
-    if (reportData) {
-      setFilteredTransactions(reportData.transactions)
-    }
+    // DECOUPLING: Reset to the full list of transactions for display
+    setFilteredTransactions(transactionsForDisplay)
   }
 
 
@@ -667,7 +673,8 @@ export default function TaxReportsPage() {
         throw new Error(data.error || 'Failed to generate tax report')
       }
 
-      setReportData(data.data)
+      // DECOUPLING: Only update reportData, not the displayed transactions
+      setExportReportData(data.data)
       toast.success('Tax report generated successfully!')
     } catch (error) {
       console.error('❌ Error generating tax report:', error)
@@ -712,7 +719,7 @@ export default function TaxReportsPage() {
         ) : (
           <>
             {/* Enhanced Statistics Cards */}
-            {reportData && (
+            {displayReportData && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -722,7 +729,7 @@ export default function TaxReportsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">${reportData.summary.total_gross_sales.toFixed(2)}</div>
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_gross_sales.toFixed(2)}</div>
                     <div className="flex items-center gap-1 text-gray-600">
                       <TrendingUp className="h-3 w-3" />
                       <span className="font-capsule text-xs">Total revenue before fees</span>
@@ -738,7 +745,7 @@ export default function TaxReportsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">${reportData.summary.total_tax_collected.toFixed(2)}</div>
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_tax_collected.toFixed(2)}</div>
                     <div className="flex items-center gap-1 text-gray-600">
                       <Calculator className="h-3 w-3" />
                       <span className="font-capsule text-xs">Tax from all transactions</span>
@@ -754,7 +761,7 @@ export default function TaxReportsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">${reportData.summary.total_net_revenue.toFixed(2)}</div>
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_net_revenue.toFixed(2)}</div>
                     <div className="flex items-center gap-1 text-gray-600">
                       <DollarSign className="h-3 w-3" />
                       <span className="font-capsule text-xs">After fees and costs</span>
@@ -770,7 +777,7 @@ export default function TaxReportsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold mb-2 text-gray-900">{reportData.summary.total_transactions}</div>
+                    <div className="text-2xl font-semibold mb-2 text-gray-900">{displayReportData.summary.total_transactions}</div>
                     <div className="flex items-center gap-1 text-gray-600">
                       <BarChart3 className="h-3 w-3" />
                       <span className="font-capsule text-xs">Total processed</span>
@@ -781,7 +788,7 @@ export default function TaxReportsPage() {
             )}
 
             {/* Detailed Transactions */}
-            {reportData && (
+            {displayReportData && (
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="p-6">
                   <div className="flex flex-col space-y-4">
@@ -791,8 +798,8 @@ export default function TaxReportsPage() {
                           Transaction Details
                           <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
                             {filteredTransactions.length}
-                            {filteredTransactions.length !== reportData.transactions.length && (
-                              <span className="text-xs"> / {reportData.transactions.length}</span>
+                            {filteredTransactions.length !== displayReportData.transactions.length && (
+                              <span className="text-xs"> / {displayReportData.transactions.length}</span>
                             )}
                           </Badge>
                         </CardTitle>
@@ -803,8 +810,8 @@ export default function TaxReportsPage() {
                     </div>
 
                     {/* Date Filter Row */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-gray-100">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-100">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <div className="flex items-center gap-2">
                           <Label htmlFor="tx-start-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
                             From:
@@ -819,9 +826,6 @@ export default function TaxReportsPage() {
                             placeholder="Start date"
                           />
                         </div>
-                      </div>
-
-                      <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <Label htmlFor="tx-end-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
                             To:
@@ -843,7 +847,7 @@ export default function TaxReportsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={clearTransactionFilters}
-                          className="h-9 px-3 text-xs hover:bg-gray-100"
+                          className="h-9 px-3 text-xs hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
                         >
                           <XCircle className="h-3 w-3 mr-1" />
                           Clear
@@ -898,7 +902,7 @@ export default function TaxReportsPage() {
                             </td>
                           </tr>
                         ) : (
-                          filteredTransactions.map((transaction) => (
+                          filteredTransactions.slice(0, displayLimit).map((transaction) => (
                           <tr
                             key={transaction.id}
                             className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -993,9 +997,9 @@ export default function TaxReportsPage() {
                       </tbody>
                     </table>
                     
-                    {/* View More button - only show if we have the initial 5 and there might be more */}
-                    {reportData.transactions.length === 5 && reportData.total_count > 5 && !transactionStartDate && !transactionEndDate && (
-                      <div className="flex justify-center pt-6 border-t border-gray-200 mt-6">
+                    <div className="flex flex-col items-center gap-4 pt-6 border-t border-gray-200 mt-6">
+                      {/* Load all transactions button */}
+                      {displayReportData && displayReportData.transactions.length < displayReportData.total_count && (
                         <Button
                           variant="outline"
                           onClick={() => loadTaxReport()}
@@ -1007,10 +1011,21 @@ export default function TaxReportsPage() {
                           ) : (
                             <Eye className="h-4 w-4" />
                           )}
-                          {loadingReport ? 'Loading...' : `View More (${reportData.total_count - 5} more)`}
+                          {loadingReport ? 'Loading...' : `View All Transactions (${displayReportData.total_count})`}
                         </Button>
-                      </div>
-                    )}
+                      )}
+
+                      {/* Client-side pagination controls */}
+                      {filteredTransactions.length > 5 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500">Show:</span>
+                          <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(10)} disabled={displayLimit === 10 || filteredTransactions.length < 10}>10</Button>
+                          <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(50)} disabled={displayLimit === 50 || filteredTransactions.length < 50}>50</Button>
+                          <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(filteredTransactions.length)} disabled={displayLimit === filteredTransactions.length}>All</Button>
+                          {displayLimit > 5 && <Button variant="ghost" size="sm" onClick={() => setDisplayLimit(5)}>5</Button>}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1023,7 +1038,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                       Report Configuration
-                      {reportData && (
+                      {exportReportData && (
                         <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
                           Ready to Export
                         </Badge>
@@ -1155,7 +1170,7 @@ export default function TaxReportsPage() {
                 </div>
 
                 {/* Export Section - Only show when report data is available */}
-                {reportData && (
+                {exportReportData && (
                   <>
                     <div className="border-t border-gray-200 pt-6">
                       <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -1163,7 +1178,7 @@ export default function TaxReportsPage() {
                         Export Options
                       </h3>
 
-                      <div className="flex flex-col lg:flex-row gap-6">
+                      <div className="flex flex-col lg:flex-row gap-6 lg:items-end">
                         {/* Template Selection */}
                         <div className="flex-1 space-y-2">
                           <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
@@ -1234,17 +1249,17 @@ export default function TaxReportsPage() {
                     </div>
 
                     {/* Report Date Range Info */}
-                    <div className="bg-gray-50 rounded-lg p-4 flex items-start gap-3">
-                      <Info className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div className="bg-[#7f5efd]/10 border border-[#7f5efd]/20 rounded-lg p-4 flex items-start gap-3">
+                      <Info className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="font-capsule text-xs text-gray-600">
+                        <p className="font-capsule text-xs text-gray-700">
                           Current report includes transactions from{' '}
                           <span className="font-semibold">
-                            {reportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date}
+                            {formatFullDate(exportReportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date, timezone)}
                           </span>{' '}
                           to{' '}
                           <span className="font-semibold">
-                            {reportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date}
+                            {formatFullDate(exportReportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date, timezone)}
                           </span>
                         </p>
                       </div>
@@ -1255,7 +1270,7 @@ export default function TaxReportsPage() {
             </Card>
 
             {/* No Data State */}
-            {!reportData && !loadingReport && (
+            {!displayReportData && !loadingReport && (
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="pt-12 pb-12">
                   <div className="text-center">
