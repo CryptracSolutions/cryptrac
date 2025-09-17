@@ -248,7 +248,7 @@ export default function SupportedCryptocurrencies() {
               {filteredCurrencies.length === 0 && !loading && (
                 <div className="text-center py-20">
                   <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 text-lg mb-2">No currencies found matching "{searchTerm}"</p>
+                  <p className="text-gray-600 text-lg mb-2">No currencies found matching &ldquo;{searchTerm}&rdquo;</p>
                   <p className="text-gray-500">Try searching with a different name or ticker symbol</p>
                 </div>
               )}

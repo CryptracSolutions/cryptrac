@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
+import { Card, CardContent } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
 

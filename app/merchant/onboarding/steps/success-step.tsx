@@ -31,7 +31,7 @@ interface SuccessStepProps {
 }
 
 export default function SuccessStep({ onboardingData, onFinish, isLoading }: SuccessStepProps) {
-  const { businessInfo, walletConfig, paymentConfig } = onboardingData
+  const { businessInfo } = onboardingData
 
   const shareMessage = `🚀 ${businessInfo.businessName} is now accepting crypto payments via Cryptrac!`
 

@@ -30,38 +30,39 @@ setInterval(() => {
 }, 30000)
 
 // Broadcast payment status update to all connected clients watching this payment
-function broadcastPaymentStatusUpdate(paymentId: string, statusData: any) {
-  const message = JSON.stringify({
-    type: 'payment_status_update',
-    payment_id: paymentId,
-    ...statusData,
-    timestamp: new Date().toISOString()
-  })
+// Currently unused - kept for potential future WebSocket implementation
+// function broadcastPaymentStatusUpdate(paymentId: string, statusData: any) {
+//   const message = JSON.stringify({
+//     type: 'payment_status_update',
+//     payment_id: paymentId,
+//     ...statusData,
+//     timestamp: new Date().toISOString()
+//   })
 
-  let broadcastCount = 0
-  const entries = Array.from(connections.entries())
-  for (const [id, conn] of entries) {
-    if (conn.paymentId === paymentId) {
-      try {
-        if (conn.ws.readyState === WebSocket.OPEN) {
-          conn.ws.send(message)
-          conn.lastActivity = Date.now()
-          broadcastCount++
-        } else {
-          // Clean up closed connections
-          connections.delete(id)
-        }
-      } catch (error) {
-        console.warn(`Error broadcasting to WebSocket ${id}:`, error)
-        connections.delete(id)
-      }
-    }
-  }
+//   let broadcastCount = 0
+//   const entries = Array.from(connections.entries())
+//   for (const [id, conn] of entries) {
+//     if (conn.paymentId === paymentId) {
+//       try {
+//         if (conn.ws.readyState === WebSocket.OPEN) {
+//           conn.ws.send(message)
+//           conn.lastActivity = Date.now()
+//           broadcastCount++
+//         } else {
+//           // Clean up closed connections
+//           connections.delete(id)
+//         }
+//       } catch (error) {
+//         console.warn(`Error broadcasting to WebSocket ${id}:`, error)
+//         connections.delete(id)
+//       }
+//     }
+//   }
 
-  if (broadcastCount > 0) {
-    console.log(`📡 Broadcasted payment status update for ${paymentId} to ${broadcastCount} clients`)
-  }
-}
+//   if (broadcastCount > 0) {
+//     console.log(`📡 Broadcasted payment status update for ${paymentId} to ${broadcastCount} clients`)
+//   }
+// }
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -234,7 +235,7 @@ export async function POST(request: NextRequest) {
                 type: 'heartbeat',
                 timestamp: new Date().toISOString()
               })}\n\n`))
-            } catch (error) {
+            } catch {
               clearInterval(heartbeat)
               subscription.unsubscribe()
             }

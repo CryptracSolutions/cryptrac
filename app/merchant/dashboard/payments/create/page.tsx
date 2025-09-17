@@ -10,7 +10,6 @@ import {
   CreditCard,
   Users,
   AlertCircle,
-  CheckCircle,
   Clock,
   Plus,
   Trash2,
@@ -139,13 +138,13 @@ export default function CreatePaymentLinkPage() {
       const wallets = { ...(merchant.wallets || {}) };
 
       // Resolve tax configuration using top-level fields, falling back to onboarding_data
-      const resolvedTaxEnabled = (merchant as any).tax_enabled ?? (merchant as any).onboarding_data?.tax_enabled ?? false;
+      const resolvedTaxEnabled = (merchant as Record<string, unknown>).tax_enabled ?? ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_enabled ?? false;
       const resolvedTaxRates = resolvedTaxEnabled
-        ? ((merchant as any).tax_rates && (merchant as any).tax_rates.length > 0
-            ? (merchant as any).tax_rates
-            : ((merchant as any).onboarding_data?.tax_rates || []))
+        ? ((merchant as Record<string, unknown>).tax_rates && ((merchant as Record<string, unknown>).tax_rates as any[]).length > 0
+            ? (merchant as Record<string, unknown>).tax_rates
+            : (((merchant as Record<string, unknown>).onboarding_data as any)?.tax_rates || []))
         : [];
-      const resolvedTaxStrategy = (merchant as any).tax_strategy || (merchant as any).onboarding_data?.tax_strategy || 'origin';
+      const resolvedTaxStrategy = (merchant as Record<string, unknown>).tax_strategy || ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_strategy || 'origin';
 
       const updatedMerchant = { 
         ...merchant, 
@@ -153,7 +152,7 @@ export default function CreatePaymentLinkPage() {
         tax_enabled: resolvedTaxEnabled,
         tax_rates: resolvedTaxRates,
         tax_strategy: resolvedTaxStrategy
-      } as any;
+      } as MerchantSettings;
       setMerchantSettings(updatedMerchant);
       const cryptos = Object.keys(wallets);
       setAvailableCryptos(cryptos);

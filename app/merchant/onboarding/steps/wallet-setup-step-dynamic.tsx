@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import WalletsManager from '@/app/components/settings/WalletsManager'
@@ -15,7 +15,7 @@ interface WalletSetupStepProps {
   onBack: () => void
 }
 
-type MerchantSettings = Record<string, any> & {
+type MerchantSettings = Record<string, unknown> & {
   wallets: Record<string, string>
   wallet_extra_ids?: Record<string, string>
 }
@@ -40,7 +40,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
   const handleNext = () => {
     // Only pass wallets that have valid addresses
     const validWallets = Object.fromEntries(
-      Object.entries(settings.wallets).filter(([_, address]) =>
+      Object.entries(settings.wallets).filter(([, address]) =>
         address && address.trim()
       )
     )

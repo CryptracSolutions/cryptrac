@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, Shield, Users, Eye, Lock, Settings, AlertCircle, Clock, Phone, Mail, MapPin, FileText, Database, CreditCard, Globe } from "lucide-react";
+import { ChevronRight, Shield, Users, Eye, Lock, Settings, AlertCircle, Clock, Phone, Mail, MapPin, FileText, Database, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
@@ -144,7 +144,7 @@ export default function PrivacyPolicy() {
                     </p>
                   </div>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
-                    Cryptrac Solutions ("Company," "we," "us," or "our") is committed to protecting the privacy and security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our cryptocurrency payment processing platform, website, mobile applications, and related services (collectively, the "Service").
+                    Cryptrac Solutions (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) is committed to protecting the privacy and security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our cryptocurrency payment processing platform, website, mobile applications, and related services (collectively, the &ldquo;Service&rdquo;).
                   </p>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
                     This Privacy Policy applies to all users of our Service, including merchants who use our platform to accept cryptocurrency payments and customers who make payments through our system. By using our Service, you consent to the data practices described in this policy.
@@ -791,7 +791,7 @@ export default function PrivacyPolicy() {
                 <section id="children-privacy" className="mb-12">
                   <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
                     <Users className="h-8 w-8 text-[#7f5efd]" />
-                    9. Children's Privacy
+                    9. Children&apos;s Privacy
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     Our Service is not intended for use by individuals under the age of 18, and we do not knowingly collect personal information from children. Cryptocurrency payment processing involves complex financial transactions that require adult understanding and legal capacity to enter into binding agreements.

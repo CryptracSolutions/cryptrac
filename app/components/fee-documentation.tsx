@@ -24,7 +24,7 @@ function NetworkFeeEstimator() {
         if (mounted) {
           setFees(data)
         }
-      } catch (e) {
+      } catch {
         if (mounted) setError('Unavailable')
       } finally {
         if (mounted) setLoading(false)

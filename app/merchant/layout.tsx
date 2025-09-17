@@ -26,7 +26,7 @@ export default function MerchantLayout({
       const user = session?.user
       if (!user) return
 
-      const role = (user.user_metadata as any)?.role || 'merchant'
+      const role = (user.user_metadata as Record<string, unknown>)?.role || 'merchant'
       if (role !== 'merchant') return
 
       try {
@@ -40,7 +40,7 @@ export default function MerchantLayout({
         if (error || !completed) {
           router.replace('/merchant/onboarding')
         }
-      } catch (_e) {
+      } catch {
         router.replace('/merchant/onboarding')
       }
     }

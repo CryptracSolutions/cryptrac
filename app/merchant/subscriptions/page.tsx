@@ -15,7 +15,6 @@ import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import {
   Search,
   Plus,
-  Filter,
   Calendar,
   DollarSign,
   Users,
@@ -60,7 +59,7 @@ interface Subscription {
 }
 
 export default function MerchantSubscriptionsPage() {
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
+  const [, setUser] = useState<Record<string, unknown> | null>(null);
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [filteredSubs, setFilteredSubs] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);

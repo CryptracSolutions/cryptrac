@@ -114,7 +114,7 @@ export default function SubscriptionsInfo() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="font-phonic text-base">
-                  Monthly or annual software subscriptions. Reduce churn with crypto's global accessibility.
+                  Monthly or annual software subscriptions. Reduce churn with crypto&apos;s global accessibility.
                 </CardDescription>
               </CardContent>
             </Card>

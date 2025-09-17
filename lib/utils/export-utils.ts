@@ -240,7 +240,7 @@ export function generateTaxReportPDF(
     const rows = transactions.map(tx => getRowDataForPDFTemplate(tx, options))
 
     // Configure column widths based on template
-    const columnStyles = getColumnStylesForTemplate(options.template, contentWidth)
+    const columnStyles = getColumnStylesForTemplate(options.template)
 
     // Generate the table with professional styling
     autoTable(doc, {
@@ -265,11 +265,11 @@ export function generateTaxReportPDF(
       alternateRowStyles: {
         fillColor: colors.background
       },
-      columnStyles: columnStyles,
-      didDrawPage: (data) => {
+      columnStyles: columnStyles as any,
+      didDrawPage: () => {
         // Add footer on every page
-        const pageNumber = (doc as any).internal.getCurrentPageInfo().pageNumber
-        const totalPages = (doc as any).internal.getNumberOfPages()
+        const pageNumber = ((doc as any).internal as any).getCurrentPageInfo().pageNumber
+        const totalPages = ((doc as any).internal as any).getNumberOfPages()
 
         // Footer background
         doc.setFillColor(colors.background[0], colors.background[1], colors.background[2])
@@ -289,10 +289,10 @@ export function generateTaxReportPDF(
     })
 
     // Add digital verification notice on last page
-    const lastPageNumber = (doc as any).internal.getNumberOfPages()
+    const lastPageNumber = ((doc as any).internal as any).getNumberOfPages()
     doc.setPage(lastPageNumber)
 
-    const currentY = (doc as any).lastAutoTable.finalY || yPos
+    const currentY = ((doc as any).lastAutoTable as any)?.finalY || yPos
     if (currentY < pageHeight - 60) {
       doc.setFontSize(9)
       doc.setFont('helvetica', 'italic')
@@ -447,7 +447,7 @@ function getColumnsForPDFTemplate(template: ExportTemplate): string[] {
 }
 
 // Column styles for PDF tables
-function getColumnStylesForTemplate(template: ExportTemplate, contentWidth: number): any {
+function getColumnStylesForTemplate(template: ExportTemplate): Record<string, unknown> {
   const baseStyles = {
     0: { cellWidth: 22, halign: 'left' },   // Date
     1: { cellWidth: 'auto', halign: 'left' }, // Description (auto-expand)
@@ -646,7 +646,7 @@ function getCSVRowDataForTemplate(tx: ExportTransaction, options: ExportOptions)
 }
 
 // Generate monthly analytics for Excel
-function generateMonthlyAnalytics(transactions: ExportTransaction[]): any[][] {
+function generateMonthlyAnalytics(transactions: ExportTransaction[]): unknown[][] {
   const monthlyData: { [key: string]: { count: number, gross: number, tax: number, fees: number, net: number } } = {}
 
   transactions.forEach(tx => {

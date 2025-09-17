@@ -29,7 +29,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
       const element = document.getElementById('blog-content');
       if (!element) return;
       
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      const { scrollTop, clientHeight } = document.documentElement;
       const elementTop = element.offsetTop;
       const elementHeight = element.scrollHeight;
       

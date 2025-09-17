@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Missing address or currency' }, { status: 400 })
   }
 
-  const result = formatAddressForQR(currency, address, extraId)
+  const result = formatAddressForQR(currency, address)
   const valid = isValidAddress(address)
 
   return NextResponse.json({

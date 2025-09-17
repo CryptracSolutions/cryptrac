@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, DollarSign, HelpCircle, Network, ChevronLeft, ChevronRight, ExternalLink, FileText } from "lucide-react";
+import { useState, useRef } from "react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, HelpCircle, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";

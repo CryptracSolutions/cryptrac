@@ -61,7 +61,7 @@ interface OnboardingData {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { cleanupIncompleteOnboarding, isLoading: cleanupLoading } = useOnboardingCleanup()
+  const { cleanupIncompleteOnboarding } = useOnboardingCleanup()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

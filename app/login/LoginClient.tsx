@@ -65,7 +65,7 @@ export default function Login() {
             } else {
               router.push('/merchant/dashboard');
             }
-          } catch (_e) {
+          } catch {
             router.push('/merchant/onboarding');
           }
         }

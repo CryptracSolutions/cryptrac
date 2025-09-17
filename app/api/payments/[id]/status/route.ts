@@ -11,7 +11,7 @@ async function broadcastPaymentUpdate(
     console.log(`📡 Broadcasting real-time update for payment: ${paymentId}`)
 
     // Use HTTP broadcast API; no server-side subscribe needed
-    const { error: channelError } = await supabase
+    const sendResponse = await supabase
       .channel(`payment-${paymentId}`)
       .send({
         type: 'broadcast',
@@ -30,10 +30,10 @@ async function broadcastPaymentUpdate(
         }
       })
 
-    if (channelError) {
-      console.warn('⚠️ Error broadcasting payment update:', channelError)
-    } else {
+    if (sendResponse === 'ok') {
       console.log('✅ Real-time broadcast sent successfully')
+    } else {
+      console.warn('⚠️ Error broadcasting payment update')
     }
 
   } catch (error) {
@@ -124,9 +124,9 @@ export async function GET(
               effectiveStatus = payment.status
             }
 
-            const existingPaymentData = (payment.payment_data || {}) as Record<string, any>
+            const existingPaymentData = (payment.payment_data || {}) as Record<string, unknown>
             const nowIso = new Date().toISOString()
-            const paymentDataUpdate: Record<string, any> = { ...existingPaymentData }
+            const paymentDataUpdate: Record<string, unknown> = { ...existingPaymentData }
             let shouldUpdatePaymentData = false
 
             if ((effectiveStatus === 'confirmed' || effectiveStatus === 'finished') && !paymentDataUpdate.payment_confirmed_at) {

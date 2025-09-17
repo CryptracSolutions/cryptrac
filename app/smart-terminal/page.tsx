@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+// import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
@@ -12,9 +12,9 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { AlertCircle, CheckCircle2, Clock, Smartphone, ArrowLeft, ArrowRight, Mail, Zap, ShoppingBag, DollarSign, TrendingUp, Globe, AlertTriangle, Bitcoin, Coins, Network } from 'lucide-react';
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation';
 import { formatAmountForDisplay } from '@/lib/crypto-uri-builder';
-import { formatAddressForQR } from '@/lib/simple-address-formatter';
-import { trackURIGeneration } from '@/lib/uri-analytics';
-import { getOrCreateClientId } from '@/lib/ab-testing';
+// import { formatAddressForQR } from '@/lib/simple-address-formatter';
+// import { trackURIGeneration } from '@/lib/uri-analytics';
+// import { getOrCreateClientId } from '@/lib/ab-testing';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/app/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -77,14 +77,6 @@ function expandStableCoins(wallets: Record<string, string>): string[] {
   return Array.from(stable);
 }
 
-// Centralized wallet-specific URI builder (with fallback)
-function buildPaymentURI(currency: string, address: string, amount: number, extraId?: string) {
-  const { qrContent } = formatAddressForQR(currency, address, extraId);
-  try {
-    trackURIGeneration({ currency, walletDetected: '', uriType: 'address-only', uri: qrContent });
-  } catch {}
-  return qrContent;
-}
 
 function SmartTerminalPageContent() {
   const [device, setDevice] = useState<TerminalDevice | null>(null);
@@ -181,11 +173,11 @@ function SmartTerminalPageContent() {
         }
 
         // Resolve tax configuration using top-level fields, falling back to onboarding_data
-        const resolvedTaxEnabled = (merchant as any).tax_enabled ?? (merchant as any).onboarding_data?.tax_enabled ?? false;
+        const resolvedTaxEnabled = (merchant as Record<string, unknown>).tax_enabled ?? ((merchant as Record<string, unknown>).onboarding_data as any)?.tax_enabled ?? false;
         const resolvedTaxRates = resolvedTaxEnabled
-          ? ((merchant as any).tax_rates && (merchant as any).tax_rates.length > 0
-              ? (merchant as any).tax_rates
-              : ((merchant as any).onboarding_data?.tax_rates || []))
+          ? ((merchant as Record<string, unknown>).tax_rates && ((merchant as Record<string, unknown>).tax_rates as any[]).length > 0
+              ? (merchant as Record<string, unknown>).tax_rates
+              : (((merchant as Record<string, unknown>).onboarding_data as any)?.tax_rates || []))
           : [];
 
         setMerchantSettings({
@@ -1047,8 +1039,8 @@ function SmartTerminalPageContent() {
               {paymentLink && paymentData && (
                 <div className="flex flex-col items-center space-y-2 sm:space-y-3" aria-live="polite">
                   {(() => {
-                const baseUri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
-                const uri = baseUri;
+                // const baseUri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
+                // const uri = baseUri;
                 const needsExtra = !!(paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency));
                   return (
                     <>

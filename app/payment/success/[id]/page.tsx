@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 import { Separator } from '@/app/components/ui/separator'
-import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle, Shield, Zap, CreditCard, ArrowRight, AlertTriangle } from 'lucide-react'
+import { CheckCircle, Copy, ExternalLink, Mail, Loader2, AlertCircle, Shield, Zap, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'

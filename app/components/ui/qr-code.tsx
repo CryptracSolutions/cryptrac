@@ -21,7 +21,7 @@ export function QRCode({ currency, address, extraId, value, size = 256, classNam
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
 
-  const derived = currency && address ? formatAddressForQR(currency, address, extraId) : null
+  const derived = currency && address ? formatAddressForQR(currency, address) : null
   const qrContent = value ?? derived?.qrContent ?? ''
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(qrContent)}`
 

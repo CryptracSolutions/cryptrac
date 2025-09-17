@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 async function fetchJSON(input: RequestInfo, init?: RequestInit, timeoutMs = 6000) {
   const controller = new AbortController()
@@ -21,13 +21,13 @@ function isHexResult(v: unknown): v is string {
   return typeof v === 'string' && /^0x[0-9a-fA-F]+$/.test(v)
 }
 
-async function jsonRpcHex(url: string, payload: any): Promise<string | null> {
+async function jsonRpcHex(url: string, payload: Record<string, unknown>): Promise<string | null> {
   const res = await fetchJSON(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
   }).catch(() => null)
-  const hex = (res as any)?.result
+  const hex = (res as Record<string, unknown>)?.result
   return isHexResult(hex) ? hex : null
 }
 
@@ -38,13 +38,14 @@ async function ethFeeHistoryWei(url: string): Promise<number> {
     method: 'eth_feeHistory',
     params: [5, 'latest', [50]] // 5 blocks, 50th percentile tip
   }
-  const res: any = await fetchJSON(url, {
+  const res: Record<string, unknown> = await fetchJSON(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
   })
-  const baseFees: string[] | undefined = res?.result?.baseFeePerGas
-  const rewards: string[][] | undefined = res?.result?.reward
+  const result = res?.result as { baseFeePerGas?: string[], reward?: string[][] } | undefined
+  const baseFees: string[] | undefined = result?.baseFeePerGas
+  const rewards: string[][] | undefined = result?.reward
   if (!Array.isArray(baseFees) || !Array.isArray(rewards) || rewards.length === 0) {
     throw new Error('bad feeHistory')
   }
@@ -165,7 +166,7 @@ export async function GET() {
 
     // 9) Tron (approx): use chain parameter transaction fee per KB (sun)
     const tronParams = await fetchJSON('https://api.trongrid.io/wallet/getchainparameters', { method: 'GET' }).catch(() => null)
-    const txFeeParam = (tronParams?.chainParameter || []).find((p: any) => p.key === 'getTransactionFee')
+    const txFeeParam = (tronParams?.chainParameter || []).find((p: Record<string, unknown>) => p.key === 'getTransactionFee')
     const tronSunPerKb = safeNumber(txFeeParam?.value) || 1000 // default 1000 sun
     const tronFeeTrx = (tronSunPerKb / 1_000_000) * 0.2 // assume ~0.2 KB simple transfer
     const tronFeeUsd = tronFeeTrx * usdPrice.TRX
@@ -182,7 +183,7 @@ export async function GET() {
     }
 
     return NextResponse.json(data, { status: 200 })
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'failed' }, { status: 500 })
   }
 }

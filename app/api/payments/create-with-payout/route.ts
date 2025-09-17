@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Payment provider temporarily unavailable. Please try again shortly.' }, { status: 503 })
     }
 
-    let paymentData: any
+    let paymentData: Record<string, unknown> | null
     try { paymentData = JSON.parse(responseText) } catch { paymentData = null }
     if (!nowPaymentsResponse.ok || !paymentData) {
       console.error('❌ NOWPayments API error:', paymentData || responseText)

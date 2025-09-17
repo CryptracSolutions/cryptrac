@@ -14,7 +14,7 @@ export function LandingNav() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
   const [canAccessDashboard, setCanAccessDashboard] = React.useState(false)
   const [isAuthChecked, setIsAuthChecked] = React.useState(false)
-  const [isPending, startTransition] = React.useTransition()
+  const [, startTransition] = React.useTransition()
 
   // Close dropdown when clicking outside
   React.useEffect(() => {

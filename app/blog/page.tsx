@@ -71,7 +71,7 @@ export default function BlogPage() {
               </div>
               {searchTerm && (
                 <p className="text-sm text-gray-600 mt-2 text-center">
-                  Found {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''} matching "{searchTerm}"
+                  Found {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''} matching &ldquo;{searchTerm}&rdquo;
                 </p>
               )}
             </div>

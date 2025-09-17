@@ -5,7 +5,7 @@ import { env } from '@/lib/env'
 
 // Function to trigger real-time notifications for payment status updates
 async function broadcastPaymentUpdate(
-  supabase: any,
+  supabase: ReturnType<typeof createServerClient>,
   paymentId: string,
   updateData: Record<string, unknown>
 ) {
@@ -892,10 +892,10 @@ export async function POST(request: Request) {
       newStatus = currentStatus
     }
 
-    const existingPaymentData = (payment.payment_data || {}) as Record<string, any>
+    const existingPaymentData = (payment.payment_data || {}) as Record<string, unknown>
     const nowIso = new Date().toISOString()
 
-    const paymentDataUpdate: Record<string, any> = {
+    const paymentDataUpdate: Record<string, unknown> = {
       ...existingPaymentData,
       now_webhook_payment_id: String(payment_id),
       now_parent_payment_id: parent_payment_id ? String(parent_payment_id) : undefined,

@@ -1,28 +1,28 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import React, { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
+import { Card, CardContent } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
-import { Input } from '@/app/components/ui/input'
-import { Label } from '@/app/components/ui/label'
+// import { Input } from '@/app/components/ui/input'
+// import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
-import { Separator } from '@/app/components/ui/separator'
-import { Copy, ExternalLink, Loader2, AlertCircle, CheckCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Shield, Zap, CreditCard, Filter, Globe, AlertTriangle, ChevronDown, ShoppingBag, Bitcoin, Coins, Network, TrendingUp, Smartphone, DollarSign } from 'lucide-react'
+// import { Separator } from '@/app/components/ui/separator'
+import { Copy, Loader2, AlertCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Globe, AlertTriangle, ShoppingBag, Bitcoin, Coins, Network, TrendingUp, Smartphone, DollarSign, Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
-import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority, NETWORKS } from '@/lib/crypto-networks'
+import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority } from '@/lib/crypto-networks'
 import { buildCurrencyMapping } from '@/lib/currency-mapping'
 import { requiresExtraId, getExtraIdLabel } from '@/lib/extra-id-validation'
-import { buildCryptoPaymentURI, formatAmountForDisplay } from '@/lib/crypto-uri-builder'
+import { formatAmountForDisplay } from '@/lib/crypto-uri-builder'
 import { formatAddressForQR } from '@/lib/simple-address-formatter'
 import { trackURIGeneration } from '@/lib/uri-analytics'
 import { loadDynamicConfig } from '@/lib/wallet-uri-config'
 import type { DynamicConfig } from '@/lib/wallet-uri-config'
 import { getOrCreateClientId } from '@/lib/ab-testing'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+// import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/app/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus'
 
@@ -126,108 +126,11 @@ interface FeeBreakdown {
 
 
 // Block explorer URLs for different networks
-const getBlockExplorerUrl = (txHash: string, currency: string): string | null => {
-  if (!txHash) return null
-  
-  const currency_upper = currency.toUpperCase()
-  
-  // Bitcoin
-  if (currency_upper === 'BTC') {
-    return `https://blockchair.com/bitcoin/transaction/${txHash}`
-  }
-  
-  // Ethereum and ERC-20 tokens
-  if (['ETH', 'USDT', 'USDC', 'USDTERC20', 'DAI', 'PYUSD'].includes(currency_upper)) {
-    return `https://etherscan.io/tx/${txHash}`
-  }
-  
-  // BSC and BEP-20 tokens
-  if (['BNB', 'BNBBSC', 'BSC', 'USDTBSC', 'USDCBSC', 'BUSDBSC'].includes(currency_upper)) {
-    return `https://bscscan.com/tx/${txHash}`
-  }
-  
-  // Solana and SPL tokens
-  if (['SOL', 'USDTSOL', 'USDCSOL'].includes(currency_upper)) {
-    return `https://solscan.io/tx/${txHash}`
-  }
-  
-  // Polygon and Polygon tokens
-  if (['MATIC', 'USDTMATIC', 'USDCMATIC'].includes(currency_upper)) {
-    return `https://polygonscan.com/tx/${txHash}`
-  }
-  
-  // Tron and TRC-20 tokens
-  if (['TRX', 'USDTTRC20', 'TUSDTRC20'].includes(currency_upper)) {
-    return `https://tronscan.org/#/transaction/${txHash}`
-  }
-  
-  // Avalanche
-  if (currency_upper === 'AVAX') {
-    return `https://snowtrace.io/tx/${txHash}`
-  }
-  
-  // Arbitrum
-  if (['ARB', 'USDTARB', 'USDCARB'].includes(currency_upper)) {
-    return `https://arbiscan.io/tx/${txHash}`
-  }
-  
-  // Optimism
-  if (['OP', 'USDTOP', 'USDCOP'].includes(currency_upper)) {
-    return `https://optimistic.etherscan.io/tx/${txHash}`
-  }
-  
-  // Base
-  if (['ETHBASE', 'USDCBASE'].includes(currency_upper)) {
-    return `https://basescan.org/tx/${txHash}`
-  }
-  
-  // TON
-  if (['TON', 'USDTTON'].includes(currency_upper)) {
-    return `https://tonscan.org/tx/${txHash}`
-  }
-  
-  // Algorand
-  if (['ALGO', 'USDCALGO'].includes(currency_upper)) {
-    return `https://algoexplorer.io/tx/${txHash}`
-  }
-  
-  // Litecoin
-  if (currency_upper === 'LTC') {
-    return `https://blockchair.com/litecoin/transaction/${txHash}`
-  }
-  
-  // Cardano
-  if (currency_upper === 'ADA') {
-    return `https://cardanoscan.io/transaction/${txHash}`
-  }
-  
-  // XRP
-  if (currency_upper === 'XRP') {
-    return `https://xrpscan.com/tx/${txHash}`
-  }
-  
-  // Polkadot
-  if (currency_upper === 'DOT') {
-    return `https://polkadot.subscan.io/extrinsic/${txHash}`
-  }
-  
-  // Stellar
-  if (currency_upper === 'XLM') {
-    return `https://stellar.expert/explorer/public/tx/${txHash}`
-  }
-  
-  // NEAR
-  if (currency_upper === 'NEAR') {
-    return `https://explorer.near.org/transactions/${txHash}`
-  }
-  
-  return null
-}
 
 export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
-  const searchParams = useSearchParams()
+  // const searchParams = useSearchParams()
   const id = params?.id as string
   
   // State management
@@ -242,11 +145,11 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true)
   const [creatingPayment, setCreatingPayment] = useState(false)
   const [error, setError] = useState<string>('')
-  const [dynamicConfig, setDynamicConfig] = useState<DynamicConfig | null>(null)
-  const [clientId, setClientId] = useState<string>('anon')
+  const [, setDynamicConfig] = useState<DynamicConfig | null>(null)
+  const [, setClientId] = useState<string>('anon')
   
   // Real-time payment status monitoring
-  const { paymentStatus: realtimeStatus, connectionStatus } = useRealTimePaymentStatus({
+  const { } = useRealTimePaymentStatus({
     paymentId: paymentData?.payment_id || null,
     enabled: !!paymentData?.payment_id,
     onStatusChange: (updatedStatus) => {
@@ -468,8 +371,7 @@ export default function PaymentPage() {
         // Simple: address-only QR content (append extraId for special currencies)
         const { qrContent } = formatAddressForQR(
           data.payment.pay_currency,
-          data.payment.pay_address,
-          data.payment.payin_extra_id || undefined
+          data.payment.pay_address
         )
         const qrData = qrContent
         
@@ -516,70 +418,7 @@ export default function PaymentPage() {
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'waiting':
-        return <Clock className="h-4 w-4 text-yellow-500" />
-      case 'confirming':
-      case 'partially_paid':
-        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
-      case 'confirmed':
-      case 'sending':
-      case 'finished':
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'failed':
-      case 'refunded':
-      case 'expired':
-        return <AlertCircle className="h-4 w-4 text-red-500" />
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />
-    }
-  }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'waiting':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'confirming':
-      case 'partially_paid':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'confirmed':
-      case 'sending':
-      case 'finished':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'failed':
-      case 'refunded':
-      case 'expired':
-        return 'bg-red-100 text-red-800 border-red-200'
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
-  }
-
-  const formatStatus = (status: string) => {
-    switch (status) {
-      case 'waiting':
-        return 'Waiting for Payment'
-      case 'confirming':
-        return 'Confirming Payment'
-      case 'partially_paid':
-        return 'Partial Payment Received'
-      case 'confirmed':
-        return 'Payment Confirmed'
-      case 'sending':
-        return 'Sending to Merchant'
-      case 'finished':
-        return 'Payment Complete'
-      case 'failed':
-        return 'Payment Failed'
-      case 'refunded':
-        return 'Payment Refunded'
-      case 'expired':
-        return 'Payment Expired'
-      default:
-        return status.charAt(0).toUpperCase() + status.slice(1)
-    }
-  }
 
   // Load payment link on component mount
   useEffect(() => {
@@ -1065,7 +904,7 @@ export default function PaymentPage() {
                             type="button"
                             className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm transition-colors"
                             onClick={() => {
-                              setPaymentData(null as any)
+                              setPaymentData(null)
                               setPaymentStatus(null)
                               setQrCodeDataUrl('')
                               setExtraIdConfirmed(false)

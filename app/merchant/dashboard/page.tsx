@@ -150,7 +150,7 @@ export default function MerchantDashboard() {
         status: t.status || 'confirmed',
         created_at: t.created_at,
         payment_link_id: t.payment_link_id,
-        payment_link_title: (t as any).payment_links?.title || 'Payment',
+        payment_link_title: ((t as Record<string, unknown>).payment_links as any)?.title as string || 'Payment',
       })));
     } catch (err) {
       console.error('Failed to fetch new payments:', err);
@@ -197,7 +197,7 @@ export default function MerchantDashboard() {
           status: t.status || 'confirmed',
           created_at: t.created_at,
           payment_link_id: t.payment_link_id,
-          payment_link_title: (t as any).payment_links?.title || 'Payment',
+          payment_link_title: ((t as Record<string, unknown>).payment_links as any)?.title as string || 'Payment',
         }))
       );
 
@@ -672,7 +672,7 @@ export default function MerchantDashboard() {
           {/* What's New Section */}
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
             <CardHeader className="p-6">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">What's New</CardTitle>
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">What&apos;s New</CardTitle>
               <CardDescription className="font-capsule text-sm text-gray-600">
                 Latest features and improvements to enhance your payment experience
               </CardDescription>

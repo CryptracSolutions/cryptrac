@@ -51,7 +51,7 @@ export default function TermsOfService() {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -81,7 +81,7 @@ export default function TermsOfService() {
               Terms of Service
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
-              Please read these terms carefully before using Cryptrac's cryptocurrency payment processing platform
+              Please read these terms carefully before using Cryptrac&apos;s cryptocurrency payment processing platform
             </p>
             <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
@@ -149,10 +149,10 @@ export default function TermsOfService() {
                     </p>
                   </div>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
-                    Welcome to Cryptrac, a cryptocurrency payment processing platform operated by Cryptrac Solutions ("Company," "we," "us," or "our"). These Terms of Service ("Terms") govern your use of our website, mobile applications, and related services (collectively, the "Service") that enable merchants to accept cryptocurrency payments and provide customers with secure payment processing solutions.
+                    Welcome to Cryptrac, a cryptocurrency payment processing platform operated by Cryptrac Solutions (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). These Terms of Service (&ldquo;Terms&rdquo;) govern your use of our website, mobile applications, and related services (collectively, the &ldquo;Service&rdquo;) that enable merchants to accept cryptocurrency payments and provide customers with secure payment processing solutions.
                   </p>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
-                    By accessing or using our Service, you ("User," "you," or "your") agree to be bound by these Terms and our Privacy Policy, which is incorporated herein by reference. If you do not agree to these Terms, you may not access or use our Service.
+                    By accessing or using our Service, you (&ldquo;User,&rdquo; &ldquo;you,&rdquo; or &ldquo;your&rdquo;) agree to be bound by these Terms and our Privacy Policy, which is incorporated herein by reference. If you do not agree to these Terms, you may not access or use our Service.
                   </p>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed">
                     These Terms constitute a legally binding agreement between you and Cryptrac Solutions. We reserve the right to modify these Terms at any time, and such modifications will be effective immediately upon posting. Your continued use of the Service after any such changes constitutes your acceptance of the new Terms.
@@ -550,7 +550,7 @@ export default function TermsOfService() {
                   
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6">
                     <p className="font-phonic text-sm font-normal text-amber-900">
-                      <strong>Note:</strong> Cryptocurrency transactions are recorded on public blockchains. While we don't publish personal information, transaction details may be publicly visible on blockchain explorers.
+                      <strong>Note:</strong> Cryptocurrency transactions are recorded on public blockchains. While we don&apos;t publish personal information, transaction details may be publicly visible on blockchain explorers.
                     </p>
                   </div>
                 </section>
@@ -580,7 +580,7 @@ export default function TermsOfService() {
                         <li>• Incorrect wallet addresses or lost transactions</li>
                       </ul>
                       <p className="font-phonic text-sm font-normal">
-                        OUR SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND.
+                        OUR SERVICE IS PROVIDED &ldquo;AS IS&rdquo; AND &ldquo;AS AVAILABLE&rdquo; WITHOUT WARRANTIES OF ANY KIND.
                       </p>
                     </CardContent>
                   </Card>
@@ -600,7 +600,7 @@ export default function TermsOfService() {
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
-                    You agree to defend, indemnify, and hold harmless Cryptrac Solutions and its officers, directors, employees, agents, and affiliates from and against any and all claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney's fees) arising from:
+                    You agree to defend, indemnify, and hold harmless Cryptrac Solutions and its officers, directors, employees, agents, and affiliates from and against any and all claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney&apos;s fees) arising from:
                   </p>
                   
                   <ul className="space-y-2 text-gray-700 mb-4">

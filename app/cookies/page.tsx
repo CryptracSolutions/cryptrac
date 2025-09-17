@@ -43,7 +43,7 @@ export default function CookiePolicy() {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -141,7 +141,7 @@ export default function CookiePolicy() {
                     </p>
                   </div>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
-                    This Cookie Policy explains how Cryptrac Solutions ("Company," "we," "us," or "our") uses cookies and similar tracking technologies when you visit our website, use our mobile applications, or interact with our cryptocurrency payment processing services (collectively, the "Service"). This policy should be read in conjunction with our Privacy Policy and Terms of Service.
+                    This Cookie Policy explains how Cryptrac Solutions (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) uses cookies and similar tracking technologies when you visit our website, use our mobile applications, or interact with our cryptocurrency payment processing services (collectively, the &ldquo;Service&rdquo;). This policy should be read in conjunction with our Privacy Policy and Terms of Service.
                   </p>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-4">
                     Cookies are small text files that are placed on your device when you visit a website or use an application. They are widely used to make websites and applications work more efficiently and to provide information to website owners about user behavior and preferences.

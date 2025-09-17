@@ -8,12 +8,12 @@ interface QueryMetric {
   lastUsed: number;
 }
 
-interface SearchMetrics {
-  totalSearches: number;
-  successfulSearches: number;
-  topQueries: QueryMetric[];
-  lastSearchTime: number | null;
-}
+// interface SearchMetrics {
+//   totalSearches: number;
+//   successfulSearches: number;
+//   topQueries: QueryMetric[];
+//   lastSearchTime: number | null;
+// }
 
 /**
  * Hook for tracking search analytics

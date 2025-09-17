@@ -285,7 +285,7 @@ export default function AboutPage() {
 
                   <Card className="border-blue-200 bg-blue-50 mb-6">
                     <CardHeader>
-                      <CardTitle className="font-phonic text-2xl font-normal text-blue-900">The Future We're Building</CardTitle>
+                      <CardTitle className="font-phonic text-2xl font-normal text-blue-900">The Future We&apos;re Building</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid md:grid-cols-2 gap-4">

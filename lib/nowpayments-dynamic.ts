@@ -2,22 +2,23 @@
 const NOWPAYMENTS_API_BASE = 'https://api.nowpayments.io/v1'
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY
 
-interface RawNOWPaymentsCurrency {
-  code?: unknown;
-  currency?: unknown;
-  name?: unknown;
-  network?: unknown;
-  networks?: unknown;
-  min_amount?: unknown;
-  max_amount?: unknown;
-  min_deposit_amount?: unknown;
-  max_deposit_amount?: unknown;
-  min_trx_amount?: unknown;
-  max_trx_amount?: unknown;
-  is_available?: unknown;
-  is_deprecated?: unknown;
-  rate_usd?: unknown;
-}
+// Unused interface - kept for potential future API compatibility
+// interface RawNOWPaymentsCurrency {
+//   code?: unknown;
+//   currency?: unknown;
+//   name?: unknown;
+//   network?: unknown;
+//   networks?: unknown;
+//   min_amount?: unknown;
+//   max_amount?: unknown;
+//   min_deposit_amount?: unknown;
+//   max_deposit_amount?: unknown;
+//   min_trx_amount?: unknown;
+//   max_trx_amount?: unknown;
+//   is_available?: unknown;
+//   is_deprecated?: unknown;
+//   rate_usd?: unknown;
+// }
 
 // Cache for currency data
 let currencyCache: {
@@ -130,29 +131,29 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
         const network =
           typeof currency.network === 'string'
             ? currency.network
-            : Array.isArray((currency as any).networks) && (currency as any).networks.length > 0
-              ? String((currency as any).networks[0]?.network || (currency as any).networks[0])
+            : Array.isArray((currency as Record<string, unknown>).networks) && ((currency as Record<string, unknown>).networks as any[]).length > 0
+              ? String(((currency as Record<string, unknown>).networks as any[])[0]?.network || ((currency as Record<string, unknown>).networks as any[])[0])
               : 'Unknown'
 
         // NOWPayments may use other names for min/max; default safely
-        const minAmtRaw = (currency as any).min_amount ?? (currency as any).min_deposit_amount ?? (currency as any).min_trx_amount
-        const maxAmtRaw = (currency as any).max_amount ?? (currency as any).max_deposit_amount ?? (currency as any).max_trx_amount
+        const minAmtRaw = (currency as Record<string, unknown>).min_amount ?? (currency as Record<string, unknown>).min_deposit_amount ?? (currency as Record<string, unknown>).min_trx_amount
+        const maxAmtRaw = (currency as Record<string, unknown>).max_amount ?? (currency as Record<string, unknown>).max_deposit_amount ?? (currency as Record<string, unknown>).max_trx_amount
 
         return {
           code: String(codeValue).toUpperCase(),
-          name: String((currency as any).name ?? codeValue).trim() || String(codeValue).toUpperCase(),
+          name: String((currency as Record<string, unknown>).name ?? codeValue).trim() || String(codeValue).toUpperCase(),
           network: String(network),
-          is_available: (currency as any).is_available !== false && (currency as any).is_deprecated !== true,
+          is_available: (currency as Record<string, unknown>).is_available !== false && (currency as Record<string, unknown>).is_deprecated !== true,
           min_amount: parseFloat(String(minAmtRaw)) || 0.00000001,
           max_amount: parseFloat(String(maxAmtRaw)) || 1000000,
-          rate_usd: parseFloat(String((currency as any).rate_usd)) || 0
+          rate_usd: parseFloat(String((currency as Record<string, unknown>).rate_usd)) || 0
         }
       })
     }
 
     // Try the detailed coins endpoint first
     let endpointTried: string | null = null
-    let lastError: Error
+    // let lastError: Error
 
     const tryFetch = async (path: string) => {
       endpointTried = path
@@ -171,7 +172,7 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
 
     if (!response.ok) {
       // Fallback to /currencies (list of tickers)
-      lastError = new Error(`Primary endpoint failed: ${response.status} ${response.statusText}`)
+      // lastError = new Error(`Primary endpoint failed: ${response.status} ${response.statusText}`)
       response = await tryFetch('/currencies')
     }
 
@@ -182,7 +183,7 @@ export async function fetchAvailableCurrencies(): Promise<NOWPaymentsCurrency[]>
 
     // Parse JSON safely (some outages return HTML)
     const text = await response.text()
-    let data: any
+    let data: Record<string, unknown>
     try {
       data = JSON.parse(text)
     } catch {

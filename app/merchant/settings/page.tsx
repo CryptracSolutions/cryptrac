@@ -6,9 +6,7 @@ export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
-  CheckCircle,
   Loader2,
-  Info,
   DollarSign,
   Calculator,
   Bell,
@@ -19,7 +17,7 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 
-import { Alert, AlertDescription } from '@/app/components/ui/alert';
+// import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Checkbox } from '@/app/components/ui/checkbox';
@@ -115,7 +113,7 @@ const getCurrencyDisplayName = (code: string) => {
 
 export default function MerchantSettingsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserType | null>(null);
+  const [, setUser] = useState<UserType | null>(null);
   const [settings, setSettings] = useState<MerchantSettings>({
     // Payment settings defaults
     charge_customer_fee: false,
@@ -226,7 +224,7 @@ export default function MerchantSettingsPage() {
       const wallets = { ...(merchant.wallets || {}) };
 
       // Check if tax data exists in onboarding_data and hasn't been moved to main fields yet
-      const hasOnboardingTaxData = merchant.onboarding_data?.tax_enabled !== undefined;
+      // const hasOnboardingTaxData = merchant.onboarding_data?.tax_enabled !== undefined;
       const taxEnabled = merchant.tax_enabled ?? merchant.onboarding_data?.tax_enabled ?? false;
       const taxStrategy = merchant.tax_strategy || merchant.onboarding_data?.tax_strategy || 'origin';
       const salesType = merchant.sales_type || merchant.onboarding_data?.sales_type || 'local';
@@ -318,60 +316,6 @@ export default function MerchantSettingsPage() {
     }
   };
 
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-      console.log('💾 Saving settings...');
-
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !user) {
-        console.error('Auth error:', authError);
-        toast.error('Authentication error');
-        return;
-      }
-
-      // Update payment config based on auto_convert_enabled
-      const updatedPaymentConfig = {
-        auto_forward: settings.payment_config.auto_forward,
-        fee_percentage: settings.auto_convert_enabled ? 1.0 : 0.5,
-        ...(settings.auto_convert_enabled ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
-      };
-
-      const { error: updateError } = await supabase
-        .from('merchants')
-        .update({
-          charge_customer_fee: settings.charge_customer_fee,
-          auto_convert_enabled: settings.auto_convert_enabled,
-          preferred_payout_currency: settings.preferred_payout_currency,
-          payment_config: updatedPaymentConfig,
-          tax_enabled: settings.tax_enabled,
-          tax_rates: settings.tax_rates.map(rate => ({
-            ...rate,
-            percentage: parseFloat(rate.percentage)
-          })),
-          business_address: settings.business_address,
-          tax_strategy: settings.tax_strategy,
-          sales_type: settings.sales_type
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) {
-        console.error('Error updating merchant:', updateError);
-        toast.error('Failed to save settings');
-        return;
-      }
-
-      console.log('✅ Settings saved successfully');
-      setLastSavedSettings(settings);
-
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      toast.error('Failed to save settings');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   // Auto-save functionality
   const autoSave = async (newSettings: MerchantSettings) => {

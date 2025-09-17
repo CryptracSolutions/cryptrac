@@ -216,25 +216,25 @@ export function useRealTimePaymentStatus({
         (payload) => {
           console.log(`📨 Database change received for payment ${paymentId}`)
           // Convert database payload to PaymentStatus format
-          const dbData = payload.new as any
+          const dbData = payload.new as Record<string, unknown>
           updatePaymentStatus({
-            payment_id: dbData.nowpayments_payment_id,
-            payment_status: dbData.status,
-            pay_address: dbData.pay_address || '',
-            payin_extra_id: dbData.payin_extra_id,
-            pay_amount: dbData.pay_amount || 0,
-            pay_currency: dbData.pay_currency || '',
-            price_amount: dbData.amount || 0,
-            price_currency: dbData.currency || 'USD',
-            order_id: dbData.order_id || '',
-            order_description: dbData.description || '',
-            created_at: dbData.created_at,
-            updated_at: dbData.updated_at,
-            tx_hash: dbData.tx_hash,
-            actually_paid: dbData.amount_received,
-            outcome_amount: dbData.merchant_receives,
-            outcome_currency: dbData.payout_currency,
-            network: dbData.pay_currency
+            payment_id: dbData.nowpayments_payment_id as string,
+            payment_status: dbData.status as string,
+            pay_address: (dbData.pay_address as string) || '',
+            payin_extra_id: dbData.payin_extra_id as string | undefined,
+            pay_amount: (dbData.pay_amount as number) || 0,
+            pay_currency: (dbData.pay_currency as string) || '',
+            price_amount: (dbData.amount as number) || 0,
+            price_currency: (dbData.currency as string) || 'USD',
+            order_id: (dbData.order_id as string) || '',
+            order_description: (dbData.description as string) || '',
+            created_at: dbData.created_at as string,
+            updated_at: dbData.updated_at as string,
+            tx_hash: dbData.tx_hash as string | undefined,
+            actually_paid: dbData.amount_received as number | undefined,
+            outcome_amount: dbData.merchant_receives as number | undefined,
+            outcome_currency: dbData.payout_currency as string | undefined,
+            network: dbData.pay_currency as string | undefined
           })
         }
       )

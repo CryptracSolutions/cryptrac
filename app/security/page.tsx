@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, Shield, Lock, Eye, AlertTriangle, CheckCircle2, Server, Key, Users, Clock, Phone, Mail, MapPin, FileText, Zap, Database, Globe, UserCheck, AlertCircle } from "lucide-react";
+import { Shield, Lock, Eye, AlertTriangle, CheckCircle2, Server, Key, Users, Clock, Phone, Mail, FileText, Zap, Database, Globe, UserCheck, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
@@ -145,7 +145,7 @@ export default function SecurityPage() {
                   </div>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
-                    At Cryptrac, security is not an afterthought—it's the foundation of everything we build. As a cryptocurrency payment processing platform handling financial transactions, we understand the critical importance of maintaining the highest security standards to protect your business, your customers, and the integrity of the blockchain ecosystem.
+                    At Cryptrac, security is not an afterthought—it&apos;s the foundation of everything we build. As a cryptocurrency payment processing platform handling financial transactions, we understand the critical importance of maintaining the highest security standards to protect your business, your customers, and the integrity of the blockchain ecosystem.
                   </p>
 
                   <div className="grid md:grid-cols-3 gap-4 mb-6">

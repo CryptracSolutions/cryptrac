@@ -14,8 +14,7 @@ const EXTRA_ID_CURRENCIES: Record<string, string> = {
 
 export function formatAddressForQR(
   currency: string,
-  address: string,
-  extraId?: string
+  address: string
 ): AddressFormatResult {
   const upperCurrency = (currency || '').toUpperCase()
   const needsExtraId = upperCurrency in EXTRA_ID_CURRENCIES

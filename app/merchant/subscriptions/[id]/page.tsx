@@ -3,8 +3,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTimezone } from '@/lib/contexts/TimezoneContext';
-import { formatDateShort, formatDateTime, formatFullDateTime, formatDate } from '@/lib/utils/date-utils';
-import Link from 'next/link';
+import { formatDateShort, formatFullDateTime, formatDate } from '@/lib/utils/date-utils';
+// import Link from 'next/link';
 import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Badge } from '@/app/components/ui/badge';
 import { Input } from '@/app/components/ui/input';

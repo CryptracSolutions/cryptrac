@@ -49,7 +49,7 @@ export default function ContactPage() {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -80,7 +80,7 @@ export default function ContactPage() {
       } else {
         throw new Error('Failed to send message');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to send message. Please try again.');
     } finally {
       setLoading(false);
@@ -103,7 +103,7 @@ export default function ContactPage() {
               Contact Us
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
-              Have questions about Cryptrac? We're here to help. Reach out to our support team for assistance with your cryptocurrency payment processing needs.
+              Have questions about Cryptrac? We&apos;re here to help. Reach out to our support team for assistance with your cryptocurrency payment processing needs.
             </p>
             <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export default function ContactPage() {
                         Contact Form
                       </CardTitle>
                       <p className="font-capsule text-base font-normal text-gray-600">
-                        Fill out the form below and we'll get back to you as soon as possible.
+                        Fill out the form below and we&apos;ll get back to you as soon as possible.
                       </p>
                     </CardHeader>
                     <CardContent>
@@ -401,7 +401,7 @@ export default function ContactPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
-                          Currently, we provide support in English only. However, we're working on expanding our language support. For now, we can work with translation tools if needed.
+                          Currently, we provide support in English only. However, we&apos;re working on expanding our language support. For now, we can work with translation tools if needed.
                         </p>
                       </CardContent>
                     </Card>
@@ -412,7 +412,7 @@ export default function ContactPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
-                          For security-related issues, please contact us immediately at support@cryptrac.com with "SECURITY" in the subject line. We treat security reports with the highest priority and respond within 4 hours.
+                          For security-related issues, please contact us immediately at support@cryptrac.com with &ldquo;SECURITY&rdquo; in the subject line. We treat security reports with the highest priority and respond within 4 hours.
                         </p>
                       </CardContent>
                     </Card>
@@ -473,7 +473,7 @@ export default function ContactPage() {
                         <a href="mailto:support@cryptrac.com" className="font-phonic font-semibold text-gray-900 hover:text-[#7f5efd]">
                           support@cryptrac.com
                         </a>
-                        <p className="font-phonic text-sm font-normal text-gray-500 mt-2">Include "URGENT" in subject line</p>
+                        <p className="font-phonic text-sm font-normal text-gray-500 mt-2">Include &ldquo;URGENT&rdquo; in subject line</p>
                       </CardContent>
                     </Card>
                     
@@ -497,7 +497,7 @@ export default function ContactPage() {
                       Ready to Get Started?
                     </h3>
                     <p className="font-capsule text-base font-normal text-gray-700 mb-6">
-                      Our support team is here to help you with any questions about Cryptrac's cryptocurrency payment processing platform.
+                      Our support team is here to help you with any questions about Cryptrac&apos;s cryptocurrency payment processing platform.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                       <Button asChild className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">

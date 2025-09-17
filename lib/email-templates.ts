@@ -17,7 +17,7 @@ function formatEmailDate(dateString: string | undefined, timezone: string = 'Ame
       minute: '2-digit',
       timeZoneName: 'short'
     });
-  } catch (error) {
+  } catch {
     // Fallback if timezone is invalid
     return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',

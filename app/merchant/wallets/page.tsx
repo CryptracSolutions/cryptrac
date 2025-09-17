@@ -5,9 +5,7 @@ import React, { useState, useEffect } from 'react';
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import {
-  Save,
   CheckCircle,
-  Loader2,
   HelpCircle,
   Star
 } from 'lucide-react';
@@ -61,9 +59,9 @@ interface MerchantSettings {
 const recommendedCurrencies = RECOMMENDED_CURRENCIES
 
 export default function WalletsPage() {
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
+  const [, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showTrustWalletGuide, setShowTrustWalletGuide] = useState(false);
   const [lastSavedSettings, setLastSavedSettings] = useState<MerchantSettings | null>(null);
@@ -134,36 +132,6 @@ export default function WalletsPage() {
     fetchUserAndSettings();
   }, [router]);
 
-  // Save settings
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-      setSuccess(false);
-
-      const response = await fetch('/api/merchants/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save settings');
-      }
-
-      setSuccess(true);
-      setLastSavedSettings(settings);
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      toast.error('Failed to save settings');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   // Auto-save functionality
   const autoSave = async (newSettings: MerchantSettings) => {
@@ -187,6 +155,7 @@ export default function WalletsPage() {
       }
 
       setLastSavedSettings(newSettings);
+      setSuccess(true);
 
     } catch (error) {
       console.error('Failed to auto-save settings:', error);
@@ -205,6 +174,16 @@ export default function WalletsPage() {
 
     return () => clearTimeout(timeoutId);
   }, [settings, lastSavedSettings]);
+
+  // Auto-hide success message after 3 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   // Handle currency selection from recommended currencies tooltip
   const handleCurrencyClick = (currencyCode: string) => {

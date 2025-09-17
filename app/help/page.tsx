@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, HelpCircle, Users, CreditCard, Shield, AlertCircle, Settings, Phone, Mail, MapPin, Clock, FileText, Zap, Lock, Eye, MessageCircle, BookOpen, Wrench, Globe, Star } from "lucide-react";
+import { ChevronRight, HelpCircle, Users, CreditCard, Shield, Settings, Phone, Mail, MapPin, Clock, FileText, Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
@@ -42,7 +42,7 @@ export default function HelpPage() {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -72,7 +72,7 @@ export default function HelpPage() {
               Help & Support Guide
             </h1>
             <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
-              Comprehensive assistance for merchants and customers using Cryptrac's cryptocurrency payment processing platform
+              Comprehensive assistance for merchants and customers using Cryptrac&apos;s cryptocurrency payment processing platform
             </p>
             <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export default function HelpPage() {
                     </p>
                   </div>
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    Welcome to Cryptrac, your comprehensive cryptocurrency payment processing platform. This Help & Support Guide is designed to assist both merchants and customers in understanding and effectively using our services. Whether you're a business owner looking to accept cryptocurrency payments or a customer making a purchase, this guide provides step-by-step instructions, troubleshooting tips, and answers to frequently asked questions.
+                    Welcome to Cryptrac, your comprehensive cryptocurrency payment processing platform. This Help & Support Guide is designed to assist both merchants and customers in understanding and effectively using our services. Whether you&apos;re a business owner looking to accept cryptocurrency payments or a customer making a purchase, this guide provides step-by-step instructions, troubleshooting tips, and answers to frequently asked questions.
                   </p>
                   <p className="text-gray-700 leading-relaxed mb-4">
                     Cryptrac simplifies cryptocurrency payments by providing a secure, non-custodial platform that connects merchants with customers through seamless payment processing. Our platform supports multiple cryptocurrencies including Bitcoin, Ethereum, Solana, TRON, BNB, and various stablecoins, making it easy for businesses to expand their payment options and reach a global customer base.
@@ -173,7 +173,7 @@ export default function HelpPage() {
                         <ul className="space-y-2 text-sm text-gray-600">
                           <li className="flex items-start gap-2">
                             <Badge variant="outline" className="mt-0.5">1</Badge>
-                            <span>Visit our website and click "Sign Up" or "Get Started"</span>
+                            <span>Visit our website and click &ldquo;Sign Up&rdquo; or &ldquo;Get Started&rdquo;</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <Badge variant="outline" className="mt-0.5">2</Badge>
@@ -299,7 +299,7 @@ export default function HelpPage() {
                   </h2>
                   
                   <p className="text-gray-700 leading-relaxed mb-6">
-                    Making payments through Cryptrac is designed to be simple and secure, whether you're purchasing products, services, or making recurring payments. This section provides step-by-step guidance for customers navigating the payment process.
+                    Making payments through Cryptrac is designed to be simple and secure, whether you&apos;re purchasing products, services, or making recurring payments. This section provides step-by-step guidance for customers navigating the payment process.
                   </p>
 
                   <div className="space-y-6">
@@ -364,7 +364,7 @@ export default function HelpPage() {
                         <ul className="space-y-2 text-sm text-purple-700">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-purple-600 mt-0.5" />
-                            <span>Status updates: "Awaiting Payment" → "Payment Detected" → "Payment Confirmed"</span>
+                            <span>Status updates: &ldquo;Awaiting Payment&rdquo; → &ldquo;Payment Detected&rdquo; → &ldquo;Payment Confirmed&rdquo;</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-purple-600 mt-0.5" />
@@ -405,7 +405,7 @@ export default function HelpPage() {
                         <CardTitle className="text-lg text-red-900">Payment Not Detected Issues</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <p className="text-red-800 mb-3">If you've sent a cryptocurrency payment but the payment page still shows "Awaiting Payment":</p>
+                        <p className="text-red-800 mb-3">If you&apos;ve sent a cryptocurrency payment but the payment page still shows &ldquo;Awaiting Payment&rdquo;:</p>
                         <ul className="space-y-2 text-sm text-red-700">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-red-600 mt-0.5" />
@@ -444,7 +444,7 @@ export default function HelpPage() {
                           </li>
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-orange-600 mt-0.5" />
-                            <span>Use "replace-by-fee" mechanisms if supported by your wallet</span>
+                            <span>Use &ldquo;replace-by-fee&rdquo; mechanisms if supported by your wallet</span>
                           </li>
                         </ul>
                       </CardContent>
@@ -455,15 +455,15 @@ export default function HelpPage() {
                         <CardTitle className="text-lg text-yellow-900">Account Access Problems</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <p className="text-yellow-800 mb-3">If you're unable to log in to your merchant account:</p>
+                        <p className="text-yellow-800 mb-3">If you&apos;re unable to log in to your merchant account:</p>
                         <ul className="space-y-2 text-sm text-yellow-700">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-yellow-600 mt-0.5" />
-                            <span>Verify you're using the correct email address and password</span>
+                            <span>Verify you&apos;re using the correct email address and password</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-yellow-600 mt-0.5" />
-                            <span>Use the "Forgot Password" link to reset your password</span>
+                            <span>Use the &ldquo;Forgot Password&rdquo; link to reset your password</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-yellow-600 mt-0.5" />
@@ -627,7 +627,7 @@ export default function HelpPage() {
                       Need Additional Help?
                     </h3>
                     <p className="text-gray-700 mb-6">
-                      Our support team is here to help you succeed with cryptocurrency payment processing. Don't hesitate to reach out whenever you need assistance.
+                      Our support team is here to help you succeed with cryptocurrency payment processing. Don&apos;t hesitate to reach out whenever you need assistance.
                     </p>
                     <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
                       <div className="flex items-center gap-2">
