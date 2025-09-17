@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowRight, Shield, Zap, Globe, CheckCircle, Bitcoin, Smartphone, BarChart3, HelpCircle, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -53,8 +53,18 @@ export default function Home() {
     }
   ];
 
-  const CARDS_PER_VIEW = 3;
+  const [isMobile, setIsMobile] = useState(false);
+  const CARDS_PER_VIEW = isMobile ? 1 : 3;
   const maxSlide = Math.max(0, features.length - CARDS_PER_VIEW);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const updateScroll = (slideIndex: number) => {
     if (carouselRef.current) {
@@ -416,7 +426,7 @@ export default function Home() {
             <button
               onClick={prevSlide}
               disabled={currentSlide === 0}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <ChevronLeft className="h-6 w-6 text-[#7f5efd]" />
             </button>
@@ -424,13 +434,13 @@ export default function Home() {
             <button
               onClick={nextSlide}
               disabled={currentSlide >= maxSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <ChevronRight className="h-6 w-6 text-[#7f5efd]" />
             </button>
 
             {/* Cards Container */}
-            <div className="overflow-hidden mx-16">
+            <div className="overflow-hidden mx-12 sm:mx-16">
               <div 
                 ref={carouselRef}
                 className="flex overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
@@ -455,7 +465,7 @@ export default function Home() {
                 }}
               >
                 {features.map((feature, index) => (
-                  <div key={index} className="w-1/3 flex-shrink-0 px-4" style={{scrollSnapAlign: 'start'}}>
+                  <div key={index} className={`${isMobile ? 'w-full' : 'w-1/3'} flex-shrink-0 px-2 sm:px-4`} style={{scrollSnapAlign: 'start'}}>
                     <Card interactive={false} className="border-[#7f5efd] bg-[#f8f7ff] border-2 shadow-lg bg-white h-full select-none">
                       <CardHeader className="text-center pb-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -609,17 +619,17 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
+      <section className="py-10 sm:py-12 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
-        <div className="container-wide text-center relative">
-          <h2 className="font-phonic text-3xl font-normal text-white mb-6">
+        <div className="container-wide text-center relative px-4 sm:px-6">
+          <h2 className="font-phonic text-2xl sm:text-3xl font-normal text-white mb-4 sm:mb-6">
             Ready to start accepting crypto payments?
           </h2>
-          <p className="font-capsule text-base text-white/90 mb-10 max-w-3xl mx-auto">
+          <p className="font-capsule text-base text-white/90 mb-8 sm:mb-10 max-w-3xl mx-auto">
             Join thousands of businesses already using Cryptrac to accept cryptocurrency payments securely and efficiently.
           </p>
           <div className="flex justify-center">
-            <Button size="lg" className="font-phonic text-base font-normal px-8 py-4 shadow-lg bg-white text-[#7f5efd] hover:bg-gray-50 transition-all duration-200" asChild>
+            <Button size="lg" className="font-phonic text-base font-normal px-6 sm:px-8 py-4 min-h-[48px] shadow-lg bg-white text-[#7f5efd] hover:bg-gray-50 transition-all duration-200" asChild>
               <Link href="/signup">
                 Start Free 30-Day Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -633,16 +643,16 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-16">
+      <footer className="bg-gray-900 text-white py-12 sm:py-16">
         <div className="container-wide">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-6 lg:gap-12">
             {/* Brand Section */}
-            <div className="lg:col-span-1">
-              <Logo variant="white" size="md" className="mb-6" />
-              <p className="font-phonic text-base text-gray-400 mb-6 leading-relaxed">
+            <div className="sm:col-span-2 lg:col-span-1 mb-8 sm:mb-0">
+              <Logo variant="white" size="md" className="mb-4 sm:mb-6" />
+              <p className="font-phonic text-base text-gray-400 mb-4 sm:mb-6 leading-relaxed">
                 The simplest way to accept cryptocurrency payments. Non-custodial, secure, and designed for modern businesses.
               </p>
-              <div className="font-phonic text-sm text-gray-500 mb-6">
+              <div className="font-phonic text-sm text-gray-500 mb-4 sm:mb-6">
                 Transparent pricing: $19/month subscription, no transaction fees to Cryptrac
               </div>
               {/* Social Links */}
@@ -669,9 +679,9 @@ export default function Home() {
             </div>
 
             {/* Product Section */}
-            <div className="lg:col-span-1">
-              <h3 className="font-phonic text-2xl font-normal mb-6">Product</h3>
-              <ul className="space-y-3 font-phonic text-sm text-gray-400">
+            <div className="sm:col-span-1 lg:col-span-1">
+              <h3 className="font-phonic text-xl sm:text-2xl font-normal mb-4 sm:mb-6">Product</h3>
+              <ul className="space-y-2 sm:space-y-3 font-phonic text-sm text-gray-400">
                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
                 <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                 <li><Link href="#faq" className="hover:text-white transition-colors">FAQ</Link></li>
@@ -680,9 +690,9 @@ export default function Home() {
             </div>
 
             {/* Support Section */}
-            <div className="lg:col-span-1">
-              <h3 className="font-phonic text-2xl font-normal mb-6">Support</h3>
-              <ul className="space-y-3 font-phonic text-sm text-gray-400">
+            <div className="sm:col-span-1 lg:col-span-1">
+              <h3 className="font-phonic text-xl sm:text-2xl font-normal mb-4 sm:mb-6">Support</h3>
+              <ul className="space-y-2 sm:space-y-3 font-phonic text-sm text-gray-400">
                 <li><Link href="/help" className="hover:text-white transition-colors">Help Center</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
                 <li><Link href="/security" className="hover:text-white transition-colors">Security</Link></li>
@@ -690,9 +700,9 @@ export default function Home() {
             </div>
 
             {/* Company Section */}
-            <div className="lg:col-span-1">
-              <h3 className="font-phonic text-2xl font-normal mb-6">Company</h3>
-              <ul className="space-y-3 font-phonic text-sm text-gray-400">
+            <div className="sm:col-span-2 sm:mt-6 lg:mt-0 lg:col-span-1">
+              <h3 className="font-phonic text-xl sm:text-2xl font-normal mb-4 sm:mb-6">Company</h3>
+              <ul className="space-y-2 sm:space-y-3 font-phonic text-sm text-gray-400">
                 <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
                 <li><Link href="/careers" className="hover:text-white transition-colors">Become a Sales Rep</Link></li>
                 <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
@@ -701,20 +711,20 @@ export default function Home() {
           </div>
 
           {/* Bottom Section */}
-          <div className="border-t border-gray-800 mt-12 pt-8">
+          <div className="border-t border-gray-800 mt-8 sm:mt-12 pt-6 sm:pt-8">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-6 lg:space-y-0">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 lg:space-x-8">
                 <p className="font-phonic text-xs text-gray-400">
                   &copy; 2025 Cryptrac. All rights reserved.
                 </p>
-                <div className="flex items-center space-x-6">
-                  <Link href="/privacy" className="font-phonic text-xs text-gray-400 hover:text-white transition-colors">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                  <Link href="/privacy" className="font-phonic text-xs text-gray-400 hover:text-white transition-colors py-1">
                     Privacy Policy
                   </Link>
-                  <Link href="/terms" className="font-phonic text-xs text-gray-400 hover:text-white transition-colors">
+                  <Link href="/terms" className="font-phonic text-xs text-gray-400 hover:text-white transition-colors py-1">
                     Terms of Service
                   </Link>
-                  <Link href="/cookies" className="font-phonic text-xs text-gray-400 hover:text-white transition-colors">
+                  <Link href="/cookies" className="font-phonic text-xs text-gray-400 hover:text-white transition-colors py-1">
                     Cookie Policy
                   </Link>
                 </div>
