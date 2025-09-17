@@ -68,6 +68,10 @@ export function useRealTimePaymentStatus({
   const reconnectAttemptsRef = useRef(0)
   const maxReconnectAttempts = 10
   const missingConfigWarnedRef = useRef(false)
+  const isMountedRef = useRef(true)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const hasInitialFetchRef = useRef(false)
+  const connectionMethodRef = useRef<'none' | 'realtime' | 'sse' | 'polling'>('none')
   
   // Stable refs to prevent stale closures
   const connectSSERef = useRef<(() => void) | null>(null)
@@ -86,6 +90,10 @@ export function useRealTimePaymentStatus({
 
   // Update payment status and notify listeners
   const updatePaymentStatus = useCallback((newStatus: PaymentStatus) => {
+    if (!isMountedRef.current) {
+      console.log('⚠️ Skipping status update - component unmounted')
+      return
+    }
     console.log(`📨 Payment status update received:`, newStatus.payment_status)
     paymentStatusRef.current = newStatus
     setPaymentStatus(newStatus)
@@ -95,11 +103,18 @@ export function useRealTimePaymentStatus({
 
   // Polling fallback function
   const pollPaymentStatus = useCallback(async () => {
-    if (!paymentId) return
+    if (!paymentId || !isMountedRef.current) return
+
+    // Abort any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    abortControllerRef.current = new AbortController()
 
     try {
       console.log(`🔄 Polling payment status for: ${paymentId}`)
       const response = await fetch(`/api/payments/${paymentId}/status`, {
+        signal: abortControllerRef.current.signal,
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
@@ -111,22 +126,31 @@ export function useRealTimePaymentStatus({
         const data = await response.json()
         if (data.success && data.payment) {
           updatePaymentStatus(data.payment)
-          setConnectionStatus(prev => ({ 
-            ...prev, 
-            connected: true, 
-            error: null,
-            method: 'polling'
-          }))
+          if (isMountedRef.current) {
+            setConnectionStatus(prev => ({
+              ...prev,
+              connected: true,
+              error: null,
+              method: 'polling'
+            }))
+          }
         }
       } else {
         throw new Error(`HTTP ${response.status}`)
       }
     } catch (error) {
+      // Ignore abort errors
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('🛑 Polling request aborted')
+        return
+      }
       console.error('❌ Polling error:', error)
-      setConnectionStatus(prev => ({ 
-        ...prev, 
-        error: error instanceof Error ? error.message : 'Polling failed' 
-      }))
+      if (isMountedRef.current) {
+        setConnectionStatus(prev => ({
+          ...prev,
+          error: error instanceof Error ? error.message : 'Polling failed'
+        }))
+      }
     }
   }, [paymentId, updatePaymentStatus])
 
@@ -198,8 +222,8 @@ export function useRealTimePaymentStatus({
         setConnectionStatus(prev => ({ ...prev, reconnecting: true }))
         
         reconnectTimeoutRef.current = setTimeout(() => {
-          if (paymentId) connectSSE()
-        }, Math.pow(2, reconnectAttemptsRef.current) * 1000) // Exponential backoff
+          if (paymentId && isMountedRef.current) connectSSE()
+        }, Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000)) // Exponential backoff with max 30s
       } else if (fallbackToPolling) {
         console.log('🔄 Falling back to polling after SSE failures')
         if (paymentId && startPollingRef.current) startPollingRef.current()
@@ -305,8 +329,8 @@ export function useRealTimePaymentStatus({
             setConnectionStatus(prev => ({ ...prev, reconnecting: true }))
             
             reconnectTimeoutRef.current = setTimeout(() => {
-              if (paymentId && supabaseRef.current) connectRealTime()
-            }, Math.pow(2, reconnectAttemptsRef.current) * 1000)
+              if (paymentId && supabaseRef.current && isMountedRef.current) connectRealTime()
+            }, Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000))
           } else {
             console.log('🔄 Falling back to SSE after real-time failures')
             // Use timeout to avoid circular dependency
@@ -322,16 +346,23 @@ export function useRealTimePaymentStatus({
 
   // Start polling
   const startPolling = useCallback(() => {
-    if (pollingIntervalRef.current) return // Already polling
+    if (pollingIntervalRef.current || connectionMethodRef.current !== 'none') return // Already connected
 
     console.log(`🔄 Starting polling for payment: ${paymentId}`)
+    connectionMethodRef.current = 'polling'
     setConnectionStatus(prev => ({ ...prev, method: 'polling' }))
-    
-    // Initial poll
-    pollPaymentStatus()
-    
-    // Set up interval
-    pollingIntervalRef.current = setInterval(pollPaymentStatus, pollingInterval)
+
+    // Initial poll with delay to avoid immediate call
+    const initialDelay = hasInitialFetchRef.current ? 0 : 1000
+    setTimeout(() => {
+      if (isMountedRef.current) {
+        pollPaymentStatus()
+      }
+    }, initialDelay)
+
+    // Set up interval with minimum 5 second polling
+    const effectiveInterval = Math.max(pollingInterval, 5000)
+    pollingIntervalRef.current = setInterval(pollPaymentStatus, effectiveInterval)
   }, [paymentId, pollPaymentStatus, pollingInterval])
 
   // Update function refs to avoid stale closures
@@ -341,7 +372,13 @@ export function useRealTimePaymentStatus({
   // Stop all connections
   const disconnect = useCallback(() => {
     console.log('🔌 Disconnecting from payment status updates')
-    
+
+    // Abort any pending fetch
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+
     const hadPolling = Boolean(pollingIntervalRef.current)
     const hadSSE = Boolean(eventSourceRef.current)
     const hadSubscription = Boolean(subscriptionRef.current)
@@ -371,19 +408,23 @@ export function useRealTimePaymentStatus({
       reconnectTimeoutRef.current = null
     }
     
+    connectionMethodRef.current = 'none'
+
     const hadSideEffect = hadPolling || hadSSE || hadSubscription || hadTimeout
 
-    setConnectionStatus(prev => {
-      const shouldUpdateStatus =
-        hadSideEffect ||
-        prev.connected ||
-        prev.reconnecting ||
-        prev.error !== null ||
-        prev.method !== 'none' ||
-        prev.lastUpdate !== null
+    if (isMountedRef.current) {
+      setConnectionStatus(prev => {
+        const shouldUpdateStatus =
+          hadSideEffect ||
+          prev.connected ||
+          prev.reconnecting ||
+          prev.error !== null ||
+          prev.method !== 'none' ||
+          prev.lastUpdate !== null
 
-      return shouldUpdateStatus ? initialConnectionStatus : prev
-    })
+        return shouldUpdateStatus ? initialConnectionStatus : prev
+      })
+    }
   }, [])
 
   // Connect on mount and when paymentId changes
@@ -394,34 +435,45 @@ export function useRealTimePaymentStatus({
     }
 
     console.log(`🚀 Starting real-time connection for payment: ${paymentId}`)
-    
+
     // Try real-time first, with fallbacks
     if (!HAS_SUPABASE_CONFIG) {
+      // Try SSE first, then fall back to polling
       if (connectSSERef.current) {
         connectSSERef.current()
-      }
-      if (fallbackToPolling && startPollingRef.current) {
+      } else if (fallbackToPolling && startPollingRef.current) {
         startPollingRef.current()
       }
       return disconnect
     }
 
+    // Only connect real-time, let it handle fallbacks
     connectRealTime()
 
     return disconnect
   }, [enabled, paymentId, connectRealTime, disconnect, fallbackToPolling])
 
-  // Perform an immediate status fetch to avoid waiting solely on realtime
+  // Perform a single initial status fetch after a short delay
   useEffect(() => {
-    if (enabled && paymentId) {
-      // Fire and forget; errors handled inside pollPaymentStatus
-      pollPaymentStatus()
+    if (enabled && paymentId && !hasInitialFetchRef.current) {
+      hasInitialFetchRef.current = true
+      // Delay initial fetch to avoid race with real-time connection
+      const timer = setTimeout(() => {
+        if (isMountedRef.current) {
+          pollPaymentStatus()
+        }
+      }, 500)
+      return () => clearTimeout(timer)
     }
   }, [enabled, paymentId, pollPaymentStatus])
 
-  // Cleanup on unmount
+  // Track mounted state and cleanup on unmount
   useEffect(() => {
-    return disconnect
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      disconnect()
+    }
   }, [disconnect])
 
   return {

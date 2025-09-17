@@ -150,31 +150,38 @@ export default function PaymentPage() {
   const [, setDynamicConfig] = useState<DynamicConfig | null>(null)
   const [, setClientId] = useState<string>('anon')
   
+  // Navigation flag to prevent updates during transition
+  const [isNavigating, setIsNavigating] = useState(false)
+
   // Real-time payment status monitoring
-  const { } = useRealTimePaymentStatus({
+  const { disconnect } = useRealTimePaymentStatus({
     paymentId: paymentData?.payment_id || null,
-    enabled: !!paymentData?.payment_id,
+    enabled: !!paymentData?.payment_id && !isNavigating,
     onStatusChange: (updatedStatus) => {
       console.log(`🔄 Pay page status update received:`, updatedStatus)
       console.log(`📱 Current status state:`, paymentStatus)
-      
+
       const newStatus = updatedStatus.payment_status
       console.log(`🎯 New status from real-time: ${newStatus}`)
-      
+
       setPaymentStatus(prev => {
         console.log(`📊 Status state change: ${prev?.payment_status} → ${newStatus}`)
         if (!prev || newStatus !== prev.payment_status) {
           console.log(`✅ Status actually changing: ${prev?.payment_status} → ${newStatus}`)
-          
+
           // Handle payment completion
-          if (newStatus === 'finished' || 
+          if (newStatus === 'finished' ||
               newStatus === 'confirmed' ||
               newStatus === 'sending') {
             console.log('✅ Payment completed via real-time update')
-            // Redirect to success page
-            router.push(`/payment/success/${paymentLink?.id}?payment_id=${updatedStatus.payment_id}`)
+            // Disconnect and navigate with delay to prevent errors
+            setIsNavigating(true)
+            disconnect()
+            setTimeout(() => {
+              router.push(`/payment/success/${paymentLink?.id}?payment_id=${updatedStatus.payment_id}`)
+            }, 100)
           }
-          
+
           return updatedStatus;
         } else {
           console.log(`⚠️ Status unchanged: ${prev?.payment_status}`)
@@ -183,7 +190,7 @@ export default function PaymentPage() {
       });
     },
     fallbackToPolling: true,
-    pollingInterval: 2000 // Match Smart Terminal POS polling cadence
+    pollingInterval: 5000 // Reduced polling frequency to minimize API calls
   })
 
   useEffect(() => {

@@ -110,7 +110,7 @@ function SmartTerminalPageContent() {
   >(null);
   const [extraIdConfirmed, setExtraIdConfirmed] = useState<boolean>(false);
   const [status, setStatus] = useState('');
-  const [receipt, setReceipt] = useState({ email: '', sent: false });
+  const [receipt, setReceipt] = useState({ email: '', sent: false, sending: false });
   const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyInfo[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
   const [error, setError] = useState<string>('');
@@ -398,10 +398,10 @@ function SmartTerminalPageContent() {
     onStatusChange: (updatedStatus) => {
       console.log(`🔄 Smart terminal status update received:`, updatedStatus)
       console.log(`📱 Current status state:`, status)
-      
+
       const newStatus = updatedStatus.payment_status
       console.log(`🎯 New status from real-time: ${newStatus}`)
-      
+
       setStatus(prev => {
         console.log(`📊 Status state change: ${prev} → ${newStatus}`)
         if (newStatus !== prev) {
@@ -419,7 +419,7 @@ function SmartTerminalPageContent() {
       });
     },
     fallbackToPolling: true,
-    pollingInterval: 2000 // Faster polling for POS environment
+    pollingInterval: 5000 // Reduced polling frequency to minimize API calls
   });
 
   const appendDigit = (d: string) => {
@@ -521,14 +521,41 @@ function SmartTerminalPageContent() {
   };
 
   const sendEmailReceipt = async () => {
-    if (!paymentLink || !receipt.email.trim()) return;
-    const data = { email: receipt.email, payment_link_id: paymentLink.id };
-    await makeAuthenticatedRequest('/api/receipts/email', { method: 'POST', body: JSON.stringify(data) });
-    setReceipt({ email: '', sent: true });
-    // Reset success message after 3 seconds
-    setTimeout(() => {
-      setReceipt({ email: '', sent: false });
-    }, 3000);
+    if (!paymentLink || !receipt.email.trim() || receipt.sending) return;
+
+    setReceipt(prev => ({ ...prev, sending: true }));
+
+    try {
+      const data = { email: receipt.email, payment_link_id: paymentLink.id };
+      const res = await makeAuthenticatedRequest('/api/receipts/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Failed to send receipt:', errorData);
+        setError(errorData.error || 'Failed to send receipt. Please try again.');
+        setReceipt(prev => ({ ...prev, sending: false }));
+        return;
+      }
+
+      const result = await res.json();
+      console.log('Receipt sent successfully:', result);
+
+      setReceipt({ email: '', sent: true, sending: false });
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setReceipt(prev => ({ ...prev, sent: false }));
+      }, 3000);
+    } catch (error) {
+      console.error('Error sending receipt:', error);
+      setError('Failed to send receipt. Please try again.');
+      setReceipt(prev => ({ ...prev, sending: false }));
+    }
   };
 
   return (
@@ -1103,26 +1130,31 @@ function SmartTerminalPageContent() {
                             </div>
                           </div>
                           {/* Right: Send Receipt */}
-                          <div className="bg-white p-2 rounded-md border border-gray-200">
-                            <div className="flex gap-2 justify-center md:justify-end">
-                              <Input 
-                                placeholder="Customer email address" 
-                                value={receipt.email} 
-                                onChange={e=>setReceipt({...receipt, email:e.target.value})} 
+                          <div className="bg-white p-3 rounded-md border border-gray-200 min-h-[60px] flex items-center justify-center">
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                placeholder="Customer email address"
+                                value={receipt.email}
+                                onChange={e=>setReceipt({...receipt, email:e.target.value})}
                                 aria-label="receipt email"
                                 className="h-10 bg-white border-2 border-transparent focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs"
                               />
-                              <Button 
-                                onClick={sendEmailReceipt} 
-                                disabled={!receipt.email.trim() || receipt.sent}
+                              <Button
+                                onClick={sendEmailReceipt}
+                                disabled={!receipt.email.trim() || receipt.sent || receipt.sending}
                                 className={cn(
-                                  "h-10 px-4 font-semibold rounded-lg transition-all duration-200",
-                                  receipt.sent 
-                                    ? "bg-green-600 text-white" 
-                                    : "bg-[#7f5efd] text-white"
+                                  "h-10 px-4 font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
+                                  receipt.sent
+                                    ? "bg-green-600 text-white"
+                                    : "bg-[#7f5efd] text-white hover:bg-[#6d4eeb]"
                                 )}
                               >
-                                {receipt.sent ? (
+                                {receipt.sending ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Sending...
+                                  </>
+                                ) : receipt.sent ? (
                                   <>
                                     <CheckCircle2 className="h-4 w-4 mr-2" />
                                     Sent
@@ -1130,7 +1162,7 @@ function SmartTerminalPageContent() {
                                 ) : (
                                   <>
                                     <Mail className="h-4 w-4 mr-2" />
-                                    Email Receipt
+                                    Send Receipt
                                   </>
                                 )}
                               </Button>
@@ -1262,7 +1294,7 @@ function SmartTerminalPageContent() {
                       setStep('amount'); 
                       setTax(Boolean(merchantSettings?.tax_enabled)); 
                       setChargeFee(Boolean(merchantSettings?.charge_customer_fee));
-                      setReceipt({ email: '', sent: false });
+                      setReceipt({ email: '', sent: false, sending: false });
                       setIsLocked(false);
                       
                       // Exit fullscreen
