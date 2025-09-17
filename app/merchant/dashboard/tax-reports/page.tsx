@@ -28,6 +28,7 @@ import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Badge } from '@/app/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/dialog'
 
 import { supabase } from '@/lib/supabase-browser'
 import toast from 'react-hot-toast'
@@ -514,23 +515,30 @@ export default function TaxReportsPage() {
     }
   }
 
-  const markAsRefunded = async (transaction: Transaction) => {
-    if (!user) return
-    const refundAmountStr = prompt('Refund amount', transaction.total_paid.toString())
-    if (refundAmountStr === null) return
-    const refundAmount = parseFloat(refundAmountStr)
-    const refundDate = prompt('Refund date (YYYY-MM-DD)', new Date().toISOString().split('T')[0])
+  const [selectedRefundTransaction, setSelectedRefundTransaction] = useState<Transaction | null>(null)
+  const [showRefundModal, setShowRefundModal] = useState(false)
+  const [refundAmount, setRefundAmount] = useState('')
+  const [refundDate, setRefundDate] = useState(new Date().toISOString().split('T')[0])
+
+  const handleRefundConfirm = async () => {
+    if (!selectedRefundTransaction || !user) return
     try {
+      const parsedAmount = parseFloat(refundAmount)
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        toast.error('Invalid refund amount')
+        return
+      }
       const { error } = await supabase
         .from('transactions')
         .update({
           status: 'refunded',
-          refund_amount: refundAmount,
-          refunded_at: refundDate ? `${refundDate}T00:00:00.000Z` : new Date().toISOString()
+          refund_amount: parsedAmount,
+          refunded_at: `${refundDate}T00:00:00.000Z`
         })
-        .eq('id', transaction.id)
+        .eq('id', selectedRefundTransaction.id)
       if (error) throw error
       toast.success('Transaction marked as refunded')
+      setShowRefundModal(false)
       loadTaxReport()
     } catch (error) {
       console.error('Refund error:', error)
@@ -845,7 +853,7 @@ export default function TaxReportsPage() {
                             <SelectTrigger className="w-20 h-9 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-xs">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="w-20">
+                            <SelectContent>
                               <SelectItem value="5">5</SelectItem>
                               <SelectItem value="10">10</SelectItem>
                               <SelectItem value="50">50</SelectItem>
@@ -876,23 +884,13 @@ export default function TaxReportsPage() {
                     <thead>
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Date</th>
-                        <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Description</th>
                         <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Link ID</th>
                         <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Gross Amount</th>
                         <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Tax</th>
-                        <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">
-                          <div className="flex items-center justify-end gap-1">
-                            Fees
-                            <div className="group relative">
-                              <Info className="h-3 w-3 text-gray-400" />
-                              <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-                                Shows who paid the gateway fee
-                              </div>
-                            </div>
-                          </div>
-                        </th>
+                        <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Fees</th>
                         <th className="text-right py-3 px-4 font-phonic text-base font-normal text-gray-900">Net Amount</th>
                         <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Status</th>
+                        <th className="text-left py-3 px-4 font-phonic text-base font-normal text-gray-900">Description</th>
                         <th className="text-center py-3 px-4 font-phonic text-base font-normal text-gray-900">Actions</th>
                       </tr>
                     </thead>
@@ -924,16 +922,6 @@ export default function TaxReportsPage() {
                         >
                           <td className="py-3 px-4 text-sm text-gray-600">
                             {formatDateShort(getTransactionTimestamp(transaction), timezone)}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-900 font-medium">
-                            <div className="flex items-center gap-2">
-                              {transaction.product_description}
-                              {transaction.tx_hash && (
-                                <span className="text-green-500" title="Blockchain verified">
-                                  <ExternalLink className="h-3 w-3" />
-                                </span>
-                              )}
-                            </div>
                           </td>
                           <td className="py-3 px-4 text-xs font-mono">
                             {transaction.link_id ? (
@@ -971,6 +959,9 @@ export default function TaxReportsPage() {
                               {transaction.status}
                             </Badge>
                           </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 font-medium">
+                            {transaction.product_description}
+                          </td>
                           <td className="py-3 px-4 text-center">
                             <div className="flex items-center justify-center gap-2">
                               {transaction.public_receipt_id && (
@@ -981,7 +972,7 @@ export default function TaxReportsPage() {
                                     e.stopPropagation()
                                     viewReceipt(transaction.public_receipt_id!)
                                   }}
-                                  className="h-8 px-2 text-xs"
+                                  className="h-8 px-2 text-xs hover:bg-[#7f5efd] hover:text-white"
                                   title="View customer receipt"
                                 >
                                   <ExternalLink className="h-3 w-3 mr-1" />
@@ -994,9 +985,12 @@ export default function TaxReportsPage() {
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    markAsRefunded(transaction)
+                                    setSelectedRefundTransaction(transaction)
+                                    setRefundAmount(transaction.total_paid.toString())
+                                    setRefundDate(new Date().toISOString().split('T')[0])
+                                    setShowRefundModal(true)
                                   }}
-                                  className="h-8 px-2 text-xs"
+                                  className="h-8 px-2 text-xs hover:bg-[#7f5efd] hover:text-white"
                                   title="Mark as refunded"
                                 >
                                   <XCircle className="h-3 w-3 mr-1" />

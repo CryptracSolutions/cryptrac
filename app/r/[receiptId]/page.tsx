@@ -32,7 +32,14 @@ const explorers: Record<string, string> = {
   TRX: 'https://tronscan.org/#/transaction/',
   LTC: 'https://blockchair.com/litecoin/transaction/',
   XLM: 'https://stellar.expert/explorer/public/tx/',
-  XRP: 'https://livenet.xrpl.org/transactions/'
+  XRP: 'https://livenet.xrpl.org/transactions/',
+  MATIC: 'https://polygonscan.com/tx/',
+  BNB: 'https://bscscan.com/tx/',
+  AVAX: 'https://snowtrace.io/tx/',
+  SOL: 'https://solscan.io/tx/',
+  ADA: 'https://cardanoscan.io/transaction/',
+  DOT: 'https://polkadot.subscan.io/extrinsic/',
+  GENERIC: 'https://blockchair.com/search?q='
 };
 
 export default async function ReceiptPage({ params }: { params: Promise<{ receiptId: string }> }) {
@@ -137,13 +144,20 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       if (explorers[upper]) return explorers[upper];
 
       if (upper.includes('TRX') || upper.includes('TRON') || upper.includes('TRC')) return explorers.TRX;
-      if (upper.includes('ETH') || upper.includes('ERC') || upper.includes('BASE')) return explorers.ETH;
-      if (upper.includes('BTC')) return explorers.BTC;
-      if (upper.includes('LTC')) return explorers.LTC;
+      if (upper.includes('ETH') || upper.includes('ERC') || upper.includes('BASE') || upper.includes('ETHEREUM')) return explorers.ETH;
+      if (upper.includes('BTC') || upper.includes('BITCOIN')) return explorers.BTC;
+      if (upper.includes('LTC') || upper.includes('LITECOIN')) return explorers.LTC;
       if (upper.includes('XLM') || upper.includes('STELLAR')) return explorers.XLM;
-      if (upper.includes('XRP')) return explorers.XRP;
+      if (upper.includes('XRP') || upper.includes('RIPPLE')) return explorers.XRP;
+      if (upper.includes('MATIC') || upper.includes('POLYGON')) return explorers.MATIC;
+      if (upper.includes('BNB') || upper.includes('BSC') || upper.includes('BINANCE')) return explorers.BNB;
+      if (upper.includes('AVAX') || upper.includes('AVALANCHE')) return explorers.AVAX;
+      if (upper.includes('SOL') || upper.includes('SOLANA')) return explorers.SOL;
+      if (upper.includes('ADA') || upper.includes('CARDANO')) return explorers.ADA;
+      if (upper.includes('DOT') || upper.includes('POLKADOT')) return explorers.DOT;
     }
-    return null;
+    // Always return a generic explorer as fallback if we have a hash
+    return explorers.GENERIC;
   };
 
   const explorerBase = resolveExplorerBase(tx.network, tx.asset, tx.pay_currency || tx.currency);
@@ -515,20 +529,26 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                       </div>
                     )}
 
-                    {txLink && (
+                    {displayHash && (
                       <div className="pt-3">
-                        <a
-                          href={txLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white px-5 py-2.5 text-sm font-medium transition-all shadow-sm"
-                        >
-                          View on Blockchain Explorer
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H19.5V12" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6L10.5 15" />
-                          </svg>
-                        </a>
+                        {txLink ? (
+                          <a
+                            href={txLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white px-5 py-2.5 text-sm font-medium transition-all shadow-sm"
+                          >
+                            View on Blockchain Explorer
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H19.5V12" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6L10.5 15" />
+                            </svg>
+                          </a>
+                        ) : (
+                          <div className="text-sm text-gray-500 italic">
+                            Blockchain explorer unavailable for this network
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
