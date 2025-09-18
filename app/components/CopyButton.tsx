@@ -1,6 +1,7 @@
 'use client';
 
 import { Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 
 interface CopyButtonProps {
@@ -11,10 +12,15 @@ interface CopyButtonProps {
 export function CopyButton({ text, label }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success('Copied!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy');
+    }
   };
 
   return (

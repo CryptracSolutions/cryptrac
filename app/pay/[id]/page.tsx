@@ -961,8 +961,10 @@ export default function PaymentPage() {
                           <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold mb-3 sm:mb-0 text-center">
                             {paymentData.pay_address}
                           </p>
-                          <div className="mt-2 sm:mt-0 sm:absolute sm:right-2 sm:top-2 flex justify-center sm:justify-end">
-                            <CopyButton text={paymentData.pay_address} label="address" />
+                          <div className="absolute right-2 top-2">
+                            <div className="bg-white p-0.5 rounded-md shadow-sm">
+                              <CopyButton text={paymentData.pay_address} label="address" />
+                            </div>
                           </div>
                         </div>
                       </div>
