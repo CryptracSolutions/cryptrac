@@ -632,10 +632,10 @@ function SmartTerminalPageContent() {
                     } catch {}
                     router.push('/merchant/dashboard');
                   }}
-                  className="flex items-center gap-2 text-[#7f5efd] transition-colors duration-200 px-4 py-2 rounded-md hover:bg-purple-50"
+                  className="flex items-center gap-1 sm:gap-2 text-[#7f5efd] transition-colors duration-200 px-2 py-1 sm:px-4 sm:py-2 rounded-md hover:bg-purple-50"
                 >
-                  <ArrowLeft className="h-5 w-5" />
-                  <span className="text-base font-medium">Dashboard</span>
+                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-sm sm:text-base font-medium">Dashboard</span>
                 </button>
               </div>
 

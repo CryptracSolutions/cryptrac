@@ -962,9 +962,7 @@ export default function PaymentPage() {
                             {paymentData.pay_address}
                           </p>
                           <div className="absolute right-2 top-2">
-                            <div className="bg-white p-0.5 rounded-md shadow-sm">
-                              <CopyButton text={paymentData.pay_address} label="address" />
-                            </div>
+                            <CopyButton text={paymentData.pay_address} label="address" />
                           </div>
                         </div>
                       </div>

@@ -313,7 +313,7 @@ export async function GET(request: Request) {
         : gross * (percentage / 100)
       const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
       const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
-      const net = totalPaid - fees
+      const saleTotal = gross + taxAmt
       const txHash = transactionRow.tx_hash || transactionRow.payin_hash || null
       const blockchainNetwork = normalizeNetwork(
         transactionRow.blockchain_network,
@@ -345,6 +345,8 @@ export async function GET(request: Request) {
       // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
       // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
       const feePayer: 'merchant' | 'customer' = transactionRow.fee_paid_by_customer ? 'customer' : 'merchant'
+      const merchantFeePortion = feePayer === 'merchant' ? fees : 0
+      const net = Math.max(saleTotal - merchantFeePortion, 0)
 
       return {
         id: t.id,
@@ -464,7 +466,7 @@ export async function GET(request: Request) {
             : gross * (percentage / 100)
           const totalPaid = Number(t.total_amount_paid || t.subtotal_with_tax || gross + taxAmt)
           const fees = Number(t.gateway_fee || 0) + Number(t.cryptrac_fee || 0)
-          const net = totalPaid - fees
+          const saleTotal = gross + taxAmt
           const txHash = transactionRow.tx_hash || transactionRow.payin_hash || null
           const blockchainNetwork = normalizeNetwork(
             transactionRow.blockchain_network,
@@ -496,6 +498,8 @@ export async function GET(request: Request) {
           // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
           // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
           const feePayer: 'merchant' | 'customer' = transactionRow.fee_paid_by_customer ? 'customer' : 'merchant'
+          const merchantFeePortion = feePayer === 'merchant' ? fees : 0
+          const net = Math.max(saleTotal - merchantFeePortion, 0)
 
           return {
             id: t.id,
@@ -627,6 +631,7 @@ function calculateSummary(
     tax_amount: number
     fees: number
     net_amount: number
+    fee_payer?: 'merchant' | 'customer'
   }>,
   dateRange: { start_date: string; end_date: string }
 ): TransactionSummary {
@@ -643,7 +648,8 @@ function calculateSummary(
   transactions.forEach(t => {
     summary.total_gross_sales += t.gross_amount
     summary.total_tax_collected += t.tax_amount
-    summary.total_fees += t.fees
+    const merchantFeePortion = !t.fee_payer || t.fee_payer === 'merchant' ? t.fees : 0
+    summary.total_fees += merchantFeePortion
     summary.total_net_revenue += t.net_amount
   })
 

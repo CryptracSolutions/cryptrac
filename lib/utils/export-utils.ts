@@ -220,7 +220,7 @@ export function generateTaxReportPDF(
 
     // Summary grid
     const summaryData = [
-      ['Total Transactions:', summary.total_transactions.toString(), 'Processing Fees:', `$${summary.total_fees.toFixed(2)}`],
+      ['Total Transactions:', summary.total_transactions.toString(), 'Processing Fees (Merchant Paid):', `$${summary.total_fees.toFixed(2)}`],
       ['Gross Sales:', `$${summary.total_gross_sales.toFixed(2)}`, 'Net Revenue:', `$${summary.total_net_revenue.toFixed(2)}`],
       ['Tax Collected:', `$${summary.total_tax_collected.toFixed(2)}`, '', '']
     ]
@@ -357,7 +357,7 @@ export function generateTaxReportExcel(
     ['Total Transactions:', summary.total_transactions],
     ['Gross Sales:', `$${summary.total_gross_sales.toFixed(2)}`],
     ['Tax Collected:', `$${summary.total_tax_collected.toFixed(2)}`],
-    ['Processing Fees:', `$${summary.total_fees.toFixed(2)}`],
+    ['Processing Fees (Merchant Paid):', `$${summary.total_fees.toFixed(2)}`],
     ['Net Revenue:', `$${summary.total_net_revenue.toFixed(2)}`],
     [''],
     ['Disclaimer:', 'This is a computer-generated document provided for informational purposes only and should not be considered legal or tax advice. Please consult a qualified professional for advice regarding your specific circumstances.'],
@@ -437,7 +437,7 @@ export function generateEnhancedCSV(
     `"Total Transactions:","${summary.total_transactions}"`,
     `"Gross Sales:","$${summary.total_gross_sales.toFixed(2)}"`,
     `"Tax Collected:","$${summary.total_tax_collected.toFixed(2)}"`,
-    `"Processing Fees:","$${summary.total_fees.toFixed(2)}"`,
+    `"Processing Fees (Merchant Paid):","$${summary.total_fees.toFixed(2)}"`,
     `"Net Revenue:","$${summary.total_net_revenue.toFixed(2)}"`,
     `""`,
     `"Disclaimer:","This is a computer-generated document provided for informational purposes only and should not be considered legal or tax advice. Please consult a qualified professional for advice regarding your specific circumstances."`,

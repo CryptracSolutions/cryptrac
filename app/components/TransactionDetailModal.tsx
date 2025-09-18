@@ -90,10 +90,30 @@ export function TransactionDetailModal({
       ? transaction.updated_at
       : transaction.created_at)
 
+  const saleTotal = transaction.gross_amount + transaction.tax_amount
+  const feesAmount = transaction.fees
+  const feePaidByCustomer = transaction.fee_payer === 'customer'
+  const computedCustomerPaid = saleTotal + (feePaidByCustomer ? feesAmount : 0)
+  const safeTotalPaid = Number.isFinite(transaction.total_paid) ? transaction.total_paid : 0
+  const customerPaidAmount = safeTotalPaid > 0 ? safeTotalPaid : computedCustomerPaid
+  const computedNetAmount = Math.max(saleTotal - (feePaidByCustomer ? 0 : feesAmount), 0)
+  const safeNetAmount = Number.isFinite(transaction.net_amount) ? transaction.net_amount : computedNetAmount
+  const merchantNetAmount = Math.max(safeNetAmount, 0)
+  const hasBlockchainSection = Boolean(transaction.tx_hash || transaction.currency_received)
+  const feesDisplay = feesAmount === 0
+    ? `$${feesAmount.toFixed(2)}`
+    : `${feePaidByCustomer ? '+' : '-'}$${feesAmount.toFixed(2)}`
+  const paymentAmountText = transaction.currency_received
+    ? `${transaction.amount_received !== null && transaction.amount_received !== undefined ? `${transaction.amount_received.toFixed(8)} ` : ''}${transaction.currency_received.toUpperCase()}`.trim()
+    : ''
+  const normalizedNetworkLabel = transaction.blockchain_network
+    ? transaction.blockchain_network.replace('-', ' ').replace(/_/g, ' ').toUpperCase()
+    : null
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-white border-[#7f5efd] shadow-xl rounded-lg">
-        <DialogHeader className="pb-4 border-b border-[#7f5efd]/20">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white border-[#7f5efd] shadow-xl rounded-xl p-0">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-[#7f5efd]/20">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <DialogTitle className="font-phonic text-xl font-bold text-gray-900 mb-1">
@@ -116,7 +136,7 @@ export function TransactionDetailModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="px-5 py-4 space-y-3">
           {/* Key Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Date & Time */}
@@ -165,17 +185,10 @@ export function TransactionDetailModal({
               <h3 className="font-phonic text-sm font-semibold text-gray-900">Description</h3>
             </div>
             <p className="text-gray-800 text-sm ml-8">{transaction.product_description}</p>
-            {transaction.currency_received && (
-              <div className="mt-2 pt-2 border-t border-[#7f5efd]/10 ml-8">
-                <p className="text-xs text-gray-600">
-                  Payment received: <span className="font-mono font-medium text-gray-900">{transaction.amount_received?.toFixed(8)} {transaction.currency_received.toUpperCase()}</span>
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Financial Breakdown */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-[#7f5efd]/5 rounded-lg border border-[#7f5efd]/20 p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-[#7f5efd]/10 rounded flex items-center justify-center">
                 <DollarSign className="h-3.5 w-3.5 text-[#7f5efd]" />
@@ -184,13 +197,13 @@ export function TransactionDetailModal({
             </div>
 
             <div className="space-y-2 ml-8">
-              <div className="flex justify-between items-center py-1.5">
+              <div className="flex justify-between items-center py-1">
                 <span className="text-sm text-gray-600">Base Amount</span>
                 <span className="text-sm font-medium text-gray-900">${transaction.gross_amount.toFixed(2)}</span>
               </div>
 
               {transaction.tax_amount > 0 && (
-                <div className="flex justify-between items-center py-1.5">
+                <div className="flex justify-between items-center py-1">
                   <span className="text-sm text-gray-600">
                     Tax {transaction.tax_label && `(${transaction.tax_label})`}
                     {transaction.tax_percentage > 0 && (
@@ -201,24 +214,35 @@ export function TransactionDetailModal({
                 </div>
               )}
 
-              <div className="flex justify-between items-center py-1.5">
+              <div className="flex justify-between items-center py-1">
+                <span className="text-sm text-gray-600">Subtotal</span>
+                <span className="text-sm font-medium text-gray-900">${saleTotal.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between items-center py-1">
                 <span className="text-sm text-gray-600">
                   Gateway Fees
                   {transaction.fee_payer && (
                     <span className="text-xs text-gray-500 ml-1">({transaction.fee_payer} paid)</span>
                   )}
                 </span>
-                <span className="text-sm font-medium text-gray-900">-${transaction.fees.toFixed(2)}</span>
+                <span
+                  className={`text-sm font-medium ${
+                    feesAmount === 0 ? 'text-gray-500' : feePaidByCustomer ? 'text-gray-900' : 'text-red-600'
+                  }`}
+                >
+                  {feesDisplay}
+                </span>
               </div>
 
-              <div className="pt-2 mt-2 border-t border-gray-100">
+              <div className="pt-3 mt-2 border-t border-[#7f5efd]/15 grid gap-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Customer Paid</span>
-                  <span className="text-base font-semibold text-gray-900">${transaction.total_paid.toFixed(2)}</span>
+                  <span className="text-base font-semibold text-gray-900">${customerPaidAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center mt-1">
+                <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">You Received</span>
-                  <span className="text-base font-semibold text-[#7f5efd]">${transaction.net_amount.toFixed(2)}</span>
+                  <span className="text-base font-semibold text-[#7f5efd]">${merchantNetAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -247,7 +271,7 @@ export function TransactionDetailModal({
           </div>
 
           {/* Blockchain Verification */}
-          {transaction.tx_hash && (
+          {hasBlockchainSection && (
             <div className="bg-[#7f5efd]/5 rounded-lg border border-[#7f5efd]/20 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -256,36 +280,55 @@ export function TransactionDetailModal({
                   </div>
                   <h3 className="font-phonic text-sm font-semibold text-gray-900">Blockchain Verification</h3>
                 </div>
-                <Badge className="bg-green-100 text-green-700 border-green-200 text-xs px-2 py-0.5">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Verified
-                </Badge>
+                {transaction.tx_hash && (
+                  <Badge className="bg-green-100 text-green-700 border-green-200 text-xs px-2 py-0.5">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Verified
+                  </Badge>
+                )}
               </div>
 
               <div className="space-y-3 ml-8">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Hash</span>
-                    <button
-                      onClick={() => copyToClipboard(transaction.tx_hash!, 'Transaction Hash')}
-                      className="p-1 hover:bg-[#7f5efd]/10 rounded transition-colors"
-                    >
-                      <Copy className="h-3 w-3 text-[#7f5efd]" />
-                    </button>
+                {paymentAmountText && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Payment Received</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-medium text-gray-900">{paymentAmountText}</span>
+                      <button
+                        onClick={() => copyToClipboard(paymentAmountText, 'Payment amount')}
+                        className="shrink-0 p-1 hover:bg-[#7f5efd]/10 rounded transition-colors"
+                        aria-label="Copy payment amount"
+                      >
+                        <Copy className="h-3 w-3 text-[#7f5efd]" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="bg-white p-2 rounded border border-[#7f5efd]/10">
-                    <p className="font-mono text-xs text-gray-700 break-all">{transaction.tx_hash}</p>
-                  </div>
-                </div>
+                )}
 
-                {transaction.blockchain_network && (
-                  <div>
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Network</span>
-                    <div className="mt-1 flex items-center gap-2">
+                {transaction.tx_hash && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Hash</span>
+                      <button
+                        onClick={() => copyToClipboard(transaction.tx_hash!, 'Transaction Hash')}
+                        className="p-1 hover:bg-[#7f5efd]/10 rounded transition-colors"
+                        aria-label="Copy transaction hash"
+                      >
+                        <Copy className="h-3 w-3 text-[#7f5efd]" />
+                      </button>
+                    </div>
+                    <div className="bg-white p-2 rounded border border-[#7f5efd]/10">
+                      <p className="font-mono text-xs text-gray-700 break-all">{transaction.tx_hash}</p>
+                    </div>
+                  </div>
+                )}
+
+                {normalizedNetworkLabel && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Network</span>
+                    <div className="flex items-center gap-2">
                       <Activity className="h-3.5 w-3.5 text-[#7f5efd]" />
-                      <p className="text-sm text-gray-900">
-                        {transaction.blockchain_network.replace('-', ' ').replace(/_/g, ' ').toUpperCase()}
-                      </p>
+                      <p className="text-sm text-gray-900">{normalizedNetworkLabel}</p>
                     </div>
                   </div>
                 )}

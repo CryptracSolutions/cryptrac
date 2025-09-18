@@ -816,12 +816,12 @@ export default function TaxReportsPage() {
 
                   {/* Filters Row: Status + Date + Show (centered) */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3 pt-3 border-t border-gray-100">
-                    <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex flex-wrap items-end justify-center gap-4 w-full">
                       {/* Local Status Filter (isolated) */}
-                      <div className="space-y-1">
+                      <div className="flex flex-col gap-1 min-w-[12rem]">
                         <Label className="font-capsule text-xs text-gray-600">Status</Label>
                         <Select value={transactionStatus} onValueChange={(value: 'all' | 'confirmed' | 'refunded') => setTransactionStatus(value)}>
-                          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectTrigger className="h-11 w-full bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -832,41 +832,38 @@ export default function TaxReportsPage() {
                         </Select>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="tx-start-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
-                          From:
-                        </Label>
+                      <div className="flex flex-col gap-1 min-w-[12rem]">
+                        <Label htmlFor="tx-start-date" className="font-capsule text-xs text-gray-600">From</Label>
                         <Input
                           id="tx-start-date"
                           type="date"
                           value={transactionStartDate}
                           onChange={(e) => setTransactionStartDate(e.target.value)}
                           max={transactionEndDate || undefined}
-                          className="h-11 text-sm bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 px-3"
+                          className="h-11 w-full text-sm bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 px-3"
                           placeholder="Start date"
                         />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="tx-end-date" className="font-capsule text-xs text-gray-500 whitespace-nowrap">
-                          To:
-                        </Label>
+
+                      <div className="flex flex-col gap-1 min-w-[12rem]">
+                        <Label htmlFor="tx-end-date" className="font-capsule text-xs text-gray-600">To</Label>
                         <Input
                           id="tx-end-date"
                           type="date"
                           value={transactionEndDate}
                           onChange={(e) => setTransactionEndDate(e.target.value)}
                           min={transactionStartDate || undefined}
-                          className="h-11 text-sm bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 px-3"
+                          className="h-11 w-full text-sm bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 px-3"
                           placeholder="End date"
                         />
                       </div>
 
                       {/* REFACTOR: Moved Show dropdown here */}
                       {filteredTransactions.length > 5 && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-1 min-w-[8rem]">
                           <Label className="font-capsule text-xs text-gray-600">Show</Label>
                           <Select value={displayLimit.toString()} onValueChange={(value) => setDisplayLimit(Number(value))}>
-                            <SelectTrigger className="w-28 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <SelectTrigger className="h-11 w-full bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -880,15 +877,18 @@ export default function TaxReportsPage() {
                       )}
 
                       {(transactionStartDate || transactionEndDate || transactionStatus !== 'all') && (
-                        <Button
-                          variant="ghost"
-                          size="default"
-                          onClick={clearTransactionFilters}
-                          className="h-11 px-4 hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Clear
-                        </Button>
+                        <div className="flex flex-col gap-1 self-end">
+                          <span className="font-capsule text-xs text-transparent select-none">Clear</span>
+                          <Button
+                            variant="ghost"
+                            size="default"
+                            onClick={clearTransactionFilters}
+                            className="h-11 px-4 hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Clear
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1199,7 +1199,7 @@ export default function TaxReportsPage() {
                       <div className="space-y-2">
                         <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
                         <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
-                          <SelectTrigger className="w-full lg:w-[calc(50%-0.75rem)] h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 justify-between">
                             <SelectValue className="text-left" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1209,9 +1209,6 @@ export default function TaxReportsPage() {
                             <SelectItem value="summary">Summary - Executive overview</SelectItem>
                           </SelectContent>
                         </Select>
-                        <p className="font-capsule text-xs text-gray-500 mt-1">
-                          Choose a template based on your intended use
-                        </p>
                       </div>
 
                       {/* Export Buttons */}
@@ -1363,7 +1360,7 @@ export default function TaxReportsPage() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="border-t border-[#7f5efd]/20 pt-4">
+            <DialogFooter className="border-t border-[#7f5efd]/20 pt-4 gap-3 items-center sm:justify-center sm:space-x-0">
               <Button variant="outline" onClick={() => setShowRefundModal(false)}>
                 Cancel
               </Button>
