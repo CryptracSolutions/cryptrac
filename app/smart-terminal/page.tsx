@@ -584,12 +584,12 @@ function SmartTerminalPageContent() {
       )}
       
 
-      <div className="flex flex-col items-center justify-center min-h-screen p-1 sm:p-2 bg-gradient-to-br from-purple-50 via-white to-purple-50">
+      <div className="flex flex-col items-center justify-center min-h-screen p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-purple-50 via-white to-purple-50">
         <div className="w-full max-w-2xl landscape:max-w-5xl h-full flex flex-col justify-center">
         {/* Main Card */}
-        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden relative min-h-[90vh] sm:min-h-[85vh] flex flex-col">
+        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden relative min-h-[85vh] sm:min-h-[85vh] lg:min-h-[90vh] flex flex-col">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
-          <CardHeader className="pb-0 px-3 sm:px-4 pt-2 sm:pt-3">
+          <CardHeader className="pb-0 px-4 sm:px-6 pt-3 sm:pt-4">
             {/* Dashboard Button - Top Center of Card (only on initial page) */}
             {step === 'amount' && !paymentLink && (
               <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
@@ -606,8 +606,8 @@ function SmartTerminalPageContent() {
                   }}
                   className="flex items-center gap-1 text-[#7f5efd] transition-colors duration-200 p-1.5 rounded-md"
                 >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="text-xs font-medium opacity-80">Dashboard</span>
+                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-sm sm:text-base font-medium opacity-80">Dashboard</span>
                 </button>
               </div>
             )}
@@ -619,18 +619,18 @@ function SmartTerminalPageContent() {
                   "h-2 w-2 rounded-full",
                   merchantSettings ? "bg-green-500 animate-pulse" : "bg-gray-300"
                 )} />
-                <span className="text-xs text-gray-600">
+                <span className="text-sm sm:text-sm text-gray-600">
                   {merchantSettings ? (isLocked ? 'Customer Mode - Locked' : 'Terminal Active') : 'Loading...'}
                 </span>
               </div>
               {device && (
-                <div className="text-xs text-gray-500">
+                <div className="text-sm sm:text-sm text-gray-500">
                   Device ID: {device.id.slice(0, 8)}
                 </div>
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-4 pb-3 sm:pb-4 flex-1 flex flex-col justify-center">
+          <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6 flex-1 flex flex-col justify-center">
           {error && (
             <Alert className="border-red-200 bg-red-50">
               <AlertCircle className="h-4 w-4 text-red-600" />
@@ -640,21 +640,21 @@ function SmartTerminalPageContent() {
             </Alert>
           )}
           {step === 'amount' && !paymentLink && (
-            <div className="w-full space-y-2 sm:space-y-3 landscape:grid landscape:grid-cols-5 landscape:gap-3 landscape:space-y-0">
+            <div className="w-full space-y-3 sm:space-y-4 md:grid md:grid-cols-5 md:gap-4 md:space-y-0">
               {/* Amount Display - spans 3 columns in landscape */}
-              <div className="bg-gradient-to-br from-purple-50 to-white p-3 sm:p-4 lg:p-6 rounded-xl border border-purple-100 landscape:col-span-3 h-full flex flex-col justify-center min-h-[100px] sm:min-h-[120px] lg:min-h-[160px]">
+              <div className="bg-gradient-to-br from-purple-50 to-white p-4 sm:p-5 lg:p-6 rounded-xl border border-purple-100 md:col-span-3 h-full flex flex-col justify-center min-h-[120px] sm:min-h-[140px] lg:min-h-[160px]">
                 <div className="flex items-center justify-center mb-2">
                   <DollarSign className="h-5 w-5 lg:h-6 lg:w-6 text-[#7f5efd] mr-1" />
-                  <span className="text-sm lg:text-base text-gray-500 uppercase tracking-wider">Amount</span>
+                  <span className="text-base sm:text-base lg:text-lg text-gray-500 uppercase tracking-wider">Amount</span>
                 </div>
                 <div className="text-center font-phonic font-bold text-[#7f5efd]" style={{fontSize: 'clamp(1.75rem, 5vw, 3.5rem)'}} aria-live="polite">
                   ${amount || '0.00'}
                 </div>
               </div>
               {/* Price Breakdown - positioned in sidebar for landscape */}
-              <div className="landscape:col-span-2 landscape:space-y-2">
+              <div className="md:col-span-2 space-y-3">
                 {baseAmount > 0 && (
-                  <div className="bg-gradient-to-br from-gray-50 to-white p-2 sm:p-3 lg:p-4 rounded-xl border border-gray-200 text-xs sm:text-sm lg:text-base space-y-1" aria-live="polite">
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-3 sm:p-4 lg:p-4 rounded-xl border border-gray-200 text-sm sm:text-sm lg:text-base space-y-2" aria-live="polite">
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Subtotal</span>
@@ -681,12 +681,12 @@ function SmartTerminalPageContent() {
                 )}
               </div>
               {/* Number Pad - spans full width in landscape */}
-              <div className="grid grid-cols-3 gap-1 sm:gap-2 lg:gap-3 landscape:col-span-5">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-3 md:col-span-5">
                 {[1,2,3,4,5,6,7,8,9,'0','.'].map((d: string | number)=> (
                   <Button 
                     key={d}
                     variant="outline"
-                    className="h-10 sm:h-12 lg:h-14 text-lg sm:text-xl lg:text-2xl font-semibold bg-white border-purple-200 text-gray-700 transition-all duration-200 rounded-lg shadow-sm"
+                    className="h-12 sm:h-12 lg:h-14 text-lg sm:text-xl lg:text-2xl font-semibold bg-white border-purple-200 text-gray-700 transition-all duration-200 rounded-lg shadow-sm"
                     aria-label={`digit ${d}`}
                     onClick={() => appendDigit(String(d))}
                   >
@@ -694,7 +694,7 @@ function SmartTerminalPageContent() {
                   </Button>
                 ))}
                 <Button 
-                  className="h-10 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-orange-50 border-orange-200 text-orange-600 transition-all duration-200 rounded-lg shadow-sm" 
+                  className="h-12 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-orange-50 border-orange-200 text-orange-600 transition-all duration-200 rounded-lg shadow-sm" 
                   onClick={backspace} 
                   aria-label="backspace"
                   variant="outline"
@@ -702,7 +702,7 @@ function SmartTerminalPageContent() {
                   ⌫
                 </Button>
                 <Button 
-                  className="h-10 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-red-50 border-red-200 text-red-600 transition-all duration-200 rounded-lg shadow-sm" 
+                  className="h-12 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-red-50 border-red-200 text-red-600 transition-all duration-200 rounded-lg shadow-sm" 
                   onClick={clearAmount} 
                   aria-label="clear"
                   variant="outline"
@@ -712,7 +712,7 @@ function SmartTerminalPageContent() {
               </div>
 
               {/* Options - spans full width in landscape */}
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 landscape:col-span-5">
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:col-span-5">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <div className={cn(
                     "h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all duration-200",
@@ -728,7 +728,7 @@ function SmartTerminalPageContent() {
                     onChange={e=>setTax(e.target.checked)} 
                     aria-label="Add tax"
                   />
-                  <span className="text-sm font-medium text-gray-700">Add tax</span>
+                  <span className="text-base sm:text-base font-medium text-gray-700">Add tax</span>
                 </label>
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <div className={cn(
@@ -745,7 +745,7 @@ function SmartTerminalPageContent() {
                     onChange={e=>setChargeFee(e.target.checked)} 
                     aria-label="Charge customer fee" 
                   />
-                  <span className="text-sm font-medium text-gray-700">Customer pays fee</span>
+                  <span className="text-base sm:text-base font-medium text-gray-700">Customer pays fee</span>
                 </label>
               </div>
 
@@ -753,7 +753,7 @@ function SmartTerminalPageContent() {
               <Button 
                 onClick={readyForPayment}
                 variant="default"
-                className="w-full h-10 sm:h-12 lg:h-16 text-base sm:text-lg lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 landscape:col-span-5"
+                className="w-full h-12 sm:h-14 lg:h-16 text-base sm:text-lg lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 md:col-span-5"
                 aria-label="ready"
                 disabled={!amount}
               >
@@ -922,12 +922,12 @@ function SmartTerminalPageContent() {
                     
                     {/* Currency Selection */}
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                        <Coins className="h-3 w-3 text-[#7f5efd]" />
+                      <label className="text-sm sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Coins className="h-4 w-4 text-[#7f5efd]" />
                         Currency
                       </label>
                       <Select value={crypto} onValueChange={(value) => setCrypto(value)}>
-                        <SelectTrigger className="w-full h-9 bg-gradient-to-r from-white to-purple-50 border border-purple-200 focus:border-[#7f5efd] rounded-lg transition-all duration-200 shadow-sm text-gray-900 text-xs">
+                        <SelectTrigger className="w-full h-11 sm:h-10 bg-gradient-to-r from-white to-purple-50 border border-purple-200 focus:border-[#7f5efd] rounded-lg transition-all duration-200 shadow-sm text-gray-900 text-sm sm:text-sm">
                           {(() => {
                             const current = availableCurrencies.find(c => c.code === crypto)
                             const displayName = current?.name || getCurrencyDisplayName(crypto)
@@ -1031,7 +1031,7 @@ function SmartTerminalPageContent() {
                           key={p} 
                           variant={tipPercent === p ? 'default' : 'outline'} 
                           className={cn(
-                            "h-8 text-xs font-semibold rounded-md transition-all duration-200",
+                            "h-11 sm:h-10 text-sm sm:text-sm font-semibold rounded-md transition-all duration-200",
                             tipPercent === p 
                               ? "bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white shadow-lg" 
                               : "bg-white border border-purple-200 text-[#7f5efd]"
@@ -1062,15 +1062,15 @@ function SmartTerminalPageContent() {
               </div>
 
               {/* Final Total and Payment Button */}
-              <div className="w-full space-y-2 landscape:col-span-2">
+              <div className="w-full space-y-3 md:col-span-2">
                 {/* Final Total Display */}
                 {tipSelected && (
-                  <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-2 lg:p-4 rounded-lg text-white w-full">
+                  <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 sm:p-4 lg:p-4 rounded-lg text-white w-full">
                     <div className="text-center">
-                      <p className="text-[10px] opacity-90">Final Total</p>
+                      <p className="text-sm sm:text-sm opacity-90">Final Total</p>
                       <p className="font-bold" style={{fontSize: 'clamp(1.25rem, 4vw, 2.25rem)'}}>${finalTotal.toFixed(2)}</p>
                       {tipPercent !== null && tipPercent > 0 && (
-                        <p className="text-[10px] opacity-90 mt-0.5">Includes ${tipAmount.toFixed(2)} tip</p>
+                        <p className="text-sm sm:text-sm opacity-90 mt-1">Includes ${tipAmount.toFixed(2)} tip</p>
                       )}
                     </div>
                   </div>
@@ -1079,7 +1079,7 @@ function SmartTerminalPageContent() {
                 <Button
                   onClick={generate}
                   variant="default"
-                  className="w-full h-10 sm:h-12 lg:h-16 text-base lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                  className="w-full h-12 sm:h-14 lg:h-16 text-base sm:text-lg lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   aria-label="pay now"
                   disabled={!tipSelected || loading}
                 >
@@ -1099,7 +1099,7 @@ function SmartTerminalPageContent() {
             </div>
           )}
               {paymentLink && paymentData && (
-                <div className="flex flex-col items-center space-y-2 sm:space-y-3" aria-live="polite">
+                <div className="flex flex-col items-center space-y-3 sm:space-y-4" aria-live="polite">
                   {(() => {
                 // const baseUri = buildPaymentURI(paymentData.pay_currency, paymentData.pay_address, paymentData.pay_amount, paymentData.payin_extra_id);
                 // const uri = baseUri;
@@ -1107,15 +1107,15 @@ function SmartTerminalPageContent() {
                   return (
                     <>
                     {/* Payment Status */}
-                    <div className="w-full bg-gradient-to-br from-purple-50 to-white p-2 sm:p-3 rounded-lg border border-purple-100">
+                    <div className="w-full bg-gradient-to-br from-purple-50 to-white p-3 sm:p-4 rounded-lg border border-purple-100">
                       {status !== 'confirmed' ? (
                         <>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4 text-[#7f5efd] animate-spin" />
-                              <span className="text-xs sm:text-sm font-semibold text-gray-700">Awaiting Payment</span>
+                              <span className="text-sm sm:text-base font-semibold text-gray-700">Awaiting Payment</span>
                             </div>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-purple-100 text-[#7f5efd]">
+                            <span className="px-2 py-1 rounded-full text-sm sm:text-sm font-semibold bg-purple-100 text-[#7f5efd]">
                               {status.toUpperCase()}
                             </span>
                           </div>
@@ -1126,7 +1126,7 @@ function SmartTerminalPageContent() {
                           <div className="bg-green-50 border border-green-200 p-3 rounded-md min-h-[60px] flex items-center justify-center">
                             <div className="flex items-center gap-3">
                               <CheckCircle2 className="h-6 w-6 text-green-600" />
-                              <p className="text-sm font-bold text-green-800">Payment Confirmed</p>
+                              <p className="text-base sm:text-lg font-bold text-green-800">Payment Confirmed</p>
                             </div>
                           </div>
                           {/* Right: Send Receipt */}
@@ -1137,13 +1137,13 @@ function SmartTerminalPageContent() {
                                 value={receipt.email}
                                 onChange={e=>setReceipt({...receipt, email:e.target.value})}
                                 aria-label="receipt email"
-                                className="h-10 bg-white border-2 border-transparent focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs"
+                                className="h-11 sm:h-10 bg-white border-2 border-transparent focus:border-[#7f5efd] rounded-lg transition-all duration-200 w-full max-w-xs text-base"
                               />
                               <Button
                                 onClick={sendEmailReceipt}
                                 disabled={!receipt.email.trim() || receipt.sent || receipt.sending}
                                 className={cn(
-                                  "h-10 px-4 font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
+                                  "h-11 sm:h-10 px-4 font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
                                   receipt.sent
                                     ? "bg-green-600 text-white"
                                     : "bg-[#7f5efd] text-white hover:bg-[#6d4eeb]"
@@ -1176,21 +1176,21 @@ function SmartTerminalPageContent() {
 
                     {/* QR Code (single) */}
                     {(!needsExtra || extraIdConfirmed) && (
-                      <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                        <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={180} hideDetails />
+                      <div className="bg-white p-4 sm:p-3 rounded-lg shadow-lg border border-gray-200">
+                        <QRCode currency={paymentData.pay_currency} address={paymentData.pay_address} extraId={paymentData.payin_extra_id} size={200} hideDetails />
                       </div>
                     )}
                     {needsExtra && !extraIdConfirmed && (
-                      <div className="bg-purple-50 p-2 rounded-md border border-purple-200 text-center">
+                      <div className="bg-purple-50 p-3 rounded-md border border-purple-200 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <input
                             type="checkbox"
-                            className="h-4 w-4 text-[#7f5efd] border-purple-300 rounded accent-[#7f5efd] focus:ring-[#7f5efd]"
+                            className="h-5 w-5 text-[#7f5efd] border-purple-300 rounded accent-[#7f5efd] focus:ring-[#7f5efd]"
                             checked={extraIdConfirmed}
                             onChange={(e) => setExtraIdConfirmed(e.target.checked)}
                             aria-label={`Confirm including ${getExtraIdLabel(paymentData.pay_currency).toLowerCase()}`}
                           />
-                          <label className="text-sm font-medium text-purple-900 select-none" onClick={() => setExtraIdConfirmed(v => !v)}>
+                          <label className="text-base sm:text-base font-medium text-purple-900 select-none" onClick={() => setExtraIdConfirmed(v => !v)}>
                             Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.
                           </label>
                         </div>
@@ -1202,7 +1202,7 @@ function SmartTerminalPageContent() {
                       <div className="flex justify-center">
                         <button
                           type="button"
-                          className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] text-white shadow-sm transition-colors"
+                          className="h-11 sm:h-10 px-4 text-sm sm:text-sm font-semibold rounded-md bg-[#7f5efd] text-white shadow-sm transition-colors"
                           onClick={() => {
                             setPaymentLink(null);
                             setPaymentData(null);
@@ -1218,23 +1218,23 @@ function SmartTerminalPageContent() {
                     {/* Destination Tag/Memo Warning (centered, above amount) */}
                     {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
                       <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                        <AlertTriangle className="h-4 w-4 text-[#7f5efd] mx-auto mb-1" />
-                        <p className="text-xs font-semibold text-purple-900 mb-1">
+                        <AlertTriangle className="h-5 w-5 text-[#7f5efd] mx-auto mb-2" />
+                        <p className="text-sm sm:text-base font-semibold text-purple-900 mb-2">
                           {getExtraIdLabel(paymentData.pay_currency)} Required
                         </p>
-                        <div className="bg-white p-1.5 rounded-md border border-purple-200 mb-1">
+                        <div className="bg-white p-2 rounded-md border border-purple-200 mb-2">
                           <p className="text-sm font-mono text-[#7f5efd] font-semibold break-all">
                             {paymentData.payin_extra_id}
                           </p>
                         </div>
-                        <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
-                        <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
+                        <p className="text-sm sm:text-sm text-purple-900">Include this{getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
+                        <p className="text-sm sm:text-sm text-purple-900 mt-1">In many wallets(e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
                       </div>
                     )}
                     {/* Payment Details */}
-                    <div className="w-full bg-gradient-to-r from-purple-50 to-purple-25 p-2 rounded-lg border border-purple-200">
+                    <div className="w-full bg-gradient-to-r from-purple-50 to-purple-25 p-3 rounded-lg border border-purple-200">
                       <div className="text-center">
-                        <p className="text-[10px] text-gray-600">Send exactly</p>
+                        <p className="text-sm sm:text-sm text-gray-600">Send exactly</p>
                         <p className="font-bold text-[#7f5efd]" style={{fontSize: 'clamp(1.125rem, 4vw, 1.5rem)'}}>
                           {formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}
                         </p>
@@ -1242,13 +1242,13 @@ function SmartTerminalPageContent() {
                     </div>
                     {/* Address Display */}
                     {/* Always show the amount below address as a manual fallback */}
-                    <div className="w-full bg-gradient-to-br from-purple-50 to-white p-2 rounded-lg border border-purple-200">
-                      <div className="mb-1 text-center">
-                        <span className="text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
+                    <div className="w-full bg-gradient-to-br from-purple-50 to-white p-3 rounded-lg border border-purple-200">
+                      <div className="mb-2 text-center">
+                        <span className="text-sm sm:text-sm font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
                       </div>
-                      <div className="bg-white p-1.5 rounded-md border border-gray-200 shadow-sm text-center">
-                        <p className="text-[9px] text-gray-600 mb-0.5">Send to</p>
-                        <p className="text-xs sm:text-sm font-mono break-all text-[#7f5efd] leading-relaxed font-bold">
+                      <div className="bg-white p-2 sm:p-3 rounded-md border border-gray-200 shadow-sm text-center">
+                        <p className="text-sm sm:text-sm text-gray-600 mb-1">Send to</p>
+                        <p className="text-sm sm:text-base font-mono break-all text-[#7f5efd] leading-relaxed font-bold">
                           {paymentData.pay_address}
                         </p>
                       </div>
@@ -1302,7 +1302,7 @@ function SmartTerminalPageContent() {
                         document.exitFullscreen().catch(console.warn);
                       }
                     }}
-                    className="w-full h-10 text-sm sm:text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full h-12 sm:h-12 text-base sm:text-lg font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     <ShoppingBag className="h-5 w-5" />
                     Start New Sale

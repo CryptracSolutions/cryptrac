@@ -10,7 +10,6 @@ import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
 // import { Separator } from '@/app/components/ui/separator'
 import { Loader2, AlertCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Globe, AlertTriangle, ShoppingBag, Bitcoin, Coins, Network, TrendingUp, Smartphone, DollarSign, Zap } from 'lucide-react'
-import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority } from '@/lib/crypto-networks'
 import { buildCurrencyMapping } from '@/lib/currency-mapping'
@@ -458,19 +457,6 @@ export default function PaymentPage() {
       setCreatingPayment(false)
     }
   }
-
-  const copyToClipboard = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success(`${label} copied to clipboard`)
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error)
-      toast.error('Failed to copy to clipboard')
-    }
-  }
-
-
-
   // Load payment link on component mount
   useEffect(() => {
     if (!id) return
