@@ -590,28 +590,6 @@ function SmartTerminalPageContent() {
         <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden relative min-h-[85vh] sm:min-h-[85vh] lg:min-h-[90vh] flex flex-col">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
           <CardHeader className="pb-0 px-4 sm:px-6 pt-3 sm:pt-4">
-            {/* Dashboard Button - Top Left on mobile, Center on desktop */}
-            {step === 'amount' && !paymentLink && (
-              <div className="absolute top-3 left-3 sm:left-1/2 sm:transform sm:-translate-x-1/2 z-10">
-                <button
-                  type="button"
-                  onClick={() => {
-                    try {
-                      setIsLocked(false);
-                      if (document.fullscreenElement && document.exitFullscreen) {
-                        document.exitFullscreen().catch(() => {});
-                      }
-                    } catch {}
-                    router.push('/merchant/dashboard');
-                  }}
-                  className="flex items-center gap-2 text-[#7f5efd] transition-colors duration-200 p-2 rounded-md hover:bg-purple-50"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                  <span className="text-base font-medium">Dashboard</span>
-                </button>
-              </div>
-            )}
-
             {/* Status Bar */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -640,7 +618,28 @@ function SmartTerminalPageContent() {
             </Alert>
           )}
           {step === 'amount' && !paymentLink && (
-            <div className="w-full space-y-3 sm:space-y-4 md:grid md:grid-cols-5 md:gap-4 md:space-y-0">
+            <div className="w-full space-y-3 sm:space-y-4">
+              {/* Dashboard Button - Centered above Amount card */}
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      setIsLocked(false);
+                      if (document.fullscreenElement && document.exitFullscreen) {
+                        document.exitFullscreen().catch(() => {});
+                      }
+                    } catch {}
+                    router.push('/merchant/dashboard');
+                  }}
+                  className="flex items-center gap-2 text-[#7f5efd] transition-colors duration-200 px-4 py-2 rounded-md hover:bg-purple-50"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span className="text-base font-medium">Dashboard</span>
+                </button>
+              </div>
+
+              <div className="w-full space-y-3 sm:space-y-4 md:grid md:grid-cols-5 md:gap-4 md:space-y-0">
               {/* Amount Display - spans 3 columns in landscape */}
               <div className="bg-gradient-to-br from-purple-50 to-white p-4 sm:p-5 lg:p-6 rounded-xl border border-purple-100 md:col-span-3 h-full flex flex-col justify-center min-h-[120px] sm:min-h-[140px] lg:min-h-[160px]">
                 <div className="flex items-center justify-center mb-2">
@@ -759,6 +758,7 @@ function SmartTerminalPageContent() {
               >
                 Ready for Payment
               </Button>
+              </div>
             </div>
           )}
           {step === 'customer' && !paymentLink && (
@@ -1025,31 +1025,33 @@ function SmartTerminalPageContent() {
                   <div className="bg-white p-3 rounded-lg border border-gray-200">
                     <p className="text-sm sm:text-sm font-semibold text-gray-700 mb-2 text-center">Add a tip?</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {/* Show all three tip presets */}
                       {(device?.tip_presets || defaultTips).map((p: number) => (
-                        <Button 
-                          key={p} 
-                          variant={tipPercent === p ? 'default' : 'outline'} 
+                        <Button
+                          key={p}
+                          variant={tipPercent === p ? 'default' : 'outline'}
                           className={cn(
-                            "h-11 sm:h-10 text-sm sm:text-sm font-semibold rounded-md transition-all duration-200",
-                            tipPercent === p 
-                              ? "bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white shadow-lg" 
+                            "h-10 text-sm font-semibold rounded-md transition-all duration-200",
+                            tipPercent === p
+                              ? "bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white shadow-lg"
                               : "bg-white border border-purple-200 text-[#7f5efd]"
                           )}
-                          onClick={() => {setTipPercent(p); setTipSelected(true);}} 
+                          onClick={() => {setTipPercent(p); setTipSelected(true);}}
                           aria-label={`tip ${p}%`}
                         >
                           {p}%
                         </Button>
                       ))}
-                      <Button 
-                        variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'} 
+                      {/* No tip button */}
+                      <Button
+                        variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'}
                         className={cn(
-                          "h-11 sm:h-10 text-sm sm:text-sm font-semibold rounded-md transition-all duration-200 col-span-2 sm:col-span-1",
+                          "h-10 text-sm font-semibold rounded-md transition-all duration-200",
                           tipPercent === 0 && tipSelected
                             ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg"
                             : "bg-white border border-gray-300 text-gray-600"
                         )}
-                        onClick={() => {setTipPercent(0); setTipSelected(true);}} 
+                        onClick={() => {setTipPercent(0); setTipSelected(true);}}
                         aria-label="no tip"
                       >
                         No Tip
