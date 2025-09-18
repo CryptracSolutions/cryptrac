@@ -95,7 +95,7 @@ export default function SecurityPage() {
 
       <div className="container-wide flex flex-col lg:flex-row gap-8 relative py-4 md:py-8">
         {/* Mobile Navigation Dropdown */}
-        <div className="lg:hidden w-full mb-4">
+        <div className="lg:hidden w-full mb-4 sticky top-16 z-30 bg-white py-2 border-b border-gray-100 px-4 md:px-6">
           <details className="group">
             <summary className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 min-h-[44px]">
               <span className="font-phonic text-base font-normal text-gray-900">Table of Contents</span>
