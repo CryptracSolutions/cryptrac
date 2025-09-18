@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useTimezone } from '@/lib/contexts/TimezoneContext'
 import { formatDateShort, formatFullDate } from '@/lib/utils/date-utils'
 
@@ -521,6 +521,19 @@ export default function TaxReportsPage() {
   const [showRefundModal, setShowRefundModal] = useState(false)
   const [refundAmount, setRefundAmount] = useState('')
   const [refundDate, setRefundDate] = useState(new Date().toISOString().split('T')[0])
+  const refundAmountInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (showRefundModal) {
+      // Focus and select amount for quick edit, after modal mounts
+      setTimeout(() => {
+        if (refundAmountInputRef.current) {
+          refundAmountInputRef.current.focus()
+          refundAmountInputRef.current.select()
+        }
+      }, 0)
+    }
+  }, [showRefundModal])
 
   const handleRefundConfirm = async () => {
     if (!selectedRefundTransaction || !user) return
@@ -1338,8 +1351,14 @@ export default function TaxReportsPage() {
                   <Input
                     id="refund-amount"
                     type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
                     value={refundAmount}
                     onChange={(e) => setRefundAmount(e.target.value)}
+                    ref={refundAmountInputRef}
+                    leftIcon={<DollarSign className="h-4 w-4" />}
+                    className="h-11"
                   />
                 </div>
               </div>
@@ -1353,6 +1372,7 @@ export default function TaxReportsPage() {
                     type="date"
                     value={refundDate}
                     onChange={(e) => setRefundDate(e.target.value)}
+                    className="h-11"
                   />
                 </div>
               </div>
