@@ -24,7 +24,7 @@ import { getOrCreateClientId } from '@/lib/ab-testing'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/app/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus'
-import { CopyButton } from '@/components/CopyButton'
+import { CopyButton } from '@/app/components/CopyButton'
 
 const SUPABASE_AVAILABLE = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
