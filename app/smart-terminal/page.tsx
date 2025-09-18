@@ -590,9 +590,9 @@ function SmartTerminalPageContent() {
         <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden relative min-h-[85vh] sm:min-h-[85vh] lg:min-h-[90vh] flex flex-col">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
           <CardHeader className="pb-0 px-4 sm:px-6 pt-3 sm:pt-4">
-            {/* Dashboard Button - Top Center of Card (only on initial page) */}
+            {/* Dashboard Button - Top Left on mobile, Center on desktop */}
             {step === 'amount' && !paymentLink && (
-              <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
+              <div className="absolute top-3 left-3 sm:left-1/2 sm:transform sm:-translate-x-1/2 z-10">
                 <button
                   type="button"
                   onClick={() => {
@@ -604,10 +604,10 @@ function SmartTerminalPageContent() {
                     } catch {}
                     router.push('/merchant/dashboard');
                   }}
-                  className="flex items-center gap-1 text-[#7f5efd] transition-colors duration-200 p-1.5 rounded-md"
+                  className="flex items-center gap-2 text-[#7f5efd] transition-colors duration-200 p-2 rounded-md hover:bg-purple-50"
                 >
-                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-sm sm:text-base font-medium opacity-80">Dashboard</span>
+                  <ArrowLeft className="h-5 w-5" />
+                  <span className="text-base font-medium">Dashboard</span>
                 </button>
               </div>
             )}
@@ -757,7 +757,6 @@ function SmartTerminalPageContent() {
                 aria-label="ready"
                 disabled={!amount}
               >
-                <DollarSign className="h-5 w-5" />
                 Ready for Payment
               </Button>
             </div>
@@ -1023,8 +1022,8 @@ function SmartTerminalPageContent() {
                   </div>
 
                   {/* Tip Selection */}
-                  <div className="bg-white p-2 rounded-lg border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-700 mb-1 text-center">Add a tip?</p>
+                  <div className="bg-white p-3 rounded-lg border border-gray-200">
+                    <p className="text-sm sm:text-sm font-semibold text-gray-700 mb-2 text-center">Add a tip?</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {(device?.tip_presets || defaultTips).map((p: number) => (
                         <Button 
@@ -1045,9 +1044,9 @@ function SmartTerminalPageContent() {
                       <Button 
                         variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'} 
                         className={cn(
-                          "h-8 text-xs font-semibold rounded-md transition-all duration-200",
+                          "h-11 sm:h-10 text-sm sm:text-sm font-semibold rounded-md transition-all duration-200 col-span-2 sm:col-span-1",
                           tipPercent === 0 && tipSelected
-                            ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg" 
+                            ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg"
                             : "bg-white border border-gray-300 text-gray-600"
                         )}
                         onClick={() => {setTipPercent(0); setTipSelected(true);}} 
@@ -1067,7 +1066,7 @@ function SmartTerminalPageContent() {
                 {tipSelected && (
                   <div className="bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] p-3 sm:p-4 lg:p-4 rounded-lg text-white w-full">
                     <div className="text-center">
-                      <p className="text-sm sm:text-sm opacity-90">Final Total</p>
+                      <p className="text-sm sm:text-sm opacity-90 mb-1">Final Total</p>
                       <p className="font-bold" style={{fontSize: 'clamp(1.25rem, 4vw, 2.25rem)'}}>${finalTotal.toFixed(2)}</p>
                       {tipPercent !== null && tipPercent > 0 && (
                         <p className="text-sm sm:text-sm opacity-90 mt-1">Includes ${tipAmount.toFixed(2)} tip</p>
