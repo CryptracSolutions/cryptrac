@@ -538,37 +538,7 @@ export default function PaymentSuccessPage() {
           </CardContent>
         </Card>
 
-        {/* Additional Information */}
-        <Card className="mb-8 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 bg-white group">
-          <CardHeader className="text-center pb-6">
-            <CardTitle className="font-phonic text-2xl font-normal text-gray-900">What&apos;s Next?</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                              <div className="text-center p-4 sm:p-6 bg-green-50 rounded-lg border border-green-200">
-                <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                <h3 className="font-phonic text-lg sm:text-base font-normal text-gray-900 mb-2">Payment Confirmed</h3>
-                <p className="font-phonic text-base sm:text-sm font-normal text-gray-600">
-                  Your payment has been confirmed on the blockchain and the merchant has been notified.
-                </p>
-              </div>
-                              <div className="text-center p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h3 className="font-phonic text-lg sm:text-base font-normal text-gray-900 mb-2">Receipt Available</h3>
-                <p className="font-phonic text-base sm:text-sm font-normal text-gray-600">
-                  Request an email receipt above to keep detailed records of this transaction.
-                </p>
-              </div>
-                              <div className="text-center p-4 sm:p-6 bg-purple-50 rounded-lg border border-purple-200">
-                <ExternalLink className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                <h3 className="font-phonic text-lg sm:text-base font-normal text-gray-900 mb-2">Blockchain Verification</h3>
-                <p className="font-phonic text-base sm:text-sm font-normal text-gray-600">
-                  Use the transaction hashes above to verify your payment on the blockchain explorer.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
 
         {/* Footer removed as requested */}
       </div>

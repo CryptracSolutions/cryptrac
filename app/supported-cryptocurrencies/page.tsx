@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from "next/link";
-import { ArrowLeft, Search, Bitcoin, Shield, Zap, Globe } from "lucide-react";
+import { ArrowLeft, Search, Bitcoin } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";

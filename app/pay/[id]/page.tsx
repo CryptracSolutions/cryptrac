@@ -9,7 +9,7 @@ import { Button } from '@/app/components/ui/button'
 // import { Label } from '@/app/components/ui/label'
 import { Badge } from '@/app/components/ui/badge'
 // import { Separator } from '@/app/components/ui/separator'
-import { Copy, Loader2, AlertCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Globe, AlertTriangle, ShoppingBag, Bitcoin, Coins, Network, TrendingUp, Smartphone, DollarSign, Zap } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2, Clock, ArrowRight, RefreshCw, Globe, AlertTriangle, ShoppingBag, Bitcoin, Coins, Network, TrendingUp, Smartphone, DollarSign, Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { groupCurrenciesByNetwork, getNetworkInfo, getCurrencyDisplayName, sortNetworksByPriority } from '@/lib/crypto-networks'
@@ -25,6 +25,7 @@ import { getOrCreateClientId } from '@/lib/ab-testing'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/app/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus'
+import { CopyButton } from '@/components/CopyButton'
 
 const SUPABASE_AVAILABLE = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -954,7 +955,7 @@ export default function PaymentPage() {
                             </p>
                           </div>
                           <p className="text-base sm:text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
-                          <p className="text-sm sm:text-[11px] text-purple-900 mt-2 sm:mt-1">In many wallets (e.g., Trust Wallet), paste under "{getExtraIdLabel(paymentData.pay_currency)}" or "Memo".</p>
+                          <p className="text-sm sm:text-[11px] text-purple-900 mt-2 sm:mt-1">In many wallets (e.g., Trust Wallet), paste under &quot;{getExtraIdLabel(paymentData.pay_currency)}&quot; or &quot;Memo&quot;.</p>
                         </div>
                       )}
 
@@ -971,19 +972,12 @@ export default function PaymentPage() {
                         </div>
                         <div className="bg-white p-4 sm:p-3 rounded-lg border border-gray-200 shadow-sm relative">
                           <p className="text-base sm:text-xs text-gray-600 mb-2 sm:mb-1 text-center">Send to this address</p>
-                          <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold mb-3 sm:mb-0">
+                          <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold mb-3 sm:mb-0 text-center">
                             {paymentData.pay_address}
                           </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                            className="w-full sm:w-auto sm:absolute sm:right-2 sm:top-2 min-h-[44px] px-4 border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50 text-base sm:text-sm"
-                            aria-label="Copy address"
-                          >
-                            <Copy className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-0" />
-                            <span className="sm:hidden">Copy Address</span>
-                          </Button>
+                          <div className="mt-2 sm:mt-0 sm:absolute sm:right-2 sm:top-2 flex justify-center sm:justify-end">
+                            <CopyButton text={paymentData.pay_address} label="address" />
+                          </div>
                         </div>
                       </div>
 
