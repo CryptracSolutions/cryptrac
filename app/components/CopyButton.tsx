@@ -20,10 +20,11 @@ export function CopyButton({ text, label }: CopyButtonProps) {
   return (
     <button
       onClick={copyToClipboard}
-      className="p-1 hover:bg-[#7f5efd]/10 rounded transition-colors"
+      className="min-w-[44px] min-h-[44px] p-2 sm:p-1 hover:bg-[#7f5efd]/10 rounded transition-colors flex items-center justify-center"
       title={`Copy ${label}`}
+      aria-label={`Copy ${label}`}
     >
-      <Copy className={`h-3 w-3 ${copied ? 'text-green-600' : 'text-[#7f5efd]'}`} />
+      <Copy className={`h-5 w-5 sm:h-3 sm:w-3 ${copied ? 'text-green-600' : 'text-[#7f5efd]'}`} />
     </button>
   );
 }
