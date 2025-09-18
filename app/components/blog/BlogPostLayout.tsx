@@ -88,32 +88,32 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
       {/* Header */}
       <LandingNav />
 
-      <div className="container-wide py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
+      <div className="container-wide py-8 px-4 md:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <article className="lg:col-span-3">
             {/* Article Header */}
             <header className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline" className="text-sm">
+                <Badge variant="outline" className="text-sm md:text-sm">
                   {post.category}
                 </Badge>
                 {post.featured && (
-                  <Badge className="bg-[#7f5efd] text-white text-sm">
+                  <Badge className="bg-[#7f5efd] text-white text-sm md:text-sm">
                     Featured
                   </Badge>
                 )}
               </div>
               
-              <h1 className="font-phonic text-4xl lg:text-5xl font-normal tracking-tight bg-gradient-to-r from-gray-900 via-[#6b46c1] to-gray-900 bg-clip-text text-transparent mb-6 leading-tight">
+              <h1 className="font-phonic text-3xl md:text-4xl lg:text-5xl font-normal tracking-tight bg-gradient-to-r from-gray-900 via-[#6b46c1] to-gray-900 bg-clip-text text-transparent mb-6 leading-tight">
                 {post.title}
               </h1>
               
-              <p className="font-capsule text-lg font-normal text-gray-600 mb-6 leading-relaxed">
+              <p className="font-capsule text-base md:text-lg font-normal text-gray-600 mb-6 leading-relaxed">
                 {post.excerpt}
               </p>
               
-              <div className="flex items-center gap-6 text-sm text-gray-500 mb-6">
+              <div className="flex flex-wrap items-center gap-3 md:gap-6 text-sm md:text-sm text-gray-500 mb-6">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-[#7f5efd]" />
                   <span className="font-phonic font-normal">{post.author}</span>
@@ -195,12 +195,12 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
 
             {/* Share Section */}
             <div className="border-t border-[#7f5efd]/20 pt-8 mb-12 bg-gradient-to-r from-[#f5f3ff]/10 to-transparent p-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <h3 className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <h3 className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                   <Share2 className="h-5 w-5 text-[#7f5efd]" />
                   Share this article
                 </h3>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -242,14 +242,14 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
             </div>
 
             {/* Author Bio */}
-            <div className="bg-gradient-to-r from-[#f5f3ff]/40 via-[#f5f3ff]/20 to-[#f5f3ff]/10 border border-[#7f5efd]/30 rounded-lg p-6 mb-12 shadow-sm">
-              <div className="flex items-start gap-4">
+            <div className="bg-gradient-to-r from-[#f5f3ff]/40 via-[#f5f3ff]/20 to-[#f5f3ff]/10 border border-[#7f5efd]/30 rounded-lg p-4 md:p-6 mb-12 shadow-sm">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#6547e8] rounded-full flex items-center justify-center shadow-lg">
                   <User className="h-8 w-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-phonic text-lg font-normal text-gray-900 mb-2">{post.author}</h4>
-                  <p className="font-capsule text-sm font-normal text-gray-600">
+                  <h4 className="font-phonic text-base md:text-lg font-normal text-gray-900 mb-2 text-center md:text-left">{post.author}</h4>
+                  <p className="font-capsule text-base md:text-sm font-normal text-gray-600 text-center md:text-left">
                     {post.author === 'Cryptrac Team' 
                       ? 'The Cryptrac team is dedicated to making cryptocurrency payments accessible and secure for businesses worldwide. Our experts combine deep blockchain knowledge with practical business experience.'
                       : 'Expert contributor to the Cryptrac blog, sharing insights on cryptocurrency payments, blockchain technology, and the future of digital commerce.'
@@ -262,18 +262,18 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
 
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="sticky top-24 space-y-8">
+            <div className="lg:sticky lg:top-24 space-y-6 md:space-y-8">
               {/* Table of Contents */}
               <Card className="shadow-lg border-l-4 border-[#7f5efd]">
                 <CardHeader className="bg-gradient-to-r from-[#f5f3ff]/20 to-transparent">
-                  <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                  <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-[#7f5efd]" />
                     Table of Contents
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <p className="font-capsule text-gray-600">
+                  <div className="space-y-2">
+                    <p className="font-capsule text-base md:text-sm text-gray-600">
                       Navigate through this article using the headings below.
                     </p>
                   </div>
@@ -284,7 +284,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
               {relatedPosts.length > 0 && (
                 <Card className="shadow-lg border-l-4 border-[#a78bfa]">
                   <CardHeader className="bg-gradient-to-r from-[#f3f0ff]/20 to-transparent">
-                    <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                    <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                       <ChevronRight className="h-5 w-5 text-[#a78bfa]" />
                       Related Articles
                     </CardTitle>
@@ -293,14 +293,14 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                     {relatedPosts.map((relatedPost) => (
                       <Link key={relatedPost.id} href={`/blog/${relatedPost.slug}`}>
                         <div className="pb-4 border-b border-gray-200 last:border-b-0 hover:bg-[#f5f3ff]/30 p-2 rounded transition-colors">
-                          <h4 className="font-phonic text-sm font-normal text-gray-900 mb-2 line-clamp-2">
+                          <h4 className="font-phonic text-base md:text-sm font-normal text-gray-900 mb-2 line-clamp-2">
                             {relatedPost.title}
                           </h4>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                          <div className="flex items-center gap-2 text-sm md:text-xs text-gray-500 mb-2">
                             <Calendar className="h-3 w-3" />
                             {new Date(relatedPost.date).toLocaleDateString()}
                           </div>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-sm md:text-xs">
                             {relatedPost.category}
                           </Badge>
                         </div>
@@ -313,26 +313,26 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
               {/* Newsletter Signup */}
               <Card className="shadow-lg border-l-4 border-[#7f5efd] bg-gradient-to-r from-[#f5f3ff]/40 to-[#f5f3ff]/20">
                 <CardHeader className="bg-gradient-to-r from-[#f5f3ff]/30 to-transparent">
-                  <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                  <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                     <Share2 className="h-5 w-5 text-[#7f5efd]" />
                     Stay Updated
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="font-capsule text-sm font-normal text-gray-600 mb-4">
+                  <p className="font-capsule text-base md:text-sm font-normal text-gray-600 mb-4">
                     Get the latest cryptocurrency payment insights and Cryptrac updates.
                   </p>
                   <div className="space-y-3">
                     <input
                       type="email"
                       placeholder="Enter your email"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7f5efd] focus:border-transparent"
+                      className="w-full px-3 py-3 md:py-2 text-base md:text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7f5efd] focus:border-transparent h-12 md:h-10"
                     />
                     <Button className="w-full" size="sm">
                       Subscribe
                     </Button>
                   </div>
-                  <p className="font-phonic text-xs font-normal text-gray-500 mt-2">
+                  <p className="font-phonic text-sm md:text-xs font-normal text-gray-500 mt-2">
                     No spam. Unsubscribe at any time.
                   </p>
                 </CardContent>
@@ -341,26 +341,26 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
               {/* Quick Links */}
               <Card className="shadow-lg border-l-4 border-[#c4b5fd]">
                 <CardHeader className="bg-gradient-to-r from-[#faf9ff]/40 to-transparent">
-                  <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                  <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                     <ChevronRight className="h-5 w-5 text-[#c4b5fd]" />
                     Quick Links
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Link href="/merchant/onboarding" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
-                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Get Started</span>
+                  <Link href="/merchant/onboarding" className="flex items-center justify-between p-3 md:p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group min-h-[44px] md:min-h-0">
+                    <span className="font-phonic text-base md:text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Get Started</span>
                     <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
-                  <Link href="/smart-terminal" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
-                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Smart Terminal</span>
+                  <Link href="/smart-terminal" className="flex items-center justify-between p-3 md:p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group min-h-[44px] md:min-h-0">
+                    <span className="font-phonic text-base md:text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Smart Terminal</span>
                     <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
-                  <Link href="/security" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
-                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Security</span>
+                  <Link href="/security" className="flex items-center justify-between p-3 md:p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group min-h-[44px] md:min-h-0">
+                    <span className="font-phonic text-base md:text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Security</span>
                     <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
-                  <Link href="/contact" className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group">
-                    <span className="font-phonic text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Contact Support</span>
+                  <Link href="/contact" className="flex items-center justify-between p-3 md:p-2 rounded-lg hover:bg-[#f5f3ff]/30 transition-colors group min-h-[44px] md:min-h-0">
+                    <span className="font-phonic text-base md:text-sm font-normal text-gray-700 group-hover:text-[#7f5efd]">Contact Support</span>
                     <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#7f5efd]" />
                   </Link>
                 </CardContent>
@@ -373,10 +373,10 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
       {/* Call to Action */}
       <section className="bg-gradient-to-r from-[#7f5efd] to-[#6547e8] py-16">
         <div className="container-wide text-center">
-          <h2 className="font-phonic text-3xl font-normal text-white mb-4">
+          <h2 className="font-phonic text-2xl md:text-3xl font-normal text-white mb-4">
             Ready to Accept Cryptocurrency Payments?
           </h2>
-          <p className="font-capsule text-lg font-normal text-white/80 mb-8 max-w-2xl mx-auto">
+          <p className="font-capsule text-base md:text-lg font-normal text-white/80 mb-8 max-w-2xl mx-auto px-4 md:px-0">
             Join thousands of merchants using Cryptrac to accept Bitcoin, Ethereum, and other cryptocurrencies securely.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -405,7 +405,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                 © 2025 Cryptrac Solutions. All rights reserved.
               </p>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-4 md:gap-6">
               <Link href="/blog" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
                 Blog
               </Link>
