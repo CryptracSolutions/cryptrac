@@ -121,6 +121,7 @@ export default function TaxReportsPage() {
   // DECOUPLING: State for transactions displayed in the UI
   const [transactionsForDisplay, setTransactionsForDisplay] = useState<Transaction[]>([])
   const [displayLimit, setDisplayLimit] = useState(5)
+  const [showAllTransactions, setShowAllTransactions] = useState(false)
 
   // Transaction filtering states
   const [transactionStartDate, setTransactionStartDate] = useState<string>('')
@@ -639,6 +640,12 @@ export default function TaxReportsPage() {
     filterTransactionsByDate()
   }, [transactionStartDate, transactionEndDate, transactionStatus, transactionsForDisplay]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (showAllTransactions) {
+      setDisplayLimit(filteredTransactions.length)
+    }
+  }, [filteredTransactions.length, showAllTransactions])
+
   // Clear transaction date filters
   const clearTransactionFilters = () => {
     setTransactionStartDate('')
@@ -646,6 +653,7 @@ export default function TaxReportsPage() {
     setTransactionStatus('all')
     // DECOUPLING: Reset to the full list of transactions for display
     setFilteredTransactions(transactionsForDisplay)
+    setShowAllTransactions(false)
   }
 
 
@@ -700,6 +708,9 @@ export default function TaxReportsPage() {
       </div>
     );
   }
+
+  const showSelectValue = showAllTransactions ? 'all' : displayLimit.toString()
+  const transactionsToDisplay = showAllTransactions ? filteredTransactions : filteredTransactions.slice(0, displayLimit)
 
   return (
       <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
@@ -862,7 +873,18 @@ export default function TaxReportsPage() {
                       {filteredTransactions.length > 5 && (
                         <div className="flex flex-col gap-1 min-w-[8rem]">
                           <Label className="font-capsule text-xs text-gray-600">Show</Label>
-                          <Select value={displayLimit.toString()} onValueChange={(value) => setDisplayLimit(Number(value))}>
+                          <Select
+                            value={showSelectValue}
+                            onValueChange={(value) => {
+                              if (value === 'all') {
+                                setShowAllTransactions(true)
+                                setDisplayLimit(filteredTransactions.length)
+                              } else {
+                                setShowAllTransactions(false)
+                                setDisplayLimit(Number(value))
+                              }
+                            }}
+                          >
                             <SelectTrigger className="h-11 w-full bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                               <SelectValue />
                             </SelectTrigger>
@@ -870,7 +892,7 @@ export default function TaxReportsPage() {
                               <SelectItem value="5">5</SelectItem>
                               <SelectItem value="10">10</SelectItem>
                               <SelectItem value="50">50</SelectItem>
-                              <SelectItem value={filteredTransactions.length.toString()}>All</SelectItem>
+                              <SelectItem value="all">All</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -930,7 +952,7 @@ export default function TaxReportsPage() {
                           </td>
                         </tr>
                       ) : (
-                        filteredTransactions.slice(0, displayLimit).map((transaction) => (
+                        transactionsToDisplay.map((transaction) => (
                         <tr
                           key={transaction.id}
                           className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"

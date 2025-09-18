@@ -109,12 +109,13 @@ export function TransactionDetailModal({
   const normalizedNetworkLabel = transaction.blockchain_network
     ? transaction.blockchain_network.replace('-', ' ').replace(/_/g, ' ').toUpperCase()
     : null
+  const actionButtonClasses = 'flex items-center gap-2 bg-[#7f5efd] hover:bg-[#6b4fd8] text-white h-9 px-4 text-sm font-medium transition-all'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white border-[#7f5efd] shadow-xl rounded-xl p-0">
-        <DialogHeader className="px-5 pt-4 pb-3 border-b border-[#7f5efd]/20">
-          <div className="flex items-start justify-between">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-[#7f5efd]/20 pr-12">
+          <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <DialogTitle className="font-phonic text-xl font-bold text-gray-900 mb-1">
                 Transaction Details
@@ -337,13 +338,13 @@ export function TransactionDetailModal({
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex items-center justify-center gap-3 pt-2">
             {transaction.public_receipt_id && (
               <Button
                 onClick={openReceipt}
-                variant="outline"
-                className="border-[#7f5efd]/30 hover:border-[#7f5efd] text-gray-700 hover:text-[#7f5efd] hover:bg-[#7f5efd]/5 h-9 text-sm transition-all"
+                className={actionButtonClasses}
               >
+                <ExternalLink className="h-4 w-4" />
                 View Receipt
               </Button>
             )}
@@ -351,7 +352,7 @@ export function TransactionDetailModal({
             {transaction.tx_hash && transaction.blockchain_network && (
               <Button
                 onClick={openBlockchainExplorer}
-                className="flex items-center gap-2 bg-[#7f5efd] hover:bg-[#6b4fd8] text-white h-9 text-sm font-medium transition-all"
+                className={actionButtonClasses}
               >
                 <ExternalLink className="h-4 w-4" />
                 View on Blockchain Explorer
