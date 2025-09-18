@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ChevronRight, Shield, Users, Eye, Lock, Settings, AlertCircle, Clock, Phone, Mail, MapPin, FileText, Database, Globe } from "lucide-react";
+import { ChevronRight, Shield, Users, Eye, Lock, Settings, AlertCircle, Clock, Phone, Mail, MapPin, FileText, Database, Globe, Menu, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
@@ -11,6 +11,7 @@ import { LandingNav } from "@/app/components/layout/landing-nav";
 
 export default function PrivacyPolicy() {
   const [activeSection, setActiveSection] = useState<string>("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const effectiveDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const sections = useMemo(() => [
@@ -66,19 +67,19 @@ export default function PrivacyPolicy() {
       <LandingNav />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-16">
-        <div className="container-wide relative z-10">
+      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-12 md:py-16">
+        <div className="container-wide relative z-10 px-4 md:px-6">
           <div className="text-center">
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Legal Documentation
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl md:text-4xl lg:text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Privacy Policy
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto px-4">
               Learn how Cryptrac protects your privacy and handles your personal information
             </p>
-            <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 mt-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>Effective: {effectiveDate}</span>
@@ -93,7 +94,57 @@ export default function PrivacyPolicy() {
         </div>
       </section>
 
-      <div className="container-wide flex gap-8 relative py-8">
+      {/* Mobile Navigation Toggle */}
+      <div className="lg:hidden sticky top-16 z-40 bg-white border-b">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50"
+        >
+          <span className="font-phonic text-base font-normal">Table of Contents</span>
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Navigation Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-white">
+          <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+            <h2 className="font-phonic text-lg font-normal text-gray-900">Table of Contents</h2>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <nav className="overflow-y-auto h-full pb-20">
+            <div className="px-4 py-4 space-y-2">
+              {sections.map((section) => {
+                const Icon = section.icon;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => {
+                      scrollToSection(section.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+                      activeSection === section.id
+                        ? 'bg-[#f5f3ff] text-[#7f5efd]'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-phonic text-base font-normal">{section.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
+      )}
+
+      <div className="container-wide flex gap-8 relative py-4 md:py-8 px-4 md:px-6">
         {/* Sidebar Navigation */}
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
@@ -115,7 +166,7 @@ export default function PrivacyPolicy() {
                       }`}
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-left">{section.title}</span>
+                      <span className="text-left text-sm">{section.title}</span>
                     </button>
                   );
                 })}
@@ -125,17 +176,17 @@ export default function PrivacyPolicy() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-4xl">
+        <main className="flex-1 max-w-4xl w-full">
           <Card className="shadow-xl border-0">
-            <CardContent className="p-8 md:p-12">
+            <CardContent className="p-4 md:p-8 lg:p-12">
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Shield className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Shield className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     1. Introduction
                   </h2>
-                  <div className="bg-[#f5f3ff] border-l-4 border-[#7f5efd] p-6 rounded-r-lg mb-6">
+                  <div className="bg-[#f5f3ff] border-l-4 border-[#7f5efd] p-4 md:p-6 rounded-r-lg mb-6">
                     <p className="font-phonic text-base font-normal text-gray-900 mb-2">
                       Protecting Your Privacy is Our Priority
                     </p>
@@ -161,8 +212,8 @@ export default function PrivacyPolicy() {
 
                 {/* Section 2: Information We Collect */}
                 <section id="information-collected" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Database className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Database className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     2. Information We Collect
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -171,8 +222,8 @@ export default function PrivacyPolicy() {
                   
                   <div className="space-y-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Account and Profile Information</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Account and Profile Information</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Collected when you register for a merchant account or interact with our Service:</p>
@@ -198,8 +249,8 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-gray-200">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Financial and Payment Information</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Financial and Payment Information</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Essential for our cryptocurrency payment processing services:</p>
@@ -221,7 +272,7 @@ export default function PrivacyPolicy() {
                             <span>Payment confirmation data from blockchain networks</span>
                           </li>
                         </ul>
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
                           <p className="font-phonic text-xs font-normal text-amber-900">
                             <strong>Important:</strong> We do not store private keys or have access to your cryptocurrency wallets beyond the addresses you provide.
                           </p>
@@ -230,8 +281,8 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-gray-200">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Transaction Data</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Transaction Data</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Comprehensive records of all payment activities:</p>
@@ -257,8 +308,8 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-gray-200">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Technical Information</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Technical Information</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Automatically collected to ensure proper functionality and security:</p>
@@ -289,8 +340,8 @@ export default function PrivacyPolicy() {
 
                 {/* Section 3: How We Use Your Information */}
                 <section id="how-we-use" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Settings className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Settings className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     3. How We Use Your Information
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -299,8 +350,8 @@ export default function PrivacyPolicy() {
                   
                   <div className="space-y-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Service Provision and Operation</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Service Provision and Operation</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Our primary use of your information:</p>
@@ -326,7 +377,7 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-red-200 bg-red-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="text-lg text-red-900">Security and Fraud Prevention</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -353,7 +404,7 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-blue-200 bg-blue-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="text-lg text-blue-900">Compliance and Legal Obligations</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -380,7 +431,7 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-green-200 bg-green-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="text-lg text-green-900">Service Improvement and Development</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -412,8 +463,8 @@ export default function PrivacyPolicy() {
 
                 {/* Section 4: Information Sharing and Disclosure */}
                 <section id="information-sharing" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Users className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Users className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     4. Information Sharing and Disclosure
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -422,13 +473,13 @@ export default function PrivacyPolicy() {
                   
                   <div className="space-y-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Service Providers and Business Partners</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Service Providers and Business Partners</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <p className="font-capsule text-base font-normal text-gray-700">Limited access to your information as necessary to support our operations:</p>
                         
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Card className="border-gray-200">
                             <CardHeader className="pb-3">
                               <CardTitle className="font-phonic text-sm font-normal text-gray-900">NOWPayments</CardTitle>
@@ -472,7 +523,7 @@ export default function PrivacyPolicy() {
                           </Card>
                         </div>
                         
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
                           <p className="font-phonic text-xs font-normal text-amber-900">
                             <strong>Security:</strong> Each service provider is bound by contractual obligations to protect your information and use it only for authorized purposes.
                           </p>
@@ -481,7 +532,7 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-blue-200 bg-blue-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="font-phonic text-2xl font-normal text-blue-900">Legal and Regulatory Disclosures</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -513,17 +564,17 @@ export default function PrivacyPolicy() {
 
                 {/* Section 5: Data Security and Protection */}
                 <section id="data-security" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Lock className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Lock className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     5. Data Security and Protection
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     Protecting your information is a fundamental responsibility that we take seriously. We implement comprehensive security measures designed to safeguard your data against unauthorized access, alteration, disclosure, or destruction.
                   </p>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card className="border-green-200 bg-green-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="font-phonic text-2xl font-normal text-green-900">Technical Safeguards</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -549,7 +600,7 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-blue-200 bg-blue-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="font-phonic text-2xl font-normal text-blue-900">Administrative Safeguards</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -586,18 +637,18 @@ export default function PrivacyPolicy() {
 
                 {/* Section 6: Your Privacy Rights and Choices */}
                 <section id="privacy-rights" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Eye className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Eye className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     6. Your Privacy Rights and Choices
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     We believe that you should have control over your personal information, and we provide several mechanisms for you to exercise your privacy rights and manage how your information is used.
                   </p>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Access and Portability Rights</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Access and Portability Rights</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Request information about the personal data we have collected:</p>
@@ -619,8 +670,8 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-gray-200">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Correction and Update Rights</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Correction and Update Rights</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Ensure your personal information is accurate and up-to-date:</p>
@@ -642,8 +693,8 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-gray-200">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Deletion Rights</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Deletion Rights</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Request deletion of your personal information:</p>
@@ -665,8 +716,8 @@ export default function PrivacyPolicy() {
                     </Card>
 
                     <Card className="border-gray-200">
-                      <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Communication Preferences</CardTitle>
+                      <CardHeader className="pb-3 md:pb-4">
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Communication Preferences</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700">Manage how we communicate with you:</p>
@@ -693,8 +744,8 @@ export default function PrivacyPolicy() {
 
                 {/* Section 7: International Data Transfers */}
                 <section id="international-transfers" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Globe className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Globe className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     7. International Data Transfers and Processing
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -729,17 +780,17 @@ export default function PrivacyPolicy() {
 
                 {/* Section 8: Data Retention and Deletion */}
                 <section id="data-retention" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Clock className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Clock className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     8. Data Retention and Deletion
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     We retain your information only as long as necessary to provide our services, comply with legal obligations, and protect our legitimate interests. Our data retention practices are designed to balance your privacy rights with our operational and legal requirements.
                   </p>
                   
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="border-blue-200 bg-blue-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="font-phonic text-2xl font-normal text-blue-900">Account Information</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
@@ -754,7 +805,7 @@ export default function PrivacyPolicy() {
                     </Card>
                     
                     <Card className="border-green-200 bg-green-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="font-phonic text-2xl font-normal text-green-900">Transaction Data</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
@@ -769,7 +820,7 @@ export default function PrivacyPolicy() {
                     </Card>
                     
                     <Card className="border-purple-200 bg-purple-50">
-                      <CardHeader>
+                      <CardHeader className="pb-3 md:pb-4">
                         <CardTitle className="font-phonic text-2xl font-normal text-purple-900">Communication Data</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
@@ -789,8 +840,8 @@ export default function PrivacyPolicy() {
 
                 {/* Section 9: Children's Privacy */}
                 <section id="children-privacy" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Users className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Users className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     9. Children&apos;s Privacy
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -820,8 +871,8 @@ export default function PrivacyPolicy() {
 
                 {/* Section 10: Changes to This Policy */}
                 <section id="policy-changes" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     10. Changes to This Privacy Policy
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -831,7 +882,7 @@ export default function PrivacyPolicy() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Notification Methods</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Notification Methods</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
@@ -853,7 +904,7 @@ export default function PrivacyPolicy() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Your Rights</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Your Rights</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
@@ -879,8 +930,8 @@ export default function PrivacyPolicy() {
 
                 {/* Section 11: Contact Information */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Phone className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Phone className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     11. Contact Information and Privacy Support
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -888,10 +939,10 @@ export default function PrivacyPolicy() {
                   </p>
                   
                   <Card className="border-[#7f5efd]/20 bg-gradient-to-br from-[#f5f3ff] to-white">
-                    <CardHeader>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Cryptrac Solutions</CardTitle>
+                    <CardHeader className="pb-3 md:pb-4">
+                      <CardTitle className="font-phonic text-2xl md:text-3xl font-normal text-gray-900">Cryptrac Solutions</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 md:space-y-6">
                       <div className="flex items-center gap-3">
                         <Mail className="h-5 w-5 text-[#7f5efd]" />
                         <div>
@@ -933,8 +984,8 @@ export default function PrivacyPolicy() {
 
                 {/* Final Agreement Box */}
                 <Card className="border-[#7f5efd] bg-gradient-to-br from-[#f5f3ff] to-white">
-                  <CardContent className="pt-8 pb-8 text-center">
-                    <h3 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
+                  <CardContent className="pt-6 pb-6 md:pt-8 md:pb-8 text-center px-4">
+                    <h3 className="font-phonic text-2xl md:text-3xl font-normal text-gray-900 mb-4">
                       Privacy Policy Acknowledgment
                     </h3>
                     <p className="font-capsule text-base font-normal text-gray-700 mb-6">
@@ -961,26 +1012,26 @@ export default function PrivacyPolicy() {
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 mt-16">
-        <div className="container-wide">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4">
+        <div className="container-wide px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-left">
               <Logo variant="white" size="sm" />
-              <Separator orientation="vertical" className="h-6 bg-gray-700" />
+              <Separator orientation="vertical" className="hidden md:block h-6 bg-gray-700" />
               <p className="font-phonic text-sm font-normal text-gray-400">
                 © 2025 Cryptrac Solutions. All rights reserved.
               </p>
             </div>
-            <div className="flex items-center gap-6">
-              <Link href="/privacy" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+              <Link href="/privacy" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors px-2 py-2 md:px-0 md:py-0">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
+              <Link href="/terms" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors px-2 py-2 md:px-0 md:py-0">
                 Terms of Service
               </Link>
-              <Link href="/cookies" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
+              <Link href="/cookies" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors px-2 py-2 md:px-0 md:py-0">
                 Cookie Policy
               </Link>
-              <Link href="/contact" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
+              <Link href="/contact" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors px-2 py-2 md:px-0 md:py-0">
                 Contact
               </Link>
             </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Smartphone, Shield, Zap, CheckCircle } from "lucide-react";
+import { Smartphone, Shield, Zap, CheckCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { LandingNav } from "@/app/components/layout/landing-nav";
@@ -10,16 +10,6 @@ export default function SmartTerminalInfo() {
       <LandingNav />
       
       <div className="container-wide py-16">
-        {/* Back Button */}
-        <div className="mb-8">
-          <Button variant="ghost" asChild className="text-gray-600 hover:text-[#7f5efd]">
-            <Link href="/" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </Link>
-          </Button>
-        </div>
-
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#7c3aed] rounded-2xl flex items-center justify-center mx-auto mb-8">

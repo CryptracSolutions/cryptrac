@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, Shield, CreditCard, Users, AlertCircle, Ban, Lock, Scale, Zap, Phone, Mail, MapPin, Clock } from "lucide-react";
+import { ChevronRight, FileText, Shield, CreditCard, Users, AlertCircle, Ban, Lock, Scale, Zap, Phone, Mail, MapPin, Clock, Menu, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Logo } from "@/app/components/ui/logo";
 import { Separator } from "@/app/components/ui/separator";
@@ -11,6 +11,7 @@ import { LandingNav } from "@/app/components/layout/landing-nav";
 
 export default function TermsOfService() {
   const [activeSection, setActiveSection] = useState<string>("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const effectiveDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const sections = useMemo(() => [
@@ -71,19 +72,19 @@ export default function TermsOfService() {
       <LandingNav />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-16">
-        <div className="container-wide relative z-10">
+      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-12 md:py-16">
+        <div className="container-wide relative z-10 px-4 md:px-6">
           <div className="text-center">
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Legal Documentation
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl md:text-4xl lg:text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Terms of Service
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto px-4">
               Please read these terms carefully before using Cryptrac&apos;s cryptocurrency payment processing platform
             </p>
-            <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 mt-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>Effective: {effectiveDate}</span>
@@ -98,7 +99,57 @@ export default function TermsOfService() {
         </div>
       </section>
 
-      <div className="container-wide flex gap-8 relative py-8">
+      {/* Mobile Navigation Toggle */}
+      <div className="lg:hidden sticky top-16 z-40 bg-white border-b">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50"
+        >
+          <span className="font-phonic text-base font-normal">Table of Contents</span>
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Navigation Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-white">
+          <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+            <h2 className="font-phonic text-lg font-normal text-gray-900">Table of Contents</h2>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <nav className="overflow-y-auto h-full pb-20">
+            <div className="px-4 py-4 space-y-2">
+              {sections.map((section) => {
+                const Icon = section.icon;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => {
+                      scrollToSection(section.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+                      activeSection === section.id
+                        ? 'bg-[#f5f3ff] text-[#7f5efd]'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-phonic text-base font-normal">{section.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
+      )}
+
+      <div className="container-wide flex gap-8 relative py-4 md:py-8 px-4 md:px-6">
         {/* Sidebar Navigation */}
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
@@ -120,7 +171,7 @@ export default function TermsOfService() {
                       }`}
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-left">{section.title}</span>
+                      <span className="text-left text-sm">{section.title}</span>
                     </button>
                   );
                 })}
@@ -130,17 +181,17 @@ export default function TermsOfService() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-4xl">
+        <main className="flex-1 max-w-4xl w-full">
           <Card className="shadow-xl border-0">
-            <CardContent className="p-8 md:p-12">
+            <CardContent className="p-4 md:p-8 lg:p-12">
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <FileText className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <FileText className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     1. Introduction and Acceptance of Terms
                   </h2>
-                  <div className="bg-[#f5f3ff] border-l-4 border-[#7f5efd] p-6 rounded-r-lg mb-6">
+                  <div className="bg-[#f5f3ff] border-l-4 border-[#7f5efd] p-4 md:p-6 rounded-r-lg mb-6">
                     <p className="font-phonic text-base font-normal text-gray-900 mb-2">
                       Welcome to Cryptrac, operated by Cryptrac Solutions
                     </p>
@@ -163,18 +214,18 @@ export default function TermsOfService() {
 
                 {/* Section 2: Service Description */}
                 <section id="service" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Zap className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Zap className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     2. Description of Service
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     Cryptrac is a non-custodial cryptocurrency payment processing platform that facilitates transactions between merchants and customers using various cryptocurrencies including Bitcoin (BTC), Ethereum (ETH), Solana (SOL), TRON (TRX), BNB, and associated stablecoins such as USDT, USDC, and DAI.
                   </p>
                   
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <Card className="border-gray-200">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Merchant Features</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Merchant Features</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
@@ -200,7 +251,7 @@ export default function TermsOfService() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Customer Features</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Customer Features</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
@@ -236,8 +287,8 @@ export default function TermsOfService() {
 
                 {/* Section 3: Eligibility */}
                 <section id="eligibility" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Users className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Users className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     3. Eligibility and Account Registration
                   </h2>
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -276,15 +327,15 @@ export default function TermsOfService() {
 
                 {/* Section 4: Merchant Responsibilities */}
                 <section id="merchant" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Shield className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Shield className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     4. Merchant Responsibilities and Obligations
                   </h2>
                   
                   <div className="space-y-6">
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Wallet Address Management</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Wallet Address Management</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="font-capsule text-base font-normal text-gray-700">
@@ -295,7 +346,7 @@ export default function TermsOfService() {
 
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Legal Compliance</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Legal Compliance</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <ul className="space-y-2 text-gray-700">
@@ -321,7 +372,7 @@ export default function TermsOfService() {
 
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Product & Service Accuracy</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Product & Service Accuracy</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="font-capsule text-base font-normal text-gray-700">
@@ -342,8 +393,8 @@ export default function TermsOfService() {
 
                 {/* Section 5: Customer Obligations */}
                 <section id="customer" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <CreditCard className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <CreditCard className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     5. Customer Payment Process and Obligations
                   </h2>
                   
@@ -382,15 +433,15 @@ export default function TermsOfService() {
 
                 {/* Section 6: Fees */}
                 <section id="fees" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Scale className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Scale className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     6. Fees and Payment Processing
                   </h2>
                   
-                  <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <Card className="border-[#7f5efd]/20">
                       <CardHeader className="bg-[#f5f3ff]">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Platform Fee</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Platform Fee</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <div className="font-phonic text-3xl font-normal text-[#7f5efd] mb-2">$19/month</div>
@@ -401,7 +452,7 @@ export default function TermsOfService() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Gateway Fee</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Gateway Fee</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <div className="font-phonic text-3xl font-normal text-gray-900 mb-2">0.5-1%</div>
@@ -413,7 +464,7 @@ export default function TermsOfService() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Network Fee</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Network Fee</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <div className="font-phonic text-3xl font-normal text-gray-900 mb-2">Variable</div>
@@ -432,8 +483,8 @@ export default function TermsOfService() {
 
                 {/* Section 7: Prohibited Uses */}
                 <section id="prohibited" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Ban className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Ban className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     7. Prohibited Uses and Conduct
                   </h2>
                   
@@ -478,8 +529,8 @@ export default function TermsOfService() {
 
                 {/* Section 8: Intellectual Property */}
                 <section id="intellectual" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Lock className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Lock className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     8. Intellectual Property Rights
                   </h2>
                   
@@ -516,8 +567,8 @@ export default function TermsOfService() {
 
                 {/* Section 9: Privacy */}
                 <section id="privacy" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Shield className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Shield className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     9. Privacy and Data Protection
                   </h2>
                   
@@ -559,8 +610,8 @@ export default function TermsOfService() {
 
                 {/* Section 10: Liability */}
                 <section id="liability" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     10. Limitation of Liability and Disclaimers
                   </h2>
                   
@@ -594,8 +645,8 @@ export default function TermsOfService() {
 
                 {/* Section 11: Indemnification */}
                 <section id="indemnification" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Shield className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Shield className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     11. Indemnification
                   </h2>
                   
@@ -631,15 +682,15 @@ export default function TermsOfService() {
 
                 {/* Section 12: Termination */}
                 <section id="termination" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     12. Termination
                   </h2>
                   
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">We May Terminate</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">We May Terminate</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="text-sm text-gray-600 mb-2">Immediately for:</p>
@@ -654,7 +705,7 @@ export default function TermsOfService() {
                     
                     <Card className="border-gray-200">
                       <CardHeader className="bg-gray-50">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">You May Terminate</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">You May Terminate</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="text-sm text-gray-600 mb-2">At any time by:</p>
@@ -676,8 +727,8 @@ export default function TermsOfService() {
 
                 {/* Section 13: Dispute Resolution */}
                 <section id="dispute" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Scale className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Scale className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     13. Dispute Resolution and Governing Law
                   </h2>
                   
@@ -722,8 +773,8 @@ export default function TermsOfService() {
 
                 {/* Section 14: Force Majeure */}
                 <section id="force" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     14. Force Majeure
                   </h2>
                   
@@ -731,7 +782,7 @@ export default function TermsOfService() {
                     We shall not be liable for any failure or delay in performance due to circumstances beyond our reasonable control, including but not limited to:
                   </p>
                   
-                  <div className="grid md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <Card className="border-gray-200">
                       <CardContent className="pt-4 pb-4">
                         <p className="text-sm text-center text-gray-600">Natural disasters</p>
@@ -769,8 +820,8 @@ export default function TermsOfService() {
 
                 {/* Section 15: General Provisions */}
                 <section id="general" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <FileText className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <FileText className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     15. Severability and Entire Agreement
                   </h2>
                   
@@ -808,8 +859,8 @@ export default function TermsOfService() {
 
                 {/* Section 16: Contact */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Phone className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
+                    <Phone className="h-6 w-6 md:h-8 md:w-8 text-[#7f5efd]" />
                     16. Contact Information
                   </h2>
                   
@@ -818,10 +869,10 @@ export default function TermsOfService() {
                   </p>
                   
                   <Card className="border-[#7f5efd]/20 bg-gradient-to-br from-[#f5f3ff] to-white">
-                    <CardHeader>
-                      <CardTitle className="font-phonic text-3xl font-normal text-gray-900">Cryptrac Solutions</CardTitle>
+                    <CardHeader className="pb-3 md:pb-4">
+                      <CardTitle className="font-phonic text-2xl md:text-3xl font-normal text-gray-900">Cryptrac Solutions</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 md:space-y-6">
                       <div className="flex items-center gap-3">
                         <Mail className="h-5 w-5 text-[#7f5efd]" />
                         <div>
@@ -863,8 +914,8 @@ export default function TermsOfService() {
 
                 {/* Final Agreement Box */}
                 <Card className="border-[#7f5efd] bg-gradient-to-br from-[#f5f3ff] to-white">
-                  <CardContent className="pt-8 pb-8 text-center">
-                    <h3 className="font-phonic text-3xl font-normal text-gray-900 mb-4">
+                  <CardContent className="pt-6 pb-6 md:pt-8 md:pb-8 text-center px-4">
+                    <h3 className="font-phonic text-2xl md:text-3xl font-normal text-gray-900 mb-4">
                       Agreement Acknowledgment
                     </h3>
                     <p className="font-capsule text-base font-normal text-gray-700 mb-6">
@@ -891,23 +942,23 @@ export default function TermsOfService() {
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 mt-16">
-        <div className="container-wide">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4">
+        <div className="container-wide px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-left">
               <Logo variant="white" size="sm" />
-              <Separator orientation="vertical" className="h-6 bg-gray-700" />
+              <Separator orientation="vertical" className="hidden md:block h-6 bg-gray-700" />
               <p className="font-phonic text-sm font-normal text-gray-400">
                 © 2025 Cryptrac Solutions. All rights reserved.
               </p>
             </div>
-            <div className="flex items-center gap-6">
-              <Link href="/privacy" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+              <Link href="/privacy" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors px-2 py-2 md:px-0 md:py-0">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
+              <Link href="/terms" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors px-2 py-2 md:px-0 md:py-0">
                 Terms of Service
               </Link>
-              <Link href="/contact" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors">
+              <Link href="/contact" className="font-phonic text-sm font-normal text-gray-400 hover:text-white transition-colors px-2 py-2 md:px-0 md:py-0">
                 Contact
               </Link>
             </div>

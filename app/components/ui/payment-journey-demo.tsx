@@ -234,13 +234,13 @@ function QRCodeStage() {
       </div>
 
       {/* Amount */}
-      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-3 rounded-lg border border-purple-200 text-center">
+      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-2 rounded-lg border border-purple-200 text-center">
         <p className="text-xs text-gray-600 mb-1">Send exactly</p>
         <p className="text-lg font-bold text-[#7f5efd]">0.00748 BTC</p>
       </div>
 
       {/* Address - Full Address with Gradient */}
-      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-3 rounded-lg border border-purple-200 relative">
+      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-2 rounded-lg border border-purple-200 relative">
         <div className="text-center">
           <p className="text-xs text-gray-600 mb-1">Wallet Address</p>
           <p className="text-xs font-mono text-[#7f5efd] font-medium break-all leading-relaxed">
