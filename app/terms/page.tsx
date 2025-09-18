@@ -114,7 +114,12 @@ export default function TermsOfService() {
                 return (
                   <button
                     key={section.id}
-                    onClick={() => scrollToSection(section.id)}
+                    onClick={(e) => {
+                      scrollToSection(section.id);
+                      // Close the details dropdown
+                      const details = e.currentTarget.closest('details');
+                      if (details) details.open = false;
+                    }}
                     className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
                       activeSection === section.id
                         ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'

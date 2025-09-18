@@ -94,7 +94,7 @@ export default function PrivacyPolicy() {
       </section>
 
       {/* Mobile Navigation Dropdown */}
-      <div className="lg:hidden w-full mb-4 px-4 md:px-6">
+      <div className="lg:hidden w-full mb-4 px-4 md:px-6 sticky top-16 z-30 bg-white py-2 border-b border-gray-100">
         <details className="group">
           <summary className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 min-h-[44px]">
             <span className="font-phonic text-base font-normal text-gray-900">Table of Contents</span>
@@ -109,7 +109,12 @@ export default function PrivacyPolicy() {
                 return (
                   <button
                     key={section.id}
-                    onClick={() => scrollToSection(section.id)}
+                    onClick={(e) => {
+                      scrollToSection(section.id);
+                      // Close the details dropdown
+                      const details = e.currentTarget.closest('details');
+                      if (details) details.open = false;
+                    }}
                     className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
                       activeSection === section.id
                         ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
