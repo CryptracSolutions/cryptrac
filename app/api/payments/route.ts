@@ -111,8 +111,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
+    const dateRange = searchParams.get('date_range') || '';
 
-    console.log('Query params:', { search, status, page, limit });
+    console.log('Query params:', { search, status, page, limit, dateRange });
 
     // Build query using service role (bypasses RLS)
     let query = serviceSupabase
@@ -132,6 +133,35 @@ export async function GET(request: NextRequest) {
     // Apply search filter
     if (search) {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+
+    // Apply date range filter
+    if (dateRange) {
+      const now = new Date();
+      let startDate: Date | null = null;
+      let endDate: Date | null = new Date();
+
+      if (dateRange === 'today') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (dateRange === '7d') {
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 7);
+      } else if (dateRange === '30d') {
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 30);
+      } else if (dateRange === 'this_month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (dateRange === 'last_month') {
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+      if (endDate) {
+        query = query.lt('created_at', endDate.toISOString());
+      }
     }
 
     // Apply pagination
@@ -183,7 +213,7 @@ export async function GET(request: NextRequest) {
       : paymentLinksWithStatus;
 
     // Get total count for pagination using service role
-    const { data: allLinks, error: countError } = await serviceSupabase
+    let countQuery = serviceSupabase
       .from('payment_links')
       .select(`
         *,
@@ -195,6 +225,37 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('merchant_id', merchant.id);
+
+    // Apply same date range to count query
+    if (dateRange) {
+      const now = new Date();
+      let startDate: Date | null = null;
+      let endDate: Date | null = new Date();
+
+      if (dateRange === 'today') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (dateRange === '7d') {
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 7);
+      } else if (dateRange === '30d') {
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 30);
+      } else if (dateRange === 'this_month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (dateRange === 'last_month') {
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+
+      if (startDate) {
+        countQuery = countQuery.gte('created_at', startDate.toISOString());
+      }
+      if (endDate) {
+        countQuery = countQuery.lt('created_at', endDate.toISOString());
+      }
+    }
+
+    const { data: allLinks, error: countError } = await countQuery;
 
     if (countError) {
       console.error('Count error:', countError);
@@ -235,13 +296,43 @@ export async function GET(request: NextRequest) {
     // Calculate payment statistics
     const { data: payments, error: paymentsError } = await serviceSupabase
       .from('transactions')
-      .select('status, amount, currency')
+      .select('status, amount, currency, created_at')
       .eq('merchant_id', merchant.id)
       .in('status', ['confirmed', 'finished']);
 
     if (!paymentsError && payments) {
-      statistics.total_payments = payments.length;
-      statistics.total_revenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+      let filteredPayments = payments;
+      if (dateRange) {
+        const now = new Date();
+        let startDate: Date | null = null;
+        let endDate: Date | null = new Date();
+
+        if (dateRange === 'today') {
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        } else if (dateRange === '7d') {
+          startDate = new Date(now);
+          startDate.setDate(startDate.getDate() - 7);
+        } else if (dateRange === '30d') {
+          startDate = new Date(now);
+          startDate.setDate(startDate.getDate() - 30);
+        } else if (dateRange === 'this_month') {
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        } else if (dateRange === 'last_month') {
+          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        }
+
+        filteredPayments = payments.filter(p => {
+          const createdAt = p.created_at ? new Date(p.created_at) : null;
+          if (!createdAt) return false;
+          const afterStart = startDate ? createdAt >= startDate : true;
+          const beforeEnd = endDate ? createdAt < endDate : true;
+          return afterStart && beforeEnd;
+        });
+      }
+
+      statistics.total_payments = filteredPayments.length;
+      statistics.total_revenue = filteredPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
     }
 
     console.log('Calculated statistics:', statistics);

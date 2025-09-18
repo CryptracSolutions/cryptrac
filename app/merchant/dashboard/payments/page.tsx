@@ -104,15 +104,16 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateRange, setDateRange] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
   const notifiedLinksRef = useRef<Set<string>>(new Set());
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    links: true,
-    pos: true,
-    subscriptions: true,
+    links: false,
+    pos: false,
+    subscriptions: false,
   });
 
   const toggleSection = (key: string) =>
@@ -143,7 +144,8 @@ export default function PaymentsPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '50',
-        ...(statusFilter !== 'all' && { status: statusFilter })
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(dateRange !== 'all' && { date_range: dateRange })
       });
 
       console.log('Making authenticated API request...');
@@ -195,7 +197,7 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, statusFilter, router]);
+  }, [currentPage, statusFilter, dateRange, router]);
 
   useEffect(() => {
     fetchPaymentLinks();
@@ -583,7 +585,7 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.total_links}</div>
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.total_links}</div>
             <div className="flex items-center gap-1 text-gray-600">
               <BarChart3 className="h-3 w-3" />
               <span className="font-capsule text-xs">All payment links</span>
@@ -599,7 +601,7 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.active_links}</div>
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.active_links}</div>
             <div className="flex items-center gap-1 text-gray-600">
               <Zap className="h-3 w-3" />
               <span className="font-capsule text-xs">Accepting payments</span>
@@ -615,7 +617,7 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.completed_links}</div>
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.completed_links}</div>
             <div className="flex items-center gap-1 text-gray-600">
               <CheckCircle className="h-3 w-3" />
               <span className="font-capsule text-xs">Finished or max uses</span>
@@ -631,7 +633,7 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.expired_links}</div>
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.expired_links}</div>
             <div className="flex items-center gap-1 text-gray-600">
               <Clock className="h-3 w-3" />
               <span className="font-capsule text-xs">Past expiry date</span>
@@ -647,7 +649,7 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-gray-900">{statistics.single_use_links}</div>
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.single_use_links}</div>
             <div className="flex items-center gap-1 text-gray-600">
               <Users className="h-3 w-3" />
               <span className="font-capsule text-xs">One-time payments</span>
@@ -663,7 +665,7 @@ export default function PaymentsPage() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-gray-900">
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">
               {formatCurrency(statistics.total_revenue)}
             </div>
             <div className="flex items-center gap-1 text-gray-600">
@@ -674,10 +676,10 @@ export default function PaymentsPage() {
         </Card>
       </div>
 
-      {/* Status Filter */}
-      <div className="flex justify-center">
+      {/* Filters */}
+      <div className="flex justify-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200" aria-label="Filter by status">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -686,6 +688,19 @@ export default function PaymentsPage() {
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="expired">Expired</SelectItem>
             <SelectItem value="paused">Paused</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={dateRange} onValueChange={setDateRange}>
+          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200" aria-label="Filter by date">
+            <SelectValue placeholder="Filter by date" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Dates</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="7d">Last 7 days</SelectItem>
+            <SelectItem value="30d">Last 30 days</SelectItem>
+            <SelectItem value="this_month">This month</SelectItem>
+            <SelectItem value="last_month">Last month</SelectItem>
           </SelectContent>
         </Select>
       </div>
