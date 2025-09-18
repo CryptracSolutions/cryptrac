@@ -116,22 +116,6 @@ export default function SupportedCryptocurrencies() {
                 />
               </div>
             </div>
-
-            {/* Trust Indicators */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 font-phonic text-base font-normal text-gray-600">
-              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
-                <Shield className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic text-base font-normal">Non-Custodial</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
-                <Zap className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic text-base font-normal">Instant Processing</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
-                <Globe className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic text-base font-normal">Global Support</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>

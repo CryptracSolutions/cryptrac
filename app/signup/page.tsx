@@ -133,7 +133,7 @@ export default function Signup() {
       </div>
 
       {/* Right Side - Content */}
-      <div className="flex-1 flex items-start justify-center p-8 pt-16">
+      <div className="flex-1 flex items-start justify-center p-4 md:p-8 pt-8 md:pt-16">
         <div className="w-full max-w-md space-y-6">
           {/* Logo and Header */}
           <div className="text-center">
@@ -144,7 +144,7 @@ export default function Signup() {
               </Link>
             </div>
             <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Welcome to the future of payments</h1>
-            <p className="font-capsule text-base text-gray-600 mb-6">
+            <p className="font-capsule text-base text-gray-600 mb-6 px-4">
               Join thousands of businesses already using Cryptrac to accept cryptocurrency payments from customers
             </p>
             <div className="flex justify-center">
@@ -162,7 +162,7 @@ export default function Signup() {
                 $19/month or $199/year after trial
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-8 pb-8">
+            <CardContent className="px-4 md:px-8 pb-8">
               <form onSubmit={handleSignup} className="space-y-6">
                 <Input
                   type="email"
@@ -197,7 +197,7 @@ export default function Signup() {
                   required
                 />
 
-                <div className="font-phonic text-sm text-gray-500">
+                <div className="font-phonic text-base text-gray-500">
                   Password must be at least 6 characters long
                 </div>
 
@@ -212,11 +212,11 @@ export default function Signup() {
               </form>
 
               <div className="mt-8 text-center">
-                <p className="font-phonic text-sm text-gray-600">
+                <p className="font-phonic text-base text-gray-600">
                   Already have an account?{' '}
-                  <Link 
-                    href="/login" 
-                    className="text-[#7f5efd] hover:text-[#7c3aed] font-phonic font-normal transition-colors"
+                  <Link
+                    href="/login"
+                    className="text-[#7f5efd] hover:text-[#7c3aed] font-phonic font-normal transition-colors inline-block py-1"
                   >
                     Sign in
                   </Link>
@@ -227,14 +227,14 @@ export default function Signup() {
 
 
           {/* Footer */}
-          <div className="text-center text-sm text-gray-500">
-            <p>
+          <div className="text-center text-base text-gray-500 px-4">
+            <p className="leading-relaxed">
               By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
+              <Link href="/terms" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors inline-block py-1">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
+              <Link href="/privacy" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors inline-block py-1">
                 Privacy Policy
               </Link>
             </p>

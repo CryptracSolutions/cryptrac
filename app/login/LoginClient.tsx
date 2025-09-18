@@ -116,7 +116,7 @@ export default function Login() {
       </div>
 
       {/* Right Side - Content */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md space-y-8">
           {/* Logo and Header */}
           <div className="text-center">
@@ -126,7 +126,7 @@ export default function Login() {
                 <span className="font-phonic text-xl leading-tight font-medium text-gray-900 tracking-tight">Cryptrac</span>
               </Link>
             </div>
-            <p className="font-capsule text-base text-gray-600">
+            <p className="font-capsule text-base text-gray-600 px-4">
               Sign in to your Cryptrac account to manage your crypto payments
             </p>
           </div>
@@ -139,7 +139,7 @@ export default function Login() {
                 Enter your credentials to access your dashboard
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-8 pb-8">
+            <CardContent className="px-4 md:px-8 pb-8">
               <form onSubmit={handleLogin} className="space-y-6">
                 <Input
                   type="email"
@@ -175,14 +175,12 @@ export default function Login() {
                 />
 
                 <div className="flex items-center justify-between">
-                  <div className="text-sm">
-                    <Link 
-                      href="/forgot-password" 
-                      className="font-phonic text-[#7f5efd] hover:text-[#7c3aed] font-normal transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+                  <Link
+                    href="/forgot-password"
+                    className="font-phonic text-base text-[#7f5efd] hover:text-[#7c3aed] font-normal transition-colors inline-block py-2"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
 
                 <Button 
@@ -196,11 +194,11 @@ export default function Login() {
               </form>
 
               <div className="mt-8 text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-base text-gray-600">
                   Don&apos;t have an account?{' '}
-                  <Link 
-                    href="/signup" 
-                    className="font-phonic text-[#7f5efd] hover:text-[#7c3aed] font-normal transition-colors"
+                  <Link
+                    href="/signup"
+                    className="font-phonic text-[#7f5efd] hover:text-[#7c3aed] font-normal transition-colors inline-block py-1"
                   >
                     Sign up for free
                   </Link>
@@ -210,14 +208,14 @@ export default function Login() {
           </Card>
 
           {/* Footer */}
-          <div className="text-center text-sm text-gray-500">
-            <p>
+          <div className="text-center text-base text-gray-500 px-4">
+            <p className="leading-relaxed">
               By signing in, you agree to our{' '}
-              <Link href="/terms" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
+              <Link href="/terms" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors inline-block py-1">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors">
+              <Link href="/privacy" className="text-[#7f5efd] hover:text-[#7c3aed] transition-colors inline-block py-1">
                 Privacy Policy
               </Link>
             </p>
