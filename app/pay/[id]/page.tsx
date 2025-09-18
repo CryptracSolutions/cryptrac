@@ -501,8 +501,8 @@ export default function PaymentPage() {
           </div>
           <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Error</h1>
           <p className="font-phonic text-base font-normal text-gray-600 mb-6">{error}</p>
-          <Button onClick={() => window.location.reload()} size="lg" className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button onClick={() => window.location.reload()} size="lg" className="font-phonic text-lg sm:text-base font-normal px-8 py-4 sm:py-3 min-h-[56px] sm:min-h-[48px] shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+            <RefreshCw className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
             Try Again
           </Button>
         </div>
@@ -528,11 +528,11 @@ export default function PaymentPage() {
   const needsExtra = !!(paymentData?.payin_extra_id && requiresExtraId(paymentData.pay_currency))
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 bg-gradient-to-br from-purple-50 via-white to-purple-50">
       <div className="w-full max-w-2xl">
-        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden">
+        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
-          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 pt-4">
+          <CardContent className="space-y-6 px-4 sm:px-6 md:px-8 py-6">
             {loading ? (
               <div className="text-center py-12">
                 <Loader2 className="h-12 w-12 animate-spin text-[#7f5efd] mx-auto mb-4" />
@@ -544,8 +544,8 @@ export default function PaymentPage() {
                 <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
                 <h1 className="text-2xl font-semibold text-gray-900 mb-4">Payment Error</h1>
                 <p className="text-base text-gray-600 mb-6">{error}</p>
-                <Button onClick={() => window.location.reload()} className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                <Button onClick={() => window.location.reload()} className="min-h-[48px] px-6 text-base bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+                  <RefreshCw className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
                   Try Again
                 </Button>
               </div>
@@ -558,15 +558,15 @@ export default function PaymentPage() {
             ) : (
               <>
                 {/* Header */}
-                <div className="text-center space-y-2">
-                  <h1 className="text-2xl font-semibold text-gray-900">{paymentLink.title}</h1>
+                <div className="text-center space-y-3">
+                  <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{paymentLink.title}</h1>
                   {paymentLink.description && (
                     <p className="text-base text-gray-600">{paymentLink.description}</p>
                   )}
                   {paymentLink.subscription_id && (
-                    <Badge className="bg-blue-100 text-blue-800">Recurring Invoice</Badge>
+                    <Badge className="bg-blue-100 text-blue-800 px-3 py-1 text-sm">Recurring Invoice</Badge>
                   )}
-                  <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                  <div className="flex items-center justify-center space-x-2 text-base text-gray-500">
                     <span>Powered by</span>
                     <span className="font-medium text-gray-900">{paymentLink.merchant.business_name}</span>
                   </div>
@@ -574,31 +574,31 @@ export default function PaymentPage() {
 
                 {/* Payment Details */}
                 {feeBreakdown && (
-                  <div className="bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-100" aria-live="polite">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ShoppingBag className="h-4 w-4 text-[#7f5efd]" />
-                      <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
+                  <div className="bg-gradient-to-br from-purple-50 to-white p-4 sm:p-5 rounded-xl border border-purple-100" aria-live="polite">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ShoppingBag className="h-5 w-5 text-[#7f5efd]" />
+                      <span className="text-sm sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
                     </div>
-                    <div className="space-y-1 text-sm">
+                    <div className="space-y-2 text-base sm:text-sm">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Subtotal</span>
                         <span className="font-semibold text-gray-900">${feeBreakdown.baseAmount.toFixed(2)}</span>
                       </div>
                       {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
                         <div className="flex justify-between items-center text-[#7f5efd]">
-                          <span>Tax</span>
-                          <span className="font-medium">+${feeBreakdown.taxAmount.toFixed(2)}</span>
+                          <span className="text-base sm:text-sm">Tax</span>
+                          <span className="font-medium text-base sm:text-sm">+${feeBreakdown.taxAmount.toFixed(2)}</span>
                         </div>
                       )}
                       {feeBreakdown.platformFee > 0 && (
                         <div className="flex justify-between items-center text-[#7f5efd]">
-                          <span>Gateway fee</span>
-                          <span className="font-medium">+${feeBreakdown.platformFee.toFixed(2)}</span>
+                          <span className="text-base sm:text-sm">Gateway fee</span>
+                          <span className="font-medium text-base sm:text-sm">+${feeBreakdown.platformFee.toFixed(2)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between items-center font-bold border-t border-purple-100 pt-1">
-                        <span className="text-gray-700">Total</span>
-                        <span className="text-[#7f5efd]">${feeBreakdown.customerTotal.toFixed(2)}</span>
+                      <div className="flex justify-between items-center font-bold border-t border-purple-100 pt-2 mt-2">
+                        <span className="text-gray-700 text-base sm:text-sm">Total</span>
+                        <span className="text-[#7f5efd] text-lg sm:text-base">${feeBreakdown.customerTotal.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -608,9 +608,9 @@ export default function PaymentPage() {
                   /* Currency Selection */
                   <div className="space-y-4">
                     {/* Network Selection */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Network className="h-4 w-4 text-[#7f5efd]" />
+                    <div className="space-y-3">
+                      <label className="text-base sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Network className="h-5 w-5 sm:h-4 sm:w-4 text-[#7f5efd]" />
                         Network
                       </label>
                       
@@ -646,7 +646,7 @@ export default function PaymentPage() {
                         
                         return (
                           <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                            <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
+                            <SelectTrigger className="w-full min-h-[48px] h-12 px-4 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md md:hover:scale-[1.02] text-gray-900 text-base">
                               <div className="flex items-center gap-2">
                                 {(() => {
                                   const iconClass = "h-4 w-4 text-[#7f5efd]"
@@ -732,9 +732,9 @@ export default function PaymentPage() {
                     </div>
                     
                     {/* Currency Selection */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Coins className="h-4 w-4 text-[#7f5efd]" />
+                    <div className="space-y-3">
+                      <label className="text-base sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Coins className="h-5 w-5 sm:h-4 sm:w-4 text-[#7f5efd]" />
                         Currency
                       </label>
                       {availableCurrencies.length === 0 ? (
@@ -744,7 +744,7 @@ export default function PaymentPage() {
                         </div>
                       ) : (
                         <Select value={selectedCurrency} onValueChange={(value) => setSelectedCurrency(value)}>
-                          <SelectTrigger className="w-full h-12 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] text-gray-900">
+                          <SelectTrigger className="w-full min-h-[48px] h-12 px-4 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md md:hover:scale-[1.02] text-gray-900 text-base">
                             {selectedCurrency ? (() => {
                               const current = availableCurrencies.find(c => c.code === selectedCurrency)
                               const displayName = current?.name || getCurrencyDisplayName(selectedCurrency)
@@ -842,10 +842,10 @@ export default function PaymentPage() {
                     </div>
                     
                     {selectedCurrency && (
-                      <Button 
-                        onClick={createPayment} 
+                      <Button
+                        onClick={createPayment}
                         disabled={creatingPayment}
-                        className="w-full h-14 text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                        className="w-full min-h-[56px] h-14 px-6 text-lg sm:text-base font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] hover:from-[#7c3aed] hover:to-[#8b6cef] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                       >
                         {creatingPayment ? (
                           <>
@@ -869,7 +869,7 @@ export default function PaymentPage() {
                       const status = currentStatus.payment_status
                       const isConfirmed = status === 'confirmed' || status === 'finished' || status === 'sending'
                       return (
-                        <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
+                        <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 sm:p-5 rounded-xl border border-purple-100">
                           {!isConfirmed ? (
                             <>
                               <div className="flex items-center justify-between">
@@ -901,25 +901,25 @@ export default function PaymentPage() {
                     {/* QR Code and Payment Info */}
                     <div className="space-y-4">
                       {qrCodeDataUrl && (!needsExtra || extraIdConfirmed) && (
-                        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
+                        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-56 h-56 mx-auto mb-3" />
+                          <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-3" />
                         </div>
                       )}
                       {needsExtra && !extraIdConfirmed && (
-                        <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <div className="bg-purple-50 p-4 sm:p-3 rounded-lg border border-purple-200">
+                          <label className="flex items-start sm:items-center gap-3 cursor-pointer">
                             <input
                               type="checkbox"
-                              className="h-4 w-4 text-[#7f5efd] border-purple-300 rounded accent-[#7f5efd] focus:ring-[#7f5efd]"
+                              className="mt-1 sm:mt-0 min-w-[20px] min-h-[20px] sm:h-4 sm:w-4 text-[#7f5efd] border-purple-300 rounded accent-[#7f5efd] focus:ring-[#7f5efd]"
                               checked={extraIdConfirmed}
                               onChange={(e) => setExtraIdConfirmed(e.target.checked)}
                               aria-label={`Confirm including ${getExtraIdLabel(paymentData.pay_currency).toLowerCase()}`}
                             />
-                            <label className="text-sm font-medium text-purple-900 select-none" onClick={() => setExtraIdConfirmed(v => !v)}>
+                            <span className="text-base sm:text-sm font-medium text-purple-900 select-none text-left">
                               Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.
-                            </label>
-                          </div>
+                            </span>
+                          </label>
                         </div>
                       )}
 
@@ -928,7 +928,7 @@ export default function PaymentPage() {
                         <div className="flex justify-center">
                           <button
                             type="button"
-                            className="h-8 px-3 text-xs font-semibold rounded-md bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm transition-colors"
+                            className="min-h-[44px] px-6 text-base sm:text-sm font-semibold rounded-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white shadow-sm transition-colors"
                             onClick={() => {
                               setPaymentData(null)
                               setPaymentStatus(null)
@@ -943,45 +943,46 @@ export default function PaymentPage() {
 
                       {/* Destination Tag/Memo Warning (centered, above amount) */}
                       {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
-                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                          <AlertTriangle className="h-4 w-4 text-[#7f5efd] mx-auto mb-1" />
-                          <p className="text-xs font-semibold text-purple-900 mb-1">
+                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-4 sm:p-3 text-center">
+                          <AlertTriangle className="h-5 w-5 sm:h-4 sm:w-4 text-[#7f5efd] mx-auto mb-2 sm:mb-1" />
+                          <p className="text-base sm:text-xs font-semibold text-purple-900 mb-2 sm:mb-1">
                             {getExtraIdLabel(paymentData.pay_currency)} Required
                           </p>
-                          <div className="bg-white p-1.5 rounded-md border border-purple-200 mb-1">
-                            <p className="text-sm font-mono text-[#7f5efd] font-semibold break-all">
+                          <div className="bg-white p-3 sm:p-1.5 rounded-md border border-purple-200 mb-2 sm:mb-1">
+                            <p className="text-base sm:text-sm font-mono text-[#7f5efd] font-semibold break-all">
                               {paymentData.payin_extra_id}
                             </p>
                           </div>
-                          <p className="text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
-                          <p className="text-[11px] text-purple-900 mt-1">In many wallets (e.g., Trust Wallet), paste under “{getExtraIdLabel(paymentData.pay_currency)}” or “Memo”.</p>
+                          <p className="text-base sm:text-xs text-purple-900">Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.</p>
+                          <p className="text-sm sm:text-[11px] text-purple-900 mt-2 sm:mt-1">In many wallets (e.g., Trust Wallet), paste under "{getExtraIdLabel(paymentData.pay_currency)}" or "Memo".</p>
                         </div>
                       )}
 
                       {/* Amount */}
-                      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 rounded-lg border border-purple-200 text-center">
-                        <p className="text-sm text-gray-600 mb-1">Send exactly</p>
-                        <p className="text-2xl font-bold text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</p>
+                      <div className="bg-gradient-to-r from-purple-50 to-purple-25 p-4 sm:p-5 rounded-lg border border-purple-200 text-center">
+                        <p className="text-base sm:text-sm text-gray-600 mb-2">Send exactly</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[#7f5efd]">{formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}</p>
                       </div>
 
                       {/* Address */}
-                      <div className="w-full bg-gradient-to-br from-purple-50 to-white p-3 rounded-xl border border-purple-200">
-                        <div className="mb-2 text-center">
-                          <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
+                      <div className="w-full bg-gradient-to-br from-purple-50 to-white p-4 sm:p-3 rounded-xl border border-purple-200">
+                        <div className="mb-3 sm:mb-2 text-center">
+                          <span className="text-sm sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">Wallet Address</span>
                         </div>
-                        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm text-center relative">
-                          <p className="text-xs text-gray-600 mb-1">Send to this address</p>
-                          <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold">
+                        <div className="bg-white p-4 sm:p-3 rounded-lg border border-gray-200 shadow-sm relative">
+                          <p className="text-base sm:text-xs text-gray-600 mb-2 sm:mb-1 text-center">Send to this address</p>
+                          <p className="text-sm font-mono break-all text-[#7f5efd] leading-relaxed tracking-wide font-semibold mb-3 sm:mb-0">
                             {paymentData.pay_address}
                           </p>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => copyToClipboard(paymentData.pay_address, 'Address')}
-                            className="absolute right-2 top-2 border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50"
+                            className="w-full sm:w-auto sm:absolute sm:right-2 sm:top-2 min-h-[44px] px-4 border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50 text-base sm:text-sm"
                             aria-label="Copy address"
                           >
-                            <Copy className="h-4 w-4" />
+                            <Copy className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-0" />
+                            <span className="sm:hidden">Copy Address</span>
                           </Button>
                         </div>
                       </div>

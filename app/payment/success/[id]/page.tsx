@@ -278,7 +278,7 @@ export default function PaymentSuccessPage() {
           <p className="font-phonic text-base font-normal text-gray-600 mb-6 leading-relaxed">
             {error || "The payment confirmation you're looking for doesn't exist."}
           </p>
-          <Button onClick={() => window.location.href = '/'} size="lg" className="font-phonic text-base font-normal px-8 py-3 shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+          <Button onClick={() => window.location.href = '/'} size="lg" className="font-phonic text-lg sm:text-base font-normal px-8 py-4 sm:py-3 min-h-[56px] sm:min-h-[48px] shadow-lg bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
             Go Home
           </Button>
         </div>
@@ -287,8 +287,8 @@ export default function PaymentSuccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container-narrow">
+    <div className="min-h-screen bg-background py-6 sm:py-8">
+      <div className="container-narrow px-4 sm:px-6">
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="relative mb-6">
@@ -296,21 +296,21 @@ export default function PaymentSuccessPage() {
               <CheckCircle className="h-12 w-12 text-[#7f5efd]" />
             </div>
           </div>
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Confirmed!</h1>
+          <h1 className="font-phonic text-2xl sm:text-3xl font-normal tracking-tight text-gray-900 mb-4">Payment Confirmed!</h1>
           <p className="font-phonic text-base font-normal text-gray-600 mb-4">
             Your payment has been successfully processed and confirmed on the blockchain.
           </p>
-          <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-base sm:text-sm text-gray-500">
             <div className="flex items-center space-x-2">
-              <Shield className="h-4 w-4 text-[#7f5efd]" />
+              <Shield className="h-5 w-5 sm:h-4 sm:w-4 text-[#7f5efd]" />
               <span className="font-phonic font-normal">Secure Transaction</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Zap className="h-4 w-4 text-[#7f5efd]" />
+              <Zap className="h-5 w-5 sm:h-4 sm:w-4 text-[#7f5efd]" />
               <span className="font-phonic font-normal">Instant Confirmation</span>
             </div>
             <div className="flex items-center space-x-2">
-              <CreditCard className="h-4 w-4 text-[#7f5efd]" />
+              <CreditCard className="h-5 w-5 sm:h-4 sm:w-4 text-[#7f5efd]" />
               <span className="font-phonic font-normal">Non-Custodial</span>
             </div>
           </div>
@@ -325,20 +325,20 @@ export default function PaymentSuccessPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Payment Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
-                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payment Method</Label>
-                <p className="font-phonic text-2xl font-normal text-[#7f5efd] mb-2">{paymentData.pay_currency.toUpperCase()}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="text-center p-4 sm:p-6 bg-purple-50 rounded-lg border border-purple-200">
+                <Label className="font-phonic text-base sm:text-sm font-normal text-gray-700 mb-3 block">Payment Method</Label>
+                <p className="font-phonic text-xl sm:text-2xl font-normal text-[#7f5efd] mb-2">{paymentData.pay_currency.toUpperCase()}</p>
                 <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-semibold">
                   {paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
                 </Badge>
               </div>
-              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
-                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Amount Paid</Label>
-                <p className="font-phonic text-3xl font-medium text-[#7f5efd] mb-2">
+              <div className="text-center p-4 sm:p-6 bg-purple-50 rounded-lg border border-purple-200">
+                <Label className="font-phonic text-base sm:text-sm font-normal text-gray-700 mb-3 block">Amount Paid</Label>
+                <p className="font-phonic text-2xl sm:text-3xl font-medium text-[#7f5efd] mb-2">
                   {formatCrypto(paymentData.pay_amount, paymentData.pay_currency.toUpperCase())}
                 </p>
-                <p className="font-phonic text-sm font-normal text-gray-600">
+                <p className="font-phonic text-base sm:text-sm font-normal text-gray-600">
                   ≈ {formatCurrency(paymentData.price_amount, paymentData.price_currency.toUpperCase())}
                 </p>
               </div>
@@ -348,21 +348,22 @@ export default function PaymentSuccessPage() {
 
             {/* Transaction Details */}
             <div className="space-y-4">
-              <div className="text-center">
-                <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block text-center">Order ID</Label>
-                <div className="flex gap-3 items-stretch justify-center">
+              <div className="">
+                <Label className="font-phonic text-base sm:text-sm font-normal text-gray-700 mb-3 block text-center">Order ID</Label>
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch justify-center">
                   <Input
                     value={paymentData.order_id}
                     readOnly
-                    className="font-mono text-sm bg-gray-50 w-full flex-1 min-w-[400px] text-center"
+                    className="font-mono text-sm bg-gray-50 w-full flex-1 sm:min-w-[400px] text-center"
                   />
                   <Button
                     variant="outline"
                     size="lg"
                     onClick={() => copyToClipboard(paymentData.order_id)}
-                    className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
+                    className="font-phonic text-base font-normal min-h-[48px] px-6 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-0" />
+                    <span className="sm:hidden">Copy</span>
                   </Button>
                 </div>
               </div>
@@ -381,19 +382,20 @@ export default function PaymentSuccessPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Input
                       value={paymentData.payin_extra_id}
                       readOnly
-                      className="font-mono text-sm bg-white border-green-300 w-full flex-1 min-w-[400px]"
+                      className="font-mono text-sm bg-white border-green-300 w-full flex-1 sm:min-w-[400px]"
                     />
                     <Button
                       variant="outline"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.payin_extra_id!)}
-                      className="font-phonic text-base font-normal border-green-600 text-green-700 hover:bg-green-50 shadow-sm"
+                      className="font-phonic text-base font-normal min-h-[48px] px-6 border-green-600 text-green-700 hover:bg-green-50 shadow-sm"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-0" />
+                      <span className="sm:hidden">Copy</span>
                     </Button>
                   </div>
                 </div>
@@ -401,37 +403,41 @@ export default function PaymentSuccessPage() {
 
               {/* Transaction Hash */}
               {paymentData.tx_hash && (
-                <div className="text-center">
-                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block text-center">Transaction Hash</Label>
-                  <div className="flex gap-3 items-stretch justify-center">
+                <div className="">
+                  <Label className="font-phonic text-base sm:text-sm font-normal text-gray-700 mb-3 block text-center">Transaction Hash</Label>
+                  <div className="flex flex-col sm:flex-row gap-3 items-stretch justify-center">
                     <Input
                       value={paymentData.tx_hash}
                       readOnly
-                      className="font-mono text-sm bg-gray-50 w-full flex-1 min-w-[500px] text-center"
+                      className="font-mono text-xs sm:text-sm bg-gray-50 w-full flex-1 sm:min-w-[400px] text-center"
                     />
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => copyToClipboard(paymentData.tx_hash!)}
-                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    {getBlockExplorerUrl(paymentData.tx_hash, paymentData.pay_currency) && (
+                    <div className="flex gap-3 justify-center">
                       <Button
                         variant="outline"
                         size="lg"
-                        onClick={() => {
-                          const explorerUrl = getBlockExplorerUrl(paymentData.tx_hash!, paymentData.pay_currency)
-                          if (explorerUrl) {
-                            window.open(explorerUrl, '_blank')
-                          }
-                        }}
-                        className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
+                        onClick={() => copyToClipboard(paymentData.tx_hash!)}
+                        className="font-phonic text-base font-normal min-h-[48px] px-6 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm flex-1 sm:flex-none"
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <Copy className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-0" />
+                        <span className="sm:hidden">Copy</span>
                       </Button>
-                    )}
+                      {getBlockExplorerUrl(paymentData.tx_hash, paymentData.pay_currency) && (
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={() => {
+                            const explorerUrl = getBlockExplorerUrl(paymentData.tx_hash!, paymentData.pay_currency)
+                            if (explorerUrl) {
+                              window.open(explorerUrl, '_blank')
+                            }
+                          }}
+                          className="font-phonic text-base font-normal min-h-[48px] px-6 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm flex-1 sm:flex-none"
+                        >
+                          <ExternalLink className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-0" />
+                          <span className="sm:hidden">View</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -441,20 +447,21 @@ export default function PaymentSuccessPage() {
               {/* Payout Hash */}
               {paymentData.payout_hash && (
                 <div>
-                  <Label className="font-phonic text-sm font-normal text-gray-700 mb-3 block">Payout Hash (Merchant Transaction)</Label>
-                  <div className="flex gap-3">
+                  <Label className="font-phonic text-base sm:text-sm font-normal text-gray-700 mb-3 block">Payout Hash (Merchant Transaction)</Label>
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Input
                       value={paymentData.payout_hash}
                       readOnly
-                      className="font-mono text-sm bg-gray-50 w-full flex-1 min-w-[500px]"
+                      className="font-mono text-xs sm:text-sm bg-gray-50 w-full flex-1 sm:min-w-[400px]"
                     />
                     <Button
                       variant="outline"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.payout_hash!)}
-                      className="font-phonic text-base font-normal border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
+                      className="font-phonic text-base font-normal min-h-[48px] px-6 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-0" />
+                      <span className="sm:hidden">Copy</span>
                     </Button>
                     {getBlockExplorerUrl(paymentData.payout_hash, paymentData.payout_currency || paymentData.pay_currency) && (
                       <Button
@@ -485,29 +492,29 @@ export default function PaymentSuccessPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Email Receipt */}
-            <div className="text-center">
-              <div className="flex gap-3 justify-center">
+            <div className="">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Input
                   type="email"
                   placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={emailReceiptSent}
-                  className="w-full max-w-md"
+                  className="w-full sm:max-w-md text-base h-12"
                 />
                 <Button
                   onClick={sendEmailReceipt}
                   disabled={sendingEmailReceipt || emailReceiptSent || !email.trim()}
                   variant={emailReceiptSent ? "secondary" : "default"}
                   size="lg"
-                  className={`font-phonic text-base font-normal px-8 py-3 shadow-sm ${emailReceiptSent ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'}`}
+                  className={`font-phonic text-base font-normal min-h-[48px] px-6 sm:px-8 py-3 shadow-sm ${emailReceiptSent ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'}`}
                 >
                   {sendingEmailReceipt ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
                   ) : emailReceiptSent ? (
-                    <CheckCircle className="h-4 w-4" />
+                    <CheckCircle className="h-5 w-5 sm:h-4 sm:w-4" />
                   ) : (
-                    <Mail className="h-4 w-4" />
+                    <Mail className="h-5 w-5 sm:h-4 sm:w-4" />
                   )}
                   <span className="ml-2">
                     {emailReceiptSent ? 'Sent' : 'Send Email'}
@@ -537,25 +544,25 @@ export default function PaymentSuccessPage() {
             <CardTitle className="font-phonic text-2xl font-normal text-gray-900">What&apos;s Next?</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                              <div className="text-center p-4 sm:p-6 bg-green-50 rounded-lg border border-green-200">
                 <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                <h3 className="font-phonic font-normal text-gray-900 mb-2">Payment Confirmed</h3>
-                <p className="font-phonic text-sm font-normal text-gray-600">
+                <h3 className="font-phonic text-lg sm:text-base font-normal text-gray-900 mb-2">Payment Confirmed</h3>
+                <p className="font-phonic text-base sm:text-sm font-normal text-gray-600">
                   Your payment has been confirmed on the blockchain and the merchant has been notified.
                 </p>
               </div>
-                              <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
+                              <div className="text-center p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
                 <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h3 className="font-phonic font-normal text-gray-900 mb-2">Receipt Available</h3>
-                <p className="font-phonic text-sm font-normal text-gray-600">
+                <h3 className="font-phonic text-lg sm:text-base font-normal text-gray-900 mb-2">Receipt Available</h3>
+                <p className="font-phonic text-base sm:text-sm font-normal text-gray-600">
                   Request an email receipt above to keep detailed records of this transaction.
                 </p>
               </div>
-                              <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
+                              <div className="text-center p-4 sm:p-6 bg-purple-50 rounded-lg border border-purple-200">
                 <ExternalLink className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                <h3 className="font-phonic font-normal text-gray-900 mb-2">Blockchain Verification</h3>
-                <p className="font-phonic text-sm font-normal text-gray-600">
+                <h3 className="font-phonic text-lg sm:text-base font-normal text-gray-900 mb-2">Blockchain Verification</h3>
+                <p className="font-phonic text-base sm:text-sm font-normal text-gray-600">
                   Use the transaction hashes above to verify your payment on the blockchain explorer.
                 </p>
               </div>
