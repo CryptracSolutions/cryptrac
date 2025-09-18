@@ -96,10 +96,10 @@ export default function SupportedCryptocurrencies() {
               Back to Home
             </Link>
             
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-6 leading-tight">
+            <h1 className="font-phonic text-2xl md:text-3xl lg:text-4xl font-normal tracking-tight text-gray-900 mb-4 md:mb-6 leading-tight">
               All Supported <span className="text-[#7f5efd]">Cryptocurrencies</span>
             </h1>
-            <p className="font-capsule text-base font-normal leading-8 text-gray-600 max-w-3xl mx-auto mb-10">
+            <p className="font-capsule text-base md:text-lg font-normal leading-7 md:leading-8 text-gray-600 max-w-3xl mx-auto mb-6 md:mb-10">
               <span className="font-phonic text-base font-normal text-[#7f5efd]">{Object.keys(APPROVED_CURRENCIES).length} supported cryptocurrencies</span> for instant, secure payments
             </p>
 
@@ -118,18 +118,18 @@ export default function SupportedCryptocurrencies() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 font-phonic text-sm font-normal text-gray-600">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 font-phonic text-base font-normal text-gray-600">
               <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Shield className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic text-sm font-normal">Non-Custodial</span>
+                <span className="font-phonic text-base font-normal">Non-Custodial</span>
               </div>
               <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Zap className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic text-sm font-normal">Instant Processing</span>
+                <span className="font-phonic text-base font-normal">Instant Processing</span>
               </div>
               <div className="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-sm border border-[#ede9fe]">
                 <Globe className="h-4 w-4 text-[#7f5efd]" />
-                <span className="font-phonic text-sm font-normal">Global Support</span>
+                <span className="font-phonic text-base font-normal">Global Support</span>
               </div>
             </div>
           </div>
@@ -162,20 +162,20 @@ export default function SupportedCryptocurrencies() {
               {stablecoins.length > 0 && (
                 <>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Stablecoins</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 max-w-7xl mx-auto mb-12">
+                  <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 md:gap-4 max-w-7xl mx-auto mb-12">
                     {stablecoins.map((currency) => (
-                      <Card key={currency.code} className="p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-[#ede9fe] bg-[#f5f3ff]/30">
+                      <Card key={currency.code} className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-[#ede9fe] bg-[#f5f3ff]/30">
                         <div className="flex flex-col items-center h-full">
                           <div className="p-2 bg-[#ede9fe] rounded-lg mb-3 flex-shrink-0">
                             <CryptoIcon currency={currency.code} size="md" />
                           </div>
                           <div className="text-center flex-1 flex flex-col justify-center min-h-0">
-                            <div className="font-semibold text-gray-900 text-sm mb-1 uppercase">{currency.code}</div>
-                            <div className="text-xs text-gray-500 leading-tight px-1" title={currency.display_name}>
+                            <div className="font-semibold text-gray-900 text-sm md:text-base mb-1 uppercase">{currency.code}</div>
+                            <div className="text-xs md:text-sm text-gray-500 leading-tight px-1" title={currency.display_name}>
                               {currency.display_name}
                             </div>
                             {currency.network && (
-                              <div className="text-xs text-[#7f5efd] mt-1">
+                              <div className="text-xs md:text-sm text-[#7f5efd] mt-1">
                                 {currency.network}
                               </div>
                             )}
@@ -191,20 +191,20 @@ export default function SupportedCryptocurrencies() {
               {regularCurrencies.length > 0 && (
                 <>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Cryptocurrencies</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 max-w-7xl mx-auto">
+                  <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 md:gap-4 max-w-7xl mx-auto">
                     {regularCurrencies.map((currency) => (
-                      <Card key={currency.code} className="p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-gray-200 bg-white">
+                      <Card key={currency.code} className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-gray-200 bg-white">
                         <div className="flex flex-col items-center h-full">
                           <div className="p-2 bg-gray-100 rounded-lg mb-3 flex-shrink-0">
                             <CryptoIcon currency={currency.code} size="md" />
                           </div>
                           <div className="text-center flex-1 flex flex-col justify-center min-h-0">
-                            <div className="font-semibold text-gray-900 text-sm mb-1 uppercase">{currency.code}</div>
-                            <div className="text-xs text-gray-500 leading-tight px-1" title={currency.display_name}>
+                            <div className="font-semibold text-gray-900 text-sm md:text-base mb-1 uppercase">{currency.code}</div>
+                            <div className="text-xs md:text-sm text-gray-500 leading-tight px-1" title={currency.display_name}>
                               {currency.display_name}
                             </div>
                             {currency.network && (
-                              <div className="text-xs text-[#7f5efd] mt-1">
+                              <div className="text-xs md:text-sm text-[#7f5efd] mt-1">
                                 {currency.network}
                               </div>
                             )}
@@ -230,16 +230,16 @@ export default function SupportedCryptocurrencies() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
+      <section className="py-12 md:py-16 bg-gradient-to-r from-[#7f5efd] to-[#7c3aed] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#7f5efd]/90 to-[#7c3aed]/90"></div>
-        <div className="container-wide text-center relative">
-          <h2 className="text-3xl font-normal text-white mb-4">
+        <div className="container-wide text-center relative px-4">
+          <h2 className="text-2xl md:text-3xl font-normal text-white mb-4">
             Ready to accept crypto payments?
           </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-white/90 mb-6 md:mb-8 max-w-2xl mx-auto">
             Start accepting any of these cryptocurrencies in minutes with our simple integration.
           </p>
-          <div className="flex justify-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:space-x-4">
             <Button size="lg" className="bg-white text-[#7f5efd] hover:bg-gray-50" asChild>
               <Link href="/signup">
                 Start Free Trial
@@ -264,18 +264,18 @@ export default function SupportedCryptocurrencies() {
               </p>
             </div>
             <div className="flex items-center space-x-6">
-              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
+              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors text-base">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">
+              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors text-base">
                 Terms of Service
               </Link>
-              <Link href="/contact" className="text-gray-400 hover:text-white transition-colors text-sm">
+              <Link href="/contact" className="text-gray-400 hover:text-white transition-colors text-base">
                 Contact
               </Link>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-base">
             &copy; 2025 Cryptrac. All rights reserved.
           </div>
         </div>

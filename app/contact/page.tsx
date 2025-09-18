@@ -99,13 +99,13 @@ export default function ContactPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Customer Support
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl md:text-4xl lg:text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Contact Us
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base md:text-lg font-normal text-gray-600 max-w-2xl mx-auto">
               Have questions about Cryptrac? We&apos;re here to help. Reach out to our support team for assistance with your cryptocurrency payment processing needs.
             </p>
-            <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 text-base text-gray-500">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>Response within 24 hours</span>
@@ -120,12 +120,45 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <div className="container-wide flex gap-8 relative py-8">
-        {/* Sidebar Navigation */}
+      <div className="container-wide flex flex-col lg:flex-row gap-8 relative py-4 md:py-8">
+        {/* Mobile Navigation Dropdown */}
+        <div className="lg:hidden w-full mb-4">
+          <details className="group">
+            <summary className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 min-h-[44px]">
+              <span className="font-phonic text-base font-normal text-gray-900">Quick Navigation</span>
+              <svg className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div className="mt-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <nav className="py-2">
+                {sections.map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => scrollToSection(section.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="text-left">{section.title}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </details>
+        </div>
+
+        {/* Desktop Sidebar Navigation */}
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
             <CardHeader className="pb-4">
-              <CardTitle className="font-phonic text-sm font-normal text-gray-900">Quick Navigation</CardTitle>
+              <CardTitle className="font-phonic text-base font-normal text-gray-900">Quick Navigation</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <nav className="space-y-1 pb-4">
@@ -135,13 +168,13 @@ export default function ContactPage() {
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 font-phonic text-sm font-normal transition-all hover:bg-gray-50 ${
-                        activeSection === section.id 
-                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]' 
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className="h-5 w-5 flex-shrink-0" />
                       <span className="text-left">{section.title}</span>
                     </button>
                   );
@@ -152,21 +185,21 @@ export default function ContactPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-4xl">
+        <main className="flex-1 max-w-4xl w-full">
           <Card className="shadow-xl border-0">
-            <CardContent className="p-8 md:p-12">
+            <CardContent className="p-6 md:p-8 lg:p-12">
               <div className="space-y-12">
                 {/* Section 1: Contact Information */}
                 <section id="contact-info">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Phone className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Phone className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     Contact Information
                   </h2>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex flex-wrap items-center gap-2">
                           <Mail className="h-5 w-5 text-[#7f5efd]" />
                           Email Support
                         </CardTitle>
@@ -176,13 +209,13 @@ export default function ContactPage() {
                         <a href="mailto:support@cryptrac.com" className="font-phonic font-semibold text-gray-900 hover:text-[#7f5efd] transition-colors">
                           support@cryptrac.com
                         </a>
-                        <p className="font-phonic text-sm font-normal text-gray-500 mt-2">Best for technical issues and general inquiries</p>
+                        <p className="font-phonic text-base font-normal text-gray-500 mt-2">Best for technical issues and general inquiries</p>
                       </CardContent>
                     </Card>
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                           <Phone className="h-5 w-5 text-[#7f5efd]" />
                           Phone Support
                         </CardTitle>
@@ -192,13 +225,13 @@ export default function ContactPage() {
                         <a href="tel:+13476193721" className="font-phonic font-semibold text-gray-900 hover:text-[#7f5efd] transition-colors">
                           +1 (347) 619-3721
                         </a>
-                        <p className="font-phonic text-sm font-normal text-gray-500 mt-2">Available during business hours</p>
+                        <p className="font-phonic text-base font-normal text-gray-500 mt-2">Available during business hours</p>
                       </CardContent>
                     </Card>
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                           <MapPin className="h-5 w-5 text-[#7f5efd]" />
                           Business Hours
                         </CardTitle>
@@ -207,13 +240,13 @@ export default function ContactPage() {
                         <p className="font-capsule text-base font-normal text-gray-600 mb-2">Eastern Standard Time</p>
                         <p className="font-phonic font-semibold text-gray-900">Monday - Friday</p>
                         <p className="font-capsule text-base font-normal text-gray-600">9:00 AM - 6:00 PM EST</p>
-                        <p className="font-phonic text-sm font-normal text-gray-500 mt-2">Weekend support via email</p>
+                        <p className="font-phonic text-base font-normal text-gray-500 mt-2">Weekend support via email</p>
                       </CardContent>
                     </Card>
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900 flex items-center gap-2">
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900 flex items-center gap-2">
                           <Users className="h-5 w-5 text-[#7f5efd]" />
                           Response Times
                         </CardTitle>
@@ -222,11 +255,11 @@ export default function ContactPage() {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-500" />
-                            <span className="font-phonic text-sm font-normal text-gray-600">Email: Within 2 hours</span>
+                            <span className="font-phonic text-base font-normal text-gray-600">Email: Within 2 hours</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-500" />
-                            <span className="font-phonic text-sm font-normal text-gray-600">Phone: Immediate during hours</span>
+                            <span className="font-phonic text-base font-normal text-gray-600">Phone: Immediate during hours</span>
                           </div>
                         </div>
                       </CardContent>
@@ -238,48 +271,48 @@ export default function ContactPage() {
 
                 {/* Section 2: Support Hours */}
                 <section id="support-hours">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Clock className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Clock className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     Support Hours & Availability
                   </h2>
                   
                   <div className="grid md:grid-cols-3 gap-4 mb-6">
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-green-900">Standard Support</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-green-900">Standard Support</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="font-phonic text-sm font-normal text-green-800 mb-2">Monday - Friday</p>
                         <p className="font-phonic text-2xl font-bold text-green-900 mb-2">9 AM - 6 PM EST</p>
-                        <p className="font-phonic text-xs font-normal text-green-700">Email & Phone Support</p>
+                        <p className="font-phonic text-base font-normal text-green-700">Email & Phone Support</p>
                       </CardContent>
                     </Card>
                     
                     <Card className="border-blue-200 bg-blue-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-blue-900">Weekend Support</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-blue-900">Weekend Support</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
-                        <p className="font-phonic text-sm font-normal text-blue-800 mb-2">Saturday - Sunday</p>
+                        <p className="font-phonic text-base font-normal text-blue-800 mb-2">Saturday - Sunday</p>
                         <p className="font-phonic text-2xl font-bold text-blue-900 mb-2">Email Only</p>
-                        <p className="font-phonic text-xs font-normal text-blue-700">Response within 2 hours</p>
+                        <p className="font-phonic text-base font-normal text-blue-700">Response within 2 hours</p>
                       </CardContent>
                     </Card>
                     
                     <Card className="border-orange-200 bg-orange-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-orange-900">Emergency Support</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-orange-900">Emergency Support</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <p className="font-phonic text-sm font-normal text-orange-800 mb-2">24/7 for Critical Issues</p>
                         <p className="font-phonic text-2xl font-bold text-orange-900 mb-2">Security & Outages</p>
-                        <p className="font-phonic text-xs font-normal text-orange-700">Immediate response</p>
+                        <p className="font-phonic text-base font-normal text-orange-700">Immediate response</p>
                       </CardContent>
                     </Card>
                   </div>
 
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="font-phonic text-sm font-normal text-amber-900">
+                    <p className="font-phonic text-base font-normal text-amber-900">
                       <strong>Holiday Schedule:</strong> We observe major US holidays. During holidays, email support is available with extended response times. Emergency support remains available for critical issues.
                     </p>
                   </div>
@@ -289,8 +322,8 @@ export default function ContactPage() {
 
                 {/* Section 3: Contact Form */}
                 <section id="contact-form">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <MessageSquare className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <MessageSquare className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     Send us a Message
                   </h2>
                   
@@ -367,15 +400,15 @@ export default function ContactPage() {
 
                 {/* Section 4: FAQ */}
                 <section id="faq">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <HelpCircle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <HelpCircle className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     Frequently Asked Questions
                   </h2>
                   
                   <div className="space-y-4">
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900">How quickly will I receive a response?</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900">How quickly will I receive a response?</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
@@ -386,7 +419,7 @@ export default function ContactPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900">What information should I include in my message?</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900">What information should I include in my message?</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
@@ -397,7 +430,7 @@ export default function ContactPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900">Do you offer support in languages other than English?</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900">Do you offer support in languages other than English?</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
@@ -408,7 +441,7 @@ export default function ContactPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900">How do I report a security issue?</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900">How do I report a security issue?</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700">
@@ -423,8 +456,8 @@ export default function ContactPage() {
 
                 {/* Section 5: Emergency Support */}
                 <section id="emergency">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <AlertCircle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <AlertCircle className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     Emergency Support
                   </h2>
                   
@@ -466,25 +499,25 @@ export default function ContactPage() {
                   <div className="mt-6 grid md:grid-cols-2 gap-4">
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900">Emergency Contact</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900">Emergency Contact</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700 mb-2">For critical issues:</p>
                         <a href="mailto:support@cryptrac.com" className="font-phonic font-semibold text-gray-900 hover:text-[#7f5efd]">
                           support@cryptrac.com
                         </a>
-                        <p className="font-phonic text-sm font-normal text-gray-500 mt-2">Include &ldquo;URGENT&rdquo; in subject line</p>
+                        <p className="font-phonic text-base font-normal text-gray-500 mt-2">Include &ldquo;URGENT&rdquo; in subject line</p>
                       </CardContent>
                     </Card>
                     
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-lg font-normal text-gray-900">Response Time</CardTitle>
+                        <CardTitle className="font-phonic text-base md:text-lg font-normal text-gray-900">Response Time</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="font-capsule text-base font-normal text-gray-700 mb-2">Emergency issues:</p>
                         <p className="font-phonic font-semibold text-gray-900">Immediately</p>
-                        <p className="font-phonic text-sm font-normal text-gray-500 mt-2">24/7 monitoring for critical issues</p>
+                        <p className="font-phonic text-base font-normal text-gray-500 mt-2">24/7 monitoring for critical issues</p>
                       </CardContent>
                     </Card>
                   </div>

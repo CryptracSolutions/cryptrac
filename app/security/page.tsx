@@ -72,13 +72,13 @@ export default function SecurityPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Platform Security
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl md:text-4xl lg:text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Security at Cryptrac
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base md:text-lg font-normal text-gray-600 max-w-2xl mx-auto">
               Learn how we protect your cryptocurrency payments with enterprise-grade security measures and best practices
             </p>
-            <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 text-base text-gray-500">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>Updated: {effectiveDate}</span>
@@ -93,12 +93,45 @@ export default function SecurityPage() {
         </div>
       </section>
 
-      <div className="container-wide flex gap-8 relative py-8">
-        {/* Sidebar Navigation */}
+      <div className="container-wide flex flex-col lg:flex-row gap-8 relative py-4 md:py-8">
+        {/* Mobile Navigation Dropdown */}
+        <div className="lg:hidden w-full mb-4">
+          <details className="group">
+            <summary className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 min-h-[44px]">
+              <span className="font-phonic text-base font-normal text-gray-900">Table of Contents</span>
+              <svg className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div className="mt-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <nav className="py-2">
+                {sections.map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => scrollToSection(section.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="text-left">{section.title}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </details>
+        </div>
+
+        {/* Desktop Sidebar Navigation */}
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
             <CardHeader className="pb-4">
-              <CardTitle className="font-phonic text-sm font-normal text-gray-900">Table of Contents</CardTitle>
+              <CardTitle className="font-phonic text-base font-normal text-gray-900">Table of Contents</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <nav className="space-y-1 pb-4">
@@ -108,13 +141,13 @@ export default function SecurityPage() {
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 font-phonic text-sm font-normal transition-all hover:bg-gray-50 ${
-                        activeSection === section.id 
-                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]' 
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className="h-5 w-5 flex-shrink-0" />
                       <span className="text-left">{section.title}</span>
                     </button>
                   );
@@ -125,14 +158,14 @@ export default function SecurityPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-4xl">
+        <main className="flex-1 max-w-4xl w-full">
           <Card className="shadow-xl border-0">
-            <CardContent className="p-8 md:p-12">
+            <CardContent className="p-6 md:p-8 lg:p-12">
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Security Overview */}
                 <section id="overview" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Shield className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Shield className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     1. Security Overview
                   </h2>
                   <div className="bg-[#f5f3ff] border-l-4 border-[#7f5efd] p-6 rounded-r-lg mb-6">
@@ -148,13 +181,13 @@ export default function SecurityPage() {
                     At Cryptrac, security is not an afterthought—it&apos;s the foundation of everything we build. As a cryptocurrency payment processing platform handling financial transactions, we understand the critical importance of maintaining the highest security standards to protect your business, your customers, and the integrity of the blockchain ecosystem.
                   </p>
 
-                  <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-green-900 text-center">Non-Custodial</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-green-900 text-center">Non-Custodial</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-green-700">
+                        <p className="font-phonic text-base font-normal text-green-700">
                           We never hold your cryptocurrency. Payments go directly to your wallets.
                         </p>
                       </CardContent>
@@ -162,10 +195,10 @@ export default function SecurityPage() {
                     
                     <Card className="border-blue-200 bg-blue-50">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-blue-900 text-center">End-to-End Encryption</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-blue-900 text-center">End-to-End Encryption</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-blue-700">
+                        <p className="font-phonic text-base font-normal text-blue-700">
                           All data transmission and storage protected with advanced encryption.
                         </p>
                       </CardContent>
@@ -173,10 +206,10 @@ export default function SecurityPage() {
                     
                     <Card className="border-purple-200 bg-purple-50">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-purple-900 text-center">Zero-Trust Architecture</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-purple-900 text-center">Zero-Trust Architecture</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-purple-700">
+                        <p className="font-phonic text-base font-normal text-purple-700">
                           Every request is verified, authenticated, and authorized.
                         </p>
                       </CardContent>
@@ -192,8 +225,8 @@ export default function SecurityPage() {
 
                 {/* Section 2: Platform Security */}
                 <section id="platform-security" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Lock className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Lock className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     2. Platform Security Architecture
                   </h2>
                   
@@ -204,10 +237,10 @@ export default function SecurityPage() {
                   <div className="space-y-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Application Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Application Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Secure coding practices with regular code reviews</span>
@@ -234,10 +267,10 @@ export default function SecurityPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">API Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">API Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Key className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>API key authentication with rate limiting</span>
@@ -260,10 +293,10 @@ export default function SecurityPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Transport Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Transport Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Globe className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>TLS 1.3 encryption for all communications</span>
@@ -290,8 +323,8 @@ export default function SecurityPage() {
 
                 {/* Section 3: Data Protection */}
                 <section id="data-protection" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Database className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Database className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     3. Data Protection and Privacy
                   </h2>
                   
@@ -299,10 +332,10 @@ export default function SecurityPage() {
                     We implement comprehensive data protection measures to safeguard sensitive information throughout its lifecycle, from collection and processing to storage and eventual deletion.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-green-900">Encryption at Rest</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-green-900">Encryption at Rest</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-green-700">
@@ -328,7 +361,7 @@ export default function SecurityPage() {
 
                     <Card className="border-blue-200 bg-blue-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-blue-900">Data Access Controls</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-blue-900">Data Access Controls</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-blue-700">
@@ -354,7 +387,7 @@ export default function SecurityPage() {
                   </div>
 
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6">
-                    <p className="font-phonic text-sm font-normal text-amber-900">
+                    <p className="font-phonic text-base font-normal text-amber-900">
                       <strong>Data Minimization:</strong> We collect and store only the data necessary for payment processing. Sensitive information like private keys is never stored on our systems.
                     </p>
                   </div>
@@ -364,8 +397,8 @@ export default function SecurityPage() {
 
                 {/* Section 4: Transaction Security */}
                 <section id="transaction-security" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Zap className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Zap className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     4. Transaction Security
                   </h2>
                   
@@ -376,10 +409,10 @@ export default function SecurityPage() {
                   <div className="space-y-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Payment Link Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Payment Link Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Cryptographically secure payment link generation</span>
@@ -402,7 +435,7 @@ export default function SecurityPage() {
 
                     <Card className="border-red-200 bg-red-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-red-900">Fraud Prevention</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-red-900">Fraud Prevention</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-red-700">
@@ -428,10 +461,10 @@ export default function SecurityPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Blockchain Verification</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Blockchain Verification</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Zap className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Multi-node blockchain confirmation validation</span>
@@ -458,8 +491,8 @@ export default function SecurityPage() {
 
                 {/* Section 5: Authentication & Access */}
                 <section id="authentication" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <UserCheck className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <UserCheck className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     5. Authentication and Access Control
                   </h2>
                   
@@ -467,13 +500,13 @@ export default function SecurityPage() {
                     We implement robust authentication and authorization mechanisms to ensure that only legitimate users can access merchant accounts and sensitive functionality.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Multi-Factor Authentication</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Multi-Factor Authentication</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Key className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Email and SMS verification codes</span>
@@ -496,10 +529,10 @@ export default function SecurityPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Session Management</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Session Management</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Clock className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Secure session token generation</span>
@@ -526,8 +559,8 @@ export default function SecurityPage() {
 
                 {/* Section 6: Infrastructure Security */}
                 <section id="infrastructure" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Server className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Server className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     6. Infrastructure Security
                   </h2>
                   
@@ -538,7 +571,7 @@ export default function SecurityPage() {
                   <div className="space-y-6">
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-green-900">Cloud Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-green-900">Cloud Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-green-700">
@@ -564,7 +597,7 @@ export default function SecurityPage() {
 
                     <Card className="border-blue-200 bg-blue-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-blue-900">Network Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-blue-900">Network Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-blue-700">
@@ -590,7 +623,7 @@ export default function SecurityPage() {
 
                     <Card className="border-purple-200 bg-purple-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-purple-900">Monitoring & Logging</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-purple-900">Monitoring & Logging</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-purple-700">
@@ -620,8 +653,8 @@ export default function SecurityPage() {
 
                 {/* Section 7: Compliance & Standards */}
                 <section id="compliance" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <CheckCircle2 className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <CheckCircle2 className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     7. Compliance and Security Standards
                   </h2>
                   
@@ -629,13 +662,13 @@ export default function SecurityPage() {
                     Cryptrac adheres to industry-leading security standards and regulatory frameworks to ensure our platform meets the highest levels of security and compliance requirements.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Security Frameworks</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Security Frameworks</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>ISO 27001 Information Security Management</span>
@@ -658,10 +691,10 @@ export default function SecurityPage() {
 
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Regulatory Compliance</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Regulatory Compliance</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>GDPR data protection compliance</span>
@@ -694,8 +727,8 @@ export default function SecurityPage() {
 
                 {/* Section 8: Incident Response */}
                 <section id="incident-response" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <AlertTriangle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <AlertTriangle className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     8. Incident Response and Recovery
                   </h2>
                   
@@ -758,8 +791,8 @@ export default function SecurityPage() {
 
                 {/* Section 9: User Security Responsibilities */}
                 <section id="user-security" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Users className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Users className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     9. Your Security Responsibilities
                   </h2>
                   
@@ -767,13 +800,13 @@ export default function SecurityPage() {
                     While we implement comprehensive security measures, the security of your account also depends on following best practices on your end. Here are key steps you can take to protect your account and transactions.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Account Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Account Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Use strong, unique passwords for your account</span>
@@ -796,7 +829,7 @@ export default function SecurityPage() {
 
                     <Card className="border-amber-200 bg-amber-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-amber-900">Wallet Security</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-amber-900">Wallet Security</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-amber-700">
@@ -848,8 +881,8 @@ export default function SecurityPage() {
 
                 {/* Section 10: Security Reporting */}
                 <section id="reporting" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Eye className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Eye className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     10. Security Issue Reporting
                   </h2>
                   
@@ -860,11 +893,11 @@ export default function SecurityPage() {
                   <div className="space-y-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Vulnerability Reporting</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">Vulnerability Reporting</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="font-capsule text-base font-normal text-gray-700 mb-3">If you discover a security vulnerability, please:</p>
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Badge variant="outline" className="mt-0.5">1</Badge>
                             <span>Email security@cryptrac.com with detailed information</span>
@@ -887,7 +920,7 @@ export default function SecurityPage() {
 
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-green-900">Responsible Disclosure Policy</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-green-900">Responsible Disclosure Policy</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <ul className="space-y-2 font-phonic text-sm font-normal text-green-700">
@@ -917,8 +950,8 @@ export default function SecurityPage() {
 
                 {/* Section 11: Contact Information */}
                 <section id="contact" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Phone className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Phone className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     11. Security Contact Information
                   </h2>
                   

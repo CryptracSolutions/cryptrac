@@ -73,13 +73,13 @@ export default function AboutPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               About Cryptrac
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl md:text-4xl lg:text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Simplifying Cryptocurrency Payments
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base md:text-lg font-normal text-gray-600 max-w-2xl mx-auto">
               Learn about our mission to make cryptocurrency payments accessible, secure, and effortless for businesses worldwide
             </p>
-            <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 text-base text-gray-500">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>Founded in {foundedYear}</span>
@@ -94,12 +94,45 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <div className="container-wide flex gap-8 relative py-8">
-        {/* Sidebar Navigation */}
+      <div className="container-wide flex flex-col lg:flex-row gap-8 relative py-4 md:py-8">
+        {/* Mobile Navigation Dropdown */}
+        <div className="lg:hidden w-full mb-4">
+          <details className="group">
+            <summary className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 min-h-[44px]">
+              <span className="font-phonic text-base font-normal text-gray-900">Table of Contents</span>
+              <svg className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div className="mt-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <nav className="py-2">
+                {sections.map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => scrollToSection(section.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="text-left">{section.title}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </details>
+        </div>
+
+        {/* Desktop Sidebar Navigation */}
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
             <CardHeader className="pb-4">
-              <CardTitle className="font-phonic text-sm font-normal text-gray-900">Table of Contents</CardTitle>
+              <CardTitle className="font-phonic text-base font-normal text-gray-900">Table of Contents</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <nav className="space-y-1 pb-4">
@@ -109,13 +142,13 @@ export default function AboutPage() {
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 font-phonic text-sm font-normal transition-all hover:bg-gray-50 ${
-                        activeSection === section.id 
-                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]' 
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className="h-5 w-5 flex-shrink-0" />
                       <span className="text-left">{section.title}</span>
                     </button>
                   );
@@ -126,15 +159,15 @@ export default function AboutPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-4xl">
+        <main className="flex-1 max-w-4xl w-full">
           <Card className="shadow-xl border-0">
-            <CardContent className="p-8 md:p-12">
+            <CardContent className="p-6 md:p-8 lg:p-12">
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Building className="h-8 w-8 text-[#7f5efd]" />
-                    1. About Cryptrac
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Building className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
+                    <span>1. About Cryptrac</span>
                   </h2>
                   <div className="bg-[#f5f3ff] border-l-4 border-[#7f5efd] p-6 rounded-r-lg mb-6">
                     <p className="font-phonic text-base font-normal text-gray-900 mb-2">
@@ -149,13 +182,13 @@ export default function AboutPage() {
                     Cryptrac Solutions is a leading cryptocurrency payment processing platform that bridges the gap between traditional commerce and the digital economy. Founded in {foundedYear}, we have been at the forefront of making cryptocurrency payments accessible to merchants and customers worldwide, regardless of their technical expertise or prior experience with digital assets.
                   </p>
 
-                  <div className="grid md:grid-cols-3 gap-6 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900 text-center">Non-Custodial</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900 text-center">Non-Custodial</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-gray-600">
+                        <p className="font-phonic text-base font-normal text-gray-600">
                           Your funds go directly to your wallets. We never hold your cryptocurrency.
                         </p>
                       </CardContent>
@@ -163,10 +196,10 @@ export default function AboutPage() {
                     
                     <Card className="border-blue-200 bg-blue-50">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-blue-900 text-center">Global Scale</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-blue-900 text-center">Global Scale</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-blue-700">
+                        <p className="font-phonic text-base font-normal text-blue-700">
                           Supporting businesses worldwide with multi-currency payment processing.
                         </p>
                       </CardContent>
@@ -174,10 +207,10 @@ export default function AboutPage() {
                     
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader className="pb-3">
-                        <CardTitle className="font-phonic text-2xl font-normal text-green-900 text-center">User-Focused</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-green-900 text-center">User-Focused</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-green-700">
+                        <p className="font-phonic text-base font-normal text-green-700">
                           Designed with simplicity and security as our primary concerns.
                         </p>
                       </CardContent>
@@ -193,9 +226,9 @@ export default function AboutPage() {
 
                 {/* Section 2: Mission */}
                 <section id="mission" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Target className="h-8 w-8 text-[#7f5efd]" />
-                    2. Our Mission
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Target className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
+                    <span>2. Our Mission</span>
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -204,7 +237,7 @@ export default function AboutPage() {
 
                   <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30 mb-6">
                     <CardHeader>
-                      <CardTitle className="font-phonic text-2xl font-normal text-gray-900 text-center">
+                      <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900 text-center">
 &quot;Making Cryptocurrency Payments as Simple as Traditional Payments&quot;
                       </CardTitle>
                     </CardHeader>
@@ -215,13 +248,13 @@ export default function AboutPage() {
                     </CardContent>
                   </Card>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">For Merchants</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">For Merchants</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Reduce payment processing fees</span>
@@ -244,10 +277,10 @@ export default function AboutPage() {
                     
                     <Card className="border-gray-200">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900">For Customers</CardTitle>
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900">For Customers</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Enhanced privacy and security</span>
@@ -274,9 +307,9 @@ export default function AboutPage() {
 
                 {/* Section 3: Vision */}
                 <section id="vision" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Lightbulb className="h-8 w-8 text-[#7f5efd]" />
-                    3. Our Vision
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Lightbulb className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
+                    <span>3. Our Vision</span>
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
@@ -285,31 +318,31 @@ export default function AboutPage() {
 
                   <Card className="border-blue-200 bg-blue-50 mb-6">
                     <CardHeader>
-                      <CardTitle className="font-phonic text-2xl font-normal text-blue-900">The Future We&apos;re Building</CardTitle>
+                      <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-blue-900">The Future We&apos;re Building</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-blue-900">Universal Adoption</h4>
-                          <p className="font-phonic text-sm font-normal text-blue-700">
+                          <p className="font-phonic text-base font-normal text-blue-700">
                             Every business, from corner stores to multinational corporations, can accept cryptocurrency payments effortlessly.
                           </p>
                         </div>
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-blue-900">Financial Inclusion</h4>
-                          <p className="font-phonic text-sm font-normal text-blue-700">
+                          <p className="font-phonic text-base font-normal text-blue-700">
                             Enabling economic participation for underbanked populations through accessible digital payment solutions.
                           </p>
                         </div>
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-blue-900">Innovation Driver</h4>
-                          <p className="font-phonic text-sm font-normal text-blue-700">
+                          <p className="font-phonic text-base font-normal text-blue-700">
                             Pioneering new features and capabilities that make cryptocurrency payments even more powerful and user-friendly.
                           </p>
                         </div>
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-blue-900">Trust & Security</h4>
-                          <p className="font-phonic text-sm font-normal text-blue-700">
+                          <p className="font-phonic text-base font-normal text-blue-700">
                             Setting the standard for security and reliability in cryptocurrency payment processing.
                           </p>
                         </div>
@@ -326,21 +359,21 @@ export default function AboutPage() {
 
                 {/* Section 4: Values */}
                 <section id="values" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <Heart className="h-8 w-8 text-[#7f5efd]" />
-                    4. Our Core Values
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <Heart className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
+                    <span>4. Our Core Values</span>
                   </h2>
                   
                   <p className="font-capsule text-base font-normal text-gray-700 leading-relaxed mb-6">
                     Our values guide every decision we make and every feature we build. They represent our commitment to our users, our team, and the broader cryptocurrency ecosystem.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-gray-900 flex items-center gap-2">
-                          <Shield className="h-6 w-6 text-[#7f5efd]" />
-                          Security First
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-gray-900 flex flex-wrap items-center gap-2">
+                          <Shield className="h-5 md:h-6 w-5 md:w-6 text-[#7f5efd]" />
+                          <span>Security First</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -352,9 +385,9 @@ export default function AboutPage() {
 
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-green-900 flex items-center gap-2">
-                          <Users className="h-6 w-6 text-green-600" />
-                          User-Centric Design
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-green-900 flex flex-wrap items-center gap-2">
+                          <Users className="h-5 md:h-6 w-5 md:w-6 text-green-600" />
+                          <span>User-Centric Design</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -366,9 +399,9 @@ export default function AboutPage() {
 
                     <Card className="border-blue-200 bg-blue-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-blue-900 flex items-center gap-2">
-                          <Globe className="h-6 w-6 text-blue-600" />
-                          Global Accessibility
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-blue-900 flex flex-wrap items-center gap-2">
+                          <Globe className="h-5 md:h-6 w-5 md:w-6 text-blue-600" />
+                          <span>Global Accessibility</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -380,9 +413,9 @@ export default function AboutPage() {
 
                     <Card className="border-purple-200 bg-purple-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-purple-900 flex items-center gap-2">
-                          <Lightbulb className="h-6 w-6 text-purple-600" />
-                          Innovation
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-purple-900 flex flex-wrap items-center gap-2">
+                          <Lightbulb className="h-5 md:h-6 w-5 md:w-6 text-purple-600" />
+                          <span>Innovation</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -394,9 +427,9 @@ export default function AboutPage() {
 
                     <Card className="border-orange-200 bg-orange-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-orange-900 flex items-center gap-2">
-                          <Heart className="h-6 w-6 text-orange-600" />
-                          Transparency
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-orange-900 flex flex-wrap items-center gap-2">
+                          <Heart className="h-5 md:h-6 w-5 md:w-6 text-orange-600" />
+                          <span>Transparency</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -408,9 +441,9 @@ export default function AboutPage() {
 
                     <Card className="border-red-200 bg-red-50">
                       <CardHeader>
-                        <CardTitle className="font-phonic text-2xl font-normal text-red-900 flex items-center gap-2">
-                          <Award className="h-6 w-6 text-red-600" />
-                          Excellence
+                        <CardTitle className="font-phonic text-lg md:text-xl lg:text-2xl font-normal text-red-900 flex flex-wrap items-center gap-2">
+                          <Award className="h-5 md:h-6 w-5 md:w-6 text-red-600" />
+                          <span>Excellence</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -444,7 +477,7 @@ export default function AboutPage() {
                         <p className="font-capsule text-base font-normal text-gray-700">
                           In the early days of cryptocurrency adoption, we observed that while the technology was revolutionary, the user experience was often frustrating:
                         </p>
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Complex wallet setups and private key management</span>
@@ -520,13 +553,13 @@ export default function AboutPage() {
                     Cryptrac is built on modern, scalable technology designed for reliability, security, and performance. Our architecture supports high transaction volumes while maintaining the speed and responsiveness users expect.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
                         <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Platform Architecture</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Zap className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Next.js 15 with TypeScript for robust web applications</span>
@@ -552,7 +585,7 @@ export default function AboutPage() {
                         <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Cryptocurrency Integration</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Globe className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>NOWPayments integration for reliable transaction processing</span>
@@ -594,7 +627,7 @@ export default function AboutPage() {
                     Security is not just a feature at Cryptrac&mdash;it&apos;s the cornerstone of our entire platform. We implement industry-leading security practices to ensure that your funds and data are protected at every level.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader>
                         <CardTitle className="font-phonic text-2xl font-normal text-green-900">Non-Custodial Architecture</CardTitle>
@@ -668,13 +701,13 @@ export default function AboutPage() {
                     Cryptrac is built by a diverse team of cryptocurrency enthusiasts, software engineers, security experts, and business professionals who share a passion for making digital payments accessible to everyone.
                   </p>
 
-                  <div className="grid md:grid-cols-3 gap-6 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader className="text-center">
                         <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Engineering</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-gray-600">
+                        <p className="font-phonic text-base font-normal text-gray-600">
                           Full-stack developers, blockchain specialists, and infrastructure engineers building the next generation of payment technology.
                         </p>
                       </CardContent>
@@ -685,7 +718,7 @@ export default function AboutPage() {
                         <CardTitle className="font-phonic text-2xl font-normal text-blue-900">Security</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-blue-700">
+                        <p className="font-phonic text-base font-normal text-blue-700">
                           Cybersecurity experts and cryptography specialists ensuring the highest levels of platform and transaction security.
                         </p>
                       </CardContent>
@@ -696,7 +729,7 @@ export default function AboutPage() {
                         <CardTitle className="font-phonic text-2xl font-normal text-green-900">Business</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <p className="font-phonic text-sm font-normal text-green-700">
+                        <p className="font-phonic text-base font-normal text-green-700">
                           Product managers, customer success specialists, and business development professionals focused on user experience and growth.
                         </p>
                       </CardContent>
@@ -708,28 +741,28 @@ export default function AboutPage() {
                       <CardTitle className="font-phonic text-2xl font-normal text-gray-900 text-center">Our Culture</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-gray-900">Remote-First</h4>
-                          <p className="font-phonic text-sm font-normal text-gray-600">
+                          <p className="font-phonic text-base font-normal text-gray-600">
                             We embrace remote work and hire the best talent globally, fostering collaboration across time zones and cultures.
                           </p>
                         </div>
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-gray-900">Continuous Learning</h4>
-                          <p className="font-phonic text-sm font-normal text-gray-600">
+                          <p className="font-phonic text-base font-normal text-gray-600">
                             The cryptocurrency space evolves rapidly, and we invest heavily in keeping our team at the forefront of new developments.
                           </p>
                         </div>
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-gray-900">User Advocacy</h4>
-                          <p className="font-phonic text-sm font-normal text-gray-600">
+                          <p className="font-phonic text-base font-normal text-gray-600">
                             Every team member understands and champions the needs of our users in their day-to-day work.
                           </p>
                         </div>
                         <div className="space-y-2">
                           <h4 className="font-phonic text-base font-normal text-gray-900">Innovation</h4>
-                          <p className="font-phonic text-sm font-normal text-gray-600">
+                          <p className="font-phonic text-base font-normal text-gray-600">
                             We encourage creative thinking and provide the resources to explore new ideas and technologies.
                           </p>
                         </div>
@@ -751,13 +784,13 @@ export default function AboutPage() {
                     Since our launch, we&apos;ve reached several important milestones that reflect our growth and the trust our users place in our platform.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Card className="border-[#7f5efd]/20 bg-[#f5f3ff]/30">
                       <CardHeader>
                         <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Platform Growth</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <Star className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Thousands of merchants onboarded globally</span>
@@ -831,7 +864,7 @@ export default function AboutPage() {
                         <CardTitle className="font-phonic text-2xl font-normal text-gray-900">Near-Term Developments</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
+                        <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
                             <TrendingUp className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Enhanced mobile applications with advanced features</span>
@@ -905,7 +938,7 @@ export default function AboutPage() {
                       <div className="flex items-center gap-3">
                         <Mail className="h-5 w-5 text-[#7f5efd]" />
                         <div>
-                          <p className="font-phonic text-sm font-normal text-gray-600">General Inquiries</p>
+                          <p className="font-phonic text-base font-normal text-gray-600">General Inquiries</p>
                           <a href="mailto:hello@cryptrac.com" className="font-phonic text-base font-normal text-gray-900 hover:text-[#7f5efd]">
                             hello@cryptrac.com
                           </a>
@@ -915,7 +948,7 @@ export default function AboutPage() {
                       <div className="flex items-center gap-3">
                         <Phone className="h-5 w-5 text-[#7f5efd]" />
                         <div>
-                          <p className="font-phonic text-sm font-normal text-gray-600">Support</p>
+                          <p className="font-phonic text-base font-normal text-gray-600">Support</p>
                           <a href="mailto:support@cryptrac.com" className="font-phonic text-base font-normal text-gray-900 hover:text-[#7f5efd]">
                             support@cryptrac.com
                           </a>
@@ -925,7 +958,7 @@ export default function AboutPage() {
                       <div className="flex items-center gap-3">
                         <Users className="h-5 w-5 text-[#7f5efd]" />
                         <div>
-                          <p className="font-phonic text-sm font-normal text-gray-600">Business Development</p>
+                          <p className="font-phonic text-base font-normal text-gray-600">Business Development</p>
                           <a href="mailto:partnerships@cryptrac.com" className="font-phonic text-base font-normal text-gray-900 hover:text-[#7f5efd]">
                             partnerships@cryptrac.com
                           </a>
@@ -933,7 +966,7 @@ export default function AboutPage() {
                       </div>
                       
                       <div className="pt-4 border-t">
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="text-center">
                             <Button asChild className="w-full">
                               <Link href="/merchant/onboarding">

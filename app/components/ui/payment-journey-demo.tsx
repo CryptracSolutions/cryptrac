@@ -213,7 +213,7 @@ function QRCodeStage() {
   return (
     <div className="space-y-4">
       {/* Status */}
-      <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+      <div className="bg-purple-50 p-1 rounded-lg border border-purple-200">
         <div className="flex items-center justify-center gap-2">
           <Clock className="h-6 w-6 text-[#7f5efd] animate-spin" />
           <span className="text-sm font-medium text-gray-700">Awaiting Payment</span>

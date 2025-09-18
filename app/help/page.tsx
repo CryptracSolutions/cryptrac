@@ -68,13 +68,13 @@ export default function HelpPage() {
             <Badge className="mb-4 bg-[#f5f3ff] text-[#7f5efd] border-[#ede9fe]">
               Support & Documentation
             </Badge>
-            <h1 className="font-phonic text-6xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl md:text-4xl lg:text-6xl font-normal tracking-tight text-gray-900 mb-4">
               Help & Support Guide
             </h1>
-            <p className="font-capsule text-base font-normal text-gray-600 max-w-2xl mx-auto">
+            <p className="font-capsule text-base md:text-lg font-normal text-gray-600 max-w-2xl mx-auto">
               Comprehensive assistance for merchants and customers using Cryptrac&apos;s cryptocurrency payment processing platform
             </p>
-            <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 text-base text-gray-500">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>Last Updated: {lastUpdated}</span>
@@ -89,12 +89,45 @@ export default function HelpPage() {
         </div>
       </section>
 
-      <div className="container-wide flex gap-8 relative py-8">
-        {/* Sidebar Navigation */}
+      <div className="container-wide flex flex-col lg:flex-row gap-8 relative py-4 md:py-8">
+        {/* Mobile Navigation Dropdown */}
+        <div className="lg:hidden w-full mb-4">
+          <details className="group">
+            <summary className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 min-h-[44px]">
+              <span className="font-phonic text-base font-normal text-gray-900">Table of Contents</span>
+              <svg className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div className="mt-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <nav className="py-2">
+                {sections.map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => scrollToSection(section.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] font-phonic text-base font-normal transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="text-left">{section.title}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </details>
+        </div>
+
+        {/* Desktop Sidebar Navigation */}
         <aside className="hidden lg:block w-64 sticky top-24 h-fit">
           <Card className="shadow-lg border-gray-200">
             <CardHeader className="pb-4">
-              <CardTitle className="font-phonic text-sm font-normal text-gray-900">Table of Contents</CardTitle>
+              <CardTitle className="font-phonic text-base font-normal text-gray-900">Table of Contents</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <nav className="space-y-1 pb-4">
@@ -104,13 +137,13 @@ export default function HelpPage() {
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-all hover:bg-gray-50 ${
-                        activeSection === section.id 
-                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]' 
+                      className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-base transition-all hover:bg-gray-50 ${
+                        activeSection === section.id
+                          ? 'bg-[#f5f3ff] text-[#7f5efd] border-l-2 border-[#7f5efd]'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className="h-5 w-5 flex-shrink-0" />
                       <span className="text-left">{section.title}</span>
                     </button>
                   );
@@ -121,14 +154,14 @@ export default function HelpPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-4xl">
+        <main className="flex-1 max-w-4xl w-full">
           <Card className="shadow-xl border-0">
-            <CardContent className="p-8 md:p-12">
+            <CardContent className="p-6 md:p-8 lg:p-12">
               <div className="prose prose-gray max-w-none">
                 {/* Section 1: Welcome */}
                 <section id="welcome" className="mb-12">
-                  <h2 className="font-phonic text-2xl font-normal text-gray-900 mb-6 flex items-center gap-3">
-                    <HelpCircle className="h-8 w-8 text-[#7f5efd]" />
+                  <h2 className="font-phonic text-xl md:text-2xl font-normal text-gray-900 mb-4 md:mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+                    <HelpCircle className="h-6 md:h-8 w-6 md:w-8 text-[#7f5efd]" />
                     1. Welcome to Cryptrac
                   </h2>
                   <div className="bg-[#f5f3ff] border-l-4 border-[#7f5efd] p-6 rounded-r-lg mb-6">
@@ -170,7 +203,7 @@ export default function HelpPage() {
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="text-gray-700">The registration process begins with:</p>
-                        <ul className="space-y-2 text-sm text-gray-600">
+                        <ul className="space-y-2 text-base text-gray-600">
                           <li className="flex items-start gap-2">
                             <Badge variant="outline" className="mt-0.5">1</Badge>
                             <span>Visit our website and click &ldquo;Sign Up&rdquo; or &ldquo;Get Started&rdquo;</span>
@@ -228,13 +261,13 @@ export default function HelpPage() {
                     Your merchant dashboard serves as the central hub for managing all aspects of your cryptocurrency payment processing. Understanding the various features and sections will help you maximize the effectiveness of our platform for your business needs.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <Card className="border-[#7f5efd]/20">
                       <CardHeader className="bg-[#f5f3ff]">
                         <CardTitle className="text-lg text-gray-900">Dashboard Overview</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
-                        <ul className="space-y-2 text-sm text-gray-600">
+                        <ul className="space-y-2 text-base text-gray-600">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Total payments received and transaction volume</span>
@@ -260,7 +293,7 @@ export default function HelpPage() {
                         <CardTitle className="text-lg text-gray-900">Payment Link Management</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
-                        <ul className="space-y-2 text-sm text-gray-600">
+                        <ul className="space-y-2 text-base text-gray-600">
                           <li className="flex items-start gap-2">
                             <ChevronRight className="h-4 w-4 text-[#7f5efd] mt-0.5" />
                             <span>Create, edit, and monitor all payment links</span>
@@ -492,7 +525,7 @@ export default function HelpPage() {
                     Security is paramount when dealing with cryptocurrency payments, and both merchants and customers play important roles in maintaining the safety and integrity of transactions. This section outlines essential security practices that help protect against fraud, theft, and other security threats.
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <Card className="border-green-200 bg-green-50">
                       <CardHeader>
                         <CardTitle className="text-lg text-green-900">Account Security for Merchants</CardTitle>
