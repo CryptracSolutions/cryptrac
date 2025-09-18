@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTimezone } from '@/lib/contexts/TimezoneContext'
 import { formatDateShort, formatFullDate } from '@/lib/utils/date-utils'
 
@@ -521,19 +521,6 @@ export default function TaxReportsPage() {
   const [showRefundModal, setShowRefundModal] = useState(false)
   const [refundAmount, setRefundAmount] = useState('')
   const [refundDate, setRefundDate] = useState(new Date().toISOString().split('T')[0])
-  const refundAmountInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    if (showRefundModal) {
-      // Focus and select amount for quick edit, after modal mounts
-      setTimeout(() => {
-        if (refundAmountInputRef.current) {
-          refundAmountInputRef.current.focus()
-          refundAmountInputRef.current.select()
-        }
-      }, 0)
-    }
-  }, [showRefundModal])
 
   const handleRefundConfirm = async () => {
     if (!selectedRefundTransaction || !user) return
@@ -1090,7 +1077,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-capsule text-xs text-gray-600">Report Type</Label>
                     <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
-                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1105,7 +1092,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-capsule text-xs text-gray-600">Year</Label>
                     <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
-                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1120,7 +1107,7 @@ export default function TaxReportsPage() {
                     <div className="space-y-2">
                       <Label className="font-capsule text-xs text-gray-600">Quarter</Label>
                       <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
-                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1136,7 +1123,7 @@ export default function TaxReportsPage() {
                   <div className="space-y-2">
                     <Label className="font-capsule text-xs text-gray-600">Status</Label>
                     <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
-                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                      <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1156,7 +1143,7 @@ export default function TaxReportsPage() {
                         type="date"
                         value={filters.start_date}
                         onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-                        className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                        className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
                       />
                     </div>
                     <div className="space-y-2">
@@ -1165,7 +1152,7 @@ export default function TaxReportsPage() {
                         type="date"
                         value={filters.end_date}
                         onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-                        className="w-full h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                        className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
                       />
                     </div>
                   </div>
@@ -1212,7 +1199,7 @@ export default function TaxReportsPage() {
                       <div className="space-y-2">
                         <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
                         <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
-                          <SelectTrigger className="w-full lg:w-[calc(50%-0.75rem)] h-10 bg-white border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200 text-sm">
+                          <SelectTrigger className="w-full lg:w-[calc(50%-0.75rem)] h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                             <SelectValue className="text-left" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1356,7 +1343,6 @@ export default function TaxReportsPage() {
                     placeholder="0.00"
                     value={refundAmount}
                     onChange={(e) => setRefundAmount(e.target.value)}
-                    ref={refundAmountInputRef}
                     leftIcon={<DollarSign className="h-4 w-4" />}
                     className="h-11"
                   />
@@ -1381,7 +1367,9 @@ export default function TaxReportsPage() {
               <Button variant="outline" onClick={() => setShowRefundModal(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleRefundConfirm}>Confirm Refund</Button>
+              <Button onClick={handleRefundConfirm} className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+                Confirm Refund
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
