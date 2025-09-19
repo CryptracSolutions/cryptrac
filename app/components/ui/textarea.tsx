@@ -10,13 +10,13 @@ export interface TextareaProps
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, error, label, ...props }, ref) => {
     const textareaId = React.useId()
-    
+
     return (
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {label && (
-          <label 
+          <label
             htmlFor={textareaId}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="font-inter text-sm font-medium text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             {label}
           </label>
@@ -24,15 +24,15 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           id={textareaId}
           className={cn(
-            "flex min-h-[80px] w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-base font-normal placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7f5efd]/20 focus-visible:ring-offset-0 focus-visible:border-[#7f5efd] hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 ease-in-out resize-none",
-            error && "border-error-500 focus-visible:ring-error-500/20 focus-visible:border-error-500",
+            "flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 font-inter text-sm font-normal placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-0 focus-visible:border-primary-500 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 resize-y",
+            error && "border-error-500 focus-visible:ring-error-500 focus-visible:border-error-500",
             className
           )}
           ref={ref}
           {...props}
         />
         {error && (
-          <p className="text-sm text-destructive">{error}</p>
+          <p className="font-inter text-xs text-error-600 font-normal mt-1">{error}</p>
         )}
       </div>
     )

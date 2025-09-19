@@ -12,13 +12,13 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, label, leftIcon, rightIcon, ...props }, ref) => {
     const inputId = React.useId()
-    
+
     return (
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {label && (
-          <label 
+          <label
             htmlFor={inputId}
-            className="font-phonic text-sm font-normal text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="font-inter text-sm font-medium text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             {label}
           </label>
@@ -33,10 +33,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={type}
             className={cn(
-              "flex h-12 w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-3 font-phonic text-base font-normal placeholder:text-gray-400 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-normal focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7f5efd]/20 focus-visible:ring-offset-0 focus-visible:border-[#7f5efd] hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 ease-in-out",
-              leftIcon && "pl-12",
-              rightIcon && "pr-12",
-              error && "border-error-500 focus-visible:ring-error-500/20 focus-visible:border-error-500",
+              "flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 font-inter text-sm font-normal placeholder:text-gray-400 ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-0 focus-visible:border-primary-500 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
+              leftIcon && "pl-10",
+              rightIcon && "pr-10",
+              error && "border-error-500 focus-visible:ring-error-500 focus-visible:border-error-500",
               className
             )}
             ref={ref}
@@ -49,7 +49,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && (
-          <p className="font-phonic text-sm text-error-600 font-normal">{error}</p>
+          <p className="font-inter text-xs text-error-600 font-normal mt-1">{error}</p>
         )}
       </div>
     )

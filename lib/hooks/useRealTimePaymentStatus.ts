@@ -5,6 +5,18 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const HAS_SUPABASE_CONFIG = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
 
+const FINAL_PAYMENT_STATUSES = new Set([
+  'confirmed',
+  'finished',
+  'completed',
+  'succeeded',
+  'sending',
+  'paid',
+  'failed',
+  'expired',
+  'cancelled'
+])
+
 const initialConnectionStatus: ConnectionStatus = {
   connected: false,
   reconnecting: false,
@@ -88,6 +100,14 @@ export function useRealTimePaymentStatus({
     missingConfigWarnedRef.current = true
   }
 
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+      console.log('🛑 Stopped payment status polling interval')
+    }
+  }, [])
+
   // Update payment status and notify listeners
   const updatePaymentStatus = useCallback((newStatus: PaymentStatus) => {
     if (!isMountedRef.current) {
@@ -99,11 +119,21 @@ export function useRealTimePaymentStatus({
     setPaymentStatus(newStatus)
     setConnectionStatus(prev => ({ ...prev, lastUpdate: new Date() }))
     onStatusChange?.(newStatus)
-  }, [onStatusChange])
+
+    if (FINAL_PAYMENT_STATUSES.has(newStatus.payment_status)) {
+      stopPolling()
+    }
+  }, [onStatusChange, stopPolling])
 
   // Polling fallback function
   const pollPaymentStatus = useCallback(async () => {
     if (!paymentId || !isMountedRef.current) return
+
+    const currentStatus = paymentStatusRef.current?.payment_status
+    if (currentStatus && FINAL_PAYMENT_STATUSES.has(currentStatus)) {
+      stopPolling()
+      return
+    }
 
     // Abort any previous request
     if (abortControllerRef.current) {
@@ -152,15 +182,7 @@ export function useRealTimePaymentStatus({
         }))
       }
     }
-  }, [paymentId, updatePaymentStatus])
-
-  const stopPolling = useCallback(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current)
-      pollingIntervalRef.current = null
-      console.log('🛑 Stopped payment status polling interval')
-    }
-  }, [])
+  }, [paymentId, updatePaymentStatus, stopPolling])
 
   // Server-Sent Events connection
   const connectSSE = useCallback(() => {

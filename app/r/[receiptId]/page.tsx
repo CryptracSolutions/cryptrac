@@ -42,6 +42,17 @@ const explorers: Record<string, string> = {
   GENERIC: 'https://blockchair.com/search?q='
 };
 
+const coerceBoolean = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === 'true' || normalized === 't' || normalized === '1' || normalized === 'yes';
+  }
+  return false;
+};
+
 export default async function ReceiptPage({ params }: { params: Promise<{ receiptId: string }> }) {
   const { receiptId } = await params;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -71,6 +82,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       gateway_fee_amount,
       conversion_fee_amount,
       network_fee_amount,
+      is_fee_paid_by_user,
       total_paid,
       tx_hash,
       nowpayments_payment_id,
@@ -131,6 +143,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   // FIXED: Correct amount calculation - use base_amount directly, not subtract tax
   const baseAmount = Number(tx.base_amount || tx.amount || 0);
   const totalPaid = Number(tx.total_paid || tx.total_amount_paid || tx.amount || 0);
+  const gatewayFeeAmount = Number(tx.gateway_fee_amount || 0);
+  const feePaidByCustomer = coerceBoolean(tx.is_fee_paid_by_user);
   
   const resolveExplorerBase = (
     network?: string | null,
@@ -414,11 +428,20 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
                     </div>
                   )}
 
-                  {/* Only show gateway fee if customer paid it (total_paid includes gateway fee) */}
-                  {Number(tx.gateway_fee_amount || 0) > 0 && totalPaid > (Number(tx.subtotal_with_tax || baseAmount + Number(tx.tax_amount || 0)) + Number(tx.conversion_fee_amount || 0) + Number(tx.network_fee_amount || 0)) && (
+                  {gatewayFeeAmount > 0 && (
                     <div className="flex items-center justify-between">
                       <span className="font-phonic text-base text-gray-600">Gateway Fee</span>
-                      <span className="font-phonic text-base text-[#7f5efd]">+{format(tx.gateway_fee_amount, tx.currency)}</span>
+                      {feePaidByCustomer ? (
+                        <span className="font-phonic text-base text-[#7f5efd] flex items-center gap-2">
+                          +{format(gatewayFeeAmount, tx.currency)}
+                          <span className="text-[10px] uppercase tracking-[0.25em] text-gray-500">Customer paid</span>
+                        </span>
+                      ) : (
+                        <span className="font-phonic text-base text-gray-500 flex items-center gap-2">
+                          {format(gatewayFeeAmount, tx.currency)}
+                          <span className="text-[10px] uppercase tracking-[0.25em] text-gray-500">Merchant paid</span>
+                        </span>
+                      )}
                     </div>
                   )}
 

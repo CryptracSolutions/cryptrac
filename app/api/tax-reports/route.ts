@@ -110,8 +110,20 @@ type RawTransactionRow = {
   asset?: string | null
   currency_received?: string | null
   amount_received?: number | string | null
-  fee_paid_by_customer?: boolean | null
+  fee_paid_by_customer?: boolean | string | number | null
+  is_fee_paid_by_user?: boolean | string | number | null
   total_paid?: number | string | null
+}
+
+function isTruthyFlag(value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    return normalized === 'true' || normalized === 't' || normalized === '1' || normalized === 'yes'
+  }
+  return false
 }
 
 function normalizeNetwork(...values: Array<unknown>): string | null {
@@ -235,6 +247,7 @@ export async function GET(request: Request) {
         asset,
         network,
         status,
+        is_fee_paid_by_user,
         gateway_fee,
         cryptrac_fee,
         refund_amount,
@@ -342,10 +355,12 @@ export async function GET(request: Request) {
           ? t.updated_at
           : null)
 
-      // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
-      // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
-      const feePayer: 'merchant' | 'customer' = transactionRow.fee_paid_by_customer ? 'customer' : 'merchant'
-      const merchantFeePortion = feePayer === 'merchant' ? fees : 0
+      // Determine fee payer using either fee_paid_by_customer or is_fee_paid_by_user
+      const feePaidByCustomerFlag = isTruthyFlag(
+        transactionRow.fee_paid_by_customer ?? transactionRow.is_fee_paid_by_user ?? false
+      )
+      const feePayer: 'merchant' | 'customer' = feePaidByCustomerFlag ? 'customer' : 'merchant'
+      const merchantFeePortion = feePaidByCustomerFlag ? 0 : fees
       const net = Math.max(saleTotal - merchantFeePortion, 0)
 
       return {
@@ -417,6 +432,7 @@ export async function GET(request: Request) {
             asset,
             network,
             status,
+            is_fee_paid_by_user,
             gateway_fee,
             cryptrac_fee,
             refund_amount,
@@ -495,10 +511,12 @@ export async function GET(request: Request) {
               ? t.updated_at
               : null)
 
-          // Determine fee payer: if fee_paid_by_customer is true, customer paid, otherwise merchant paid
-          // Note: This field may not exist yet in the database, so we default to 'merchant' for backwards compatibility
-          const feePayer: 'merchant' | 'customer' = transactionRow.fee_paid_by_customer ? 'customer' : 'merchant'
-          const merchantFeePortion = feePayer === 'merchant' ? fees : 0
+          // Determine fee payer using either fee_paid_by_customer or is_fee_paid_by_user
+          const feePaidByCustomerFlag = isTruthyFlag(
+            transactionRow.fee_paid_by_customer ?? transactionRow.is_fee_paid_by_user ?? false
+          )
+          const feePayer: 'merchant' | 'customer' = feePaidByCustomerFlag ? 'customer' : 'merchant'
+          const merchantFeePortion = feePaidByCustomerFlag ? 0 : fees
           const net = Math.max(saleTotal - merchantFeePortion, 0)
 
           return {
