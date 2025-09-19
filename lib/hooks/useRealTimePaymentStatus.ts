@@ -154,6 +154,14 @@ export function useRealTimePaymentStatus({
     }
   }, [paymentId, updatePaymentStatus])
 
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+      console.log('🛑 Stopped payment status polling interval')
+    }
+  }, [])
+
   // Server-Sent Events connection
   const connectSSE = useCallback(() => {
     if (!paymentId) return
@@ -175,6 +183,7 @@ export function useRealTimePaymentStatus({
         method: 'sse'
       }))
       reconnectAttemptsRef.current = 0
+      stopPolling()
     }
 
     eventSource.onmessage = (event) => {
@@ -234,7 +243,7 @@ export function useRealTimePaymentStatus({
     }
 
     eventSourceRef.current = eventSource
-  }, [paymentId, updatePaymentStatus, fallbackToPolling])
+  }, [paymentId, updatePaymentStatus, fallbackToPolling, stopPolling])
 
   // Supabase real-time connection
   const connectRealTime = useCallback(() => {
@@ -320,20 +329,26 @@ export function useRealTimePaymentStatus({
             method: 'realtime'
           }))
           reconnectAttemptsRef.current = 0
-          // Keep polling running for redundancy - both methods can coexist
-          console.log('✅ Real-time connected, keeping polling for redundancy')
-        } else if (status === 'CLOSED') {
+          stopPolling()
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          const errorMessage =
+            status === 'CLOSED'
+              ? 'Real-time connection closed'
+              : status === 'TIMED_OUT'
+                ? 'Real-time connection timed out'
+                : 'Real-time channel error'
+
           setConnectionStatus(prev => ({ 
             ...prev, 
             connected: false,
-            error: 'Real-time connection closed'
+            error: errorMessage
           }))
-          
+
           // Attempt reconnect or fallback
           if (reconnectAttemptsRef.current < maxReconnectAttempts) {
             reconnectAttemptsRef.current++
             setConnectionStatus(prev => ({ ...prev, reconnecting: true }))
-            
+
             reconnectTimeoutRef.current = setTimeout(() => {
               if (paymentId && supabaseRef.current && isMountedRef.current) connectRealTime()
             }, Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000))
@@ -341,7 +356,7 @@ export function useRealTimePaymentStatus({
             console.log('🔄 Falling back to SSE after real-time failures')
             // Fallback to polling for reliability
             console.log('🔄 Falling back to polling after real-time failures')
-            if (paymentId && startPollingRef.current) {
+            if (fallbackToPolling && paymentId && startPollingRef.current) {
               startPollingRef.current()
             }
           }
@@ -349,13 +364,17 @@ export function useRealTimePaymentStatus({
       })
 
     subscriptionRef.current = channel
-  }, [paymentId, updatePaymentStatus]) // Remove circular dependencies
+  }, [paymentId, updatePaymentStatus, fallbackToPolling, stopPolling]) // Remove circular dependencies
 
   // Start polling
-  const startPolling = useCallback(() => {
-    if (pollingIntervalRef.current) return // Already polling
+  const startPolling = useCallback((intervalOverride?: number) => {
+    if (!paymentId) return
 
-    console.log(`🔄 Starting polling for payment: ${paymentId}`)
+    const intervalMs = intervalOverride ?? pollingInterval
+
+    stopPolling()
+
+    console.log(`🔄 Starting polling for payment: ${paymentId} (${intervalMs}ms)`)
     connectionMethodRef.current = 'polling'
     setConnectionStatus(prev => ({ ...prev, method: 'polling' }))
 
@@ -363,8 +382,8 @@ export function useRealTimePaymentStatus({
     pollPaymentStatus()
 
     // Set up interval - use provided interval for faster updates
-    pollingIntervalRef.current = setInterval(pollPaymentStatus, pollingInterval)
-  }, [paymentId, pollPaymentStatus, pollingInterval])
+    pollingIntervalRef.current = setInterval(pollPaymentStatus, intervalMs)
+  }, [paymentId, pollPaymentStatus, pollingInterval, stopPolling])
 
   // Update function refs to avoid stale closures
   connectSSERef.current = connectSSE
@@ -385,12 +404,8 @@ export function useRealTimePaymentStatus({
     const hadSubscription = Boolean(subscriptionRef.current)
     const hadTimeout = Boolean(reconnectTimeoutRef.current)
 
-    // Clear polling
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current)
-      pollingIntervalRef.current = null
-    }
-    
+    stopPolling()
+
     // Close SSE
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
@@ -426,7 +441,7 @@ export function useRealTimePaymentStatus({
         return shouldUpdateStatus ? initialConnectionStatus : prev
       })
     }
-  }, [])
+  }, [stopPolling])
 
   // Connect on mount and when paymentId changes
   useEffect(() => {

@@ -479,7 +479,7 @@ export default function MerchantDashboard() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-gray-900">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${stats.totalRevenue.toFixed(2)}</div>
               <div className="flex items-center gap-1 text-gray-600">
                 <TrendingUp className="h-3 w-3" />
                 <span className="font-capsule text-xs">Growing steadily</span>
@@ -495,7 +495,7 @@ export default function MerchantDashboard() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-gray-900">{stats.paymentLinks}</div>
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{stats.paymentLinks}</div>
               <div className="flex items-center gap-1 text-gray-600">
                 <Users className="h-3 w-3" />
                 <span className="font-capsule text-xs">Active links</span>
@@ -511,7 +511,7 @@ export default function MerchantDashboard() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-gray-900">{stats.successfulPayments}</div>
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{stats.successfulPayments}</div>
               <div className="flex items-center gap-1 text-gray-600">
                 <Zap className="h-3 w-3" />
                 <span className="font-capsule text-xs">Completed transactions</span>

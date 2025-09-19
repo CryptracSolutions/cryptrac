@@ -181,7 +181,7 @@ export default function MerchantSubscriptionsPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-gray-900">
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">
                 {subs.filter(s => s.status === 'active').length}
               </div>
               <div className="flex items-center gap-1 text-gray-600">
@@ -199,7 +199,7 @@ export default function MerchantSubscriptionsPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-gray-900">
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">
                 ${subs.filter(s => s.status === 'active').reduce((sum, s) => sum + s.amount, 0).toFixed(2)}
               </div>
               <div className="flex items-center gap-1 text-gray-600">
@@ -217,7 +217,7 @@ export default function MerchantSubscriptionsPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-gray-900">
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">
                 {new Set(subs.map(s => s.customer_id)).size}
               </div>
               <div className="flex items-center gap-1 text-gray-600">
@@ -235,7 +235,7 @@ export default function MerchantSubscriptionsPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-gray-900">
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">
                 {subs.length > 0 ? Math.round((subs.filter(s => s.status === 'active').length / subs.length) * 100) : 0}%
               </div>
               <div className="flex items-center gap-1 text-gray-600">

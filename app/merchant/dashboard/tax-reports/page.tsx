@@ -745,7 +745,7 @@ export default function TaxReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_gross_sales.toFixed(2)}</div>
+                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${displayReportData.summary.total_gross_sales.toFixed(2)}</div>
                   <div className="flex items-center gap-1 text-gray-600">
                     <TrendingUp className="h-3 w-3" />
                     <span className="font-capsule text-xs">Total revenue before fees</span>
@@ -761,7 +761,7 @@ export default function TaxReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_tax_collected.toFixed(2)}</div>
+                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${displayReportData.summary.total_tax_collected.toFixed(2)}</div>
                   <div className="flex items-center gap-1 text-gray-600">
                     <Calculator className="h-3 w-3" />
                     <span className="font-capsule text-xs">Tax from all transactions</span>
@@ -777,7 +777,7 @@ export default function TaxReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-gray-900">${displayReportData.summary.total_net_revenue.toFixed(2)}</div>
+                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${displayReportData.summary.total_net_revenue.toFixed(2)}</div>
                   <div className="flex items-center gap-1 text-gray-600">
                     <DollarSign className="h-3 w-3" />
                     <span className="font-capsule text-xs">After fees and costs</span>
@@ -793,7 +793,7 @@ export default function TaxReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-gray-900">{displayReportData.summary.total_transactions}</div>
+                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{displayReportData.summary.total_transactions}</div>
                   <div className="flex items-center gap-1 text-gray-600">
                     <BarChart3 className="h-3 w-3" />
                     <span className="font-capsule text-xs">Total processed</span>
