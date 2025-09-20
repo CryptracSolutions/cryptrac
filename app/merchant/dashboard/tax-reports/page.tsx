@@ -812,7 +812,7 @@ export default function TaxReportsPage() {
                     <div className="space-y-2">
                       <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                         Transaction Details
-                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                        <Badge variant="secondary" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
                           {filteredTransactions.length}
                           {filteredTransactions.length !== displayReportData.transactions.length && (
                             <span className="text-xs"> / {displayReportData.transactions.length}</span>
@@ -903,7 +903,7 @@ export default function TaxReportsPage() {
                           <span className="font-capsule text-xs text-transparent select-none">Clear</span>
                           <Button
                             variant="ghost"
-                            size="default"
+                            size="lg"
                             onClick={clearTransactionFilters}
                             className="h-11 px-4 hover:bg-[#7f5efd]/10 hover:text-[#7f5efd] transition-colors"
                           >
@@ -1004,7 +1004,7 @@ export default function TaxReportsPage() {
                             <div className="flex items-center justify-center gap-2">
                               {transaction.public_receipt_id && (
                                 <Button
-                                  variant="outline"
+                                  variant="secondary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -1019,7 +1019,7 @@ export default function TaxReportsPage() {
                               )}
                               {transaction.status !== 'refunded' && (
                                 <Button
-                                  variant="outline"
+                                  variant="secondary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -1047,7 +1047,7 @@ export default function TaxReportsPage() {
                     {/* Load all transactions button */}
                     {displayReportData && displayReportData.transactions.length < displayReportData.total_count && (
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => loadTaxReport()}
                         disabled={loadingReport}
                         className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
@@ -1076,7 +1076,7 @@ export default function TaxReportsPage() {
                   <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                     Report Configuration
                     {exportReportData && (
-                      <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                      <Badge variant="secondary" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
                         Ready to Export
                       </Badge>
                     )}
@@ -1193,7 +1193,7 @@ export default function TaxReportsPage() {
                   <Button
                     onClick={generateReport}
                     disabled={loadingReport}
-                    size="default"
+                    size="lg"
                     className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
                   >
                     {loadingReport ? (
@@ -1239,9 +1239,9 @@ export default function TaxReportsPage() {
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button
                             disabled={exportingCSV}
-                            size="default"
+                            size="lg"
                             onClick={() => exportToCSV(selectedTemplate)}
-                            variant="outline"
+                            variant="secondary"
                             className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
                           >
                             {exportingCSV ? (
@@ -1254,9 +1254,9 @@ export default function TaxReportsPage() {
 
                           <Button
                             disabled={exportingPDF}
-                            size="default"
+                            size="lg"
                             onClick={() => exportToPDF(selectedTemplate)}
-                            variant="outline"
+                            variant="secondary"
                             className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
                           >
                             {exportingPDF ? (
@@ -1269,9 +1269,9 @@ export default function TaxReportsPage() {
 
                           <Button
                             disabled={exportingExcel}
-                            size="default"
+                            size="lg"
                             onClick={() => exportToExcel(selectedTemplate)}
-                            variant="outline"
+                            variant="secondary"
                             className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
                           >
                             {exportingExcel ? (
@@ -1320,7 +1320,7 @@ export default function TaxReportsPage() {
                   <Button
                     onClick={generateReport}
                     disabled={loadingReport}
-                    size="default"
+                    size="lg"
                     className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
                   >
                     Generate Report
@@ -1383,7 +1383,7 @@ export default function TaxReportsPage() {
               </div>
             </div>
             <DialogFooter className="border-t border-[#7f5efd]/20 pt-4 gap-3 items-center sm:justify-center sm:space-x-0">
-              <Button variant="outline" onClick={() => setShowRefundModal(false)}>
+              <Button variant="secondary" onClick={() => setShowRefundModal(false)}>
                 Cancel
               </Button>
               <Button onClick={handleRefundConfirm} className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">

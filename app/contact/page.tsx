@@ -544,7 +544,7 @@ export default function ContactPage() {
                           Email Support
                         </Link>
                       </Button>
-                      <Button variant="outline" asChild>
+                      <Button variant="secondary" asChild>
                         <Link href="/help">
                           <HelpCircle className="h-4 w-4 mr-2" />
                           Help Center

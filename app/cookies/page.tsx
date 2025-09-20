@@ -422,15 +422,15 @@ export default function CookiePolicy() {
                         <p className="font-capsule text-base font-normal text-gray-700">Most modern browsers provide direct cookie control:</p>
                         <ul className="space-y-2 text-sm text-gray-600">
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">1</Badge>
+                            <Badge variant="secondary" className="mt-0.5">1</Badge>
                             <span>View and manage existing cookies</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">2</Badge>
+                            <Badge variant="secondary" className="mt-0.5">2</Badge>
                             <span>Block all cookies or allow only first-party cookies</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">3</Badge>
+                            <Badge variant="secondary" className="mt-0.5">3</Badge>
                             <span>Selectively allow cookies from specific websites</span>
                           </li>
                         </ul>

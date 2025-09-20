@@ -716,7 +716,7 @@ export default function MerchantSettingsPage() {
                               <p className="font-capsule text-sm text-gray-600">Configure your tax rates</p>
                             </div>
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               size="sm"
                               onClick={addTaxRate}
                               className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"

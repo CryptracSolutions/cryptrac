@@ -313,7 +313,7 @@ export default function Home() {
                     <ArrowRight className="ml-3 h-6 w-6" />
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 border-2 border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-300" asChild>
+                <Button variant="secondary" size="lg" className="font-phonic text-lg font-normal px-10 py-4 h-14 border-2 border-[#7f5efd] text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white transition-all duration-300" asChild>
                   <Link href="#pricing">View Pricing</Link>
                 </Button>
               </div>
@@ -401,7 +401,7 @@ export default function Home() {
             <p className="font-phonic text-base text-gray-600 mb-4">
               <span className="font-medium text-[#7f5efd]"></span>
             </p>
-            <Button variant="outline" size="sm" className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
+            <Button variant="secondary" size="sm" className="border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff]" asChild>
               <Link href="/supported-cryptocurrencies">View All Supported Cryptocurrencies</Link>
             </Button>
           </div>

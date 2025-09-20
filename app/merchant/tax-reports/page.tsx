@@ -4,6 +4,8 @@ import React from 'react'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
+import { EmptyState } from '@/app/components/ui/empty-state'
+import { Receipt } from 'lucide-react'
 
 export default function TaxReportsPage() {
   return (
@@ -27,13 +29,18 @@ export default function TaxReportsPage() {
       </div>
 
       <Card className="shadow-soft">
-        <CardContent className="space-y-6">
-          {/* Placeholder for reports */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-            <p className="font-capsule text-base font-normal text-gray-600 mb-4">No reports generated yet.</p>
-            <Button className="bg-primary-500 text-white">Generate Report</Button>
-          </div>
-          {/* Add table or list here in future */}
+        <CardContent className="p-6">
+          <EmptyState
+            variant="no-data"
+            icon={<Receipt className="h-[48px] w-[48px]" />}
+            title="No reports generated yet"
+            description="Generate your first tax report to see your transaction summary"
+            action={
+              <Button className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+                Generate Report
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
     </div>

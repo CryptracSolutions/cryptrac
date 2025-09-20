@@ -560,7 +560,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             <div className="flex justify-between pt-8">
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 onClick={onPrevious}
                 className="flex items-center"
               >

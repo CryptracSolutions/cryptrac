@@ -1,0 +1,391 @@
+/**
+ * Stripe-Parity Design Tokens
+ * Complete CSS variable system matching Stripe's design language
+ * with Cryptrac brand adaptations
+ */
+
+:root {
+  /* ============================================
+     COLORS
+     ============================================ */
+
+  /* Brand Colors */
+  --color-brand: #7f5efd; /* Cryptrac purple (replaces Stripe #635BFF) */
+  --color-brand-hover: #6d4fdd;
+  --color-brand-active: #5b3fc0;
+  --color-brand-stripe-ref: #635BFF; /* Stripe reference - DO NOT USE */
+
+  /* App Header & Navigation */
+  --color-app-header: #063667;
+  --color-nav-bg: #0a2540;
+
+  /* Text Hierarchy */
+  --color-text-primary: #30313D;
+  --color-text-secondary: #6A7383;
+  --color-text-tertiary: #8792A2;
+  --color-text-disabled: #A3ACBA;
+  --color-text-white: #FFFFFF;
+  --color-text-link: #7f5efd;
+  --color-text-link-hover: #6d4fdd;
+
+  /* Surfaces & Backgrounds */
+  --color-bg-surface: #FFFFFF;
+  --color-bg-canvas: #F6F9FC;
+  --color-bg-hover: #F6F8FA;
+  --color-bg-active: #E3E8EE;
+  --color-bg-disabled: #F6F8FA;
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Borders */
+  --color-border-default: #D5DBE1;
+  --color-border-hover: #C9D1DB;
+  --color-border-focus: #7f5efd;
+  --color-border-input: #E3E8EE;
+  --color-border-light: #F6F8FA;
+  --color-border-error: #E35C5C;
+
+  /* Status Colors */
+  --color-success: #41C064;
+  --color-success-bg: #F1FDF6;
+  --color-success-border: #C4F1D5;
+  --color-warning: #E9B949;
+  --color-warning-bg: #FFFBEB;
+  --color-warning-border: #FDE68A;
+  --color-error: #E35C5C;
+  --color-error-bg: #FEF2F2;
+  --color-error-border: #FECACA;
+  --color-info: #7f5efd;
+  --color-info-bg: #F5F3FF;
+  --color-info-border: #DDD6FE;
+
+  /* ============================================
+     SPACING (4px Grid System)
+     ============================================ */
+
+  --space-0: 0px;
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+
+  /* Component-specific spacing */
+  --padding-button-x: 8px;
+  --padding-button-y: 4px;
+  --padding-input: 8px;
+  --padding-card: 16px;
+  --padding-section: 16px;
+  --padding-drawer: 16px;
+  --padding-icon-button: 4px;
+
+  /* Gaps */
+  --gap-xs: 4px;
+  --gap-sm: 6px;
+  --gap-md: 8px;
+  --gap-lg: 12px;
+  --gap-xl: 16px;
+  --gap-xxl: 32px;
+
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+
+  /* Font Families */
+  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  --font-text: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Courier New', monospace;
+
+  /* Font Sizes */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  /* Line Heights */
+  --leading-xs: 16px;
+  --leading-sm: 20px;
+  --leading-md: 24px;
+  --leading-lg: 28px;
+  --leading-xl: 32px;
+  --leading-2xl: 40px;
+
+  /* Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Letter Spacing */
+  --tracking-tight: -0.4px;
+  --tracking-normal: -0.154px;
+  --tracking-wide: 0.3px;
+
+  /* ============================================
+     BORDER RADIUS
+     ============================================ */
+
+  --radius-xs: 4px;  /* Buttons, checkboxes, badges */
+  --radius-sm: 5px;  /* Input fields */
+  --radius-md: 8px;  /* Cards, modals, drawers */
+  --radius-lg: 12px; /* Large cards */
+  --radius-xl: 16px; /* Extra large elements */
+  --radius-full: 9999px; /* Pills, avatars */
+
+  /* ============================================
+     SHADOWS (Elevation System)
+     ============================================ */
+
+  /* Level 0 - No shadow */
+  --shadow-none: none;
+
+  /* Level 1 - Soft (buttons, inputs) */
+  --shadow-soft: 0px 1px 1px rgba(0, 0, 0, 0.12),
+                 0px 2px 5px rgba(60, 66, 87, 0.08);
+
+  /* Level 2 - Medium (dropdowns, selects, hover states) */
+  --shadow-medium: 0px 2px 5px rgba(60, 66, 87, 0.12),
+                   0px 1px 1px rgba(0, 0, 0, 0.08);
+
+  /* Level 3 - Elevated (cards, drawers, modals) */
+  --shadow-elevated: 0px 7px 14px rgba(48, 49, 61, 0.08),
+                     0px 3px 6px rgba(0, 0, 0, 0.12);
+
+  /* Level 4 - High (popovers, tooltips) */
+  --shadow-high: 0px 15px 35px rgba(48, 49, 61, 0.12),
+                 0px 5px 15px rgba(0, 0, 0, 0.08);
+
+  /* Specific shadows */
+  --shadow-checkbox: 0px 2px 5px rgba(48, 49, 61, 0.08),
+                     0px 1px 1px rgba(0, 0, 0, 0.12);
+  --shadow-focus: 0 0 0 2px var(--color-bg-surface),
+                  0 0 0 4px var(--color-brand);
+
+  /* ============================================
+     COMPONENT DIMENSIONS
+     ============================================ */
+
+  /* Buttons */
+  --button-height-xs: 24px;
+  --button-height-sm: 28px;
+  --button-height-md: 32px;
+  --button-height-lg: 40px;
+  --button-min-width: 64px;
+
+  /* Inputs */
+  --input-height-sm: 28px;
+  --input-height-md: 32px;
+  --input-height-lg: 40px;
+
+  /* Icons */
+  --icon-xs: 12px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --icon-xl: 32px;
+
+  /* Checkboxes & Radio */
+  --checkbox-size: 16px;
+  --checkbox-inner: 14px;
+  --radio-size: 16px;
+  --switch-height: 20px;
+  --switch-width: 36px;
+
+  /* Drawers & Modals */
+  --drawer-width-sm: 320px;
+  --drawer-width-md: 344px;
+  --drawer-width-lg: 480px;
+  --drawer-width-xl: 640px;
+  --modal-width-sm: 400px;
+  --modal-width-md: 600px;
+  --modal-width-lg: 800px;
+
+  /* Header Heights */
+  --header-height: 60px;
+  --app-bar-height: 40px;
+  --nav-width: 240px;
+  --nav-collapsed-width: 60px;
+
+  /* ============================================
+     Z-INDEX SCALE
+     ============================================ */
+
+  --z-base: 0;
+  --z-above: 1;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-notification: 60;
+  --z-tooltip: 70;
+  --z-max: 9999;
+
+  /* ============================================
+     TRANSITIONS & ANIMATIONS
+     ============================================ */
+
+  /* Durations */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 250ms;
+  --duration-slower: 400ms;
+
+  /* Easing Functions */
+  --ease-default: ease;
+  --ease-linear: linear;
+  --ease-in: ease-in;
+  --ease-out: ease-out;
+  --ease-in-out: ease-in-out;
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Transform Values */
+  --scale-pressed: 0.98;
+  --scale-hover: 1.02;
+  --opacity-hover: 0.8;
+  --opacity-disabled: 0.5;
+
+  /* ============================================
+     ICON SYSTEM
+     ============================================ */
+
+  /* Icon Sizes (matching Stripe's system) */
+  --icon-size-xs: 12px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 20px;
+  --icon-size-lg: 24px;
+  --icon-size-xl: 32px;
+
+  /* Icon Stroke Properties */
+  --icon-stroke-width: 2px;
+  --icon-stroke-width-thin: 1.5px;
+  --icon-stroke-width-thick: 2.5px;
+  --icon-stroke-linecap: round;
+  --icon-stroke-linejoin: round;
+
+  /* Icon Colors */
+  --icon-color-default: var(--color-text-secondary);
+  --icon-color-primary: var(--color-text-primary);
+  --icon-color-brand: var(--color-brand);
+  --icon-color-white: var(--color-text-white);
+  --icon-color-disabled: var(--color-text-disabled);
+  --icon-color-success: var(--color-success);
+  --icon-color-error: var(--color-error);
+  --icon-color-warning: var(--color-warning);
+  --icon-color-info: var(--color-info);
+
+  /* Icon Animations */
+  --icon-transition: all 200ms ease;
+  --icon-transition-fast: all 150ms ease;
+  --icon-transition-slow: all 300ms ease;
+  --icon-rotate-loading: rotate 1s linear infinite;
+  --icon-scale-active: 0.95;
+  --icon-opacity-hover: 0.8;
+
+  /* Icon Spacing */
+  --icon-gap-xs: 4px;
+  --icon-gap-sm: 6px;
+  --icon-gap-md: 8px;
+  --icon-gap-lg: 12px;
+
+  /* ============================================
+     BREAKPOINTS
+     ============================================ */
+
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ============================================
+     FORM SYSTEM
+     ============================================ */
+
+  /* Form Component Heights */
+  --form-input-height-sm: 24px;
+  --form-input-height-md: 28px;
+  --form-input-height-lg: 36px;
+
+  /* Form Field Spacing */
+  --form-field-gap-sm: 8px;
+  --form-field-gap-md: 16px;
+  --form-field-gap-lg: 24px;
+  --form-section-gap: 32px;
+
+  /* Form Padding */
+  --form-padding-x: 8px;
+  --form-padding-y: 4px;
+  --form-padding-sm-x: 6px;
+  --form-padding-sm-y: 2px;
+  --form-padding-lg-x: 12px;
+  --form-padding-lg-y: 6px;
+
+  /* Form Border Radius */
+  --form-border-radius: 4px;
+  --form-border-radius-lg: 5px;
+
+  /* Form Colors */
+  --form-text-primary: #30313d;
+  --form-text-secondary: #6a7383;
+  --form-text-disabled: #a3acba;
+  --form-text-placeholder: #a3acba;
+  --form-text-error: #e85d75;
+  --form-text-success: #0a7c15;
+
+  /* Form Borders */
+  --form-border-default: #e3e8ee;
+  --form-border-hover: #d5dbe1;
+  --form-border-focus: #7f5efd;
+  --form-border-error: #e85d75;
+  --form-border-success: #0a7c15;
+
+  /* Form Backgrounds */
+  --form-bg-default: #ffffff;
+  --form-bg-disabled: #f6f9fc;
+  --form-bg-hover: #f7fafc;
+  --form-bg-selected: #f7fafc;
+
+  /* Form Shadows */
+  --form-shadow-default: 0px 2px 5px 0px rgba(60, 66, 87, 0.12),
+                         0px 1px 1px 0px rgba(0, 0, 0, 0.08);
+  --form-shadow-focus: 0px 2px 5px 0px rgba(127, 94, 253, 0.12),
+                       0px 1px 1px 0px rgba(127, 94, 253, 0.08);
+  --form-shadow-dropdown: 0px 7px 14px 0px rgba(48, 49, 61, 0.08),
+                         0px 3px 6px 0px rgba(0, 0, 0, 0.12);
+  --form-shadow-checkbox: 0px 2px 5px 0px rgba(48, 49, 61, 0.08),
+                         0px 1px 1px 0px rgba(0, 0, 0, 0.12);
+
+  /* Form Typography */
+  --form-label-size: 14px;
+  --form-label-weight: 600;
+  --form-label-spacing: -0.154px;
+  --form-subheading-size: 11px;
+  --form-subheading-weight: 600;
+  --form-subheading-spacing: -0.4px;
+  --form-help-text-size: 12px;
+  --form-error-text-size: 12px;
+
+  /* Form Specific Dimensions */
+  --form-checkbox-size: 16px;
+  --form-radio-size: 16px;
+  --form-switch-height: 18px;
+  --form-switch-width: 32px;
+  --form-icon-size: 14px;
+}
+
+/* Dark mode tokens (future implementation) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode overrides will go here */
+  }
+}

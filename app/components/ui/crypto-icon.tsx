@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils"
 interface CryptoIconProps extends React.HTMLAttributes<HTMLDivElement> {
   currency: string
   size?: "sm" | "md" | "lg" | "xl"
-  variant?: "default" | "minimal"
+  variant?: "primary" | "minimal"
 }
 
 const CryptoIcon = React.forwardRef<HTMLDivElement, CryptoIconProps>(
-  ({ className, currency, size = "md", variant = "default", ...props }, ref) => {
+  ({ className, currency, size = "md", variant = "primary", ...props }, ref) => {
     const sizeClasses = {
       sm: "h-6 w-6",
       md: "h-8 w-8",

@@ -19,7 +19,9 @@ import {
   Zap
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, MetricCard, ActivityCard } from '@/app/components/ui/card';
+import { EmptyState } from '@/app/components/ui/empty-state';
+import { TimelineList } from '@/app/components/ui/timeline-list';
 
 import { CryptoIcon } from '@/app/components/ui/crypto-icon';
 import { supabase } from '@/lib/supabase-browser';
@@ -399,26 +401,22 @@ export default function MerchantDashboard() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Link href="/merchant/dashboard/payments/create">
-              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
-                <Plus className="h-4 w-4" />
+              <Button variant="primary" size="md" fullWidth leftIcon={<Plus size={16} />}>
                 Create Payment Link
               </Button>
             </Link>
             <Link href="/smart-terminal">
-              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
-                <CreditCard className="h-4 w-4" />
+              <Button variant="primary" size="md" fullWidth leftIcon={<CreditCard size={16} />}>
                 Open Smart Terminal
               </Button>
             </Link>
             <Link href="/merchant/subscriptions/create">
-              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
-                <Plus className="h-4 w-4" />
+              <Button variant="primary" size="md" fullWidth leftIcon={<Plus size={16} />}>
                 Create Subscription
               </Button>
             </Link>
             <Link href="/merchant/subscriptions">
-              <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
-                <Calendar className="h-4 w-4" />
+              <Button variant="primary" size="md" fullWidth leftIcon={<Calendar size={16} />}>
                 Manage Subscriptions
               </Button>
             </Link>
@@ -445,8 +443,7 @@ export default function MerchantDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" onClick={markPaymentsSeen} className="text-[#7f5efd] hover:bg-[#7f5efd]/10">
-                  <CheckCircle className="h-4 w-4 mr-1" />
+                <Button size="sm" variant="ghost" onClick={markPaymentsSeen} leftIcon={<CheckCircle size={14} />}>
                   Mark seen
                 </Button>
               </div>
@@ -471,53 +468,27 @@ export default function MerchantDashboard() {
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Revenue</CardTitle>
-              <div className="p-2 bg-[#7f5efd] rounded-lg">
-                <DollarSign className="h-4 w-4 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${stats.totalRevenue.toFixed(2)}</div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <TrendingUp className="h-3 w-3" />
-                <span className="font-capsule text-xs">Growing steadily</span>
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Total Revenue"
+            value={`$${stats.totalRevenue.toFixed(2)}`}
+            trend={{ value: 12, direction: 'up' }}
+            subtitle="Growing steadily"
+            icon={<DollarSign className="h-4 w-4" />}
+          />
 
-          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Payment Links</CardTitle>
-              <div className="p-2 bg-[#7f5efd] rounded-lg">
-                <LinkIcon className="h-4 w-4 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{stats.paymentLinks}</div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <Users className="h-3 w-3" />
-                <span className="font-capsule text-xs">Active links</span>
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Payment Links"
+            value={stats.paymentLinks}
+            subtitle="Active links"
+            icon={<LinkIcon className="h-4 w-4" />}
+          />
 
-          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Successful Payments</CardTitle>
-              <div className="p-2 bg-[#7f5efd] rounded-lg">
-                <CheckCircle className="h-4 w-4 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{stats.successfulPayments}</div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <Zap className="h-3 w-3" />
-                <span className="font-capsule text-xs">Completed transactions</span>
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Successful Payments"
+            value={stats.successfulPayments}
+            subtitle="Completed transactions"
+            icon={<CheckCircle className="h-4 w-4" />}
+          />
         </div>
 
         {/* Enhanced Quick Actions & Recent Activity */}
@@ -531,10 +502,11 @@ export default function MerchantDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 pt-0 space-y-4">
-              <Button 
+              <Button
                 onClick={() => router.push('/merchant/dashboard/payments/create')}
-                className="w-full justify-start h-auto p-4 hover:bg-gray-50 transition-colors"
-                variant="outline"
+                className="w-full justify-start h-auto p-4"
+                variant="secondary"
+                fullWidth
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
@@ -549,8 +521,9 @@ export default function MerchantDashboard() {
 
               <Button
                 onClick={() => router.push('/smart-terminal')}
-                className="w-full justify-start h-auto p-4 hover:bg-gray-50 transition-colors"
-                variant="outline"
+                className="w-full justify-start h-auto p-4"
+                variant="secondary"
+                fullWidth
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
@@ -565,8 +538,9 @@ export default function MerchantDashboard() {
 
               <Button
                 onClick={() => router.push('/merchant/subscriptions/create')}
-                className="w-full justify-start h-auto p-4 hover:bg-gray-50 transition-colors"
-                variant="outline"
+                className="w-full justify-start h-auto p-4"
+                variant="secondary"
+                fullWidth
               >
                 <div className="flex items-center gap-4">
                     <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
@@ -582,71 +556,42 @@ export default function MerchantDashboard() {
           </Card>
 
           {/* Enhanced Recent Activity */}
-          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="p-6">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Recent Activity</CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
-                Your latest payment link activity
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              {recentTransactions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="p-4 bg-[#7f5efd]/10 rounded-full mb-6">
-                    <Calendar className="h-8 w-8 text-[#7f5efd]" />
-                  </div>
-                  <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No activity yet</h3>
-                  <p className="font-capsule text-sm text-gray-500 mb-6 max-w-sm">
-                    Create your first payment link to start seeing activity here.
-                  </p>
-                  <Button
-                    onClick={() => router.push('/merchant/dashboard/payments/create')}
-                    size="default" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
-                  >
-                    Get Started
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentTransactions.map(tx => (
-                    <div 
-                      key={tx.id} 
-                      onClick={() => router.push(`/merchant/dashboard/payments/${tx.payment_link_id}`)}
-                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+          <ActivityCard title="Recent Activity">
+            {recentTransactions.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  variant="no-data"
+                  icon={<Calendar className="h-[48px] w-[48px]" />}
+                  title="No activity yet"
+                  description="Create your first payment link to start seeing activity here."
+                  action={
+                    <Button
+                      onClick={() => router.push('/merchant/dashboard/payments/create')}
+                      variant="primary"
+                      size="sm"
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg group-hover:bg-[#7f5efd]/15 transition-colors duration-200">
-                          <DollarSign className="h-4 w-4 text-[#7f5efd]" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <p className="font-phonic text-sm font-semibold text-gray-900">{formatCurrency(tx.amount, tx.currency)}</p>
-                            {tx.pay_currency !== tx.currency && (
-                              <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-                                paid in {tx.pay_currency}
-                              </span>
-                            )}
-                          </div>
-                          <p className="font-capsule text-sm text-gray-700">{tx.payment_link_title}</p>
-                          <p className="font-capsule text-xs text-gray-500">
-                            {formatDateTime(tx.created_at, timezone)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{tx.currency}</span>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      Get Started
+                    </Button>
+                  }
+                  compact
+                />
+              </div>
+              ) : (
+                <div className="p-[8px]">
+                  <TimelineList
+                    events={recentTransactions.map(tx => ({
+                      id: tx.id,
+                      type: 'payment' as const,
+                      title: formatCurrency(tx.amount, tx.currency),
+                      subtitle: tx.payment_link_title,
+                      timestamp: formatDateTime(tx.created_at, timezone)
+                    }))}
+                    showConnector
+                    dense
+                  />
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </ActivityCard>
         </div>
 
         {/* Enhanced Supported Cryptocurrencies */}

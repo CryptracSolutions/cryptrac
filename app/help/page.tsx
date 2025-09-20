@@ -210,15 +210,15 @@ export default function HelpPage() {
                         <p className="text-gray-700">The registration process begins with:</p>
                         <ul className="space-y-2 text-base text-gray-600">
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">1</Badge>
+                            <Badge variant="secondary" className="mt-0.5">1</Badge>
                             <span>Visit our website and click &ldquo;Sign Up&rdquo; or &ldquo;Get Started&rdquo;</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">2</Badge>
+                            <Badge variant="secondary" className="mt-0.5">2</Badge>
                             <span>Provide basic business information including business name, contact details, and business type</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">3</Badge>
+                            <Badge variant="secondary" className="mt-0.5">3</Badge>
                             <span>Create secure login credentials and verify your email address</span>
                           </li>
                         </ul>

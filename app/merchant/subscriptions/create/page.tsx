@@ -608,7 +608,7 @@ export default function CreateSubscriptionPage() {
                   </div>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => setForm({ ...form, showAdvanced: !form.showAdvanced })}
                     className="flex items-center gap-2 font-medium"
                   >

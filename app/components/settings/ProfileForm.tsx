@@ -520,7 +520,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <div className="mt-6 flex justify-end gap-3">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   onClick={cancelEmailChange}
                   size="sm"
                   className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"

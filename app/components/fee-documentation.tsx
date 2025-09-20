@@ -132,7 +132,7 @@ export function FeeDocumentation({
                   <div className="flex items-center gap-2">
                     <Network className={"h-4 w-4 " + (isLanding ? 'text-[#7f5efd]' : 'text-blue-500')} />
                     <span className="font-medium text-sm">Network Fees</span>
-                    <Badge variant="outline" className={"text-xs " + (isLanding ? 'border-gray-300 text-gray-700' : '')}>Variable</Badge>
+                    <Badge variant="secondary" className={"text-xs " + (isLanding ? 'border-gray-300 text-gray-700' : '')}>Variable</Badge>
                   </div>
                   <p className="text-xs text-gray-600">
                     Paid to blockchain miners/validators. Varies by network congestion and coin type.
@@ -145,7 +145,7 @@ export function FeeDocumentation({
                   <div className="flex items-center gap-2">
                     <CreditCard className={"h-4 w-4 " + (isLanding ? 'text-[#7f5efd]' : 'text-green-500')} />
                     <span className="font-medium text-sm">Gateway Fees</span>
-                    <Badge variant="outline" className={"text-xs " + (isLanding ? 'border-[#7f5efd] text-[#7f5efd] bg-[#7f5efd]/10' : '')}>0.5% - 1%</Badge>
+                    <Badge variant="secondary" className={"text-xs " + (isLanding ? 'border-[#7f5efd] text-[#7f5efd] bg-[#7f5efd]/10' : '')}>0.5% - 1%</Badge>
                   </div>
                   <p className="text-xs text-gray-600">
                     Gateway fee. You choose whether the customer or merchant pays.
@@ -247,7 +247,7 @@ export function FeeDocumentation({
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Network className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : 'text-orange-600')} />
                       Network Fees
-                      <Badge variant="outline" className={isLanding ? 'border-[#7f5efd] text-[#7f5efd] bg-[#7f5efd]/10' : 'bg-orange-100 text-orange-700'}>Variable</Badge>
+                      <Badge variant="secondary" className={isLanding ? 'border-[#7f5efd] text-[#7f5efd] bg-[#7f5efd]/10' : 'bg-orange-100 text-orange-700'}>Variable</Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -297,7 +297,7 @@ export function FeeDocumentation({
                     <CardTitle className="text-lg flex items-center gap-2">
                       <CreditCard className={"h-5 w-5 " + (isLanding ? 'text-[#7f5efd]' : 'text-green-600')} />
                       Gateway Fees
-                      <Badge variant="outline" className={isLanding ? 'border-[#7f5efd] text-[#7f5efd] bg-[#7f5efd]/10' : 'bg-green-100 text-green-700'}>0.5% - 1%</Badge>
+                      <Badge variant="secondary" className={isLanding ? 'border-[#7f5efd] text-[#7f5efd] bg-[#7f5efd]/10' : 'bg-green-100 text-green-700'}>0.5% - 1%</Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">

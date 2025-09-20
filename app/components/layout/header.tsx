@@ -2,14 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Menu, X, LogOut, ChevronDown } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { GlobalSearch } from "@/app/components/search/GlobalSearch"
+import { UserMenu } from "@/app/components/navigation/user-menu"
 import { cn } from "@/lib/utils"
 import { Button } from "@/app/components/ui/button"
-import { Avatar, AvatarFallback } from "@/app/components/ui/avatar"
 import { createClient } from "@/lib/supabase-browser"
-import { toast } from "react-hot-toast"
 
 interface HeaderProps {
   user?: {
@@ -27,10 +25,8 @@ interface HeaderProps {
 const Header = React.forwardRef<HTMLElement, HeaderProps>(
   ({ user, className, onMobileMenuToggle }, ref) => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
-    const [isProfileOpen, setIsProfileOpen] = React.useState(false)
     const [localUser, setLocalUser] = React.useState(user)
     const [businessName, setBusinessName] = React.useState<string | null>(null)
-    const router = useRouter()
     const supabase = createClient()
     
     // Fetch merchant business name
@@ -88,39 +84,6 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       }
     }, [user, supabase.auth, fetchBusinessName])
     
-    // Close profile dropdown when clicking outside
-    React.useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        const target = event.target as Element
-        if (isProfileOpen && !target.closest('[data-profile-dropdown]')) {
-          setIsProfileOpen(false)
-        }
-      }
-      
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [isProfileOpen])
-    
-    const handleLogout = async () => {
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        toast.error(error.message)
-      } else {
-        toast.success('Logged out successfully')
-        router.push('/login')
-      }
-      setIsProfileOpen(false)
-    }
-    
-    const getInitials = (email: string, businessName?: string) => {
-      if (businessName) {
-        return businessName.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)
-      }
-      return email.split('@')[0].slice(0, 2).toUpperCase()
-    }
-    
-    const displayBusinessName = businessName || localUser?.user_metadata?.business_name || 'Account'
-    
     
     const navigation = localUser ? [] : [
       { name: 'Features', href: '/#features' },
@@ -132,11 +95,11 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       <header
         ref={ref}
         className={cn(
-          "sticky top-0 z-50 w-full border-b bg-white shadow-sm",
+          "sticky top-0 z-50 w-full border-b border-[var(--color-border-subtle)] bg-white",
           className
         )}
       >
-        <div className="container-wide flex h-16 items-center">
+        <div className="flex h-[60px] items-center px-6">
           {/* Global Search (left-aligned) */}
           {localUser && (
             <div className="hidden md:block w-full max-w-md">
@@ -160,103 +123,50 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           )}
           
           {/* Right Side */}
-          <div className="flex items-center space-x-4 ml-auto">
+          <div className="flex items-center gap-4 ml-auto">
             {localUser ? (
-              /* User Menu */
-              <div className="relative" data-profile-dropdown>
+              <UserMenu
+                user={localUser}
+                businessName={businessName}
+                align="end"
+              />
+            ) : (
+              /* Auth Buttons */
+              <div className="hidden md:flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="relative h-10 px-3 rounded-lg hover:bg-accent"
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                  asChild
                 >
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-                        {getInitials(localUser.email || '', displayBusinessName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="hidden sm:block text-left">
-                      <div className="text-sm font-medium leading-none">
-                        {displayBusinessName}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {localUser.email}
-                      </div>
-                    </div>
-                    <ChevronDown className={cn(
-                      "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                      isProfileOpen && "rotate-180"
-                    )} />
-                  </div>
-                </Button>
-                
-                {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-lg border border-gray-200 bg-white shadow-xl z-50">
-                    <div className="p-4 border-b">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                            {getInitials(localUser.email || '', displayBusinessName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">
-                            {displayBusinessName}
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {localUser.email}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {localUser.user_metadata?.role === 'admin' ? 'Administrator' : 'Merchant'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Profile and Settings buttons removed - functionality moved to sidebar */}
-                    
-                    <div className="border-t py-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start px-4 py-2 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={handleLogout}
-                      >
-                        <LogOut className="mr-3 h-4 w-4" />
-                        Log out
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Auth Buttons */
-              <div className="hidden md:flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
                   <Link href="/login">Log in</Link>
                 </Button>
-                <Button size="sm" asChild>
+                <Button
+                  size="sm"
+                  className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+                  asChild
+                >
                   <Link href="/signup">Get Started</Link>
                 </Button>
               </div>
             )}
-            
+
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => {
-                if (onMobileMenuToggle) {
+            {onMobileMenuToggle && (
+              <button
+                onClick={() => {
                   onMobileMenuToggle()
-                } else {
                   setIsMenuOpen(!isMenuOpen)
-                }
-              }}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+                }}
+                className="lg:hidden p-2 hover:bg-[var(--color-bg-subtle)] rounded-md transition-colors"
+              >
+                {isMenuOpen ? (
+                  <X className="h-5 w-5 text-[var(--color-text-secondary)]" />
+                ) : (
+                  <Menu className="h-5 w-5 text-[var(--color-text-secondary)]" />
+                )}
+              </button>
+            )}
           </div>
         </div>
         

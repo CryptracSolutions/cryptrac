@@ -1,0 +1,334 @@
+/**
+ * Stripe-Parity Design System
+ * Main entry point for all design system styles
+ *
+ * Import this file in your app/globals.css or app/layout.tsx
+ */
+
+/* Design Tokens - Foundation */
+@import './design-tokens.css';
+
+/* Typography System */
+@import './typography.css';
+
+/* Animations & Transitions */
+@import './animations.css';
+
+/* Utility Classes */
+@import './utilities.css';
+
+/* ============================================
+   BASE RESET & DEFAULTS
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+#root,
+#__next {
+  isolation: isolate;
+}
+
+/* ============================================
+   STRIPE-SPECIFIC PATTERNS
+   ============================================ */
+
+/* Focus Visible Polyfill */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+/* Stripe Button Pattern */
+.stripe-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-text);
+  font-size: var(--text-md);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-sm);
+  padding: var(--padding-button-y) var(--padding-button-x);
+  transition: all var(--duration-normal) var(--ease-default);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+.stripe-button:active {
+  transform: scale(var(--scale-pressed));
+}
+
+.stripe-button:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+
+.stripe-button:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Stripe Input Pattern */
+.stripe-input {
+  width: 100%;
+  height: var(--input-height-sm);
+  padding: var(--padding-input);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-text);
+  font-size: var(--text-md);
+  font-weight: var(--font-regular);
+  line-height: var(--leading-sm);
+  color: var(--color-text-primary);
+  transition: border-color var(--duration-fast) var(--ease-default);
+  outline: none;
+}
+
+.stripe-input:focus {
+  border-color: var(--color-border-focus);
+}
+
+.stripe-input:disabled {
+  background-color: var(--color-bg-disabled);
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.stripe-input::placeholder {
+  color: var(--color-text-disabled);
+}
+
+/* Stripe Card Pattern */
+.stripe-card {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: var(--padding-card);
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Stripe Drawer Pattern */
+.stripe-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg-surface);
+  border-left: 1px solid var(--color-border-default);
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+  z-index: var(--z-modal);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.stripe-drawer-sm { width: var(--drawer-width-sm); }
+.stripe-drawer-md { width: var(--drawer-width-md); }
+.stripe-drawer-lg { width: var(--drawer-width-lg); }
+
+/* Stripe Checkbox Pattern */
+.stripe-checkbox {
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  position: relative;
+}
+
+.stripe-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.stripe-checkbox-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-checkbox);
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.stripe-checkbox-input:checked ~ .stripe-checkbox-box {
+  background-color: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.stripe-checkbox-check {
+  position: absolute;
+  top: 25%;
+  left: 25%;
+  width: 50%;
+  height: 50%;
+  opacity: 0;
+  transform: scale(0);
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+.stripe-checkbox-input:checked ~ .stripe-checkbox-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stripe List Item Pattern */
+.stripe-list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  padding: var(--space-sm);
+  transition: background-color var(--duration-fast) var(--ease-default);
+}
+
+.stripe-list-item:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.stripe-list-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--color-border-default);
+}
+
+/* Stripe Section Header */
+.stripe-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+  padding: var(--padding-section);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+/* Stripe App Branding Bar */
+.stripe-app-branding {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  padding: var(--space-sm) var(--padding-section);
+  background-color: var(--color-app-header);
+  border-bottom: 1px solid var(--color-border-default);
+  height: var(--app-bar-height);
+}
+
+/* ============================================
+   GLOBAL OVERRIDES
+   ============================================ */
+
+/* Override default Tailwind colors with Stripe palette */
+.bg-primary { background-color: var(--color-brand) !important; }
+.text-primary { color: var(--color-text-primary) !important; }
+.text-secondary { color: var(--color-text-secondary) !important; }
+.border-default { border-color: var(--color-border-default) !important; }
+
+/* Override default shadows */
+.shadow-sm { box-shadow: var(--shadow-soft) !important; }
+.shadow-md { box-shadow: var(--shadow-medium) !important; }
+.shadow-lg { box-shadow: var(--shadow-elevated) !important; }
+.shadow-xl { box-shadow: var(--shadow-high) !important; }
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  pre {
+    white-space: pre-wrap !important;
+  }
+
+  pre,
+  blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+
+  img {
+    page-break-inside: avoid;
+  }
+
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}

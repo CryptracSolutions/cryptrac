@@ -357,7 +357,7 @@ export default function PaymentSuccessPage() {
                     className="font-mono text-sm bg-gray-50 w-full flex-1 sm:min-w-[400px] text-center"
                   />
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="lg"
                     onClick={() => copyToClipboard(paymentData.order_id)}
                     className="font-phonic text-base font-normal min-h-[48px] px-6 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
@@ -389,7 +389,7 @@ export default function PaymentSuccessPage() {
                       className="font-mono text-sm bg-white border-green-300 w-full flex-1 sm:min-w-[400px]"
                     />
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.payin_extra_id!)}
                       className="font-phonic text-base font-normal min-h-[48px] px-6 border-green-600 text-green-700 hover:bg-green-50 shadow-sm"
@@ -413,7 +413,7 @@ export default function PaymentSuccessPage() {
                     />
                     <div className="flex gap-3 justify-center">
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="lg"
                         onClick={() => copyToClipboard(paymentData.tx_hash!)}
                         className="font-phonic text-base font-normal min-h-[48px] px-6 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm flex-1 sm:flex-none"
@@ -423,7 +423,7 @@ export default function PaymentSuccessPage() {
                       </Button>
                       {getBlockExplorerUrl(paymentData.tx_hash, paymentData.pay_currency) && (
                         <Button
-                          variant="outline"
+                          variant="secondary"
                           size="lg"
                           onClick={() => {
                             const explorerUrl = getBlockExplorerUrl(paymentData.tx_hash!, paymentData.pay_currency)
@@ -455,7 +455,7 @@ export default function PaymentSuccessPage() {
                       className="font-mono text-xs sm:text-sm bg-gray-50 w-full flex-1 sm:min-w-[400px]"
                     />
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="lg"
                       onClick={() => copyToClipboard(paymentData.payout_hash!)}
                       className="font-phonic text-base font-normal min-h-[48px] px-6 border-[#7f5efd] text-[#7f5efd] hover:bg-[#f5f3ff] shadow-sm"
@@ -465,7 +465,7 @@ export default function PaymentSuccessPage() {
                     </Button>
                     {getBlockExplorerUrl(paymentData.payout_hash, paymentData.payout_currency || paymentData.pay_currency) && (
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="lg"
                         onClick={() => {
                           const explorerUrl = getBlockExplorerUrl(paymentData.payout_hash!, paymentData.payout_currency || paymentData.pay_currency)
@@ -505,7 +505,7 @@ export default function PaymentSuccessPage() {
                 <Button
                   onClick={sendEmailReceipt}
                   disabled={sendingEmailReceipt || emailReceiptSent || !email.trim()}
-                  variant={emailReceiptSent ? "secondary" : "default"}
+                  variant={emailReceiptSent ? "secondary" : "primary"}
                   size="lg"
                   className={`font-phonic text-base font-normal min-h-[48px] px-6 sm:px-8 py-3 shadow-sm ${emailReceiptSent ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-[#7f5efd] hover:bg-[#7c3aed] text-white'}`}
                 >

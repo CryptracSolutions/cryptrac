@@ -22,7 +22,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Badge } from '@/app/components/ui/badge';
 import { QRCode } from '@/app/components/ui/qr-code';
 import { supabase } from '@/lib/supabase-browser';
-import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
+import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
+import { DetailList } from '@/app/components/ui/detail-list'
+import type { DetailItem } from '@/app/components/ui/detail-list'
 
 interface PaymentLink {
   id: string;
@@ -197,7 +199,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
       <div className="px-6 py-8 space-y-8 max-w-4xl mx-auto">
         <div className="flex items-center space-x-4">
           <Button 
-            variant="outline" 
+            variant="secondary" 
             onClick={() => router.push('/merchant/dashboard/payments')}
             className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
           >
@@ -247,6 +249,40 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
   
   const feeLabel = autoConvertEnabled ? `${feePercentage.toFixed(1)}% (Auto-convert)` : `${feePercentage.toFixed(1)}% (Direct crypto)`;
 
+  const settingsItems: DetailItem[] = [
+    {
+      label: 'Created',
+      value: formatDate(paymentLink.created_at)
+    },
+    {
+      label: 'Link ID',
+      value: paymentLink.link_id,
+      copyable: true
+    }
+  ]
+
+  if (paymentLink.expires_at) {
+    settingsItems.push({
+      label: 'Expires',
+      value: formatDate(paymentLink.expires_at)
+    })
+  }
+
+  if (paymentLink.max_uses !== null && paymentLink.max_uses !== undefined) {
+    settingsItems.push({
+      label: 'Maximum Uses',
+      value: paymentLink.max_uses.toString()
+    })
+  }
+
+  if (paymentLink.redirect_url) {
+    settingsItems.push({
+      label: 'Redirect URL',
+      value: paymentLink.redirect_url,
+      copyable: true
+    })
+  }
+
   return (
     <div className="px-6 py-8 space-y-8 max-w-6xl mx-auto">
       {/* Breadcrumbs */}
@@ -270,7 +306,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
         </div>
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => router.push('/merchant/dashboard/payments')}
             className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
           >
@@ -380,37 +416,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 pt-0 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Created</label>
-                  <p className="font-capsule text-sm text-gray-900 mt-1">{formatDate(paymentLink.created_at)}</p>
-                </div>
-                <div>
-                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Link ID</label>
-                  <p className="font-mono text-xs text-gray-900 mt-1 bg-gray-50 p-2 rounded border">{paymentLink.link_id}</p>
-                </div>
-              </div>
-
-              {paymentLink.expires_at && (
-                <div>
-                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</label>
-                  <p className="font-capsule text-sm text-gray-900 mt-1">{formatDate(paymentLink.expires_at)}</p>
-                </div>
-              )}
-
-              {paymentLink.max_uses && (
-                <div>
-                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Maximum Uses</label>
-                  <p className="font-capsule text-sm text-gray-900 mt-1">{paymentLink.max_uses}</p>
-                </div>
-              )}
-
-              {paymentLink.redirect_url && (
-                <div>
-                  <label className="font-phonic text-xs font-medium text-gray-500 uppercase tracking-wider">Redirect URL</label>
-                  <p className="font-capsule text-sm text-gray-900 mt-1 break-all">{paymentLink.redirect_url}</p>
-                </div>
-              )}
+              <DetailList items={settingsItems} />
             </CardContent>
           </Card>
         </div>
@@ -434,7 +440,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                     {paymentLink.payment_url}
                   </code>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => copyToClipboard(paymentLink.payment_url)}
                     className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
@@ -446,7 +452,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
 
               <div className="flex space-x-3">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => window.open(paymentLink.payment_url, '_blank')}
                   className="flex-1 border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
                 >
@@ -454,7 +460,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                   Open Link
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => copyToClipboard(paymentLink.payment_url)}
                   className="flex-1 border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
                 >
@@ -486,7 +492,7 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
                   Customers can scan this QR code to access the payment link
                 </p>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => {
                     // This would trigger a download of the QR code
                     // Implementation would depend on the QR code component
@@ -505,4 +511,3 @@ export default function PaymentDetailsPage({ params }: PaymentDetailsPageProps) 
     </div>
   );
 }
-

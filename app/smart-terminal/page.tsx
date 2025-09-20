@@ -684,7 +684,7 @@ function SmartTerminalPageContent() {
                 {[1,2,3,4,5,6,7,8,9,'0','.'].map((d: string | number)=> (
                   <Button 
                     key={d}
-                    variant="outline"
+                    variant="secondary"
                     className="h-12 sm:h-12 lg:h-14 text-lg sm:text-xl lg:text-2xl font-semibold bg-white border-purple-200 text-gray-700 transition-all duration-200 rounded-lg shadow-sm"
                     aria-label={`digit ${d}`}
                     onClick={() => appendDigit(String(d))}
@@ -696,7 +696,7 @@ function SmartTerminalPageContent() {
                   className="h-12 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-orange-50 border-orange-200 text-orange-600 transition-all duration-200 rounded-lg shadow-sm" 
                   onClick={backspace} 
                   aria-label="backspace"
-                  variant="outline"
+                  variant="secondary"
                 >
                   ⌫
                 </Button>
@@ -704,7 +704,7 @@ function SmartTerminalPageContent() {
                   className="h-12 sm:h-12 lg:h-14 text-lg lg:text-xl font-semibold bg-red-50 border-red-200 text-red-600 transition-all duration-200 rounded-lg shadow-sm" 
                   onClick={clearAmount} 
                   aria-label="clear"
-                  variant="outline"
+                  variant="secondary"
                 >
                   C
                 </Button>
@@ -751,7 +751,7 @@ function SmartTerminalPageContent() {
               {/* Continue Button - spans full width in landscape */}
               <Button 
                 onClick={readyForPayment}
-                variant="default"
+                variant="primary"
                 className="w-full h-12 sm:h-14 lg:h-16 text-base sm:text-lg lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 md:col-span-5"
                 aria-label="ready"
                 disabled={!amount}
@@ -1029,7 +1029,7 @@ function SmartTerminalPageContent() {
                       {(device?.tip_presets || defaultTips).map((p: number) => (
                         <Button
                           key={p}
-                          variant={tipPercent === p ? 'default' : 'outline'}
+                          variant={tipPercent === p ? 'primary' : 'secondary'}
                           className={cn(
                             "h-10 text-sm font-semibold rounded-md transition-all duration-200",
                             tipPercent === p
@@ -1044,7 +1044,7 @@ function SmartTerminalPageContent() {
                       ))}
                       {/* No tip button */}
                       <Button
-                        variant={tipPercent === 0 && tipSelected ? 'default' : 'outline'}
+                        variant={tipPercent === 0 && tipSelected ? 'primary' : 'secondary'}
                         className={cn(
                           "h-10 text-sm font-semibold rounded-md transition-all duration-200",
                           tipPercent === 0 && tipSelected
@@ -1079,7 +1079,7 @@ function SmartTerminalPageContent() {
                 {/* Generate Payment Button */}
                 <Button
                   onClick={generate}
-                  variant="default"
+                  variant="primary"
                   className="w-full h-12 sm:h-14 lg:h-16 text-base sm:text-lg lg:text-xl font-semibold bg-gradient-to-r from-[#7f5efd] to-[#9b7cff] text-white rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   aria-label="pay now"
                   disabled={!tipSelected || loading}
@@ -1261,7 +1261,7 @@ function SmartTerminalPageContent() {
                     {status !== 'confirmed' && !isLocked && (
                       <div className="flex justify-center">
                         <Button 
-                          variant="outline" 
+                          variant="secondary" 
                           onClick={() => { 
                             setPaymentLink(null); 
                             setPaymentData(null); 

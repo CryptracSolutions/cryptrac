@@ -85,7 +85,7 @@ export default function BlogPage() {
           {categories.map((category) => (
             <Button
               key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
+              variant={selectedCategory === category ? "primary" : "secondary"}
               size="sm"
               onClick={() => setSelectedCategory(category)}
               className="font-phonic text-sm font-normal"
@@ -110,7 +110,7 @@ export default function BlogPage() {
                     <Card key={post.id} className="border-[#7f5efd]/20 bg-[#f5f3ff]/30 hover:shadow-lg transition-shadow">
                       <CardHeader>
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="text-sm md:text-xs">
+                          <Badge variant="secondary" className="text-sm md:text-xs">
                             {post.category}
                           </Badge>
                           <Badge className="bg-[#7f5efd] text-white text-sm md:text-xs">
@@ -171,7 +171,7 @@ export default function BlogPage() {
                     ? "All Articles" 
                     : `${selectedCategory} Articles`
                 }
-                <Badge variant="outline" className="text-sm">
+                <Badge variant="secondary" className="text-sm">
                   {filteredPosts.length}
                 </Badge>
               </h2>
@@ -192,7 +192,7 @@ export default function BlogPage() {
                   </p>
                   {searchTerm && (
                     <Button 
-                      variant="outline" 
+                      variant="secondary" 
                       onClick={() => setSearchTerm("")}
                       className="text-[#7f5efd] border-[#7f5efd] hover:bg-[#7f5efd] hover:text-white"
                     >
@@ -208,7 +208,7 @@ export default function BlogPage() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-3">
-                              <Badge variant="outline" className="text-sm md:text-xs">
+                              <Badge variant="secondary" className="text-sm md:text-xs">
                                 {post.category}
                               </Badge>
                               {post.featured && (
@@ -282,7 +282,7 @@ export default function BlogPage() {
                           <Calendar className="h-3 w-3" />
                           {new Date(post.date).toLocaleDateString()}
                         </div>
-                        <Badge variant="outline" className="text-sm md:text-xs">
+                        <Badge variant="secondary" className="text-sm md:text-xs">
                           {post.category}
                         </Badge>
                       </div>
@@ -385,7 +385,7 @@ export default function BlogPage() {
                 Get Started Free
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10" asChild>
+            <Button size="lg" variant="secondary" className="border-white/20 text-white hover:bg-white/10" asChild>
               <Link href="/contact">
                 Contact Sales
               </Link>

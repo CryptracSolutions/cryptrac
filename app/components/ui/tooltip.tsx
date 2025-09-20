@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Star } from 'lucide-react'
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, StarIcon } from '@/components/ui/icons'
 import { CryptoIcon } from '@/app/components/ui/crypto-icon'
 
 interface RecommendedCurrency {
@@ -25,7 +25,7 @@ type Position = 'top' | 'bottom' | 'left' | 'right'
 export default function Tooltip({ trigger, title, description, recommendedCurrencies, onCurrencyClick, className = "" }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState<Position>('right')
-  const [chevronIcon, setChevronIcon] = useState<React.ReactNode>(<ChevronRight className="h-4 w-4 text-[#7f5efd]" />)
+  const [chevronIcon, setChevronIcon] = useState<React.ReactNode>(<ChevronRightIcon size="sm" color="brand" />)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLDivElement>(null)
 
@@ -83,17 +83,17 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
         // Set appropriate chevron icon
         switch (bestPosition) {
           case 'top':
-            setChevronIcon(<ChevronUp className="h-4 w-4 text-[#7f5efd]" />)
+            setChevronIcon(<ChevronUpIcon size="sm" color="brand" />)
             break
           case 'bottom':
-            setChevronIcon(<ChevronDown className="h-4 w-4 text-[#7f5efd]" />)
+            setChevronIcon(<ChevronDownIcon size="sm" color="brand" />)
             break
           case 'left':
-            setChevronIcon(<ChevronLeft className="h-4 w-4 text-[#7f5efd]" />)
+            setChevronIcon(<ChevronLeftIcon size="sm" color="brand" />)
             break
           case 'right':
           default:
-            setChevronIcon(<ChevronRight className="h-4 w-4 text-[#7f5efd]" />)
+            setChevronIcon(<ChevronRightIcon size="sm" color="brand" />)
             break
         }
       }
@@ -171,7 +171,7 @@ export default function Tooltip({ trigger, title, description, recommendedCurren
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-[#7f5efd]" />
+                  <StarIcon size="sm" color="brand" />
                   <CardTitle className="text-sm font-semibold text-[#7f5efd]">
                     {title}
                   </CardTitle>

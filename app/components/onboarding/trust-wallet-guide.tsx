@@ -217,7 +217,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch content-stretch">
             <Button
               onClick={() => setHasWallet(false)}
-              variant="outline"
+              variant="secondary"
               className="p-6 w-full min-h-[160px] flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-blue-50 hover:border-blue-200"
             >
               <Download className="w-8 h-8 text-blue-600" />
@@ -227,7 +227,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             
             <Button
               onClick={() => setHasWallet(true)}
-              variant="outline"
+              variant="secondary"
               className="p-6 w-full min-h-[160px] flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-green-50 hover:border-green-200"
             >
               <CheckCircle className="w-8 h-8 text-green-600" />
@@ -238,7 +238,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
             <div className="flex flex-col">
               <Button
                 onClick={() => { setUseExchange(true); setExchangeStep(1); }}
-                variant="outline"
+                variant="secondary"
                 className="p-6 w-full min-h-[160px] flex flex-col items-center justify-center gap-2 whitespace-normal text-center hover:bg-indigo-50 border-[#7f5efd]"
               >
                 <Banknote className="w-8 h-8 text-indigo-600" />
@@ -453,7 +453,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
                   setExchangeStep(prev => Math.max(1, prev - 1))
                 }
               }}
-              variant="outline"
+              variant="secondary"
               className="px-6"
             >
               Previous
@@ -573,7 +573,7 @@ export default function TrustWalletGuide({ onComplete, onSkip }: TrustWalletGuid
         <div className="flex justify-between pt-6 border-t">
           <Button
             onClick={handlePrevious}
-            variant="outline"
+            variant="secondary"
             className="px-6"
           >
             Previous

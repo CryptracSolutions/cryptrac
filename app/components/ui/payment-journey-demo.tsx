@@ -303,7 +303,7 @@ function SuccessStage() {
       {/* Action Buttons */}
       <div className="space-y-3">
         {/* View Transaction Button - Purple */}
-        <Button variant="outline" size="sm" className="w-full border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50">
+        <Button variant="secondary" size="sm" className="w-full border-[#7f5efd] text-[#7f5efd] hover:bg-purple-50">
           <Globe className="h-4 w-4 mr-2" />
           View on Blockchain
         </Button>
@@ -325,7 +325,7 @@ function SuccessStage() {
                 className="w-full text-xs px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#7f5efd] focus:border-[#7f5efd]"
               />
               <Button 
-                variant="outline" 
+                variant="secondary" 
                 size="sm" 
                 onClick={handleSendReceipt}
                 disabled={!receiptEmail}

@@ -980,7 +980,7 @@ export default function AboutPage() {
                             </Button>
                           </div>
                           <div className="text-center">
-                            <Button variant="outline" asChild className="w-full">
+                            <Button variant="secondary" asChild className="w-full">
                               <Link href="/contact">
                                 Contact Sales
                               </Link>

@@ -230,7 +230,7 @@ export default function SupportedCryptocurrencies() {
                 <ArrowLeft className="ml-2 h-5 w-5 rotate-180" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white/10" asChild>
+            <Button size="lg" variant="secondary" className="bg-transparent text-white border-white hover:bg-white/10" asChild>
               <Link href="/#pricing">View Pricing</Link>
             </Button>
           </div>

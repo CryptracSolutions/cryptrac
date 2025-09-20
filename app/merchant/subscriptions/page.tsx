@@ -7,10 +7,11 @@ import Link from 'next/link';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, MetricCard } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
+import { EmptyState } from '@/app/components/ui/empty-state';
 
 import {
   Search,
@@ -173,23 +174,12 @@ export default function MerchantSubscriptionsPage() {
 
         {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Active Subscriptions</CardTitle>
-              <div className="p-2 bg-[#7f5efd] rounded-lg">
-                <CreditCard className="h-4 w-4 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">
-                {subs.filter(s => s.status === 'active').length}
-              </div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <TrendingUp className="h-3 w-3" />
-                <span className="font-capsule text-xs">Currently active</span>
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Active Subscriptions"
+            value={subs.filter(s => s.status === 'active').length}
+            subtitle="Currently active"
+            icon={<CreditCard className="h-4 w-4" />}
+          />
 
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -284,14 +274,14 @@ export default function MerchantSubscriptionsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="flex items-center gap-2 font-medium"
                 >
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="flex items-center gap-2 font-medium"
                 >
                   <BarChart3 className="h-4 w-4" />
@@ -310,28 +300,28 @@ export default function MerchantSubscriptionsPage() {
         ) : (
           <div className="space-y-6">
             {filteredSubs.length === 0 ? (
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <Card className="border border-gray-200 shadow-sm">
                 <CardContent className="p-12">
-                  <div className="text-center">
-                    <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                      <CreditCard className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No Subscriptions Found</h3>
-                    <p className="font-capsule text-sm text-gray-600 mb-6">
-                      {searchTerm || statusFilter !== 'all' 
+                  <EmptyState
+                    variant={searchTerm || statusFilter !== 'all' ? 'no-results' : 'no-data'}
+                    icon={<CreditCard className="h-[48px] w-[48px]" />}
+                    title="No Subscriptions Found"
+                    description={
+                      searchTerm || statusFilter !== 'all'
                         ? 'Try adjusting your search or filters to see more results.'
                         : 'Get started by creating your first subscription.'
-                      }
-                    </p>
-                    {!searchTerm && statusFilter === 'all' && (
-                      <Link href="/merchant/subscriptions/create">
-                        <Button className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create First Subscription
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
+                    }
+                    action={
+                      !searchTerm && statusFilter === 'all' && (
+                        <Link href="/merchant/subscriptions/create">
+                          <Button className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create First Subscription
+                          </Button>
+                        </Link>
+                      )
+                    }
+                  />
                 </CardContent>
               </Card>
             ) : (
@@ -395,7 +385,7 @@ export default function MerchantSubscriptionsPage() {
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {subscription.subscription_invoices.slice(0, 3).map((invoice, index) => (
-                                  <Badge key={index} variant="outline" className="font-capsule text-xs">
+                                  <Badge key={index} variant="secondary" className="font-capsule text-xs">
                                     {invoice.invoice_number} - {invoice.status}
                                   </Badge>
                                 ))}
@@ -407,7 +397,7 @@ export default function MerchantSubscriptionsPage() {
                         <div className="flex items-center gap-2 ml-4">
                           <Link href={`/merchant/subscriptions/${subscription.id}`}>
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               size="sm"
                               className="flex items-center gap-2"
                             >
@@ -416,7 +406,7 @@ export default function MerchantSubscriptionsPage() {
                             </Button>
                           </Link>
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             className="flex items-center gap-2"
                           >
@@ -424,7 +414,7 @@ export default function MerchantSubscriptionsPage() {
                             Edit
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             className="flex items-center gap-2"
                           >

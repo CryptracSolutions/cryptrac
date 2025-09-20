@@ -6,27 +6,22 @@ import {
   Shield, 
   Users, 
   Building, 
-  CreditCard, 
+  CreditCard,
   Settings,
-  AlertTriangle,
   Activity,
   DollarSign,
   BarChart3,
   Bell,
-  TrendingUp,
-  TrendingDown,
   Eye,
   EyeOff,
   RefreshCw,
-  Zap,
-  Clock,
-  CheckCircle,
-  AlertCircle
+  Zap
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Badge } from '@/app/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, MetricCard } from '@/app/components/ui/card';
+import { TimelineList } from '@/app/components/ui/timeline-list';
 import { DashboardLayout } from '@/app/components/layout/dashboard-layout';
+import { PageLayout, GridContainer, GridItem } from '@/components/ui/layouts';
 import { createClient } from '@/lib/supabase-browser';
 
 export default function AdminDashboard() {
@@ -192,88 +187,59 @@ export default function AdminDashboard() {
     }
   ];
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
   return (
     <DashboardLayout user={user}>
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-phonic text-6xl font-normal text-gray-900">Admin Dashboard</h1>
-            <p className="font-capsule text-base font-normal text-gray-600 mt-2">Platform overview and administrative controls</p>
-          </div>
+      <PageLayout variant="fluid" padding="none">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-phonic text-6xl font-normal text-gray-900">Admin Dashboard</h1>
+              <p className="font-capsule text-base font-normal text-gray-600 mt-2">Platform overview and administrative controls</p>
+            </div>
           <div className="flex items-center gap-3">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowSensitiveData(!showSensitiveData)}
-              className="flex items-center gap-2 font-phonic font-normal"
+              leftIcon={showSensitiveData ? <EyeOff size={16} /> : <Eye size={16} />}
             >
-              {showSensitiveData ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               {showSensitiveData ? 'Hide' : 'Show'} Sensitive Data
             </Button>
             <Button
               onClick={refreshData}
               disabled={refreshing}
-              className="flex items-center gap-2 font-phonic font-normal bg-[#7f5efd] hover:bg-[#6b4fd8] text-white"
+              variant="primary"
+              loading={refreshing}
+              leftIcon={!refreshing ? <RefreshCw size={16} /> : undefined}
             >
-              {refreshing ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
               {refreshing ? 'Refreshing...' : 'Refresh Data'}
             </Button>
           </div>
         </div>
 
         {/* Platform Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <GridContainer columns={4} gap="md" responsive={true}>
           {platformStats.map((stat, index) => (
-            <Card key={index} className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 bg-gradient-to-r ${stat.color} rounded-lg`}>
-                    <stat.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-phonic text-sm font-normal text-gray-600">{stat.title}</p>
-                    <p className="font-phonic text-3xl font-normal text-gray-900">{stat.value}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {stat.changeType === 'positive' ? (
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className={`font-phonic text-sm font-normal ${
-                        stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <p className="font-phonic text-xs font-normal text-gray-500 mt-3">{stat.description}</p>
-              </CardContent>
-            </Card>
+            <GridItem key={index} span="auto">
+              <MetricCard
+                title={stat.title}
+                value={stat.value}
+                trend={{
+                  value: parseFloat(stat.change.replace(/[^0-9.-]/g, '')),
+                  direction: stat.changeType === 'positive' ? 'up' : 'down'
+                }}
+                subtitle={stat.description}
+                icon={<stat.icon className="h-4 w-4" />}
+              />
+            </GridItem>
           ))}
-        </div>
+        </GridContainer>
 
         {/* Admin Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <GridContainer columns={2} gap="md" responsive={true}>
           {adminSections.map((section, index) => (
-            <Card key={index} className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <GridItem key={index} span="auto">
+              <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200 h-full">
               <CardHeader className="pb-6">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg`}>
@@ -291,7 +257,7 @@ export default function AdminDashboard() {
                 {section.actions.map((action, actionIndex) => (
                   <Button
                     key={actionIndex}
-                    variant="outline"
+                    variant="secondary"
                     className="w-full justify-start h-12 font-phonic text-base font-normal"
                     onClick={() => router.push(action.href)}
                   >
@@ -300,8 +266,9 @@ export default function AdminDashboard() {
                 ))}
               </CardContent>
             </Card>
+          </GridItem>
           ))}
-        </div>
+        </GridContainer>
 
         {/* Recent Activity */}
         <Card className="border-2 shadow-lg hover:shadow-xl transition-all duration-200">
@@ -319,34 +286,24 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <Button
-                variant="outline"
-                className="flex items-center gap-2 font-phonic font-normal"
+                variant="secondary"
               >
                 View All
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start gap-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex-shrink-0">
-                    {getStatusIcon(activity.status)}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-phonic text-base font-normal text-gray-900">{activity.title}</h4>
-                    <p className="font-phonic text-sm font-normal text-gray-600 mt-1">{activity.description}</p>
-                    <p className="font-phonic text-xs font-normal text-gray-500 mt-2">{activity.time}</p>
-                  </div>
-                  <Badge
-                    variant={activity.status === 'completed' ? 'default' : 'secondary'}
-                    className="font-phonic text-xs font-normal"
-                  >
-                    {activity.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
+            <TimelineList
+              events={recentActivity.map((activity, index) => ({
+                id: index.toString(),
+                type: activity.status === 'completed' ? 'success' : activity.status === 'warning' ? 'error' : 'pending',
+                title: activity.title,
+                subtitle: activity.description,
+                timestamp: activity.time
+              }))}
+              showConnector
+              dense
+            />
           </CardContent>
         </Card>
 
@@ -368,33 +325,34 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
-                variant="outline"
-                className="h-16 font-phonic text-base font-normal flex flex-col items-center gap-2"
+                variant="secondary"
+                className="h-16 flex flex-col items-center gap-2"
                 onClick={() => router.push('/admin/merchants')}
               >
-                <Building className="h-6 w-6" />
+                <Building size={24} />
                 Manage Merchants
               </Button>
               <Button
-                variant="outline"
-                className="h-16 font-phonic text-base font-normal flex flex-col items-center gap-2"
+                variant="secondary"
+                className="h-16 flex flex-col items-center gap-2"
                 onClick={() => router.push('/admin/analytics')}
               >
-                <BarChart3 className="h-6 w-6" />
+                <BarChart3 size={24} />
                 View Analytics
               </Button>
               <Button
-                variant="outline"
-                className="h-16 font-phonic text-base font-normal flex flex-col items-center gap-2"
+                variant="secondary"
+                className="h-16 flex flex-col items-center gap-2"
                 onClick={() => router.push('/admin/settings')}
               >
-                <Settings className="h-6 w-6" />
+                <Settings size={24} />
                 System Settings
               </Button>
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </PageLayout>
     </DashboardLayout>
   );
 }

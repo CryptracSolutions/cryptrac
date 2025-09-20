@@ -567,7 +567,7 @@ export default function CreatePaymentLinkPage() {
                           <Label className="font-phonic text-sm font-semibold text-gray-900">Tax Rates</Label>
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={addTaxRate}
                             className="flex items-center gap-2"
@@ -841,13 +841,13 @@ export default function CreatePaymentLinkPage() {
                         </Badge>
                       )}
                       {form.expires_at && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="secondary" className="text-xs">
                           <Clock className="h-3 w-3 mr-1" />
                           Expires: {formatDateShort(form.expires_at, timezone)}
                         </Badge>
                       )}
                       {form.max_uses && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="secondary" className="text-xs">
                           <Users className="h-3 w-3 mr-1" />
                           Max uses: {form.max_uses}
                         </Badge>

@@ -904,19 +904,19 @@ export default function SecurityPage() {
                         <p className="font-capsule text-base font-normal text-gray-700 mb-3">If you discover a security vulnerability, please:</p>
                         <ul className="space-y-2 font-phonic text-base font-normal text-gray-600">
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">1</Badge>
+                            <Badge variant="secondary" className="mt-0.5">1</Badge>
                             <span>Email security@cryptrac.com with detailed information</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">2</Badge>
+                            <Badge variant="secondary" className="mt-0.5">2</Badge>
                             <span>Include steps to reproduce the issue</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">3</Badge>
+                            <Badge variant="secondary" className="mt-0.5">3</Badge>
                             <span>Provide your contact information for follow-up</span>
                           </li>
                           <li className="flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5">4</Badge>
+                            <Badge variant="secondary" className="mt-0.5">4</Badge>
                             <span>Allow us time to investigate and address the issue</span>
                           </li>
                         </ul>

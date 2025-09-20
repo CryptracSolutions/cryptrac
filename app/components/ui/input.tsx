@@ -2,54 +2,97 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   error?: string
   label?: string
+  helpText?: string
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
+  size?: "small" | "medium" | "large"
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, error, label, leftIcon, rightIcon, ...props }, ref) => {
+  ({ className, type, error, label, helpText, leftIcon, rightIcon, size = "medium", disabled, ...props }, ref) => {
     const inputId = React.useId()
 
+    const sizeClasses = {
+      small: "h-6 text-xs px-2 py-1",
+      medium: "h-7 text-sm px-2 py-1",
+      large: "h-9 text-base px-3 py-1.5"
+    }
+
+    const iconSizeClasses = {
+      small: "w-3 h-3",
+      medium: "w-3.5 h-3.5",
+      large: "w-4 h-4"
+    }
+
+    const iconPositionClasses = {
+      small: leftIcon ? "pl-6" : "",
+      medium: leftIcon ? "pl-7" : "",
+      large: leftIcon ? "pl-9" : ""
+    }
+
+    const rightIconPositionClasses = {
+      small: rightIcon ? "pr-6" : "",
+      medium: rightIcon ? "pr-7" : "",
+      large: rightIcon ? "pr-9" : ""
+    }
+
     return (
-      <div className="space-y-1.5">
+      <div className="w-full">
         {label && (
           <label
             htmlFor={inputId}
-            className="font-inter text-sm font-medium text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="block text-sm font-semibold text-[#30313d] mb-1 tracking-[-0.154px]"
           >
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            <div className={cn(
+              "absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none",
+              iconSizeClasses[size],
+              disabled ? "text-[#a3acba]" : "text-[#6a7383]"
+            )}>
               {leftIcon}
             </div>
           )}
           <input
             id={inputId}
             type={type}
+            disabled={disabled}
             className={cn(
-              "flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 font-inter text-sm font-normal placeholder:text-gray-400 ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-0 focus-visible:border-primary-500 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
-              leftIcon && "pl-10",
-              rightIcon && "pr-10",
-              error && "border-error-500 focus-visible:ring-error-500 focus-visible:border-error-500",
+              "w-full rounded bg-white font-normal tracking-[-0.154px] placeholder:text-[#a3acba] transition-all duration-200",
+              "border border-[#e3e8ee] shadow-[0px_2px_5px_0px_rgba(60,66,87,0.12),0px_1px_1px_0px_rgba(0,0,0,0.08)]",
+              "hover:border-[#d5dbe1]",
+              "focus:outline-none focus:ring-2 focus:ring-[#7f5efd] focus:ring-offset-0 focus:border-[#7f5efd] focus:shadow-[0px_2px_5px_0px_rgba(127,94,253,0.12),0px_1px_1px_0px_rgba(127,94,253,0.08)]",
+              "disabled:bg-[#f6f9fc] disabled:border-[#e3e8ee] disabled:text-[#a3acba] disabled:cursor-not-allowed disabled:opacity-75",
+              sizeClasses[size],
+              iconPositionClasses[size],
+              rightIconPositionClasses[size],
+              error && "border-[#e85d75] hover:border-[#e85d75] focus:ring-[#e85d75] focus:border-[#e85d75]",
               className
             )}
             ref={ref}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            <div className={cn(
+              "absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none",
+              iconSizeClasses[size],
+              disabled ? "text-[#a3acba]" : error ? "text-[#e85d75]" : "text-[#6a7383]"
+            )}>
               {rightIcon}
             </div>
           )}
         </div>
+        {helpText && !error && (
+          <p className="mt-1 text-xs text-[#6a7383] tracking-[-0.154px]">{helpText}</p>
+        )}
         {error && (
-          <p className="font-inter text-xs text-error-600 font-normal mt-1">{error}</p>
+          <p className="mt-1 text-xs text-[#e85d75] tracking-[-0.154px]">{error}</p>
         )}
       </div>
     )
@@ -58,4 +101,3 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = "Input"
 
 export { Input }
-

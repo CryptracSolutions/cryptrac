@@ -451,7 +451,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                       </label>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         onClick={() => {
                           const newRate = {
@@ -620,7 +620,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <Button
               type="button"
               onClick={onPrevious}
-              variant="outline"
+              variant="secondary"
               className="flex items-center gap-2 px-6 h-11"
             >
               <ArrowLeft className="w-4 h-4" />

@@ -4,14 +4,14 @@ import { cn } from "@/lib/utils"
 
 interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg" | "xl"
-  variant?: "default" | "white" | "dark"
+  variant?: "primary" | "white" | "dark"
   showText?: boolean
   // Optional classes applied to the emblem container behind the image
   emblemClassName?: string
 }
 
 const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
-  ({ className, size = "md", variant = "default", showText = true, emblemClassName, ...props }, ref) => {
+  ({ className, size = "md", variant = "primary", showText = true, emblemClassName, ...props }, ref) => {
     const sizeClasses = {
       sm: "h-6 w-6",
       md: "h-8 w-8", 

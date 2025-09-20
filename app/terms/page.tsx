@@ -290,15 +290,15 @@ export default function TermsOfService() {
                       <p className="font-capsule text-base font-normal text-gray-700">Merchants must provide:</p>
                       <ul className="space-y-2 font-phonic text-sm font-normal text-gray-600">
                         <li className="flex items-start gap-2">
-                          <Badge variant="outline" className="mt-0.5">1</Badge>
+                          <Badge variant="secondary" className="mt-0.5">1</Badge>
                           <span>Accurate business information and contact details</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <Badge variant="outline" className="mt-0.5">2</Badge>
+                          <Badge variant="secondary" className="mt-0.5">2</Badge>
                           <span>Valid cryptocurrency wallet addresses</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <Badge variant="outline" className="mt-0.5">3</Badge>
+                          <Badge variant="secondary" className="mt-0.5">3</Badge>
                           <span>Compliance documentation as required</span>
                         </li>
                       </ul>

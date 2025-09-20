@@ -1,6 +1,6 @@
 'use client';
 
-import { Copy } from 'lucide-react';
+import { CopyIcon, CheckIcon } from '@/components/ui/icons';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
@@ -30,7 +30,11 @@ export function CopyButton({ text, label }: CopyButtonProps) {
       title={`Copy ${label}`}
       aria-label={`Copy ${label}`}
     >
-      <Copy className={`h-5 w-5 sm:h-3 sm:w-3 ${copied ? 'text-green-600' : 'text-[#7f5efd]'}`} />
+      {copied ? (
+        <CheckIcon size="md" color="success" animate className="sm:w-3 sm:h-3" />
+      ) : (
+        <CopyIcon size="md" color="brand" animate className="sm:w-3 sm:h-3" />
+      )}
     </button>
   );
 }

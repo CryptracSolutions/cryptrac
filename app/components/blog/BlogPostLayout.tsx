@@ -95,7 +95,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
             {/* Article Header */}
             <header className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline" className="text-sm md:text-sm">
+                <Badge variant="secondary" className="text-sm md:text-sm">
                   {post.category}
                 </Badge>
                 {post.featured && (
@@ -202,7 +202,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                 </h3>
                 <div className="flex flex-wrap items-center gap-2 md:gap-3">
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => window.open(shareUrls.twitter, '_blank')}
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
@@ -211,7 +211,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                     Twitter
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => window.open(shareUrls.linkedin, '_blank')}
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
@@ -220,7 +220,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                     LinkedIn
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => window.open(shareUrls.facebook, '_blank')}
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
@@ -229,7 +229,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                     Facebook
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={handleCopyUrl}
                     className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd] hover:text-white hover:border-[#7f5efd]"
@@ -300,7 +300,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                             <Calendar className="h-3 w-3" />
                             {new Date(relatedPost.date).toLocaleDateString()}
                           </div>
-                          <Badge variant="outline" className="text-sm md:text-xs">
+                          <Badge variant="secondary" className="text-sm md:text-xs">
                             {relatedPost.category}
                           </Badge>
                         </div>
@@ -385,7 +385,7 @@ export function BlogPostLayout({ post }: BlogPostLayoutProps) {
                 Get Started Free
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10" asChild>
+            <Button size="lg" variant="secondary" className="border-white/20 text-white hover:bg-white/10" asChild>
               <Link href="/contact">
                 Contact Sales
               </Link>

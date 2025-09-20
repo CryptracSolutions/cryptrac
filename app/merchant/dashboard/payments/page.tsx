@@ -6,9 +6,11 @@ import { formatDateTime } from '@/lib/utils/date-utils';
 
 export const dynamic = 'force-dynamic';
 import { Button } from '@/app/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, MetricCard } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { EmptyState } from '@/app/components/ui/empty-state';
+import { Pagination } from '@/app/components/ui/pagination';
 import { 
   Plus,
   ExternalLink,
@@ -25,7 +27,6 @@ import {
   BarChart3,
   Calendar,
   Users,
-  Zap,
   Clock
 } from 'lucide-react';
 import Link from 'next/link';
@@ -279,7 +280,7 @@ export default function PaymentsPage() {
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
         {link?.max_uses === 1 && (
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="secondary" className="text-xs">
             Single Use
           </Badge>
         )}
@@ -294,7 +295,7 @@ export default function PaymentsPage() {
       actions.push(
         <Button
           key="complete"
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={() => updatePaymentLinkStatus(link.id, 'completed', 'Manually completed by merchant')}
           disabled={statusUpdateLoading === link.id}
@@ -311,7 +312,7 @@ export default function PaymentsPage() {
       actions.push(
         <Button
           key="reactivate"
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={() => updatePaymentLinkStatus(link.id, 'active', 'Reactivated by merchant')}
           disabled={statusUpdateLoading === link.id}
@@ -346,7 +347,7 @@ export default function PaymentsPage() {
       buttons.push(
         <Button
           key="copy"
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={() => copyToClipboard(getPaymentUrl(link.link_id), link.id)}
           className="flex items-center gap-1"
@@ -362,7 +363,7 @@ export default function PaymentsPage() {
       buttons.push(
         <Button
           key="open"
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
           className="flex items-center gap-1"
@@ -376,7 +377,7 @@ export default function PaymentsPage() {
     // View button (always shown)
     buttons.push(
       <Link key="view" href={`/merchant/dashboard/payments/${link.id}`}>
-        <Button variant="outline" size="sm" className="flex items-center gap-1">
+        <Button variant="secondary" size="sm" className="flex items-center gap-1">
           <Eye className="h-3 w-3" />
           View
         </Button>
@@ -402,12 +403,12 @@ export default function PaymentsPage() {
               <div className="flex items-center gap-2">
                 {getStatusBadge(link.status, link)}
                 {(link.source === 'subscription' || link.subscription_id) && (
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
                     Subscription
                   </Badge>
                 )}
                 {link.confirmed_payment_count > 0 && (
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
                     Payment received
                   </Badge>
                 )}
@@ -494,7 +495,7 @@ export default function PaymentsPage() {
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
             <p className="font-capsule text-base font-normal text-red-600 mb-6">Error: {error}</p>
             <div className="flex gap-4 justify-center">
-              <Button onClick={fetchPaymentLinks} variant="outline" size="lg">
+              <Button onClick={fetchPaymentLinks} variant="secondary" size="lg">
                 Try Again
               </Button>
               <Button onClick={() => router.push('/login')} size="lg">
@@ -549,25 +550,25 @@ export default function PaymentsPage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Link href="/merchant/dashboard/payments/create">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button variant="primary" size="lg" className="w-full flex items-center justify-center gap-2">
               <Plus className="h-4 w-4" />
               Create Payment Link
             </Button>
           </Link>
           <Link href="/smart-terminal">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button variant="primary" size="lg" className="w-full flex items-center justify-center gap-2">
               <CreditCard className="h-4 w-4" />
               Open Smart Terminal
             </Button>
           </Link>
           <Link href="/merchant/subscriptions/create">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button variant="primary" size="lg" className="w-full flex items-center justify-center gap-2">
               <Plus className="h-4 w-4" />
               Create Subscription
             </Button>
           </Link>
           <Link href="/merchant/subscriptions">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button variant="primary" size="lg" className="w-full flex items-center justify-center gap-2">
               <Calendar className="h-4 w-4" />
               Manage Subscriptions
             </Button>
@@ -577,103 +578,47 @@ export default function PaymentsPage() {
 
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Links</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <LinkIcon className="h-4 w-4 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.total_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
-              <BarChart3 className="h-3 w-3" />
-              <span className="font-capsule text-xs">All payment links</span>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Total Links"
+          value={statistics.total_links}
+          subtitle="All payment links"
+          icon={<LinkIcon className="h-4 w-4" />}
+        />
 
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Active</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <TrendingUp className="h-4 w-4 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.active_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
-              <Zap className="h-3 w-3" />
-              <span className="font-capsule text-xs">Accepting payments</span>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Active"
+          value={statistics.active_links}
+          subtitle="Accepting payments"
+          icon={<TrendingUp className="h-4 w-4" />}
+        />
 
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Completed</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <CheckCircle className="h-4 w-4 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.completed_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
-              <CheckCircle className="h-3 w-3" />
-              <span className="font-capsule text-xs">Finished or max uses</span>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Completed"
+          value={statistics.completed_links}
+          subtitle="Finished or max uses"
+          icon={<CheckCircle className="h-4 w-4" />}
+        />
 
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Expired</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <AlertCircle className="h-4 w-4 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.expired_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
-              <Clock className="h-3 w-3" />
-              <span className="font-capsule text-xs">Past expiry date</span>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Expired"
+          value={statistics.expired_links}
+          subtitle="Past expiry date"
+          icon={<AlertCircle className="h-4 w-4" />}
+        />
 
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Single Use</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <CreditCard className="h-4 w-4 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.single_use_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
-              <Users className="h-3 w-3" />
-              <span className="font-capsule text-xs">One-time payments</span>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Single Use"
+          value={statistics.single_use_links}
+          subtitle="One-time payments"
+          icon={<CreditCard className="h-4 w-4" />}
+        />
 
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Revenue</CardTitle>
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <DollarSign className="h-4 w-4 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">
-              {formatCurrency(statistics.total_revenue)}
-            </div>
-            <div className="flex items-center gap-1 text-gray-600">
-              <TrendingUp className="h-3 w-3" />
-              <span className="font-capsule text-xs">{statistics.total_payments} payments</span>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Total Revenue"
+          value={formatCurrency(statistics.total_revenue)}
+          subtitle={`${statistics.total_payments} payments`}
+          icon={<DollarSign className="h-4 w-4" />}
+        />
       </div>
 
       {/* Filters */}
@@ -713,7 +658,7 @@ export default function PaymentsPage() {
               <div className="space-y-2">
                 <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                   {group.title}
-                  <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                  <Badge variant="secondary" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
                     {group.items.length}
                   </Badge>
                 </CardTitle>
@@ -741,13 +686,13 @@ export default function PaymentsPage() {
           {openSections[group.key] && (
             <CardContent className="p-6 pt-0">
               {group.items.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <LinkIcon className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
-                  <p className="font-capsule text-sm text-gray-500 mb-6">Get started by creating your first payment link</p>
-                </div>
+                <EmptyState
+                  variant="no-data"
+                  icon={<LinkIcon className="h-[48px] w-[48px]" />}
+                  title={`No ${group.title.toLowerCase()} found`}
+                  description="Get started by creating your first payment link"
+                  compact
+                />
               ) : (
                 <div className="space-y-4">
                   {group.items.map(renderLink)}
@@ -760,35 +705,14 @@ export default function PaymentsPage() {
 
       {/* Enhanced Pagination */}
       {totalPages > 1 && (
-        <Card className="border border-gray-200 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex justify-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
-              >
-                Previous
-              </Button>
-              <div className="flex items-center px-4 py-2 font-capsule text-sm text-gray-600 bg-gray-50 rounded-lg">
-                Page {currentPage} of {totalPages}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
-              >
-                Next
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          itemsPerPage={50}
+          totalItems={statistics.total_links}
+        />
       )}
     </div>
   );
 }
-

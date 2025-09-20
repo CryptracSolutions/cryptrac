@@ -22,33 +22,33 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Cryptrac Brand Colors
+        // Stripe-Parity Brand Colors with Cryptrac purple
         primary: {
           50: '#f5f3ff',
           100: '#ede9fe',
           200: '#ddd6fe',
           300: '#c4b5fd',
           400: '#a78bfa',
-          500: '#7f5efd', // Main Cryptrac purple
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
-          950: '#2e1065',
+          500: '#7f5efd', // Cryptrac purple (replaces Stripe #635BFF)
+          600: '#6d4fdd',
+          700: '#5b3fc0',
+          800: '#4a3399',
+          900: '#3a2873',
+          950: '#2a1d52',
         },
-        // Neutral grays for professional look
+        // Stripe-matched gray scale
         gray: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
-          950: '#030712',
+          50: '#F6F9FC',  // Canvas background
+          100: '#F6F8FA', // Hover states
+          200: '#E3E8EE', // Input borders
+          300: '#D5DBE1', // Default borders
+          400: '#A3ACBA', // Disabled text
+          500: '#8792A2', // Tertiary text
+          600: '#6A7383', // Secondary text
+          700: '#4B5563',
+          800: '#30313D', // Primary text
+          900: '#0A2540', // Navigation bg
+          950: '#063667', // App header
         },
         // Muted success palette (≈35 % saturation)
         success: {
@@ -119,9 +119,11 @@ module.exports = {
         },
       },
       borderRadius: {
-        lg: "16px",
-        md: "calc(16px - 2px)",
-        sm: "calc(16px - 4px)",
+        xs: "4px",   // Buttons, checkboxes
+        sm: "5px",   // Input fields
+        md: "8px",   // Cards, drawers
+        lg: "12px",  // Large cards
+        xl: "16px",  // Extra large elements
       },
       fontFamily: {
         // Robinhood-inspired typography system
@@ -133,27 +135,19 @@ module.exports = {
         mono: ['var(--font-geist-mono)', 'monospace'],
       },
       fontSize: {
-        // Fine print
-        'xs': ['12px', { lineHeight: '19px', letterSpacing: '-0.1px' }],
-        // Small text
-        'sm': ['14px', { lineHeight: '22px', letterSpacing: '-0.1px' }],
-        // Body text
-        'base': ['16px', { lineHeight: '24px', letterSpacing: '-0.25px' }],
-        // Large body text
-        'lg': ['18px', { lineHeight: '26px', letterSpacing: '-0.25px' }],
-        'xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.3px' }],
-        // Subheadings
-        '2xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.4px' }],
-        // Section headers
-        '3xl': ['26px', { lineHeight: '32px', letterSpacing: '-0.7px' }],
-        '4xl': ['32px', { lineHeight: '38px', letterSpacing: '-0.9px' }],
-        // Main headers
-        '5xl': ['36px', { lineHeight: '44px', letterSpacing: '-0.9px' }],
-        '6xl': ['46px', { lineHeight: '56px', letterSpacing: '-1.8px' }],
-        // Brand statement
-        '7xl': ['64px', { lineHeight: '70px', letterSpacing: '-0.9px' }],
-        // Hero
-        '8xl': ['80px', { lineHeight: '72px', letterSpacing: '-4px' }],
+        // Stripe-matched type scale
+        'xs': ['11px', { lineHeight: '16px', letterSpacing: '-0.4px' }],  // Subheadings/labels
+        'sm': ['12px', { lineHeight: '16px', letterSpacing: '-0.1px' }],  // Captions
+        'base': ['14px', { lineHeight: '20px', letterSpacing: '-0.154px' }], // Body text
+        'lg': ['16px', { lineHeight: '24px', letterSpacing: '-0.4px' }],  // Headings
+        'xl': ['20px', { lineHeight: '28px', letterSpacing: '0.3px' }],   // Display titles
+        '2xl': ['24px', { lineHeight: '32px', letterSpacing: '-0.4px' }],
+        '3xl': ['32px', { lineHeight: '40px', letterSpacing: '-0.4px' }],
+        '4xl': ['36px', { lineHeight: '44px', letterSpacing: '-0.9px' }],
+        '5xl': ['48px', { lineHeight: '56px', letterSpacing: '-0.9px' }],
+        '6xl': ['60px', { lineHeight: '72px', letterSpacing: '-1.8px' }],
+        '7xl': ['72px', { lineHeight: '90px', letterSpacing: '-0.9px' }],
+        '8xl': ['96px', { lineHeight: '120px', letterSpacing: '-4px' }],
       },
       fontWeight: {
         light: '300',
@@ -163,18 +157,96 @@ module.exports = {
         bold: '700',
       },
       spacing: {
+        // Stripe 4px grid system
+        '0': '0px',
+        'xxs': '2px',
+        'xs': '4px',
+        'sm': '8px',
+        'md': '12px',
+        'lg': '16px',
+        'xl': '24px',
+        'xxl': '32px',
+        '3xl': '48px',
+        '4xl': '64px',
+        // Component-specific spacing
+        'button-x': '8px',
+        'button-y': '4px',
+        'input': '8px',
+        'card': '16px',
+        'section': '16px',
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
         '144': '36rem',
       },
+      boxShadow: {
+        // Stripe elevation system
+        'soft': '0px 1px 1px rgba(0,0,0,0.12), 0px 2px 5px rgba(60,66,87,0.08)',
+        'medium': '0px 2px 5px rgba(60,66,87,0.12), 0px 1px 1px rgba(0,0,0,0.08)',
+        'elevated': '0px 7px 14px rgba(48,49,61,0.08), 0px 3px 6px rgba(0,0,0,0.12)',
+        'high': '0px 15px 35px rgba(48,49,61,0.12), 0px 5px 15px rgba(0,0,0,0.08)',
+        'focus': '0 0 0 2px var(--tw-ring-offset-color), 0 0 0 4px var(--tw-ring-color)',
+      },
+      transitionDuration: {
+        '0': '0ms',
+        '150': '150ms',
+        '200': '200ms',
+        '250': '250ms',
+        '400': '400ms',
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+      },
+      width: {
+        // Drawer/Modal widths
+        'drawer-sm': '320px',
+        'drawer-md': '344px',
+        'drawer-lg': '480px',
+        'drawer-xl': '640px',
+        'modal-sm': '400px',
+        'modal-md': '600px',
+        'modal-lg': '800px',
+      },
+      height: {
+        // Component heights
+        'button-xs': '24px',
+        'button-sm': '28px',
+        'button-md': '32px',
+        'button-lg': '40px',
+        'input-sm': '28px',
+        'input-md': '32px',
+        'input-lg': '40px',
+        'header': '60px',
+        'app-bar': '40px',
+      },
+      zIndex: {
+        'dropdown': '10',
+        'sticky': '20',
+        'fixed': '30',
+        'modal-backdrop': '40',
+        'modal': '50',
+        'notification': '60',
+        'tooltip': '70',
+        'max': '9999',
+      },
       animation: {
+        // Stripe-matched animations
+        "fade-in": "fadeIn 200ms ease forwards",
+        "fade-out": "fadeOut 200ms ease forwards",
+        "scale-in": "scaleIn 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "scale-out": "scaleOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "slide-in-right": "slideInRight 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "slide-in-bottom": "slideInBottom 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "slide-out-right": "slideOutRight 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "spin": "spin 1s linear infinite",
+        "pulse": "pulse 2s ease-in-out infinite",
+        "shimmer": "shimmer 1.5s ease-in-out infinite",
+        "shake": "shake 0.5s ease",
+        "checkmark": "checkmark 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        // Standardised 200 ms fade & scale animations; removed bounce and slide-in variants
-        "fade-in": "fade-in 0.2s ease-in-out",
-        "scale-in": "scale-in 0.2s ease-in-out",
-        // Wave flow animations for hero background
+        // Wave flow animations for hero background (preserved)
         'wave-flow-1': 'wave-flow-1 20s ease-in-out infinite',
         'wave-flow-2': 'wave-flow-2 25s ease-in-out infinite',
         'wave-flow-3': 'wave-flow-3 30s ease-in-out infinite',
@@ -182,6 +254,60 @@ module.exports = {
         'wave-flow-5': 'wave-flow-5 35s ease-in-out infinite',
       },
       keyframes: {
+        // Stripe-matched keyframes
+        "fadeIn": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "fadeOut": {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
+        "scaleIn": {
+          from: { transform: "scale(0.95)", opacity: "0" },
+          to: { transform: "scale(1)", opacity: "1" },
+        },
+        "scaleOut": {
+          from: { transform: "scale(1)", opacity: "1" },
+          to: { transform: "scale(0.95)", opacity: "0" },
+        },
+        "slideInRight": {
+          from: { transform: "translateX(100%)" },
+          to: { transform: "translateX(0)" },
+        },
+        "slideInBottom": {
+          from: { transform: "translateY(100%)" },
+          to: { transform: "translateY(0)" },
+        },
+        "slideOutRight": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(100%)" },
+        },
+        "spin": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+        "pulse": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%": { transform: "translateX(-4px)" },
+          "20%": { transform: "translateX(4px)" },
+          "30%": { transform: "translateX(-4px)" },
+          "40%": { transform: "translateX(4px)" },
+          "50%": { transform: "translateX(-2px)" },
+          "60%": { transform: "translateX(2px)" },
+        },
+        "checkmark": {
+          "0%": { strokeDashoffset: "100" },
+          "100%": { strokeDashoffset: "0" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -189,15 +315,6 @@ module.exports = {
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
-        },
-        // Simplified keyframes to align with new animation guidelines
-        "fade-in": {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
-        "scale-in": {
-          from: { transform: "scale(0.95)", opacity: "0" },
-          to: { transform: "scale(1)", opacity: "1" },
         },
         // Wave flow keyframes for hero background
         'wave-flow-1': {

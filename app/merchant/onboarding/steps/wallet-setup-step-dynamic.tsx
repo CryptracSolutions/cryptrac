@@ -81,7 +81,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           {/* Action Buttons */}
           <div className="flex justify-center items-center gap-6">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowTrustWalletGuide(true)}
               className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
             >
@@ -92,7 +92,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
             <Tooltip
               trigger={
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
                 >
                   <Star className="h-4 w-4" />
@@ -149,7 +149,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       <div className="flex justify-between pt-8">
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           onClick={onBack}
           className="flex items-center"
         >

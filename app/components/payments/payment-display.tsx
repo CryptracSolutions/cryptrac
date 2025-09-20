@@ -229,7 +229,7 @@ export default function PaymentDisplay({
             </div>
             <Button
               onClick={copyAddress}
-              variant="outline"
+              variant="secondary"
               size="sm"
               className="shrink-0"
             >
@@ -245,7 +245,7 @@ export default function PaymentDisplay({
         {/* QR Code Button */}
         <Button
           onClick={() => setShowQR(!showQR)}
-          variant="outline"
+          variant="secondary"
           className="w-full"
         >
           <QrCode className="w-4 h-4 mr-2" />

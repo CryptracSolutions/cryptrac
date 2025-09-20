@@ -3,11 +3,11 @@ import { cn } from "@/lib/utils"
 
 interface LoadingSpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg" | "xl"
-  variant?: "default" | "primary" | "white"
+  variant?: "primary" | "primary" | "white"
 }
 
 const LoadingSpinner = React.forwardRef<HTMLDivElement, LoadingSpinnerProps>(
-  ({ className, size = "md", variant = "default", ...props }, ref) => {
+  ({ className, size = "md", variant = "primary", ...props }, ref) => {
     const sizeClasses = {
       sm: "h-4 w-4",
       md: "h-6 w-6",
