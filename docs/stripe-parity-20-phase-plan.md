@@ -237,7 +237,7 @@ Complete UI/UX transformation to achieve visual and experiential parity with Str
 
 ## PHASE 8: Modal, Sheet & Overlay System
 **Objective**: Implement Stripe's overlay patterns with perfect fidelity
-**Tools**: Figma MCP (drawer components)
+**Tools**: Figma MCP (drawer components), WebFetch for Stripe overlay patterns
 **Instructions**:
 1. Extract modal/drawer patterns:
    - Size variations (320px, 480px, full)

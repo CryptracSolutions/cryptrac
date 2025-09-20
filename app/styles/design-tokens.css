@@ -202,9 +202,26 @@
   --drawer-width-md: 344px;
   --drawer-width-lg: 480px;
   --drawer-width-xl: 640px;
+  --drawer-width-full: 800px;
   --modal-width-sm: 400px;
-  --modal-width-md: 600px;
-  --modal-width-lg: 800px;
+  --modal-width-md: 560px;
+  --modal-width-lg: 720px;
+  --modal-width-xl: 960px;
+  --modal-width-full: calc(100vw - 64px);
+
+  /* Overlay Specific */
+  --overlay-backdrop: rgba(0, 0, 0, 0.5);
+  --overlay-backdrop-blur: 4px;
+  --overlay-animation-duration: 200ms;
+  --overlay-animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --overlay-border-radius: 8px;
+  --overlay-shadow: 0px 7px 14px 0px rgba(48, 49, 61, 0.08),
+                   0px 3px 6px 0px rgba(0, 0, 0, 0.12);
+  --tooltip-offset: 12px;
+  --tooltip-arrow-size: 8px;
+  --tooltip-hover-delay-in: 500ms;
+  --tooltip-hover-delay-out: 0ms;
+  --popover-offset: 4px;
 
   /* Header Heights */
   --header-height: 60px;

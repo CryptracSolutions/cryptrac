@@ -659,3 +659,313 @@
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+
+/* ============================================
+   OVERLAY-SPECIFIC ANIMATIONS (Phase 8)
+   ============================================ */
+
+/* Modal Backdrop (Stripe-matching) */
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(var(--overlay-backdrop-blur));
+  }
+}
+
+@keyframes backdropFadeOut {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(var(--overlay-backdrop-blur));
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+}
+
+.backdrop-fade-in {
+  animation: backdropFadeIn var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+.backdrop-fade-out {
+  animation: backdropFadeOut var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+/* Modal Scale Animation (Stripe-matching) */
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalScaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+}
+
+.modal-scale-in {
+  animation: modalScaleIn var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+.modal-scale-out {
+  animation: modalScaleOut var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+/* Drawer Slide Animations */
+@keyframes drawerSlideInRight {
+  from {
+    transform: translateX(100%);
+    box-shadow: none;
+  }
+  to {
+    transform: translateX(0);
+    box-shadow: var(--overlay-shadow);
+  }
+}
+
+@keyframes drawerSlideOutRight {
+  from {
+    transform: translateX(0);
+    box-shadow: var(--overlay-shadow);
+  }
+  to {
+    transform: translateX(100%);
+    box-shadow: none;
+  }
+}
+
+@keyframes drawerSlideInLeft {
+  from {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+  to {
+    transform: translateX(0);
+    box-shadow: var(--overlay-shadow);
+  }
+}
+
+@keyframes drawerSlideOutLeft {
+  from {
+    transform: translateX(0);
+    box-shadow: var(--overlay-shadow);
+  }
+  to {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+}
+
+.drawer-slide-in-right {
+  animation: drawerSlideInRight var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+.drawer-slide-out-right {
+  animation: drawerSlideOutRight var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+.drawer-slide-in-left {
+  animation: drawerSlideInLeft var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+.drawer-slide-out-left {
+  animation: drawerSlideOutLeft var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+/* Bottom Sheet Animations (Mobile) */
+@keyframes sheetSlideInBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheetSlideOutBottom {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.sheet-slide-in-bottom {
+  animation: sheetSlideInBottom var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+.sheet-slide-out-bottom {
+  animation: sheetSlideOutBottom var(--overlay-animation-duration) var(--overlay-animation-easing) forwards;
+}
+
+/* Tooltip Animations */
+@keyframes tooltipFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tooltipFadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tooltipFadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tooltipFadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.tooltip-fade-in-up {
+  animation: tooltipFadeInUp 150ms var(--ease-smooth) forwards;
+}
+
+.tooltip-fade-in-down {
+  animation: tooltipFadeInDown 150ms var(--ease-smooth) forwards;
+}
+
+.tooltip-fade-in-left {
+  animation: tooltipFadeInLeft 150ms var(--ease-smooth) forwards;
+}
+
+.tooltip-fade-in-right {
+  animation: tooltipFadeInRight 150ms var(--ease-smooth) forwards;
+}
+
+/* Popover Animations */
+@keyframes popoverExpand {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popoverCollapse {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.popover-expand {
+  animation: popoverExpand 150ms var(--ease-smooth) forwards;
+  transform-origin: top center;
+}
+
+.popover-collapse {
+  animation: popoverCollapse 150ms var(--ease-smooth) forwards;
+  transform-origin: top center;
+}
+
+/* Dropdown Menu Animations */
+.dropdown-slide-down {
+  animation: slideDown 150ms var(--ease-smooth) forwards;
+}
+
+.dropdown-slide-up {
+  animation: slideUp 150ms var(--ease-smooth) forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Overlay Utility Classes */
+.overlay-backdrop {
+  background-color: var(--overlay-backdrop);
+  backdrop-filter: blur(var(--overlay-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-backdrop-blur));
+}
+
+.overlay-shadow {
+  box-shadow: var(--overlay-shadow);
+}
+
+.overlay-rounded {
+  border-radius: var(--overlay-border-radius);
+}
+
+/* Handle Bar for Mobile Sheets */
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background-color: var(--color-border);
+  border-radius: 2px;
+  margin: 8px auto 16px;
+}
+
+/* Prevent body scroll when overlay is open */
+.no-scroll {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+}
