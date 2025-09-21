@@ -424,7 +424,7 @@ export default function CreatePaymentLinkPage() {
   }
 
   return (
-    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto max-md:px-4 max-md:space-y-6">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -444,13 +444,13 @@ export default function CreatePaymentLinkPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form onSubmit={handleSubmit} className="space-y-8 max-md:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-md:gap-5">
             {/* Main Form */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-8 max-md:space-y-6">
               {/* Basic Information */}
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+                <CardHeader className="p-6 max-md:p-4">
                   <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-[#7f5efd]" />
                     Basic Information
@@ -459,8 +459,8 @@ export default function CreatePaymentLinkPage() {
                     Enter the basic details for your payment link
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CardContent className="p-6 pt-0 space-y-6 max-md:p-4 max-md:space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="title" className="font-phonic text-sm font-semibold text-gray-900">Payment Link Title *</Label>
                       <Input
@@ -487,8 +487,8 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Pricing Configuration */}
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+                <CardHeader className="p-6 max-md:p-4">
                   <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <DollarSign className="h-5 w-5 text-[#7f5efd]" />
                     Pricing Configuration
@@ -497,8 +497,8 @@ export default function CreatePaymentLinkPage() {
                     Set the amount, currency, and billing details
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CardContent className="p-6 pt-0 space-y-6 max-md:p-4 max-md:space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="amount" className="font-phonic text-sm font-normal text-gray-700">Amount *</Label>
                       <Input
@@ -634,8 +634,8 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Payment Settings */}
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+                <CardHeader className="p-6 max-md:p-4">
                   <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <Coins className="h-5 w-5 text-[#7f5efd]" />
                     Payment Settings
@@ -644,7 +644,7 @@ export default function CreatePaymentLinkPage() {
                     Configure cryptocurrency payment options
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6 max-md:p-4 max-md:space-y-5">
                   <div className="space-y-4">
                     <div>
                       <Label className="font-phonic text-sm font-semibold text-gray-900">Accepted Cryptocurrencies</Label>
@@ -652,7 +652,7 @@ export default function CreatePaymentLinkPage() {
                     </div>
                     {availableCryptos.length > 0 ? (
                       <>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 max-md:grid-cols-1 max-md:gap-3">
                           {availableCryptos.map(crypto => (
                             <label key={crypto} className="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200">
                               <Checkbox
@@ -693,7 +693,7 @@ export default function CreatePaymentLinkPage() {
 
                   {/* Payment Options */}
                   <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
                       {/* Gateway Fee Setting */}
                       <div className="space-y-2">
                         <Label className="font-phonic text-sm font-semibold text-gray-900">Gateway Fee</Label>
@@ -750,8 +750,8 @@ export default function CreatePaymentLinkPage() {
               </Card>
 
               {/* Advanced Settings */}
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+                <CardHeader className="p-6 max-md:p-4">
                   <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <Settings className="h-5 w-5 text-[#7f5efd]" />
                     Advanced Settings
@@ -760,8 +760,8 @@ export default function CreatePaymentLinkPage() {
                     Configure expiration and usage limits
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CardContent className="p-6 pt-0 space-y-6 max-md:p-4 max-md:space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expires_at" className="font-phonic text-sm font-normal text-gray-700">Expiration Date</Label>
                       <Input
@@ -800,9 +800,9 @@ export default function CreatePaymentLinkPage() {
             </div>
 
             {/* Payment Link Preview */}
-            <div className="space-y-8">
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6">
+            <div className="space-y-8 max-md:space-y-6">
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+                <CardHeader className="p-6 max-md:p-4">
                   <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <Receipt className="h-5 w-5 text-[#7f5efd]" />
                     Payment Preview
@@ -811,7 +811,7 @@ export default function CreatePaymentLinkPage() {
                     How your payment link will appear
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
+                <CardContent className="p-6 pt-0 space-y-6 max-md:p-4 max-md:space-y-5">
                   {/* Preview Section - Smart Terminal Style */}
                   <div className="space-y-4">
                     {/* Title and Description */}

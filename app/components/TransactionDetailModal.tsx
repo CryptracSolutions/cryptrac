@@ -25,6 +25,7 @@ import { Badge } from '@/app/components/ui/badge'
 import { getBlockchainExplorerUrl } from '@/lib/utils/export-utils'
 import { formatCompactDateTime } from '@/lib/utils/date-utils'
 import toast from 'react-hot-toast'
+import { useSwipeToClose } from '@/lib/hooks/use-swipe-to-close'
 
 interface TransactionDetailModalProps {
   open: boolean
@@ -63,6 +64,16 @@ export function TransactionDetailModal({
   transaction,
   timezone
 }: TransactionDetailModalProps) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+
+  useSwipeToClose(contentRef, {
+    onClose: () => onOpenChange(false),
+    directions: ['down'],
+    threshold: 70,
+    restraint: 100,
+    enabled: open,
+  })
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
     toast.success(`${label} copied`)
@@ -113,8 +124,11 @@ export function TransactionDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white border-[#7f5efd] shadow-xl rounded-xl p-0">
-        <DialogHeader className="px-5 pt-4 pb-3 border-b border-[#7f5efd]/20 pr-12">
+      <DialogContent
+        ref={contentRef}
+        className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white border-[#7f5efd] shadow-xl rounded-xl p-0 max-md:w-[95vw] max-md:max-h-[95vh] max-md:h-[95vh] max-md:rounded-none max-md:border-0 max-md:m-0"
+      >
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-[#7f5efd]/20 pr-12 max-md:px-4 max-md:pt-5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <DialogTitle className="font-phonic text-xl font-bold text-gray-900 mb-1">
@@ -137,7 +151,7 @@ export function TransactionDetailModal({
           </div>
         </DialogHeader>
 
-        <div className="px-5 py-4 space-y-3">
+        <div className="px-5 py-4 space-y-3 max-md:px-4 max-md:py-5">
           {/* Key Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Date & Time */}

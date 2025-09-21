@@ -11,6 +11,7 @@ import {
 } from '@/app/components/ui/dialog'
 import { Button } from '@/app/components/ui/button'
 import { CheckCircle } from 'lucide-react'
+import { useSwipeToClose } from '@/lib/hooks/use-swipe-to-close'
 
 interface DestinationTagModalProps {
   isOpen: boolean
@@ -19,6 +20,16 @@ interface DestinationTagModalProps {
 }
 
 export default function DestinationTagModal({ isOpen, onClose, currency }: DestinationTagModalProps) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+
+  useSwipeToClose<HTMLDivElement>(contentRef, {
+    onClose,
+    directions: ['down'],
+    threshold: 60,
+    restraint: 100,
+    enabled: isOpen,
+  })
+
   const getTitle = (currency: string) => {
     switch (currency.toUpperCase()) {
       case 'XRP': return 'About Destination Tags'
@@ -45,8 +56,11 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-sm bg-white border-[#7f5efd] shadow-xl">
-        <DialogHeader className="text-center pb-3">
+      <DialogContent
+        ref={contentRef}
+        className="sm:max-w-sm bg-white border-[#7f5efd] shadow-xl max-md:w-[90vw] max-md:max-w-none max-md:rounded-2xl max-md:h-auto"
+      >
+        <DialogHeader className="text-center pb-3 px-2">
           <DialogTitle className="text-lg font-bold text-gray-900">
             {getTitle(currency)}
           </DialogTitle>
@@ -55,7 +69,7 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-3 px-1">
           <div className="bg-[#7f5efd]/5 p-3 rounded-lg border border-[#7f5efd]/20">
             <div className="flex items-start gap-2">
               <CheckCircle className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
@@ -88,7 +102,7 @@ export default function DestinationTagModal({ isOpen, onClose, currency }: Desti
           <DialogClose asChild>
             <Button
               onClick={onClose}
-              className="bg-[#7f5efd] hover:bg-[#6b4fd8] text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
+              className="bg-[#7f5efd] hover:bg-[#6b4fd8] text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors duration-200 max-md:w-full max-md:h-11"
             >
               I Understand
             </Button>

@@ -99,10 +99,12 @@
     --text-small: 14px;
     --text-small-line: 22px;
     --text-small-spacing: -0.1px;
-    
+
     --text-fine: 12px;
     --text-fine-line: 19px;
     --text-fine-spacing: -0.1px;
+    /* Fallback viewport unit, updated via mobile hook */
+    --vh: 1vh;
     /* Cryptrac Brand Colors */
     --primary: 263 91% 69%; /* #7f5efd */
     --primary-foreground: 0 0% 100%;
@@ -1137,5 +1139,70 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Safari and Chrome */
+  }
+}
+
+@layer utilities {
+  /* Mobile-only utilities using max-md breakpoint; zero desktop impact */
+  @media (max-width: 767px) {
+    .mobile-container {
+      @apply w-full mx-auto px-4;
+    }
+
+    .mobile-stack {
+      @apply flex flex-col gap-4;
+    }
+
+    .mobile-inline-scroll {
+      @apply w-full overflow-x-auto overflow-y-hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-inline-scroll > * {
+      scroll-snap-align: start;
+    }
+
+    .mobile-touch-target {
+      @apply flex items-center justify-center;
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    .mobile-safe-h-screen {
+      min-height: calc(var(--vh) * 100);
+    }
+
+    .mobile-safe-area {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+
+    .mobile-card {
+      @apply rounded-2xl border bg-white/90 shadow-sm backdrop-blur;
+      border-color: hsl(var(--border) / 0.4);
+    }
+
+    .mobile-content-spacing {
+      @apply space-y-4;
+    }
+
+    .mobile-divider {
+      @apply border-t pt-4;
+      border-color: hsl(var(--border) / 0.4);
+    }
+
+    .mobile-text-balance {
+      text-wrap: balance;
+    }
+
+    .mobile-no-scroll {
+      @apply overflow-hidden;
+    }
+
+    .mobile-footer-safe {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    }
   }
 }

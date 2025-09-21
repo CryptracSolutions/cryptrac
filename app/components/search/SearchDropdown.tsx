@@ -36,6 +36,7 @@ import { SearchResult, SearchResultGroup, SearchApiResponse } from "@/types/sear
 
 interface SearchDropdownProps {
   className?: string
+  autoFocus?: boolean
 }
 
 const CATEGORY_ICONS = {
@@ -63,7 +64,7 @@ const STATUS_COLORS = {
   expired: "bg-gray-100 text-gray-800"
 } as const
 
-export function SearchDropdown({ className }: SearchDropdownProps) {
+export function SearchDropdown({ className, autoFocus }: SearchDropdownProps) {
   const [query, setQuery] = React.useState("")
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
@@ -157,6 +158,18 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
       doSearch(query)
     }
   }, [query, doSearch, isOpen])
+
+  // Auto-focus when requested (used by mobile overlay)
+  React.useEffect(() => {
+    if (!autoFocus) return
+
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus()
+      setIsOpen(true)
+    }, 10)
+
+    return () => window.clearTimeout(timer)
+  }, [autoFocus])
 
   // Handle result click
   const handleResultClick = React.useCallback((result: SearchResult) => {

@@ -163,10 +163,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto max-md:px-4">
       {/* Main Configuration Card */}
-      <Card className="shadow-lg border-0 bg-white">
-        <CardHeader className="text-center space-y-6">
+      <Card className="shadow-lg border-0 bg-white max-md:rounded-2xl">
+        <CardHeader className="text-center space-y-6 max-md:space-y-4 max-md:px-2">
           <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
             <Settings className="w-10 h-10 text-white" />
           </div>
@@ -180,11 +180,11 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
           </div>
         </CardHeader>
 
-        <CardContent className="p-8 space-y-10">
+        <CardContent className="p-8 space-y-10 max-md:p-5 max-md:space-y-6">
 
             {/* Configured Cryptocurrencies Display */}
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
                 <div className="flex items-center gap-2">
                   <Tooltip
                     trigger={
@@ -203,7 +203,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                   />
                   <h2 className="text-lg font-bold text-gray-900">Accepted Cryptocurrencies</h2>
                 </div>
-                <div className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
+                <div className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full max-md:self-start">
                   <span className="text-[#7f5efd] font-bold">{expandedCurrencies.length}</span> Total
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               {/* Base Currencies */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-900">Base Cryptocurrencies</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-md:gap-4">
                   {baseCurrencies.map((currency) => (
                     <div
                       key={currency}
@@ -237,7 +237,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               {expandedCurrencies.length > baseCurrencies.length && (
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-900">Included Stable Coins</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-md:gap-4">
                     {expandedCurrencies.filter(currency => !baseCurrencies.includes(currency)).map((currency) => (
                       <div
                         key={currency}
@@ -616,12 +616,12 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 )}
               </div>
           {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6 border-t">
+          <div className="flex justify-between pt-6 border-t max-md:flex-col max-md:gap-3 max-md:pt-5">
             <Button
               type="button"
               onClick={onPrevious}
               variant="outline"
-              className="flex items-center gap-2 px-6 h-11"
+              className="flex items-center gap-2 px-6 h-11 max-md:w-full max-md:justify-center"
             >
               <ArrowLeft className="w-4 h-4" />
               Previous
@@ -630,7 +630,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || configuredCurrencies.length === 0}
-              className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center gap-2 px-6 h-11"
+              className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center gap-2 px-6 h-11 max-md:w-full max-md:justify-center"
             >
               {isSubmitting ? (
                 <>

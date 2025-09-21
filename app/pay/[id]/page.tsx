@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/app/componen
 import { cn } from '@/lib/utils'
 import { useRealTimePaymentStatus } from '@/lib/hooks/useRealTimePaymentStatus'
 import { CopyButton } from '@/app/components/CopyButton'
+import { OptimizedImage } from '@/app/components/ui/optimized-image'
 
 const SUPABASE_AVAILABLE = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -32,6 +33,7 @@ const SUPABASE_AVAILABLE = Boolean(
 )
 
 const supabase = supabaseBrowserClient
+const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw='
 
 interface PaymentLink {
   id: string
@@ -287,6 +289,76 @@ export default function PaymentPage() {
     }
   }
 
+  const getNetworkIcon = (networkId: string, className: string) => {
+    switch (networkId) {
+      case 'bitcoin':
+        return <Bitcoin className={className} />
+      case 'ethereum':
+        return <Zap className={className} />
+      case 'binance':
+        return <TrendingUp className={className} />
+      case 'solana':
+        return <Zap className={className} />
+      case 'polygon':
+        return <Network className={className} />
+      case 'tron':
+        return <Globe className={className} />
+      case 'ton':
+        return <Smartphone className={className} />
+      case 'arbitrum':
+        return <TrendingUp className={className} />
+      case 'optimism':
+        return <CheckCircle2 className={className} />
+      case 'base':
+        return <DollarSign className={className} />
+      case 'avalanche':
+        return <Network className={className} />
+      case 'algorand':
+        return <Coins className={className} />
+      case 'litecoin':
+        return <Coins className={className} />
+      case 'cardano':
+        return <Coins className={className} />
+      case 'polkadot':
+        return <Network className={className} />
+      case 'chainlink':
+        return <Globe className={className} />
+      default:
+        return <Network className={className} />
+    }
+  }
+
+  const getCurrencyIcon = (currencyCode: string, className: string) => {
+    const code = currencyCode.toUpperCase()
+
+    if (code === 'BTC') return <Bitcoin className={className} />
+    if (
+      code.includes('USDT') ||
+      code.includes('USDC') ||
+      code.includes('DAI') ||
+      code.includes('PYUSD') ||
+      code.includes('BUSD') ||
+      code.includes('TUSD')
+    ) {
+      return <DollarSign className={className} />
+    }
+    if (code === 'ETH' || code.includes('ETH')) return <Zap className={className} />
+    if (code === 'SOL' || code.includes('SOL')) return <Zap className={className} />
+    if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className={className} />
+    if (code === 'MATIC') return <Network className={className} />
+    if (code === 'TRX') return <Globe className={className} />
+    if (code === 'TON') return <Smartphone className={className} />
+    if (code === 'ARB') return <TrendingUp className={className} />
+    if (code === 'OP') return <CheckCircle2 className={className} />
+    if (code === 'AVAX') return <Network className={className} />
+    if (code === 'ALGO') return <Coins className={className} />
+    if (code === 'LTC') return <Coins className={className} />
+    if (code === 'ADA') return <Coins className={className} />
+    if (code === 'DOT') return <Network className={className} />
+    if (code === 'LINK') return <Globe className={className} />
+    return <Coins className={className} />
+  }
+
 
 
   const loadPaymentLink = async () => {
@@ -514,12 +586,362 @@ export default function PaymentPage() {
   const currentStatus = paymentStatus || paymentData
   const needsExtra = !!(paymentData?.payin_extra_id && requiresExtraId(paymentData.pay_currency))
 
+  const renderMobileContent = () => {
+    if (loading) {
+      return (
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-purple-100 p-6 space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[#7f5efd] mx-auto" />
+          <div className="text-center space-y-1">
+            <h2 className="text-lg font-semibold text-gray-900">Loading Payment Details</h2>
+            <p className="text-sm text-gray-600">Please wait while we securely prepare your checkout.</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-red-100 p-6 space-y-4 text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+          <div className="space-y-2">
+            <h1 className="text-xl font-semibold text-gray-900">Payment Error</h1>
+            <p className="text-sm text-gray-600">{error}</p>
+          </div>
+          <Button onClick={() => window.location.reload()} className="w-full h-12 bg-[#7f5efd] hover:bg-[#7c3aed] text-white">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
+      )
+    }
+
+    if (!paymentLink) {
+      return (
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-gray-100 p-6 space-y-3 text-center">
+          <AlertCircle className="h-12 w-12 text-gray-500 mx-auto" />
+          <h1 className="text-xl font-semibold text-gray-900">Payment Link Not Found</h1>
+          <p className="text-sm text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
+        </div>
+      )
+    }
+
+    const mobileStatus = currentStatus
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-purple-100 p-6 space-y-4">
+          <div className="space-y-2 text-center">
+            <h1 className="text-xl font-semibold text-gray-900">{paymentLink.title}</h1>
+            {paymentLink.description && (
+              <p className="text-sm text-gray-600">{paymentLink.description}</p>
+            )}
+            {paymentLink.subscription_id && (
+              <Badge className="bg-blue-100 text-blue-800 px-3 py-1 text-xs">Recurring Invoice</Badge>
+            )}
+            <div className="flex flex-col items-center gap-1 text-sm text-gray-500">
+              <span>Powered by</span>
+              <span className="font-medium text-gray-900">{paymentLink.merchant.business_name}</span>
+            </div>
+          </div>
+
+          {feeBreakdown && (
+            <div className="bg-purple-50/80 rounded-xl border border-purple-100 p-4 space-y-2" aria-live="polite">
+              <div className="flex items-center justify-center gap-2 text-xs font-semibold text-purple-900 uppercase">
+                <ShoppingBag className="h-4 w-4" />
+                Order Summary
+              </div>
+              <div className="space-y-2 text-sm text-gray-700">
+                <div className="flex items-center justify-between">
+                  <span>Subtotal</span>
+                  <span className="font-semibold text-gray-900">${feeBreakdown.baseAmount.toFixed(2)}</span>
+                </div>
+                {paymentLink.tax_enabled && feeBreakdown.taxAmount > 0 && (
+                  <div className="flex items-center justify-between text-[#7f5efd]">
+                    <span>Tax</span>
+                    <span className="font-medium">+${feeBreakdown.taxAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                {feeBreakdown.platformFee > 0 && (
+                  <div className="flex items-center justify-between text-[#7f5efd]">
+                    <span>Gateway fee</span>
+                    <span className="font-medium">+${feeBreakdown.platformFee.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-purple-100 pt-2">
+                  <span className="font-semibold text-gray-800">Total</span>
+                  <span className="text-lg font-bold text-[#7f5efd]">${feeBreakdown.customerTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!paymentData ? (
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Network className="h-4 w-4 text-[#7f5efd]" />
+                  Network
+                </label>
+                {availableCurrencies.length > 0 && (() => {
+                  const groupedCurrencies = groupCurrenciesByNetwork(
+                    availableCurrencies.map(c => ({ code: c.code, name: c.name })),
+                    paymentLink.accepted_cryptos
+                  )
+                  const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
+
+                  return (
+                    <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
+                      <SelectTrigger className="h-12 rounded-xl border border-purple-200 bg-white px-4 text-sm font-semibold text-gray-900 justify-between">
+                        <div className="flex items-center gap-2">
+                          {selectedNetwork === 'all'
+                            ? <Globe className="h-4 w-4 text-[#7f5efd]" />
+                            : getNetworkIcon(selectedNetwork, 'h-4 w-4 text-[#7f5efd]')}
+                          <span className="capitalize">{selectedNetwork === 'all' ? 'All networks' : selectedNetwork}</span>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent
+                        position="popper"
+                        sideOffset={5}
+                        className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm"
+                      >
+                        <SelectItem value="all" className="hover:bg-white/10 rounded-lg text-white flex items-center gap-2">
+                          <Globe className="h-4 w-4" />
+                          All networks
+                        </SelectItem>
+                        {availableNetworks.map((networkId) => {
+                          const network = getNetworkInfo(networkId)!
+                          const currencyCount = groupedCurrencies.get(networkId)?.length || 0
+                          return (
+                            <SelectItem
+                              key={networkId}
+                              value={networkId}
+                              className="hover:bg-white/10 rounded-lg transition-colors duration-200 text-white"
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                  {getNetworkIcon(networkId, 'h-4 w-4 text-white')}
+                                  <span className="font-semibold">{network.displayName}</span>
+                                </div>
+                                <span className="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded">
+                                  {currencyCount}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                  )
+                })()}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-[#7f5efd]" />
+                  Currency
+                </label>
+                {availableCurrencies.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#7f5efd]" />
+                    <p className="text-sm text-gray-600">Loading currencies...</p>
+                  </div>
+                ) : (
+                  <Select value={selectedCurrency} onValueChange={(value) => setSelectedCurrency(value)}>
+                    <SelectTrigger className="h-12 rounded-xl border border-purple-200 bg-white px-4 text-sm font-semibold text-gray-900 justify-between">
+                      {selectedCurrency ? (
+                        <div className="flex items-center gap-2">
+                          {getCurrencyIcon(selectedCurrency, 'h-4 w-4 text-[#7f5efd]')}
+                          <span className="uppercase font-semibold">{selectedCurrency}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500">Select a currency</span>
+                      )}
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      sideOffset={5}
+                      className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm"
+                    >
+                      {filteredCurrencies.map((c) => {
+                        const displayName = c.name || getCurrencyDisplayName(c.code)
+                        const isAvailable = c.enabled
+                        return (
+                          <SelectItem
+                            key={c.code}
+                            value={c.code}
+                            disabled={!isAvailable}
+                            className={cn(
+                              'hover:bg-white/10 rounded-lg transition-colors duration-200 text-white',
+                              !isAvailable && 'opacity-50 cursor-not-allowed'
+                            )}
+                            title={!isAvailable ? 'Temporarily unavailable' : undefined}
+                          >
+                            <div className="flex items-center gap-2">
+                              {getCurrencyIcon(c.code, 'h-4 w-4 text-white')}
+                              <span className="font-semibold uppercase">{c.code}</span>
+                              <span className="text-xs text-white/80">{displayName}</span>
+                            </div>
+                          </SelectItem>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {selectedCurrency && (
+                <Button
+                  onClick={createPayment}
+                  disabled={creatingPayment}
+                  className="w-full h-12 rounded-xl bg-[#7f5efd] hover:bg-[#7c3aed] text-white font-semibold flex items-center justify-center gap-2"
+                >
+                  {creatingPayment ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Creating Payment...
+                    </>
+                  ) : (
+                    <>
+                      Pay with {selectedCurrency.toUpperCase()}
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {mobileStatus && (() => {
+                const status = mobileStatus.payment_status
+                const isConfirmed = status === 'confirmed' || status === 'finished' || status === 'sending'
+                return (
+                  <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
+                    {!isConfirmed ? (
+                      <div className="flex flex-col items-center gap-2 text-center">
+                        <Clock className="h-5 w-5 text-[#7f5efd] animate-spin" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-gray-800">Awaiting Payment</p>
+                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-[11px] font-semibold text-[#7f5efd]">
+                            {status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          <div>
+                            <p className="text-sm font-semibold text-green-700">Payment Confirmed</p>
+                            <p className="text-xs text-green-600">Transaction has been confirmed</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              {qrCodeDataUrl && (!needsExtra || extraIdConfirmed) && (
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                  <OptimizedImage
+                    src={qrCodeDataUrl || TRANSPARENT_PIXEL}
+                    alt="Payment QR Code"
+                    width={256}
+                    height={256}
+                    className="mx-auto h-60 w-60"
+                    variant="qr"
+                  />
+                  <p className="mt-3 text-xs text-gray-500">Scan with your wallet app</p>
+                </div>
+              )}
+
+              {needsExtra && !extraIdConfirmed && (
+                <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 space-y-3">
+                  <label className="flex items-start gap-3 text-sm text-purple-900">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 rounded border-purple-300 text-[#7f5efd]"
+                      checked={extraIdConfirmed}
+                      onChange={(e) => setExtraIdConfirmed(e.target.checked)}
+                      aria-label={`Confirm including ${getExtraIdLabel(paymentData.pay_currency).toLowerCase()}`}
+                    />
+                    <span>
+                      Please confirm you will include the {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} to reveal the QR code.
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {paymentData.payin_extra_id && requiresExtraId(paymentData.pay_currency) && (
+                <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 space-y-3 text-center">
+                  <AlertTriangle className="mx-auto h-5 w-5 text-[#7f5efd]" />
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-purple-900">
+                      {getExtraIdLabel(paymentData.pay_currency)} Required
+                    </p>
+                    <div className="rounded-lg border border-purple-200 bg-white p-3">
+                      <p className="font-mono text-sm font-semibold text-[#7f5efd] break-all">
+                        {paymentData.payin_extra_id}
+                      </p>
+                    </div>
+                    <p className="text-xs text-purple-900">
+                      Include this {getExtraIdLabel(paymentData.pay_currency).toLowerCase()} or the payment may be lost.
+                    </p>
+                    <p className="text-[11px] text-purple-900">
+                      In many wallets (e.g., Trust Wallet), look for &quot;{getExtraIdLabel(paymentData.pay_currency)}&quot; or &quot;Memo&quot;.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-xl border border-purple-200 bg-purple-25 p-4 text-center space-y-2">
+                <p className="text-xs text-gray-600">Send exactly</p>
+                <p className="text-lg font-bold text-[#7f5efd]">
+                  {formatAmountForDisplay(paymentData.pay_amount)} {paymentData.pay_currency.toUpperCase()}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-purple-200 bg-purple-50/70 p-4 space-y-3">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-700 text-center">Wallet Address</span>
+                <div className="relative rounded-lg border border-gray-200 bg-white p-4 text-center">
+                  <p className="text-xs text-gray-600">Send to this address</p>
+                  <p className="mt-2 font-mono text-sm font-semibold text-[#7f5efd] break-all">
+                    {paymentData.pay_address}
+                  </p>
+                  <div className="absolute right-2 top-2">
+                    <CopyButton text={paymentData.pay_address} label="address" />
+                  </div>
+                </div>
+              </div>
+
+              {(mobileStatus && !['confirmed', 'finished', 'sending'].includes(mobileStatus.payment_status)) && (
+                <Button
+                  type="button"
+                  className="w-full h-12 rounded-xl border border-purple-200 bg-white text-sm font-semibold text-[#7f5efd] shadow-sm"
+                  onClick={() => {
+                    setPaymentData(null)
+                    setPaymentStatus(null)
+                    setQrCodeDataUrl('')
+                    setExtraIdConfirmed(false)
+                  }}
+                >
+                  Change Currency
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 bg-gradient-to-br from-purple-50 via-white to-purple-50">
-      <div className="w-full max-w-2xl">
-        <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
-          <CardContent className="space-y-6 px-4 sm:px-6 md:px-8 py-6">
+      <div className="hidden md:flex w-full justify-center">
+        <div className="w-full max-w-2xl">
+          <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
+            <CardContent className="space-y-6 px-4 sm:px-6 md:px-8 py-6">
             {loading ? (
               <div className="text-center py-12">
                 <Loader2 className="h-12 w-12 animate-spin text-[#7f5efd] mx-auto mb-4" />
@@ -609,72 +1031,16 @@ export default function PaymentPage() {
                         )
                         const availableNetworks = sortNetworksByPriority(Array.from(groupedCurrencies.keys()))
                         
-                        const getNetworkIcon = (networkId: string) => {
-                          switch (networkId) {
-                            case 'bitcoin': return <Bitcoin className="h-4 w-4 text-white" />
-                            case 'ethereum': return <Zap className="h-4 w-4 text-white" />
-                            case 'binance': return <TrendingUp className="h-4 w-4 text-white" />
-                            case 'solana': return <Zap className="h-4 w-4 text-white" />
-                            case 'polygon': return <Network className="h-4 w-4 text-white" />
-                            case 'tron': return <Globe className="h-4 w-4 text-white" />
-                            case 'ton': return <Smartphone className="h-4 w-4 text-white" />
-                            case 'arbitrum': return <TrendingUp className="h-4 w-4 text-white" />
-                            case 'optimism': return <CheckCircle2 className="h-4 w-4 text-white" />
-                            case 'base': return <DollarSign className="h-4 w-4 text-white" />
-                            case 'avalanche': return <Network className="h-4 w-4 text-white" />
-                            case 'algorand': return <Coins className="h-4 w-4 text-white" />
-                            case 'litecoin': return <Coins className="h-4 w-4 text-white" />
-                            case 'cardano': return <Coins className="h-4 w-4 text-white" />
-                            case 'polkadot': return <Network className="h-4 w-4 text-white" />
-                            case 'chainlink': return <Globe className="h-4 w-4 text-white" />
-                            default: return <Network className="h-4 w-4 text-white" />
-                          }
-                        }
-                        
                         return (
                           <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
                             <SelectTrigger className="w-full min-h-[48px] h-12 px-4 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md md:hover:scale-[1.02] text-gray-900 text-base">
                               <div className="flex items-center gap-2">
                                 {(() => {
                                   const iconClass = "h-4 w-4 text-[#7f5efd]"
-                                  switch (selectedNetwork) {
-                                    case 'all':
-                                      return <Globe className={iconClass} />
-                                    case 'bitcoin':
-                                      return <Bitcoin className={iconClass} />
-                                    case 'ethereum':
-                                      return <Zap className={iconClass} />
-                                    case 'binance':
-                                      return <TrendingUp className={iconClass} />
-                                    case 'solana':
-                                      return <Zap className={iconClass} />
-                                    case 'polygon':
-                                      return <Network className={iconClass} />
-                                    case 'tron':
-                                      return <Globe className={iconClass} />
-                                    case 'ton':
-                                      return <Smartphone className={iconClass} />
-                                    case 'arbitrum':
-                                      return <TrendingUp className={iconClass} />
-                                    case 'optimism':
-                                      return <CheckCircle2 className={iconClass} />
-                                    case 'base':
-                                      return <DollarSign className={iconClass} />
-                                    case 'avalanche':
-                                      return <Network className={iconClass} />
-                                    case 'algorand':
-                                      return <Coins className={iconClass} />
-                                    case 'litecoin':
-                                      return <Coins className={iconClass} />
-                                    case 'cardano':
-                                      return <Coins className={iconClass} />
-                                    case 'polkadot':
-                                      return <Network className={iconClass} />
-                                    case 'chainlink':
-                                      return <Globe className={iconClass} />
-                                    default:
-                                      return <Network className={iconClass} />
+                                  if (selectedNetwork === 'all') {
+                                    return <Globe className={iconClass} />
                                   }
+                                  return getNetworkIcon(selectedNetwork, iconClass)
                                 })()}
                                 <span className="font-semibold">
                                   {selectedNetwork === 'all'
@@ -702,7 +1068,7 @@ export default function PaymentPage() {
                                   <SelectItem key={networkId} value={networkId} className="hover:bg-white/10 rounded-lg transition-colors duration-200">
                                     <div className="flex items-center justify-between w-full">
                                       <div className="flex items-center gap-2">
-                                        {getNetworkIcon(networkId)}
+                                        {getNetworkIcon(networkId, 'h-4 w-4 text-white')}
                                         <span className="font-bold text-white">{network.displayName}</span>
                                       </div>
                                       <span className="text-sm font-bold text-white bg-white/20 px-2 py-0.5 rounded-md ml-4">
@@ -735,29 +1101,9 @@ export default function PaymentPage() {
                             {selectedCurrency ? (() => {
                               const current = availableCurrencies.find(c => c.code === selectedCurrency)
                               const displayName = current?.name || getCurrencyDisplayName(selectedCurrency)
-                              const getCurrencyIconLocal = (currencyCode: string) => {
-                                const code = currencyCode.toUpperCase()
-                                if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-[#7f5efd]" />
-                                if (code.includes('USDT') || code.includes('USDC') || code.includes('DAI') || code.includes('PYUSD') || code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'MATIC') return <Network className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'TRX') return <Globe className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'TON') return <Smartphone className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'AVAX') return <Network className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'ALGO') return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'LTC') return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'ADA') return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'DOT') return <Network className="h-4 w-4 text-[#7f5efd]" />
-                                if (code === 'LINK') return <Globe className="h-4 w-4 text-[#7f5efd]" />
-                                return <Coins className="h-4 w-4 text-[#7f5efd]" />
-                              }
                               return (
                                 <div className="flex items-center gap-2">
-                                  {getCurrencyIconLocal(selectedCurrency)}
+                                  {getCurrencyIcon(selectedCurrency, 'h-4 w-4 text-[#7f5efd]')}
                                   <span className="font-bold">{selectedCurrency.toUpperCase()}</span>
                                   <span className="text-gray-600">{displayName}</span>
                                 </div>
@@ -772,34 +1118,6 @@ export default function PaymentPage() {
                             className="rounded-xl border-purple-200 shadow-xl bg-gradient-to-br from-[#7f5efd] to-[#9b7cff] backdrop-blur-sm z-50"
                           >
                             {(() => {
-                              const getCurrencyIcon = (currencyCode: string) => {
-                                const code = currencyCode.toUpperCase()
-                                // Bitcoin
-                                if (code === 'BTC') return <Bitcoin className="h-4 w-4 text-white" />
-                                // Stablecoins
-                                if (code.includes('USDT')) return <DollarSign className="h-4 w-4 text-white" />
-                                if (code.includes('USDC')) return <DollarSign className="h-4 w-4 text-white" />
-                                if (code.includes('DAI')) return <DollarSign className="h-4 w-4 text-white" />
-                                if (code.includes('PYUSD')) return <DollarSign className="h-4 w-4 text-white" />
-                                if (code.includes('BUSD') || code.includes('TUSD')) return <DollarSign className="h-4 w-4 text-white" />
-                                // Major cryptocurrencies
-                                if (code === 'ETH' || code.includes('ETH')) return <Zap className="h-4 w-4 text-white" />
-                                if (code === 'SOL' || code.includes('SOL')) return <Zap className="h-4 w-4 text-white" />
-                                if (code === 'BNB' || code.includes('BNB')) return <TrendingUp className="h-4 w-4 text-white" />
-                                if (code === 'MATIC') return <Network className="h-4 w-4 text-white" />
-                                if (code === 'TRX') return <Globe className="h-4 w-4 text-white" />
-                                if (code === 'TON') return <Smartphone className="h-4 w-4 text-white" />
-                                if (code === 'ARB') return <TrendingUp className="h-4 w-4 text-white" />
-                                if (code === 'OP') return <CheckCircle2 className="h-4 w-4 text-white" />
-                                if (code === 'AVAX') return <Network className="h-4 w-4 text-white" />
-                                if (code === 'ALGO') return <Coins className="h-4 w-4 text-white" />
-                                if (code === 'LTC') return <Coins className="h-4 w-4 text-white" />
-                                if (code === 'ADA') return <Coins className="h-4 w-4 text-white" />
-                                if (code === 'DOT') return <Network className="h-4 w-4 text-white" />
-                                if (code === 'LINK') return <Globe className="h-4 w-4 text-white" />
-                                return <Coins className="h-4 w-4 text-white" />
-                              }
-
                               return filteredCurrencies.map((c) => {
                                 const displayName = c.name || getCurrencyDisplayName(c.code)
                                 const isAvailable = c.enabled
@@ -815,7 +1133,7 @@ export default function PaymentPage() {
                                     title={!isAvailable ? 'Temporarily unavailable' : undefined}
                                   >
                                     <div className="flex items-center gap-2">
-                                      {getCurrencyIcon(c.code)}
+                                      {getCurrencyIcon(c.code, 'h-4 w-4 text-white')}
                                       <span className="font-bold text-white">{c.code.toUpperCase()}</span>
                                       <span className="text-sm text-white/80">{displayName}</span>
                                     </div>
@@ -889,8 +1207,14 @@ export default function PaymentPage() {
                     <div className="space-y-4">
                       {qrCodeDataUrl && (!needsExtra || extraIdConfirmed) && (
                         <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-3" />
+                          <OptimizedImage
+                            src={qrCodeDataUrl || TRANSPARENT_PIXEL}
+                            alt="Payment QR Code"
+                            width={256}
+                            height={256}
+                            className="w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-3"
+                            variant="qr"
+                          />
                         </div>
                       )}
                       {needsExtra && !extraIdConfirmed && (
@@ -978,6 +1302,11 @@ export default function PaymentPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+    </div>
+
+      <div className="md:hidden w-full max-w-xl mx-auto mt-4">
+        {renderMobileContent()}
       </div>
     </div>
   )

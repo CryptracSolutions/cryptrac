@@ -2,8 +2,10 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
 import { Header } from "./header"
 import { Sidebar } from "./sidebar"
+import { MobileNav } from "./mobile-nav"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -23,6 +25,7 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
   ({ children, user, className, showSidebar = true, showHeader = true }, ref) => {
     const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+    const pathname = usePathname()
     
     const userRole = user?.user_metadata?.role || "merchant"
     
@@ -38,6 +41,10 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
       return () => window.removeEventListener('resize', handleResize)
     }, [])
     
+    React.useEffect(() => {
+      setMobileMenuOpen(false)
+    }, [pathname])
+
     return (
       <div ref={ref} className={cn("min-h-screen bg-gray-50 flex", className)}>
         {/* Full-height sidebar */}
@@ -51,23 +58,13 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
                 onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
               />
             </div>
-            
+
             {/* Mobile Sidebar Overlay */}
-            {mobileMenuOpen && (
-              <div className="fixed inset-0 z-50 md:hidden">
-                <div 
-                  className="fixed inset-0 bg-black/50" 
-                  onClick={() => setMobileMenuOpen(false)}
-                />
-                <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
-                  <Sidebar
-                    userRole={userRole}
-                    collapsed={false}
-                    onToggleCollapse={() => setMobileMenuOpen(false)}
-                  />
-                </div>
-              </div>
-            )}
+            <MobileNav
+              open={mobileMenuOpen}
+              onClose={() => setMobileMenuOpen(false)}
+              userRole={userRole}
+            />
           </>
         )}
         
@@ -100,4 +97,3 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
 DashboardLayout.displayName = "DashboardLayout"
 
 export { DashboardLayout }
-

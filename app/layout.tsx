@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ToasterWrapper from './components/ToasterWrapper'; // Import wrapper (client-safe)
 import { TimezoneProvider } from '@/lib/contexts/TimezoneContext';
+import { ConnectionStatus } from '@/app/components/ui/connection-status';
 
 export const metadata: Metadata = {
   title: {
@@ -44,6 +45,7 @@ export default function RootLayout({
         <TimezoneProvider>
           <ToasterWrapper /> {/* Wrapper handles dynamic/ssr */}
           {children}
+          <ConnectionStatus />
         </TimezoneProvider>
       </body>
     </html>

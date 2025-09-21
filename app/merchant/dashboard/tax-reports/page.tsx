@@ -35,6 +35,7 @@ import toast from 'react-hot-toast'
 import type { User } from '@supabase/supabase-js'
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
 import { TransactionDetailModal } from '@/app/components/TransactionDetailModal'
+import { LazyMount } from '@/app/components/ui/lazy-mount'
 import {
   generateTaxReportPDF,
   generateTaxReportExcel,
@@ -805,7 +806,22 @@ export default function TaxReportsPage() {
 
           {/* Detailed Transactions */}
           {displayReportData && (
-            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <LazyMount
+              className="block"
+              placeholder={(
+                <Card className="border border-gray-200 shadow-sm">
+                  <CardHeader className="p-6">
+                    <div className="h-6 w-44 rounded-md bg-gray-200 animate-pulse" />
+                  </CardHeader>
+                  <CardContent className="p-6 pt-0 space-y-3">
+                    <div className="h-4 w-full rounded bg-gray-100 animate-pulse" />
+                    <div className="h-4 w-5/6 rounded bg-gray-100 animate-pulse" />
+                    <div className="h-4 w-2/3 rounded bg-gray-100 animate-pulse" />
+                  </CardContent>
+                </Card>
+              )}
+            >
+              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader className="p-6">
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center justify-between">
@@ -917,7 +933,7 @@ export default function TaxReportsPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-0">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-200">
@@ -1064,8 +1080,134 @@ export default function TaxReportsPage() {
                     {/* REFACTOR: Removed Show dropdown from here */}
                   </div>
                 </div>
+                <div className="md:hidden space-y-4">
+                  {filteredTransactions.length === 0 ? (
+                    <Card className="border border-gray-200 shadow-sm">
+                      <CardContent className="p-6 text-center space-y-3">
+                        <div className="p-3 bg-gray-50 rounded-full mx-auto w-fit">
+                          <FileText className="h-6 w-6 text-gray-400" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-phonic text-sm font-medium text-gray-600">No transactions found</p>
+                          <p className="font-capsule text-xs text-gray-500">Try adjusting your date filters</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    transactionsToDisplay.map((transaction) => (
+                      <Card
+                        key={transaction.id}
+                        className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+                        onClick={() => handleTransactionClick(transaction)}
+                      >
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {formatDateShort(getTransactionTimestamp(transaction), timezone)}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                {transaction.product_description || 'No description provided'}
+                              </p>
+                              {transaction.link_id && (
+                                <span className="inline-flex items-center gap-1 text-xs font-mono bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
+                                  Link {transaction.link_id}
+                                </span>
+                              )}
+                            </div>
+                            <Badge
+                              variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
+                              className="text-[11px]"
+                            >
+                              {transaction.status}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
+                            <div className="space-y-1">
+                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Gross</p>
+                              <p className="text-sm font-semibold text-gray-900">${transaction.gross_amount.toFixed(2)}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Tax</p>
+                              <p className="text-sm font-semibold text-gray-900">${transaction.tax_amount.toFixed(2)}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Fees</p>
+                              <div className="text-sm font-semibold text-gray-900">
+                                ${transaction.fees.toFixed(2)}
+                                {transaction.fee_payer && (
+                                  <span className="block text-[10px] text-gray-500 mt-1">
+                                    {transaction.fee_payer === 'customer' ? 'Customer paid' : 'Merchant paid'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Net</p>
+                              <p className="text-sm font-semibold text-[#7f5efd]">${transaction.net_amount.toFixed(2)}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            {transaction.public_receipt_id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 px-3 text-xs flex-1"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  viewReceipt(transaction.public_receipt_id!)
+                                }}
+                              >
+                                <ExternalLink className="h-3.5 w-3.5 mr-2" />
+                                Receipt
+                              </Button>
+                            )}
+                            {transaction.status !== 'refunded' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 px-3 text-xs flex-1"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedRefundTransaction(transaction)
+                                  setRefundAmount(transaction.total_paid.toString())
+                                  setRefundDate(new Date().toISOString().split('T')[0])
+                                  setShowRefundModal(true)
+                                }}
+                              >
+                                <XCircle className="h-3.5 w-3.5 mr-2" />
+                                Refund
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+
+                  <div className="flex flex-col items-center gap-4 pt-4 border-t border-gray-200 mt-4">
+                    {displayReportData && displayReportData.transactions.length < displayReportData.total_count && (
+                      <Button
+                        variant="outline"
+                        onClick={() => loadTaxReport()}
+                        disabled={loadingReport}
+                        className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2 w-full justify-center"
+                      >
+                        {loadingReport ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                        {loadingReport ? 'Loading...' : `View All Transactions (${displayReportData.total_count})`}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardContent>
-            </Card>
+              </Card>
+            </LazyMount>
           )}
 
           {/* Combined Report Configuration & Export */}

@@ -32,6 +32,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
+import { LazyMount } from '@/app/components/ui/lazy-mount';
 
 interface PaymentLink {
   id: string;
@@ -707,55 +708,72 @@ export default function PaymentsPage() {
 
       {/* Enhanced Payment Links by Category */}
       {groups.map(group => (
-        <Card key={group.key} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
-                  {group.title}
-                  <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
-                    {group.items.length}
-                  </Badge>
-                </CardTitle>
-                <CardDescription className="font-capsule text-sm text-gray-600">
-                  {group.key === 'links' && 'Standard payment links for invoices and sales'}
-                  {group.key === 'pos' && 'Point-of-sale transactions from Smart Terminal'}
-                  {group.key === 'subscriptions' && 'Recurring subscription payments'}
-                </CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleSection(group.key)}
-                className="flex items-center gap-2 hover:bg-gray-100 transition-colors duration-200"
-              >
-                <ChevronDown 
-                  className={`h-4 w-4 transition-transform duration-200 ${
-                    openSections[group.key] ? 'rotate-180' : ''
-                  }`} 
-                />
-                {openSections[group.key] ? 'Collapse' : 'Expand'}
-              </Button>
-            </div>
-          </CardHeader>
-          {openSections[group.key] && (
-            <CardContent className="p-6 pt-0">
-              {group.items.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <LinkIcon className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
-                  <p className="font-capsule text-sm text-gray-500 mb-6">Get started by creating your first payment link</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {group.items.map(renderLink)}
-                </div>
-              )}
-            </CardContent>
+        <LazyMount
+          key={group.key}
+          className="block"
+          placeholder={(
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="p-6">
+                <div className="h-6 w-32 rounded-md bg-gray-200 animate-pulse" />
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-3">
+                <div className="h-4 w-full rounded bg-gray-100 animate-pulse" />
+                <div className="h-4 w-3/4 rounded bg-gray-100 animate-pulse" />
+                <div className="h-4 w-2/3 rounded bg-gray-100 animate-pulse" />
+              </CardContent>
+            </Card>
           )}
-        </Card>
+        >
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                    {group.title}
+                    <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                      {group.items.length}
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="font-capsule text-sm text-gray-600">
+                    {group.key === 'links' && 'Standard payment links for invoices and sales'}
+                    {group.key === 'pos' && 'Point-of-sale transactions from Smart Terminal'}
+                    {group.key === 'subscriptions' && 'Recurring subscription payments'}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleSection(group.key)}
+                  className="flex items-center gap-2 hover:bg-gray-100 transition-colors duration-200"
+                >
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      openSections[group.key] ? 'rotate-180' : ''
+                    }`}
+                  />
+                  {openSections[group.key] ? 'Collapse' : 'Expand'}
+                </Button>
+              </div>
+            </CardHeader>
+            {openSections[group.key] && (
+              <CardContent className="p-6 pt-0">
+                {group.items.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <LinkIcon className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-2">No {group.title.toLowerCase()} found</h3>
+                    <p className="font-capsule text-sm text-gray-500 mb-6">Get started by creating your first payment link</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {group.items.map(renderLink)}
+                  </div>
+                )}
+              </CardContent>
+            )}
+          </Card>
+        </LazyMount>
       ))}
 
       {/* Enhanced Pagination */}
@@ -791,4 +809,3 @@ export default function PaymentsPage() {
     </div>
   );
 }
-

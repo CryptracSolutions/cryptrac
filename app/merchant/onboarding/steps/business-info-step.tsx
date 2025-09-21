@@ -254,9 +254,9 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader className="text-center space-y-6">
+    <div className="max-w-3xl mx-auto max-md:px-4">
+      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm max-md:rounded-2xl max-md:shadow-lg">
+        <CardHeader className="text-center space-y-6 max-md:space-y-4 max-md:px-2 max-md:text-left">
           <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
             <Building2 className="w-10 h-10 text-white" />
           </div>
@@ -270,17 +270,17 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
           </div>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8">
+        <CardContent className="p-8 space-y-10 max-md:p-5 max-md:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8 max-md:space-y-6">
             
             {/* Business Information Section */}
-            <div className="space-y-8">
+            <div className="space-y-8 max-md:space-y-5">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
                 <Building2 className="w-6 h-6 text-[#7f5efd]" />
                 Business Information
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
                 {/* Business Name */}
                 <div className="space-y-2">
                   <label className="text-body font-medium text-gray-700">
@@ -379,13 +379,13 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             </div>
 
             {/* Contact Information Section */}
-            <div className="space-y-6">
+            <div className="space-y-6 max-md:space-y-5">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
                 <Phone className="w-6 h-6 text-[#7f5efd]" />
                 Contact Information
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
                 {/* First Name */}
                 <div className="space-y-2">
                   <label className="text-body font-medium text-gray-700">
@@ -466,13 +466,13 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
             </div>
 
             {/* Business Address Section */}
-            <div className="space-y-8">
+            <div className="space-y-8 max-md:space-y-5">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 leading-snug">
                 <MapPin className="w-6 h-6 text-[#7f5efd]" />
                 Business Address
               </h3>
               
-              <div className="space-y-6">
+              <div className="space-y-6 max-md:space-y-4">
                 {/* Street Address */}
                 <div className="space-y-2">
                   <label className="text-body font-medium text-gray-700">
@@ -490,7 +490,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-md:gap-4">
                   {/* City */}
                   <div className="space-y-2">
                                       <label className="text-body font-medium text-gray-700">
@@ -557,12 +557,12 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
 
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-8">
+            <div className="flex justify-between pt-8 max-md:flex-col max-md:gap-3 max-md:pt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onPrevious}
-                className="flex items-center"
+                className="flex items-center max-md:justify-center max-md:h-12 max-md:w-full"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Previous
@@ -571,7 +571,7 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center"
+                className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center max-md:justify-center max-md:h-12 max-md:w-full"
               >
                 {isSubmitting ? 'Saving...' : 'Continue'}
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -583,4 +583,3 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
     </div>
   )
 }
-

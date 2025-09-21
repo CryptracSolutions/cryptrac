@@ -26,6 +26,7 @@ import { supabase } from '@/lib/supabase-browser';
 import Link from 'next/link';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
+import { LazyMount } from '@/app/components/ui/lazy-mount';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -650,24 +651,40 @@ export default function MerchantDashboard() {
         </div>
 
         {/* Enhanced Supported Cryptocurrencies */}
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="p-6">
-            <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Cryptocurrencies you currently accept</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-0">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {supportedCurrencies.map((crypto) => (
-                <div key={crypto.symbol} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#7f5efd]/30 hover:shadow-sm transition-all duration-200">
-                  <CryptoIcon currency={crypto.symbol} className="h-8 w-8" />
-                  <div>
-                    <div className="font-phonic text-sm font-semibold text-gray-900">{crypto.symbol}</div>
-                    <div className="font-capsule text-xs text-gray-600">{crypto.name}</div>
+        <LazyMount
+          className="block"
+          placeholder={(
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="p-6">
+                <div className="h-6 w-52 rounded-md bg-gray-200 animate-pulse" />
+              </CardHeader>
+              <CardContent className="p-6 pt-0 grid grid-cols-2 md:grid-cols-5 gap-4">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="h-14 rounded-lg bg-gray-100 animate-pulse" />
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        >
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Cryptocurrencies you currently accept</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {supportedCurrencies.map((crypto) => (
+                  <div key={crypto.symbol} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#7f5efd]/30 hover:shadow-sm transition-all duration-200">
+                    <CryptoIcon currency={crypto.symbol} className="h-8 w-8" />
+                    <div>
+                      <div className="font-phonic text-sm font-semibold text-gray-900">{crypto.symbol}</div>
+                      <div className="font-capsule text-xs text-gray-600">{crypto.name}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </LazyMount>
 
         {/* Getting Started & What's New - Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

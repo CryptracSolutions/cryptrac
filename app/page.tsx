@@ -9,6 +9,7 @@ import { CryptoIcon } from "@/app/components/ui/crypto-icon";
 import { LandingNav } from "@/app/components/layout/landing-nav";
 import { PaymentJourneyDemo } from "@/app/components/ui/payment-journey-demo";
 import { FeeDocumentation } from "@/app/components/fee-documentation";
+import { LazyMount } from "@/app/components/ui/lazy-mount";
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -382,19 +383,30 @@ export default function Home() {
           </div>
           
           {/* All Cryptocurrencies - Uniform Grid */}
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4 max-w-6xl mx-auto mb-8">
-            {supportedCryptos.map((crypto) => (
-              <div key={crypto.symbol} className="flex flex-col items-center p-4 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group">
-                <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-3">
-                  <CryptoIcon currency={crypto.symbol} size="md" />
-                </div>
-                <div className="text-center">
-                  <div className="font-phonic font-normal text-gray-900 text-sm mb-1">{crypto.symbol}</div>
-                  <div className="font-phonic text-xs text-gray-500">{crypto.name}</div>
-                </div>
+          <LazyMount
+            className="block max-w-6xl mx-auto mb-8"
+            placeholder={(
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4">
+                {Array.from({ length: 12 }).map((_, idx) => (
+                  <div key={idx} className="h-24 rounded-xl bg-[#ede9fe]/60 animate-pulse" />
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          >
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4">
+              {supportedCryptos.map((crypto) => (
+                <div key={crypto.symbol} className="flex flex-col items-center p-4 rounded-lg hover:bg-[#f5f3ff] transition-all duration-200 group">
+                  <div className="p-2 bg-[#ede9fe] rounded-lg group-hover:bg-[#ddd6fe] transition-colors mb-3">
+                    <CryptoIcon currency={crypto.symbol} size="md" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-phonic font-normal text-gray-900 text-sm mb-1">{crypto.symbol}</div>
+                    <div className="font-phonic text-xs text-gray-500">{crypto.name}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </LazyMount>
 
           {/* Call to Action */}
           <div className="text-center">

@@ -5,12 +5,10 @@ import { SearchDropdown } from "./SearchDropdown"
 
 interface GlobalSearchProps {
   className?: string
+  autoFocus?: boolean
 }
 
-export function GlobalSearch({ className }: GlobalSearchProps) {
-
-
-  return <SearchDropdown className={className} />
+export function GlobalSearch({ className, autoFocus }: GlobalSearchProps) {
+  return <SearchDropdown className={className} autoFocus={autoFocus} />
 }
-
 

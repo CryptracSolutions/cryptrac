@@ -1,10 +1,10 @@
 "use client"
 
 import React, { useState } from 'react'
-import Image from 'next/image'
 import { formatAddressForQR } from '@/lib/simple-address-formatter'
 import { cn } from '@/lib/utils'
 import { LoadingSpinner } from './loading-spinner'
+import { OptimizedImage } from '@/app/components/ui/optimized-image'
 
 interface QRCodeProps {
   // Preferred: currency/address/extraId for payment addresses
@@ -48,12 +48,13 @@ export function QRCode({ currency, address, extraId, value, size = 256, classNam
             Failed to load QR
           </div>
         ) : (
-          <Image
+          <OptimizedImage
             src={qrUrl}
             alt={`${currency ?? 'Payment'} address QR`}
             width={size}
             height={size}
             className="rounded-lg"
+            variant="qr"
             onLoad={handleImageLoad}
             onError={handleImageError}
           />

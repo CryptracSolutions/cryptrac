@@ -9,6 +9,7 @@ import { Dialog, DialogContent } from '@/app/components/ui/dialog'
 import Tooltip from '@/app/components/ui/tooltip'
 import { RECOMMENDED_CURRENCIES } from '@/lib/recommended-currencies'
 import { CheckCircle, HelpCircle, Wallet, Star, ArrowLeft } from 'lucide-react'
+import { LazyMount } from '@/app/components/ui/lazy-mount'
 
 interface WalletSetupStepProps {
   onNext: (wallets: Record<string, string>, walletExtraIds?: Record<string, string>) => void
@@ -63,9 +64,9 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
 
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader className="text-center space-y-6">
+    <div className="max-w-3xl mx-auto max-md:px-4">
+      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm max-md:rounded-2xl">
+        <CardHeader className="text-center space-y-6 max-md:space-y-4 max-md:px-2">
           <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
             <Wallet className="w-10 h-10 text-white" />
           </div>
@@ -79,11 +80,11 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center items-center gap-6">
+          <div className="flex justify-center items-center gap-6 max-md:flex-col max-md:items-stretch">
             <Button
               variant="outline"
               onClick={() => setShowTrustWalletGuide(true)}
-              className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
+              className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12"
             >
               <HelpCircle className="h-4 w-4" />
               Setup Guide
@@ -93,7 +94,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
               trigger={
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
+                  className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12"
                 >
                   <Star className="h-4 w-4" />
                   Highly Recommended
@@ -107,10 +108,10 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-8">
+        <CardContent className="p-8 space-y-8 max-md:p-5 max-md:space-y-6">
           {/* Setup Guide Modal */}
           <Dialog open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
-            <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-transparent border-0 shadow-none p-0 max-h-[90vh] overflow-y-auto overscroll-contain">
+            <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-transparent border-0 shadow-none p-0 max-h-[90vh] overflow-y-auto overscroll-contain max-md:w-[95vw]">
               <TrustWalletGuide
                 onComplete={() => setShowTrustWalletGuide(false)}
                 onSkip={() => setShowTrustWalletGuide(false)}
@@ -119,21 +120,34 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
           </Dialog>
 
       {/* Wallets Manager - exact same component as /merchant/wallets */}
-      <WalletsManager
-        settings={settings}
-        setSettings={setSettings}
-        focusCurrency={focusCurrency}
-        onValidationChange={(currency, isValid) => {
-          setInvalidWallets(prev => {
-            if (isValid) {
-              return prev.filter(c => c !== currency);
-            } else if (!prev.includes(currency)) {
-              return [...prev, currency];
-            }
-            return prev;
-          });
-        }}
-      />
+      <LazyMount
+        className="block"
+        placeholder={(
+          <Card className="border border-dashed border-[#7f5efd]/40">
+            <CardContent className="p-6 space-y-4">
+              <div className="h-4 w-40 rounded bg-[#7f5efd]/10 animate-pulse" />
+              <div className="h-16 rounded bg-[#7f5efd]/5 animate-pulse" />
+              <div className="h-16 rounded bg-[#7f5efd]/5 animate-pulse" />
+            </CardContent>
+          </Card>
+        )}
+      >
+        <WalletsManager
+          settings={settings}
+          setSettings={setSettings}
+          focusCurrency={focusCurrency}
+          onValidationChange={(currency, isValid) => {
+            setInvalidWallets(prev => {
+              if (isValid) {
+                return prev.filter(c => c !== currency);
+              } else if (!prev.includes(currency)) {
+                return [...prev, currency];
+              }
+              return prev;
+            });
+          }}
+        />
+      </LazyMount>
 
       {/* Progress indicator */}
       {hasValidWallet && (
@@ -146,12 +160,12 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
       )}
 
       {/* Navigation buttons for onboarding flow */}
-      <div className="flex justify-between pt-8">
+      <div className="flex justify-between pt-8 max-md:flex-col max-md:gap-3 max-md:pt-6">
         <Button
           type="button"
           variant="outline"
           onClick={onBack}
-          className="flex items-center"
+          className="flex items-center justify-center max-md:h-12 max-md:w-full"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
@@ -159,7 +173,7 @@ export default function WalletSetupStep({ onNext, onBack }: WalletSetupStepProps
         <Button
           onClick={handleNext}
           disabled={!hasValidWallet}
-          className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center"
+          className="bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white flex items-center justify-center max-md:h-12 max-md:w-full"
         >
           {hasValidWallet ? 'Continue' : invalidWallets.length > 0 ? 'Fix invalid wallets' : 'Add at least one wallet'}
         </Button>

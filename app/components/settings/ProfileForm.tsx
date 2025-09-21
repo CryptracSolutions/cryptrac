@@ -11,6 +11,7 @@ import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Button } from '@/app/components/ui/button';
 import { supabase } from '@/lib/supabase-browser';
+import { useSwipeToClose } from '@/lib/hooks/use-swipe-to-close';
 
 // Business types
 const BUSINESS_TYPES = [
@@ -152,6 +153,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
   const [showEmailConfirmDialog, setShowEmailConfirmDialog] = React.useState(false);
   const [pendingEmailChange, setPendingEmailChange] = React.useState<string>('');
   const [savingEmail, setSavingEmail] = React.useState(false);
+  const emailModalRef = React.useRef<HTMLDivElement>(null);
 
   const openEmailChangeModal = () => {
     setPendingEmailChange(settings.email || '');
@@ -192,6 +194,14 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
     setPendingEmailChange('');
   };
 
+  useSwipeToClose(emailModalRef, {
+    onClose: cancelEmailChange,
+    directions: ['down'],
+    threshold: 60,
+    restraint: 100,
+    enabled: showEmailConfirmDialog,
+  });
+
   // Close on Escape
   React.useEffect(() => {
     if (!showEmailConfirmDialog) return;
@@ -206,11 +216,11 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
   }, [showEmailConfirmDialog]);
 
   return (
-    <div className="space-y-8">
-      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
+    <div className="space-y-8 max-md:space-y-6 max-md:px-3">
+      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+        <CardHeader className="p-6 max-md:p-4">
+          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
+            <div className="space-y-2 max-md:space-y-3">
               <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                 <div className="p-2 bg-[#7f5efd] rounded-lg">
                   <Building className="h-4 w-4 text-white" />
@@ -223,8 +233,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
             <div className="space-y-2">
               <label className="font-phonic text-sm font-normal text-gray-700">Business Name *</label>
               <Input
@@ -294,10 +304,10 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         </CardContent>
       </Card>
 
-      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
+      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+        <CardHeader className="p-6 max-md:p-4">
+          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
+            <div className="space-y-2 max-md:space-y-3">
               <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                 <div className="p-2 bg-[#7f5efd] rounded-lg">
                   <Phone className="h-4 w-4 text-white" />
@@ -310,8 +320,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
             <div className="space-y-2">
               <label className="font-phonic text-sm font-normal text-gray-700">First Name *</label>
               <Input
@@ -367,7 +377,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
 
           <div className="space-y-2">
             <label className="font-phonic text-sm font-normal text-gray-700">Email Address *</label>
-            <div className="flex flex-wrap items-start gap-3">
+            <div className="flex flex-wrap items-start gap-3 max-md:flex-col max-md:items-stretch">
               <div className="flex-1 min-w-[220px]">
                 <Input
                   value={settings.email}
@@ -390,10 +400,10 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         </CardContent>
       </Card>
 
-      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
+      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
+        <CardHeader className="p-6 max-md:p-4">
+          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
+            <div className="space-y-2 max-md:space-y-3">
               <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
                 <div className="p-2 bg-[#7f5efd] rounded-lg">
                   <MapPin className="h-4 w-4 text-white" />
@@ -406,8 +416,8 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-8">
-          <div className="space-y-6">
+        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-6">
+          <div className="space-y-6 max-md:space-y-4">
             <div className="space-y-2">
               <label className="font-phonic text-sm font-normal text-gray-700">Street Address *</label>
               <Input
@@ -422,7 +432,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-md:gap-4">
               <div className="space-y-2">
                 <label className="font-phonic text-sm font-normal text-gray-700">City *</label>
                 <Input
@@ -483,8 +493,11 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
             onClick={cancelEmailChange}
             aria-hidden="true"
           />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-gray-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between">
+          <div
+            ref={emailModalRef}
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-gray-200 bg-white p-6 shadow-2xl max-md:left-0 max-md:top-auto max-md:bottom-0 max-md:translate-x-0 max-md:translate-y-0 max-md:max-w-none max-md:rounded-t-2xl max-md:border-gray-100 max-md:p-5"
+          >
+            <div className="flex items-start justify-between max-md:flex-col max-md:items-stretch max-md:gap-4">
               <div>
                 <h2 className="font-phonic text-xl font-normal text-gray-900">Confirm Email Change</h2>
                 <p className="mt-2 font-capsule text-base font-normal text-gray-700">
@@ -494,7 +507,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <button
                 onClick={cancelEmailChange}
                 aria-label="Close"
-                className="ml-4 rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                className="ml-4 rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 max-md:ml-auto"
               >
                 ✕
               </button>
@@ -517,13 +530,13 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 className="mt-2 w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
                 required
               />
-              <div className="mt-6 flex justify-end gap-3">
+              <div className="mt-6 flex justify-end gap-3 max-md:flex-col max-md:w-full">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={cancelEmailChange}
                   size="sm"
-                  className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200"
+                  className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 max-md:w-full max-md:h-11"
                 >
                   Cancel
                 </Button>
@@ -531,7 +544,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   type="submit"
                   disabled={savingEmail || !pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
                   size="sm"
-                  className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                  className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white max-md:w-full max-md:h-11"
                 >
                   {savingEmail ? 'Saving…' : 'Confirm Change'}
                 </Button>

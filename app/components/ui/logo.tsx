@@ -1,6 +1,6 @@
 import * as React from "react"
-import Image from "next/image"
 import { cn } from "@/lib/utils"
+import { OptimizedImage } from "@/app/components/ui/optimized-image"
 
 interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg" | "xl"
@@ -35,12 +35,13 @@ const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
         {/* Cryptrac Logo */}
         <div className={cn("flex items-center justify-center rounded-lg", sizeClasses[size], emblemClassName)}>
           <div className="h-full w-full rounded-lg overflow-hidden">
-            <Image
+            <OptimizedImage
               src="/logo.png"
               alt="Cryptrac Logo"
               width={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
               height={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64}
               className="h-full w-full object-contain"
+              variant="icon"
               priority
             />
           </div>
@@ -64,4 +65,3 @@ const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
 Logo.displayName = "Logo"
 
 export { Logo }
-

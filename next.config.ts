@@ -1,6 +1,77 @@
 import type { NextConfig } from "next";
 import withPWA from 'next-pwa';
 
+const runtimeCaching = [
+  {
+    urlPattern: ({ request }: { request: Request }) => request.destination === 'document',
+    handler: 'NetworkFirst',
+    options: {
+      cacheName: 'pages-cache',
+      networkTimeoutSeconds: 10,
+      expiration: {
+        maxEntries: 50,
+        maxAgeSeconds: 24 * 60 * 60,
+      },
+    },
+  },
+  {
+    urlPattern: ({ request }: { request: Request }) => ['style', 'script', 'worker'].includes(request.destination),
+    handler: 'StaleWhileRevalidate',
+    options: {
+      cacheName: 'static-resources',
+      expiration: {
+        maxEntries: 60,
+        maxAgeSeconds: 7 * 24 * 60 * 60,
+      },
+    },
+  },
+  {
+    urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/_next/static/'),
+    handler: 'CacheFirst',
+    options: {
+      cacheName: 'next-static',
+      expiration: {
+        maxEntries: 80,
+        maxAgeSeconds: 30 * 24 * 60 * 60,
+      },
+    },
+  },
+  {
+    urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/_next/image'),
+    handler: 'StaleWhileRevalidate',
+    options: {
+      cacheName: 'next-image',
+      expiration: {
+        maxEntries: 80,
+        maxAgeSeconds: 7 * 24 * 60 * 60,
+      },
+    },
+  },
+  {
+    urlPattern: ({ request }: { request: Request }) => request.destination === 'image',
+    handler: 'StaleWhileRevalidate',
+    options: {
+      cacheName: 'image-cache',
+      expiration: {
+        maxEntries: 120,
+        maxAgeSeconds: 14 * 24 * 60 * 60,
+      },
+    },
+  },
+  {
+    urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/api/'),
+    handler: 'NetworkFirst',
+    options: {
+      cacheName: 'api-cache',
+      networkTimeoutSeconds: 10,
+      expiration: {
+        maxEntries: 60,
+        maxAgeSeconds: 24 * 60 * 60,
+      },
+    },
+  },
+]
+
 const nextConfig: NextConfig = {
   eslint: {
     // Completely ignore ESLint during builds
@@ -62,4 +133,9 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  runtimeCaching,
+  cacheOnFrontEndNav: true,
+  fallbacks: {
+    document: '/offline',
+  },
 })(nextConfig);

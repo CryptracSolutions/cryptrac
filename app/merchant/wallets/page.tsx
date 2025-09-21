@@ -20,6 +20,7 @@ import TrustWalletGuide from '@/app/components/onboarding/trust-wallet-guide';
 import { Dialog, DialogContent } from '@/app/components/ui/dialog';
 import Tooltip from '@/app/components/ui/tooltip';
 import { RECOMMENDED_CURRENCIES } from '@/lib/recommended-currencies';
+import { LazyMount } from '@/app/components/ui/lazy-mount';
 
 interface MerchantSettings {
   // Wallet settings
@@ -203,7 +204,7 @@ export default function WalletsPage() {
   }
 
   return (
-    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto max-md:px-4 max-md:space-y-6">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -236,7 +237,7 @@ export default function WalletsPage() {
 
         {/* Setup Guide Modal */}
         <Dialog open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
-          <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-transparent border-0 shadow-none p-0 max-h-[90vh] overflow-y-auto overscroll-contain">
+          <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-transparent border-0 shadow-none p-0 max-h-[90vh] overflow-y-auto overscroll-contain max-md:w-[95vw]">
             <TrustWalletGuide
               onComplete={() => setShowTrustWalletGuide(false)}
               onSkip={() => setShowTrustWalletGuide(false)}
@@ -245,11 +246,11 @@ export default function WalletsPage() {
         </Dialog>
 
         {/* Setup Guide + Recommended (matches onboarding step 3) */}
-        <div className="flex justify-center items-center gap-6">
+        <div className="flex justify-center items-center gap-6 max-md:flex-col max-md:items-stretch">
           <Button
             variant="outline"
             onClick={() => setShowTrustWalletGuide(true)}
-            className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
+            className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12"
           >
             <HelpCircle className="h-4 w-4" />
             Setup Guide
@@ -259,7 +260,7 @@ export default function WalletsPage() {
             trigger={
               <Button
                 variant="outline"
-                className="flex items-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200"
+                className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12"
               >
                 <Star className="h-4 w-4" />
                 Highly Recommended
@@ -273,11 +274,23 @@ export default function WalletsPage() {
         </div>
 
         {/* Wallets Manager */}
-        <WalletsManager
-          settings={settings}
-          setSettings={setSettings}
-          focusCurrency={focusCurrency}
-        />
+        <LazyMount
+          className="block"
+          placeholder={(
+            <div className="border border-dashed border-[#7f5efd]/40 rounded-xl p-6 space-y-4">
+              <div className="h-4 w-48 rounded bg-[#7f5efd]/10 animate-pulse" />
+              <div className="h-16 rounded bg-[#7f5efd]/5 animate-pulse" />
+              <div className="h-16 rounded bg-[#7f5efd]/5 animate-pulse" />
+              <div className="h-16 rounded bg-[#7f5efd]/5 animate-pulse" />
+            </div>
+          )}
+        >
+          <WalletsManager
+            settings={settings}
+            setSettings={setSettings}
+            focusCurrency={focusCurrency}
+          />
+        </LazyMount>
       </div>
   );
 }
