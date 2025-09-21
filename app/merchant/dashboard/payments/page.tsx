@@ -33,6 +33,19 @@ import { useRouter } from 'next/navigation';
 import { supabase, makeAuthenticatedRequest } from '@/lib/supabase-browser';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import { LazyMount } from '@/app/components/ui/lazy-mount';
+import { cn } from '@/lib/utils';
+import { usePullToRefresh } from '@/lib/hooks/use-pull-to-refresh';
+import { useSwipeActions } from '@/lib/hooks/use-swipe-actions';
+import { useIsMobile } from '@/lib/hooks/use-mobile';
+import {
+  MobileDataCard,
+  MobileDataCardActions,
+  MobileDataCardHeader,
+  MobileDataCardMeta,
+  MobileDataCardMetaItem,
+  MobileDataCardSubtitle,
+  MobileDataCardTitle,
+} from '@/app/components/ui/mobile-data-card';
 
 interface PaymentLink {
   id: string;
@@ -110,6 +123,7 @@ export default function PaymentsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
+  const [swipedLinkId, setSwipedLinkId] = useState<string | null>(null);
   const notifiedLinksRef = useRef<Set<string>>(new Set());
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     links: false,
@@ -122,11 +136,14 @@ export default function PaymentsPage() {
 
   const router = useRouter();
   const { timezone } = useTimezone();
+  const isMobile = useIsMobile();
 
-  const fetchPaymentLinks = useCallback(async () => {
+  const fetchPaymentLinks = useCallback(async (options?: { silent?: boolean }) => {
     try {
       console.log('Fetching payment links...');
-      setLoading(true);
+      if (!options?.silent) {
+        setLoading(true);
+      }
       setError(null);
 
       // Check authentication using singleton client
@@ -196,9 +213,18 @@ export default function PaymentsPage() {
       console.error('Error fetching payment links:', error);
       setError('Failed to load payment links');
     } finally {
-      setLoading(false);
+      if (!options?.silent) {
+        setLoading(false);
+      }
+      setSwipedLinkId(null);
     }
   }, [currentPage, statusFilter, dateRange, router]);
+
+  const { pullDistance, isRefreshing: isPullRefreshing } = usePullToRefresh({
+    enabled: isMobile,
+    threshold: 60,
+    onRefresh: () => fetchPaymentLinks({ silent: true }),
+  });
 
   useEffect(() => {
     fetchPaymentLinks();
@@ -225,7 +251,7 @@ export default function PaymentsPage() {
       console.log('Status updated:', result);
 
       // Refresh the payment links
-      await fetchPaymentLinks();
+      await fetchPaymentLinks({ silent: true });
 
     } catch (error) {
       console.error('Error updating status:', error);
@@ -264,7 +290,7 @@ export default function PaymentsPage() {
     return formatDateTime(dateString, timezone);
   };
 
-  const getStatusBadge = (status: string, link?: PaymentLink) => {
+  const getStatusBadges = (status: string, link?: PaymentLink) => {
     const variants = {
       active: { variant: 'default' as const, color: 'bg-green-100 text-green-800' },
       expired: { variant: 'secondary' as const, color: 'bg-gray-100 text-gray-800' },
@@ -273,19 +299,22 @@ export default function PaymentsPage() {
     };
 
     const config = variants[status as keyof typeof variants] || variants.active;
-    
-    return (
-      <div className="flex items-center gap-2 max-md:flex-wrap">
-        <Badge variant={config.variant} className={config.color}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+
+    const badges: React.ReactNode[] = [
+      <Badge key="status" variant={config.variant} className={config.color}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    ];
+
+    if (link?.max_uses === 1) {
+      badges.push(
+        <Badge key="single-use" variant="outline" className="text-xs">
+          Single Use
         </Badge>
-        {link?.max_uses === 1 && (
-          <Badge variant="outline" className="text-xs">
-            Single Use
-          </Badge>
-        )}
-      </div>
-    );
+      );
+    }
+
+    return badges;
   };
 
   const getStatusActions = (link: PaymentLink) => {
@@ -391,97 +420,352 @@ export default function PaymentsPage() {
     return buttons;
   };
 
-  const renderLink = (link: PaymentLink) => (
-    <div
-      key={link.id}
-      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 bg-white max-md:p-4"
-    >
-      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
-        <div className="flex-1 max-md:w-full">
-          <div className="flex items-center gap-3 mb-4 max-md:flex-wrap">
-            <div className="p-2 bg-[#7f5efd] rounded-lg">
-              <LinkIcon className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-1">{link.title}</h3>
-              <div className="flex items-center gap-2 max-md:flex-wrap">
-                {getStatusBadge(link.status, link)}
-                {(link.source === 'subscription' || link.subscription_id) && (
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    Subscription
-                  </Badge>
+  const enhanceMobileActions = (
+    actions: React.ReactNode[],
+    onActionComplete?: () => void
+  ) =>
+    actions.map((action, index) => {
+      if (!React.isValidElement(action)) return action;
+
+      const element = action as React.ReactElement<Record<string, unknown>>;
+
+      if (element.type === Link) {
+        const onlyChild = React.Children.only(element.props.children) as React.ReactElement<Record<string, unknown>>;
+        if (React.isValidElement(onlyChild)) {
+          const childOnClick = onlyChild.props?.onClick as
+            | ((...args: unknown[]) => void)
+            | undefined;
+          const childClassName = typeof onlyChild.props?.className === 'string'
+            ? (onlyChild.props.className as string)
+            : undefined;
+
+          const enhancedChild = React.cloneElement(onlyChild, {
+            className: cn(
+              'h-11 w-full justify-center gap-2 text-sm',
+              childClassName
+            ),
+            onClick: (...args: unknown[]) => {
+              childOnClick?.(...args);
+              onActionComplete?.();
+            },
+          });
+
+          return React.cloneElement(
+            element,
+            {
+              key: element.key ?? `mobile-action-${index}`,
+              className: cn('w-full', element.props?.className as string | undefined),
+            },
+            enhancedChild
+          );
+        }
+      }
+
+      const onClick = element.props?.onClick as
+        | ((...args: unknown[]) => void)
+        | undefined;
+      const elementClassName = typeof element.props?.className === 'string'
+        ? (element.props.className as string)
+        : undefined;
+
+      return React.cloneElement(element, {
+        key: element.key ?? `mobile-action-${index}`,
+        className: cn(
+          'h-11 w-full justify-center gap-2 text-sm',
+          elementClassName
+        ),
+        onClick: (...args: unknown[]) => {
+          onClick?.(...args);
+          onActionComplete?.();
+        },
+      });
+    });
+
+  type MobileMetaItem = {
+    label: string;
+    value: string;
+    helper?: string;
+    accent?: boolean;
+  };
+
+  const renderLink = (link: PaymentLink) => {
+    const amountLabel = formatCurrency(link.amount, link.currency);
+    const createdLabel = formatDate(link.created_at);
+
+    const mobileMetaItems: MobileMetaItem[] = [
+      {
+        label: 'Amount',
+        value: amountLabel,
+        accent: true,
+      },
+      {
+        label: 'Created',
+        value: createdLabel,
+      },
+    ];
+
+    if (link.expires_at) {
+      mobileMetaItems.push({
+        label: 'Expires',
+        value: formatDate(link.expires_at),
+      });
+    }
+
+    if (link.max_uses) {
+      mobileMetaItems.push({
+        label: 'Usage',
+        value: `${link.usage_count}/${link.max_uses}`,
+      });
+    }
+
+    mobileMetaItems.push({
+      label: 'Payments',
+      value: link.confirmed_payment_count.toString(),
+      helper: 'Confirmed',
+    });
+
+    const mobileStatusActions = enhanceMobileActions(
+      getStatusActions(link),
+      () => setSwipedLinkId(null)
+    );
+    const mobileActionButtons = enhanceMobileActions(
+      getActionButtons(link),
+      () => setSwipedLinkId(null)
+    );
+    const isSwiped = swipedLinkId === link.id;
+
+    return (
+      <div key={link.id} className="space-y-3">
+        <div className="hidden md:block">
+          <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 pr-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-[#7f5efd] rounded-lg">
+                    <LinkIcon className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-1">{link.title}</h3>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadges(link.status, link)}
+                      {(link.source === 'subscription' || link.subscription_id) && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          Subscription
+                        </Badge>
+                      )}
+                      {link.confirmed_payment_count > 0 && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          Payment received
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {link.description && (
+                  <p className="font-capsule text-sm text-gray-600 mb-4">{link.description}</p>
                 )}
-                {link.confirmed_payment_count > 0 && (
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    Payment received
-                  </Badge>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-green-100 rounded">
+                      <DollarSign className="h-3 w-3 text-green-600" />
+                    </div>
+                    <span className="font-semibold text-base text-gray-900">
+                      {amountLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-gray-100 rounded">
+                      <Calendar className="h-3 w-3 text-gray-500" />
+                    </div>
+                    <span className="font-capsule text-xs text-gray-600">Created {createdLabel}</span>
+                  </div>
+                  {link.expires_at && (
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 bg-gray-100 rounded">
+                        <Clock className="h-3 w-3 text-gray-500" />
+                      </div>
+                      <span className="font-capsule text-xs text-gray-600">Expires {formatDate(link.expires_at)}</span>
+                    </div>
+                  )}
+                  {link.max_uses && (
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 bg-gray-100 rounded">
+                        <Users className="h-3 w-3 text-gray-500" />
+                      </div>
+                      <span className="font-capsule text-xs text-gray-600">{link.usage_count}/{link.max_uses} uses</span>
+                    </div>
+                  )}
+                </div>
+
+                {link.subscription_invoices && link.subscription_invoices.length > 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <BarChart3 className="h-3 w-3 text-blue-600" />
+                    <span className="font-capsule text-xs font-medium text-blue-700">
+                      Invoice: {link.subscription_invoices[0].invoice_number}
+                    </span>
+                  </div>
                 )}
+              </div>
+
+              <div className="flex flex-col items-end gap-2 ml-4">
+                <div className="flex items-center gap-2">
+                  {getStatusActions(link)}
+                </div>
+                <div className="flex items-center gap-2">
+                  {getActionButtons(link)}
+                </div>
               </div>
             </div>
           </div>
-
-          {link.description && (
-            <p className="font-capsule text-sm text-gray-600 mb-4">{link.description}</p>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="p-1 bg-green-100 rounded">
-                <DollarSign className="h-3 w-3 text-green-600" />
-              </div>
-              <span className="font-semibold text-base text-gray-900">
-                {formatCurrency(link.amount, link.currency)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="p-1 bg-gray-100 rounded">
-                <Calendar className="h-3 w-3 text-gray-500" />
-              </div>
-              <span className="font-capsule text-xs text-gray-600">Created {formatDate(link.created_at)}</span>
-            </div>
-            {link.expires_at && (
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-gray-100 rounded">
-                  <Clock className="h-3 w-3 text-gray-500" />
-                </div>
-                <span className="font-capsule text-xs text-gray-600">Expires {formatDate(link.expires_at)}</span>
-              </div>
-            )}
-            {link.max_uses && (
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-gray-100 rounded">
-                  <Users className="h-3 w-3 text-gray-500" />
-                </div>
-                <span className="font-capsule text-xs text-gray-600">{link.usage_count}/{link.max_uses} uses</span>
-              </div>
-            )}
-          </div>
-
-          {/* Subscription Invoice Number */}
-          {link.subscription_invoices && link.subscription_invoices.length > 0 && (
-            <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200 mb-4">
-              <BarChart3 className="h-3 w-3 text-blue-600" />
-              <span className="font-capsule text-xs font-medium text-blue-700">
-                Invoice: {link.subscription_invoices[0].invoice_number}
-              </span>
-            </div>
-          )}
         </div>
 
-        <div className="flex flex-col items-end gap-2 ml-4 max-md:w-full max-md:items-stretch max-md:gap-3 max-md:ml-0">
-          {/* Status Action Buttons */}
-          <div className="flex items-center gap-2 max-md:flex-col max-md:w-full">
-            {getStatusActions(link)}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 max-md:flex-col max-md:w-full">
-            {getActionButtons(link)}
-          </div>
-        </div>
+        <MobilePaymentLinkCard
+          link={link}
+          amountLabel={amountLabel}
+          description={link.description ?? undefined}
+          createdLabel={createdLabel}
+          metaItems={mobileMetaItems}
+          statusActions={mobileStatusActions}
+          actionButtons={mobileActionButtons}
+          isSwiped={isSwiped}
+          enableSwipe={isMobile}
+          onSwipeLeft={() =>
+            setSwipedLinkId((current) => (current === link.id ? null : link.id))
+          }
+          onSwipeRight={() =>
+            setSwipedLinkId((current) => (current === link.id ? null : current))
+          }
+          showSubscriptionBadge={Boolean(link.source === 'subscription' || link.subscription_id)}
+          showPaymentBadge={link.confirmed_payment_count > 0}
+        />
       </div>
-    </div>
-  );
+    );
+  };
+
+  interface MobilePaymentLinkCardProps {
+    link: PaymentLink;
+    amountLabel: string;
+    description?: string;
+    createdLabel: string;
+    metaItems: MobileMetaItem[];
+    statusActions: React.ReactNode[];
+    actionButtons: React.ReactNode[];
+    isSwiped: boolean;
+    enableSwipe: boolean;
+    onSwipeLeft: () => void;
+    onSwipeRight: () => void;
+    showSubscriptionBadge: boolean;
+    showPaymentBadge: boolean;
+  }
+
+  const MobilePaymentLinkCard = ({
+    link,
+    amountLabel,
+    description,
+    createdLabel,
+    metaItems,
+    statusActions,
+    actionButtons,
+    isSwiped,
+    enableSwipe,
+    onSwipeLeft,
+    onSwipeRight,
+    showSubscriptionBadge,
+    showPaymentBadge,
+  }: MobilePaymentLinkCardProps) => {
+    const cardRef = React.useRef<HTMLDivElement | null>(null);
+
+    useSwipeActions(cardRef, {
+      threshold: 80,
+      enabled: enableSwipe,
+      onSwipeLeft,
+      onSwipeRight,
+    });
+
+    return (
+      <MobileDataCard
+        ref={cardRef}
+        className={cn(
+          'md:hidden space-y-4 transition-shadow duration-200',
+          isSwiped && 'ring-1 ring-[#7f5efd]/40 shadow-md'
+        )}
+        data-swiped={isSwiped ? 'true' : 'false'}
+      >
+        <MobileDataCardHeader className="gap-3">
+          <div className="space-y-1">
+            <MobileDataCardTitle className="text-base">
+              {link.title}
+            </MobileDataCardTitle>
+            <MobileDataCardSubtitle className="text-sm font-semibold text-[#7f5efd]">
+              {amountLabel}
+            </MobileDataCardSubtitle>
+            {description ? (
+              <MobileDataCardSubtitle>{description}</MobileDataCardSubtitle>
+            ) : null}
+            <MobileDataCardSubtitle className="text-[11px] text-gray-500">
+              Created {createdLabel}
+            </MobileDataCardSubtitle>
+          </div>
+          <div className="flex flex-col items-end gap-1 text-right">
+            <div className="flex flex-wrap justify-end gap-2">
+              {getStatusBadges(link.status, link)}
+            </div>
+            {showSubscriptionBadge && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                Subscription
+              </Badge>
+            )}
+            {showPaymentBadge && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                Payment received
+              </Badge>
+            )}
+          </div>
+        </MobileDataCardHeader>
+
+        <MobileDataCardMeta>
+          {metaItems.map((item, index) => (
+            <MobileDataCardMetaItem
+              key={`${link.id}-mobile-meta-${index}`}
+              label={item.label}
+              value={item.value}
+              helper={item.helper}
+              accent={item.accent}
+            />
+          ))}
+        </MobileDataCardMeta>
+
+        {link.subscription_invoices && link.subscription_invoices.length > 0 && (
+          <div className="flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-3 py-2">
+            <BarChart3 className="h-4 w-4 text-blue-600" />
+            <p className="text-xs font-medium text-blue-700">
+              Invoice: {link.subscription_invoices[0].invoice_number}
+            </p>
+          </div>
+        )}
+
+        {!isSwiped && (
+          <p className="text-[11px] text-gray-500 text-center">
+            Swipe left to manage
+          </p>
+        )}
+
+        {isSwiped && statusActions.length > 0 && (
+          <MobileDataCardActions>
+            {statusActions}
+          </MobileDataCardActions>
+        )}
+
+        {isSwiped && actionButtons.length > 0 && (
+          <MobileDataCardActions className="pt-1">
+            {actionButtons}
+          </MobileDataCardActions>
+        )}
+      </MobileDataCard>
+    );
+  };
 
   if (loading) {
     return (
@@ -499,7 +783,7 @@ export default function PaymentsPage() {
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
             <p className="font-capsule text-base font-normal text-red-600 mb-6">Error: {error}</p>
             <div className="flex gap-4 justify-center">
-              <Button onClick={fetchPaymentLinks} variant="outline" size="lg">
+              <Button onClick={() => fetchPaymentLinks()} variant="outline" size="lg">
                 Try Again
               </Button>
               <Button onClick={() => router.push('/login')} size="lg">
@@ -709,6 +993,25 @@ export default function PaymentsPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {isMobile && (
+        <div
+          className="md:hidden text-center text-xs text-gray-500 transition-all duration-150"
+          style={{
+            opacity: pullDistance > 0 || isPullRefreshing ? 1 : 0,
+            transform:
+              pullDistance > 0
+                ? `translateY(${Math.min(pullDistance / 2, 40)}px)`
+                : undefined,
+          }}
+        >
+          {isPullRefreshing
+            ? 'Refreshing…'
+            : pullDistance >= 60
+              ? 'Release to refresh'
+              : 'Pull to refresh'}
+        </div>
+      )}
 
       {/* Enhanced Payment Links by Category */}
       {groups.map(group => (

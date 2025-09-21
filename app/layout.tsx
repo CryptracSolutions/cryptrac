@@ -4,6 +4,7 @@ import ToasterWrapper from './components/ToasterWrapper'; // Import wrapper (cli
 import { TimezoneProvider } from '@/lib/contexts/TimezoneContext';
 import { ConnectionStatus } from '@/app/components/ui/connection-status';
 import { ViewportHeightUpdater } from '@/app/components/layout/viewport-height-updater';
+import { MobileMetricsTracker } from '@/app/components/analytics/mobile-metrics-tracker';
 
 export const metadata: Metadata = {
   title: {
@@ -46,6 +47,7 @@ export default function RootLayout({
         <TimezoneProvider>
           <ToasterWrapper /> {/* Wrapper handles dynamic/ssr */}
           <ViewportHeightUpdater />
+          <MobileMetricsTracker />
           {children}
           <ConnectionStatus />
         </TimezoneProvider>

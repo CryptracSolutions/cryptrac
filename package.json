@@ -11,7 +11,8 @@
     "generate-types": "node scripts/generate-supabase-types.mjs",
     "baseline:desktop": "playwright test tests/playwright/desktop-baseline.spec.ts",
     "baseline:styles": "playwright test tests/playwright/computed-styles.spec.ts",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "audit:touch": "node scripts/audit-touch-targets.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -63,6 +64,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tiny-secp256k1": "^2.2.4",
     "tronweb": "^6.0.3",
+    "web-vitals": "^3.5.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

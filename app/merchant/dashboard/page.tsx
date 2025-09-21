@@ -16,7 +16,8 @@ import {
   CheckCircle,
   TrendingUp,
   Users,
-  Zap
+  Zap,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -27,6 +28,23 @@ import Link from 'next/link';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import { LazyMount } from '@/app/components/ui/lazy-mount';
+import {
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetDescription,
+  BottomSheetHeader,
+  BottomSheetTitle,
+  BottomSheetTrigger,
+} from '@/app/components/ui/bottom-sheet';
+import {
+  MobileDataCard,
+  MobileDataCardActions,
+  MobileDataCardHeader,
+  MobileDataCardMeta,
+  MobileDataCardMetaItem,
+  MobileDataCardSubtitle,
+  MobileDataCardTitle,
+} from '@/app/components/ui/mobile-data-card';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -115,6 +133,7 @@ export default function MerchantDashboard() {
   const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
   const [trialCountdown, setTrialCountdown] = useState('');
   const [newPayments, setNewPayments] = useState<RecentTransaction[]>([]);
+  const [isQuickActionsSheetOpen, setQuickActionsSheetOpen] = useState(false);
   const router = useRouter();
   const { timezone } = useTimezone();
 
@@ -128,6 +147,41 @@ export default function MerchantDashboard() {
       return amount.toFixed(2);
     }
   };
+
+  const handleQuickAction = (href: string) => {
+    router.push(href);
+  };
+
+  const quickActions = [
+    {
+      key: 'create-link',
+      title: 'Create Payment Link',
+      description: 'Generate a link to accept crypto payments',
+      icon: Plus,
+      href: '/merchant/dashboard/payments/create',
+    },
+    {
+      key: 'smart-terminal',
+      title: 'Open Smart Terminal',
+      description: 'Accept in-person crypto payments',
+      icon: CreditCard,
+      href: '/smart-terminal',
+    },
+    {
+      key: 'create-subscription',
+      title: 'Create Subscription',
+      description: 'Set up a recurring payment plan',
+      icon: Calendar,
+      href: '/merchant/subscriptions/create',
+    },
+    {
+      key: 'manage-subscriptions',
+      title: 'Manage Subscriptions',
+      description: 'Review and update recurring invoices',
+      icon: Users,
+      href: '/merchant/subscriptions',
+    },
+  ] as const;
 
   const fetchNewPayments = useCallback(async (merchantId: string) => {
     try {
@@ -254,6 +308,20 @@ export default function MerchantDashboard() {
       setNewPayments([]);
     } catch (err) {
       console.error('Failed to mark payments as seen:', err);
+    }
+  };
+
+  const openPaymentLink = (id: string) => {
+    router.push(`/merchant/dashboard/payments/${id}`);
+  };
+
+  const handleCardKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    callback: () => void
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      callback();
     }
   };
 
@@ -532,53 +600,77 @@ export default function MerchantDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 pt-0 space-y-4">
-              <Button 
-                onClick={() => router.push('/merchant/dashboard/payments/create')}
-                className="w-full justify-start h-auto p-4 hover:bg-gray-50 transition-colors"
-                variant="outline"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                    <Plus className="h-4 w-4 text-[#7f5efd]" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-phonic text-base font-semibold text-gray-900">Create Payment Link</div>
-                    <div className="font-capsule text-xs text-gray-600">Generate a link to accept crypto payments</div>
-                  </div>
-                </div>
-              </Button>
+              <div className="hidden md:flex md:flex-col md:space-y-4">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <Button
+                      key={action.key}
+                      onClick={() => handleQuickAction(action.href)}
+                      className="w-full justify-start h-auto p-4 hover:bg-gray-50 transition-colors"
+                      variant="outline"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                          <Icon className="h-4 w-4 text-[#7f5efd]" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-phonic text-base font-semibold text-gray-900">{action.title}</div>
+                          <div className="font-capsule text-xs text-gray-600">{action.description}</div>
+                        </div>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
 
-              <Button
-                onClick={() => router.push('/smart-terminal')}
-                className="w-full justify-start h-auto p-4 hover:bg-gray-50 transition-colors"
-                variant="outline"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                    <CreditCard className="h-4 w-4 text-[#7f5efd]" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-phonic text-base font-semibold text-gray-900">Smart Terminal</div>
-                    <div className="font-capsule text-xs text-gray-600">Accept in-person crypto payments</div>
-                  </div>
-                </div>
-              </Button>
-
-              <Button
-                onClick={() => router.push('/merchant/subscriptions/create')}
-                className="w-full justify-start h-auto p-4 hover:bg-gray-50 transition-colors"
-                variant="outline"
-              >
-                <div className="flex items-center gap-4">
-                    <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
-                    <Calendar className="h-4 w-4 text-[#7f5efd]" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-phonic text-base font-semibold text-gray-900">Create Subscription</div>
-                    <div className="font-capsule text-xs text-gray-600">Set up a recurring payment plan</div>
-                  </div>
-                </div>
-              </Button>
+              <div className="md:hidden">
+                <BottomSheet open={isQuickActionsSheetOpen} onOpenChange={setQuickActionsSheetOpen}>
+                  <BottomSheetTrigger asChild>
+                    <Button className="w-full h-12 text-sm font-medium text-gray-900 border-gray-200 shadow-sm">
+                      Open Quick Actions
+                    </Button>
+                  </BottomSheetTrigger>
+                  <BottomSheetContent onDismiss={() => setQuickActionsSheetOpen(false)}>
+                    <BottomSheetHeader className="space-y-2 text-left">
+                      <BottomSheetTitle>Quick Actions</BottomSheetTitle>
+                      <BottomSheetDescription>
+                        Choose what you need to do next.
+                      </BottomSheetDescription>
+                    </BottomSheetHeader>
+                    <div className="mt-4 space-y-3">
+                      {quickActions.map((action) => {
+                        const Icon = action.icon;
+                        return (
+                          <Button
+                            key={`sheet-${action.key}`}
+                            variant="outline"
+                            className="w-full justify-start h-auto p-4 text-left hover:bg-gray-50"
+                            onClick={() => {
+                              handleQuickAction(action.href);
+                              setQuickActionsSheetOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 bg-[#7f5efd]/10 rounded-lg">
+                                <Icon className="h-4 w-4 text-[#7f5efd]" />
+                              </div>
+                              <div>
+                                <div className="font-phonic text-base font-semibold text-gray-900">
+                                  {action.title}
+                                </div>
+                                <div className="font-capsule text-xs text-gray-600">
+                                  {action.description}
+                                </div>
+                              </div>
+                            </div>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </BottomSheetContent>
+                </BottomSheet>
+              </div>
             </CardContent>
           </Card>
 
@@ -608,43 +700,92 @@ export default function MerchantDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {recentTransactions.map(tx => (
-                    <div 
-                      key={tx.id} 
-                      onClick={() => router.push(`/merchant/dashboard/payments/${tx.payment_link_id}`)}
-                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 bg-[#7f5efd]/10 rounded-lg group-hover:bg-[#7f5efd]/15 transition-colors duration-200">
-                          <DollarSign className="h-4 w-4 text-[#7f5efd]" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <p className="font-phonic text-sm font-semibold text-gray-900">{formatCurrency(tx.amount, tx.currency)}</p>
-                            {tx.pay_currency !== tx.currency && (
-                              <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-                                paid in {tx.pay_currency}
-                              </span>
-                            )}
+                <>
+                  <div className="hidden md:flex md:flex-col md:space-y-3">
+                    {recentTransactions.map(tx => (
+                      <div
+                        key={tx.id}
+                        onClick={() => openPaymentLink(tx.payment_link_id)}
+                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="p-2 bg-[#7f5efd]/10 rounded-lg group-hover:bg-[#7f5efd]/15 transition-colors duration-200">
+                            <DollarSign className="h-4 w-4 text-[#7f5efd]" />
                           </div>
-                          <p className="font-capsule text-sm text-gray-700">{tx.payment_link_title}</p>
-                          <p className="font-capsule text-xs text-gray-500">
-                            {formatDateTime(tx.created_at, timezone)}
-                          </p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <p className="font-phonic text-sm font-semibold text-gray-900">{formatCurrency(tx.amount, tx.currency)}</p>
+                              {tx.pay_currency !== tx.currency && (
+                                <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                                  paid in {tx.pay_currency}
+                                </span>
+                              )}
+                            </div>
+                            <p className="font-capsule text-sm text-gray-700">{tx.payment_link_title}</p>
+                            <p className="font-capsule text-xs text-gray-500">
+                              {formatDateTime(tx.created_at, timezone)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{tx.currency}</span>
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-capsule text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{tx.currency}</span>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+
+                  <div className="md:hidden space-y-3">
+                    {recentTransactions.map(tx => (
+                      <MobileDataCard
+                        key={`mobile-${tx.id}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openPaymentLink(tx.payment_link_id)}
+                        onKeyDown={(event) => handleCardKeyDown(event, () => openPaymentLink(tx.payment_link_id))}
+                      >
+                        <MobileDataCardHeader className="gap-2">
+                          <div className="space-y-1">
+                            <MobileDataCardTitle className="text-base">
+                              {formatCurrency(tx.amount, tx.currency)}
+                            </MobileDataCardTitle>
+                            <MobileDataCardSubtitle className="text-sm text-gray-700">
+                              {tx.payment_link_title}
+                            </MobileDataCardSubtitle>
+                            <MobileDataCardSubtitle className="text-[11px] text-gray-500">
+                              {formatDateTime(tx.created_at, timezone)}
+                            </MobileDataCardSubtitle>
+                          </div>
+                        </MobileDataCardHeader>
+
+                        <MobileDataCardMeta>
+                          <MobileDataCardMetaItem
+                            label="Status"
+                            value={tx.status}
+                          />
+                          <MobileDataCardMetaItem
+                            label="Paid in"
+                            value={tx.pay_currency || tx.currency}
+                            helper={tx.pay_currency !== tx.currency ? `Original ${tx.currency}` : undefined}
+                          />
+                          <MobileDataCardMetaItem
+                            label="Link ID"
+                            value={tx.payment_link_id || '—'}
+                          />
+                        </MobileDataCardMeta>
+
+                        <MobileDataCardActions className="flex-row items-center justify-between pt-1 text-sm text-[#7f5efd]">
+                          <span className="font-medium">View payment</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </MobileDataCardActions>
+                      </MobileDataCard>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

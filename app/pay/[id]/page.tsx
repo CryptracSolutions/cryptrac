@@ -589,7 +589,7 @@ export default function PaymentPage() {
   const renderMobileContent = () => {
     if (loading) {
       return (
-        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-purple-100 p-6 space-y-4">
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-purple-100 p-6 space-y-4 animate-fade-scale">
           <Loader2 className="h-10 w-10 animate-spin text-[#7f5efd] mx-auto" />
           <div className="text-center space-y-1">
             <h2 className="text-lg font-semibold text-gray-900">Loading Payment Details</h2>
@@ -601,7 +601,7 @@ export default function PaymentPage() {
 
     if (error) {
       return (
-        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-red-100 p-6 space-y-4 text-center">
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-red-100 p-6 space-y-4 text-center animate-fade-scale">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
           <div className="space-y-2">
             <h1 className="text-xl font-semibold text-gray-900">Payment Error</h1>
@@ -617,7 +617,7 @@ export default function PaymentPage() {
 
     if (!paymentLink) {
       return (
-        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-gray-100 p-6 space-y-3 text-center">
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-gray-100 p-6 space-y-3 text-center animate-fade-scale">
           <AlertCircle className="h-12 w-12 text-gray-500 mx-auto" />
           <h1 className="text-xl font-semibold text-gray-900">Payment Link Not Found</h1>
           <p className="text-sm text-gray-600">The payment link you&apos;re looking for doesn&apos;t exist or has expired.</p>
@@ -627,8 +627,10 @@ export default function PaymentPage() {
 
     const mobileStatus = currentStatus
 
+    const mobileStatusKey = mobileStatus?.payment_status ?? (paymentData ? 'ready' : 'idle')
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-scale" key={`mobile-${mobileStatusKey}`}>
         <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-purple-100 p-6 space-y-4">
           <div className="space-y-2 text-center">
             <h1 className="text-xl font-semibold text-gray-900">{paymentLink.title}</h1>
@@ -691,7 +693,7 @@ export default function PaymentPage() {
 
                   return (
                     <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                      <SelectTrigger className="h-12 rounded-xl border border-purple-200 bg-white px-4 text-sm font-semibold text-gray-900 justify-between">
+                      <SelectTrigger className="h-12 max-md:h-12 rounded-xl border border-purple-200 bg-white px-4 text-sm font-semibold text-gray-900 justify-between">
                         <div className="flex items-center gap-2">
                           {selectedNetwork === 'all'
                             ? <Globe className="h-4 w-4 text-[#7f5efd]" />
@@ -747,7 +749,7 @@ export default function PaymentPage() {
                   </div>
                 ) : (
                   <Select value={selectedCurrency} onValueChange={(value) => setSelectedCurrency(value)}>
-                    <SelectTrigger className="h-12 rounded-xl border border-purple-200 bg-white px-4 text-sm font-semibold text-gray-900 justify-between">
+                    <SelectTrigger className="h-12 max-md:h-12 rounded-xl border border-purple-200 bg-white px-4 text-sm font-semibold text-gray-900 justify-between">
                       {selectedCurrency ? (
                         <div className="flex items-center gap-2">
                           {getCurrencyIcon(selectedCurrency, 'h-4 w-4 text-[#7f5efd]')}
@@ -941,7 +943,10 @@ export default function PaymentPage() {
         <div className="w-full max-w-2xl">
           <Card className="w-full border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-[#7f5efd] to-[#9b7cff]"></div>
-            <CardContent className="space-y-6 px-4 sm:px-6 md:px-8 py-6">
+            <CardContent
+              key={`desktop-${currentStatus?.payment_status ?? (paymentData ? 'ready' : loading ? 'loading' : 'idle')}`}
+              className="space-y-6 px-4 sm:px-6 md:px-8 py-6 animate-fade-scale"
+            >
             {loading ? (
               <div className="text-center py-12">
                 <Loader2 className="h-12 w-12 animate-spin text-[#7f5efd] mx-auto mb-4" />
@@ -1033,7 +1038,7 @@ export default function PaymentPage() {
                         
                         return (
                           <Select value={selectedNetwork} onValueChange={(v) => setSelectedNetwork(v)}>
-                            <SelectTrigger className="w-full min-h-[48px] h-12 px-4 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md md:hover:scale-[1.02] text-gray-900 text-base">
+                            <SelectTrigger className="w-full min-h-[48px] h-12 max-md:h-12 px-4 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md md:hover:scale-[1.02] text-gray-900 text-base">
                               <div className="flex items-center gap-2">
                                 {(() => {
                                   const iconClass = "h-4 w-4 text-[#7f5efd]"
@@ -1097,7 +1102,7 @@ export default function PaymentPage() {
                         </div>
                       ) : (
                         <Select value={selectedCurrency} onValueChange={(value) => setSelectedCurrency(value)}>
-                          <SelectTrigger className="w-full min-h-[48px] h-12 px-4 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md md:hover:scale-[1.02] text-gray-900 text-base">
+                          <SelectTrigger className="w-full min-h-[48px] h-12 max-md:h-12 px-4 bg-gradient-to-r from-white to-purple-50 border-2 border-purple-200 hover:border-[#7f5efd] focus:border-[#7f5efd] rounded-xl transition-all duration-200 shadow-sm hover:shadow-md md:hover:scale-[1.02] text-gray-900 text-base">
                             {selectedCurrency ? (() => {
                               const current = availableCurrencies.find(c => c.code === selectedCurrency)
                               const displayName = current?.name || getCurrencyDisplayName(selectedCurrency)

@@ -37,6 +37,15 @@ import { Breadcrumbs } from '@/app/components/ui/breadcrumbs'
 import { TransactionDetailModal } from '@/app/components/TransactionDetailModal'
 import { LazyMount } from '@/app/components/ui/lazy-mount'
 import {
+  MobileDataCard,
+  MobileDataCardActions,
+  MobileDataCardHeader,
+  MobileDataCardMeta,
+  MobileDataCardMetaItem,
+  MobileDataCardSubtitle,
+  MobileDataCardTitle,
+} from '@/app/components/ui/mobile-data-card'
+import {
   generateTaxReportPDF,
   generateTaxReportExcel,
   generateEnhancedCSV,
@@ -615,6 +624,16 @@ export default function TaxReportsPage() {
     setShowTransactionModal(true)
   }
 
+  const handleTransactionKeyPress = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    transaction: Transaction
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleTransactionClick(transaction)
+    }
+  }
+
   // Filter transactions by date range
   const filterTransactionsByDate = () => {
     // DECOUPLING: Use transactionsForDisplay as the source of truth, not reportData
@@ -1095,95 +1114,94 @@ export default function TaxReportsPage() {
                     </Card>
                   ) : (
                     transactionsToDisplay.map((transaction) => (
-                      <Card
+                      <MobileDataCard
                         key={transaction.id}
-                        className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => handleTransactionClick(transaction)}
+                        onKeyDown={(event) => handleTransactionKeyPress(event, transaction)}
                       >
-                        <CardContent className="p-4 space-y-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-1">
-                              <p className="text-sm font-semibold text-gray-900">
-                                {formatDateShort(getTransactionTimestamp(transaction), timezone)}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                {transaction.product_description || 'No description provided'}
-                              </p>
-                              {transaction.link_id && (
-                                <span className="inline-flex items-center gap-1 text-xs font-mono bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
-                                  Link {transaction.link_id}
-                                </span>
-                              )}
-                            </div>
-                            <Badge
-                              variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
-                              className="text-[11px]"
+                        <MobileDataCardHeader className="gap-3">
+                          <div className="space-y-1">
+                            <MobileDataCardTitle className="text-sm">
+                              {formatDateShort(getTransactionTimestamp(transaction), timezone)}
+                            </MobileDataCardTitle>
+                            <MobileDataCardSubtitle>
+                              {transaction.product_description || 'No description provided'}
+                            </MobileDataCardSubtitle>
+                            {transaction.link_id && (
+                              <span className="inline-flex items-center gap-1 text-xs font-mono bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
+                                Link {transaction.link_id}
+                              </span>
+                            )}
+                          </div>
+                          <Badge
+                            variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
+                            className="text-[11px]"
+                          >
+                            {transaction.status}
+                          </Badge>
+                        </MobileDataCardHeader>
+
+                        <MobileDataCardMeta>
+                          <MobileDataCardMetaItem
+                            label="Gross"
+                            value={`$${transaction.gross_amount.toFixed(2)}`}
+                          />
+                          <MobileDataCardMetaItem
+                            label="Tax"
+                            value={`$${transaction.tax_amount.toFixed(2)}`}
+                          />
+                          <MobileDataCardMetaItem
+                            label="Fees"
+                            value={`$${transaction.fees.toFixed(2)}`}
+                            helper={transaction.fee_payer ? (
+                              transaction.fee_payer === 'customer'
+                                ? 'Customer paid'
+                                : 'Merchant paid'
+                            ) : undefined}
+                          />
+                          <MobileDataCardMetaItem
+                            label="Net"
+                            value={`$${transaction.net_amount.toFixed(2)}`}
+                            accent
+                          />
+                        </MobileDataCardMeta>
+
+                        <MobileDataCardActions>
+                          {transaction.public_receipt_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-11 text-sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                viewReceipt(transaction.public_receipt_id!)
+                              }}
                             >
-                              {transaction.status}
-                            </Badge>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
-                            <div className="space-y-1">
-                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Gross</p>
-                              <p className="text-sm font-semibold text-gray-900">${transaction.gross_amount.toFixed(2)}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Tax</p>
-                              <p className="text-sm font-semibold text-gray-900">${transaction.tax_amount.toFixed(2)}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Fees</p>
-                              <div className="text-sm font-semibold text-gray-900">
-                                ${transaction.fees.toFixed(2)}
-                                {transaction.fee_payer && (
-                                  <span className="block text-[10px] text-gray-500 mt-1">
-                                    {transaction.fee_payer === 'customer' ? 'Customer paid' : 'Merchant paid'}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="uppercase tracking-wide text-[10px] text-gray-500">Net</p>
-                              <p className="text-sm font-semibold text-[#7f5efd]">${transaction.net_amount.toFixed(2)}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2">
-                            {transaction.public_receipt_id && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 px-3 text-xs flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  viewReceipt(transaction.public_receipt_id!)
-                                }}
-                              >
-                                <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                                Receipt
-                              </Button>
-                            )}
-                            {transaction.status !== 'refunded' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 px-3 text-xs flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setSelectedRefundTransaction(transaction)
-                                  setRefundAmount(transaction.total_paid.toString())
-                                  setRefundDate(new Date().toISOString().split('T')[0])
-                                  setShowRefundModal(true)
-                                }}
-                              >
-                                <XCircle className="h-3.5 w-3.5 mr-2" />
-                                Refund
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Receipt
+                            </Button>
+                          )}
+                          {transaction.status !== 'refunded' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-11 text-sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRefundTransaction(transaction)
+                                setRefundAmount(transaction.total_paid.toString())
+                                setRefundDate(new Date().toISOString().split('T')[0])
+                                setShowRefundModal(true)
+                              }}
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Refund
+                            </Button>
+                          )}
+                        </MobileDataCardActions>
+                      </MobileDataCard>
                     ))
                   )}
 
