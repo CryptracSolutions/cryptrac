@@ -448,7 +448,7 @@ export default function MerchantDashboard() {
 
   const displayName = merchant?.first_name || user.user_metadata?.business_name || user.email?.split('@')[0] || 'Your Business';
   return (
-    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto mobile-page-padding md:px-6 md:py-8">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -459,14 +459,14 @@ export default function MerchantDashboard() {
         {/* Enhanced Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:text-2xl">
               Welcome back, {displayName}!
             </h1>
-            <p className="font-phonic text-base font-normal text-gray-600">
+            <p className="font-phonic text-base font-normal text-gray-600 max-md:text-sm">
               Here&apos;s what&apos;s happening with your cryptocurrency payments today.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="hidden md:grid md:grid-cols-2 md:gap-3">
             <Link href="/merchant/dashboard/payments/create">
               <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -505,7 +505,7 @@ export default function MerchantDashboard() {
                   </span>
                 </div>
                 <div>
-                  <p className="font-phonic text-sm font-medium text-gray-900">
+                  <p className="font-phonic text-sm font-medium text-gray-900 max-md:text-xs">
                     New payment{newPayments.length > 1 ? 's' : ''} received
                   </p>
                   <p className="font-phonic text-xs text-gray-600">
@@ -514,7 +514,12 @@ export default function MerchantDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" onClick={markPaymentsSeen} className="text-[#7f5efd] hover:bg-[#7f5efd]/10">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={markPaymentsSeen}
+                  className="text-[#7f5efd] hover:bg-[#7f5efd]/10 mobile-touch-button"
+                >
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Mark seen
                 </Button>
@@ -527,11 +532,14 @@ export default function MerchantDashboard() {
         {trialEnd && (
           <Alert className="border-orange-200 bg-orange-50">
             <Clock className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-800 flex items-center justify-between">
-              <span className="font-phonic text-sm">
+            <AlertDescription className="text-orange-800 flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
+              <span className="font-phonic text-sm max-md:text-sm">
                 <strong>Free Trial:</strong> Ends {formatDateShort(trialEnd, timezone)} ({trialCountdown})
               </span>
-              <Link href="/merchant/settings" className="font-phonic text-xs text-orange-700 underline hover:text-orange-900 ml-4">
+              <Link
+                href="/merchant/settings"
+                className="font-phonic text-xs text-orange-700 underline hover:text-orange-900 ml-4 max-md:ml-0 max-md:text-sm"
+              >
                 Manage Plan
               </Link>
             </AlertDescription>
@@ -541,14 +549,14 @@ export default function MerchantDashboard() {
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Revenue</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:gap-3">
+              <CardTitle className="font-phonic text-sm font-semibold text-gray-900 max-md:text-xs">Total Revenue</CardTitle>
               <div className="p-2 bg-[#7f5efd] rounded-lg">
                 <DollarSign className="h-4 w-4 text-white" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd] max-md:text-xl">${stats.totalRevenue.toFixed(2)}</div>
               <div className="flex items-center gap-1 text-gray-600">
                 <TrendingUp className="h-3 w-3" />
                 <span className="font-capsule text-xs">Growing steadily</span>
@@ -557,14 +565,14 @@ export default function MerchantDashboard() {
           </Card>
 
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Payment Links</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:gap-3">
+              <CardTitle className="font-phonic text-sm font-semibold text-gray-900 max-md:text-xs">Payment Links</CardTitle>
               <div className="p-2 bg-[#7f5efd] rounded-lg">
                 <LinkIcon className="h-4 w-4 text-white" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{stats.paymentLinks}</div>
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd] max-md:text-xl">{stats.paymentLinks}</div>
               <div className="flex items-center gap-1 text-gray-600">
                 <Users className="h-3 w-3" />
                 <span className="font-capsule text-xs">Active links</span>
@@ -573,14 +581,14 @@ export default function MerchantDashboard() {
           </Card>
 
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Successful Payments</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:gap-3">
+              <CardTitle className="font-phonic text-sm font-semibold text-gray-900 max-md:text-xs">Successful Payments</CardTitle>
               <div className="p-2 bg-[#7f5efd] rounded-lg">
                 <CheckCircle className="h-4 w-4 text-white" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{stats.successfulPayments}</div>
+              <div className="text-2xl font-semibold mb-2 text-[#7f5efd] max-md:text-xl">{stats.successfulPayments}</div>
               <div className="flex items-center gap-1 text-gray-600">
                 <Zap className="h-3 w-3" />
                 <span className="font-capsule text-xs">Completed transactions</span>
@@ -593,13 +601,13 @@ export default function MerchantDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Enhanced Quick Actions */}
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader id="quick-actions" className="p-6">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Quick Actions</CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
+            <CardHeader id="quick-actions" className="p-6 max-md:p-5">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 max-md:text-lg">Quick Actions</CardTitle>
+              <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                 Get started with accepting cryptocurrency payments
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 pt-0 space-y-4">
+            <CardContent className="p-6 pt-0 space-y-4 max-md:p-5">
               <div className="hidden md:flex md:flex-col md:space-y-4">
                 {quickActions.map((action) => {
                   const Icon = action.icon;
@@ -676,13 +684,13 @@ export default function MerchantDashboard() {
 
           {/* Enhanced Recent Activity */}
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="p-6">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Recent Activity</CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
+            <CardHeader className="p-6 max-md:p-5">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 max-md:text-lg">Recent Activity</CardTitle>
+              <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                 Your latest payment link activity
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
+            <CardContent className="p-6 pt-0 max-md:p-5">
               {recentTransactions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="p-4 bg-[#7f5efd]/10 rounded-full mb-6">
@@ -694,7 +702,8 @@ export default function MerchantDashboard() {
                   </p>
                   <Button
                     onClick={() => router.push('/merchant/dashboard/payments/create')}
-                    size="default" className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                    size="default"
+                    className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white mobile-touch-button"
                   >
                     Get Started
                   </Button>
@@ -808,11 +817,11 @@ export default function MerchantDashboard() {
           )}
         >
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="p-6">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Cryptocurrencies you currently accept</CardTitle>
+            <CardHeader className="p-6 max-md:p-5">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 max-md:text-lg">Cryptocurrencies you currently accept</CardTitle>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <CardContent className="p-6 pt-0 max-md:p-5">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-md:gap-3">
                 {supportedCurrencies.map((crypto) => (
                   <div key={crypto.symbol} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#7f5efd]/30 hover:shadow-sm transition-all duration-200">
                     <CryptoIcon currency={crypto.symbol} className="h-8 w-8" />
@@ -831,14 +840,14 @@ export default function MerchantDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Getting Started Guide */}
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="p-6">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">Getting Started</CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
+            <CardHeader className="p-6 max-md:p-5">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 max-md:text-lg">Getting Started</CardTitle>
+              <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                 Follow these steps to start accepting cryptocurrency payments
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="space-y-4">
+            <CardContent className="p-6 pt-0 max-md:p-5">
+              <div className="space-y-4 max-md:space-y-3">
                 {steps.map(step => (
                   <div key={step.id} className="flex items-start gap-4">
                     <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-phonic text-sm font-medium ${
@@ -849,10 +858,18 @@ export default function MerchantDashboard() {
                       {step.completed ? <CheckCircle className="h-5 w-5" /> : step.id}
                     </div>
                     <div className="flex-1">
-                      <h4 className={`font-phonic text-base font-semibold mb-1 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                      <h4
+                        className={`font-phonic text-base font-semibold mb-1 max-md:text-sm ${
+                          step.completed ? 'text-gray-900' : 'text-gray-400'
+                        }`}
+                      >
                         {step.title}
                       </h4>
-                      <p className={`font-capsule text-sm ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
+                      <p
+                        className={`font-capsule text-sm max-md:text-xs ${
+                          step.completed ? 'text-gray-600' : 'text-gray-400'
+                        }`}
+                      >
                         {step.description}
                       </p>
                     </div>
@@ -864,61 +881,61 @@ export default function MerchantDashboard() {
 
           {/* What's New Section */}
           <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="p-6">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900">What&apos;s New</CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
+            <CardHeader className="p-6 max-md:p-5">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 max-md:text-lg">What&apos;s New</CardTitle>
+              <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                 Latest features and improvements to enhance your payment experience
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+            <CardContent className="p-6 pt-0 max-md:p-5">
+              <div className="space-y-4 max-md:space-y-3">
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10 max-md:p-3">
                   <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
                     <CreditCard className="h-5 w-5 text-[#7f5efd]" />
                   </div>
                   <div>
-                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1">Smart Terminal</h4>
-                    <p className="font-capsule text-xs text-gray-600">Accept in-person crypto payments with our new point-of-sale interface</p>
+                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1 max-md:text-sm">Smart Terminal</h4>
+                    <p className="font-capsule text-xs text-gray-600 max-md:text-xs">Accept in-person crypto payments with our new point-of-sale interface</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10 max-md:p-3">
                   <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
                     <Calendar className="h-5 w-5 text-[#7f5efd]" />
                   </div>
                   <div>
-                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1">Subscription Payments</h4>
-                    <p className="font-capsule text-xs text-gray-600">Set up recurring cryptocurrency payments for your regular customers</p>
+                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1 max-md:text-sm">Subscription Payments</h4>
+                    <p className="font-capsule text-xs text-gray-600 max-md:text-xs">Set up recurring cryptocurrency payments for your regular customers</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10 max-md:p-3">
                   <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
                     <Zap className="h-5 w-5 text-[#7f5efd]" />
                   </div>
                   <div>
-                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1">Real-time Notifications</h4>
-                    <p className="font-capsule text-xs text-gray-600">Get instant alerts when payments are received and confirmed</p>
+                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1 max-md:text-sm">Real-time Notifications</h4>
+                    <p className="font-capsule text-xs text-gray-600 max-md:text-xs">Get instant alerts when payments are received and confirmed</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10 max-md:p-3">
                   <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
                     <TrendingUp className="h-5 w-5 text-[#7f5efd]" />
                   </div>
                   <div>
-                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1">Enhanced Analytics</h4>
-                    <p className="font-capsule text-xs text-gray-600">Track your revenue trends and payment patterns with detailed insights</p>
+                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1 max-md:text-sm">Enhanced Analytics</h4>
+                    <p className="font-capsule text-xs text-gray-600 max-md:text-xs">Track your revenue trends and payment patterns with detailed insights</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10">
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-[#7f5efd]/5 to-transparent rounded-lg border border-[#7f5efd]/10 max-md:p-3">
                   <div className="flex-shrink-0 p-2 bg-[#7f5efd]/10 rounded-lg">
                     <Users className="h-5 w-5 text-[#7f5efd]" />
                   </div>
                   <div>
-                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1">Multi-Currency Support</h4>
-                    <p className="font-capsule text-xs text-gray-600">Accept payments in 20+ cryptocurrencies including Bitcoin, Ethereum, and stablecoins</p>
+                    <h4 className="font-phonic text-base font-semibold text-gray-900 mb-1 max-md:text-sm">Multi-Currency Support</h4>
+                    <p className="font-capsule text-xs text-gray-600 max-md:text-xs">Accept payments in 20+ cryptocurrencies including Bitcoin, Ethereum, and stablecoins</p>
                   </div>
                 </div>
               </div>

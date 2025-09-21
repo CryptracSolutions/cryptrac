@@ -111,60 +111,52 @@ export function HeaderWrapper(props) {
 ### Mobile-Only Utilities (Desktop Unaffected)
 
 ```css
-/* Mobile-Only Container (doesn't affect desktop) */
+/* Mobile-only helpers (desktop untouched) */
 @media (max-width: 767px) {
   .mobile-container {
-    @apply w-full px-4 mx-auto;
+    @apply w-full mx-auto px-4;
   }
 
-  /* Touch-Friendly Spacing (mobile only) */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px]; /* iOS minimum touch target */
-    @apply flex items-center justify-center;
+  .mobile-page-padding {
+    @apply px-4 py-6;
   }
 
-  /* Mobile Stack Layout */
+  .mobile-section-padding {
+    @apply px-4 py-5;
+  }
+
+  .mobile-section-padding-tight {
+    @apply px-4 py-4;
+  }
+
+  .mobile-touch-button {
+    min-height: 2.75rem;
+    @apply px-4;
+  }
+
   .mobile-stack {
-    @apply flex flex-col space-y-4;
+    @apply flex flex-col gap-4;
   }
-}
 
-/* Safe Responsive Pattern Using max-md */
-.safe-responsive {
-  @apply max-md:px-4 max-md:py-2; /* Only applies below 768px */
-  /* Desktop styles remain untouched */
+  .mobile-touch-target {
+    @apply flex items-center justify-center;
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 ```
 
 ### Typography Scaling (Mobile-Only)
 
-```javascript
-// tailwind.config.js additions
-module.exports = {
-  theme: {
-    extend: {
-      fontSize: {
-        // Mobile-only sizes (used with max-md: prefix)
-        'mobile-xs': ['11px', { lineHeight: '16px' }],
-        'mobile-sm': ['13px', { lineHeight: '20px' }],
-        'mobile-base': ['15px', { lineHeight: '22px' }],
-        'mobile-lg': ['17px', { lineHeight: '24px' }],
-        'mobile-xl': ['19px', { lineHeight: '26px' }],
-        'mobile-2xl': ['22px', { lineHeight: '28px' }],
-        'mobile-3xl': ['26px', { lineHeight: '32px' }],
-        'mobile-4xl': ['30px', { lineHeight: '36px' }],
-      },
-      screens: {
-        // Custom mobile-only breakpoints
-        'max-md': { 'max': '767px' }, // Mobile only
-        'xs': '475px', // Extra small devices
-        'touch': { 'raw': '(pointer: coarse)' }, // Touch devices
-        // Desktop breakpoints remain unchanged
-      }
-    }
-  }
-}
+Instead of introducing custom font tokens, we reuse Tailwind's existing typography scale and apply adjustments with responsive prefixes. Example pattern:
+
+```tsx
+<h1 className="text-3xl max-md:text-2xl">Dashboard Headline</h1>
+<p className="text-base max-md:text-sm text-gray-600">Supporting copy.</p>
+<span className="text-sm max-md:text-xs text-gray-500">Meta information</span>
 ```
+
+This keeps desktop sizes completely unchanged while ensuring mobile legibility, and it mirrors the approach now live on the merchant dashboard cards and profile forms.
 
 ## 4. Component-Specific Implementation
 
@@ -190,7 +182,7 @@ export function LandingNav() {
       <div className="md:hidden">
         {/* Hamburger Menu Button */}
         <button
-          className="touch-target p-4"
+          className="mobile-touch-target p-4"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -346,7 +338,7 @@ export function PaymentDisplay({ currency, address, amount, usdAmount, merchantN
               />
               <Button
                 onClick={() => copyToClipboard(address)}
-                className="h-12 sm:h-auto px-6 touch-target"
+              className="h-12 sm:h-auto px-6 mobile-touch-target"
                 variant="outline"
               >
                 <Copy className="w-4 h-4 mr-2" />
@@ -476,7 +468,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }) {
           <DialogTitle className="text-mobile-xl sm:text-2xl">
             Transaction Details
           </DialogTitle>
-          <DialogClose className="absolute right-4 top-4 touch-target">
+          <DialogClose className="absolute right-4 top-4 mobile-touch-target">
             <X className="h-5 w-5" />
           </DialogClose>
         </DialogHeader>
@@ -520,6 +512,63 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }) {
   );
 }
 ```
+
+### 3.5 Mobile Card & Sheet Primitives
+
+```tsx
+// app/components/ui/mobile-data-card.tsx
+export const MobileDataCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, children, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        'max-md:rounded-2xl max-md:border max-md:border-gray-200 max-md:bg-white max-md:shadow-sm',
+        'max-md:p-4 max-md:space-y-4 max-md:focus-visible:outline-none max-md:focus-visible:ring-2',
+        'max-md:focus-visible:ring-[#7f5efd] max-md:focus-visible:ring-offset-2 max-md:focus-visible:ring-offset-white',
+        'transition-shadow duration-200',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+);
+
+// app/components/ui/bottom-sheet.tsx (excerpt)
+export function BottomSheetContent({ className, children, onDismiss, ...props }: BottomSheetContentProps) {
+  const localRef = React.useRef<HTMLDivElement | null>(null)
+
+  useSwipeToClose(localRef, {
+    onClose: handleDismiss,
+    directions: ['down'],
+    threshold: 80,
+    restraint: 140,
+  })
+
+  return (
+    <BottomSheetPortal>
+      <BottomSheetOverlay />
+      <DialogPrimitive.Content
+        ref={setRefs}
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-50 grid w-full gap-4 border-t border-gray-200 bg-white',
+          'rounded-t-[32px] p-6 shadow-2xl max-h-[60vh] min-h-[40vh] md:max-h-[32rem]',
+          'data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom',
+          'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom',
+          className
+        )}
+        {...props}
+      >
+        <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300" aria-hidden />
+        <div className="overflow-y-auto [-webkit-overflow-scrolling:touch]">{children}</div>
+      </DialogPrimitive.Content>
+    </BottomSheetPortal>
+  )
+}
+```
+
+These primitives now back every handheld-only list replacement, letting the payments index, tax reports, and dashboard quick actions share spacing, focus states, and gesture behaviour while desktop markup remains untouched.
 
 ## 4. JavaScript Enhancements
 
@@ -623,6 +672,124 @@ export function useViewportHeight() {
 // height: calc(var(--vh, 1vh) * 100);
 ```
 
+### Pull-to-Refresh Hook
+```typescript
+// lib/hooks/use-pull-to-refresh.ts
+export function usePullToRefresh({ onRefresh, threshold = 60, maxDistance = 160, enabled = true }: PullToRefreshOptions) {
+  const [pullDistance, setPullDistance] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const startYRef = useRef<number | null>(null)
+  const activeRef = useRef(false)
+  const refreshingRef = useRef(false)
+  const pullDistanceRef = useRef(0)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !enabled || !isTouchDevice()) return
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (window.scrollY > 0 || refreshingRef.current) return
+      startYRef.current = event.touches[0].clientY
+      activeRef.current = true
+    }
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!activeRef.current || startYRef.current === null) return
+      const delta = event.touches[0].clientY - startYRef.current
+      if (delta <= 0 || window.scrollY > 0) {
+        activeRef.current = false
+        setPullDistance(0)
+        pullDistanceRef.current = 0
+        return
+      }
+      event.preventDefault()
+      const constrained = Math.min(delta, maxDistance)
+      setPullDistance(constrained)
+      pullDistanceRef.current = constrained
+    }
+
+    const handleTouchEnd = async () => {
+      if (!activeRef.current) return
+      activeRef.current = false
+
+      if (pullDistanceRef.current >= threshold && !refreshingRef.current) {
+        try {
+          refreshingRef.current = true
+          setIsRefreshing(true)
+          await onRefresh()
+        } finally {
+          refreshingRef.current = false
+          setIsRefreshing(false)
+        }
+      }
+
+      setPullDistance(0)
+      pullDistanceRef.current = 0
+      startYRef.current = null
+    }
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: false })
+    window.addEventListener('touchend', handleTouchEnd)
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [enabled, maxDistance, onRefresh, threshold])
+
+  return { pullDistance, isRefreshing }
+}
+```
+
+### Swipe Actions Hook
+```typescript
+// lib/hooks/use-swipe-actions.ts
+export function useSwipeActions<T extends HTMLElement>(
+  ref: RefObject<T | null>,
+  { threshold = 80, restraint = 120, enabled = true, onSwipeLeft, onSwipeRight }: SwipeActionsOptions
+) {
+  const startXRef = useRef<number | null>(null)
+  const startYRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element || !enabled || typeof window === 'undefined' || !isTouchDevice()) return
+
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0]
+      startXRef.current = touch.clientX
+      startYRef.current = touch.clientY
+    }
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (startXRef.current === null || startYRef.current === null) return
+
+      const touch = event.changedTouches[0]
+      const deltaX = touch.clientX - startXRef.current
+      const deltaY = touch.clientY - startYRef.current
+
+      startXRef.current = null
+      startYRef.current = null
+
+      if (Math.abs(deltaY) > restraint) return
+
+      if (deltaX <= -threshold) onSwipeLeft?.()
+      else if (deltaX >= threshold) onSwipeRight?.()
+    }
+
+    element.addEventListener('touchstart', handleTouchStart)
+    element.addEventListener('touchend', handleTouchEnd)
+
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStart)
+      element.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [ref, enabled, threshold, restraint, onSwipeLeft, onSwipeRight])
+}
+```
+
 ## 5. Component Implementation Examples
 
 ### Responsive Table Component
@@ -664,10 +831,10 @@ export function ResponsiveTable({ data, columns }) {
             <CardContent className="pt-6">
               {columns.map(col => (
                 <div key={col.key} className="flex justify-between py-2">
-                  <span className="text-mobile-sm text-gray-600">
+                  <span className="text-sm max-md:text-xs text-gray-600">
                     {col.label}
                   </span>
-                  <span className="text-mobile-base font-medium">
+                  <span className="text-base max-md:text-sm font-medium">
                     {row[col.key]}
                   </span>
                 </div>
@@ -693,7 +860,7 @@ export function MobileSearch({ onSearch }) {
       {/* Search Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="touch-target p-3"
+        className="mobile-touch-target p-3"
         aria-label="Search"
       >
         <Search className="w-5 h-5" />
@@ -707,7 +874,7 @@ export function MobileSearch({ onSearch }) {
             <div className="flex items-center p-4 border-b">
               <button
                 onClick={() => setIsOpen(false)}
-                className="touch-target mr-2"
+                className="mobile-touch-target mr-2"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -716,12 +883,12 @@ export function MobileSearch({ onSearch }) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search..."
-                className="flex-1 px-3 py-2 text-mobile-base"
+                className="flex-1 px-3 py-2 text-base max-md:text-sm"
                 autoFocus
               />
               <button
                 onClick={() => onSearch(query)}
-                className="touch-target ml-2 text-primary-500"
+                className="mobile-touch-target ml-2 text-primary-500"
               >
                 Search
               </button>
@@ -738,6 +905,15 @@ export function MobileSearch({ onSearch }) {
   );
 }
 ```
+
+### Merchant Dashboard & Profile (Implemented Enhancements)
+- Wrapped merchant dashboard and profile pages with `mobile-page-padding` while keeping existing desktop `px-6 py-8` spacing intact via `md:` overrides.
+- Hid the legacy quick-action grid on handhelds (`hidden md:grid`), relying on the bottom sheet to deliver the same actions with thumb-friendly spacing.
+- Applied `max-md:` typography reductions across headers, alert copy, stat cards, and “What’s New”/“Getting Started” modules so content scales cleanly without touching desktop text sizes.
+- Introduced the `mobile-touch-button` helper for CTA buttons (e.g., “Mark seen,” “Get Started,” email confirmation actions) to guarantee 44px+ targets on mobile.
+- Tightened card padding on mobile sections (`max-md:p-5`, `max-md:gap-3`) for dashboard content and profile forms while preserving desktop density.
+- Enhanced Radix `Select` triggers and menus in the profile form with mobile padding, font sizing, and capped heights to keep dropdowns scrollable on smaller viewports.
+- Reduced breadcrumb and header typography on the profile page (`max-md:text-xs` / `max-md:text-2xl`) so long merchant names fit without wrapping issues on phones.
 
 ## 6. Performance Optimizations
 
@@ -1027,6 +1203,13 @@ export const mobilePerformanceTargets = {
 - [x] Create offline support (mobile PWA)
 - [x] **Final desktop comparison test**
 
+### Phase 5: Polish & Telemetry
+- [x] Introduce shared mobile card primitives and bottom sheet system
+- [x] Upgrade dashboard quick actions, recent activity, and payment tables with swipe + pull-to-refresh
+- [x] Smooth payment flow transitions and enforce 44px selector touch targets
+- [x] Instrument mobile web-vitals collection in production builds
+- [x] Add automated touch-target audit script (`npm run audit:touch`)
+
 ### Completed Phase 0 — Summary
 - Playwright baseline harness captures PNG snapshots for `/`, `/pay/sample-id`, and merchant dashboard routes at the specified desktop widths under `tests/visual-baseline/`.
 - Computed styles for the same routes are archived as JSON at `tests/baseline/`, and the desktop class inventory lives in `docs/desktop-classes-baseline.md` for quick regression checks.
@@ -1055,6 +1238,13 @@ export const mobilePerformanceTargets = {
 - All images funnel through `OptimizedImage`, enforcing the standardized `sizes` string, blur placeholders, and 85/100 quality defaults while converting legacy `<img>` elements.
 - Offline readiness now includes runtime caching policies, an `/offline` experience, and a mobile-only connection banner so merchants stay informed when the service worker falls back to cached content.
 
+### Completed Phase 5 — Summary
+- Shared `MobileDataCard` and `BottomSheet` primitives power consistent mobile layouts across payments, tax reports, and quick-action overlays without touching desktop components.
+- Merchant dashboard quick actions render in a thumb-friendly bottom sheet (`md:hidden`) while recent activity uses swipeable cards with keyboard access; payments index cards add swipe-to-reveal actions, optimistic pull-to-refresh, and stateful copy/open buttons.
+- Tax-report transactions adopt the shared card system with focus/keyboard handling so every row remains operable on handhelds.
+- Payment checkout flow adds `animate-fade-scale` transitions for state changes and enforces `max-md:h-12` selectors to keep currency controls inside the 44px guideline.
+- `lib/analytics/mobile-tracking.ts` integrates `web-vitals` collection, auto-sending metrics from the `MobileMetricsTracker` client shim mounted via `app/layout.tsx`, while `npm run audit:touch` surfaces sub-44px targets for follow-up.
+
 ## 10. Maintenance Guidelines
 
 ### Desktop Protection Code Review Checklist
@@ -1069,6 +1259,7 @@ export const mobilePerformanceTargets = {
 #### Mobile-Specific Checks:
 - [ ] Mobile components are separate files or conditionally rendered
 - [ ] Touch targets meet 44x44px minimum (mobile only)
+- [ ] `npm run audit:touch` reports no outstanding mobile violations
 - [ ] Text readable without zooming (mobile only)
 - [ ] Forms optimized for mobile input
 - [ ] Modals full-screen on mobile, normal on desktop
@@ -1076,29 +1267,51 @@ export const mobilePerformanceTargets = {
 - [ ] No horizontal scrolling on mobile
 
 ### Monitoring & Analytics
-```javascript
+```typescript
 // lib/analytics/mobile-tracking.ts
+import { onCLS, onFID, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals'
+import { getDeviceType, isMobileViewport } from '@/lib/utils/device'
+
 export function trackMobileMetrics() {
-  // Track device types
-  const deviceType = getDeviceType();
-  analytics.track('Device Type', { type: deviceType });
+  if (typeof window === 'undefined') return
+  if (!isMobileViewport()) return
 
-  // Track viewport dimensions
-  analytics.track('Viewport', {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    orientation: window.orientation
-  });
+  const flag = '__cryptrac_mobile_vitals__'
+  if ((window as unknown as Record<string, unknown>)[flag]) return
+  ;(window as unknown as Record<string, unknown>)[flag] = true
 
-  // Track performance metrics
-  if ('performance' in window) {
-    const perfData = performance.getEntriesByType('navigation')[0];
-    analytics.track('Mobile Performance', {
-      loadTime: perfData.loadEventEnd - perfData.fetchStart,
-      domReady: perfData.domContentLoadedEventEnd - perfData.fetchStart,
-      firstPaint: performance.getEntriesByType('paint')[0]?.startTime
-    });
+  const metadata = {
+    deviceType: getDeviceType(),
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    userAgent: navigator.userAgent,
+    connection: (navigator as Navigator & { connection?: { effectiveType?: string; downlink?: number; rtt?: number } }).connection || undefined,
   }
+
+  const send = (metric: Metric) => {
+    const payload = {
+      metric: { ...metric, value: Number(metric.value.toFixed(2)) },
+      metadata,
+      timestamp: Date.now(),
+    }
+    const body = JSON.stringify(payload)
+
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/analytics/mobile-metrics', new Blob([body], { type: 'application/json' }))
+    } else {
+      fetch('/api/analytics/mobile-metrics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {})
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('[mobile-vitals]', metric.name, metric.value, metric.rating)
+    }
+  }
+
+  onCLS(send, { reportAllChanges: false })
+  onFID(send)
+  onFCP(send)
+  onINP(send)
+  onLCP(send)
+  onTTFB(send)
 }
 ```
 

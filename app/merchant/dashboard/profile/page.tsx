@@ -251,22 +251,25 @@ export default function ProfilePage() {
   }
 
   return (
-      <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
+      <div className="space-y-8 max-w-7xl mx-auto mobile-page-padding md:px-6 md:py-8">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
             { name: 'Dashboard', href: '/merchant/dashboard' },
             { name: 'Profile', href: '/merchant/dashboard/profile' }
-          ]} 
+          ]}
+          className="max-md:text-xs"
         />
         
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
           <div className="space-y-2">
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:text-2xl">
               Business Profile
             </h1>
-            <p className="font-phonic text-base font-normal text-gray-600">Manage your business information and contact details</p>
+            <p className="font-phonic text-base font-normal text-gray-600 max-md:text-sm">
+              Manage your business information and contact details
+            </p>
           </div>
           <div className="flex items-center gap-3">
             {autoSaving && (

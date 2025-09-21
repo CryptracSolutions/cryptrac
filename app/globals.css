@@ -1149,6 +1149,23 @@
       @apply w-full mx-auto px-4;
     }
 
+    .mobile-page-padding {
+      @apply px-4 py-6;
+    }
+
+    .mobile-section-padding {
+      @apply px-4 py-5;
+    }
+
+    .mobile-section-padding-tight {
+      @apply px-4 py-4;
+    }
+
+    .mobile-touch-button {
+      min-height: 2.75rem;
+      @apply px-4;
+    }
+
     .mobile-stack {
       @apply flex flex-col gap-4;
     }

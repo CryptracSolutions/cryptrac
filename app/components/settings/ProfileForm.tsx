@@ -221,19 +221,19 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         <CardHeader className="p-6 max-md:p-4">
           <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
             <div className="space-y-2 max-md:space-y-3">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3 max-md:text-lg">
                 <div className="p-2 bg-[#7f5efd] rounded-lg">
                   <Building className="h-4 w-4 text-white" />
                 </div>
                 Business Information
               </CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
+              <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                 Basic information about your business and operations
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-6">
+        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
             <div className="space-y-2">
               <label className="font-phonic text-sm font-normal text-gray-700">Business Name *</label>
@@ -252,12 +252,14 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.business_type}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, business_type: value }))}
               >
-                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:text-sm">
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-72 max-md:max-h-60 max-md:text-sm">
                   {BUSINESS_TYPES.map(type => (
-                    <SelectItem key={type} value={type} className="font-capsule text-base font-normal">{type}</SelectItem>
+                    <SelectItem key={type} value={type} className="font-capsule text-base font-normal max-md:text-sm max-md:py-2">
+                      {type}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -269,12 +271,14 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.industry}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, industry: value }))}
               >
-                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:text-sm">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-72 max-md:max-h-60 max-md:text-sm">
                   {INDUSTRIES.map(industry => (
-                    <SelectItem key={industry} value={industry} className="font-capsule text-base font-normal">{industry}</SelectItem>
+                    <SelectItem key={industry} value={industry} className="font-capsule text-base font-normal max-md:text-sm max-md:py-2">
+                      {industry}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -308,19 +312,19 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         <CardHeader className="p-6 max-md:p-4">
           <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
             <div className="space-y-2 max-md:space-y-3">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3 max-md:text-lg">
                 <div className="p-2 bg-[#7f5efd] rounded-lg">
                   <Phone className="h-4 w-4 text-white" />
                 </div>
                 Contact Information
               </CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
+              <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                 Contact details and business preferences
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-6">
+        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-md:gap-4">
             <div className="space-y-2">
               <label className="font-phonic text-sm font-normal text-gray-700">First Name *</label>
@@ -361,12 +365,16 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                 value={settings.timezone}
                 onValueChange={(value) => setSettings((prev: MerchantSettings) => ({ ...prev, timezone: value }))}
               >
-                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:text-sm">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-72 max-md:max-h-60 max-md:text-sm">
                   {US_TIMEZONES.map(timezone => (
-                    <SelectItem key={timezone.code} value={timezone.code} className="font-capsule text-base font-normal">
+                    <SelectItem
+                      key={timezone.code}
+                      value={timezone.code}
+                      className="font-capsule text-base font-normal max-md:text-sm max-md:py-2"
+                    >
                       {timezone.name}
                     </SelectItem>
                   ))}
@@ -391,7 +399,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
               <Button
                 type="button"
                 onClick={openEmailChangeModal}
-                className="shrink-0 h-11 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                className="shrink-0 h-11 bg-[#7f5efd] hover:bg-[#7c3aed] text-white mobile-touch-button"
               >
                 Change Email
               </Button>
@@ -404,19 +412,19 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
         <CardHeader className="p-6 max-md:p-4">
           <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
             <div className="space-y-2 max-md:space-y-3">
-              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+              <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3 max-md:text-lg">
                 <div className="p-2 bg-[#7f5efd] rounded-lg">
                   <MapPin className="h-4 w-4 text-white" />
                 </div>
                 Business Address
               </CardTitle>
-              <CardDescription className="font-capsule text-sm text-gray-600">
+              <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                 Your business address for tax and compliance purposes
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-6">
+        <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:space-y-5">
           <div className="space-y-6 max-md:space-y-4">
             <div className="space-y-2">
               <label className="font-phonic text-sm font-normal text-gray-700">Street Address *</label>
@@ -456,12 +464,16 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                     business_address: { ...prev.business_address, state: value }
                   }))}
                 >
-                  <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                  <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:text-sm">
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-72 max-md:max-h-60 max-md:text-sm">
                     {US_STATES.map(state => (
-                      <SelectItem key={state.code} value={state.code} className="font-capsule text-base font-normal">
+                      <SelectItem
+                        key={state.code}
+                        value={state.code}
+                        className="font-capsule text-base font-normal max-md:text-sm max-md:py-2"
+                      >
                         {state.name}
                       </SelectItem>
                     ))}
@@ -536,7 +548,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   variant="outline"
                   onClick={cancelEmailChange}
                   size="sm"
-                  className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 max-md:w-full max-md:h-11"
+                  className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 max-md:w-full max-md:h-11 mobile-touch-button"
                 >
                   Cancel
                 </Button>
@@ -544,7 +556,7 @@ export default function ProfileForm({ settings, setSettings, handlePhoneChange, 
                   type="submit"
                   disabled={savingEmail || !pendingEmailChange.trim() || pendingEmailChange.trim() === settings.email}
                   size="sm"
-                  className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white max-md:w-full max-md:h-11"
+                  className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white max-md:w-full max-md:h-11 mobile-touch-button"
                 >
                   {savingEmail ? 'Saving…' : 'Confirm Change'}
                 </Button>
