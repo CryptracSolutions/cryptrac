@@ -1059,7 +1059,7 @@ export const mobilePerformanceTargets = {
 
 ### Desktop Protection Code Review Checklist
 
-#### Must Verify for Every PR:
+#### Must Verify:
 - [ ] **No existing `md:`, `lg:`, `xl:` classes modified**
 - [ ] **No desktop components altered**
 - [ ] **Desktop regression tests pass**

@@ -3,6 +3,7 @@ import "./globals.css";
 import ToasterWrapper from './components/ToasterWrapper'; // Import wrapper (client-safe)
 import { TimezoneProvider } from '@/lib/contexts/TimezoneContext';
 import { ConnectionStatus } from '@/app/components/ui/connection-status';
+import { ViewportHeightUpdater } from '@/app/components/layout/viewport-height-updater';
 
 export const metadata: Metadata = {
   title: {
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className="antialiased">
         <TimezoneProvider>
           <ToasterWrapper /> {/* Wrapper handles dynamic/ssr */}
+          <ViewportHeightUpdater />
           {children}
           <ConnectionStatus />
         </TimezoneProvider>

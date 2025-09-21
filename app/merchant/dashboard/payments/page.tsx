@@ -275,7 +275,7 @@ export default function PaymentsPage() {
     const config = variants[status as keyof typeof variants] || variants.active;
     
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 max-md:flex-wrap">
         <Badge variant={config.variant} className={config.color}>
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
@@ -299,7 +299,7 @@ export default function PaymentsPage() {
           size="sm"
           onClick={() => updatePaymentLinkStatus(link.id, 'completed', 'Manually completed by merchant')}
           disabled={statusUpdateLoading === link.id}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 max-md:w-full max-md:justify-center"
         >
           <CheckCircle className="h-3 w-3" />
           Complete
@@ -316,7 +316,7 @@ export default function PaymentsPage() {
           size="sm"
           onClick={() => updatePaymentLinkStatus(link.id, 'active', 'Reactivated by merchant')}
           disabled={statusUpdateLoading === link.id}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 max-md:w-full max-md:justify-center"
         >
           <Play className="h-3 w-3" />
           Reactivate
@@ -350,7 +350,7 @@ export default function PaymentsPage() {
           variant="outline"
           size="sm"
           onClick={() => copyToClipboard(getPaymentUrl(link.link_id), link.id)}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 max-md:w-full max-md:justify-center"
         >
           <Copy className="h-3 w-3" />
           {copiedId === link.id ? 'Copied!' : 'Copy'}
@@ -366,7 +366,7 @@ export default function PaymentsPage() {
           variant="outline"
           size="sm"
           onClick={() => window.open(getPaymentUrl(link.link_id), '_blank')}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 max-md:w-full max-md:justify-center"
         >
           <ExternalLink className="h-3 w-3" />
           Open
@@ -377,7 +377,11 @@ export default function PaymentsPage() {
     // View button (always shown)
     buttons.push(
       <Link key="view" href={`/merchant/dashboard/payments/${link.id}`}>
-        <Button variant="outline" size="sm" className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 max-md:w-full max-md:justify-center"
+        >
           <Eye className="h-3 w-3" />
           View
         </Button>
@@ -390,17 +394,17 @@ export default function PaymentsPage() {
   const renderLink = (link: PaymentLink) => (
     <div
       key={link.id}
-      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 bg-white"
+      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 bg-white max-md:p-4"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
+        <div className="flex-1 max-md:w-full">
+          <div className="flex items-center gap-3 mb-4 max-md:flex-wrap">
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <LinkIcon className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="font-phonic text-lg font-semibold text-gray-900 mb-1">{link.title}</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 max-md:flex-wrap">
                 {getStatusBadge(link.status, link)}
                 {(link.source === 'subscription' || link.subscription_id) && (
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
@@ -464,14 +468,14 @@ export default function PaymentsPage() {
           )}
         </div>
 
-        <div className="flex flex-col items-end gap-2 ml-4">
+        <div className="flex flex-col items-end gap-2 ml-4 max-md:w-full max-md:items-stretch max-md:gap-3 max-md:ml-0">
           {/* Status Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-md:flex-col max-md:w-full">
             {getStatusActions(link)}
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-md:flex-col max-md:w-full">
             {getActionButtons(link)}
           </div>
         </div>
@@ -678,9 +682,9 @@ export default function PaymentsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-3 max-md:flex-col max-md:items-stretch max-md:px-4">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200" aria-label="Filter by status">
+          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:w-full max-md:h-12" aria-label="Filter by status">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -692,7 +696,7 @@ export default function PaymentsPage() {
           </SelectContent>
         </Select>
         <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200" aria-label="Filter by date">
+          <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:w-full max-md:h-12" aria-label="Filter by date">
             <SelectValue placeholder="Filter by date" />
           </SelectTrigger>
           <SelectContent>

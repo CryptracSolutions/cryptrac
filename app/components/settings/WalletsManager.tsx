@@ -581,13 +581,13 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
           <CardHeader
             className="pb-6 card-header"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
+              <div className="flex items-center gap-4 max-md:flex-col max-md:items-start max-md:gap-3">
                 <div className="p-3 bg-gradient-to-br from-[#7f5efd]/10 to-[#7c3aed]/10 rounded-lg shadow-soft">
                   <Wallet className="h-6 w-6 text-[#7f5efd]" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2 max-md:flex-wrap">
                     Your Wallets
                     <div className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">
                       {existingWallets.length}
@@ -598,8 +598,8 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                   </CardDescription>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 max-md:w-full max-md:justify-between max-md:pt-2">
+                <div className="flex items-center gap-2 max-md:w-full max-md:justify-start">
                   <Shield className="h-5 w-5 text-green-600" />
                   <span className="text-sm font-medium text-green-700">Secured</span>
                 </div>
@@ -619,9 +619,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                     }`}
                     onClick={(e) => handleWalletCardClick(currency, e)}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
+                    <CardContent className="p-6 max-md:p-4 max-md:space-y-4">
+                      <div className="flex items-center justify-between mb-4 max-md:flex-col max-md:items-start max-md:gap-4">
+                        <div className="flex items-center gap-4 max-md:flex-col max-md:items-start max-md:gap-3">
                           <div className="relative">
                             <CryptoIcon currency={currency} className="h-12 w-12" />
                             <div className="absolute -bottom-1 -right-1 p-1 bg-green-500 rounded-full">
@@ -653,7 +653,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 max-md:w-full max-md:justify-start max-md:flex-wrap">
                           {hasStableCoins(currency) && (
                             <Button
                               variant="ghost"
@@ -792,7 +792,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                           </div>
                         )}
                         
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-2">
                           <div className="flex items-center gap-2">
                             {getValidationIcon(currency)}
                             <span className={`text-sm font-medium ${
@@ -848,7 +848,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       {/* Enhanced Add New Wallet Section */}
       <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200">
         <CardHeader className="pb-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 max-md:flex-col max-md:items-start max-md:gap-3">
             <div className="p-3 bg-gradient-to-br from-[#7f5efd]/10 to-[#7c3aed]/10 rounded-lg shadow-soft">
               <Plus className="h-6 w-6 text-[#7f5efd]" />
             </div>
@@ -895,9 +895,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
               ) : (
                 filteredCurrencies.map((currency) => (
                   <Card key={currency.code} className="border border-gray-200 hover:border-purple-300 hover:shadow-medium transition-all duration-200 card-hover">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between mb-3 max-md:flex-col max-md:items-start max-md:gap-3">
+                        <div className="flex items-center gap-3 max-md:flex-col max-md:items-start max-md:gap-2">
                           <CryptoIcon currency={currency.code} className="h-10 w-10" />
                           <div>
                             <div className="flex items-center gap-2">
@@ -907,7 +907,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                             <div className="text-sm text-gray-500">{currency.network}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 max-md:w-full max-md:justify-start max-md:flex-wrap">
                           {getValidationIcon(currency.code)}
                           {settings.wallets[currency.code] && (
                             <Button
