@@ -424,7 +424,7 @@ export default function CreatePaymentLinkPage() {
   }
 
   return (
-    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto max-md:px-4 max-md:space-y-6">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto max-md:px-4 max-md:space-y-6 max-md:pb-28">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -435,16 +435,16 @@ export default function CreatePaymentLinkPage() {
         />
 
         {/* Enhanced Header */}
-        <div className="space-y-2">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+        <div className="space-y-2 max-md:space-y-1">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:mb-2 max-md:text-2xl">
             Create Payment Link
           </h1>
-          <p className="font-phonic text-base font-normal text-gray-600">
+          <p className="font-phonic text-base font-normal text-gray-600 max-md:text-sm">
             Create a new cryptocurrency payment link for your customers
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8 max-md:space-y-6">
+        <form id="create-payment-link-form" onSubmit={handleSubmit} className="space-y-8 max-md:space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-md:gap-5">
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-8 max-md:space-y-6">
@@ -536,13 +536,14 @@ export default function CreatePaymentLinkPage() {
 
                   {/* Tax Configuration */}
                   <div className="space-y-6">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3 max-md:items-start">
                       <Checkbox
                         id="tax_enabled"
                         checked={form.tax_enabled}
                         onCheckedChange={(checked) => handleTaxEnabledToggle(checked === true)}
+                        className="max-md:h-5 max-md:w-5"
                       />
-                      <Label htmlFor="tax_enabled" className="font-phonic text-sm font-semibold text-gray-900">
+                      <Label htmlFor="tax_enabled" className="font-phonic text-sm font-semibold text-gray-900 max-md:text-[15px]">
                         Enable tax collection
                       </Label>
                     </div>
@@ -562,15 +563,15 @@ export default function CreatePaymentLinkPage() {
                     )}
 
                     {form.tax_enabled && (
-                      <div className="ml-6 space-y-6">
-                        <div className="flex items-center justify-between">
+                      <div className="ml-6 space-y-6 max-md:ml-0">
+                        <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
                           <Label className="font-phonic text-sm font-semibold text-gray-900">Tax Rates</Label>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={addTaxRate}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 max-md:h-11 max-md:w-full max-md:justify-center"
                           >
                             <Plus className="h-4 w-4" />
                             Add Tax Rate
@@ -579,30 +580,36 @@ export default function CreatePaymentLinkPage() {
 
                         <div className="space-y-4">
                           {form.tax_rates.map((taxRate) => (
-                            <div key={taxRate.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                              <div className="flex-1">
+                            <div
+                              key={taxRate.id}
+                              className="flex items-center gap-4 rounded-lg border p-4 transition-shadow duration-200 max-md:flex-col max-md:items-stretch max-md:gap-3 max-md:rounded-2xl"
+                            >
+                              <div className="flex-1 space-y-2">
+                                <Label className="hidden text-xs uppercase tracking-wide text-gray-500 max-md:block">Label</Label>
                                 <Input
                                   placeholder="Tax Label (e.g., State Tax, Local Tax)"
                                   value={taxRate.label}
                                   onChange={(e) => updateTaxRate(taxRate.id, 'label', e.target.value)}
-                                  className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+                                  className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:h-12"
                                 />
                               </div>
 
-                              <div className="w-24">
-                                <Input
-                                  type="number"
-                                  step="0.001"
-                                  min="0"
-                                  max="50"
-                                  placeholder="6.625"
-                                  value={taxRate.percentage}
-                                  onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
-                                  className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
-                                />
+                              <div className="w-24 space-y-2 max-md:w-full">
+                                <Label className="hidden text-xs uppercase tracking-wide text-gray-500 max-md:block">Rate (%)</Label>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="number"
+                                    step="0.001"
+                                    min="0"
+                                    max="50"
+                                    placeholder="6.625"
+                                    value={taxRate.percentage}
+                                    onChange={(e) => updateTaxRate(taxRate.id, 'percentage', e.target.value)}
+                                    className="h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:h-12"
+                                  />
+                                  <span className="text-xs font-semibold text-gray-500">%</span>
+                                </div>
                               </div>
-
-                              <span className="text-body text-gray-500">%</span>
 
                               {form.tax_rates.length > 1 && (
                                 <Button
@@ -610,7 +617,7 @@ export default function CreatePaymentLinkPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => removeTaxRate(taxRate.id)}
-                                  className="text-red-600 hover:text-red-700"
+                                  className="text-red-600 hover:text-red-700 max-md:self-end"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -619,7 +626,7 @@ export default function CreatePaymentLinkPage() {
                           ))}
                         </div>
 
-                        <div className="text-body-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
+                        <div className="text-body-sm text-gray-600 bg-blue-50 p-4 rounded-lg max-md:rounded-2xl">
                           <strong>Total Tax Rate:</strong> {fees.totalTaxPercentage.toFixed(3)}%
                           {fees.totalTaxAmount > 0 && (
                             <span className="ml-2">
@@ -652,14 +659,23 @@ export default function CreatePaymentLinkPage() {
                     </div>
                     {availableCryptos.length > 0 ? (
                       <>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 max-md:grid-cols-1 max-md:gap-3">
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 max-md:gap-2">
                           {availableCryptos.map(crypto => (
-                            <label key={crypto} className="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200">
-                              <Checkbox
-                                checked={form.accepted_cryptos.includes(crypto)}
-                                onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
-                              />
-                              <span className="text-sm font-medium">{crypto}</span>
+                            <label
+                              key={crypto}
+                              className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-[#7f5efd]/40 hover:shadow-sm transition-all duration-200 max-md:rounded-2xl max-md:px-4 max-md:h-12"
+                            >
+                              <div className="flex items-center gap-3">
+                                <Checkbox
+                                  checked={form.accepted_cryptos.includes(crypto)}
+                                  onCheckedChange={(checked) => handleCryptoToggle(crypto, checked === true)}
+                                  className="max-md:h-5 max-md:w-5"
+                                />
+                                <span className="text-sm font-medium text-gray-900">{crypto}</span>
+                              </div>
+                              <Badge variant="outline" className="hidden text-[10px] text-gray-500 max-md:flex">
+                                Tap to toggle
+                              </Badge>
                             </label>
                           ))}
                         </div>
@@ -803,11 +819,11 @@ export default function CreatePaymentLinkPage() {
             <div className="space-y-8 max-md:space-y-6">
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:rounded-2xl">
                 <CardHeader className="p-6 max-md:p-4">
-                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-2 max-md:text-lg">
                     <Receipt className="h-5 w-5 text-[#7f5efd]" />
                     Payment Preview
                   </CardTitle>
-                  <CardDescription className="font-capsule text-sm text-gray-600">
+                  <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                     How your payment link will appear
                   </CardDescription>
                 </CardHeader>
@@ -815,18 +831,18 @@ export default function CreatePaymentLinkPage() {
                   {/* Preview Section - Smart Terminal Style */}
                   <div className="space-y-4">
                     {/* Title and Description */}
-                    <div className="text-center">
-                      <h3 className="font-phonic text-lg font-semibold text-gray-900">{form.title || 'Payment Link Title'}</h3>
+                    <div className="text-center space-y-1">
+                      <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">{form.title || 'Payment Link Title'}</h3>
                       {form.description && (
-                        <p className="font-phonic text-sm text-gray-600 mt-1">{form.description}</p>
+                        <p className="font-phonic text-sm text-gray-600 mt-1 max-md:text-xs">{form.description}</p>
                       )}
                     </div>
 
                     {/* Amount Display - Smart Terminal Style */}
-                    <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
-                      <div className="flex items-center justify-center mb-2">
+                    <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100 max-md:p-5">
+                      <div className="flex items-center justify-center mb-2 gap-1">
                         <DollarSign className="h-5 w-5 text-[#7f5efd] mr-1" />
-                        <span className="text-sm text-gray-500 uppercase tracking-wider">Amount</span>
+                        <span className="text-sm text-gray-500 uppercase tracking-wider max-md:text-xs">Amount</span>
                       </div>
                       <div className="text-center font-phonic font-bold text-[#7f5efd]" style={{fontSize: 'clamp(1.75rem, 5vw, 2.5rem)'}}>
                         ${fees.totalAmount.toFixed(2)}
@@ -834,20 +850,20 @@ export default function CreatePaymentLinkPage() {
                     </div>
 
                     {/* Metadata */}
-                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                    <div className="flex items-center justify-center gap-2 flex-wrap max-md:gap-1">
                       {form.accepted_cryptos.length > 0 && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs max-md:text-[11px]">
                           {form.accepted_cryptos.length} crypto{form.accepted_cryptos.length !== 1 ? 's' : ''} accepted
                         </Badge>
                       )}
                       {form.expires_at && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs max-md:text-[11px]">
                           <Clock className="h-3 w-3 mr-1" />
                           Expires: {formatDateShort(form.expires_at, timezone)}
                         </Badge>
                       )}
                       {form.max_uses && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs max-md:text-[11px]">
                           <Users className="h-3 w-3 mr-1" />
                           Max uses: {form.max_uses}
                         </Badge>
@@ -856,7 +872,7 @@ export default function CreatePaymentLinkPage() {
                   </div>
 
                   {/* Order Summary - Smart Terminal Style */}
-                  <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200">
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-xl border border-gray-200 max-md:p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <ShoppingBag className="h-3 w-3 text-[#7f5efd]" />
                       <span className="text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Order Summary</span>
@@ -905,7 +921,7 @@ export default function CreatePaymentLinkPage() {
               </Card>
             </div>
             {/* Submit Button - full width below cards */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 hidden md:block">
               <Button
                 type="submit"
                 disabled={loading || availableCryptos.length === 0}
@@ -926,6 +942,36 @@ export default function CreatePaymentLinkPage() {
             </div>
           </div>
         </form>
+
+        <div
+          className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-4 backdrop-blur"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+        >
+          <div className="flex items-center justify-between pb-3">
+            <span className="text-sm text-gray-500">Total</span>
+            <span className="font-phonic text-xl font-semibold text-[#7f5efd]">
+              ${fees.totalAmount.toFixed(2)}
+            </span>
+          </div>
+          <Button
+            type="submit"
+            form="create-payment-link-form"
+            disabled={loading || availableCryptos.length === 0}
+            className="h-12 w-full rounded-xl bg-[#7f5efd] text-white hover:bg-[#7c3aed] flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Creating…
+              </>
+            ) : (
+              <>
+                <Zap className="h-5 w-5" />
+                Create Payment Link
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     );
   }

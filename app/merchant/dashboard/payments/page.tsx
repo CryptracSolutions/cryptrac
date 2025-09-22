@@ -26,7 +26,8 @@ import {
   Calendar,
   Users,
   Zap,
-  Clock
+  Clock,
+  Filter
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -37,6 +38,14 @@ import { cn } from '@/lib/utils';
 import { usePullToRefresh } from '@/lib/hooks/use-pull-to-refresh';
 import { useSwipeActions } from '@/lib/hooks/use-swipe-actions';
 import { useIsMobile } from '@/lib/hooks/use-mobile';
+import {
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetDescription,
+  BottomSheetFooter,
+  BottomSheetHeader,
+  BottomSheetTitle,
+} from '@/app/components/ui/bottom-sheet';
 import {
   MobileDataCard,
   MobileDataCardActions,
@@ -103,6 +112,23 @@ interface ApiResponse {
   };
 }
 
+const STATUS_FILTER_OPTIONS = [
+  { value: 'all', label: 'All Statuses' },
+  { value: 'active', label: 'Active' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'expired', label: 'Expired' },
+  { value: 'paused', label: 'Paused' },
+] as const;
+
+const DATE_RANGE_OPTIONS = [
+  { value: 'all', label: 'All Dates' },
+  { value: 'today', label: 'Today' },
+  { value: '7d', label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: 'this_month', label: 'This month' },
+  { value: 'last_month', label: 'Last month' },
+] as const;
+
 export default function PaymentsPage() {
   const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([]);
   const [statistics, setStatistics] = useState<Statistics>({
@@ -124,6 +150,7 @@ export default function PaymentsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
   const [swipedLinkId, setSwipedLinkId] = useState<string | null>(null);
+  const [isFilterSheetOpen, setFilterSheetOpen] = useState(false);
   const notifiedLinksRef = useRef<Set<string>>(new Set());
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     links: false,
@@ -288,6 +315,17 @@ export default function PaymentsPage() {
 
   const formatDate = (dateString: string) => {
     return formatDateTime(dateString, timezone);
+  };
+
+  const hasActiveFilters = statusFilter !== 'all' || dateRange !== 'all';
+
+  const handleResetFilters = () => {
+    setStatusFilter('all');
+    setDateRange('all');
+  };
+
+  const handleApplyFilters = () => {
+    setFilterSheetOpen(false);
   };
 
   const getStatusBadges = (status: string, link?: PaymentLink) => {
@@ -685,24 +723,27 @@ export default function PaymentsPage() {
     });
 
     return (
-      <MobileDataCard
-        ref={cardRef}
-        className={cn(
-          'md:hidden space-y-4 transition-shadow duration-200',
-          isSwiped && 'ring-1 ring-[#7f5efd]/40 shadow-md'
-        )}
-        data-swiped={isSwiped ? 'true' : 'false'}
-      >
-        <MobileDataCardHeader className="gap-3">
+        <MobileDataCard
+          ref={cardRef}
+          className={cn(
+            'md:hidden space-y-4 transition-shadow duration-200',
+            'max-md:space-y-3 max-md:p-5 max-md:rounded-3xl',
+            isSwiped && 'ring-1 ring-[#7f5efd]/40 shadow-md'
+          )}
+          data-swiped={isSwiped ? 'true' : 'false'}
+        >
+        <MobileDataCardHeader className="gap-3 max-md:gap-4">
           <div className="space-y-1">
-            <MobileDataCardTitle className="text-base">
+            <MobileDataCardTitle className="text-base max-md:text-sm">
               {link.title}
             </MobileDataCardTitle>
-            <MobileDataCardSubtitle className="text-sm font-semibold text-[#7f5efd]">
+            <MobileDataCardSubtitle className="text-sm font-semibold text-[#7f5efd] max-md:text-base">
               {amountLabel}
             </MobileDataCardSubtitle>
             {description ? (
-              <MobileDataCardSubtitle>{description}</MobileDataCardSubtitle>
+              <MobileDataCardSubtitle className="max-md:text-xs">
+                {description}
+              </MobileDataCardSubtitle>
             ) : null}
             <MobileDataCardSubtitle className="text-[11px] text-gray-500">
               Created {createdLabel}
@@ -725,7 +766,7 @@ export default function PaymentsPage() {
           </div>
         </MobileDataCardHeader>
 
-        <MobileDataCardMeta>
+        <MobileDataCardMeta className="max-md:grid-cols-2 max-md:gap-3">
           {metaItems.map((item, index) => (
             <MobileDataCardMetaItem
               key={`${link.id}-mobile-meta-${index}`}
@@ -733,6 +774,7 @@ export default function PaymentsPage() {
               value={item.value}
               helper={item.helper}
               accent={item.accent}
+              className="max-md:space-y-1"
             />
           ))}
         </MobileDataCardMeta>
@@ -819,7 +861,19 @@ export default function PaymentsPage() {
   ];
 
   return (
-    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
+    <div
+      className={cn(
+        'px-6 py-8 space-y-8 max-w-7xl mx-auto',
+        'max-md:px-4 max-md:py-6 max-md:space-y-6'
+      )}
+      style={
+        isMobile
+          ? {
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)',
+            }
+          : undefined
+      }
+    >
       {/* Breadcrumbs */}
       <Breadcrumbs 
         items={[
@@ -829,34 +883,48 @@ export default function PaymentsPage() {
       />
       
       {/* Enhanced Header */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
-        <div className="space-y-2">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 max-md:gap-5">
+        <div className="space-y-2 max-md:space-y-1">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:mb-2 max-md:text-2xl">
             Payment Management
           </h1>
-          <p className="font-phonic text-base font-normal text-gray-600">Generate, view and manage all payments</p>
+          <p className="font-phonic text-base font-normal text-gray-600 max-md:text-sm">
+            Generate, view and manage all payments
+          </p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-md:gap-2">
           <Link href="/merchant/dashboard/payments/create">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button
+              size="default"
+              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2 max-md:h-12 max-md:text-sm max-md:rounded-xl"
+            >
               <Plus className="h-4 w-4" />
               Create Payment Link
             </Button>
           </Link>
           <Link href="/smart-terminal">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button
+              size="default"
+              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2 max-md:h-12 max-md:text-sm max-md:rounded-xl"
+            >
               <CreditCard className="h-4 w-4" />
               Open Smart Terminal
             </Button>
           </Link>
           <Link href="/merchant/subscriptions/create">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button
+              size="default"
+              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2 max-md:h-12 max-md:text-sm max-md:rounded-xl"
+            >
               <Plus className="h-4 w-4" />
               Create Subscription
             </Button>
           </Link>
           <Link href="/merchant/subscriptions">
-            <Button size="default" className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2">
+            <Button
+              size="default"
+              className="w-full bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center justify-center gap-2 max-md:h-12 max-md:text-sm max-md:rounded-xl"
+            >
               <Calendar className="h-4 w-4" />
               Manage Subscriptions
             </Button>
@@ -865,51 +933,51 @@ export default function PaymentsPage() {
       </div>
 
       {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Total Links</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-md:gap-3">
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:border max-md:border-[#7f5efd]/20 max-md:shadow-none max-md:rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:pb-1 max-md:gap-3">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900 max-md:text-xs">Total Links</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <LinkIcon className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.total_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
+          <CardContent className="pt-0 max-md:pt-1 max-md:space-y-1">
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd] max-md:mb-1 max-md:text-xl">{statistics.total_links}</div>
+            <div className="flex items-center gap-1 text-gray-600 max-md:gap-1.5">
               <BarChart3 className="h-3 w-3" />
-              <span className="font-capsule text-xs">All payment links</span>
+              <span className="font-capsule text-xs max-md:text-[11px]">All payment links</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Active</CardTitle>
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:border max-md:border-[#7f5efd]/20 max-md:shadow-none max-md:rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:pb-1 max-md:gap-3">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900 max-md:text-xs">Active</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <TrendingUp className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.active_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
+          <CardContent className="pt-0 max-md:pt-1 max-md:space-y-1">
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd] max-md:mb-1 max-md:text-xl">{statistics.active_links}</div>
+            <div className="flex items-center gap-1 text-gray-600 max-md:gap-1.5">
               <Zap className="h-3 w-3" />
-              <span className="font-capsule text-xs">Accepting payments</span>
+              <span className="font-capsule text-xs max-md:text-[11px]">Accepting payments</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Completed</CardTitle>
+        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:border max-md:border-[#7f5efd]/20 max-md:shadow-none max-md:rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:pb-1 max-md:gap-3">
+            <CardTitle className="font-phonic text-sm font-semibold text-gray-900 max-md:text-xs">Completed</CardTitle>
             <div className="p-2 bg-[#7f5efd] rounded-lg">
               <CheckCircle className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{statistics.completed_links}</div>
-            <div className="flex items-center gap-1 text-gray-600">
+          <CardContent className="pt-0 max-md:pt-1 max-md:space-y-1">
+            <div className="text-2xl font-semibold mb-2 text-[#7f5efd] max-md:mb-1 max-md:text-xl">{statistics.completed_links}</div>
+            <div className="flex items-center gap-1 text-gray-600 max-md:gap-1.5">
               <CheckCircle className="h-3 w-3" />
-              <span className="font-capsule text-xs">Finished or max uses</span>
+              <span className="font-capsule text-xs max-md:text-[11px]">Finished or max uses</span>
             </div>
           </CardContent>
         </Card>
@@ -966,17 +1034,17 @@ export default function PaymentsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex justify-center gap-3 max-md:flex-col max-md:items-stretch max-md:px-4">
+      <div className="hidden md:flex justify-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-64 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 max-md:w-full max-md:h-12" aria-label="Filter by status">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
+            {STATUS_FILTER_OPTIONS.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={dateRange} onValueChange={setDateRange}>
@@ -984,15 +1052,112 @@ export default function PaymentsPage() {
             <SelectValue placeholder="Filter by date" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Dates</SelectItem>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="7d">Last 7 days</SelectItem>
-            <SelectItem value="30d">Last 30 days</SelectItem>
-            <SelectItem value="this_month">This month</SelectItem>
-            <SelectItem value="last_month">Last month</SelectItem>
+            {DATE_RANGE_OPTIONS.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
+
+      <div className="md:hidden space-y-2">
+        <Button
+          variant="outline"
+          onClick={() => setFilterSheetOpen(true)}
+          className={cn(
+            'w-full border border-gray-200 flex items-center justify-between rounded-2xl px-4 font-phonic text-sm',
+            'max-md:h-12 max-md:text-sm'
+          )}
+        >
+          <span className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filters
+          </span>
+          {hasActiveFilters ? (
+            <Badge variant="outline" className="border-[#7f5efd]/30 bg-[#7f5efd]/10 text-[#7f5efd]">
+              Active
+            </Badge>
+          ) : (
+            <span className="text-xs text-gray-500">None</span>
+          )}
+        </Button>
+        {hasActiveFilters ? (
+          <p className="text-xs text-gray-500">
+            {[
+              statusFilter !== 'all'
+                ? STATUS_FILTER_OPTIONS.find(option => option.value === statusFilter)?.label
+                : null,
+              dateRange !== 'all'
+                ? DATE_RANGE_OPTIONS.find(option => option.value === dateRange)?.label
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' • ')}
+          </p>
+        ) : null}
+      </div>
+
+      <BottomSheet open={isFilterSheetOpen} onOpenChange={setFilterSheetOpen}>
+        <BottomSheetContent className="md:hidden" onDismiss={() => setFilterSheetOpen(false)}>
+          <BottomSheetHeader className="text-left">
+            <BottomSheetTitle>Filters</BottomSheetTitle>
+            <BottomSheetDescription>Refine the payments you want to review.</BottomSheetDescription>
+          </BottomSheetHeader>
+          <div className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <p className="font-phonic text-sm font-semibold text-gray-900">Status</p>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-12 rounded-xl border border-gray-200 text-left">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_FILTER_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <p className="font-phonic text-sm font-semibold text-gray-900">Date range</p>
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="h-12 rounded-xl border border-gray-200 text-left">
+                  <SelectValue placeholder="Filter by date" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DATE_RANGE_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <BottomSheetFooter className="mt-6 grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 rounded-xl"
+              onClick={() => {
+                handleResetFilters();
+                setFilterSheetOpen(false);
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              type="button"
+              className="h-12 rounded-xl bg-[#7f5efd] hover:bg-[#7c3aed]"
+              onClick={handleApplyFilters}
+            >
+              Apply
+            </Button>
+          </BottomSheetFooter>
+        </BottomSheetContent>
+      </BottomSheet>
 
       {isMobile && (
         <div
@@ -1113,6 +1278,30 @@ export default function PaymentsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Button
+        asChild
+        className={cn(
+          'md:hidden fixed right-4 h-14 w-14 rounded-full shadow-lg shadow-[#7f5efd]/30 bg-[#7f5efd]',
+          'hover:bg-[#7c3aed] focus-visible:ring-[#7f5efd]',
+          'flex items-center justify-center'
+        )}
+        style={
+          isMobile
+            ? {
+                bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)',
+              }
+            : undefined
+        }
+      >
+        <Link
+          href="/merchant/dashboard/payments/create"
+          aria-label="Create payment link"
+          className="flex h-full w-full items-center justify-center"
+        >
+          <Plus className="h-6 w-6 text-white" />
+        </Link>
+      </Button>
     </div>
   );
 }
