@@ -1294,12 +1294,9 @@ export default function PaymentsPage() {
             : undefined
         }
       >
-        <Link
-          href="/merchant/dashboard/payments/create"
-          aria-label="Create payment link"
-          className="flex h-full w-full items-center justify-center"
-        >
-          <Plus className="h-6 w-6 text-white" />
+        <Link href="/merchant/dashboard/payments/create" aria-label="Create payment link" className="flex items-center justify-center">
+          <span className="sr-only">Create Payment Link</span>
+          <Plus className="h-6 w-6 text-white" aria-hidden="true" />
         </Link>
       </Button>
     </div>

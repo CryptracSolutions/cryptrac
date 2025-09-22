@@ -1245,6 +1245,13 @@ export const mobilePerformanceTargets = {
 - Payment checkout flow adds `animate-fade-scale` transitions for state changes and enforces `max-md:h-12` selectors to keep currency controls inside the 44px guideline.
 - `lib/analytics/mobile-tracking.ts` integrates `web-vitals` collection, auto-sending metrics from the `MobileMetricsTracker` client shim mounted via `app/layout.tsx`, while `npm run audit:touch` surfaces sub-44px targets for follow-up.
 
+### Implementation Log — Merchant Dashboard Payment Flows (April 2025)
+- `app/merchant/dashboard/payments/page.tsx`: mobile FAB with safe-area padding, bottom-sheet filters mirroring the desktop select state, and updated KPI cards now render under `max-md` scopes. `MobileDataCard` spacing/typography, swipe-action highlights, and pull-to-refresh messaging are all guarded by `useIsMobile`, keeping the desktop table/list untouched while improving thumb reach and filter discoverability.
+- `app/merchant/dashboard/payments/[id]/page.tsx`: sticky mobile header, accordionised sections via `MobileAccordionSection`, tap-to-zoom QR bottom sheet, and swipe navigation that prefetches adjacent IDs ship alongside the original desktop markup. Historical cards/fee breakdowns are restacked into thumb-friendly blocks, and the QR sheet mirrors download/copy affordances without introducing extra wrappers around the desktop grid.
+- `app/merchant/dashboard/payments/create/page.tsx`: cryptocurrency selection grid, tax-rate editor, preview card, and footer CTA collapse into 44px touch targets with single-column spacing under `max-md`, while the desktop two-column layout stays intact. The sticky submit bar reuses the desktop `Create Payment Link` button via the shared form ID, ensuring action parity across breakpoints.
+- Documentation references updated here so future flows can replicate the pattern: safe-area padding, `useIsMobile` guards, accordion helper usage, and sticky action bar conventions are now explicitly called out for downstream teams.
+- **Verification:** `npm run lint` and `npm run type-check` executed successfully; manual desktop smoke at 1920/1440/1024px confirmed no regressions, and mobile checks at 320/375/414px validated safe-area spacing and gesture behaviour.
+
 ## 10. Maintenance Guidelines
 
 ### Desktop Protection Code Review Checklist
