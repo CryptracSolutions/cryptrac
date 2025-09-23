@@ -49,30 +49,30 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
 
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card className="shadow-medium border-0 bg-white relative overflow-hidden">
+    <div className="max-w-2xl mx-auto max-md:px-1">
+      <Card className="shadow-medium border-0 bg-white relative overflow-hidden max-md:rounded-2xl max-md:border max-md:border-[#7f5efd]/10">
 
-        <CardHeader className="text-center space-y-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+        <CardHeader className="text-center space-y-6 max-md:space-y-5 max-md:p-6 max-md:text-left">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg max-md:mx-0 max-md:w-16 max-md:h-16">
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
           <div className="space-y-4">
-            <CardTitle className="text-3xl font-bold text-gray-900 leading-tight">
+            <CardTitle className="text-3xl font-bold text-gray-900 leading-tight max-md:text-2xl">
               Congratulations!
             </CardTitle>
-            <p className="text-lg text-gray-600 leading-relaxed max-w-md mx-auto">
+            <p className="text-lg text-gray-600 leading-relaxed max-w-md mx-auto max-md:text-base max-md:mx-0">
               Your Cryptrac account is ready to accept cryptocurrency payments!
             </p>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-8">
+        <CardContent className="space-y-8 max-md:p-6 max-md:space-y-6">
           {/* Go To Dashboard Button */}
           <div className="pt-2">
             <Button
               onClick={onFinish}
               disabled={isLoading}
-              className="w-full bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white py-3 text-base font-semibold"
+              className="w-full bg-[#7f5efd] hover:bg-[#7f5efd]/90 text-white py-3 text-base font-semibold max-md:h-12"
               size="lg"
             >
               {isLoading ? (
@@ -90,30 +90,30 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
           </div>
 
           {/* What's Next */}
-          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-8">
-              <div className="text-center space-y-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm max-md:rounded-2xl max-md:border max-md:border-[#7f5efd]/10">
+            <CardContent className="p-8 max-md:p-6">
+              <div className="text-center space-y-6 max-md:text-left max-md:space-y-5">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg max-md:mx-0 max-md:w-14 max-md:h-14">
                   <ArrowRight className="w-8 h-8 text-white" />
                 </div>
                 <div className="space-y-4">
-                  <CardTitle className="text-xl font-bold text-gray-900 leading-tight">
+                  <CardTitle className="text-xl font-bold text-gray-900 leading-tight max-md:text-lg">
                     What&apos;s next?
                   </CardTitle>
-                  <div className="space-y-3 text-sm text-gray-700 max-w-md mx-auto">
-                    <div className="flex items-center justify-center space-x-3">
+                  <div className="space-y-3 text-sm text-gray-700 max-w-md mx-auto max-md:mx-0">
+                    <div className="flex items-center justify-center space-x-3 max-md:justify-start">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Create your first payment link</span>
                     </div>
-                    <div className="flex items-center justify-center space-x-3">
+                    <div className="flex items-center justify-center space-x-3 max-md:justify-start">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Generate QR codes for in-person payments</span>
                     </div>
-                    <div className="flex items-center justify-center space-x-3">
+                    <div className="flex items-center justify-center space-x-3 max-md:justify-start">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Monitor your payments in real-time</span>
                     </div>
-                    <div className="flex items-center justify-center space-x-3">
+                    <div className="flex items-center justify-center space-x-3 max-md:justify-start">
                       <div className="w-2 h-2 bg-[#7f5efd] rounded-full flex-shrink-0"></div>
                       <span>Track your earnings and analytics</span>
                     </div>
@@ -125,51 +125,51 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
 
 
           {/* Share Your Achievement */}
-          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-8">
-              <div className="text-center space-y-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm max-md:rounded-2xl max-md:border max-md:border-[#7f5efd]/10">
+            <CardContent className="p-8 max-md:p-6">
+              <div className="text-center space-y-6 max-md:text-left max-md:space-y-5">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg max-md:mx-0 max-md:w-14 max-md:h-14">
                   <Share2 className="w-8 h-8 text-white" />
                 </div>
                 <div className="space-y-4">
-                  <CardTitle className="text-xl font-bold text-gray-900 leading-tight">
+                  <CardTitle className="text-xl font-bold text-gray-900 leading-tight max-md:text-lg">
                     Share Your Achievement!
                   </CardTitle>
-                  <p className="text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
+                  <p className="text-sm text-gray-600 leading-relaxed max-w-md mx-auto max-md:text-sm max-md:mx-0">
                     Let the world know that {businessInfo.businessName} is now accepting cryptocurrency payments
                   </p>
 
-                  <div className="flex flex-wrap justify-center gap-3 pt-4">
+                  <div className="flex flex-wrap justify-center gap-3 pt-4 max-md:flex-col max-md:items-stretch">
                     <Button
                       onClick={() => handleShare('twitter')}
-                      className="flex items-center gap-2 bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                      className="flex items-center gap-2 bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg max-md:justify-center"
                     >
                       <Twitter className="w-4 h-4" />
-                      <span className="hidden sm:inline">Twitter</span>
+                      <span className="hidden md:inline max-md:inline">Twitter</span>
                     </Button>
 
                     <Button
                       onClick={() => handleShare('facebook')}
-                      className="flex items-center gap-2 bg-[#4267B2] hover:bg-[#4267B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                      className="flex items-center gap-2 bg-[#4267B2] hover:bg-[#4267B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg max-md:justify-center"
                     >
                       <Facebook className="w-4 h-4" />
-                      <span className="hidden sm:inline">Facebook</span>
+                      <span className="hidden md:inline max-md:inline">Facebook</span>
                     </Button>
 
                     <Button
                       onClick={() => handleShare('linkedin')}
-                      className="flex items-center gap-2 bg-[#2867B2] hover:bg-[#2867B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                      className="flex items-center gap-2 bg-[#2867B2] hover:bg-[#2867B2]/90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg max-md:justify-center"
                     >
                       <Linkedin className="w-4 h-4" />
-                      <span className="hidden sm:inline">LinkedIn</span>
+                      <span className="hidden md:inline max-md:inline">LinkedIn</span>
                     </Button>
 
                     <Button
                       onClick={() => handleShare('instagram')}
-                      className="flex items-center gap-2 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] hover:opacity-90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg"
+                      className="flex items-center gap-2 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] hover:opacity-90 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg max-md:justify-center"
                     >
                       <Instagram className="w-4 h-4" />
-                      <span className="hidden sm:inline">Instagram</span>
+                      <span className="hidden md:inline max-md:inline">Instagram</span>
                     </Button>
                   </div>
                 </div>
@@ -182,4 +182,3 @@ export default function SuccessStep({ onboardingData, onFinish, isLoading }: Suc
     </div>
   )
 }
-

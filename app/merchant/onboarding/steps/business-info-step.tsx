@@ -254,23 +254,23 @@ export default function BusinessInfoStep({ data, onComplete, onPrevious }: Busin
   }
 
   return (
-    <div className="max-w-3xl mx-auto max-md:px-4">
-      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm max-md:rounded-2xl max-md:shadow-lg">
-        <CardHeader className="text-center space-y-6 max-md:space-y-4 max-md:px-2 max-md:text-left">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+    <div className="max-w-3xl mx-auto max-md:px-1">
+      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm max-md:rounded-2xl max-md:shadow-lg max-md:border max-md:border-[#7f5efd]/10">
+        <CardHeader className="text-center space-y-6 max-md:space-y-4 max-md:px-6 max-md:text-left">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg max-md:mx-0 max-md:w-16 max-md:h-16">
             <Building2 className="w-10 h-10 text-white" />
           </div>
           <div className="space-y-4">
             <CardTitle className="text-2xl font-bold text-gray-900 leading-tight">
               Complete your business profile
             </CardTitle>
-            <p className="text-lg text-gray-600 leading-relaxed max-w-lg mx-auto">
+            <p className="text-lg text-gray-600 leading-relaxed max-w-lg mx-auto max-md:text-base max-md:mx-0">
               This information helps us customize your experience and ensure compliance with tax regulations.
             </p>
           </div>
         </CardHeader>
 
-        <CardContent className="p-8 space-y-10 max-md:p-5 max-md:space-y-6">
+        <CardContent className="p-8 space-y-10 max-md:p-6 max-md:space-y-6">
           <form onSubmit={handleSubmit} className="space-y-8 max-md:space-y-6">
             
             {/* Business Information Section */}

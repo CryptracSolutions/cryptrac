@@ -15,16 +15,16 @@ interface StepperProps {
   className?: string
 }
 
-export function Stepper({ 
-  steps, 
-  currentStep, 
+export function Stepper({
+  steps,
+  currentStep,
   orientation = 'horizontal',
-  className 
+  className
 }: StepperProps) {
   return (
     <div className={cn("w-full", className)}>
       {orientation === 'horizontal' ? (
-        <div className="flex items-start justify-between relative">
+        <div className="flex items-start justify-between relative max-md:overflow-x-auto max-md:px-2 max-md:pb-2">
           {steps.map((step, index) => {
             const isCompleted = step.id < currentStep
             const isCurrent = step.id === currentStep
@@ -35,7 +35,7 @@ export function Stepper({
               <div key={step.id} className="flex flex-col items-center relative flex-1">
                 {/* Step Circle */}
                 <div className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 shadow-sm relative z-10",
+                  "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 shadow-sm relative z-10 max-md:w-10 max-md:h-10",
                   isCompleted && "bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] border-[#7f5efd] text-white shadow-lg scale-105",
                   isCurrent && "border-[#7f5efd] text-[#7f5efd] bg-gradient-to-br from-[#7f5efd]/10 to-[#9f7aea]/10 shadow-md",
                   isUpcoming && "border-gray-300 text-gray-400 bg-white"
@@ -68,7 +68,7 @@ export function Stepper({
                 {/* Step Content */}
                 <div className="flex flex-col items-center mt-3 px-2">
                   <h3 className={cn(
-                    "text-sm font-semibold leading-snug text-center",
+                    "text-sm font-semibold leading-snug text-center max-md:text-xs",
                     isCurrent && "text-[#7f5efd]",
                     isCompleted && "text-gray-900",
                     isUpcoming && "text-gray-400"
@@ -77,7 +77,7 @@ export function Stepper({
                   </h3>
                   {step.description && (
                     <p className={cn(
-                      "text-xs mt-1 leading-relaxed text-center max-w-[140px]",
+                      "text-xs mt-1 leading-relaxed text-center max-w-[140px] max-md:text-[11px]",
                       isCurrent && "text-gray-600",
                       isCompleted && "text-gray-500",
                       isUpcoming && "text-gray-400"
@@ -92,17 +92,17 @@ export function Stepper({
         </div>
       ) : (
         /* Vertical orientation - keep existing logic */
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4 max-md:space-y-3">
           {steps.map((step) => {
             const isCompleted = step.id < currentStep
             const isCurrent = step.id === currentStep
             const isUpcoming = step.id > currentStep
 
             return (
-              <div key={step.id} className="flex flex-row items-center space-x-3">
+              <div key={step.id} className="flex flex-row items-center space-x-3 max-md:items-start">
                 {/* Step Circle */}
                 <div className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 shadow-sm",
+                  "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 shadow-sm max-md:w-10 max-md:h-10",
                   isCompleted && "bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] border-[#7f5efd] text-white shadow-lg scale-105",
                   isCurrent && "border-[#7f5efd] text-[#7f5efd] bg-gradient-to-br from-[#7f5efd]/10 to-[#9f7aea]/10 shadow-md",
                   isUpcoming && "border-gray-300 text-gray-400 bg-white"
@@ -117,7 +117,7 @@ export function Stepper({
                 {/* Step Content */}
                 <div className="flex flex-col">
                   <h3 className={cn(
-                    "text-sm font-semibold leading-snug",
+                    "text-sm font-semibold leading-snug max-md:text-xs",
                     isCurrent && "text-[#7f5efd]",
                     isCompleted && "text-gray-900",
                     isUpcoming && "text-gray-400"
@@ -126,7 +126,7 @@ export function Stepper({
                   </h3>
                   {step.description && (
                     <p className={cn(
-                      "text-xs mt-1 leading-relaxed",
+                      "text-xs mt-1 leading-relaxed max-md:text-[11px]",
                       isCurrent && "text-gray-600",
                       isCompleted && "text-gray-500",
                       isUpcoming && "text-gray-400"
@@ -145,4 +145,3 @@ export function Stepper({
 }
 
 export default Stepper
-

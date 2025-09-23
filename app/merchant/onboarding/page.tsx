@@ -224,27 +224,39 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/8 via-white to-[#9f7aea]/8">
-      <div className="container mx-auto px-6 py-12 space-y-12">
+    <div className="min-h-screen bg-gradient-to-br from-[#7f5efd]/8 via-white to-[#9f7aea]/8 max-md:bg-white">
+      <div className="container mx-auto px-6 py-12 space-y-12 max-md:px-4 max-md:py-10 max-md:space-y-8">
         {/* Header */}
-        <div className="text-center space-y-6">
-          <Link href="/" className="inline-flex items-center gap-3" aria-label="Go to homepage">
+        <div className="text-center space-y-6 max-md:space-y-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-3 max-md:gap-2"
+            aria-label="Go to homepage"
+          >
             <Logo size="lg" showText={false} emblemClassName="bg-transparent" />
-            <span className="font-phonic text-xl leading-tight font-medium text-gray-900 tracking-tight">Cryptrac</span>
+            <span className="font-phonic text-xl leading-tight font-medium text-gray-900 tracking-tight max-md:text-lg">
+              Cryptrac
+            </span>
           </Link>
         </div>
 
         {/* Progress Stepper */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto hidden md:block">
+          <Stepper steps={ONBOARDING_STEPS} currentStep={currentStep} />
+        </div>
+
+        <div className="md:hidden">
           <Stepper
             steps={ONBOARDING_STEPS}
             currentStep={currentStep}
+            orientation="vertical"
+            className="rounded-2xl border border-[#7f5efd]/10 bg-white/90 px-4 py-4 shadow-sm"
           />
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="max-w-2xl mx-auto space-y-6">
+          <div className="max-w-2xl mx-auto space-y-6 max-md:px-1">
             <Alert className="border-red-300 bg-red-50 shadow-lg">
               <AlertDescription className="font-capsule text-base font-medium text-red-800 leading-relaxed">
                 {error}
@@ -254,7 +266,7 @@ export default function OnboardingPage() {
         )}
 
         {/* Current Step Content */}
-        <div className="max-w-3xl mx-auto space-y-8 transition-all duration-500">
+        <div className="max-w-3xl mx-auto space-y-8 transition-all duration-500 max-md:space-y-6">
           {renderCurrentStep()}
         </div>
       </div>

@@ -163,24 +163,24 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
   }
 
   return (
-    <div className="max-w-4xl mx-auto max-md:px-4">
+    <div className="max-w-4xl mx-auto max-md:px-1">
       {/* Main Configuration Card */}
-      <Card className="shadow-lg border-0 bg-white max-md:rounded-2xl">
-        <CardHeader className="text-center space-y-6 max-md:space-y-4 max-md:px-2">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg">
+      <Card className="shadow-lg border-0 bg-white max-md:rounded-2xl max-md:border max-md:border-[#7f5efd]/10">
+        <CardHeader className="text-center space-y-6 max-md:space-y-4 max-md:px-6 max-md:text-left">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#7f5efd] to-[#9f7aea] rounded-full flex items-center justify-center mx-auto shadow-lg max-md:mx-0 max-md:w-16 max-md:h-16">
             <Settings className="w-10 h-10 text-white" />
           </div>
           <div className="space-y-4">
-            <CardTitle className="text-2xl font-bold text-gray-900 leading-tight">
+            <CardTitle className="text-2xl font-bold text-gray-900 leading-tight max-md:text-[1.625rem]">
               Payment Configuration
             </CardTitle>
-            <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto max-md:text-base max-md:mx-0">
               Configure your payment preferences and fee settings. All cryptocurrencies from your wallet setup will be accepted.
             </p>
           </div>
         </CardHeader>
 
-        <CardContent className="p-8 space-y-10 max-md:p-5 max-md:space-y-6">
+        <CardContent className="p-8 space-y-10 max-md:p-6 max-md:space-y-6">
 
             {/* Configured Cryptocurrencies Display */}
             <div className="space-y-6">
@@ -201,29 +201,29 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     recommendedCurrencies={[]}
                     className=""
                   />
-                  <h2 className="text-lg font-bold text-gray-900">Accepted Cryptocurrencies</h2>
+                  <h2 className="text-lg font-bold text-gray-900 max-md:text-base">Accepted Cryptocurrencies</h2>
                 </div>
-                <div className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full max-md:self-start">
+                <div className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full max-md:self-start max-md:text-xs">
                   <span className="text-[#7f5efd] font-bold">{expandedCurrencies.length}</span> Total
                 </div>
               </div>
 
               {/* Base Currencies */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">Base Cryptocurrencies</h3>
+                <h3 className="font-semibold text-gray-900 max-md:text-sm">Base Cryptocurrencies</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-md:gap-4">
                   {baseCurrencies.map((currency) => (
                     <div
                       key={currency}
-                      className="bg-white border border-gray-200 rounded-lg p-4"
+                      className="bg-white border border-gray-200 rounded-lg p-4 max-md:p-3"
                     >
                       <div className="flex items-center space-x-3">
                         <CryptoIcon currency={currency} size="sm" />
                         <div>
-                          <div className="font-semibold text-gray-900 text-sm">
+                          <div className="font-semibold text-gray-900 text-sm max-md:text-xs">
                             {currency}
                           </div>
-                          <div className="text-xs text-gray-600">
+                          <div className="text-xs text-gray-600 max-md:text-[11px]">
                             {getCurrencyDisplayName(currency)}
                           </div>
                         </div>
@@ -236,20 +236,20 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               {/* Stable Coins */}
               {expandedCurrencies.length > baseCurrencies.length && (
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900">Included Stable Coins</h3>
+                  <h3 className="font-semibold text-gray-900 max-md:text-sm">Included Stable Coins</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-md:gap-4">
                     {expandedCurrencies.filter(currency => !baseCurrencies.includes(currency)).map((currency) => (
                       <div
                         key={currency}
-                        className="bg-white border border-gray-200 rounded-lg p-4"
+                        className="bg-white border border-gray-200 rounded-lg p-4 max-md:p-3"
                       >
                         <div className="flex items-center space-x-3">
                           <CryptoIcon currency={currency} size="sm" />
                           <div>
-                            <div className="font-semibold text-gray-900 text-sm">
+                            <div className="font-semibold text-gray-900 text-sm max-md:text-xs">
                               {currency}
                             </div>
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-gray-600 max-md:text-[11px]">
                               {getCurrencyDisplayName(currency)}
                             </div>
                           </div>
@@ -273,8 +273,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
 
 
         {/* Gateway Fee Settings */}
-        <Card className="shadow-lg border-0 bg-white mt-8">
-          <CardContent className="p-8 space-y-8">
+        <Card className="shadow-lg border-0 bg-white mt-8 max-md:mt-6 max-md:rounded-2xl max-md:border max-md:border-[#7f5efd]/10">
+          <CardContent className="p-8 space-y-8 max-md:p-6 max-md:space-y-5">
 
             {/* Fee Responsibility Setting */}
             <div className="space-y-6">
@@ -298,7 +298,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 max-md:gap-3">
                   <Checkbox
                     className="mt-1"
                     checked={!formData.chargeCustomerFee}
@@ -319,8 +319,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex items-start gap-4">
+
+                <div className="flex items-start gap-4 max-md:gap-3">
                   <Checkbox
                     className="mt-1"
                     checked={formData.chargeCustomerFee}
@@ -347,8 +347,8 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
         </Card>
 
         {/* Tax Configuration */}
-        <Card className="shadow-lg border-0 bg-white mt-8">
-          <CardContent className="p-8 space-y-6">
+        <Card className="shadow-lg border-0 bg-white mt-8 max-md:mt-6 max-md:rounded-2xl max-md:border max-md:border-[#7f5efd]/10">
+          <CardContent className="p-8 space-y-6 max-md:p-6 max-md:space-y-5">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Tooltip
@@ -372,7 +372,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-4 max-md:gap-3">
                 <Checkbox
                   className="mt-1 data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd]"
                   checked={formData.taxEnabled}
@@ -392,7 +392,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               </div>
 
               {formData.taxEnabled && (
-                <div className="ml-8 space-y-6">
+                <div className="ml-8 space-y-6 max-md:ml-0">
                   {/* Tax Strategy */}
                   <div className="space-y-3">
                     <label className="text-sm font-medium text-gray-700">
@@ -473,7 +473,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                     
                     <div className="space-y-3">
                       {formData.taxRates?.map((rate, index) => (
-                        <div key={rate.id} className="flex items-center gap-3">
+                        <div key={rate.id} className="flex items-center gap-3 max-md:flex-col max-md:items-stretch max-md:gap-2">
                           <Input
                             placeholder="Tax label (e.g., Sales Tax)"
                             value={rate.label}
@@ -482,9 +482,9 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                               newRates[index] = { ...rate, label: e.target.value }
                               setFormData(prev => ({ ...prev, taxRates: newRates }))
                             }}
-                            className="flex-1 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                            className="flex-1 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 max-md:h-12"
                           />
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 max-md:w-full">
                             <Input
                               type="text"
                               inputMode="decimal"
@@ -495,9 +495,9 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                                 newRates[index] = { ...rate, percentage: e.target.value }
                                 setFormData(prev => ({ ...prev, taxRates: newRates }))
                               }}
-                              className="w-24 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20"
+                              className="w-24 h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 max-md:flex-1 max-md:w-full max-md:h-12"
                             />
-                            <span className="text-sm text-gray-600">%</span>
+                            <span className="text-sm text-gray-600 max-md:text-xs">%</span>
                           </div>
                           {(formData.taxRates?.length || 0) > 1 && (
                             <Button
@@ -508,7 +508,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                                 const newRates = formData.taxRates?.filter((_, i) => i !== index) || []
                                 setFormData(prev => ({ ...prev, taxRates: newRates }))
                               }}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-11 px-3"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-11 px-3 max-md:self-end"
                             >
                               Remove
                             </Button>
@@ -533,10 +533,10 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
         </Card>
 
         {/* Auto-Conversion Feature */}
-          <Card className="shadow-lg border-0 bg-white mt-8">
-            <CardContent className="p-8 space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
+        <Card className="shadow-lg border-0 bg-white mt-8 max-md:mt-6 max-md:rounded-2xl max-md:border max-md:border-[#7f5efd]/10">
+          <CardContent className="p-8 space-y-6 max-md:p-6 max-md:space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                   <Tooltip
                     trigger={
                       <button
@@ -558,7 +558,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 max-md:gap-3">
                   <Checkbox
                     className="mt-1"
                     checked={formData.autoConvert}
@@ -582,7 +582,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                 </div>
 
                 {formData.autoConvert && (
-                  <div className="ml-8 space-y-3">
+                  <div className="ml-8 space-y-3 max-md:ml-0">
                     <label className="text-sm font-medium text-gray-700">
                       Preferred Payout Currency
                     </label>
@@ -595,7 +595,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                         }))
                       }
                     >
-                      <SelectTrigger className="h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20">
+                      <SelectTrigger className="h-11 border-gray-300 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 max-md:h-12">
                         <SelectValue placeholder="Select preferred payout currency" />
                       </SelectTrigger>
                       <SelectContent>
@@ -609,7 +609,7 @@ export default function PaymentConfigStep({ data, walletConfig, onComplete, onPr
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 max-md:text-[11px]">
                       All payments will be automatically converted to this currency before payout
                     </p>
                   </div>
