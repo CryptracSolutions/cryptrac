@@ -39,7 +39,7 @@ interface BottomSheetContentProps
 const BottomSheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   BottomSheetContentProps
->(({ className, children, onDismiss, ...props }, ref) => {
+>(({ className, children, onDismiss, style, ...props }, ref) => {
   const localRef = React.useRef<HTMLDivElement | null>(null)
   const closeRef = React.useRef<HTMLButtonElement | null>(null)
 
@@ -80,12 +80,19 @@ const BottomSheetContent = React.forwardRef<
           "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom",
           className
         )}
+        style={{
+          ...style,
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)",
+        }}
         {...props}
       >
-        <div className="pt-4 px-6">
-          <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300 mb-4" aria-hidden="true" />
+        <div className="px-6 pt-4">
+          <div
+            className="mx-auto mb-4 h-1.5 w-12 select-none rounded-full bg-gray-300"
+            aria-hidden="true"
+          />
         </div>
-        <div className="flex-1 overflow-y-auto px-6 pb-6 [-webkit-overflow-scrolling:touch]">
+        <div className="flex-1 overflow-y-auto px-6 [-webkit-overflow-scrolling:touch]">
           {children}
         </div>
         <BottomSheetClose ref={closeRef} className="sr-only">
@@ -130,9 +137,17 @@ BottomSheetDescription.displayName = DialogPrimitive.Description.displayName
 
 const BottomSheetFooter = ({
   className,
+  style,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("mt-4 flex flex-col gap-2 sticky bottom-0 bg-white", className)} {...props} />
+  <div
+    className={cn("mt-4 flex flex-col gap-2 sticky bottom-0 bg-white", className)}
+    style={{
+      ...style,
+      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
+    }}
+    {...props}
+  />
 )
 
 export {

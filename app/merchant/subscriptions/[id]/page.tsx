@@ -12,7 +12,15 @@ import { Button } from '@/app/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
 import { useIsMobile } from '@/lib/hooks/use-mobile';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import {
+  MobileDataCard,
+  MobileDataCardHeader,
+  MobileDataCardMeta,
+  MobileDataCardMetaItem,
+  MobileDataCardSubtitle,
+  MobileDataCardTitle,
+} from '@/app/components/ui/mobile-data-card';
 import {
   BottomSheet,
   BottomSheetContent,
@@ -390,11 +398,13 @@ export default function SubscriptionDetailPage() {
   }
 
   return (
-    <div className={cn(
-      "p-4",
-      "max-md:px-4 max-md:py-6 max-md:pb-24"
-    )}>
-      <div className="mb-6 max-md:mb-4">
+    <div
+      className={cn(
+        "mx-auto w-full max-w-6xl space-y-8 px-6 py-8",
+        "max-md:space-y-6 max-md:px-4 max-md:py-6 max-md:pb-28"
+      )}
+    >
+      <div className="hidden md:block mb-6">
         <Breadcrumbs
           items={[
             { name: 'Dashboard', href: '/merchant/dashboard' },
@@ -406,8 +416,8 @@ export default function SubscriptionDetailPage() {
 
       {sub && (
         <div className="mb-6 max-md:mb-4">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:text-2xl max-md:mb-2">{sub.title}</h1>
-          <div className="space-y-2 max-md:space-y-1">
+          <h1 className="hidden md:block font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">{sub.title}</h1>
+          <div className="hidden md:block space-y-2">
             <p className="font-capsule text-base font-normal text-gray-600 max-md:text-sm">
               <span className="font-semibold text-[#7f5efd] text-lg max-md:text-base">
                 ${sub.amount} {sub.currency}
@@ -418,7 +428,7 @@ export default function SubscriptionDetailPage() {
               </span>
             </p>
             {sub.next_billing_at && (
-              <p className="font-capsule text-base font-normal text-gray-600 max-md:text-sm">
+              <p className="font-capsule text-base font-normal text-gray-600">
                 <Clock className="inline h-4 w-4 mr-1 text-gray-500" />
                 Next: {sub.next_billing_at ? formatDateShort(sub.next_billing_at, timezone) : 'Not scheduled'}
               </p>
@@ -439,7 +449,62 @@ export default function SubscriptionDetailPage() {
               )}
             </div>
           </div>
-          
+
+          {isMobile && (
+            <MobileDataCard className="md:hidden space-y-4">
+              <h1 className="sr-only">{sub.title}</h1>
+              <MobileDataCardHeader className="gap-1">
+                <MobileDataCardTitle className="text-base font-semibold text-gray-900">
+                  {sub.title}
+                </MobileDataCardTitle>
+                <MobileDataCardSubtitle>
+                  every {sub.interval_count} {sub.interval}
+                  {sub.interval_count > 1 ? 's' : ''}
+                </MobileDataCardSubtitle>
+              </MobileDataCardHeader>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
+                  {sub.status}
+                </Badge>
+                {sub.max_cycles ? (
+                  <Badge variant="outline" className="text-xs">
+                    {(sub.total_cycles || 0)}/{sub.max_cycles} cycles
+                  </Badge>
+                ) : null}
+                {sub.missed_payments_count && sub.missed_payments_count > 0 ? (
+                  <Badge variant="destructive" className="text-xs">
+                    {sub.missed_payments_count} missed
+                  </Badge>
+                ) : null}
+              </div>
+              <MobileDataCardMeta className="grid grid-cols-2 gap-3">
+                <MobileDataCardMetaItem
+                  label="Amount"
+                  value={`$${sub.amount} ${sub.currency}`}
+                  accent
+                />
+                <MobileDataCardMetaItem
+                  label="Next Billing"
+                  value={sub.next_billing_at
+                    ? formatDateShort(sub.next_billing_at, timezone)
+                    : 'Not scheduled'}
+                />
+                {sub.max_cycles ? (
+                  <MobileDataCardMetaItem
+                    label="Cycles"
+                    value={`${sub.total_cycles || 0} of ${sub.max_cycles}`}
+                  />
+                ) : null}
+                {typeof sub.invoice_due_days === 'number' ? (
+                  <MobileDataCardMetaItem
+                    label="Invoice Due"
+                    value={`${sub.invoice_due_days} days`}
+                  />
+                ) : null}
+              </MobileDataCardMeta>
+            </MobileDataCard>
+          )}
+
           {/* Desktop Customer Information */}
           {customer && (
             <Card className="hidden md:block mt-4 border border-gray-200 shadow-sm">
@@ -487,57 +552,48 @@ export default function SubscriptionDetailPage() {
           {customer && isMobile && (
             <Collapsible open={expandedSections.customer} onOpenChange={() => toggleSection('customer')}>
               <CollapsibleTrigger asChild>
-                <Card className="md:hidden mt-4 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <User className="h-4 w-4 text-[#7f5efd]" />
-                        Customer
-                      </CardTitle>
-                      <ChevronDown className={cn(
-                        "h-4 w-4 transition-transform",
-                        expandedSections.customer && "rotate-180"
-                      )} />
+                <MobileDataCard className="md:hidden cursor-pointer">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+                        <User className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">Customer</p>
+                        {!expandedSections.customer && (
+                          <p className="truncate text-xs text-gray-600">
+                            {customer.name || customer.email || 'No info'}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {!expandedSections.customer && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        {customer.name || customer.email || 'No info'}
-                      </p>
-                    )}
-                  </CardHeader>
-                </Card>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 text-gray-500 transition-transform',
+                        expandedSections.customer && 'rotate-180 text-[#7f5efd]'
+                      )}
+                    />
+                  </div>
+                </MobileDataCard>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-3">
+                <MobileDataCard className="md:hidden mt-3">
+                  <MobileDataCardMeta className="grid grid-cols-1 gap-3">
                     {customer.name && (
-                      <div className="flex items-center gap-3">
-                        <User className="h-4 w-4 text-gray-500" />
-                        <div className="flex-1">
-                          <p className="text-xs text-gray-500">Name</p>
-                          <p className="font-medium text-sm">{customer.name}</p>
-                        </div>
-                      </div>
+                      <MobileDataCardMetaItem label="Name" value={customer.name} />
                     )}
                     {customer.email && (
-                      <div className="flex items-center gap-3">
-                        <Mail className="h-4 w-4 text-gray-500" />
-                        <div className="flex-1">
-                          <p className="text-xs text-gray-500">Email</p>
-                          <p className="font-medium text-sm break-all">{customer.email}</p>
-                        </div>
-                      </div>
+                      <MobileDataCardMetaItem
+                        label="Email"
+                        value={<span className="break-words text-sm">{customer.email}</span>}
+                      />
                     )}
                     {customer.phone && (
-                      <div className="flex items-center gap-3">
-                        <Phone className="h-4 w-4 text-gray-500" />
-                        <div className="flex-1">
-                          <p className="text-xs text-gray-500">Phone</p>
-                          <p className="font-medium text-sm">{customer.phone}</p>
-                        </div>
-                      </div>
+                      <MobileDataCardMetaItem label="Phone" value={customer.phone} />
                     )}
-                  </CardContent>
-                </CollapsibleContent>
+                  </MobileDataCardMeta>
+                </MobileDataCard>
+              </CollapsibleContent>
             </Collapsible>
           )}
 
@@ -575,46 +631,52 @@ export default function SubscriptionDetailPage() {
           {isMobile && (
             <Collapsible open={expandedSections.timing} onOpenChange={() => toggleSection('timing')}>
               <CollapsibleTrigger asChild>
-                <Card className="md:hidden mt-4 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <Settings className="h-4 w-4 text-[#7f5efd]" />
-                        Timing
-                      </CardTitle>
-                      <ChevronDown className={cn(
-                        "h-4 w-4 transition-transform",
-                        expandedSections.timing && "rotate-180"
-                      )} />
+                <MobileDataCard className="md:hidden cursor-pointer">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+                        <Settings className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">Timing</p>
+                        {!expandedSections.timing && (
+                          <p className="truncate text-xs text-gray-600">
+                            Due: {sub.invoice_due_days || 0}d • Advance: {sub.generate_days_in_advance || 0}d
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {!expandedSections.timing && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Due: {sub.invoice_due_days || 0}d • Advance: {sub.generate_days_in_advance || 0}d
-                      </p>
-                    )}
-                  </CardHeader>
-                </Card>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 text-gray-500 transition-transform',
+                        expandedSections.timing && 'rotate-180 text-[#7f5efd]'
+                      )}
+                    />
+                  </div>
+                </MobileDataCard>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                  <CardContent className="pt-0 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Invoice Due</p>
-                      <p className="font-medium text-sm">{sub.invoice_due_days || 0} days</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Generate Early</p>
-                      <p className="font-medium text-sm">{sub.generate_days_in_advance || 0} days</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Past Due After</p>
-                      <p className="font-medium text-sm">{sub.past_due_after_days || 2} days</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Auto Resume</p>
-                      <p className="font-medium text-sm">{sub.auto_resume_on_payment ? 'Yes' : 'No'}</p>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
+                <MobileDataCard className="md:hidden mt-3">
+                  <MobileDataCardMeta className="grid grid-cols-2 gap-3">
+                    <MobileDataCardMetaItem
+                      label="Invoice Due"
+                      value={`${sub.invoice_due_days || 0} days`}
+                    />
+                    <MobileDataCardMetaItem
+                      label="Generate Early"
+                      value={`${sub.generate_days_in_advance || 0} days`}
+                    />
+                    <MobileDataCardMetaItem
+                      label="Past Due"
+                      value={`${sub.past_due_after_days || 2} days`}
+                    />
+                    <MobileDataCardMetaItem
+                      label="Auto Resume"
+                      value={sub.auto_resume_on_payment ? 'Yes' : 'No'}
+                    />
+                  </MobileDataCardMeta>
+                </MobileDataCard>
+              </CollapsibleContent>
             </Collapsible>
           )}
         </div>
@@ -624,9 +686,9 @@ export default function SubscriptionDetailPage() {
       {cyclesWithOverrides.length > 0 && (
         <Card className={cn(
           "mb-6 border border-gray-200 shadow-sm",
-          "max-md:rounded-2xl"
+          "max-md:rounded-3xl"
         )}>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 max-md:p-5 max-md:pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl font-semibold flex items-center gap-2 max-md:text-lg">
                 <Calendar className="h-5 w-5 text-[#7f5efd] max-md:h-4 max-md:w-4" />
@@ -652,7 +714,7 @@ export default function SubscriptionDetailPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 max-md:p-5 max-md:pt-0">
           
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded max-md:text-xs max-md:p-2.5">
               <p className="text-sm text-blue-800 max-md:text-xs">
@@ -712,7 +774,7 @@ export default function SubscriptionDetailPage() {
             </div>
 
             {/* Mobile cycles list - horizontal scroll */}
-            <div className="md:hidden -mx-4 px-4 overflow-x-auto">
+            <div className="md:hidden -mx-5 px-5 overflow-x-auto">
               <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
                 {cyclesWithOverrides.map((cycle, index) => (
                   <div
@@ -902,28 +964,33 @@ export default function SubscriptionDetailPage() {
 
       {/* Mobile Generate Invoice - Bottom Sheet Trigger */}
       {isMobile && (
-        <Card
-          className="md:hidden mb-6 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer"
+        <MobileDataCard
+          className="md:hidden mb-6 cursor-pointer space-y-3"
           onClick={() => setInvoiceSheetOpen(true)}
         >
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <FileText className="h-4 w-4 text-[#7f5efd]" />
-                Generate Invoice
-              </CardTitle>
-              <ChevronRight className="h-4 w-4 text-gray-500" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+                <FileText className="h-4 w-4" />
+              </span>
+              <div>
+                <MobileDataCardTitle className="text-sm">Generate Invoice</MobileDataCardTitle>
+                <MobileDataCardSubtitle>
+                  Next: ${cyclesWithOverrides[0]?.amount || sub?.amount} {sub?.currency}
+                  {sub?.next_billing_at && (
+                    <span className="block text-[11px] text-gray-500">
+                      {formatDateShort(sub.next_billing_at, timezone)}
+                    </span>
+                  )}
+                </MobileDataCardSubtitle>
+              </div>
             </div>
-            <CardDescription className="text-xs">
-              Next: ${cyclesWithOverrides[0]?.amount || sub?.amount} {sub?.currency}
-              {sub?.next_billing_at && (
-                <span className="block mt-1">
-                  {formatDateShort(sub.next_billing_at, timezone)}
-                </span>
-              )}
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            <ChevronRight className="h-4 w-4 text-gray-500" />
+          </div>
+          <p className="text-xs text-gray-500">
+            Tap to open manual invoicing options
+          </p>
+        </MobileDataCard>
       )}
 
       {/* Desktop Amount Overrides Section */}
@@ -1097,27 +1164,28 @@ export default function SubscriptionDetailPage() {
 
       {/* Mobile Amount Overrides - Collapsible or Sheet Trigger */}
       {isMobile && (
-        <Card
-          className="md:hidden mb-6 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer"
+        <MobileDataCard
+          className="md:hidden mb-6 cursor-pointer space-y-3"
           onClick={() => setOverrideSheetOpen(true)}
         >
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-[#7f5efd]" />
-                Amount Overrides
-              </CardTitle>
-              <ChevronRight className="h-4 w-4 text-gray-500" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+                <DollarSign className="h-4 w-4" />
+              </span>
+              <div>
+                <MobileDataCardTitle className="text-sm">Amount Overrides</MobileDataCardTitle>
+                <MobileDataCardSubtitle>
+                  {amountOverrides.length > 0
+                    ? `${amountOverrides.length} active overrides`
+                    : 'Set custom amounts for cycles'}
+                </MobileDataCardSubtitle>
+              </div>
             </div>
-            <CardDescription className="text-xs">
-              {amountOverrides.length > 0 ? (
-                <>{amountOverrides.length} active overrides</>
-              ) : (
-                <>Set custom amounts for cycles</>
-              )}
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            <ChevronRight className="h-4 w-4 text-gray-500" />
+          </div>
+          <p className="text-xs text-gray-500">Tap to review, edit, or create overrides</p>
+        </MobileDataCard>
       )}
 
       {/* Desktop Invoices Section */}
@@ -1171,36 +1239,43 @@ export default function SubscriptionDetailPage() {
       {isMobile && (
         <Collapsible open={expandedSections.invoices} onOpenChange={() => toggleSection('invoices')}>
           <CollapsibleTrigger asChild>
-            <Card className="md:hidden border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold flex items-center gap-2">
-                    <Receipt className="h-4 w-4 text-[#7f5efd]" />
-                    Invoices
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {invoices.length}
-                    </Badge>
-                    <ChevronDown className={cn(
-                      "h-4 w-4 transition-transform",
-                      expandedSections.invoices && "rotate-180"
-                    )} />
+            <MobileDataCard className="md:hidden cursor-pointer">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+                    <Receipt className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <MobileDataCardTitle className="text-sm">Invoices</MobileDataCardTitle>
+                    <MobileDataCardSubtitle>
+                      {invoices.length === 1 ? '1 invoice' : `${invoices.length} invoices`}
+                    </MobileDataCardSubtitle>
                   </div>
                 </div>
-              </CardHeader>
-            </Card>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {invoices.length}
+                  </Badge>
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 text-gray-500 transition-transform',
+                      expandedSections.invoices && 'rotate-180 text-[#7f5efd]'
+                    )}
+                  />
+                </div>
+              </div>
+            </MobileDataCard>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="p-4 pt-0 space-y-2">
+            <MobileDataCard className="md:hidden mt-3 space-y-2">
               {invoices.length === 0 ? (
-                <p className="text-sm text-gray-600 text-center py-4">No invoices generated yet.</p>
+                <p className="py-4 text-center text-sm text-gray-600">No invoices generated yet.</p>
               ) : (
                 invoices.map(invoice => (
-                  <div key={invoice.id} className="p-3 bg-gray-50 rounded-xl">
-                    <div className="flex justify-between items-start mb-1">
-                      <div>
-                        <p className="font-semibold text-sm">
+                  <div key={invoice.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">
                           ${invoice.amount} {invoice.currency}
                         </p>
                         {invoice.invoice_number && (
@@ -1209,16 +1284,20 @@ export default function SubscriptionDetailPage() {
                       </div>
                       <Badge
                         variant={
-                          invoice.status === 'paid' ? 'default' :
-                          invoice.status === 'pending' ? 'secondary' :
-                          invoice.status === 'past_due' ? 'destructive' : 'secondary'
+                          invoice.status === 'paid'
+                            ? 'default'
+                            : invoice.status === 'pending'
+                              ? 'secondary'
+                              : invoice.status === 'past_due'
+                                ? 'destructive'
+                                : 'secondary'
                         }
                         className="text-xs"
                       >
                         {invoice.status}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-600 mt-2">
+                    <p className="mt-2 text-xs text-gray-600">
                       Cycle: {formatDateShort(invoice.cycle_start_at, timezone)}
                     </p>
                     <p className="text-xs text-gray-600">
@@ -1227,7 +1306,7 @@ export default function SubscriptionDetailPage() {
                   </div>
                 ))
               )}
-            </div>
+            </MobileDataCard>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -1410,4 +1489,3 @@ export default function SubscriptionDetailPage() {
     </div>
   );
 }
-

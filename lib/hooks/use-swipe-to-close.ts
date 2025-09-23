@@ -37,7 +37,11 @@ export function useSwipeToClose<T extends HTMLElement>(
     if (!enabled) return false
     if (typeof window === "undefined") return false
     if (!isTouchDevice()) return false
-    return isMobileViewport()
+    const hasCoarsePointer =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches
+
+    return hasCoarsePointer || isMobileViewport()
   }, [enabled])
 
   useEffect(() => {
@@ -45,6 +49,7 @@ export function useSwipeToClose<T extends HTMLElement>(
     if (!element || !isActive()) return
 
     const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return
       const touch = event.touches[0]
       touchStartRef.current = { x: touch.clientX, y: touch.clientY }
     }
@@ -59,19 +64,24 @@ export function useSwipeToClose<T extends HTMLElement>(
       const horizontal = Math.abs(deltaX) > Math.abs(deltaY)
       if (horizontal && (directions.includes("left") || directions.includes("right"))) {
         if (Math.abs(deltaY) < restraint) {
-          event.preventDefault()
+          if (event.cancelable) {
+            event.preventDefault()
+          }
         }
       }
 
       if (!horizontal && (directions.includes("up") || directions.includes("down"))) {
         if (Math.abs(deltaX) < restraint) {
-          event.preventDefault()
+          if (event.cancelable) {
+            event.preventDefault()
+          }
         }
       }
     }
 
     const handleTouchEnd = (event: TouchEvent) => {
       if (!touchStartRef.current) return
+      if (event.changedTouches.length === 0) return
       const touch = event.changedTouches[0]
       const deltaX = touch.clientX - touchStartRef.current.x
       const deltaY = touch.clientY - touchStartRef.current.y

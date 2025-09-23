@@ -1,10 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ToasterWrapper from './components/ToasterWrapper'; // Import wrapper (client-safe)
 import { TimezoneProvider } from '@/lib/contexts/TimezoneContext';
 import { ConnectionStatus } from '@/app/components/ui/connection-status';
 import { ViewportHeightUpdater } from '@/app/components/layout/viewport-height-updater';
 import { MobileMetricsTracker } from '@/app/components/analytics/mobile-metrics-tracker';
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: {

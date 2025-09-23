@@ -1279,26 +1279,6 @@ export default function PaymentsPage() {
         </Card>
       )}
 
-      <Button
-        asChild
-        className={cn(
-          'md:hidden fixed right-4 h-14 w-14 rounded-full shadow-lg shadow-[#7f5efd]/30 bg-[#7f5efd]',
-          'hover:bg-[#7c3aed] focus-visible:ring-[#7f5efd]',
-          'flex items-center justify-center'
-        )}
-        style={
-          isMobile
-            ? {
-                bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)',
-              }
-            : undefined
-        }
-      >
-        <Link href="/merchant/dashboard/payments/create" aria-label="Create payment link" className="flex items-center justify-center">
-          <span className="sr-only">Create Payment Link</span>
-          <Plus className="h-6 w-6 text-white" aria-hidden="true" />
-        </Link>
-      </Button>
     </div>
   );
 }
