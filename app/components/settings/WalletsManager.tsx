@@ -29,6 +29,7 @@ import { isApprovedCurrency, getApprovedDisplayName } from '@/lib/approved-curre
 import { requiresExtraId, validateExtraId, getExtraIdLabel, getExtraIdPlaceholder, getExtraIdDescription } from '@/lib/extra-id-validation';
 import DestinationTagModal from '@/app/components/DestinationTagModal';
 import { useIsMobile } from '@/lib/hooks/use-mobile';
+import toast from 'react-hot-toast';
 
 // Stable coin associations for automatic inclusion
 const stableCoinAssociations: Record<string, string[]> = {
@@ -508,12 +509,33 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   };
 
   const removeWallet = (currency: string) => {
+    let autoConvertDisabled = false;
+
     setSettings(prev => {
       const newWallets = { ...prev.wallets };
       delete newWallets[currency];
-      const newExtraIds = { ...prev.wallet_extra_ids };
+
+      const newExtraIds = { ...(prev.wallet_extra_ids || {}) };
       delete newExtraIds[currency];
-      return { ...prev, wallets: newWallets, wallet_extra_ids: newExtraIds };
+
+      let nextPreferred = prev.preferred_payout_currency ?? null;
+      let nextAutoConvert = prev.auto_convert_enabled ?? false;
+
+      if (prev.preferred_payout_currency === currency) {
+        nextPreferred = null;
+        if (prev.auto_convert_enabled) {
+          nextAutoConvert = false;
+          autoConvertDisabled = true;
+        }
+      }
+
+      return {
+        ...prev,
+        wallets: newWallets,
+        wallet_extra_ids: newExtraIds,
+        preferred_payout_currency: nextPreferred,
+        auto_convert_enabled: nextAutoConvert,
+      };
     });
 
     setDraftWallets(prev => {
@@ -559,6 +581,12 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
 
     // Removing a wallet should clear any invalid state for this currency in the parent
     onValidationChange?.(currency, true);
+
+    if (autoConvertDisabled) {
+      toast('Auto-convert was disabled because its payout wallet was removed.', {
+        icon: 'ⓘ',
+      });
+    }
   };
 
   const handleExtraIdInputChange = (currency: string, extraId: string) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTimezone } from '@/lib/contexts/TimezoneContext';
 import { formatDateShort, formatDate } from '@/lib/utils/date-utils';
 // import Link from 'next/link';
@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import {
   ChevronDown,
   ChevronRight,
+  ArrowLeft,
   Calendar,
   DollarSign,
   Clock,
@@ -172,6 +173,7 @@ export default function SubscriptionDetailPage() {
   const params = useParams();
   const id = String(params?.id);
   const { timezone } = useTimezone();
+  const router = useRouter();
   const [sub, setSub] = useState<Subscription | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -411,6 +413,32 @@ export default function SubscriptionDetailPage() {
           ]}
         />
       </div>
+
+      {/* Mobile sticky header for consistency with other dashboard pages */}
+      {sub && (
+        <div className="md:hidden sticky top-0 z-40 border-b border-gray-100 bg-white/90 px-4 py-3 backdrop-blur">
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push('/merchant/subscriptions')}
+              className="h-11 w-11 rounded-xl border border-gray-200 bg-white text-gray-700"
+              aria-label="Back to subscriptions"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0 text-center">
+              <p className="truncate font-phonic text-base font-semibold text-gray-900">
+                {sub.title}
+              </p>
+              <p className="text-xs text-gray-500">Subscription</p>
+            </div>
+            <Badge variant={sub.status === 'active' ? 'default' : 'secondary'} className="rounded-full px-3 py-1 text-xs">
+              {sub.status}
+            </Badge>
+          </div>
+        </div>
+      )}
 
       {sub && (
         <div className="mb-6 max-md:mb-4">
