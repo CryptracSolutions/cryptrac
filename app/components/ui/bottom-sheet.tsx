@@ -42,6 +42,7 @@ const BottomSheetContent = React.forwardRef<
 >(({ className, children, onDismiss, style, ...props }, ref) => {
   const localRef = React.useRef<HTMLDivElement | null>(null)
   const closeRef = React.useRef<HTMLButtonElement | null>(null)
+  const scrollRef = React.useRef<HTMLDivElement | null>(null)
 
   const setRefs = React.useCallback(
     (node: HTMLDivElement | null) => {
@@ -65,6 +66,7 @@ const BottomSheetContent = React.forwardRef<
     directions: ["down"],
     threshold: 80,
     restraint: 140,
+    getScrollElement: () => scrollRef.current,
   })
 
   return (
@@ -92,7 +94,10 @@ const BottomSheetContent = React.forwardRef<
             aria-hidden="true"
           />
         </div>
-        <div className="flex-1 overflow-y-auto px-6 [-webkit-overflow-scrolling:touch]">
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto px-6 [-webkit-overflow-scrolling:touch] touch-pan-y"
+        >
           {children}
         </div>
         <BottomSheetClose ref={closeRef} className="sr-only">

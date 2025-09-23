@@ -11,7 +11,6 @@ import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
-import { useIsMobile } from '@/lib/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import {
   MobileDataCard,
@@ -173,7 +172,6 @@ export default function SubscriptionDetailPage() {
   const params = useParams();
   const id = String(params?.id);
   const { timezone } = useTimezone();
-  const isMobile = useIsMobile();
   const [sub, setSub] = useState<Subscription | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -450,13 +448,12 @@ export default function SubscriptionDetailPage() {
             </div>
           </div>
 
-          {isMobile && (
-            <MobileDataCard className="md:hidden space-y-4">
-              <h1 className="sr-only">{sub.title}</h1>
-              <MobileDataCardHeader className="gap-1">
-                <MobileDataCardTitle className="text-base font-semibold text-gray-900">
-                  {sub.title}
-                </MobileDataCardTitle>
+          <MobileDataCard className="md:hidden space-y-4">
+            <h1 className="sr-only">{sub.title}</h1>
+            <MobileDataCardHeader className="gap-1">
+              <MobileDataCardTitle className="text-base font-semibold text-gray-900">
+                {sub.title}
+              </MobileDataCardTitle>
                 <MobileDataCardSubtitle>
                   every {sub.interval_count} {sub.interval}
                   {sub.interval_count > 1 ? 's' : ''}
@@ -503,7 +500,6 @@ export default function SubscriptionDetailPage() {
                 ) : null}
               </MobileDataCardMeta>
             </MobileDataCard>
-          )}
 
           {/* Desktop Customer Information */}
           {customer && (
@@ -549,52 +545,54 @@ export default function SubscriptionDetailPage() {
           )}
 
           {/* Mobile Customer Information Collapsible */}
-          {customer && isMobile && (
-            <Collapsible open={expandedSections.customer} onOpenChange={() => toggleSection('customer')}>
-              <CollapsibleTrigger asChild>
-                <MobileDataCard className="md:hidden cursor-pointer">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
-                        <User className="h-4 w-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">Customer</p>
-                        {!expandedSections.customer && (
-                          <p className="truncate text-xs text-gray-600">
-                            {customer.name || customer.email || 'No info'}
-                          </p>
-                        )}
+          {customer && (
+            <div className="md:hidden">
+              <Collapsible open={expandedSections.customer} onOpenChange={() => toggleSection('customer')}>
+                <CollapsibleTrigger asChild>
+                  <MobileDataCard className="cursor-pointer">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+                          <User className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900">Customer</p>
+                          {!expandedSections.customer && (
+                            <p className="truncate text-xs text-gray-600">
+                              {customer.name || customer.email || 'No info'}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <ChevronDown
-                      className={cn(
-                        'h-4 w-4 text-gray-500 transition-transform',
-                        expandedSections.customer && 'rotate-180 text-[#7f5efd]'
-                      )}
-                    />
-                  </div>
-                </MobileDataCard>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <MobileDataCard className="md:hidden mt-3">
-                  <MobileDataCardMeta className="grid grid-cols-1 gap-3">
-                    {customer.name && (
-                      <MobileDataCardMetaItem label="Name" value={customer.name} />
-                    )}
-                    {customer.email && (
-                      <MobileDataCardMetaItem
-                        label="Email"
-                        value={<span className="break-words text-sm">{customer.email}</span>}
+                      <ChevronDown
+                        className={cn(
+                          'h-4 w-4 text-gray-500 transition-transform',
+                          expandedSections.customer && 'rotate-180 text-[#7f5efd]'
+                        )}
                       />
-                    )}
-                    {customer.phone && (
-                      <MobileDataCardMetaItem label="Phone" value={customer.phone} />
-                    )}
-                  </MobileDataCardMeta>
-                </MobileDataCard>
-              </CollapsibleContent>
-            </Collapsible>
+                    </div>
+                  </MobileDataCard>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <MobileDataCard className="mt-3">
+                    <MobileDataCardMeta className="grid grid-cols-1 gap-3">
+                      {customer.name && (
+                        <MobileDataCardMetaItem label="Name" value={customer.name} />
+                      )}
+                      {customer.email && (
+                        <MobileDataCardMetaItem
+                          label="Email"
+                          value={<span className="break-words text-sm">{customer.email}</span>}
+                        />
+                      )}
+                      {customer.phone && (
+                        <MobileDataCardMetaItem label="Phone" value={customer.phone} />
+                      )}
+                    </MobileDataCardMeta>
+                  </MobileDataCard>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
           )}
 
           {/* Desktop Timing Configuration */}
@@ -628,10 +626,10 @@ export default function SubscriptionDetailPage() {
           </Card>
 
           {/* Mobile Timing Configuration Collapsible */}
-          {isMobile && (
+          <div className="md:hidden">
             <Collapsible open={expandedSections.timing} onOpenChange={() => toggleSection('timing')}>
               <CollapsibleTrigger asChild>
-                <MobileDataCard className="md:hidden cursor-pointer">
+                <MobileDataCard className="cursor-pointer">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
@@ -656,7 +654,7 @@ export default function SubscriptionDetailPage() {
                 </MobileDataCard>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <MobileDataCard className="md:hidden mt-3">
+                <MobileDataCard className="mt-3">
                   <MobileDataCardMeta className="grid grid-cols-2 gap-3">
                     <MobileDataCardMetaItem
                       label="Invoice Due"
@@ -678,7 +676,7 @@ export default function SubscriptionDetailPage() {
                 </MobileDataCard>
               </CollapsibleContent>
             </Collapsible>
-          )}
+          </div>
         </div>
       )}
 
@@ -963,35 +961,33 @@ export default function SubscriptionDetailPage() {
       </Card>
 
       {/* Mobile Generate Invoice - Bottom Sheet Trigger */}
-      {isMobile && (
-        <MobileDataCard
-          className="md:hidden mb-6 cursor-pointer space-y-3"
-          onClick={() => setInvoiceSheetOpen(true)}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
-                <FileText className="h-4 w-4" />
-              </span>
-              <div>
-                <MobileDataCardTitle className="text-sm">Generate Invoice</MobileDataCardTitle>
-                <MobileDataCardSubtitle>
-                  Next: ${cyclesWithOverrides[0]?.amount || sub?.amount} {sub?.currency}
-                  {sub?.next_billing_at && (
-                    <span className="block text-[11px] text-gray-500">
-                      {formatDateShort(sub.next_billing_at, timezone)}
-                    </span>
-                  )}
-                </MobileDataCardSubtitle>
-              </div>
+      <MobileDataCard
+        className="md:hidden mb-6 cursor-pointer space-y-3"
+        onClick={() => setInvoiceSheetOpen(true)}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+              <FileText className="h-4 w-4" />
+            </span>
+            <div>
+              <MobileDataCardTitle className="text-sm">Generate Invoice</MobileDataCardTitle>
+              <MobileDataCardSubtitle>
+                Next: ${cyclesWithOverrides[0]?.amount || sub?.amount} {sub?.currency}
+                {sub?.next_billing_at && (
+                  <span className="block text-[11px] text-gray-500">
+                    {formatDateShort(sub.next_billing_at, timezone)}
+                  </span>
+                )}
+              </MobileDataCardSubtitle>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-500" />
           </div>
-          <p className="text-xs text-gray-500">
-            Tap to open manual invoicing options
-          </p>
-        </MobileDataCard>
-      )}
+          <ChevronRight className="h-4 w-4 text-gray-500" />
+        </div>
+        <p className="text-xs text-gray-500">
+          Tap to open manual invoicing options
+        </p>
+      </MobileDataCard>
 
       {/* Desktop Amount Overrides Section */}
       <Card className="hidden md:block mb-6 border border-gray-200 shadow-sm">
@@ -1163,30 +1159,28 @@ export default function SubscriptionDetailPage() {
       </Card>
 
       {/* Mobile Amount Overrides - Collapsible or Sheet Trigger */}
-      {isMobile && (
-        <MobileDataCard
-          className="md:hidden mb-6 cursor-pointer space-y-3"
-          onClick={() => setOverrideSheetOpen(true)}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
-                <DollarSign className="h-4 w-4" />
-              </span>
-              <div>
-                <MobileDataCardTitle className="text-sm">Amount Overrides</MobileDataCardTitle>
-                <MobileDataCardSubtitle>
-                  {amountOverrides.length > 0
-                    ? `${amountOverrides.length} active overrides`
-                    : 'Set custom amounts for cycles'}
-                </MobileDataCardSubtitle>
-              </div>
+      <MobileDataCard
+        className="md:hidden mb-6 cursor-pointer space-y-3"
+        onClick={() => setOverrideSheetOpen(true)}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
+              <DollarSign className="h-4 w-4" />
+            </span>
+            <div>
+              <MobileDataCardTitle className="text-sm">Amount Overrides</MobileDataCardTitle>
+              <MobileDataCardSubtitle>
+                {amountOverrides.length > 0
+                  ? `${amountOverrides.length} active overrides`
+                  : 'Set custom amounts for cycles'}
+              </MobileDataCardSubtitle>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-500" />
           </div>
-          <p className="text-xs text-gray-500">Tap to review, edit, or create overrides</p>
-        </MobileDataCard>
-      )}
+          <ChevronRight className="h-4 w-4 text-gray-500" />
+        </div>
+        <p className="text-xs text-gray-500">Tap to review, edit, or create overrides</p>
+      </MobileDataCard>
 
       {/* Desktop Invoices Section */}
       <Card className="hidden md:block border border-gray-200 shadow-sm">
@@ -1236,10 +1230,10 @@ export default function SubscriptionDetailPage() {
       </Card>
 
       {/* Mobile Invoices Section - Collapsible */}
-      {isMobile && (
+      <div className="md:hidden">
         <Collapsible open={expandedSections.invoices} onOpenChange={() => toggleSection('invoices')}>
           <CollapsibleTrigger asChild>
-            <MobileDataCard className="md:hidden cursor-pointer">
+            <MobileDataCard className="cursor-pointer">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#7f5efd]/10 text-[#7f5efd]">
@@ -1267,7 +1261,7 @@ export default function SubscriptionDetailPage() {
             </MobileDataCard>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <MobileDataCard className="md:hidden mt-3 space-y-2">
+            <MobileDataCard className="mt-3 space-y-2">
               {invoices.length === 0 ? (
                 <p className="py-4 text-center text-sm text-gray-600">No invoices generated yet.</p>
               ) : (
@@ -1309,7 +1303,7 @@ export default function SubscriptionDetailPage() {
             </MobileDataCard>
           </CollapsibleContent>
         </Collapsible>
-      )}
+      </div>
       {/* Mobile Bottom Sheets */}
 
       {/* Invoice Generation Bottom Sheet */}

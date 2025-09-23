@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ToasterWrapper from './components/ToasterWrapper'; // Import wrapper (client-safe)
 import { TimezoneProvider } from '@/lib/contexts/TimezoneContext';
-import { ConnectionStatus } from '@/app/components/ui/connection-status';
 import { ViewportHeightUpdater } from '@/app/components/layout/viewport-height-updater';
 import { MobileMetricsTracker } from '@/app/components/analytics/mobile-metrics-tracker';
 
@@ -55,7 +54,6 @@ export default function RootLayout({
           <ViewportHeightUpdater />
           <MobileMetricsTracker />
           {children}
-          <ConnectionStatus />
         </TimezoneProvider>
       </body>
     </html>
