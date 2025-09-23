@@ -1252,6 +1252,14 @@ export const mobilePerformanceTargets = {
 - Documentation references updated here so future flows can replicate the pattern: safe-area padding, `useIsMobile` guards, accordion helper usage, and sticky action bar conventions are now explicitly called out for downstream teams.
 - **Verification:** `npm run lint` and `npm run type-check` executed successfully; manual desktop smoke at 1920/1440/1024px confirmed no regressions, and mobile checks at 320/375/414px validated safe-area spacing and gesture behaviour.
 
+### Implementation Log — Merchant Settings & Wallet Experience (May 2025)
+- `app/components/ui/breadcrumbs.tsx`: wrapped the trail with `max-md:flex-wrap` spacing, downsized separators, and upgraded links to 44px-tall pill targets with focus rings so breadcrumb navigation is thumb-friendly without disturbing desktop layout.
+- `app/merchant/settings/page.tsx`: introduced a mobile `SelectTrigger` in place of the tab rail (`hidden md:flex` vs `md:hidden`), expanded header typography with `max-md:text-*` scales, converted stackable cards to `max-md:p-4` spacing, and enforced `max-md:h-12`/`max-md:w-full` on inputs and button clusters to maintain single-column ergonomics.
+- `app/merchant/wallets/page.tsx`: added safe `max-md:px-4` padding, swapped the Trust Wallet guide dialog for a mobile bottom sheet (`BottomSheetContent`), and funneled CTA buttons through `mobile-touch-button` so setup actions and tooltips meet the 44px guideline while desktop visuals remain untouched.
+- `app/components/settings/WalletsManager.tsx`: kept desktop controls intact but layered mobile-first affordances—`mobile-touch-button` buttons, 12px-tall inputs, and inline helpers—plus a `md:hidden` full-screen search overlay that reuses the desktop results renderer, expanded copy/hide controls into vertical button rows, and widened stable-coin toggles for easier tapping.
+- `app/components/DestinationTagModal.tsx`: preserved the existing dialog for desktop, but on handhelds now renders via the shared `BottomSheet` primitive with swipe-to-close support so XRP/XLM guidance conforms to our mobile modal standard.
+- **Verification:** `npm run lint` and `npm run type-check` remain green; mobile walkthrough at 320/375/414px confirmed 44px targets and sheet behaviour, and desktop snapshots at 768px+ verified no regressions.
+
 ## 10. Maintenance Guidelines
 
 ### Desktop Protection Code Review Checklist
@@ -1505,6 +1513,136 @@ Created `app/components/ui/progress.tsx`:
 - **Improved accessibility** - Larger touch targets, better contrast
 - **Performance optimized** - Lazy loading, conditional rendering
 - **Consistent patterns** - Reusable components and hooks
+
+## Implementation Updates - December 2024 (Session 2)
+
+### Bug Fixes for Create Subscription Page
+
+#### Issues Addressed:
+1. **Missing Anchor Date Field**
+   - **Problem**: Anchor date field was missing in mobile wizard step 2 (Pricing section)
+   - **Solution**: Added anchor date input field with date picker and helper text
+   - **Location**: Step 2 after Max Cycles field
+
+2. **Keyboard Dismissal Issue**
+   - **Problem**: Mobile keyboard would immediately dismiss when typing in form fields
+   - **Root Cause**: Component re-rendering on every state change
+   - **Solution**: Implemented stable `updateForm` function using `useCallback`
+   - **Implementation**: Replaced all `setForm({ ...form, field: value })` with `updateForm({ field: value })`
+
+#### Code Changes:
+```tsx
+// Added stable form update function
+const updateForm = useCallback((updates: Partial<typeof form>) => {
+  setForm(prev => ({ ...prev, ...updates }));
+}, []);
+
+// Added anchor date field in mobile wizard
+<div className="space-y-2">
+  <label className="text-sm font-medium">Anchor Date (Optional)</label>
+  <Input
+    type="date"
+    value={form.anchor}
+    onChange={(e) => updateForm({ anchor: e.target.value })}
+    className="h-12"
+  />
+  <p className="text-xs text-gray-500">Set a specific start date for billing</p>
+</div>
+```
+
+### Critical Fixes for Subscription Details Page
+
+#### Major Issues Resolved:
+
+1. **Padding Conflicts**
+   - **Problem**: Main container had `p-4` applying to all breakpoints, conflicting with mobile-specific padding
+   - **Solution**: Changed to responsive padding: `md:p-8 lg:p-8` for desktop, `max-md:px-4 max-md:py-6 max-md:pb-24` for mobile
+   - **Impact**: Eliminated conflicting padding values between breakpoints
+
+2. **Broken Indentation**
+   - **Problem**: Lines 775, 938 had improper whitespace causing rendering issues
+   - **Solution**: Fixed indentation in CardContent sections
+   - **Files Fixed**: Multiple CardContent sections throughout the file
+
+3. **Typography Inconsistencies**
+   - **Problem**: Mixed use of `font-phonic text-sm font-normal` classes
+   - **Solution**: Standardized to `text-sm font-medium` for labels
+   - **Benefit**: Cleaner, more consistent styling
+
+4. **Button Styling Issues**
+   - **Problem**: Desktop invoice generation buttons lacked proper styling
+   - **Solution**: Applied brand colors consistently: `bg-[#7f5efd] hover:bg-[#6b4fd8]`
+
+5. **Form Structure Problems**
+   - **Problem**: Incorrect nesting and indentation in override forms
+   - **Solution**: Properly structured nested divs and form elements
+
+#### Implementation Details:
+
+```tsx
+// Fixed main container padding
+<div className={cn(
+  "md:p-8 lg:p-8",  // Desktop padding only on md and above
+  "max-md:px-4 max-md:py-6 max-md:pb-24"  // Mobile-specific padding
+)}>
+
+// Fixed button styling
+<Button
+  type="submit"
+  className="h-11 bg-[#7f5efd] hover:bg-[#6b4fd8] text-white"
+>
+  Schedule Override
+</Button>
+
+// Fixed label styling
+<label className="block text-sm font-medium mb-1">
+  Start Date (Effective From)
+</label>
+```
+
+### Additional Improvements
+
+1. **Syntax Error Fixes**
+   - Fixed extra parenthesis in updateForm calls
+   - Corrected React.memo function syntax in tax-reports page
+   - Removed unused imports (ChevronRight, etc.)
+
+2. **Mobile-Desktop Separation Verification**
+   - Confirmed all desktop sections use `hidden md:block`
+   - Verified mobile sections use `md:hidden`
+   - No content accidentally showing on both views
+
+3. **Testing & Validation**
+   - ✅ All TypeScript errors resolved
+   - ✅ ESLint checks passing for subscription pages
+   - ✅ Proper mobile/desktop breakpoint separation
+   - ✅ Form validation working correctly
+   - ✅ Touch targets meet 44px minimum
+
+### Files Updated in Session 2
+
+1. **`/app/merchant/subscriptions/create/page.tsx`**
+   - Added anchor date field to mobile wizard
+   - Fixed keyboard dismissal with stable update function
+   - Corrected syntax errors
+
+2. **`/app/merchant/subscriptions/[id]/page.tsx`**
+   - Fixed padding conflicts between breakpoints
+   - Corrected indentation issues
+   - Standardized typography and button styling
+   - Improved form structure
+
+3. **`/app/merchant/dashboard/tax-reports/page.tsx`**
+   - Fixed React.memo syntax error
+   - Removed unused imports
+
+### Key Patterns Reinforced
+
+1. **Stable State Updates**: Use `useCallback` for form update functions to prevent re-renders
+2. **Breakpoint-Specific Padding**: Apply desktop padding only with `md:` prefixes
+3. **Consistent Styling**: Use brand colors and standard typography classes
+4. **Proper Indentation**: Maintain clean structure in JSX elements
+5. **Mobile-First Approach**: Always test on mobile to catch UX issues early
 
 ## Conclusion
 

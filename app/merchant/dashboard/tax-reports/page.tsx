@@ -18,7 +18,8 @@ import {
   FileText,
   Eye,
   XCircle,
-  Info
+  Info,
+  ChevronRight
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card'
@@ -45,6 +46,17 @@ import {
   MobileDataCardSubtitle,
   MobileDataCardTitle,
 } from '@/app/components/ui/mobile-data-card'
+import {
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetHeader,
+  BottomSheetTitle,
+  BottomSheetDescription,
+  BottomSheetFooter,
+} from '@/app/components/ui/bottom-sheet'
+import { useIsMobile } from '@/lib/hooks/use-mobile'
+import { usePullToRefresh } from '@/lib/hooks/use-pull-to-refresh'
+import { useSwipeActions } from '@/lib/hooks/use-swipe-actions'
 import {
   generateTaxReportPDF,
   generateTaxReportExcel,
@@ -139,6 +151,11 @@ export default function TaxReportsPage() {
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
   // Transaction status filter (isolated from report generation)
   const [transactionStatus, setTransactionStatus] = useState<'all' | 'confirmed' | 'refunded'>('all')
+
+  // Mobile-specific states
+  const isMobile = useIsMobile()
+  const [showFilterSheet, setShowFilterSheet] = useState(false)
+  const [showExportSheet, setShowExportSheet] = useState(false)
 
   const currentYear = new Date().getFullYear()
   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3)
@@ -676,6 +693,15 @@ export default function TaxReportsPage() {
     setShowAllTransactions(false)
   }
 
+  // Pull-to-refresh hook for mobile
+  const { pullDistance, isRefreshing } = usePullToRefresh({
+    onRefresh: async () => {
+      await loadTaxReport()
+    },
+    enabled: isMobile && displayReportData !== null,
+    threshold: 60,
+  })
+
 
 
   const generateReport = async () => {
@@ -732,23 +758,158 @@ export default function TaxReportsPage() {
   const showSelectValue = showAllTransactions ? 'all' : displayLimit.toString()
   const transactionsToDisplay = showAllTransactions ? filteredTransactions : filteredTransactions.slice(0, displayLimit)
 
+  // Mobile Transaction Card Component with Swipe Actions
+  const MobileTransactionCard = React.memo(function MobileTransactionCard({
+    transaction,
+    timezone,
+    onTransactionClick,
+    onTransactionKeyPress,
+    onViewReceipt,
+    onRefund
+  }: {
+    transaction: Transaction
+    timezone: string
+    onTransactionClick: (transaction: Transaction) => void
+    onTransactionKeyPress: (event: React.KeyboardEvent<HTMLDivElement>, transaction: Transaction) => void
+    onViewReceipt: (publicReceiptId: string) => void
+    onRefund: (transaction: Transaction) => void
+  }) {
+    const cardRef = React.useRef<HTMLDivElement>(null)
+    const [showActions, setShowActions] = React.useState(false)
+
+    useSwipeActions(cardRef, {
+      enabled: true,
+      threshold: 60,
+      onSwipeLeft: () => setShowActions(true),
+      onSwipeRight: () => setShowActions(false),
+    })
+
+    return (
+      <MobileDataCard
+        ref={cardRef}
+        role="button"
+        tabIndex={0}
+        onClick={() => !showActions && onTransactionClick(transaction)}
+        onKeyDown={(event) => onTransactionKeyPress(event, transaction)}
+        className={showActions ? 'border-[#7f5efd]' : ''}
+      >
+        <MobileDataCardHeader className="gap-3">
+          <div className="space-y-1">
+            <MobileDataCardTitle className="text-sm">
+              {formatDateShort(getTransactionTimestamp(transaction), timezone)}
+            </MobileDataCardTitle>
+            <MobileDataCardSubtitle>
+              {transaction.product_description || 'No description provided'}
+            </MobileDataCardSubtitle>
+            {transaction.link_id && (
+              <span className="inline-flex items-center gap-1 text-xs font-mono bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
+                Link {transaction.link_id}
+              </span>
+            )}
+          </div>
+          <Badge
+            variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
+            className="text-[11px]"
+          >
+            {transaction.status}
+          </Badge>
+        </MobileDataCardHeader>
+
+        <MobileDataCardMeta>
+          <MobileDataCardMetaItem
+            label="Gross"
+            value={`$${transaction.gross_amount.toFixed(2)}`}
+          />
+          <MobileDataCardMetaItem
+            label="Tax"
+            value={`$${transaction.tax_amount.toFixed(2)}`}
+          />
+          <MobileDataCardMetaItem
+            label="Fees"
+            value={`$${transaction.fees.toFixed(2)}`}
+            helper={transaction.fee_payer ? (
+              transaction.fee_payer === 'customer'
+                ? 'Customer paid'
+                : 'Merchant paid'
+            ) : undefined}
+          />
+          <MobileDataCardMetaItem
+            label="Net"
+            value={`$${transaction.net_amount.toFixed(2)}`}
+            accent
+          />
+        </MobileDataCardMeta>
+
+        {showActions && (
+          <MobileDataCardActions>
+            {transaction.public_receipt_id && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-12 text-sm flex-1"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onViewReceipt(transaction.public_receipt_id!)
+                  setShowActions(false)
+                }}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Receipt
+              </Button>
+            )}
+            {transaction.status !== 'refunded' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-12 text-sm flex-1"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRefund(transaction)
+                  setShowActions(false)
+                }}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Refund
+              </Button>
+            )}
+          </MobileDataCardActions>
+        )}
+      </MobileDataCard>
+    )
+  })
+
   return (
-      <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
+      <div className="px-6 py-8 max-md:px-4 max-md:py-6 space-y-8 max-md:space-y-6 max-w-7xl mx-auto">
+        {/* Pull-to-refresh indicator */}
+        {isMobile && pullDistance > 0 && (
+          <div
+            className="fixed top-0 left-0 right-0 flex items-center justify-center z-40 pointer-events-none"
+            style={{
+              transform: `translateY(${Math.min(pullDistance, 80)}px)`,
+              opacity: Math.min(pullDistance / 60, 1),
+            }}
+          >
+            <div className={`p-3 bg-white rounded-full shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
+              <RefreshCw className="h-5 w-5 text-[#7f5efd]" />
+            </div>
+          </div>
+        )}
+
         {/* Breadcrumbs */}
-        <Breadcrumbs 
+        <Breadcrumbs
           items={[
             { name: 'Dashboard', href: '/merchant/dashboard' },
             { name: 'Transactions', href: '/merchant/dashboard/tax-reports' }
-          ]} 
+          ]}
         />
-        
+
         {/* Enhanced Header */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
-          <div className="space-y-2">
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 max-md:gap-3">
+          <div className="space-y-2 max-md:space-y-1">
+            <h1 className="font-phonic text-3xl max-md:text-2xl font-normal tracking-tight text-gray-900 mb-4 max-md:mb-2">
               Tax Reports & Transactions
             </h1>
-            <p className="font-phonic text-base font-normal text-gray-600">View and manage all your transaction history</p>
+            <p className="font-phonic text-base max-md:text-sm font-normal text-gray-600">View and manage all your transaction history</p>
           </div>
         </div>
 
@@ -756,67 +917,67 @@ export default function TaxReportsPage() {
         <>
           {/* Enhanced Statistics Cards */}
           {displayReportData && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Gross Sales</CardTitle>
-                  <div className="p-2 bg-[#7f5efd] rounded-lg">
-                    <DollarSign className="h-4 w-4 text-white" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:pb-1">
+                  <CardTitle className="font-phonic text-sm max-md:text-xs font-semibold text-gray-900">Gross Sales</CardTitle>
+                  <div className="p-2 max-md:p-1.5 bg-[#7f5efd] rounded-lg">
+                    <DollarSign className="h-4 w-4 max-md:h-3 max-md:w-3 text-white" />
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${displayReportData.summary.total_gross_sales.toFixed(2)}</div>
+                <CardContent className="pt-0 max-md:pt-0">
+                  <div className="text-2xl max-md:text-lg font-semibold mb-2 max-md:mb-1 text-[#7f5efd]">${displayReportData.summary.total_gross_sales.toFixed(2)}</div>
                   <div className="flex items-center gap-1 text-gray-600">
-                    <TrendingUp className="h-3 w-3" />
-                    <span className="font-capsule text-xs">Total revenue before fees</span>
+                    <TrendingUp className="h-3 w-3 max-md:hidden" />
+                    <span className="font-capsule text-xs max-md:text-[10px]">Total revenue before fees</span>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Tax Collected</CardTitle>
-                  <div className="p-2 bg-[#7f5efd] rounded-lg">
-                    <Receipt className="h-4 w-4 text-white" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:pb-1">
+                  <CardTitle className="font-phonic text-sm max-md:text-xs font-semibold text-gray-900">Tax Collected</CardTitle>
+                  <div className="p-2 max-md:p-1.5 bg-[#7f5efd] rounded-lg">
+                    <Receipt className="h-4 w-4 max-md:h-3 max-md:w-3 text-white" />
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${displayReportData.summary.total_tax_collected.toFixed(2)}</div>
+                <CardContent className="pt-0 max-md:pt-0">
+                  <div className="text-2xl max-md:text-lg font-semibold mb-2 max-md:mb-1 text-[#7f5efd]">${displayReportData.summary.total_tax_collected.toFixed(2)}</div>
                   <div className="flex items-center gap-1 text-gray-600">
-                    <Calculator className="h-3 w-3" />
-                    <span className="font-capsule text-xs">Tax from all transactions</span>
+                    <Calculator className="h-3 w-3 max-md:hidden" />
+                    <span className="font-capsule text-xs max-md:text-[10px]">Tax from all transactions</span>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Net Revenue</CardTitle>
-                  <div className="p-2 bg-[#7f5efd] rounded-lg">
-                    <Calculator className="h-4 w-4 text-white" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:pb-1">
+                  <CardTitle className="font-phonic text-sm max-md:text-xs font-semibold text-gray-900">Net Revenue</CardTitle>
+                  <div className="p-2 max-md:p-1.5 bg-[#7f5efd] rounded-lg">
+                    <Calculator className="h-4 w-4 max-md:h-3 max-md:w-3 text-white" />
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">${displayReportData.summary.total_net_revenue.toFixed(2)}</div>
+                <CardContent className="pt-0 max-md:pt-0">
+                  <div className="text-2xl max-md:text-lg font-semibold mb-2 max-md:mb-1 text-[#7f5efd]">${displayReportData.summary.total_net_revenue.toFixed(2)}</div>
                   <div className="flex items-center gap-1 text-gray-600">
-                    <DollarSign className="h-3 w-3" />
-                    <span className="font-capsule text-xs">After fees and costs</span>
+                    <DollarSign className="h-3 w-3 max-md:hidden" />
+                    <span className="font-capsule text-xs max-md:text-[10px]">After fees and costs</span>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="font-phonic text-sm font-semibold text-gray-900">Transactions</CardTitle>
-                  <div className="p-2 bg-[#7f5efd] rounded-lg">
-                    <TrendingUp className="h-4 w-4 text-white" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:pb-1">
+                  <CardTitle className="font-phonic text-sm max-md:text-xs font-semibold text-gray-900">Transactions</CardTitle>
+                  <div className="p-2 max-md:p-1.5 bg-[#7f5efd] rounded-lg">
+                    <TrendingUp className="h-4 w-4 max-md:h-3 max-md:w-3 text-white" />
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold mb-2 text-[#7f5efd]">{displayReportData.summary.total_transactions}</div>
+                <CardContent className="pt-0 max-md:pt-0">
+                  <div className="text-2xl max-md:text-lg font-semibold mb-2 max-md:mb-1 text-[#7f5efd]">{displayReportData.summary.total_transactions}</div>
                   <div className="flex items-center gap-1 text-gray-600">
-                    <BarChart3 className="h-3 w-3" />
-                    <span className="font-capsule text-xs">Total processed</span>
+                    <BarChart3 className="h-3 w-3 max-md:hidden" />
+                    <span className="font-capsule text-xs max-md:text-[10px]">Total processed</span>
                   </div>
                 </CardContent>
               </Card>
@@ -841,27 +1002,38 @@ export default function TaxReportsPage() {
               )}
             >
               <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="p-6">
+              <CardHeader className="p-6 max-md:p-4">
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                    <div className="space-y-2 max-md:space-y-1">
+                      <CardTitle className="font-phonic text-xl max-md:text-lg font-semibold text-gray-900 flex items-center gap-3 max-md:gap-2">
                         Transaction Details
-                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20 max-md:text-xs">
                           {filteredTransactions.length}
                           {filteredTransactions.length !== displayReportData.transactions.length && (
-                            <span className="text-xs"> / {displayReportData.transactions.length}</span>
+                            <span className="text-xs max-md:text-[10px]"> / {displayReportData.transactions.length}</span>
                           )}
                         </Badge>
                       </CardTitle>
-                      <CardDescription className="font-capsule text-sm text-gray-600">
+                      <CardDescription className="font-capsule text-sm max-md:text-xs text-gray-600">
                         Select any transaction for a detailed view
                       </CardDescription>
                     </div>
+                    {isMobile && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowFilterSheet(true)}
+                        className="h-10 px-3 text-sm"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-1" />
+                        Filters
+                      </Button>
+                    )}
                   </div>
 
-                  {/* Filters Row: Status + Date + Show (centered) */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3 pt-3 border-t border-gray-100">
+                  {/* Desktop Filters Row: Status + Date + Show (centered) */}
+                  <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3 pt-3 border-t border-gray-100">
                     <div className="flex flex-wrap items-end justify-center gap-4 w-full">
                       {/* Local Status Filter (isolated) */}
                       <div className="flex flex-col gap-1 min-w-[12rem]">
@@ -951,7 +1123,7 @@ export default function TaxReportsPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-0">
+              <CardContent className="p-6 pt-0 max-md:p-4 max-md:pt-0">
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -1114,94 +1286,20 @@ export default function TaxReportsPage() {
                     </Card>
                   ) : (
                     transactionsToDisplay.map((transaction) => (
-                      <MobileDataCard
+                      <MobileTransactionCard
                         key={transaction.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => handleTransactionClick(transaction)}
-                        onKeyDown={(event) => handleTransactionKeyPress(event, transaction)}
-                      >
-                        <MobileDataCardHeader className="gap-3">
-                          <div className="space-y-1">
-                            <MobileDataCardTitle className="text-sm">
-                              {formatDateShort(getTransactionTimestamp(transaction), timezone)}
-                            </MobileDataCardTitle>
-                            <MobileDataCardSubtitle>
-                              {transaction.product_description || 'No description provided'}
-                            </MobileDataCardSubtitle>
-                            {transaction.link_id && (
-                              <span className="inline-flex items-center gap-1 text-xs font-mono bg-[#7f5efd]/10 text-[#7f5efd] px-2 py-1 rounded">
-                                Link {transaction.link_id}
-                              </span>
-                            )}
-                          </div>
-                          <Badge
-                            variant={transaction.status === 'confirmed' ? 'default' : 'secondary'}
-                            className="text-[11px]"
-                          >
-                            {transaction.status}
-                          </Badge>
-                        </MobileDataCardHeader>
-
-                        <MobileDataCardMeta>
-                          <MobileDataCardMetaItem
-                            label="Gross"
-                            value={`$${transaction.gross_amount.toFixed(2)}`}
-                          />
-                          <MobileDataCardMetaItem
-                            label="Tax"
-                            value={`$${transaction.tax_amount.toFixed(2)}`}
-                          />
-                          <MobileDataCardMetaItem
-                            label="Fees"
-                            value={`$${transaction.fees.toFixed(2)}`}
-                            helper={transaction.fee_payer ? (
-                              transaction.fee_payer === 'customer'
-                                ? 'Customer paid'
-                                : 'Merchant paid'
-                            ) : undefined}
-                          />
-                          <MobileDataCardMetaItem
-                            label="Net"
-                            value={`$${transaction.net_amount.toFixed(2)}`}
-                            accent
-                          />
-                        </MobileDataCardMeta>
-
-                        <MobileDataCardActions>
-                          {transaction.public_receipt_id && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-11 text-sm"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                viewReceipt(transaction.public_receipt_id!)
-                              }}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Receipt
-                            </Button>
-                          )}
-                          {transaction.status !== 'refunded' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-11 text-sm"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedRefundTransaction(transaction)
-                                setRefundAmount(transaction.total_paid.toString())
-                                setRefundDate(new Date().toISOString().split('T')[0])
-                                setShowRefundModal(true)
-                              }}
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Refund
-                            </Button>
-                          )}
-                        </MobileDataCardActions>
-                      </MobileDataCard>
+                        transaction={transaction}
+                        timezone={timezone}
+                        onTransactionClick={handleTransactionClick}
+                        onTransactionKeyPress={handleTransactionKeyPress}
+                        onViewReceipt={viewReceipt}
+                        onRefund={(tx) => {
+                          setSelectedRefundTransaction(tx)
+                          setRefundAmount(tx.total_paid.toString())
+                          setRefundDate(new Date().toISOString().split('T')[0])
+                          setShowRefundModal(true)
+                        }}
+                      />
                     ))
                   )}
 
@@ -1211,7 +1309,7 @@ export default function TaxReportsPage() {
                         variant="outline"
                         onClick={() => loadTaxReport()}
                         disabled={loadingReport}
-                        className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2 w-full justify-center"
+                        className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2 w-full justify-center h-12"
                       >
                         {loadingReport ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -1229,7 +1327,84 @@ export default function TaxReportsPage() {
           )}
 
           {/* Combined Report Configuration & Export */}
-          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          {isMobile ? (
+            /* Mobile: Simple card with buttons to open bottom sheets */
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="p-5">
+                <div className="space-y-2">
+                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    Report Configuration
+                    {exportReportData && (
+                      <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20 text-xs">
+                        Ready
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-gray-600">
+                    Configure and export your tax report
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="p-5 pt-0 space-y-3">
+                {/* Mobile action buttons */}
+                <Button
+                  onClick={() => setShowFilterSheet(true)}
+                  variant="outline"
+                  className="w-full h-12 justify-between border-gray-200"
+                >
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-[#7f5efd]" />
+                    Report Filters
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </Button>
+
+                {exportReportData && (
+                  <Button
+                    onClick={() => setShowExportSheet(true)}
+                    variant="outline"
+                    className="w-full h-12 justify-between border-[#7f5efd]/20 text-[#7f5efd]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Export Report
+                    </span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                )}
+
+                {!exportReportData && (
+                  <Button
+                    onClick={generateReport}
+                    disabled={loadingReport}
+                    className="w-full h-12 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+                  >
+                    {loadingReport ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      'Generate Report'
+                    )}
+                  </Button>
+                )}
+
+                {exportReportData && (
+                  <div className="bg-[#7f5efd]/10 border border-[#7f5efd]/20 rounded-lg p-3">
+                    <p className="text-xs text-gray-700">
+                      Report ready: {' '}
+                      <span className="font-semibold">
+                        {formatFullDate(exportReportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date, timezone)}
+                      </span>
+                      {' to '}
+                      <span className="font-semibold">
+                        {formatFullDate(exportReportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date, timezone)}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </CardContent>
             <CardHeader className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -1345,7 +1520,7 @@ export default function TaxReportsPage() {
                     <Checkbox
                       checked={filters.tax_only}
                       onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
-                      className="border-gray-300"
+                      className="border-gray-300 max-md:h-5 max-md:w-5"
                     />
                     <Label className="font-capsule text-sm text-gray-700 cursor-pointer">Show tax-only transactions</Label>
                   </div>
@@ -1466,6 +1641,246 @@ export default function TaxReportsPage() {
               )}
             </CardContent>
           </Card>
+          ) : (
+            /* Desktop: Full inline configuration */
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                      Report Configuration
+                      {exportReportData && (
+                        <Badge variant="outline" className="bg-[#7f5efd]/10 text-[#7f5efd] border-[#7f5efd]/20">
+                          Ready to Export
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription className="font-capsule text-sm text-gray-600">
+                      Configure parameters and export your tax report in multiple formats
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-6">
+                {/* Filter Section */}
+                <div>
+                  <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-[#7f5efd]" />
+                    Report Filters
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-capsule text-xs text-gray-600">Report Type</Label>
+                      <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="calendar_year">Calendar Year</SelectItem>
+                          <SelectItem value="fiscal_year">Fiscal Year</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="custom">Custom Range</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-capsule text-xs text-gray-600">Year</Label>
+                      <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 5 }, (_, i) => currentYear - i).map(year => (
+                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {filters.report_type === 'quarterly' && (
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600">Quarter</Label>
+                        <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
+                          <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Q1 (Jan-Mar)</SelectItem>
+                            <SelectItem value="2">Q2 (Apr-Jun)</SelectItem>
+                            <SelectItem value="3">Q3 (Jul-Sep)</SelectItem>
+                            <SelectItem value="4">Q4 (Oct-Dec)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="font-capsule text-xs text-gray-600">Status</Label>
+                      <Select value={filters.status} onValueChange={(value: 'confirmed' | 'refunded' | 'all') => setFilters({ ...filters, status: value })}>
+                        <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Transactions</SelectItem>
+                          <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                          <SelectItem value="refunded">Refunded Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {filters.report_type === 'custom' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600">Start Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.start_date}
+                          onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+                          className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-capsule text-xs text-gray-600">End Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.end_date}
+                          onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+                          className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={filters.tax_only}
+                        onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
+                        className="border-gray-300 max-md:h-5 max-md:w-5"
+                      />
+                      <Label className="font-capsule text-sm text-gray-700 cursor-pointer">Show tax-only transactions</Label>
+                    </div>
+
+                    <Button
+                      onClick={generateReport}
+                      disabled={loadingReport}
+                      size="default"
+                      className="bg-[#7f5efd] hover:bg-[#7c3aed] text-white flex items-center gap-2"
+                    >
+                      {loadingReport ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      {loadingReport ? 'Generating...' : 'Generate Report'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Export Section - Only show when report data is available */}
+                {exportReportData && (
+                  <>
+                    <div className="border-t border-gray-200 pt-6">
+                      <h3 className="font-phonic text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-[#7f5efd]" />
+                        Export Options
+                      </h3>
+
+                      {/* REFACTOR: Improved alignment for export controls */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-end">
+                        {/* Template Selection */}
+                        <div className="space-y-2">
+                          <Label className="font-capsule text-xs text-gray-600">Export Template</Label>
+                          <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
+                            <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 justify-between">
+                              <SelectValue className="text-left" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="audit">Audit Template - Full transaction details</SelectItem>
+                              <SelectItem value="tax_filing">Tax Filing - IRS compliant format</SelectItem>
+                              <SelectItem value="accounting">Accounting - QuickBooks ready</SelectItem>
+                              <SelectItem value="summary">Summary - Executive overview</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Export Buttons */}
+                        <div className="space-y-2">
+                          <Label className="font-capsule text-xs text-gray-600 text-center block lg:text-left">Export Report</Label>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <Button
+                              disabled={exportingCSV}
+                              size="default"
+                              onClick={() => exportToCSV(selectedTemplate)}
+                              variant="outline"
+                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                            >
+                              {exportingCSV ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
+                              {exportingCSV ? 'Exporting...' : 'CSV'}
+                            </Button>
+
+                            <Button
+                              disabled={exportingPDF}
+                              size="default"
+                              onClick={() => exportToPDF(selectedTemplate)}
+                              variant="outline"
+                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                            >
+                              {exportingPDF ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
+                              {exportingPDF ? 'Generating...' : 'PDF'}
+                            </Button>
+
+                            <Button
+                              disabled={exportingExcel}
+                              size="default"
+                              onClick={() => exportToExcel(selectedTemplate)}
+                              variant="outline"
+                              className="border-[#7f5efd]/20 hover:bg-[#7f5efd]/10 hover:border-[#7f5efd] text-[#7f5efd] flex items-center gap-2"
+                            >
+                              {exportingExcel ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <BarChart3 className="h-4 w-4" />
+                              )}
+                              {exportingExcel ? 'Generating...' : 'Excel'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Report Date Range Info */}
+                    <div className="bg-[#7f5efd]/10 border border-[#7f5efd]/20 rounded-lg p-4 flex items-start gap-3">
+                      <Info className="h-4 w-4 text-[#7f5efd] mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-capsule text-xs text-gray-700">
+                          Current report includes transactions from{' '}
+                          <span className="font-semibold">
+                            {formatFullDate(exportReportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date, timezone)}
+                          </span>{' '}
+                          to{' '}
+                          <span className="font-semibold">
+                            {formatFullDate(exportReportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date, timezone)}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* No Data State */}
           {!displayReportData && !loadingReport && (
@@ -1552,6 +1967,300 @@ export default function TaxReportsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Mobile Filter Bottom Sheet */}
+        <BottomSheet open={showFilterSheet} onOpenChange={setShowFilterSheet}>
+          <BottomSheetContent className="max-h-[80vh] px-6 pb-8">
+            <BottomSheetHeader>
+              <BottomSheetTitle className="text-xl font-semibold">Report Filters</BottomSheetTitle>
+              <BottomSheetDescription>Configure your tax report parameters</BottomSheetDescription>
+            </BottomSheetHeader>
+
+            <div className="mt-6 space-y-4">
+              {/* Transaction Date Filters */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-900">Transaction Filters</h3>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-600">Status</Label>
+                    <Select value={transactionStatus} onValueChange={(value: 'all' | 'confirmed' | 'refunded') => setTransactionStatus(value)}>
+                      <SelectTrigger className="h-12 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Transactions</SelectItem>
+                        <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                        <SelectItem value="refunded">Refunded Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-600">From Date</Label>
+                    <Input
+                      type="date"
+                      value={transactionStartDate}
+                      onChange={(e) => setTransactionStartDate(e.target.value)}
+                      className="h-12 w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-600">To Date</Label>
+                    <Input
+                      type="date"
+                      value={transactionEndDate}
+                      onChange={(e) => setTransactionEndDate(e.target.value)}
+                      className="h-12 w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Report Generation Filters */}
+              <div className="space-y-3 pt-3 border-t">
+                <h3 className="text-sm font-semibold text-gray-900">Report Configuration</h3>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-600">Report Type</Label>
+                    <Select value={filters.report_type} onValueChange={(value: 'calendar_year' | 'fiscal_year' | 'quarterly' | 'custom') => setFilters({ ...filters, report_type: value })}>
+                      <SelectTrigger className="h-12 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="calendar_year">Calendar Year</SelectItem>
+                        <SelectItem value="fiscal_year">Fiscal Year</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="custom">Custom Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-600">Year</Label>
+                    <Select value={filters.year.toString()} onValueChange={(value) => setFilters({ ...filters, year: parseInt(value) })}>
+                      <SelectTrigger className="h-12 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 5 }, (_, i) => currentYear - i).map(year => (
+                          <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {filters.report_type === 'quarterly' && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-600">Quarter</Label>
+                      <Select value={filters.quarter.toString()} onValueChange={(value) => setFilters({ ...filters, quarter: parseInt(value) })}>
+                        <SelectTrigger className="h-12 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Q1 (Jan-Mar)</SelectItem>
+                          <SelectItem value="2">Q2 (Apr-Jun)</SelectItem>
+                          <SelectItem value="3">Q3 (Jul-Sep)</SelectItem>
+                          <SelectItem value="4">Q4 (Oct-Dec)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {filters.report_type === 'custom' && (
+                    <>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-600">Start Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.start_date}
+                          onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+                          className="h-12 w-full"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-600">End Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.end_date}
+                          onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+                          className="h-12 w-full"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={filters.tax_only}
+                      onCheckedChange={(checked) => setFilters({ ...filters, tax_only: checked as boolean })}
+                      className="h-5 w-5"
+                    />
+                    <Label className="text-sm">Show tax-only transactions</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <BottomSheetFooter className="mt-6 flex gap-3">
+              {(transactionStartDate || transactionEndDate || transactionStatus !== 'all') && (
+                <Button
+                  variant="outline"
+                  onClick={clearTransactionFilters}
+                  className="flex-1 h-12"
+                >
+                  Clear Filters
+                </Button>
+              )}
+              <Button
+                onClick={async () => {
+                  await generateReport()
+                  setShowFilterSheet(false)
+                }}
+                disabled={loadingReport}
+                className="flex-1 h-12 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+              >
+                {loadingReport ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  'Generate Report'
+                )}
+              </Button>
+            </BottomSheetFooter>
+          </BottomSheetContent>
+        </BottomSheet>
+
+        {/* Mobile Export Bottom Sheet */}
+        <BottomSheet open={showExportSheet} onOpenChange={setShowExportSheet}>
+          <BottomSheetContent className="px-6 pb-8">
+            <BottomSheetHeader>
+              <BottomSheetTitle className="text-xl font-semibold">Export Tax Report</BottomSheetTitle>
+              <BottomSheetDescription>Choose your export format and template</BottomSheetDescription>
+            </BottomSheetHeader>
+
+            <div className="mt-6 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Export Template</Label>
+                <Select value={selectedTemplate} onValueChange={(value: ExportTemplate) => setSelectedTemplate(value)}>
+                  <SelectTrigger className="h-12 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="audit">
+                      <div className="space-y-0.5">
+                        <div className="font-medium">Audit Template</div>
+                        <div className="text-xs text-gray-500">Full transaction details</div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="tax_filing">
+                      <div className="space-y-0.5">
+                        <div className="font-medium">Tax Filing</div>
+                        <div className="text-xs text-gray-500">IRS compliant format</div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="accounting">
+                      <div className="space-y-0.5">
+                        <div className="font-medium">Accounting</div>
+                        <div className="text-xs text-gray-500">QuickBooks ready</div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="summary">
+                      <div className="space-y-0.5">
+                        <div className="font-medium">Summary</div>
+                        <div className="text-xs text-gray-500">Executive overview</div>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {exportReportData && (
+                <div className="bg-[#7f5efd]/10 border border-[#7f5efd]/20 rounded-lg p-3">
+                  <p className="text-xs text-gray-700">
+                    Report includes transactions from{' '}
+                    <span className="font-semibold">
+                      {formatFullDate(exportReportData.filters.applied_date_range?.start_date || getActualDateRange(filters).start_date, timezone)}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-semibold">
+                      {formatFullDate(exportReportData.filters.applied_date_range?.end_date || getActualDateRange(filters).end_date, timezone)}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <BottomSheetFooter className="mt-6 flex flex-col gap-3">
+              <Button
+                onClick={async () => {
+                  await exportToCSV(selectedTemplate)
+                  setShowExportSheet(false)
+                }}
+                disabled={exportingCSV}
+                variant="outline"
+                className="w-full h-12 border-[#7f5efd]/20 text-[#7f5efd]"
+              >
+                {exportingCSV ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Exporting CSV...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export as CSV
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={async () => {
+                  await exportToPDF(selectedTemplate)
+                  setShowExportSheet(false)
+                }}
+                disabled={exportingPDF}
+                variant="outline"
+                className="w-full h-12 border-[#7f5efd]/20 text-[#7f5efd]"
+              >
+                {exportingPDF ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export as PDF
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={async () => {
+                  await exportToExcel(selectedTemplate)
+                  setShowExportSheet(false)
+                }}
+                disabled={exportingExcel}
+                className="w-full h-12 bg-[#7f5efd] hover:bg-[#7c3aed] text-white"
+              >
+                {exportingExcel ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating Excel...
+                  </>
+                ) : (
+                  <>
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Export as Excel
+                  </>
+                )}
+              </Button>
+            </BottomSheetFooter>
+          </BottomSheetContent>
+        </BottomSheet>
         </div>
     );
   }

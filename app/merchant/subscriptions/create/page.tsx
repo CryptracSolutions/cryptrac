@@ -133,6 +133,11 @@ export default function CreateSubscriptionPage() {
     showAdvanced: false,
   });
 
+  // Stable form update function to prevent keyboard dismissal on mobile
+  const updateForm = useCallback((updates: Partial<typeof form>) => {
+    setForm(prev => ({ ...prev, ...updates }));
+  }, []);
+
   const loadMerchantSettings = useCallback(async () => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -353,7 +358,7 @@ export default function CreateSubscriptionPage() {
 
 
   // Mobile Step Content Components
-  const MobileStepContent = () => {
+  const renderMobileStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
@@ -363,7 +368,7 @@ export default function CreateSubscriptionPage() {
               <Input
                 placeholder="e.g., Premium Plan"
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onChange={(e) => updateForm({ title: e.target.value })}
                 className={cn(
                   "h-12",
                   validationErrors.title && "border-red-500"
@@ -379,7 +384,7 @@ export default function CreateSubscriptionPage() {
               <Input
                 placeholder="Brief description"
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) => updateForm({ description: e.target.value })}
                 className="h-12"
               />
             </div>
@@ -396,7 +401,7 @@ export default function CreateSubscriptionPage() {
                 min="0"
                 placeholder="0.00"
                 value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                onChange={(e) => updateForm({ amount: e.target.value })}
                 className={cn(
                   "h-12",
                   validationErrors.amount && "border-red-500"
@@ -411,7 +416,7 @@ export default function CreateSubscriptionPage() {
               <label className="text-sm font-medium">Currency *</label>
               <Select
                 value={form.currency}
-                onValueChange={(value) => setForm({ ...form, currency: value })}
+                onValueChange={(value) => updateForm({ currency: value })}
               >
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Select currency" />
@@ -430,7 +435,7 @@ export default function CreateSubscriptionPage() {
               <div className="flex gap-2">
                 <Select
                   value={form.interval}
-                  onValueChange={(value) => setForm({ ...form, interval: value })}
+                  onValueChange={(value) => updateForm({ interval: value })}
                 >
                   <SelectTrigger className="flex-1 h-12">
                     <SelectValue placeholder="Interval" />
@@ -446,7 +451,7 @@ export default function CreateSubscriptionPage() {
                   type="number"
                   min="1"
                   value={form.interval_count}
-                  onChange={(e) => setForm({ ...form, interval_count: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => updateForm({ interval_count: parseInt(e.target.value) || 1 })}
                   className="w-20 h-12 text-center"
                 />
               </div>
@@ -458,9 +463,20 @@ export default function CreateSubscriptionPage() {
                 min="1"
                 placeholder="Unlimited"
                 value={form.max_cycles}
-                onChange={(e) => setForm({ ...form, max_cycles: e.target.value })}
+                onChange={(e) => updateForm({ max_cycles: e.target.value })}
                 className="h-12"
               />
+              <p className="text-xs text-gray-500">Leave empty for unlimited cycles</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Anchor Date (Optional)</label>
+              <Input
+                type="date"
+                value={form.anchor}
+                onChange={(e) => updateForm({ anchor: e.target.value })}
+                className="h-12"
+              />
+              <p className="text-xs text-gray-500">Set a specific start date for billing</p>
             </div>
           </div>
         );
@@ -472,7 +488,7 @@ export default function CreateSubscriptionPage() {
               <Input
                 placeholder="Full name"
                 value={form.customer_name}
-                onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
+                onChange={(e) => updateForm({ customer_name: e.target.value })}
                 className="h-12"
               />
             </div>
@@ -482,7 +498,7 @@ export default function CreateSubscriptionPage() {
                 type="email"
                 placeholder="customer@example.com"
                 value={form.customer_email}
-                onChange={(e) => setForm({ ...form, customer_email: e.target.value })}
+                onChange={(e) => updateForm({ customer_email: e.target.value })}
                 className={cn(
                   "h-12",
                   validationErrors.customer_email && "border-red-500"
@@ -498,7 +514,7 @@ export default function CreateSubscriptionPage() {
               <Input
                 placeholder="+1 (555) 123-4567"
                 value={form.customer_phone}
-                onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
+                onChange={(e) => updateForm({ customer_phone: e.target.value })}
                 className="h-12"
               />
             </div>
@@ -519,9 +535,9 @@ export default function CreateSubscriptionPage() {
                       checked={form.accepted_cryptos.includes(crypto)}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setForm({ ...form, accepted_cryptos: [...form.accepted_cryptos, crypto] });
+                          updateForm({ accepted_cryptos: [...form.accepted_cryptos, crypto] });
                         } else {
-                          setForm({ ...form, accepted_cryptos: form.accepted_cryptos.filter(c => c !== crypto) });
+                          updateForm({ accepted_cryptos: form.accepted_cryptos.filter(c => c !== crypto) });
                         }
                       }}
                     />
@@ -540,8 +556,7 @@ export default function CreateSubscriptionPage() {
               <Select
                 value={form.charge_customer_fee === null ? 'inherit' : form.charge_customer_fee ? 'customer' : 'merchant'}
                 onValueChange={(value) => {
-                  setForm({
-                    ...form,
+                  updateForm({
                     charge_customer_fee: value === 'inherit' ? null : value === 'customer'
                   });
                 }}
@@ -561,7 +576,7 @@ export default function CreateSubscriptionPage() {
               <div className="flex items-center space-x-2 h-12">
                 <Checkbox
                   checked={form.tax_enabled}
-                  onCheckedChange={(checked) => setForm({ ...form, tax_enabled: checked as boolean })}
+                  onCheckedChange={(checked) => updateForm({ tax_enabled: checked as boolean })}
                 />
                 <span className="text-sm">Enable tax collection</span>
               </div>
@@ -578,7 +593,7 @@ export default function CreateSubscriptionPage() {
                     } else {
                       newRates.push({ id: '1', label: e.target.value, percentage: '0' });
                     }
-                    setForm({ ...form, tax_rates: newRates });
+                    updateForm({ tax_rates: newRates });
                   }}
                   className="h-12"
                 />
@@ -594,7 +609,7 @@ export default function CreateSubscriptionPage() {
                     } else {
                       newRates.push({ id: '1', label: 'Tax', percentage: e.target.value });
                     }
-                    setForm({ ...form, tax_rates: newRates });
+                    updateForm({ tax_rates: newRates });
                   }}
                   className="h-12"
                 />
@@ -731,7 +746,7 @@ export default function CreateSubscriptionPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <MobileStepContent />
+                {renderMobileStepContent()}
               </CardContent>
             </Card>
 

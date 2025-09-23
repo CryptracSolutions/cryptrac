@@ -963,7 +963,7 @@ export default function SubscriptionDetailPage() {
               <p className="font-phonic text-xs font-normal text-gray-500 mt-1">When the override begins</p>
             </div>
             <div>
-              <label className="block font-phonic text-sm font-normal mb-1">End Date (Optional)</label>
+              <label className="block text-sm font-medium mb-1">End Date (Optional)</label>
               <Input
                 type="date"
                 value={override.effective_until}
@@ -1047,10 +1047,12 @@ export default function SubscriptionDetailPage() {
                 Permanent Override
               </button>
             </div>
-          </div>
-          
-          <Button type="submit">Schedule Override</Button>
-        </form>
+            </div>
+
+            <Button type="submit" className="h-11 bg-[#7f5efd] hover:bg-[#6b4fd8] text-white">
+              Schedule Override
+            </Button>
+          </form>
 
           {/* Existing Overrides */}
           {amountOverrides.length > 0 && (
