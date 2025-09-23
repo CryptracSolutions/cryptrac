@@ -1970,7 +1970,7 @@ export default function TaxReportsPage() {
 
         {/* Mobile Filter Bottom Sheet */}
         <BottomSheet open={showFilterSheet} onOpenChange={setShowFilterSheet}>
-          <BottomSheetContent className="max-h-[80vh] px-6 pb-8">
+          <BottomSheetContent>
             <BottomSheetHeader>
               <BottomSheetTitle className="text-xl font-semibold">Report Filters</BottomSheetTitle>
               <BottomSheetDescription>Configure your tax report parameters</BottomSheetDescription>
@@ -2102,7 +2102,7 @@ export default function TaxReportsPage() {
               </div>
             </div>
 
-            <BottomSheetFooter className="mt-6 flex gap-3">
+            <BottomSheetFooter className="mt-6 pb-4 flex gap-3">
               {(transactionStartDate || transactionEndDate || transactionStatus !== 'all') && (
                 <Button
                   variant="outline"
@@ -2135,7 +2135,7 @@ export default function TaxReportsPage() {
 
         {/* Mobile Export Bottom Sheet */}
         <BottomSheet open={showExportSheet} onOpenChange={setShowExportSheet}>
-          <BottomSheetContent className="px-6 pb-8">
+          <BottomSheetContent>
             <BottomSheetHeader>
               <BottomSheetTitle className="text-xl font-semibold">Export Tax Report</BottomSheetTitle>
               <BottomSheetDescription>Choose your export format and template</BottomSheetDescription>
@@ -2193,7 +2193,7 @@ export default function TaxReportsPage() {
               )}
             </div>
 
-            <BottomSheetFooter className="mt-6 flex flex-col gap-3">
+            <BottomSheetFooter className="mt-6 pb-4 flex flex-col gap-3">
               <Button
                 onClick={async () => {
                   await exportToCSV(selectedTemplate)

@@ -188,6 +188,10 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       // Set the search term to the currency code to filter the list
       setSearchTerm(focusCurrency.toLowerCase());
 
+      if (isMobileViewport) {
+        setIsMobileSearchOpen(true);
+      }
+
       // Focus the search input after a short delay to ensure the component has updated
       setTimeout(() => {
         if (searchInputRef.current) {
@@ -196,7 +200,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
         }
       }, 100);
     }
-  }, [focusCurrency]);
+  }, [focusCurrency, isMobileViewport]);
 
   useEffect(() => {
     if (!isMobileSearchOpen) return;
@@ -432,14 +436,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
         }
 
         if (options.source === 'draft') {
-          setPendingWallets(prev => {
-            const next = { ...prev };
-            delete next[currency];
-            return next;
-          });
-          if (pendingHighlight === currency) {
-            setPendingHighlight(null);
-          }
+          setPendingWallets(prev => ({ ...prev, [currency]: true }));
         }
 
         onValidationChange?.(currency, false);
@@ -448,14 +445,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       console.error('Validation error:', error);
       setValidationStatus(prev => ({ ...prev, [currency]: 'invalid' }));
       if (options.source === 'draft') {
-        setPendingWallets(prev => {
-          const next = { ...prev };
-          delete next[currency];
-          return next;
-        });
-        if (pendingHighlight === currency) {
-          setPendingHighlight(null);
-        }
+        setPendingWallets(prev => ({ ...prev, [currency]: true }));
       }
     }
   };
@@ -852,6 +842,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       const status = validationStatus[currency.code] || 'idle';
       const extraStatus = extraIdValidationStatus[currency.code] || 'idle';
       const canConfirm = isPending && status === 'valid' && (!requiresExtraId(currency.code) || extraStatus === 'valid');
+      const confirmDisabled = !canConfirm;
 
       return (
         <Card
@@ -1031,22 +1022,32 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
                 </>
               )}
 
-              {isPending && canConfirm && (
-                <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4">
-                  <p className="text-sm font-medium text-green-800">
-                    Address validated. Move it to your wallets?
+              {isPending && (
+                <div className={`space-y-3 rounded-lg border p-4 ${
+                  canConfirm
+                    ? 'border-green-200 bg-green-50'
+                    : 'border-yellow-200 bg-yellow-50'
+                }`}>
+                  <p className={`text-sm font-medium ${canConfirm ? 'text-green-800' : 'text-yellow-800'}`}>
+                    {canConfirm
+                      ? 'Address validated. Move it to your wallets?'
+                      : requiresExtraId(currency.code)
+                      ? 'Add the required extra ID to finish validation.'
+                      : 'Complete the address validation to continue.'}
                   </p>
                   <div className="grid gap-2 md:grid-cols-3">
                     <Button
                       onClick={() => handleConfirmPendingWallet(currency.code)}
-                      className="mobile-touch-button max-md:h-12 bg-green-600 hover:bg-green-700 text-white"
+                      className="mobile-touch-button max-md:h-12 bg-green-600 hover:bg-green-700 text-white disabled:bg-green-300 disabled:text-white"
+                      disabled={confirmDisabled}
                     >
                       Confirm
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => handleConfirmPendingWallet(currency.code, { addAnother: true })}
-                      className="mobile-touch-button max-md:h-12 border-gray-200"
+                      className="mobile-touch-button max-md:h-12 border-gray-200 disabled:opacity-60"
+                      disabled={confirmDisabled}
                     >
                       Add another wallet
                     </Button>

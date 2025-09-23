@@ -73,18 +73,19 @@ const BottomSheetContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={setRefs}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 grid w-full gap-4 border-t border-gray-200 bg-white",
-          "rounded-t-[32px] p-6 shadow-2xl",
-          "max-h-[60vh] min-h-[40vh]",
+          "fixed inset-x-0 bottom-0 z-50 flex flex-col w-full border-t border-gray-200 bg-white",
+          "rounded-t-[32px] shadow-2xl",
+          "max-h-[90vh]",
           "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom",
           "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom",
-          "md:max-h-[32rem]",
           className
         )}
         {...props}
       >
-        <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300" aria-hidden="true" />
-        <div className="overflow-y-auto [-webkit-overflow-scrolling:touch]">
+        <div className="pt-4 px-6">
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300 mb-4" aria-hidden="true" />
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 pb-6 [-webkit-overflow-scrolling:touch]">
           {children}
         </div>
         <BottomSheetClose ref={closeRef} className="sr-only">
@@ -131,7 +132,7 @@ const BottomSheetFooter = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("mt-4 flex flex-col gap-2", className)} {...props} />
+  <div className={cn("mt-4 flex flex-col gap-2 sticky bottom-0 bg-white", className)} {...props} />
 )
 
 export {
