@@ -112,10 +112,14 @@ interface WalletsManagerProps<T = Record<string, unknown>> {
   settings: T & {
     wallets: Record<string, string>;
     wallet_extra_ids?: Record<string, string>;
+    preferred_payout_currency?: string | null;
+    auto_convert_enabled?: boolean;
   };
   setSettings: React.Dispatch<React.SetStateAction<T & {
     wallets: Record<string, string>;
     wallet_extra_ids?: Record<string, string>;
+    preferred_payout_currency?: string | null;
+    auto_convert_enabled?: boolean;
   }>>;
   focusCurrency?: string;
   onValidationChange?: (currency: string, isValid: boolean) => void;
