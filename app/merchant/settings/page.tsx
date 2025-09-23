@@ -147,6 +147,7 @@ export default function MerchantSettingsPage() {
     email_payment_notifications_enabled: true,
     public_receipts_enabled: true,
   });
+  const [activeTab, setActiveTab] = useState<'payments' | 'tax' | 'notifications'>('payments');
 
   useEffect(() => {
     const fetchNotificationSettings = async () => {
@@ -418,7 +419,7 @@ export default function MerchantSettingsPage() {
   }
 
   return (
-    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto max-md:px-4 max-md:py-6 max-md:space-y-6">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -428,18 +429,18 @@ export default function MerchantSettingsPage() {
         />
         
         {/* Enhanced Header */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 max-md:gap-5">
           <div className="space-y-2">
-            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+            <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:text-2xl max-md:leading-tight">
               Account Settings
             </h1>
-            <p className="font-phonic text-base font-normal text-gray-600">Manage your payment preferences, tax settings, and notifications</p>
+            <p className="font-phonic text-base font-normal text-gray-600 max-md:text-sm">Manage your payment preferences, tax settings, and notifications</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-md:flex-wrap max-md:gap-2">
             {saving && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-500 max-md:text-xs">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="font-capsule text-xs">Auto-saving...</span>
+                <span className="font-capsule text-xs max-md:text-xs">Auto-saving...</span>
               </div>
             )}
           </div>
@@ -448,10 +449,26 @@ export default function MerchantSettingsPage() {
 
 
         {/* Enhanced Tabs */}
-        <Tabs defaultValue="payments" className="space-y-8">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as 'payments' | 'tax' | 'notifications')}
+          className="space-y-8 max-md:space-y-6"
+        >
           <div className="w-full">
-            <div className="border-b border-gray-200">
-              <TabsList className="flex w-full space-x-8 px-4 bg-transparent h-auto p-0" aria-label="Tabs">
+            <div className="md:hidden mb-4">
+              <Select value={activeTab} onValueChange={(value) => setActiveTab(value as 'payments' | 'tax' | 'notifications')}>
+                <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:h-12 max-md:text-base">
+                  <SelectValue placeholder="Select a settings category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="payments">Payments</SelectItem>
+                  <SelectItem value="tax">Tax</SelectItem>
+                  <SelectItem value="notifications">Notifications</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="hidden md:block border-b border-gray-200">
+              <TabsList className="hidden md:flex w-full space-x-8 px-4 bg-transparent h-auto p-0" aria-label="Tabs">
                 <TabsTrigger 
                   value="payments" 
                   className="flex flex-1 items-center gap-2 py-4 px-1 border-b-2 border-transparent font-phonic text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 data-[state=active]:border-[#7f5efd] data-[state=active]:text-[#7f5efd] transition-all duration-200"
@@ -478,69 +495,69 @@ export default function MerchantSettingsPage() {
           </div>
 
           {/* Payments Tab */}
-          <TabsContent value="payments" className="space-y-8">
+          <TabsContent value="payments" className="space-y-8 max-md:space-y-6">
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="p-6">
-                <div className="flex items-center justify-between">
+              <CardHeader className="p-6 max-md:p-4">
+                <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
                   <div className="space-y-2">
-                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3 max-md:text-lg">
                       Payment Configuration
                     </CardTitle>
-                    <CardDescription className="font-capsule text-sm text-gray-600">
+                    <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                       Configure your payment processing preferences and fees
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-8">
+              <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:pt-0 max-md:space-y-6">
                 <div className="space-y-6">
                   {/* Gateway Fee and Payment Options */}
-                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-4">
+                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors max-md:p-4 max-md:space-y-4">
+                    <div className="flex items-center justify-between mb-6 max-md:flex-col max-md:items-start max-md:gap-4 max-md:mb-4">
+                      <div className="flex items-center gap-4 max-md:items-start max-md:gap-3">
                         <div className="p-2 bg-[#7f5efd] rounded-lg">
                           <DollarSign className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Gateway Fee</h3>
-                          <p className="font-capsule text-sm text-gray-600">
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Gateway Fee</h3>
+                          <p className="font-capsule text-sm text-gray-600 max-md:text-xs">
                             {settings.auto_convert_enabled ? 'With auto-convert enabled' : 'With auto-convert disabled'}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-phonic text-2xl font-normal text-[#7f5efd]">
+                      <div className="text-right max-md:text-left max-md:w-full">
+                        <p className="font-phonic text-2xl font-normal text-[#7f5efd] max-md:text-xl">
                           {settings.auto_convert_enabled ? '1.0%' : '0.5%'}
                         </p>
-                        <p className="font-phonic text-xs font-normal text-gray-500">
+                        <p className="font-phonic text-xs font-normal text-gray-500 max-md:text-[11px]">
                           {settings.auto_convert_enabled ? 'Higher rate for conversion' : 'Standard rate'}
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="font-phonic text-base font-semibold text-gray-900">Fee Payment</h4>
+                      <h4 className="font-phonic text-base font-semibold text-gray-900 max-md:text-base">Fee Payment</h4>
                       <div className="space-y-3">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3 max-md:flex-col max-md:items-start max-md:gap-2 max-md:bg-gray-50 max-md:px-3 max-md:py-3 max-md:rounded-lg max-md:min-h-[44px]">
                           <Checkbox
                             id="merchant-pays-fee"
                             checked={!settings.charge_customer_fee}
                             onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: !(checked as boolean) }))}
-                            className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                            className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20 max-md:w-6 max-md:h-6"
                           />
-                          <label htmlFor="merchant-pays-fee" className="font-phonic text-base font-normal">
+                          <label htmlFor="merchant-pays-fee" className="font-phonic text-base font-normal max-md:text-sm">
                             Merchant pays gateway fee
                           </label>
                         </div>
 
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3 max-md:flex-col max-md:items-start max-md:gap-2 max-md:bg-gray-50 max-md:px-3 max-md:py-3 max-md:rounded-lg max-md:min-h-[44px]">
                           <Checkbox
                             id="customer-pays-fee"
                             checked={settings.charge_customer_fee}
                             onCheckedChange={(checked) => setSettings(prev => ({ ...prev, charge_customer_fee: checked as boolean }))}
-                            className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                            className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20 max-md:w-6 max-md:h-6"
                           />
-                          <label htmlFor="customer-pays-fee" className="font-phonic text-base font-normal">
+                          <label htmlFor="customer-pays-fee" className="font-phonic text-base font-normal max-md:text-sm">
                             Customer pays gateway fee
                           </label>
                         </div>
@@ -549,15 +566,15 @@ export default function MerchantSettingsPage() {
                   </div>
 
                   {/* Auto-Convert and Preferred Currency */}
-                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-4">
+                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors max-md:p-4 max-md:space-y-4">
+                    <div className="flex items-center justify-between mb-6 max-md:flex-col max-md:items-start max-md:gap-4 max-md:mb-4">
+                      <div className="flex items-center gap-4 max-md:items-start max-md:gap-3">
                         <div className="p-2 bg-[#7f5efd] rounded-lg">
                           <Zap className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Auto-Convert</h3>
-                          <p className="font-capsule text-sm text-gray-600">Automatically convert payments to preferred currency</p>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Auto-Convert</h3>
+                          <p className="font-capsule text-sm text-gray-600 max-md:text-xs">Automatically convert payments to preferred currency</p>
                         </div>
                       </div>
                       <Checkbox
@@ -572,18 +589,18 @@ export default function MerchantSettingsPage() {
                             ...(checked ? { auto_convert_fee: 1.0 } : { no_convert_fee: 0.5 })
                           }
                         }))}
-                        className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                        className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20 max-md:w-6 max-md:h-6"
                       />
                     </div>
 
                     {settings.auto_convert_enabled && (
                       <div className="space-y-4">
-                        <h4 className="font-phonic text-base font-semibold text-gray-900">Preferred Payout Currency</h4>
+                        <h4 className="font-phonic text-base font-semibold text-gray-900 max-md:text-base">Preferred Payout Currency</h4>
                         <Select
                           value={settings.preferred_payout_currency || ''}
                           onValueChange={(value) => setSettings(prev => ({ ...prev, preferred_payout_currency: value }))}
                         >
-                          <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:h-12 max-md:text-base">
                             <SelectValue placeholder="Select payout currency" />
                           </SelectTrigger>
                           <SelectContent>
@@ -629,39 +646,39 @@ export default function MerchantSettingsPage() {
           </TabsContent>
 
           {/* Tax Management Tab */}
-          <TabsContent value="tax" className="space-y-8">
+          <TabsContent value="tax" className="space-y-8 max-md:space-y-6">
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="p-6">
-                <div className="flex items-center justify-between">
+              <CardHeader className="p-6 max-md:p-4">
+                <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
                   <div className="space-y-2">
-                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3 max-md:text-lg">
                       Tax Collection Settings
                     </CardTitle>
-                    <CardDescription className="font-capsule text-sm text-gray-600">
+                    <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                       Configure tax collection for your payments
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-8">
-                <div className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:pt-0 max-md:space-y-6">
+                <div className="space-y-6 max-md:space-y-5">
                   {/* Tax Collection Toggle */}
-                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                  <div className="p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors max-md:p-4 max-md:space-y-4">
+                    <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
+                      <div className="flex items-center gap-4 max-md:items-start max-md:gap-3">
                         <div className="p-2 bg-[#7f5efd] rounded-lg">
                           <Calculator className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Tax Collection</h3>
-                          <p className="font-capsule text-sm text-gray-600">Enable tax collection on payments</p>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Tax Collection</h3>
+                          <p className="font-capsule text-sm text-gray-600 max-md:text-xs">Enable tax collection on payments</p>
                         </div>
                       </div>
                       <Checkbox
                         id="tax-enabled"
                         checked={settings.tax_enabled}
                         onCheckedChange={(checked) => setSettings(prev => ({ ...prev, tax_enabled: checked as boolean }))}
-                        className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                        className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20 max-md:w-6 max-md:h-6"
                       />
                     </div>
                   </div>
@@ -669,16 +686,16 @@ export default function MerchantSettingsPage() {
                   {settings.tax_enabled && (
                     <>
                       {/* Tax Configuration */}
-                      <div className="space-y-8">
+                      <div className="space-y-8 max-md:space-y-6">
                         {/* Tax Strategy */}
                         <div className="space-y-4">
-                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Tax Strategy</h3>
-                          <p className="font-capsule text-sm text-gray-600 mb-2">Choose how tax rates are applied</p>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Tax Strategy</h3>
+                          <p className="font-capsule text-sm text-gray-600 mb-2 max-md:text-xs">Choose how tax rates are applied</p>
                           <Select
                             value={settings.tax_strategy}
                             onValueChange={(value: 'origin' | 'destination' | 'custom') => setSettings(prev => ({ ...prev, tax_strategy: value }))}
                           >
-                            <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:h-12 max-md:text-base">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -691,13 +708,13 @@ export default function MerchantSettingsPage() {
 
                         {/* Sales Type */}
                         <div className="space-y-4">
-                          <h3 className="font-phonic text-lg font-semibold text-gray-900">Sales Type</h3>
-                          <p className="font-capsule text-sm text-gray-600 mb-2">Define your business model</p>
+                          <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Sales Type</h3>
+                          <p className="font-capsule text-sm text-gray-600 mb-2 max-md:text-xs">Define your business model</p>
                           <Select
                             value={settings.sales_type}
                             onValueChange={(value: 'local' | 'online' | 'both') => setSettings(prev => ({ ...prev, sales_type: value }))}
                           >
-                            <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <SelectTrigger className="w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 mobile-touch-button max-md:h-12 max-md:text-base">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -710,16 +727,16 @@ export default function MerchantSettingsPage() {
 
                         {/* Default Tax Rates */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
                             <div>
-                              <h3 className="font-phonic text-lg font-semibold text-gray-900">Default Tax Rates</h3>
-                              <p className="font-capsule text-sm text-gray-600">Configure your tax rates</p>
+                              <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Default Tax Rates</h3>
+                              <p className="font-capsule text-sm text-gray-600 max-md:text-xs">Configure your tax rates</p>
                             </div>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={addTaxRate}
-                              className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2"
+                              className="border-gray-200 hover:border-[#7f5efd] hover:text-[#7f5efd] transition-colors duration-200 flex items-center gap-2 mobile-touch-button max-md:w-full max-md:h-12"
                             >
                               <Plus className="h-4 w-4" />
                               Add Rate
@@ -728,14 +745,17 @@ export default function MerchantSettingsPage() {
 
                           <div className="space-y-4">
                             {settings.tax_rates.map((rate) => (
-                              <div key={rate.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
+                              <div
+                                key={rate.id}
+                                className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors max-md:flex-col max-md:items-stretch max-md:gap-3"
+                              >
                                 <input
                                   placeholder="Tax label (e.g., Sales Tax)"
                                   value={rate.label}
                                   onChange={(e) => updateTaxRate(rate.id, 'label', e.target.value)}
-                                  className="flex-1 w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
+                                  className="flex-1 w-full h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3 max-md:h-12 max-md:text-base"
                                 />
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 max-md:w-full max-md:justify-between">
                                   <input
                                     type="text"
                                     inputMode="decimal"
@@ -743,18 +763,18 @@ export default function MerchantSettingsPage() {
                                     placeholder="0.0"
                                     value={rate.percentage}
                                     onChange={(e) => updateTaxRate(rate.id, 'percentage', e.target.value)}
-                                    className="w-24 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3"
+                                    className="w-24 h-11 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 focus:border-[#7f5efd] focus:ring-[#7f5efd]/20 rounded-md px-3 max-md:w-full max-md:h-12 max-md:text-base"
                                     min="0"
                                     max="100"
                                   />
-                                  <span className="font-capsule text-xs text-gray-600">%</span>
+                                  <span className="font-capsule text-xs text-gray-600 max-md:text-sm">%</span>
                                 </div>
                                 {settings.tax_rates.length > 1 && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => removeTaxRate(rate.id)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 mobile-touch-button max-md:w-full max-md:h-12"
                                   >
                                     Remove
                                   </Button>
@@ -765,14 +785,14 @@ export default function MerchantSettingsPage() {
                         </div>
 
                         {/* Tax Information Alert */}
-                        <div className="p-6 border border-orange-200 rounded-lg bg-orange-50">
-                          <div className="flex items-start gap-4">
+                        <div className="p-6 border border-orange-200 rounded-lg bg-orange-50 max-md:p-4 max-md:space-y-4">
+                          <div className="flex items-start gap-4 max-md:flex-col max-md:items-stretch max-md:gap-3">
                             <div className="p-2 bg-orange-100 rounded-lg">
                               <AlertCircle className="h-4 w-4 text-orange-600" />
                             </div>
                             <div>
-                              <h3 className="font-phonic text-lg font-semibold text-orange-900 mb-2">Important Notice</h3>
-                              <p className="font-capsule text-sm text-orange-800">
+                              <h3 className="font-phonic text-lg font-semibold text-orange-900 mb-2 max-md:text-base">Important Notice</h3>
+                              <p className="font-capsule text-sm text-orange-800 max-md:text-xs">
                                 Cryptrac helps you charge and report taxes accurately but does not file or remit taxes.
                                 Consult with a tax professional for compliance requirements in your jurisdiction.
                               </p>
@@ -788,30 +808,30 @@ export default function MerchantSettingsPage() {
           </TabsContent>
 
           {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-8">
+          <TabsContent value="notifications" className="space-y-8 max-md:space-y-6">
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="p-6">
-                <div className="flex items-center justify-between">
+              <CardHeader className="p-6 max-md:p-4">
+                <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
                   <div className="space-y-2">
-                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3">
+                    <CardTitle className="font-phonic text-xl font-semibold text-gray-900 flex items-center gap-3 max-md:text-lg">
                       Notification Preferences
                     </CardTitle>
-                    <CardDescription className="font-capsule text-sm text-gray-600">
+                    <CardDescription className="font-capsule text-sm text-gray-600 max-md:text-xs">
                       Manage email alerts and public receipts
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-8">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
-                    <div className="flex items-center gap-4">
+              <CardContent className="p-6 pt-0 space-y-8 max-md:p-4 max-md:pt-0 max-md:space-y-6">
+                <div className="space-y-6 max-md:space-y-5">
+                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors max-md:p-4 max-md:flex-col max-md:items-start max-md:gap-4">
+                    <div className="flex items-center gap-4 max-md:items-start max-md:gap-3">
                       <div className="p-2 bg-[#7f5efd] rounded-lg">
                         <Bell className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Payment Notifications</h3>
-                        <p className="font-capsule text-sm text-gray-600">Receive email alerts when payments are received</p>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Payment Notifications</h3>
+                        <p className="font-capsule text-sm text-gray-600 max-md:text-xs">Receive email alerts when payments are received</p>
                       </div>
                     </div>
                     <Checkbox
@@ -819,18 +839,18 @@ export default function MerchantSettingsPage() {
                       onCheckedChange={(checked) =>
                         updateNotificationSetting('email_payment_notifications_enabled', !!checked)
                       }
-                      className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                      className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20 max-md:w-6 max-md:h-6"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg hover:border-[#7f5efd] transition-colors max-md:p-4 max-md:flex-col max-md:items-start max-md:gap-4">
+                    <div className="flex items-center gap-4 max-md:items-start max-md:gap-3">
                       <div className="p-2 bg-[#7f5efd] rounded-lg">
                         <CreditCard className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-phonic text-lg font-semibold text-gray-900">Public Receipts</h3>
-                        <p className="font-capsule text-sm text-gray-600">Make payment receipts publicly accessible</p>
+                        <h3 className="font-phonic text-lg font-semibold text-gray-900 max-md:text-base">Public Receipts</h3>
+                        <p className="font-capsule text-sm text-gray-600 max-md:text-xs">Make payment receipts publicly accessible</p>
                       </div>
                     </div>
                     <Checkbox
@@ -838,7 +858,7 @@ export default function MerchantSettingsPage() {
                       onCheckedChange={(checked) =>
                         updateNotificationSetting('public_receipts_enabled', !!checked)
                       }
-                      className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20"
+                      className="w-5 h-5 border-2 border-gray-300 rounded-md data-[state=checked]:bg-[#7f5efd] data-[state=checked]:border-[#7f5efd] data-[state=checked]:text-white transition-all duration-200 hover:border-[#7f5efd] focus:ring-2 focus:ring-[#7f5efd]/20 max-md:w-6 max-md:h-6"
                     />
                   </div>
                 </div>

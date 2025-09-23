@@ -18,6 +18,7 @@ import {
   Eye,
   EyeOff,
   Copy,
+  X,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -133,7 +134,9 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
   const [showDestinationTagModal, setShowDestinationTagModal] = useState(false);
   const [modalCurrency, setModalCurrency] = useState<string>('');
   const [shownModals, setShownModals] = useState<Set<string>>(new Set());
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize validation status for all currencies
   useEffect(() => {
@@ -187,6 +190,41 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
       }, 100);
     }
   }, [focusCurrency]);
+
+  useEffect(() => {
+    if (!isMobileSearchOpen) return;
+
+    const timeout = window.setTimeout(() => {
+      mobileSearchInputRef.current?.focus();
+    }, 120);
+
+    return () => window.clearTimeout(timeout);
+  }, [isMobileSearchOpen]);
+
+  useEffect(() => {
+    if (!isMobileSearchOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileSearchOpen]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!isMobileSearchOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileSearchOpen]);
 
   // Load additional currencies
   useEffect(() => {
@@ -558,6 +596,178 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
     return stableCoinAssociations[currency] && stableCoinAssociations[currency].length > 0;
   };
 
+  const currencyResults = loadingCurrencies ? (
+    <div className="text-center py-12">
+      <div className="p-4 bg-gray-50 rounded-lg inline-block">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-gray-400" />
+        <p className="text-sm text-gray-600 font-medium">Loading currencies...</p>
+      </div>
+    </div>
+  ) : filteredCurrencies.length === 0 ? (
+    <div className="text-center py-8">
+      <div className="p-4 bg-gray-50 rounded-lg inline-block">
+        <Search className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+        <p className="text-sm text-gray-600 font-medium">
+          {searchTerm ? 'No cryptocurrencies found' : 'Start typing to search currencies'}
+        </p>
+      </div>
+    </div>
+  ) : (
+    filteredCurrencies.map((currency) => (
+      <Card
+        key={currency.code}
+        className="border border-gray-200 hover:border-purple-300 hover:shadow-medium transition-all duration-200 card-hover"
+      >
+        <CardContent className="p-4 space-y-3 max-md:p-4 max-md:space-y-4">
+          <div className="flex items-center justify-between mb-3 max-md:flex-col max-md:items-start max-md:gap-3">
+            <div className="flex items-center gap-3 max-md:flex-col max-md:items-start max-md:gap-2">
+              <CryptoIcon currency={currency.code} className="h-10 w-10" />
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-gray-900 text-sm uppercase bg-gray-100 px-2 py-0.5 rounded">
+                    {currency.code}
+                  </span>
+                  <span className="font-semibold text-gray-900">{currency.display_name || currency.name}</span>
+                </div>
+                <div className="text-sm text-gray-500 max-md:text-xs">{currency.network}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 max-md:w-full max-md:justify-between max-md:flex-wrap">
+              <div className="flex items-center gap-2">
+                {getValidationIcon(currency.code)}
+                {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
+                  <span
+                    className={`text-sm font-medium ${
+                      validationStatus[currency.code] === 'valid'
+                        ? 'text-green-600'
+                        : validationStatus[currency.code] === 'invalid'
+                        ? 'text-red-600'
+                        : 'text-purple-600'
+                    }`}
+                  >
+                    {getValidationMessage(currency.code)}
+                  </span>
+                )}
+              </div>
+              {settings.wallets[currency.code] && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeWallet(currency.code)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg mobile-touch-button max-md:h-12 max-md:w-full"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Input
+              placeholder={`Enter ${currency.display_name || currency.name} wallet address`}
+              value={settings.wallets[currency.code] || ''}
+              onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
+              className={`font-mono text-sm h-12 border-gray-200 focus:border-[#7f5efd] focus-visible:ring-[#7f5efd]/20 max-md:text-base max-md:h-12 ${
+                requiresExtraId(currency.code) && validationStatus[currency.code] === 'invalid'
+                  ? 'border-red-300 focus-visible:ring-red-300'
+                  : ''
+              }`}
+            />
+
+            {/* Extra ID input for currencies that require it */}
+            {requiresExtraId(currency.code) && (
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700 max-md:text-sm">
+                  {getExtraIdLabel(currency.code)} (if required by your wallet)
+                </label>
+                <div className="relative">
+                  <Input
+                    placeholder={getExtraIdPlaceholder(currency.code)}
+                    value={settings.wallet_extra_ids?.[currency.code] || ''}
+                    onChange={(e) => handleExtraIdInputChange(currency.code, e.target.value)}
+                    className={`pr-12 font-mono text-sm h-12 border-gray-200 focus:border-[#7f5efd] focus-visible:ring-[#7f5efd]/20 max-md:text-base max-md:h-12 max-md:pr-4 ${
+                      extraIdValidationStatus[currency.code] === 'idle' ||
+                      extraIdValidationStatus[currency.code] === 'checking'
+                        ? 'border-[#7f5efd] focus-visible:ring-[#7f5efd]'
+                        : ''
+                    }`}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 max-md:hidden">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const extraId = settings.wallet_extra_ids?.[currency.code];
+                        if (extraId) {
+                          navigator.clipboard.writeText(extraId);
+                          setCopiedExtraId(currency.code);
+                          setTimeout(() => setCopiedExtraId(null), 2000);
+                        }
+                      }}
+                      className="h-8 w-8 p-0 hover:bg-gray-100"
+                    >
+                      {copiedExtraId === currency.code ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-gray-500" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="hidden max-md:flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const extraId = settings.wallet_extra_ids?.[currency.code];
+                      if (extraId) {
+                        navigator.clipboard.writeText(extraId);
+                        setCopiedExtraId(currency.code);
+                        setTimeout(() => setCopiedExtraId(null), 2000);
+                      }
+                    }}
+                    className="mobile-touch-button max-md:h-12 max-md:flex-1 border-gray-200"
+                  >
+                    {copiedExtraId === currency.code ? 'Copied' : 'Copy Extra ID'}
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 max-md:text-xs">
+                  {getExtraIdDescription(currency.code)}
+                </p>
+                {extraIdValidationStatus[currency.code] && extraIdValidationStatus[currency.code] !== 'idle' && (
+                  <div className="flex items-center gap-2 text-sm max-md:text-xs">
+                    {extraIdValidationStatus[currency.code] === 'valid' ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : extraIdValidationStatus[currency.code] === 'invalid' ? (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    ) : (
+                      <Loader2 className="h-4 w-4 text-purple-500 animate-spin" />
+                    )}
+                    <span
+                      className={`font-medium ${
+                        extraIdValidationStatus[currency.code] === 'valid'
+                          ? 'text-green-600'
+                          : extraIdValidationStatus[currency.code] === 'invalid'
+                          ? 'text-red-600'
+                          : 'text-purple-600'
+                      }`}
+                    >
+                      {extraIdValidationStatus[currency.code] === 'valid'
+                        ? `Valid ${getExtraIdLabel(currency.code).toLowerCase()}`
+                        : extraIdValidationStatus[currency.code] === 'invalid'
+                        ? `Invalid ${getExtraIdLabel(currency.code).toLowerCase()} format`
+                        : `Checking ${getExtraIdLabel(currency.code).toLowerCase()}...`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    ))
+  );
+
   return (
     <div className="space-y-8">
       {/* Smart Wallet Setup card removed as requested */}
@@ -847,7 +1057,7 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
 
       {/* Enhanced Add New Wallet Section */}
       <Card className="border-gray-200 shadow-medium hover:shadow-large transition-all duration-200">
-        <CardHeader className="pb-6">
+        <CardHeader className="pb-6 max-md:p-4 max-md:pb-4">
           <div className="flex items-center gap-4 max-md:flex-col max-md:items-start max-md:gap-3">
             <div className="p-3 bg-gradient-to-br from-[#7f5efd]/10 to-[#7c3aed]/10 rounded-lg shadow-soft">
               <Plus className="h-6 w-6 text-[#7f5efd]" />
@@ -862,8 +1072,18 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="relative">
+        <CardContent className="space-y-6 max-md:p-4 max-md:space-y-5">
+          <div className="md:hidden">
+            <Button
+              variant="outline"
+              onClick={() => setIsMobileSearchOpen(true)}
+              className="w-full justify-center gap-2 border-gray-200 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/40 mobile-touch-button max-md:h-12"
+            >
+              <Search className="h-4 w-4" />
+              Search cryptocurrencies
+            </Button>
+          </div>
+          <div className="relative hidden md:block">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               ref={searchInputRef}
@@ -873,149 +1093,45 @@ export default function WalletsManager<T = Record<string, unknown>>({ settings, 
               className="pl-12 h-14 text-base border-gray-200 focus:border-purple-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-purple-500 rounded-lg"
             />
           </div>
-          
-          {loadingCurrencies ? (
-            <div className="text-center py-12">
-              <div className="p-4 bg-gray-50 rounded-lg inline-block">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-gray-400" />
-                <p className="text-sm text-gray-600 font-medium">Loading currencies...</p>
-              </div>
-            </div>
-          ) : (
+
+          <div className="hidden md:block">
             <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-              {filteredCurrencies.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="p-4 bg-gray-50 rounded-lg inline-block">
-                    <Search className="h-8 w-8 mx-auto mb-3 text-gray-400" />
-                    <p className="text-sm text-gray-600 font-medium">
-                      {searchTerm ? 'No cryptocurrencies found' : 'Start typing to search currencies'}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                filteredCurrencies.map((currency) => (
-                  <Card key={currency.code} className="border border-gray-200 hover:border-purple-300 hover:shadow-medium transition-all duration-200 card-hover">
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between mb-3 max-md:flex-col max-md:items-start max-md:gap-3">
-                        <div className="flex items-center gap-3 max-md:flex-col max-md:items-start max-md:gap-2">
-                          <CryptoIcon currency={currency.code} className="h-10 w-10" />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-gray-900 text-sm uppercase bg-gray-100 px-2 py-0.5 rounded">{currency.code}</span>
-                              <span className="font-semibold text-gray-900">{currency.display_name || currency.name}</span>
-                            </div>
-                            <div className="text-sm text-gray-500">{currency.network}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 max-md:w-full max-md:justify-start max-md:flex-wrap">
-                          {getValidationIcon(currency.code)}
-                          {settings.wallets[currency.code] && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeWallet(currency.code)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Input
-                          placeholder={`Enter ${currency.display_name || currency.name} wallet address`
-                          }
-                          value={settings.wallets[currency.code] || ''}
-                          onChange={(e) => handleWalletInputChange(currency.code, e.target.value)}
-                          className={`font-mono text-sm ${
-                            requiresExtraId(currency.code) && validationStatus[currency.code] === 'invalid' ? 'border-red-300 focus-visible:ring-red-300' : ''
-                          }`}
-                        />
-                        
-                        {validationStatus[currency.code] && validationStatus[currency.code] !== 'idle' && (
-                          <div className="flex items-center gap-2 text-sm">
-                            {getValidationIcon(currency.code)}
-                            <span className={`font-medium ${
-                              validationStatus[currency.code] === 'valid' ? 'text-green-600' :
-                              validationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-                              'text-purple-600'
-                            }`}>
-                              {getValidationMessage(currency.code)}
-                            </span>
-                          </div>
-                        )}
-                        
-                        {/* Extra ID input for currencies that require it */}
-                        {requiresExtraId(currency.code) && (
-                          <>
-                            <label className="text-xs font-medium text-gray-700">
-                              {getExtraIdLabel(currency.code)} (if required by your wallet)
-                            </label>
-                            <div className="relative">
-                              <Input
-                                placeholder={getExtraIdPlaceholder(currency.code)}
-                                value={settings.wallet_extra_ids?.[currency.code] || ''}
-                                onChange={(e) => handleExtraIdInputChange(currency.code, e.target.value)}
-                                className={`pr-12 font-mono text-sm focus:border-[#7f5efd] focus-visible:ring-[#7f5efd]/20 ${
-                                  extraIdValidationStatus[currency.code] === 'idle' || extraIdValidationStatus[currency.code] === 'checking' ? 'border-[#7f5efd] focus-visible:ring-[#7f5efd]' : ''
-                                }`}
-                              />
-                              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    const extraId = settings.wallet_extra_ids?.[currency.code];
-                                    if (extraId) {
-                                      navigator.clipboard.writeText(extraId);
-                                      setCopiedExtraId(currency.code);
-                                      setTimeout(() => setCopiedExtraId(null), 2000);
-                                    }
-                                  }}
-                                  className="h-8 w-8 p-0 hover:bg-gray-100"
-                                >
-                                  {copiedExtraId === currency.code ?
-                                    <CheckCircle className="h-4 w-4 text-green-500" /> :
-                                    <Copy className="h-4 w-4 text-gray-500" />
-                                  }
-                                </Button>
-                              </div>
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              {getExtraIdDescription(currency.code)}
-                            </p>
-                            {extraIdValidationStatus[currency.code] && extraIdValidationStatus[currency.code] !== 'idle' && (
-                              <div className="flex items-center gap-2 text-sm">
-                                {extraIdValidationStatus[currency.code] === 'valid' ? (
-                                  <CheckCircle className="h-4 w-4 text-green-500" />
-                                ) : extraIdValidationStatus[currency.code] === 'invalid' ? (
-                                  <XCircle className="h-4 w-4 text-red-500" />
-                                ) : (
-                                  <Loader2 className="h-4 w-4 text-purple-500 animate-spin" />
-                                )}
-                                <span className={`font-medium ${
-                                  extraIdValidationStatus[currency.code] === 'valid' ? 'text-green-600' :
-                                  extraIdValidationStatus[currency.code] === 'invalid' ? 'text-red-600' :
-                                  'text-purple-600'
-                                }`}>
-                                  {extraIdValidationStatus[currency.code] === 'valid' ? `Valid ${getExtraIdLabel(currency.code).toLowerCase()}` :
-                                   extraIdValidationStatus[currency.code] === 'invalid' ? `Invalid ${getExtraIdLabel(currency.code).toLowerCase()} format` :
-                                   `Checking ${getExtraIdLabel(currency.code).toLowerCase()}...`}
-                                </span>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+              {currencyResults}
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
+
+      {isMobileSearchOpen && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-white md:hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <span className="text-sm font-medium text-gray-900">Search wallets</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileSearchOpen(false)}
+              aria-label="Close search"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="px-4 py-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                ref={mobileSearchInputRef}
+                placeholder="Search cryptocurrencies"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-12 text-base border-gray-200 focus:border-purple-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-purple-500 rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3">
+            {currencyResults}
+          </div>
+        </div>
+      )}
 
       {/* Destination Tag Modal */}
       {showDestinationTagModal && (

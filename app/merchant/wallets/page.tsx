@@ -21,6 +21,14 @@ import { Dialog, DialogContent } from '@/app/components/ui/dialog';
 import Tooltip from '@/app/components/ui/tooltip';
 import { RECOMMENDED_CURRENCIES } from '@/lib/recommended-currencies';
 import { LazyMount } from '@/app/components/ui/lazy-mount';
+import {
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetHeader,
+  BottomSheetTitle,
+  BottomSheetDescription
+} from '@/app/components/ui/bottom-sheet';
+import { useIsMobile } from '@/lib/hooks/use-mobile';
 
 interface MerchantSettings {
   // Wallet settings
@@ -100,6 +108,7 @@ export default function WalletsPage() {
     sales_type: 'online'
   });
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   // Fetch user and settings
   useEffect(() => {
@@ -204,7 +213,7 @@ export default function WalletsPage() {
   }
 
   return (
-    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto max-md:px-4 max-md:space-y-6">
+    <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto max-md:px-4 max-md:py-6 max-md:space-y-6">
         {/* Breadcrumbs */}
         <Breadcrumbs 
           items={[
@@ -215,10 +224,10 @@ export default function WalletsPage() {
         
         {/* Enhanced Header */}
         <div className="space-y-2">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:text-2xl max-md:leading-tight">
             Wallet Addresses
           </h1>
-          <p className="font-phonic text-base font-normal text-gray-600">
+          <p className="font-phonic text-base font-normal text-gray-600 max-md:text-sm">
             Manage your cryptocurrency wallet addresses for receiving payments
           </p>
         </div>
@@ -227,30 +236,50 @@ export default function WalletsPage() {
 
         {/* Success Alert */}
         {success && (
-          <Alert className="border-green-200 bg-green-50">
+          <Alert className="border-green-200 bg-green-50 max-md:p-4">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="font-phonic text-base font-normal text-green-800">
+            <AlertDescription className="font-phonic text-base font-normal text-green-800 max-md:text-sm">
               Your wallet settings have been updated successfully.
             </AlertDescription>
           </Alert>
         )}
 
         {/* Setup Guide Modal */}
-        <Dialog open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
-          <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-transparent border-0 shadow-none p-0 max-h-[90vh] overflow-y-auto overscroll-contain max-md:w-[95vw]">
-            <TrustWalletGuide
-              onComplete={() => setShowTrustWalletGuide(false)}
-              onSkip={() => setShowTrustWalletGuide(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        {isMobile ? (
+          <BottomSheet open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
+            <BottomSheetContent
+              className="md:hidden max-h-[92vh] overflow-y-auto px-0"
+              onDismiss={() => setShowTrustWalletGuide(false)}
+            >
+              <BottomSheetHeader className="px-4 text-left">
+                <BottomSheetTitle>Trust Wallet Setup</BottomSheetTitle>
+                <BottomSheetDescription>Follow the guide to configure your wallets.</BottomSheetDescription>
+              </BottomSheetHeader>
+              <div className="px-4 pb-6">
+                <TrustWalletGuide
+                  onComplete={() => setShowTrustWalletGuide(false)}
+                  onSkip={() => setShowTrustWalletGuide(false)}
+                />
+              </div>
+            </BottomSheetContent>
+          </BottomSheet>
+        ) : (
+          <Dialog open={showTrustWalletGuide} onOpenChange={setShowTrustWalletGuide}>
+            <DialogContent className="w-[92vw] max-w-[92vw] sm:max-w-3xl md:max-w-4xl bg-transparent border-0 shadow-none p-0 max-h-[90vh] overflow-y-auto overscroll-contain">
+              <TrustWalletGuide
+                onComplete={() => setShowTrustWalletGuide(false)}
+                onSkip={() => setShowTrustWalletGuide(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Setup Guide + Recommended (matches onboarding step 3) */}
         <div className="flex justify-center items-center gap-6 max-md:flex-col max-md:items-stretch">
           <Button
             variant="outline"
             onClick={() => setShowTrustWalletGuide(true)}
-            className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12"
+            className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12 mobile-touch-button"
           >
             <HelpCircle className="h-4 w-4" />
             Setup Guide
@@ -260,7 +289,7 @@ export default function WalletsPage() {
             trigger={
               <Button
                 variant="outline"
-                className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12"
+                className="flex items-center justify-center gap-2 border-[#7f5efd]/30 text-[#7f5efd] hover:bg-[#7f5efd]/5 hover:border-[#7f5efd]/50 shadow-sm transition-all duration-200 max-md:w-full max-md:h-12 mobile-touch-button"
               >
                 <Star className="h-4 w-4" />
                 Highly Recommended
@@ -277,7 +306,7 @@ export default function WalletsPage() {
         <LazyMount
           className="block"
           placeholder={(
-            <div className="border border-dashed border-[#7f5efd]/40 rounded-xl p-6 space-y-4">
+            <div className="border border-dashed border-[#7f5efd]/40 rounded-xl p-6 space-y-4 max-md:p-4">
               <div className="h-4 w-48 rounded bg-[#7f5efd]/10 animate-pulse" />
               <div className="h-16 rounded bg-[#7f5efd]/5 animate-pulse" />
               <div className="h-16 rounded bg-[#7f5efd]/5 animate-pulse" />

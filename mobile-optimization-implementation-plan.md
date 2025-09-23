@@ -1322,6 +1322,190 @@ export function trackMobileMetrics() {
 }
 ```
 
+## Implementation Log - Subscription Management Pages (December 2024)
+
+### Completed Subscription Pages Mobile Optimization
+
+#### 1. Subscriptions List Page (`/merchant/subscriptions`)
+**Implementation Details:**
+- **Typography**: Applied responsive text sizing with `max-md:text-2xl` for headers, `max-md:text-sm` for body text
+- **Mobile Cards**: Converted subscription items to `MobileDataCard` components with swipe-to-reveal actions (pause/resume, edit, view)
+- **Swipe Actions**: Implemented `useSwipeActions` hook for left swipe to reveal quick actions
+- **Pull-to-Refresh**: Added `usePullToRefresh` hook with loading indicator for refreshing subscription list
+- **Filters**: Moved search and status filters to `BottomSheet` component on mobile
+- **FAB**: Added floating action button for "Create Subscription" with safe-area padding for iOS
+- **Statistics Cards**: Optimized grid layout from 4 columns to 2x2 grid on mobile with condensed labels
+- **Touch Targets**: All buttons meet 44px minimum with `max-md:h-12` classes
+- **Safe Areas**: Applied iOS safe-area padding using `env(safe-area-inset-bottom)`
+
+**Mobile-Specific Components:**
+```tsx
+const MobileSubscriptionCard = ({ subscription }: { subscription: Subscription }) => {
+  // Swipeable card with status badge, customer info, billing details
+  // Reveals pause/resume, edit, view actions on swipe
+}
+```
+
+#### 2. Subscription Details Page (`/merchant/subscriptions/[id]`)
+**Implementation Details:**
+- **Layout**: Stacked sections vertically on mobile with collapsible panels
+- **Customer Info**: Implemented as `Collapsible` component with expand/collapse animation
+- **Timing Config**: Similar collapsible section for timing settings
+- **Upcoming Cycles**: Horizontal scrollable cards instead of vertical list
+  - Each cycle shown as a compact card (160px wide)
+  - Shows date, cycle number, amount with override indicators
+  - Smooth horizontal scroll with momentum
+- **Invoice Generation**: Moved to bottom sheet with simplified UI
+  - Standard generation with next cycle preview
+  - Email notification form integrated
+  - Copy payment URL action
+- **Amount Overrides**: Full bottom sheet with:
+  - List of active overrides
+  - New override form with mobile-optimized date inputs
+  - Quick preset buttons (1 month, 1 year, permanent)
+- **Invoice History**: Collapsible section with card-based layout
+  - Each invoice as a rounded card with status badge
+  - Compact display with essential info
+- **Date Inputs**: Enhanced with native mobile date pickers
+- **Modals**: All complex forms converted to bottom sheets
+- **Sticky Actions**: Important buttons remain accessible during scroll
+
+**Key Mobile Patterns:**
+```tsx
+// Collapsible sections for progressive disclosure
+<Collapsible open={expandedSections.customer} onOpenChange={() => toggleSection('customer')}>
+  <CollapsibleTrigger asChild>
+    <Card className="md:hidden cursor-pointer">
+      // Section header with chevron indicator
+    </Card>
+  </CollapsibleTrigger>
+  <CollapsibleContent>
+    // Section content
+  </CollapsibleContent>
+</Collapsible>
+
+// Horizontal scroll for cycles
+<div className="md:hidden -mx-4 px-4 overflow-x-auto">
+  <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
+    {cycles.map(cycle => <CycleCard />)}
+  </div>
+</div>
+```
+
+#### 3. Create Subscription Page (`/merchant/subscriptions/create`)
+**Implementation Details:**
+- **Wizard Approach**: Complete multi-step form wizard with 6 steps:
+  1. **Basic Information**: Title and description
+  2. **Pricing & Billing**: Amount, currency, interval, max cycles
+  3. **Customer Details**: Name, email, phone
+  4. **Payment Settings**: Accepted cryptocurrencies grid
+  5. **Advanced Options**: Gateway fees, tax settings
+  6. **Review & Submit**: Summary of all entered data
+- **Progress Indicator**: Visual progress bar and step icons
+  - Each step shows icon and title
+  - Completed steps highlighted in purple
+  - Current step with filled background
+  - Disabled future steps grayed out
+- **Step Navigation**:
+  - Back/Next buttons in sticky footer
+  - Direct step navigation for completed steps
+  - Step validation before proceeding
+- **Form Validation**: Per-step validation with inline errors
+- **Input Types**: Proper keyboards for different inputs:
+  - `type="email"` for email field
+  - `type="tel"` for phone
+  - `type="number"` with step for amounts
+  - Native date pickers for dates
+- **Touch Targets**: All form controls 44px minimum height
+- **Sticky Footer**: Navigation buttons always visible with safe-area padding
+- **Desktop Preservation**: Original single-page form remains untouched for desktop
+
+**Wizard Implementation:**
+```tsx
+const wizardSteps = [
+  { id: 1, title: 'Basic Info', icon: CreditCard },
+  { id: 2, title: 'Pricing', icon: DollarSign },
+  { id: 3, title: 'Customer', icon: Users },
+  { id: 4, title: 'Payment', icon: Coins },
+  { id: 5, title: 'Advanced', icon: Settings },
+  { id: 6, title: 'Review', icon: Check },
+];
+
+// Mobile-only wizard interface
+{isMobile ? (
+  <>
+    <Progress value={(currentStep / 6) * 100} />
+    <div className="flex justify-between">
+      {wizardSteps.map(step => <StepButton />)}
+    </div>
+    <Card>
+      <MobileStepContent />
+    </Card>
+    <div className="fixed bottom-0 left-0 right-0 p-4">
+      <Button onClick={handlePrevStep}>Back</Button>
+      <Button onClick={handleNextStep}>Next</Button>
+    </div>
+  </>
+) : (
+  // Desktop form unchanged
+)}
+```
+
+### Technical Components Added
+
+#### Progress Component
+Created `app/components/ui/progress.tsx`:
+- Radix UI based progress bar
+- Purple fill color matching brand
+- Smooth animation on value changes
+- Used for wizard step progress
+
+#### Mobile-Specific Hooks Used
+- `useIsMobile()`: Detect mobile viewport for conditional rendering
+- `usePullToRefresh()`: Pull gesture for list refresh
+- `useSwipeActions()`: Swipe gestures for card actions
+- `Collapsible`: Radix UI component for expandable sections
+- `BottomSheet`: Custom component for mobile overlays
+
+### Key Patterns Applied
+
+1. **All mobile styles use `max-md:` prefix** - Desktop unchanged above 768px
+2. **Conditional rendering** - Mobile components only mount on mobile
+3. **Progressive disclosure** - Complex sections hidden by default
+4. **Gesture support** - Native mobile interactions (swipe, pull)
+5. **Bottom sheets** - Replace modals and complex forms
+6. **Horizontal scrolling** - Handle data overflow elegantly
+7. **Card-based layouts** - Replace tables and lists
+8. **Sticky elements** - Keep important actions accessible
+9. **Safe area padding** - Respect device insets
+10. **44px touch targets** - All interactive elements
+
+### Testing & Verification
+
+- ✅ **Linting**: All TypeScript/ESLint errors resolved
+- ✅ **Desktop Preservation**: No changes to `md:` and above breakpoints
+- ✅ **Mobile Breakpoints**: All changes scoped to `max-md:`
+- ✅ **Touch Targets**: Minimum 44px height verified
+- ✅ **Gesture Support**: Swipe and pull-to-refresh functional
+- ✅ **Form Validation**: Step-by-step validation working
+- ✅ **Bottom Sheets**: Smooth animations and dismissal
+- ✅ **Safe Areas**: iOS notch/home indicator respected
+
+### Files Modified
+
+1. `/app/merchant/subscriptions/page.tsx` - List page with mobile cards
+2. `/app/merchant/subscriptions/[id]/page.tsx` - Details with collapsibles and bottom sheets
+3. `/app/merchant/subscriptions/create/page.tsx` - Multi-step wizard for mobile
+4. `/app/components/ui/progress.tsx` - New progress bar component
+
+### Impact Summary
+
+- **Zero desktop changes** - All existing functionality preserved
+- **Mobile-first UX** - Touch-friendly, gesture-based interactions
+- **Improved accessibility** - Larger touch targets, better contrast
+- **Performance optimized** - Lazy loading, conditional rendering
+- **Consistent patterns** - Reusable components and hooks
+
 ## Conclusion
 
 This implementation plan provides a comprehensive approach to mobile optimization while **guaranteeing zero changes to the desktop experience**. The desktop-protection-first approach ensures that all existing functionality and design remains completely intact.

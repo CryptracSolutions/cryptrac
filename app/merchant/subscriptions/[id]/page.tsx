@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTimezone } from '@/lib/contexts/TimezoneContext';
-import { formatDateShort, formatFullDateTime, formatDate } from '@/lib/utils/date-utils';
+import { formatDateShort, formatDate } from '@/lib/utils/date-utils';
 // import Link from 'next/link';
 import { makeAuthenticatedRequest, supabase } from '@/lib/supabase-browser';
 import { Badge } from '@/app/components/ui/badge';
@@ -11,6 +11,38 @@ import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { Breadcrumbs } from '@/app/components/ui/breadcrumbs';
+import { useIsMobile } from '@/lib/hooks/use-mobile';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import {
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetHeader,
+  BottomSheetTitle,
+  BottomSheetDescription,
+} from '@/app/components/ui/bottom-sheet';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/app/components/ui/collapsible';
+import { cn } from '@/lib/utils';
+import {
+  ChevronDown,
+  ChevronRight,
+  Calendar,
+  DollarSign,
+  Clock,
+  Info,
+  Mail,
+  Phone,
+  User,
+  Receipt,
+  Settings,
+  FileText,
+  Send,
+  Copy,
+  CheckCircle
+} from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -133,6 +165,7 @@ export default function SubscriptionDetailPage() {
   const params = useParams();
   const id = String(params?.id);
   const { timezone } = useTimezone();
+  const isMobile = useIsMobile();
   const [sub, setSub] = useState<Subscription | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -141,13 +174,31 @@ export default function SubscriptionDetailPage() {
   const [invoiceLink, setInvoiceLink] = useState<{ url: string; id: string } | null>(null);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Mobile-specific state
+  const [isOverrideSheetOpen, setOverrideSheetOpen] = useState(false);
+  const [isInvoiceSheetOpen, setInvoiceSheetOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    customer: false,
+    timing: false,
+    invoices: false,
+    overrides: false,
+    upcomingCycles: true,
+  });
   
   // ENHANCED: Add state for future cycle targeting
   const [targetCycleDate, setTargetCycleDate] = useState('');
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
-  
+
   // ENHANCED: Add state for upcoming cycles display
   const [showAllCycles, setShowAllCycles] = useState(false);
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   const fetchInvoices = useCallback(async (): Promise<void> => {
     const { data: invs } = await supabase
@@ -339,178 +390,388 @@ export default function SubscriptionDetailPage() {
   }
 
   return (
-    <div className="p-4">
-      <div className="mb-6">
-        <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">Dashboard</h1>
-        <p className="font-capsule text-base font-normal text-gray-600 mb-1">
-          Manage your subscriptions and billing cycles.
-        </p>
-        <Breadcrumbs 
+    <div className={cn(
+      "p-4",
+      "max-md:px-4 max-md:py-6 max-md:pb-24"
+    )}>
+      <div className="mb-6 max-md:mb-4">
+        <Breadcrumbs
           items={[
             { name: 'Dashboard', href: '/merchant/dashboard' },
             { name: 'Subscriptions', href: '/merchant/subscriptions' },
             { name: sub?.title || 'Loading...', href: '#' }
-          ]} 
+          ]}
         />
       </div>
 
       {sub && (
-        <div className="mb-6">
-          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4">{sub.title}</h1>
-          <p className="font-capsule text-base font-normal text-gray-600 mb-1">
-            {sub.amount} {sub.currency} every {sub.interval_count} {sub.interval}
-            {sub.interval_count > 1 ? 's' : ''}
-            {sub.max_cycles && (
-              <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                {sub.max_cycles} cycles max
+        <div className="mb-6 max-md:mb-4">
+          <h1 className="font-phonic text-3xl font-normal tracking-tight text-gray-900 mb-4 max-md:text-2xl max-md:mb-2">{sub.title}</h1>
+          <div className="space-y-2 max-md:space-y-1">
+            <p className="font-capsule text-base font-normal text-gray-600 max-md:text-sm">
+              <span className="font-semibold text-[#7f5efd] text-lg max-md:text-base">
+                ${sub.amount} {sub.currency}
               </span>
-            )}
-          </p>
-          {sub.next_billing_at && (
-            <p className="font-capsule text-base font-normal text-gray-600 mb-1">
-              Next billing: {sub.next_billing_at ? formatFullDateTime(sub.next_billing_at, timezone) : 'Not scheduled'}
+              <span className="ml-2">
+                every {sub.interval_count} {sub.interval}
+                {sub.interval_count > 1 ? 's' : ''}
+              </span>
             </p>
-          )}
-          <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
-            {sub.status}
-          </Badge>
-          
-          {/* Customer Information */}
-          {customer && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-phonic text-base font-normal mb-2">Customer Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {customer.name && (
-                  <div>
-                    <span className="font-medium">Name:</span> {customer.name}
-                  </div>
-                )}
-                {customer.email && (
-                  <div>
-                    <span className="font-medium">Email:</span> {customer.email}
-                  </div>
-                )}
-                {customer.phone && (
-                  <div>
-                    <span className="font-medium">Phone:</span> {customer.phone}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Timing Configuration */}
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-phonic text-base font-normal mb-2">Timing Configuration</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Invoice Due Days:</span> {sub.invoice_due_days || 0}
-              </div>
-              <div>
-                <span className="font-medium">Generate in Advance:</span> {sub.generate_days_in_advance || 0} days
-              </div>
-              <div>
-                <span className="font-medium">Past Due After:</span> {sub.past_due_after_days || 2} days
-              </div>
-              <div>
-                <span className="font-medium">Auto Resume:</span> {sub.auto_resume_on_payment ? 'Yes' : 'No'}
-              </div>
+            {sub.next_billing_at && (
+              <p className="font-capsule text-base font-normal text-gray-600 max-md:text-sm">
+                <Clock className="inline h-4 w-4 mr-1 text-gray-500" />
+                Next: {sub.next_billing_at ? formatDateShort(sub.next_billing_at, timezone) : 'Not scheduled'}
+              </p>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
+                {sub.status}
+              </Badge>
+              {sub.max_cycles && (
+                <Badge variant="outline" className="text-xs">
+                  {sub.total_cycles || 0}/{sub.max_cycles} cycles
+                </Badge>
+              )}
+              {sub.missed_payments_count && sub.missed_payments_count > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {sub.missed_payments_count} missed
+                </Badge>
+              )}
             </div>
           </div>
+          
+          {/* Desktop Customer Information */}
+          {customer && (
+            <Card className="hidden md:block mt-4 border border-gray-200 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <User className="h-5 w-5 text-[#7f5efd]" />
+                  Customer Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  {customer.name && (
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Name</p>
+                        <p className="font-medium">{customer.name}</p>
+                      </div>
+                    </div>
+                  )}
+                  {customer.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Email</p>
+                        <p className="font-medium">{customer.email}</p>
+                      </div>
+                    </div>
+                  )}
+                  {customer.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Phone</p>
+                        <p className="font-medium">{customer.phone}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Mobile Customer Information Collapsible */}
+          {customer && isMobile && (
+            <Collapsible open={expandedSections.customer} onOpenChange={() => toggleSection('customer')}>
+              <CollapsibleTrigger asChild>
+                <Card className="md:hidden mt-4 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base font-semibold flex items-center gap-2">
+                        <User className="h-4 w-4 text-[#7f5efd]" />
+                        Customer
+                      </CardTitle>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 transition-transform",
+                        expandedSections.customer && "rotate-180"
+                      )} />
+                    </div>
+                    {!expandedSections.customer && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {customer.name || customer.email || 'No info'}
+                      </p>
+                    )}
+                  </CardHeader>
+                </Card>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-3">
+                    {customer.name && (
+                      <div className="flex items-center gap-3">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Name</p>
+                          <p className="font-medium text-sm">{customer.name}</p>
+                        </div>
+                      </div>
+                    )}
+                    {customer.email && (
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-4 w-4 text-gray-500" />
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Email</p>
+                          <p className="font-medium text-sm break-all">{customer.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    {customer.phone && (
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-4 w-4 text-gray-500" />
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Phone</p>
+                          <p className="font-medium text-sm">{customer.phone}</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {/* Desktop Timing Configuration */}
+          <Card className="hidden md:block mt-4 border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Settings className="h-5 w-5 text-[#7f5efd]" />
+                Timing Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-xs text-gray-500">Invoice Due Days</p>
+                  <p className="font-medium">{sub.invoice_due_days || 0} days</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Generate in Advance</p>
+                  <p className="font-medium">{sub.generate_days_in_advance || 0} days</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Past Due After</p>
+                  <p className="font-medium">{sub.past_due_after_days || 2} days</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Auto Resume</p>
+                  <p className="font-medium">{sub.auto_resume_on_payment ? 'Yes' : 'No'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mobile Timing Configuration Collapsible */}
+          {isMobile && (
+            <Collapsible open={expandedSections.timing} onOpenChange={() => toggleSection('timing')}>
+              <CollapsibleTrigger asChild>
+                <Card className="md:hidden mt-4 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base font-semibold flex items-center gap-2">
+                        <Settings className="h-4 w-4 text-[#7f5efd]" />
+                        Timing
+                      </CardTitle>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 transition-transform",
+                        expandedSections.timing && "rotate-180"
+                      )} />
+                    </div>
+                    {!expandedSections.timing && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Due: {sub.invoice_due_days || 0}d • Advance: {sub.generate_days_in_advance || 0}d
+                      </p>
+                    )}
+                  </CardHeader>
+                </Card>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                  <CardContent className="pt-0 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500">Invoice Due</p>
+                      <p className="font-medium text-sm">{sub.invoice_due_days || 0} days</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Generate Early</p>
+                      <p className="font-medium text-sm">{sub.generate_days_in_advance || 0} days</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Past Due After</p>
+                      <p className="font-medium text-sm">{sub.past_due_after_days || 2} days</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Auto Resume</p>
+                      <p className="font-medium text-sm">{sub.auto_resume_on_payment ? 'Yes' : 'No'}</p>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
       )}
 
       {/* ENHANCED: Upcoming Billing Cycles Preview with Dynamic Display */}
       {cyclesWithOverrides.length > 0 && (
-        <div className="mb-6 p-4 border rounded-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-phonic text-2xl font-normal">Upcoming Billing Cycles</h2>
-            <div className="flex items-center gap-2">
-              {!showAllCycles && cyclesWithOverrides.length >= 5 && (
-                <button
-                  onClick={() => setShowAllCycles(true)}
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
-                >
-                  Show All {sub?.max_cycles ? `(${Math.min((sub.max_cycles - (sub.total_cycles || 0)), 12)})` : '(12)'}
-                </button>
-              )}
-              {showAllCycles && (
-                <button
-                  onClick={() => setShowAllCycles(false)}
-                  className="text-sm text-gray-600 hover:text-gray-800 underline"
-                >
-                  Show Less
-                </button>
-              )}
+        <Card className={cn(
+          "mb-6 border border-gray-200 shadow-sm",
+          "max-md:rounded-2xl"
+        )}>
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl font-semibold flex items-center gap-2 max-md:text-lg">
+                <Calendar className="h-5 w-5 text-[#7f5efd] max-md:h-4 max-md:w-4" />
+                Upcoming Cycles
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                {!showAllCycles && cyclesWithOverrides.length >= 5 && (
+                  <button
+                    onClick={() => setShowAllCycles(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline max-md:text-xs"
+                  >
+                    Show All {sub?.max_cycles ? `(${Math.min((sub.max_cycles - (sub.total_cycles || 0)), 12)})` : '(12)'}
+                  </button>
+                )}
+                {showAllCycles && (
+                  <button
+                    onClick={() => setShowAllCycles(false)}
+                    className="text-sm text-gray-600 hover:text-gray-800 underline max-md:text-xs"
+                  >
+                    Show Less
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          </CardHeader>
+          <CardContent className="pt-0">
           
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-            <p className="text-sm text-blue-800">
-              {sub?.max_cycles ? (
-                <>
-                  <strong>Subscription Progress:</strong> Showing {cyclesWithOverrides.length} upcoming cycles 
-                  (cycles {((sub.total_cycles || 0) + 1)} to {((sub.total_cycles || 0) + cyclesWithOverrides.length)} of {sub.max_cycles} total).
-                </>
-              ) : (
-                <>
-                  <strong>Ongoing Subscription:</strong> Showing next {cyclesWithOverrides.length} billing cycles. 
-                  This subscription will continue indefinitely until canceled.
-                </>
-              )}
-              <br />
-              <strong>Automatic billing</strong> will use these amounts when each cycle date arrives.
-            </p>
-          </div>
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded max-md:text-xs max-md:p-2.5">
+              <p className="text-sm text-blue-800 max-md:text-xs">
+                {sub?.max_cycles ? (
+                  <>
+                    <Info className="inline h-3 w-3 mr-1" />
+                    <strong>Progress:</strong> {cyclesWithOverrides.length} upcoming
+                    <span className="hidden md:inline"> (cycles {((sub.total_cycles || 0) + 1)}-{((sub.total_cycles || 0) + cyclesWithOverrides.length)} of {sub.max_cycles})</span>
+                  </>
+                ) : (
+                  <>
+                    <Info className="inline h-3 w-3 mr-1" />
+                    <strong>Ongoing:</strong> Next {cyclesWithOverrides.length} cycles
+                    <span className="hidden md:inline"> • Continues indefinitely</span>
+                  </>
+                )}
+                <span className="hidden md:inline">
+                  <br />
+                  <strong>Automatic billing</strong> will use these amounts when each cycle date arrives.
+                </span>
+              </p>
+            </div>
           
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {cyclesWithOverrides.map((cycle, index) => (
-              <div key={cycle.date} className={`flex justify-between items-center p-3 rounded ${
-                index === 0 ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
-              }`}>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {formatDateOnly(cycle.date, timezone)}
-                    </span>
-                    {index === 0 && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Next</span>}
-                    {cycle.hasOverride && (
-                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                        Override Active
+            {/* Desktop cycles list */}
+            <div className="hidden md:block space-y-2 max-h-96 overflow-y-auto">
+              {cyclesWithOverrides.map((cycle, index) => (
+                <div key={cycle.date} className={`flex justify-between items-center p-3 rounded ${
+                  index === 0 ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
+                }`}>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {formatDateOnly(cycle.date, timezone)}
                       </span>
+                      {index === 0 && <Badge variant="default" className="text-xs">Next</Badge>}
+                      {cycle.hasOverride && (
+                        <Badge variant="outline" className="text-xs bg-orange-50">
+                          Override
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Cycle #{cycle.cycleNumber}
+                      {sub?.max_cycles && ` of ${sub.max_cycles}`}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className={`font-medium ${cycle.hasOverride ? 'text-orange-600' : 'text-gray-900'}`}>
+                      ${cycle.amount} {sub?.currency}
+                    </span>
+                    {cycle.hasOverride && cycle.overrideNote && (
+                      <div className="text-xs text-gray-500">{cycle.overrideNote}</div>
                     )}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Cycle #{cycle.cycleNumber}
-                    {sub?.max_cycles && ` of ${sub.max_cycles}`}
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile cycles list - horizontal scroll */}
+            <div className="md:hidden -mx-4 px-4 overflow-x-auto">
+              <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
+                {cyclesWithOverrides.map((cycle, index) => (
+                  <div
+                    key={cycle.date}
+                    className={cn(
+                      "flex-shrink-0 w-40 p-3 rounded-xl border",
+                      index === 0
+                        ? "bg-blue-50 border-blue-200"
+                        : "bg-gray-50 border-gray-200"
+                    )}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        {index === 0 && <Badge variant="default" className="text-[10px] px-1.5 py-0">Next</Badge>}
+                        {cycle.hasOverride && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Override</Badge>}
+                      </div>
+                      <p className="font-medium text-sm">
+                        {new Date(cycle.date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        Cycle #{cycle.cycleNumber}
+                      </p>
+                      <p className={cn(
+                        "font-semibold text-base",
+                        cycle.hasOverride ? "text-orange-600" : "text-[#7f5efd]"
+                      )}>
+                        ${cycle.amount}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <span className={`font-medium ${cycle.hasOverride ? 'text-orange-600' : 'text-gray-900'}`}>
-                    ${cycle.amount} {sub?.currency}
-                  </span>
-                  {cycle.hasOverride && cycle.overrideNote && (
-                    <div className="text-xs text-gray-500">{cycle.overrideNote}</div>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
           
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-            <p className="text-sm text-green-800">
-              <strong>Automatic Billing Active:</strong> The subscription scheduler runs every minute for immediate responsiveness. 
-              Invoices will be generated automatically within 1 minute when each cycle date arrives based on the amounts shown above.
-              <br />
-              <strong>Manual Generation:</strong> You can also generate invoices manually below for testing or early billing.
-            </p>
-          </div>
-        </div>
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded max-md:text-xs max-md:p-2.5">
+              <p className="text-sm text-green-800 max-md:text-xs">
+                <CheckCircle className="inline h-3 w-3 mr-1" />
+                <strong>Auto-billing:</strong> Active
+                <span className="hidden md:inline"> • Runs every minute</span>
+                <span className="md:hidden"> • 1min</span>
+                <br className="hidden md:block" />
+                <span className="hidden md:inline">
+                  <strong>Manual:</strong> Generate invoices below for testing.
+                </span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* ENHANCED: Generate Invoice Section with Better UX */}
-      <div className="mb-6 p-4 border rounded-lg">
-        <h2 className="font-phonic text-2xl font-normal mb-4">🧾 Manual Invoice Generation</h2>
+      {/* Desktop Generate Invoice Section */}
+      <Card className="hidden md:block mb-6 border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <FileText className="h-5 w-5 text-[#7f5efd]" />
+            Manual Invoice Generation
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
         
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
           <p className="text-sm text-blue-800">
@@ -636,22 +897,56 @@ export default function SubscriptionDetailPage() {
             </form>
           </div>
         )}
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* ENHANCED: Amount Overrides Section with Better Explanation */}
-      <div className="mb-6 p-4 border rounded-lg">
-        <h2 className="font-phonic text-2xl font-normal mb-4">Amount Overrides</h2>
+      {/* Mobile Generate Invoice - Bottom Sheet Trigger */}
+      {isMobile && (
+        <Card
+          className="md:hidden mb-6 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer"
+          onClick={() => setInvoiceSheetOpen(true)}
+        >
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <FileText className="h-4 w-4 text-[#7f5efd]" />
+                Generate Invoice
+              </CardTitle>
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            </div>
+            <CardDescription className="text-xs">
+              Next: ${cyclesWithOverrides[0]?.amount || sub?.amount} {sub?.currency}
+              {sub?.next_billing_at && (
+                <span className="block mt-1">
+                  {formatDateShort(sub.next_billing_at, timezone)}
+                </span>
+              )}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Desktop Amount Overrides Section */}
+      <Card className="hidden md:block mb-6 border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-[#7f5efd]" />
+            Amount Overrides
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
         
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-          <p className="text-sm text-green-800">
-            <strong>How overrides work:</strong> When you schedule an override, it will automatically apply to all billing cycles on or after the effective date. 
-            You can see how overrides affect upcoming cycles in the &quot;Upcoming Billing Cycles&quot; section above.
-          </p>
-        </div>
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+            <p className="text-sm text-green-800">
+              <Info className="inline h-4 w-4 mr-1" />
+              <strong>How it works:</strong> Overrides apply to all cycles on/after the effective date.
+              Check upcoming cycles above to see effects.
+            </p>
+          </div>
         
-        {/* Schedule New Override */}
-        <form onSubmit={scheduleOverride} className="space-y-4 mb-6">
-          <h3 className="font-phonic text-base font-normal">Schedule New Override</h3>
+          {/* Schedule New Override */}
+          <form onSubmit={scheduleOverride} className="space-y-4 mb-6">
+            <h3 className="font-semibold">Schedule New Override</h3>
           
           {/* Date Range Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -757,86 +1052,359 @@ export default function SubscriptionDetailPage() {
           <Button type="submit">Schedule Override</Button>
         </form>
 
-        {/* Existing Overrides */}
-        {amountOverrides.length > 0 && (
-          <div>
-            <h3 className="font-phonic text-base font-normal mb-3">Scheduled Overrides</h3>
-            <div className="space-y-2">
-              {amountOverrides.map(override => (
-                <div key={override.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">${override.amount}</span>
-                      {override.effective_until ? (
-                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                          Time-Limited
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          Permanent
-                        </span>
+          {/* Existing Overrides */}
+          {amountOverrides.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-3">Scheduled Overrides</h3>
+              <div className="space-y-2">
+                {amountOverrides.map(override => (
+                  <div key={override.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">${override.amount}</span>
+                        {override.effective_until ? (
+                          <Badge variant="outline" className="text-xs">
+                            Time-Limited
+                          </Badge>
+                        ) : (
+                          <Badge variant="default" className="text-xs">
+                            Permanent
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        <span>From {formatDateOnly(override.effective_from, timezone)}</span>
+                        {override.effective_until && (
+                          <span> to {formatDateOnly(override.effective_until, timezone)}</span>
+                        )}
+                      </div>
+                      {override.note && (
+                        <div className="text-sm text-gray-500 mt-1">{override.note}</div>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {/* FIXED: Use proper date formatting without timezone conversion */}
-                      <span>From {formatDateOnly(override.effective_from, timezone)}</span>
-                      {override.effective_until && (
-                        <span> to {formatDateOnly(override.effective_until, timezone)}</span>
-                      )}
-                    </div>
-                    {override.note && (
-                      <div className="text-sm text-gray-500 mt-1">{override.note}</div>
-                    )}
+                    <span className="text-xs text-gray-400">
+                      Created {formatDateShort(override.created_at, timezone)}
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-400">
-                    Created {formatDateShort(override.created_at, timezone)}
-                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Mobile Amount Overrides - Collapsible or Sheet Trigger */}
+      {isMobile && (
+        <Card
+          className="md:hidden mb-6 border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer"
+          onClick={() => setOverrideSheetOpen(true)}
+        >
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-[#7f5efd]" />
+                Amount Overrides
+              </CardTitle>
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            </div>
+            <CardDescription className="text-xs">
+              {amountOverrides.length > 0 ? (
+                <>{amountOverrides.length} active overrides</>
+              ) : (
+                <>Set custom amounts for cycles</>
+              )}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Desktop Invoices Section */}
+      <Card className="hidden md:block border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <Receipt className="h-5 w-5 text-[#7f5efd]" />
+            Invoice History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+        
+          {invoices.length === 0 ? (
+            <p className="text-gray-600">No invoices generated yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {invoices.map(invoice => (
+                <div key={invoice.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium">
+                      {invoice.invoice_number && (
+                        <span className="text-sm text-gray-500 mr-2">{invoice.invoice_number}</span>
+                      )}
+                      ${invoice.amount} {invoice.currency}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Cycle: {formatDateShort(invoice.cycle_start_at, timezone)} |
+                      Due: {formatDateShort(invoice.due_date, timezone)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={
+                      invoice.status === 'paid' ? 'default' :
+                      invoice.status === 'pending' ? 'secondary' :
+                      invoice.status === 'past_due' ? 'destructive' : 'secondary'
+                    }>
+                      {invoice.status}
+                    </Badge>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {formatDateShort(invoice.created_at, timezone)}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Invoices Section */}
-      <div className="p-4 border rounded-lg">
-        <h2 className="font-phonic text-2xl font-normal mb-4">Invoice History</h2>
-        
-        {invoices.length === 0 ? (
-          <p className="font-capsule text-base font-normal text-gray-600">No invoices generated yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {invoices.map(invoice => (
-              <div key={invoice.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <div>
-                  <div className="font-medium">
-                    {invoice.invoice_number && (
-                      <span className="text-sm text-gray-500 mr-2">{invoice.invoice_number}</span>
-                    )}
-                    ${invoice.amount} {invoice.currency}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Cycle: {formatDateShort(invoice.cycle_start_at, timezone)} | 
-                    Due: {formatDateShort(invoice.due_date, timezone)}
+      {/* Mobile Invoices Section - Collapsible */}
+      {isMobile && (
+        <Collapsible open={expandedSections.invoices} onOpenChange={() => toggleSection('invoices')}>
+          <CollapsibleTrigger asChild>
+            <Card className="md:hidden border border-gray-200 shadow-sm max-md:rounded-2xl cursor-pointer">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-[#7f5efd]" />
+                    Invoices
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {invoices.length}
+                    </Badge>
+                    <ChevronDown className={cn(
+                      "h-4 w-4 transition-transform",
+                      expandedSections.invoices && "rotate-180"
+                    )} />
                   </div>
                 </div>
-                <div className="text-right">
-                  <Badge variant={
-                    invoice.status === 'paid' ? 'default' : 
-                    invoice.status === 'pending' ? 'secondary' : 
-                    invoice.status === 'past_due' ? 'destructive' : 'secondary'
-                  }>
-                    {invoice.status}
-                  </Badge>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {formatDateShort(invoice.created_at, timezone)}
+              </CardHeader>
+            </Card>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-4 pt-0 space-y-2">
+              {invoices.length === 0 ? (
+                <p className="text-sm text-gray-600 text-center py-4">No invoices generated yet.</p>
+              ) : (
+                invoices.map(invoice => (
+                  <div key={invoice.id} className="p-3 bg-gray-50 rounded-xl">
+                    <div className="flex justify-between items-start mb-1">
+                      <div>
+                        <p className="font-semibold text-sm">
+                          ${invoice.amount} {invoice.currency}
+                        </p>
+                        {invoice.invoice_number && (
+                          <p className="text-xs text-gray-500">{invoice.invoice_number}</p>
+                        )}
+                      </div>
+                      <Badge
+                        variant={
+                          invoice.status === 'paid' ? 'default' :
+                          invoice.status === 'pending' ? 'secondary' :
+                          invoice.status === 'past_due' ? 'destructive' : 'secondary'
+                        }
+                        className="text-xs"
+                      >
+                        {invoice.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Cycle: {formatDateShort(invoice.cycle_start_at, timezone)}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Due: {formatDateShort(invoice.due_date, timezone)}
+                    </p>
                   </div>
+                ))
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+      {/* Mobile Bottom Sheets */}
+
+      {/* Invoice Generation Bottom Sheet */}
+      <BottomSheet open={isInvoiceSheetOpen} onOpenChange={setInvoiceSheetOpen}>
+        <BottomSheetContent className="md:hidden max-h-[90vh] overflow-y-auto" onDismiss={() => setInvoiceSheetOpen(false)}>
+          <BottomSheetHeader className="text-left">
+            <BottomSheetTitle>Generate Invoice</BottomSheetTitle>
+            <BottomSheetDescription>
+              Create an invoice for this subscription
+            </BottomSheetDescription>
+          </BottomSheetHeader>
+          <div className="space-y-4 py-4">
+            {/* Standard Generation */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">Next Scheduled Invoice</h3>
+              <div className="p-3 bg-gray-50 rounded-xl">
+                <p className="font-semibold text-lg text-[#7f5efd]">
+                  ${cyclesWithOverrides[0]?.amount || sub?.amount} {sub?.currency}
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {sub?.next_billing_at ? formatDateShort(sub.next_billing_at, timezone) : 'Not scheduled'}
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setTargetCycleDate('');
+                  generateInvoice();
+                  setInvoiceSheetOpen(false);
+                }}
+                className="w-full h-12 bg-[#7f5efd] hover:bg-[#6b4fd8]"
+              >
+                Generate Invoice
+              </Button>
+            </div>
+
+            {/* Invoice Link Result */}
+            {invoiceLink && (
+              <div className="space-y-3 pt-3 border-t">
+                <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-sm font-medium text-green-800">Invoice Generated!</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(invoiceLink.url);
+                      toast.success('URL copied!');
+                    }}
+                    className="mt-2 w-full"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Payment URL
+                  </Button>
+                </div>
+                <form onSubmit={(e) => {
+                  sendEmail(e);
+                  setInvoiceSheetOpen(false);
+                }} className="space-y-3">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Send notification to..."
+                    className="h-12"
+                    required
+                  />
+                  <Button type="submit" className="w-full h-12">
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Notification
+                  </Button>
+                </form>
+              </div>
+            )}
+          </div>
+        </BottomSheetContent>
+      </BottomSheet>
+
+      {/* Amount Override Bottom Sheet */}
+      <BottomSheet open={isOverrideSheetOpen} onOpenChange={setOverrideSheetOpen}>
+        <BottomSheetContent className="md:hidden max-h-[90vh] overflow-y-auto" onDismiss={() => setOverrideSheetOpen(false)}>
+          <BottomSheetHeader className="text-left">
+            <BottomSheetTitle>Amount Overrides</BottomSheetTitle>
+            <BottomSheetDescription>
+              Set custom amounts for billing cycles
+            </BottomSheetDescription>
+          </BottomSheetHeader>
+          <div className="space-y-4 py-4">
+            {/* Existing Overrides */}
+            {amountOverrides.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Active Overrides</h3>
+                {amountOverrides.map(override => (
+                  <div key={override.id} className="p-3 bg-gray-50 rounded-xl">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold">${override.amount}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          From {formatDateShort(override.effective_from, timezone)}
+                          {override.effective_until && (
+                            <> to {formatDateShort(override.effective_until, timezone)}</>
+                          )}
+                        </p>
+                        {override.note && (
+                          <p className="text-xs text-gray-500 mt-1">{override.note}</p>
+                        )}
+                      </div>
+                      <Badge variant={override.effective_until ? "outline" : "default"} className="text-xs">
+                        {override.effective_until ? "Limited" : "Permanent"}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* New Override Form */}
+            <form onSubmit={(e) => {
+              scheduleOverride(e);
+              setOverrideSheetOpen(false);
+            }} className="space-y-4 pt-4 border-t">
+              <h3 className="font-semibold text-sm">Schedule New Override</h3>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Start Date</label>
+                  <Input
+                    type="date"
+                    value={override.effective_from}
+                    onChange={(e) => setOverride(prev => ({ ...prev, effective_from: e.target.value }))}
+                    min={new Date().toISOString().split('T')[0]}
+                    required
+                    className="h-12 mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-gray-700">End Date (Optional)</label>
+                  <Input
+                    type="date"
+                    value={override.effective_until}
+                    onChange={(e) => setOverride(prev => ({ ...prev, effective_until: e.target.value }))}
+                    min={override.effective_from || new Date().toISOString().split('T')[0]}
+                    className="h-12 mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-gray-700">New Amount</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={override.amount}
+                    onChange={(e) => setOverride(prev => ({ ...prev, amount: e.target.value }))}
+                    placeholder="29.99"
+                    required
+                    className="h-12 mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Note (Optional)</label>
+                  <Input
+                    value={override.note}
+                    onChange={(e) => setOverride(prev => ({ ...prev, note: e.target.value }))}
+                    placeholder="Reason for override..."
+                    className="h-12 mt-1"
+                  />
                 </div>
               </div>
-            ))}
+
+              <Button type="submit" className="w-full h-12 bg-[#7f5efd] hover:bg-[#6b4fd8]">
+                Schedule Override
+              </Button>
+            </form>
           </div>
-        )}
-      </div>
+        </BottomSheetContent>
+      </BottomSheet>
     </div>
   );
 }
