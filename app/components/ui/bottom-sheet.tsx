@@ -43,6 +43,7 @@ const BottomSheetContent = React.forwardRef<
   const localRef = React.useRef<HTMLDivElement | null>(null)
   const closeRef = React.useRef<HTMLButtonElement | null>(null)
   const scrollRef = React.useRef<HTMLDivElement | null>(null)
+  const dragHandleRef = React.useRef<HTMLDivElement | null>(null)
 
   const setRefs = React.useCallback(
     (node: HTMLDivElement | null) => {
@@ -61,12 +62,20 @@ const BottomSheetContent = React.forwardRef<
     closeRef.current?.click()
   }, [onDismiss])
 
-  useSwipeToClose(localRef, {
+  useSwipeToClose(scrollRef, {
     onClose: handleDismiss,
     directions: ["down"],
     threshold: 80,
     restraint: 140,
     getScrollElement: () => scrollRef.current,
+  })
+
+  useSwipeToClose(dragHandleRef, {
+    onClose: handleDismiss,
+    directions: ["down"],
+    threshold: 60,
+    restraint: 120,
+    requireScrollStart: false,
   })
 
   return (
@@ -88,7 +97,7 @@ const BottomSheetContent = React.forwardRef<
         }}
         {...props}
       >
-        <div className="px-6 pt-4">
+        <div ref={dragHandleRef} className="px-6 pt-4">
           <div
             className="mx-auto mb-4 h-1.5 w-12 select-none rounded-full bg-gray-300"
             aria-hidden="true"

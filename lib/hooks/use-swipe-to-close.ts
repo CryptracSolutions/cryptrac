@@ -18,6 +18,8 @@ export interface SwipeToCloseOptions {
   enabled?: boolean
   /** Optional function returning the scrollable element that should gate downward dismissals. */
   getScrollElement?: () => HTMLElement | null
+  /** When true, downward swipes only trigger if the scrollable element is already at the top. */
+  requireScrollStart?: boolean
 }
 
 /**
@@ -33,6 +35,7 @@ export function useSwipeToClose<T extends HTMLElement>(
     restraint = 80,
     enabled = true,
     getScrollElement,
+    requireScrollStart = true,
   }: SwipeToCloseOptions
 ) {
   const gestureStartRef = useRef<{ x: number; y: number } | null>(null)
@@ -122,7 +125,7 @@ export function useSwipeToClose<T extends HTMLElement>(
       }
 
       if (absX <= restraint) {
-        if (deltaY > 0 && !isScrollAtStart()) {
+        if (deltaY > 0 && requireScrollStart && !isScrollAtStart()) {
           return
         }
 
@@ -155,7 +158,7 @@ export function useSwipeToClose<T extends HTMLElement>(
 
       if (absY >= threshold && withinVerticalRestraint) {
         if (deltaY > 0 && directions.includes("down")) {
-          if (!isScrollAtStart()) {
+          if (requireScrollStart && !isScrollAtStart()) {
             return false
           }
 
@@ -307,5 +310,5 @@ export function useSwipeToClose<T extends HTMLElement>(
 
       resetGesture()
     }
-  }, [ref, onClose, directions, threshold, restraint, isActive, getScrollElement])
+  }, [ref, onClose, directions, threshold, restraint, isActive, getScrollElement, requireScrollStart])
 }

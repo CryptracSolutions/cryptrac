@@ -66,24 +66,57 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Debug logging for auto_convert_enabled
-    console.log('Subscription creation debug:', {
+    console.log('Subscription creation debug (incoming):', {
       charge_customer_fee,
       auto_convert_enabled,
       preferred_payout_currency,
+      merchant_charge_customer_fee: merchant.charge_customer_fee,
       merchant_auto_convert: merchant.auto_convert_enabled,
       merchant_preferred_payout: merchant.preferred_payout_currency
     });
-    
+
     if (!title || !amount || !interval || !anchor || !customer) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    
+
     const merchantWallets = merchant.wallets || {};
     const missingWallets = (accepted_cryptos || []).filter((c: string) => !merchantWallets[c]);
     if (missingWallets.length > 0) {
       return NextResponse.json({ error: `Missing wallet addresses for: ${missingWallets.join(', ')}` }, { status: 400 });
     }
-    
+
+    const effectiveChargeCustomerFee = charge_customer_fee !== null
+      ? charge_customer_fee
+      : (merchant.charge_customer_fee ?? false);
+
+    const effectiveAutoConvertEnabled = auto_convert_enabled !== null
+      ? auto_convert_enabled
+      : (merchant.auto_convert_enabled ?? false);
+
+    const effectivePreferredPayoutCurrency = preferred_payout_currency !== null
+      ? preferred_payout_currency
+      : (merchant.preferred_payout_currency ?? null);
+
+    if (effectiveAutoConvertEnabled) {
+      if (!effectivePreferredPayoutCurrency) {
+        return NextResponse.json({
+          error: 'Preferred payout currency is required when auto-convert is enabled for subscriptions.'
+        }, { status: 400 });
+      }
+
+      if (!merchantWallets[effectivePreferredPayoutCurrency]) {
+        return NextResponse.json({
+          error: `Wallet address for ${effectivePreferredPayoutCurrency} is required when auto-convert is enabled for subscriptions.`
+        }, { status: 400 });
+      }
+    }
+
+    console.log('Subscription creation debug (effective):', {
+      effectiveChargeCustomerFee,
+      effectiveAutoConvertEnabled,
+      effectivePreferredPayoutCurrency
+    });
+
     let customerId: string | null = null;
     if (customer.email || customer.phone) {
       const { data: existing } = await service
@@ -123,9 +156,9 @@ export async function POST(request: NextRequest) {
         billing_anchor: anchorDate,
         next_billing_at: anchorDate,
         pause_after_missed_payments,
-        charge_customer_fee,
-        auto_convert_enabled,
-        preferred_payout_currency,
+        charge_customer_fee: effectiveChargeCustomerFee,
+        auto_convert_enabled: effectiveAutoConvertEnabled,
+        preferred_payout_currency: effectivePreferredPayoutCurrency,
         tax_enabled,
         tax_rates,
         // Task 3: Include timing configuration
@@ -272,4 +305,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
   }
 }
-

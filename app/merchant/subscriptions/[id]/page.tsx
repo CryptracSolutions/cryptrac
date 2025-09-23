@@ -400,7 +400,7 @@ export default function SubscriptionDetailPage() {
   return (
     <div
       className={cn(
-        "mx-auto w-full max-w-6xl space-y-8 px-6 py-8",
+        "mx-auto w-full max-w-6xl space-y-8 px-6 py-8 overflow-x-hidden",
         "max-md:space-y-6 max-md:px-4 max-md:py-6 max-md:pb-28"
       )}
     >
@@ -800,7 +800,7 @@ export default function SubscriptionDetailPage() {
             </div>
 
             {/* Mobile cycles list - horizontal scroll */}
-            <div className="md:hidden -mx-5 px-5 overflow-x-auto">
+            <div className="md:hidden w-full overflow-x-auto">
               <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
                 {cyclesWithOverrides.map((cycle, index) => (
                   <div
